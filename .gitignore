@@ -1,0 +1,7 @@
+*.iml
+*.bin
+*.lock
+build/
+target/
+.gradle/
+.idea/

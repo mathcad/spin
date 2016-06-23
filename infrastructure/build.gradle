@@ -1,0 +1,57 @@
+description '基础设施'
+group 'org.infrastructure'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+//    maven { url 'http://maven.oschina.net/content/groups/public/' }
+}
+
+ext.springVersion = "4.3.0.RELEASE"
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12',
+                'org.springframework:spring-test:' + springVersion
+
+    'org.springframework:spring-test:' + springVersion
+
+    compile 'org.springframework:spring-context:' + springVersion,
+            'org.springframework:spring-aspects:' + springVersion,
+            'org.springframework:spring-context-support:' + springVersion,
+            'org.springframework:spring-webmvc:' + springVersion,
+            'org.springframework:spring-orm:' + springVersion,
+            'org.springframework:spring-oxm:' + springVersion,
+            'org.springframework.data:spring-data-commons:1.12.2.RELEASE',
+            'org.springframework.data:spring-data-jpa:1.10.2.RELEASE',
+            'org.springframework.data:spring-data-mongodb:1.9.2.RELEASE',
+            'org.springframework.data:spring-data-redis:1.7.2.RELEASE',
+            'org.hibernate:hibernate-core:5.2.0.Final',
+            'org.hibernate:hibernate-entitymanager:5.1.0.Final',
+            'org.hibernate:hibernate-validator:5.2.4.Final',
+            'org.bouncycastle:bcprov-jdk:1.5.1',
+            'io.reactivex:rxjava:1.1.5',
+            'com.google.code.gson:gson:2.6.2',
+            'com.belerweb:pinyin4j:2.5.1',
+            'org.apache.poi:poi:3.14',
+            'org.apache.httpcomponents:httpclient:4.5.2',
+            'org.apache.shiro:shiro-all:1.2.5',
+            'javax.mail:javax.mail-api:1.5.5',
+            'javax.validation:validation-api:1.1.0.Final',
+            'javax.transaction:javax.transaction-api:1.2',
+            'commons-net:commons-net:3.5',
+            'redis.clients:jedis:2.8.1',
+            'org.mongodb:mongo-java-driver:3.2.2',
+            'org.freemarker:freemarker:2.3.23',
+            'log4j:log4j:1.2.17',
+            'org.slf4j:slf4j-api:1.7.21'
+    compile group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final'
+
+    compile 'javax.servlet:javax.servlet-api:3.1.0'
+}
