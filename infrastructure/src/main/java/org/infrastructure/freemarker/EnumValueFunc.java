@@ -1,16 +1,15 @@
 package org.infrastructure.freemarker;
 
-import java.lang.reflect.Field;
-import java.util.List;
-
+import freemarker.template.TemplateMethodModelEx;
+import freemarker.template.TemplateModelException;
 import org.infrastructure.jpa.core.annotations.UserEnum;
 import org.infrastructure.throwable.BizException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 
-import freemarker.template.TemplateMethodModelEx;
-import freemarker.template.TemplateModelException;
+import java.lang.reflect.Field;
+import java.util.List;
 
 /**
  * Enum值转名称 生成sql段 case when ...

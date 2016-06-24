@@ -2,10 +2,21 @@ package org.infrastructure.jpa.core;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.*;
+import org.hibernate.CacheMode;
+import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
+import org.hibernate.LockOptions;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.*;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.ProjectionList;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.api.CmdParser.DetachedCriteriaResult;
 import org.infrastructure.jpa.core.sqlmap.SqlMapSupport;
@@ -17,13 +28,15 @@ import org.infrastructure.sys.FmtUtils;
 import org.infrastructure.sys.GenericUtils;
 import org.infrastructure.throwable.BizException;
 import org.infrastructure.util.HashUtils;
-import org.infrastructure.util.ReflectionUtils;
 import org.infrastructure.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.ReflectionUtils.FieldCallback;
+import org.springframework.util.ReflectionUtils.FieldFilter;
 
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -31,17 +44,29 @@ import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import javax.sql.DataSource;
 import java.io.Serializable;
-import java.lang.InstantiationException;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
 
 /**
- * 通用数据访问层代码 支持：<br />
- * 1、基于Jpa的Repository<br />
- * 2、基于JdbcTemplate和NamedJdbcTemplate的运用<br />
+ *
+ * 通用数据访问层代码
+ * 支持：
+ * 1、基于Jpa的Repository
+ * 2、基于JdbcTemplate和NamedJdbcTemplate的运用
  * 3、基于FreeMaker模板引擎的SqlMap，可配置的动态Sql访问类型
  *
+ * @author zhou
+ * @contact 电话: 18963752887, QQ: 251915460
+ * @create 2015年3月17日 下午3:31:39
  * @version V1.0
  */
 @Component
@@ -97,7 +122,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      *
      * @return 字段列表
      */
-    public static Map<String, Field> getJoinFields(final Class<?> cls) {
+    public static Map<String, Field> getJoinFields(final Class cls) {
         String clsName = cls.getName();
         parseForJoinFetch(cls);
         return REFER_JOIN_FIELDS.get(clsName);
@@ -108,19 +133,33 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      *
      * @param cls
      */
-    public static void parseForJoinFetch(final Class<?> cls) {
-        REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<>());
-        ReflectionUtils.doWithFields(cls, fcb -> REFER_JOIN_FIELDS.get(cls.getName()).put(fcb.getName(), fcb), ff -> {
-            boolean result = false;
-            ManyToOne m2o = ff.getAnnotation(ManyToOne.class);
-            if (m2o != null) {
-                result = true;
+    public static void parseForJoinFetch(final Class cls) {
+        REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<String, Field>());
+        ReflectionUtils.doWithFields(cls, new FieldCallback() {
+
+            @Override
+            public void doWith(Field f) throws IllegalArgumentException, IllegalAccessException {
+                REFER_JOIN_FIELDS.get(cls.getName()).put(f.getName(), f);
+                ;
             }
-            OneToOne o2o = ff.getAnnotation(OneToOne.class);
-            if (o2o != null) {
-                result = true;
+        }, new FieldFilter() {
+
+            @Override
+            public boolean matches(Field f) {
+
+                boolean result = false;
+                ManyToOne m2o = f.getAnnotation(ManyToOne.class);
+                if (m2o != null) {
+                    result = true;
                 }
-            return result;
+
+                OneToOne o2o = f.getAnnotation(OneToOne.class);
+                if (o2o != null) {
+                    result = true;
+                }
+
+                return result;
+            }
         });
     }
 
@@ -163,7 +202,8 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 后台线程专用 打开线程绑定的 session currentThreadSession 事务管理会失效
      *
-     * @param requiredNew 强制打开新连接
+     * @param requiredNew
+     *            强制打开新连接
      * @return
      * @version 1.0
      */
@@ -179,7 +219,8 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 后台线程专用 打开线程绑定的 session, 并启动事务
      *
-     * @param requiredNew 强制启动事务
+     * @param requiredNew
+     *            强制启动事务
      * @return
      * @version 1.0
      */
@@ -200,7 +241,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         Session session = popTreadSession();
         if (session != null && session.isOpen()) {
             Transaction tran = session.getTransaction();
-            if (tran != null && tran.getStatus().equals(TransactionStatus.ACTIVE)) {
+            if (tran != null && tran.isActive()) {
                 tran.commit();
                 logger.info("commit before closeSession");
             }
@@ -210,9 +251,8 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
 
     private Class<T> clazz;
 
-    @SuppressWarnings("unchecked")
     public ARepository() {
-        this.clazz = (Class<T>) GenericUtils.getSuperClassGenricType(this.getClass(), 0);
+        clazz = (Class<T>) GenericUtils.getSuperClassGenricType(this.getClass(), 0);
     }
 
     /**
@@ -226,14 +266,14 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      * 保存
      *
      * @param entity
-     * @throws BizException
+     * @throws ValidationException
      * @throws Exception
      */
     public void save(T entity) throws BizException {
         try {
 
-            if (entity instanceof AbstractEntity) {
-                AbstractEntity aEn = (AbstractEntity) entity;
+            if (entity instanceof AEntity) {
+                AEntity aEn = (AEntity) entity;
                 // new Entity
                 SessionUser user = sessionMgr.getCurrentUser();
                 if (aEn.getId() == null) {
@@ -241,11 +281,10 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
                     if (StringUtils.isNotEmpty(aEn.getCreateBy()))
                         createBy = aEn.getCreateBy();
                     if (createBy == null && user != null)
-                        createBy = StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName()
-                                : user.getLoginName();
+                        createBy = StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user.getLoginName();
                     aEn.setCreateBy(createBy);
 
-                    if (aEn.getCreateTime() == null)
+                    if(aEn.getCreateTime() == null)
                         aEn.setCreateTime(new Timestamp(new Date().getTime()));
 
                     if (user != null)
@@ -259,19 +298,18 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
                     if (StringUtils.isNotEmpty(aEn.getLastUpdateBy()))
                         lastUpdateBy = aEn.getCreateBy();
                     if (lastUpdateBy == null && user != null)
-                        lastUpdateBy = StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName()
-                                : user.getLoginName();
+                        lastUpdateBy = StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user.getLoginName();
                     aEn.setLastUpdateBy(lastUpdateBy);
 
-                    if (aEn.getLastUpdateTime() == null)
+                    if(aEn.getLastUpdateTime() == null)
                         aEn.setLastUpdateTime(new Timestamp(new Date().getTime()));
 
                     if (user != null)
                         aEn.setCreateUser(AUser.ref(user.getId()));
                     sess.save(aEn);
                 } else {
-                    aEn.setLastUpdateBy(user == null ? ""
-                            : (StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user.getLoginName()));
+                    aEn.setLastUpdateBy(user == null ? "" : (StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user
+                            .getLoginName()));
                     aEn.setLastUpdateTime(new Timestamp(new Date().getTime()));
                     if (user != null)
                         aEn.setLastUpdateUser(AUser.ref(user.getId()));
@@ -390,13 +428,13 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
             }
         }
 
-        // 将投影对象字典收集为对象
+        //将投影对象字典收集为对象
         for (Object pf : fields) {
             String pjField = pf.toString();
             int pjFieldPtIdx = pjField.indexOf(".");
             if (pjFieldPtIdx > -1 && pjField.lastIndexOf(".") == pjFieldPtIdx) {
                 String objField = pjField.split("\\.")[0];
-                if (referFields.containsKey(objField)) {
+                if(referFields.containsKey(objField)){
                     referFields.get(objField).add(pjField);
                 }
             }
@@ -463,11 +501,12 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 分页查询，有性能问题
      *
-     * @param dc 离线条件
-     * @param pr 分页请求
+     * @param dc
+     *            离线条件
+     * @param pr
+     *            分页请求
      * @return Page列表
      */
-    @SuppressWarnings("unchecked")
     public Page<T> find(DetachedCriteria dc, PageRequest pr, Order... orders) {
         Page<T> page = null;
         List<T> list = null;
@@ -506,10 +545,10 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 无分页的列表查询，最多1000条记录 （会产生性能问题）
      *
-     * @param dc 离线条件
+     * @param dc
+     *            离线条件
      * @return 结果数据
      */
-    @SuppressWarnings("unchecked")
     public List<T> find(DetachedCriteria dc) {
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
@@ -537,8 +576,10 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 通过条件查询，并排序
      *
-     * @param cs     条件组合
-     * @param orders 排序
+     * @param cs
+     *            条件组合
+     * @param orders
+     *            排序
      * @return
      */
     public List<T> find(Criterion[] cs, Order... orders) {
@@ -553,10 +594,10 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 分页的全记录查询，最多10000条记录
      *
-     * @param dc 离线条件
+     * @param dc
+     *            离线条件
      * @return 结果数据
      */
-    @SuppressWarnings("unchecked")
     public List<T> findAll() {
         Session sess = getSession();
         DetachedCriteria dc = DetachedCriteria.forClass(this.clazz);
@@ -577,7 +618,6 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      * @param args
      * @return
      */
-    @SuppressWarnings("unchecked")
     public List<T> find(String hql, Object... args) {
         Session sess = getSession();
         Query q = sess.createQuery(hql);
@@ -593,10 +633,10 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 通过唯一属性查询
      *
-     * @param cts 条件数组
+     * @param cts
+     *            条件数组
      * @return
      */
-    @SuppressWarnings("unchecked")
     public T findOne(CriteriaParam cp) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.clazz);
         for (Criterion c : cp.criterions)
@@ -620,8 +660,8 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         ct.setFirstResult(0);
         ct.setMaxResults(1);
 
-        List<Map<String, PK>> list = ct.list();
-        PK pk = list.size() == 1 ? list.get(0).get(pkf) : null;
+        List<Map> list = ct.list();
+        PK pk = list.size() == 1 ? (PK) list.get(0).get(pkf) : null;
         return pk == null ? null : this.get(pk);
     }
 
@@ -634,7 +674,8 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 通过唯一属性查询
      *
-     * @param cts 条件数组
+     * @param cts
+     *            条件数组
      * @return
      */
     public T findOne(Criterion... cts) {
@@ -646,8 +687,10 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 通过唯一属性查询
      *
-     * @param prop  唯一属性名称
-     * @param value 值
+     * @param prop
+     *            唯一属性名称
+     * @param value
+     *            值
      * @return
      */
     public T findOne(String prop, Object value) {
@@ -661,7 +704,6 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      * @param value
      * @return
      */
-    @SuppressWarnings("unchecked")
     public T findOneWithLock(String prop, Object value) {
         Session sess = getSession();
         DetachedCriteria dc = DetachedCriteria.forClass(this.clazz);
@@ -683,9 +725,12 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 判断是否有存在已有实体 默认多个字段条件为，or匹配
      *
-     * @param props  属性数组
-     * @param values 对应的只数据组
-     * @param notId  忽略匹配的Id
+     * @param props
+     *            属性数组
+     * @param values
+     *            对应的只数据组
+     * @param notId
+     *            忽略匹配的Id
      * @return 是/否
      * @version 1.0
      */
@@ -696,10 +741,14 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 判断是否有存在已有实体
      *
-     * @param props  属性数组
-     * @param values 对应的只数据组
-     * @param notId  忽略匹配的Id
-     * @param isAnd  使用and / or 连接条件
+     * @param props
+     *            属性数组
+     * @param values
+     *            对应的只数据组
+     * @param notId
+     *            忽略匹配的Id
+     * @param isAnd
+     *            使用and / or 连接条件
      * @return 是/否
      * @version 1.0
      */
@@ -718,9 +767,9 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         }
 
         if (isAnd)
-            dc.add(Restrictions.and(criteriaList.toArray(new Criterion[]{})));
+            dc.add(Restrictions.and(criteriaList.toArray(new Criterion[] {})));
         else
-            dc.add(Restrictions.or(criteriaList.toArray(new Criterion[]{})));
+            dc.add(Restrictions.or(criteriaList.toArray(new Criterion[] {})));
 
         if (notId != null)
             dc.add(Restrictions.ne("id", notId));
@@ -749,16 +798,20 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         return c > 0;
     }
 
-    protected void addProjections(final ProjectionList plist, Class<?> enCls) {
-        ReflectionUtils.doWithFields(enCls, fcb -> {
-            if (fcb.getAnnotation(Transient.class) == null) {
-                logger.info(fcb.getName());
-                plist.add(Property.forName(fcb.getName()), fcb.getName());
+    protected void addProjections(final ProjectionList plist, Class enCls) {
+        ReflectionUtils.doWithFields(enCls, new FieldCallback() {
+            @Override
+            public void doWith(Field f) throws IllegalArgumentException, IllegalAccessException {
+                if (f.getAnnotation(Transient.class) == null) {
+                    logger.info(f.getName());
+                    plist.add(Property.forName(f.getName()), f.getName());
+                }
             }
         });
     }
 
     /**
+     *
      * 统计数量
      *
      * @param cp
@@ -774,6 +827,11 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         Criteria ct = dc.getExecutableCriteria(sess);
         ct.setCacheable(false);
 
+        // 查询列表数据
+        final Map<String, Set<String>> referFields = new HashMap<String, Set<String>>();
+
+        final ProjectionList pj = beforeQueryCriteria(cp, ct, referFields);
+
         // 总数查询
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         return total;
@@ -786,7 +844,6 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      * @return
      * @version 1.0
      */
-    @SuppressWarnings("unchecked")
     public Page<T> page(CriteriaParam cp) {
 
         DetachedCriteria dc = DetachedCriteria.forClass(this.clazz);
@@ -818,11 +875,11 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
             ct.setMaxResults(cp.pageRequest.getPageSize());
         }
 
-        List<Map<String, Object>> list = ct.list();
+        List<Map> list = ct.list();
 
         ArrayList<T> enList = new ArrayList<T>();
         /** Map查询后，回填对象 */
-        for (Map<String, Object> map : list) {
+        for (Map map : list) {
             T t = convertMapToEn(map, referFields);
             enList.add(t);
         }
@@ -837,7 +894,8 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     /**
      * 根据条件查询列表
      *
-     * @param map 条件
+     * @param map
+     *            条件
      * @return 实体列表
      * @version 1.0
      */
@@ -880,7 +938,6 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      * @return
      * @version 1.0
      */
-    @SuppressWarnings("unchecked")
     private List<T> findList(CriteriaParam cp) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.clazz);
         for (Criterion c : cp.criterions)
@@ -892,7 +949,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
 
         // 查询列表数据
         final Map<String, Set<String>> referFields = new HashMap<String, Set<String>>();
-        List<Map<String, Object>> list;
+        List<Map> list;
         final ProjectionList pj = beforeQueryCriteria(cp, ct, referFields);
 
         ct.setProjection(pj);
@@ -909,32 +966,38 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
 
         ArrayList<T> enList = new ArrayList<T>();
         /** Map查询后，回填对象 */
-        for (Map<String, Object> map : list) {
+        for (Map map : list) {
             T t = convertMapToEn(map, referFields);
             enList.add(t);
         }
         return enList;
     }
 
-    private ProjectionList beforeQueryCriteria(CriteriaParam cp, Criteria ct,
-                                               final Map<String, Set<String>> referFields) {
+    private ProjectionList beforeQueryCriteria(CriteriaParam cp, Criteria ct, final Map<String, Set<String>> referFields) {
         final Set<String> qjoinFields = new HashSet<String>();
         final Map<String, Field> manyToOneFields = getJoinFields(this.clazz);
 
         // 使用投影映射字段,先查询，再反射
         final ProjectionList pj = Projections.projectionList();
-        ReflectionUtils.doWithFields(this.clazz, fcb -> {
-            ManyToMany m2m = fcb.getAnnotation(ManyToMany.class);
-            if (m2m != null) {
-            } else {
-                String pjField = fcb.getName();
-                addProjectionFields(qjoinFields, manyToOneFields, referFields, pj, pjField);
+        ReflectionUtils.doWithFields(this.clazz, new FieldCallback() {
+
+            @Override
+            public void doWith(Field f) throws IllegalArgumentException, IllegalAccessException {
+                ManyToMany m2m = f.getAnnotation(ManyToMany.class);
+                if (m2m != null) {
+                    //logger.info("ignore m2m field:\t" + f.getName());
+                } else {
+                    String pjField = f.getName();
+                    addProjectionFields(qjoinFields, manyToOneFields, referFields, pj, pjField);
+                }
             }
         });
 
         for (String pjField : cp.fields) {
             addProjectionFields(qjoinFields, manyToOneFields, referFields, pj, pjField);
         }
+
+        List<Map> list = null;
 
         // 查询结果中需外连接的表
         qjoinFields.addAll(referFields.keySet());
@@ -968,8 +1031,11 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     /**
-     * @param map         行对象
-     * @param referFields 引用字段集合
+     *
+     * @param map
+     *            行对象
+     * @param referFields
+     *            引用字段集合
      * @return
      * @throws InstantiationException
      * @throws IllegalAccessException
@@ -999,7 +1065,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
                     ReflectionUtils.makeAccessible(refField);
                     Object refObj = ReflectionUtils.getField(refField, t);
                     if (refObj == null) {
-                        Class<?> refFieldClass = refField.getType();
+                        Class refFieldClass = refField.getType();
                         refObj = refFieldClass.newInstance();
                         ReflectionUtils.makeAccessible(refField);
                         ReflectionUtils.setField(refField, t, refObj);
@@ -1028,16 +1094,11 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      *
      * @version 1.0
      */
-    public void rebuildTreePath(TreePathable<T, PK> t, String tableName) {
+    public void rebuildTreePath(TreePathable<T, PK> t, String tableName) throws Exception {
         this.getSession().flush();
 
-        if (t.getTreeParent() != null) {
-            T parent = null;
-            try {
-                parent = (T) this.get(t.getTreeParent().getTreeNodeId(), 0);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if(t.getTreeParent() !=null){
+            T parent = (T)this.get(t.getTreeParent().getTreeNodeId(),0);
             t.setTreeParent(parent);
             logger.info(t.getTreeParent().getTreeNodeId());
             logger.info(t.getTreeParent().getTreeIdPath());
@@ -1051,12 +1112,12 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         } else
             t.setTreeIdPath(t.getTreeNodeId().toString() + ",");
 
-        // 有更换父节点路径，应将所有子节点路径批量更新
+        //有更换父节点路径，应将所有子节点路径批量更新
         String newIdPath = t.getTreeIdPath();
-        if (StringUtils.isNotEmpty(oldIdPath) && oldIdPath.equals(newIdPath) == false) {
-            String sql = FmtUtils.format(
-                    "update {tableName} set id_path = REPLACE(id_path,'{oldPath}','{newPath}') where id_path like '{oldPath}%'  and id_path <> '{oldPath}%'",
-                    HashUtils.getMap("oldPath", oldIdPath, "newPath", newIdPath, "tableName", tableName));
+        if(StringUtils.isNotEmpty(oldIdPath) &&  oldIdPath.equals(newIdPath) == false){
+            String sql = FmtUtils.format("update {tableName} set id_path = REPLACE(id_path,'{oldPath}','{newPath}') where id_path like '{oldPath}%'  and id_path <> '{oldPath}%'",
+                    HashUtils.getMap("oldPath",oldIdPath,"newPath",newIdPath,"tableName",tableName)
+            );
             this.jt.update(sql);
         }
     }
