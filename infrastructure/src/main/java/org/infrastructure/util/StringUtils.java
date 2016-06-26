@@ -75,24 +75,20 @@ public abstract class StringUtils {
     //---------------------------------------------------------------------
 
     /**
-     * Check whether the given {@code String} is empty.
-     * <p>This method accepts any Object as an argument, comparing it to
-     * {@code null} and the empty String. As a consequence, this method
-     * will never return {@code true} for a non-null non-String object.
-     * <p>The Object signature is useful for general attribute handling code
-     * that commonly deals with Strings but generally has to iterate over
-     * Objects since attributes may e.g. be primitive value objects as well.
-     *
-     * @param str the candidate String
-     * @since 3.2.1
+     * <p>判断指定的字符串{@code String}是否为空</p>
+     * <p>
+     * 该方法接受一个{@code Object}作为参数，与{@code null}和空字符串比较。
+     * 如果参数是一个非String的非空对象，则一律返回{@code false}
+     * </p>
+     * @param str 待判断对象
+     * @return 参数如果为空或null，返回{@code true}，否则返回{@code false}
      */
-    public static boolean isEmpty(String str) {
+    public static boolean isEmpty(Object str) {
         return (str == null || "".equals(str));
     }
 
     /**
-     * <p>检查字符串是否非空 ("")且非 null</p>
-     * <p>
+     * <p>检查字符串是否非空 ("")且非{@code null}</p>
      * <pre>
      * StringUtils.isNotEmpty(null)      = false
      * StringUtils.isNotEmpty("")        = false
@@ -101,8 +97,8 @@ public abstract class StringUtils {
      * StringUtils.isNotEmpty("  bob  ") = true
      * </pre>
      *
-     * @param str 待检查字符串，可以为null
-     * @return <code>true</code> 如果为空或null，返回true
+     * @param str 待检查字符串，可以为{@code null}
+     * @return  参数如果为空或null，返回{@code false}，否则返回{@code true}
      */
     public static boolean isNotEmpty(String str) {
         return !StringUtils.isEmpty(str);
@@ -110,7 +106,6 @@ public abstract class StringUtils {
 
     /**
      * <p>检查字符串是否是空白字符构成, 空 ("") 或者 null</p>
-     * <p>
      * <pre>
      * StringUtils.isBlank(null)      = true
      * StringUtils.isBlank("")        = true
@@ -120,8 +115,7 @@ public abstract class StringUtils {
      * </pre>
      *
      * @param str 待检查字符串，可以为null
-     * @return <code>true</code> 如果为空白，空("")或null，返回true
-     * @since 2.0
+     * @return 参数如果为空白，空("")或{@code null}，返回{@code true}，否则返回{@code false}
      */
     public static boolean isBlank(String str) {
         int strLen;
@@ -138,7 +132,6 @@ public abstract class StringUtils {
 
     /**
      * <p>检查字符串是否是含有非空白字符</p>
-     * <p>
      * <pre>
      * StringUtils.isNotBlank(null)      = false
      * StringUtils.isNotBlank("")        = false
@@ -148,8 +141,7 @@ public abstract class StringUtils {
      * </pre>
      *
      * @param str 待检查字符串，可以为null
-     * @return <code>true</code> 如果字符串含有非空白字符，返回true，除此以外，一律返回false
-     * @since 2.0
+     * @return 如果字符串含有非空白字符，返回{@code true}，除此以外，一律返回{@code false}
      */
     public static boolean isNotBlank(String str) {
         return !StringUtils.isBlank(str);

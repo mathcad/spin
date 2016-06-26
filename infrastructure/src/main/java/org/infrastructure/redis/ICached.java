@@ -8,53 +8,69 @@ import java.util.Set;
  * @author xuweinan
  * @version 1.0
  */
-public interface ICached<K, V> {
+public interface ICached<V> {
 
     /**
      * 得到所有缓存的Key
      *
-     * @param pattern key的pattern
-     * @return key的Set
+     * @param pattern
+     * @return
+     * @version 1.0
      */
-    Set<K> getKeys(final String pattern) throws Exception;
+    Set<V> getKeys(final String pattern) throws Exception;
 
     /**
      * 设置缓存对象的过期时间
      *
-     * @param key     key
-     * @param seconds 秒
+     * @param key
+     * @param seconds
      */
-    void setExpire(final K key, final long seconds);
+    public void setExpire(final String key,final long seconds);
 
     /**
      * 存入缓存
+     *
+     * @param key
+     * @param value
+     * @version 1.0
      */
-    void put(final K key, final V value);
+    public void put(final String key, final Object value);
 
     /**
      * 存入对象，并设置期限
      *
-     * @param expire 过期时间
+     * @param key
+     * @param value
+     * @param expire
+     * @version 1.0
      */
-    void put(final K key, final V value, final Long expire);
+    public void put(final String key, final Object value, final Long expire);
 
     /**
      * 获取对象
+     *
+     * @param key
+     * @return
+     * @version 1.0
      */
-    V get(final K key);
+    public Object get(final String key);
 
     /**
      * 更新对象
+     *
+     * @param key
+     * @param value
+     * @version 1.0
      */
-    void update(final K key, final V value);
+    public void update(final String key, final Object value);
 
     /**
      * 删除缓存
      *
-     * @param keys key
+     * @param keys
      * @throws Exception
+     * @version 1.0
      */
-    @SuppressWarnings("unchecked")
-    void deleteCached(K... keys) throws Exception;
+    public void deleteCached(String... keys) throws Exception;
 
 }

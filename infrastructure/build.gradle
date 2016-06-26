@@ -1,6 +1,6 @@
 description '基础设施'
 group 'org.infrastructure'
-version '1.0-SNAPSHOT'
+version '1.6.0.4-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'maven'

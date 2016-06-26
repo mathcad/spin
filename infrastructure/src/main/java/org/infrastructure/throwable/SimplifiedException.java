@@ -4,7 +4,7 @@ import org.infrastructure.sys.ErrorAndExceptionCode;
 
 /**
  * <p>这个异常类用来简化处理异常</p>
- * <p>遇到无需明确分类处理的异常，可以统一用此异常处理，封装{@code ErrorAndExceptionCode}枚举作为参数，用于区分异常类别</p>
+ * <p>遇到无需明确分类处理的异常，可以统一用此异常处理，封装{@link ErrorAndExceptionCode}枚举作为参数，用于区分异常类别</p>
  * 
  * @author xuweinan
  * @version 1.0

@@ -8,18 +8,17 @@ import org.infrastructure.redis.ICached;
 
 public class ShiroRedisCacheManager extends AbstractCacheManager {
 
-	private ICached<String, Session> cached;
+	private ICached<Session> cached;
 
 	@Override
 	protected Cache<String, Session> createCache(String cacheName) throws CacheException {
+//		return new ShiroRedisCache<Session>(cacheName, cached);
 		return null;
 	}
-
-	public ICached<String, Session> getCached() {
+	public ICached<Session> getCached() {
 		return cached;
 	}
-
-	public void setCached(ICached<String, Session> cached) {
+	public void setCached(ICached<Session> cached) {
 		this.cached = cached;
 	}
 

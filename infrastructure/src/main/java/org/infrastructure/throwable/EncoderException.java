@@ -19,7 +19,7 @@ package org.infrastructure.throwable;
 
 /**
  * Thrown when there is a failure condition during the encoding process. This exception is thrown when an
- * {@link Encoder} encounters a encoding specific exception such as invalid data, inability to calculate a checksum,
+ * {@code Encoder} encounters a encoding specific exception such as invalid data, inability to calculate a checksum,
  * characters outside of the expected range.
  *
  * @version $Id: EncoderException.java 1619948 2014-08-22 22:53:55Z ggregory $

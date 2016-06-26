@@ -23,6 +23,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.DateFormatConverter;
+import org.infrastructure.sys.ElUtils;
+import org.infrastructure.throwable.BizException;
 import org.infrastructure.util.StringUtils;
 import org.infrastructure.web.view.ExcelExtGrid.GridColumn;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
@@ -137,7 +139,7 @@ public class ExcelExportView extends AbstractXlsView {
 
 	/**
 	 * /** 通过参数和数据生成Excel文件
-	 * 
+	 *
 	 * @param workbook
 	 *            电子表格
 	 * @param grid
@@ -182,7 +184,7 @@ public class ExcelExportView extends AbstractXlsView {
 
 			// 填充数据内容
 			for (int i = 0; i < data.size(); i++) {
-				Map rdata = (Map) data.get(i);
+				Object robj = data.get(i);
 				Row row = sheet.createRow(i + 1);// 除去头部
 				Cell cell = null;
 				// 当行赋值
@@ -190,7 +192,7 @@ public class ExcelExportView extends AbstractXlsView {
 					GridColumn col = grid.columns.get(c);
 					cell = row.createCell(c);
 
-					setDataCellValue(rdata, cell, col, workbook);
+					setDataCellValue(robj, cell, col, workbook);
 
 					cell.setCellStyle(columnStyleMap.get(col.dataIndex));
 				}
@@ -200,25 +202,30 @@ public class ExcelExportView extends AbstractXlsView {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new Exception("导出Excel文件[" + grid.fileName + "]出错");
-		}
+            throw new BizException("导出Excel文件[" + grid.fileName + "]出错", e);
+        }
 	}
 
 	/**
 	 * 设置列值 （日期类型赋值date，默认类型String
-	 * 
+	 *
 	 * @param rdata 汗数据
 	 * @param cell 单元格
 	 * @param col 列
 	 */
-	private void setDataCellValue(Map rdata, Cell cell, GridColumn col, Workbook workbook) {
-		Object o = rdata.get(col.dataIndex);
+	private void setDataCellValue(Object rdata, Cell cell, GridColumn col, Workbook workbook) {
+		Object o = null;
+		if(rdata instanceof Map){
+			o = ((Map)rdata).get(col.dataIndex);
+		}else{
+			o= ElUtils.getFieldValue(rdata,col.dataIndex);
+		}
 		if (o == null)
 			return;
 
 		if (DATE_COLUMN_XTYPE.equals(col.xtype)) {
 			if (o instanceof Date) {
-				cell.setCellValue((Date) rdata.get(col.dataIndex));
+                cell.setCellValue((Date) o);
 			}
 		} /*
 			 * Modify by zx 暂时无法支持列类型 else if
@@ -230,7 +237,7 @@ public class ExcelExportView extends AbstractXlsView {
 			 * lnk.setLabel(value); cell.setCellValue(value);
 			 * cell.setHyperlink(lnk); }
 			 */else {
-			String value = rdata.get(col.dataIndex) == null ? null : rdata.get(col.dataIndex).toString();
+            String value = o == null ? null : o.toString();
 			cell.setCellValue(value);
 		}
 	}

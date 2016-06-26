@@ -114,7 +114,12 @@ public class CmdParser {
 		List<String> qPath = new ArrayList<String>();
 		qPath.addAll(Arrays.asList(qKey.split(SPLITOR)));
 		String qOp = qPath.remove(qPath.size() -1);
-		
+
+		//去除空格
+		if(StringUtils.isNotEmpty(val)){
+			val = StringUtils.trimWhitespace(val);
+		}
+
 		Object qVal = null;
 		if(qOp.indexOf("in") > -1 || qOp.indexOf("notIn") > -1){
 			List<Object> objList = new ArrayList<Object>();
@@ -184,11 +189,11 @@ public class CmdParser {
 		}else if("notEq".equals(op)){
 			ct = Restrictions.not(Restrictions.eq(propName, value));
 		}else if("like".equals(op)){
-			ct =Restrictions.like(propName, value.toString(), MatchMode.ANYWHERE);
+			ct =Restrictions.like(propName, StringUtils.trimWhitespace(value.toString()), MatchMode.ANYWHERE);
 		}else if("startwith".equalsIgnoreCase(op)){
-			ct =Restrictions.like(propName, value.toString(), MatchMode.START);
+			ct =Restrictions.like(propName, StringUtils.trimWhitespace(value.toString()), MatchMode.START);
 		}else if("endwith".equalsIgnoreCase(op)){
-			ct =Restrictions.like(propName, value.toString(), MatchMode.END);
+			ct =Restrictions.like(propName, StringUtils.trimWhitespace(value.toString()), MatchMode.END);
 		}else if("gt".equals(op)){
 			ct =Restrictions.gt(propName, value);
 		}else if("ge".equals(op)){

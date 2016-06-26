@@ -1,7 +1,5 @@
 package org.infrastructure.jpa.core;
 
-import java.util.Map;
-
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -19,92 +17,84 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.Map;
+
 /**
  * 专供热编译调试，待验证 生产环境勿用
- * 
- * 
- * @author zhou
- * @contact 电话: 18963752887, QQ: 251915460
- * @create 2015年4月23日 下午10:32:50
+ *
+ * @author xuweinan
  * @version V1.0
  */
 public class SpringJpaSessionContext extends SpringSessionContext {
-	private static final long serialVersionUID = -8835551246505582844L;
-	static final Logger logger = LoggerFactory.getLogger(SpringJpaSessionContext.class);
-	SessionFactoryImpl sessionFactory;
+    private static final long serialVersionUID = -8835551246505582844L;
+    static final Logger logger = LoggerFactory.getLogger(SpringJpaSessionContext.class);
+    SessionFactoryImpl sessionFactory;
 
-	/**
-	 * @param sessionFactory
-	 */
-	public SpringJpaSessionContext(SessionFactoryImplementor sessionFactory) {
-		super(sessionFactory);
-		this.sessionFactory = (SessionFactoryImpl) sessionFactory;
-	}
+    public SpringJpaSessionContext(SessionFactoryImplementor sessionFactory) {
+        super(sessionFactory);
+        this.sessionFactory = (SessionFactoryImpl) sessionFactory;
+    }
 
-	@Override
-	public Session currentSession() throws HibernateException {
+    @Override
+    public Session currentSession() throws HibernateException {
 
-		Object value = TransactionSynchronizationManager.getResource(this.sessionFactory);
-		if (value instanceof Session) {
-			return (Session) value;
-		}
+        Object value = TransactionSynchronizationManager.getResource(this.sessionFactory);
+        if (value instanceof Session) {
+            return (Session) value;
+        }
 
-		/** 启用非WebContext的Session事务支持策略 */
-		WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
-		if (wac == null && value == null) {
-			bindNewSessionHolder();
-		}
+        /** 启用非WebContext的Session事务支持策略 */
+        WebApplicationContext wac = ContextLoader.getCurrentWebApplicationContext();
+        if (wac == null && value == null) {
+            bindNewSessionHolder();
+        }
 
-		/** 需要动态刷新WebContext的SessionFactoryBean（基于jrebel） */
-		if (value == null) {
-			Map<Object, Object> map = TransactionSynchronizationManager.getResourceMap();
-			if (map != null && TransactionSynchronizationManager.getResourceMap().keySet().size() > 0) {
-				rebelSessionFactory(wac);
-			}
-		}
+        /** 需要动态刷新WebContext的SessionFactoryBean（基于jrebel） */
+        if (value == null) {
+            Map<Object, Object> map = TransactionSynchronizationManager.getResourceMap();
+            if (map != null && TransactionSynchronizationManager.getResourceMap().keySet().size() > 0) rebelSessionFactory(wac);
+        }
 
-		return super.currentSession();
-	}
+        return super.currentSession();
+    }
 
-	/**
-	 * 重装载 Hibernate SessionFactory上下文
-	 * 
-	 * @version 1.0
-	 */
-	private void rebelSessionFactory(WebApplicationContext wac) {
-		// 绑定到线程
-		bindNewSessionHolder();
+    /**
+     * 重装载 Hibernate SessionFactory上下文
+     */
+    private void rebelSessionFactory(WebApplicationContext wac) {
+        // 绑定到线程
+        bindNewSessionHolder();
 
 		/* 刷新context，更新sessionFactory中的最新记录 */
-		try {
+        try {
 
-			if (wac != null) {
-				String beanName = OpenSessionInViewFilter.DEFAULT_SESSION_FACTORY_BEAN_NAME;
-				SessionFactory currentSessionFactory = wac.getBean(beanName, SessionFactory.class);
-				if (currentSessionFactory != sessionFactory) {
+            if (wac != null) {
+                String beanName = OpenSessionInViewFilter.DEFAULT_SESSION_FACTORY_BEAN_NAME;
+                SessionFactory currentSessionFactory = wac.getBean(beanName, SessionFactory.class);
+                if (currentSessionFactory != sessionFactory) {
 
-					DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) wac
-							.getAutowireCapableBeanFactory();
-					if (beanFactory.containsBeanDefinition(beanName)) {
-						beanFactory.removeBeanDefinition(beanName);
-					}
-					if (beanFactory.containsBean(beanName)) {
-						beanFactory.destroySingleton(beanName);
-					}
+                    DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) wac
+                            .getAutowireCapableBeanFactory();
+                    if (beanFactory.containsBeanDefinition(beanName)) {
+                        beanFactory.removeBeanDefinition(beanName);
+                    }
+                    if (beanFactory.containsBean(beanName)) {
+                        beanFactory.destroySingleton(beanName);
+                    }
 
-					((SingletonBeanRegistry) beanFactory).registerSingleton(beanName, this.sessionFactory);
-				}
-			}
-		} catch (Exception e) {
-			logger.error("刷新webcontext报错", e);
-			logger.debug("No session");
-		}
-	}
+                    ((SingletonBeanRegistry) beanFactory).registerSingleton(beanName, this.sessionFactory);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("刷新webcontext报错", e);
+            logger.debug("No session");
+        }
+    }
 
-	public void bindNewSessionHolder() {
-		Session session = sessionFactory.openSession();
-		session.setFlushMode(FlushMode.AUTO);
-		SessionHolder sessionHolder = new SessionHolder(session);
-		TransactionSynchronizationManager.bindResource(sessionFactory, sessionHolder);
-	}
+    public void bindNewSessionHolder() {
+        Session session = sessionFactory.openSession();
+        session.setFlushMode(FlushMode.AUTO);
+        SessionHolder sessionHolder = new SessionHolder(session);
+        TransactionSynchronizationManager.bindResource(sessionFactory, sessionHolder);
+    }
 }

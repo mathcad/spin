@@ -443,15 +443,13 @@ public abstract class ObjectUtils {
     //---------------------------------------------------------------------
 
     /**
-     * Determine if the given objects are equal, returning {@code true}
-     * if both are {@code null} or {@code false} if only one is
-     * {@code null}.
-     * <p>Compares arrays with {@code Arrays.equals}, performing an equality
-     * check based on the array elements rather than the array reference.
+     * 对{@code null}安全的equals方法
+     * <p>如果两个对象相等或均为{@code null}，或都是false，或equals，返回{@code true}</p>
+     * <p>通过Arrays.equals判断数组是否相等（基于数组元素的比较）</p>
      *
-     * @param o1 first Object to compare
-     * @param o2 second Object to compare
-     * @return whether the given objects are equal
+     * @param o1 第一个待比较对象
+     * @param o2 第二个待比较对象
+     * @return 两个对象是否相等
      * @see Arrays#equals
      */
     public static boolean nullSafeEquals(Object o1, Object o2) {
