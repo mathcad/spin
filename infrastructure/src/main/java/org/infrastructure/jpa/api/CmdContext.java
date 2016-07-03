@@ -22,19 +22,19 @@ import java.util.Map;
  */
 @Component
 public class CmdContext implements ApplicationContextAware {
-    static Logger logger = LoggerFactory.getLogger(CmdContext.class);
+    private static final Logger logger = LoggerFactory.getLogger(CmdContext.class);
 
     @Autowired
-    protected SessionManager sessionMgr;
+    private SessionManager sessionMgr;
 
     @Autowired
-    LocalSessionFactoryBean sessFactory;
+    private LocalSessionFactoryBean sessFactory;
 
-    public Map<String, ARepository> repoMap = new HashMap<String, ARepository>();
+    private Map<String, ARepository> repoMap = new HashMap<>();
 
     private static ApplicationContext applicationContext; // Spring应用上下文环境
 
-    /*
+    /**
      * 实现了ApplicationContextAware 接口，必须实现该方法；
      * 通过传递applicationContext参数初始化成员变量applicationContext
      */
@@ -43,64 +43,16 @@ public class CmdContext implements ApplicationContextAware {
         CmdContext.applicationContext = applicationContext;
     }
 
-    public static ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
-
     /**
      * 返回自动装配的对象仓储
-     *
-     * @param cls
-     * @return
      */
-    public ARepository getRepo(Class cls) {
+    public <T> ARepository<T, Long> getRepo(Class<T> cls) {
         try {
             return this.getRepo(cls.getName());
         } catch (BeansException | ClassNotFoundException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return null;
-    }
-
-    /**
-     * 获得对象
-     *
-     * @param cls
-     * @param key
-     * @return
-     */
-    public Object getEntity(Class cls, Long key) {
-        return this.getRepo(cls).get(key);
-    }
-
-    /**
-     * 获得对象
-     *
-     * @param cls
-     * @param key
-     * @return
-     */
-    public Object getEntity(Class cls, Long key, int depth) {
-        try {
-            return this.getRepo(cls).get(key, depth);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * 获得对象
-     *
-     * @param cls
-     * @param key
-     * @return 已持久化的实体
-     */
-    public <T> T saveEntity(T en) {
-        Class cls = en.getClass();
-        this.getRepo(cls).save(en);
-        return en;
     }
 
     /**
@@ -110,7 +62,7 @@ public class CmdContext implements ApplicationContextAware {
      * @throws ClassNotFoundException
      */
     @SuppressWarnings("unchecked")
-    public ARepository getRepo(String cls) throws BeansException, ClassNotFoundException {
+    public <T> ARepository<T, Long> getRepo(String cls) throws BeansException, ClassNotFoundException {
         ARepository repo = null;
 
         String repoKey = cls + "Repository";
@@ -155,4 +107,43 @@ public class CmdContext implements ApplicationContextAware {
         return repoMap.get(repoKey);
     }
 
+    /**
+     * 获得实体对象
+     *
+     * @param cls Dao类Class
+     * @param key 主键
+     * @return 实体对象
+     */
+    public <T> T getEntity(Class<T> cls, Long key) {
+        return this.getRepo(cls).get(key);
+    }
+
+    /**
+     * 获得对象
+     *
+     * @param cls Dao类Class
+     * @param key 主键
+     * @return 实体对象
+     */
+    public <T> T getEntity(Class<T> cls, Long key, int depth) {
+        try {
+            return this.getRepo(cls).get(key, depth);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * 获得对象
+     *
+     * @param en 实体
+     * @return 已持久化的实体
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T saveEntity(T en) {
+        Class<T> cls = (Class<T>) en.getClass();
+        this.getRepo(cls).save(en);
+        return en;
+    }
 }

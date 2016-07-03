@@ -58,11 +58,12 @@ import java.util.Stack;
 
 /**
  * 通用数据访问层代码
- * 支持：
+ * <p>所有的Dao均继承此类。支持：
+ * <pre>
  * 1、基于Jpa的Repository
  * 2、基于JdbcTemplate和NamedJdbcTemplate的运用
  * 3、基于FreeMaker模板引擎的SqlMap，可配置的动态Sql访问类型
- *
+ *</pre>
  * @author xuweinan
  * @version V1.0
  */
@@ -455,6 +456,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      * @param pr 分页请求
      * @return Page列表
      */
+    @SuppressWarnings("unchecked")
     public Page<T> find(DetachedCriteria dc, PageRequest pr, Order... orders) {
         Page<T> page = null;
         List<T> list = null;

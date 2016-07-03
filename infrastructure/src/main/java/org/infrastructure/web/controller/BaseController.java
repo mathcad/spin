@@ -3,10 +3,12 @@ package org.infrastructure.web.controller;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
 import org.infrastructure.jpa.api.CmdContext;
 import org.infrastructure.jpa.api.CmdParser;
-import org.infrastructure.jpa.api.QParamHandler;
 import org.infrastructure.jpa.api.QueryParam;
+import org.infrastructure.jpa.api.QueryParamHandler;
 import org.infrastructure.jpa.core.ARepository;
 import org.infrastructure.jpa.dto.Page;
 import org.infrastructure.shiro.SessionManager;
@@ -17,14 +19,12 @@ import org.infrastructure.web.view.GsonView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Spring MVC基础Action 封装了日期等 Restfull 格式化 Gson 实体转换
@@ -32,11 +32,7 @@ import java.util.Map;
  * @author xuweinan
  */
 public class BaseController {
-
-    private static Logger logger = LoggerFactory.getLogger(BaseController.class);
-
-    public static Type GTYPE_LIST_MAP = new TypeToken<List<Map>>() {
-    }.getType();
+    private static final Logger logger = LoggerFactory.getLogger(BaseController.class);
 
     private Gson _gson = null;
 
@@ -53,6 +49,7 @@ public class BaseController {
     @Autowired
     protected SessionManager sessMgr;
 
+    @Autowired
     protected CmdContext cmdContext;
 
     protected CmdParser cmdParser;
@@ -60,8 +57,6 @@ public class BaseController {
     /**
      * 输出utf-8编码的html内容
      *
-     * @param responseContent
-     * @param response
      * @throws IOException
      */
     protected void renderHtml(String responseContent, HttpServletResponse response) throws IOException {
@@ -72,14 +67,12 @@ public class BaseController {
     /**
      * 用 text/html 的方式来输出 json
      *
-     * @param json     需要序列化对象
-     * @param response
-     * @return
+     * @param json 需要序列化对象
      */
     protected String renderJsonAsHtml(Object json, HttpServletResponse response) {
 
         try {
-            if (json instanceof String == false) {
+            if (!(json instanceof String)) {
                 json = getGson().toJson(json);
             }
             response.setContentType("text/html");
@@ -95,15 +88,11 @@ public class BaseController {
 
     /**
      * 从 post的Json参数中获取到待更新的实体类
-     *
-     * @param enCls
-     * @return
      */
     public Object getEntityFromJson(Class enCls) {
         String json = this.sessMgr.getRequest().getParameter("json");
         try {
-            Object en = this.getGson().fromJson(json, enCls);
-            return en;
+            return this.getGson().fromJson(json, enCls);
         } catch (Exception ex) {
             logger.error("实体Json转换错误:\n" + json);
             throw new BizException("提交的Json数据转换错误", ex);
@@ -112,16 +101,14 @@ public class BaseController {
 
     /**
      * 从req的q获取p
-     *
-     * @return
      */
     protected QueryParam getQ() {
         String q = this.sessMgr.getRequest().getParameter("q");
-        QueryParam p = this.getGson().fromJson(q, MetaController.TYPE_QPARAM);
+        QueryParam p = this.getGson().fromJson(q, QueryParam.class);
 
-        //全局屏蔽头尾空格占位 add by zx 2016-6-17
-        for (Object k : p.q.keySet()) {
-            String qv = p.q.get(k) == null ? null : p.q.get(k).toString();
+        //全局屏蔽头尾空格占位
+        for (String k : p.q.keySet()) {
+            String qv = p.q.get(k) == null ? null : p.q.get(k);
             p.q.put(k, StringUtils.trimWhitespace(qv));
         }
         return p;
@@ -132,13 +119,12 @@ public class BaseController {
      *
      * @param repo     实体仓储
      * @param handlers 自定义查询类
-     * @return
      */
-    public Page findByQ(ARepository repo, QParamHandler... handlers) {
+    public Page findByQ(ARepository repo, QueryParamHandler... handlers) {
         String q = this.sessMgr.getRequest().getParameter("q");
-        QueryParam p = this.getGson().fromJson(q, MetaController.TYPE_QPARAM);
+        QueryParam p = this.getGson().fromJson(q, QueryParam.class);
         try {
-            return MetaController.listByQ(cmdParser, p, repo, handlers);
+            return listByQ(cmdParser, p, repo, handlers);
         } catch (Exception e) {
             throw new BizException("rest查询出错", e);
         }
@@ -148,7 +134,6 @@ public class BaseController {
      * 从Json转换到 grid实体
      *
      * @param columns json字符串
-     * @return
      * @throws Exception
      */
     protected ExcelExtGrid toExcelExtGrid(String columns) throws Exception {
@@ -165,8 +150,6 @@ public class BaseController {
 
     /**
      * 得到当前会话
-     *
-     * @return
      */
     public HttpSession getSession() {
         return this.sessMgr.getRequest().getSession();
@@ -174,12 +157,36 @@ public class BaseController {
 
     /**
      * 获取请求参数
-     *
-     * @param name
-     * @return
      */
     public String getParam(String name) {
         return sessMgr.getRequest().getParameter(name);
     }
 
+    /**
+     * 执行实体带fields投影的查询
+     *
+     * @param cmdParser sql解析器实例
+     * @param p         通用查询参数
+     * @param repo      Dao
+     * @param handlers  自定义查询类
+     * @return 查询结果
+     * @throws Exception
+     */
+    public static Page listByQ(CmdParser cmdParser, QueryParam p, ARepository repo, QueryParamHandler... handlers) throws Exception {
+        CmdParser.DetachedCriteriaResult dr = cmdParser.parseDetachedCriteria(p, handlers);
+        DetachedCriteria dc = dr.dc;
+        int page = p.start / p.limit;
+        int pagesize = p.limit;
+        PageRequest pr = new PageRequest(page, pagesize);
+        Order[] orders = cmdParser.parseOrders(p);
+
+        Page result = null;
+        if (p.fields == null || p.fields.size() == 0) {
+            // 实体列表查询，不推荐（性能低下）
+            result = repo.find(dc, pr, orders);
+        } else {
+            result = repo.findByFields(p.fields, dr, pr, orders);
+        }
+        return result;
+    }
 }

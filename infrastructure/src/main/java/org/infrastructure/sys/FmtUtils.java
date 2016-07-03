@@ -70,7 +70,7 @@ public class FmtUtils {
      *
      * @param tplt   模板字符串参数{0},参数2{1}
      * @param params 格式化参数数值
-     * @return
+     * @return 格式化后的消息
      */
     public static String format(String tplt, Object... params) {
         String rslt = tplt;

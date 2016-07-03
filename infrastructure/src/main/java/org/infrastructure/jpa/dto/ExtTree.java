@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.infrastructure.sys.MatcherUtils;
+import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,6 +120,38 @@ public class ExtTree implements Serializable {
 				find(node, prop, value);
 		}
 		return result;
+	}
+
+	/**
+	 * 遍历树，查找节点
+	 *
+	 * @param prop 属性
+	 * @param pattern 正则表达式
+	 * @return
+	 */
+	public ExtTreeNode findWithPattern(String prop,String pattern){
+		result =null;
+		for(ExtTreeNode node : this.getRoots()){
+			if(result == null)
+				findWithPatternStr(node,prop,pattern);
+		}
+		return result;
+	}
+
+	void findWithPatternStr(ExtTreeNode root,String prop,String pattern){
+
+		Object propNode = root.get(prop);
+
+		if(propNode !=null && StringUtils.isNotEmpty(pattern) && MatcherUtils.isMatch(pattern, root.get(prop).toString())){
+			result = root;
+			return;
+		}
+
+		if(root.getChildren() !=null){
+			for(ExtTreeNode node : root.getChildren()){
+				findWithPatternStr(node,prop,pattern);
+			}
+		}
 	}
 
 	ExtTreeNode result = null;

@@ -7,19 +7,18 @@ import org.hibernate.criterion.DetachedCriteria;
  *
  * @author xuweinan
  */
-public abstract class QParamHandler {
-
-    public QParamHandler(String field) {
+public abstract class QueryParamHandler {
+    public QueryParamHandler(String field) {
         this.field = field;
     }
 
     public String field;
 
     /**
-     * 自定义查询条件
+     * 处理自定义查询条件
      *
      * @param dc  离线查询条件
      * @param val 参数值
      */
-    public abstract void appendCriteria(DetachedCriteria dc, String val);
+    public abstract void processCriteria(DetachedCriteria dc, String val);
 }

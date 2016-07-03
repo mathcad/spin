@@ -1,14 +1,7 @@
 package org.infrastructure.web.controller;
 
-import java.lang.reflect.Type;
-
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
-import org.infrastructure.jpa.api.CmdContext;
 import org.infrastructure.jpa.api.CmdParser;
-import org.infrastructure.jpa.api.CmdParser.DetachedCriteriaResult;
 import org.infrastructure.jpa.api.QueryParam;
-import org.infrastructure.jpa.api.QParamHandler;
 import org.infrastructure.jpa.core.ARepository;
 import org.infrastructure.jpa.dto.Page;
 import org.infrastructure.sys.ElUtils;
@@ -20,14 +13,11 @@ import org.infrastructure.web.view.ModelGsonView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-
-import com.google.gson.reflect.TypeToken;
 
 /**
  * 提供直接操控元数据的接口
@@ -37,21 +27,11 @@ import com.google.gson.reflect.TypeToken;
  * @author xuweinan
  */
 public abstract class MetaController extends BaseController {
-    static Logger logger = LoggerFactory.getLogger(MetaController.class);
-
-    public static final Type TYPE_QPARAM = new TypeToken<QueryParam<String>>() {
-    }.getType();
-
-    @Autowired
-    CmdContext cmdContext;
+    private static final Logger logger = LoggerFactory.getLogger(MetaController.class);
 
     @Autowired
     CmdParser cmdParser;
 
-    /**
-     * @param q
-     * @return
-     */
     @RequestMapping("get")
     public ModelGsonView get(@RequestParam String cls, @RequestParam Long id,
                              @RequestParam(defaultValue = "1", required = false) Integer depth,
@@ -71,10 +51,6 @@ public abstract class MetaController extends BaseController {
         return mv;
     }
 
-    /**
-     * @param q
-     * @return
-     */
     @RequestMapping("list")
     public ModelGsonView list(String q) {
         ModelGsonView mv = new ModelGsonView();
@@ -82,7 +58,7 @@ public abstract class MetaController extends BaseController {
             if (StringUtils.isEmpty(q))
                 throw new BizException("空查询无法执行");
 
-            QueryParam p = this.getGson().fromJson(q, TYPE_QPARAM);
+            QueryParam p = this.getGson().fromJson(q, QueryParam.class);
             ARepository repo = cmdContext.getRepo(p.cls);
             Page result = listByQ(cmdParser, p, repo);
             mv.ok(result);
@@ -96,40 +72,10 @@ public abstract class MetaController extends BaseController {
     }
 
     /**
-     * 执行实体带fields投影的查询
-     *
-     * @param cmdParser
-     * @param p
-     * @param repo
-     * @param handlers  自定义查询类
-     * @return
-     * @throws Exception
-     */
-    public static Page listByQ(CmdParser cmdParser, QueryParam p, ARepository repo, QParamHandler... handlers)
-            throws Exception {
-        DetachedCriteriaResult dr = cmdParser.getDetachedCriteria(p, handlers);
-        DetachedCriteria dc = dr.dc;
-        int page = p.start / p.limit;
-        int pagesize = p.limit;
-        PageRequest pr = new PageRequest(page, pagesize);
-        Order[] orders = cmdParser.getOrders(p);
-
-        Page result = null;
-        if (p.fields == null || p.fields.size() == 0) {
-            // 实体列表查询，不推荐（性能低下）
-            result = repo.find(dc, pr, orders);
-        } else {
-            result = repo.findByFields(p.fields, dr, pr, orders);
-        }
-        return result;
-    }
-
-    /**
      * @param json exp: {name:'123123',createData:'2014-02-10 21:00:00'}
-     * @return
      */
     @RequestMapping("save")
-    @Transactional(readOnly = false)
+    @Transactional()
     public ModelGsonView save(String cls, String json) {
         ModelGsonView mv = new ModelGsonView();
         try {
@@ -145,13 +91,13 @@ public abstract class MetaController extends BaseController {
     }
 
     @RequestMapping("delete")
-    @Transactional(readOnly = false)
+    @Transactional()
     public ModelGsonView delete(String cls, Long[] id) {
         ModelGsonView mv = new ModelGsonView();
         try {
             Class clz = Class.forName(cls);
             for (Long mid : id) {
-                Object m = this.cmdContext.getRepo(cls).get(mid.longValue());
+                Object m = this.cmdContext.getRepo(cls).get(mid);
                 this.cmdContext.getRepo(cls).delete(m);
             }
             mv.ok();
@@ -166,7 +112,7 @@ public abstract class MetaController extends BaseController {
     public ModelAndView export(String q, String columns) {
         try {
             ExcelExtGrid grid = this.toExcelExtGrid(columns);
-            QueryParam qp = this.getGson().fromJson(q, TYPE_QPARAM);
+            QueryParam qp = this.getGson().fromJson(q, QueryParam.class);
             ARepository repo = cmdContext.getRepo(qp.cls);
             Page pg = listByQ(cmdParser, qp, repo);
             return new ModelAndView(new ExcelExportView(grid, pg.data));

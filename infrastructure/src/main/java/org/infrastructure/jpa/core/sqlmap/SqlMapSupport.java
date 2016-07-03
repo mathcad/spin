@@ -88,7 +88,7 @@ public class SqlMapSupport {
      * @param paramMap 参数map
      * @return 查询结果
      */
-    public List<Map<String, Object>> findList(String cmd, Map<String, Object> paramMap) {
+    public List<Map<String, Object>> findList(String cmd, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSql(cmd, paramMap);
         try {
             return this.nameJt.queryForList(sqlTxt, paramMap);
@@ -132,8 +132,7 @@ public class SqlMapSupport {
      * @param paramMap 参数
      * @return 影响条目
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public int execute(String cmd, Map paramMap) {
+    public int execute(String cmd, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSql(cmd, paramMap);
         return this.nameJt.update(sqlTxt, paramMap);
     }
@@ -145,7 +144,7 @@ public class SqlMapSupport {
      * @param qp  查询参数
      * @return 分页查询结果
      */
-    public Page<Map<String, Object>> findPage(String cmd, QueryParam<String> qp) {
+    public Page<Map<String, Object>> findPage(String cmd, QueryParam qp) {
         String sqlTxt = loader.getSql(cmd, qp.q);
         String sortInfo = parseOrder(qp);
         // 替换排序为自定义
@@ -164,7 +163,7 @@ public class SqlMapSupport {
         SqlParameterSource params = new MapSqlParameterSource(qp.q);
         Number number = this.nameJt.queryForObject(totalSqlTxt, params, Long.class);
         Long total = (number != null ? number.longValue() : 0);
-        return new Page<Map<String, Object>>(list, total);
+        return new Page<>(list, total);
     }
 
     private String removeLastOrderBy(String sql) {
@@ -183,8 +182,8 @@ public class SqlMapSupport {
         return sql;
     }
 
-    private String parseOrder(QueryParam<?> p) {
-        List<String> orders = new ArrayList<String>();
+    private String parseOrder(QueryParam p) {
+        List<String> orders = new ArrayList<>();
 
         if (StringUtils.isNotEmpty(p.sort)) {
             for (String s : p.sort.split(",")) {
