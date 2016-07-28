@@ -67,7 +67,7 @@ public abstract class ClassUtils {
 	 * Maps primitive <code>Class</code>es to their corresponding wrapper
 	 * <code>Class</code>.
 	 */
-	private static final Map<Class<?>, Class<?>> primitiveWrapperMap = new HashMap<Class<?>, Class<?>>();
+	private static final Map<Class<?>, Class<?>> primitiveWrapperMap = new HashMap<>();
 	static {
 		primitiveWrapperMap.put(Boolean.TYPE, Boolean.class);
 		primitiveWrapperMap.put(Byte.TYPE, Byte.class);
@@ -83,7 +83,7 @@ public abstract class ClassUtils {
 	/**
 	 * Maps wrapper <code>Class</code>es to their corresponding primitive types.
 	 */
-	private static final Map<Class<?>, Class<?>> wrapperPrimitiveMap = new HashMap<Class<?>, Class<?>>();
+	private static final Map<Class<?>, Class<?>> wrapperPrimitiveMap = new HashMap<>();
 	static {
 		for (Iterator<Class<?>> it = primitiveWrapperMap.keySet().iterator(); it.hasNext();) {
 			Class<?> primitiveClass = it.next();
@@ -98,13 +98,13 @@ public abstract class ClassUtils {
 	 * Maps a primitive class name to its corresponding abbreviation used in
 	 * array class names.
 	 */
-	private static final Map<String, String> abbreviationMap = new HashMap<String, String>();
+	private static final Map<String, String> abbreviationMap = new HashMap<>();
 
 	/**
 	 * Maps an abbreviation used in array class names to corresponding primitive
 	 * class name.
 	 */
-	private static final Map<String, String> reverseAbbreviationMap = new HashMap<String, String>();
+	private static final Map<String, String> reverseAbbreviationMap = new HashMap<>();
 
 	/**
 	 * Add primitive type abbreviation to maps of abbreviations.
@@ -119,7 +119,7 @@ public abstract class ClassUtils {
 		reverseAbbreviationMap.put(abbreviation, primitive);
 	}
 
-	/**
+	/*
 	 * Feed abbreviation maps
 	 */
 	static {
@@ -158,7 +158,7 @@ public abstract class ClassUtils {
 	 */
 	public static Map<String, Object> getFieldValue(Object target, String... fields) {
 		Class<?> clazz = target.getClass();
-		Map<String, Object> result = new HashMap<String, Object>();
+		Map<String, Object> result = new HashMap<>();
 		List<String> fieldNames;
 		if (fields.length < 1) {
 			String[] tmp = { "_value" };
@@ -246,7 +246,7 @@ public abstract class ClassUtils {
 			return StringUtils.EMPTY;
 		}
 
-		StringBuffer arrayPrefix = new StringBuffer();
+		StringBuilder arrayPrefix = new StringBuilder();
 
 		// Handle array encoding
 		if (className.startsWith("[")) {
@@ -261,7 +261,7 @@ public abstract class ClassUtils {
 		}
 
 		if (reverseAbbreviationMap.containsKey(className)) {
-			className = (String) reverseAbbreviationMap.get(className);
+			className = reverseAbbreviationMap.get(className);
 		}
 
 		int lastDotIdx = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
@@ -364,7 +364,7 @@ public abstract class ClassUtils {
 		if (cls == null) {
 			return null;
 		}
-		List<Class<?>> classes = new ArrayList<Class<?>>();
+		List<Class<?>> classes = new ArrayList<>();
 		Class<?> superclass = cls.getSuperclass();
 		while (superclass != null) {
 			classes.add(superclass);
@@ -396,7 +396,7 @@ public abstract class ClassUtils {
 			return null;
 		}
 
-		List<Class<?>> interfacesFound = new ArrayList<Class<?>>();
+		List<Class<?>> interfacesFound = new ArrayList<>();
 		getAllInterfaces(cls, interfacesFound);
 
 		return interfacesFound;
@@ -439,7 +439,7 @@ public abstract class ClassUtils {
 		if (classNames == null) {
 			return null;
 		}
-		List<Class<?>> classes = new ArrayList<Class<?>>(classNames.size());
+		List<Class<?>> classes = new ArrayList<>(classNames.size());
 		for (Iterator<?> it = classNames.iterator(); it.hasNext();) {
 			String className = (String) it.next();
 			try {
@@ -474,7 +474,7 @@ public abstract class ClassUtils {
 		if (classes == null) {
 			return null;
 		}
-		List<String> classNames = new ArrayList<String>(classes.size());
+		List<String> classNames = new ArrayList<>(classes.size());
 		for (Iterator<Class<?>> it = classes.iterator(); it.hasNext();) {
 			Class<?> cls = it.next();
 			if (cls == null) {
@@ -597,7 +597,7 @@ public abstract class ClassUtils {
 			return true;
 		}
 		if (cls.isPrimitive()) {
-			if (toClass.isPrimitive() == false) {
+			if (!toClass.isPrimitive()) {
 				return false;
 			}
 			if (Integer.TYPE.equals(cls)) {
@@ -765,10 +765,7 @@ public abstract class ClassUtils {
 	 *         class, false if not or <code>null</code>
 	 */
 	public static boolean isInnerClass(Class<?> cls) {
-		if (cls == null) {
-			return false;
-		}
-		return cls.getName().indexOf(INNER_CLASS_SEPARATOR_CHAR) >= 0;
+		return cls != null && cls.getName().indexOf(INNER_CLASS_SEPARATOR_CHAR) >= 0;
 	}
 
 	// Class loading
@@ -872,12 +869,12 @@ public abstract class ClassUtils {
 		if (className == null) {
 			throw new NullArgumentException("className");
 		} else if (className.endsWith("[]")) {
-			StringBuffer classNameBuffer = new StringBuffer();
+			StringBuilder classNameBuffer = new StringBuilder();
 			while (className.endsWith("[]")) {
 				className = className.substring(0, className.length() - 2);
 				classNameBuffer.append("[");
 			}
-			String abbreviation = (String) abbreviationMap.get(className);
+			String abbreviation = abbreviationMap.get(className);
 			if (abbreviation != null) {
 				classNameBuffer.append(abbreviation);
 			} else {
@@ -1051,10 +1048,10 @@ public abstract class ClassUtils {
 							className.endsWith(";") ? className.length() - 1 : className.length());
 				} else {
 					if (className.length() > 0) {
-						className = (String) reverseAbbreviationMap.get(className.substring(0, 1));
+						className = reverseAbbreviationMap.get(className.substring(0, 1));
 					}
 				}
-				StringBuffer canonicalClassNameBuffer = new StringBuffer(className);
+				StringBuilder canonicalClassNameBuffer = new StringBuilder(className);
 				for (int i = 0; i < dim; i++) {
 					canonicalClassNameBuffer.append("[]");
 				}

@@ -63,7 +63,8 @@ import java.util.Stack;
  * 1、基于Jpa的Repository
  * 2、基于JdbcTemplate和NamedJdbcTemplate的运用
  * 3、基于FreeMaker模板引擎的SqlMap，可配置的动态Sql访问类型
- *</pre>
+ * </pre>
+ *
  * @author xuweinan
  * @version V1.0
  */
@@ -80,7 +81,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
 
     protected LocalSessionFactoryBean sessFactory;
 
-    protected static ThreadLocal<Stack<Session>> currentThreadSession = new ThreadLocal<Stack<Session>>() {
+    protected static ThreadLocal<Stack<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Stack<Session>>() {
     };
 
     @SuppressWarnings("unchecked")
@@ -96,7 +97,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     private Session peekThreadSession() {
-        Stack<Session> sessStack = currentThreadSession.get();
+        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
         if (sessStack != null && !sessStack.empty()) {
             return sessStack.peek();
         }
@@ -104,23 +105,23 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     private void pushTreadSession(Session session) {
-        Stack<Session> sessStack = currentThreadSession.get();
+        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
         if (sessStack == null) {
             sessStack = new Stack<>();
-            currentThreadSession.set(sessStack);
+            THREADLOCAL_SESSIONS.set(sessStack);
         }
         sessStack.push(session);
     }
 
     private Session popTreadSession() {
         Session session = null;
-        Stack<Session> sessStack = currentThreadSession.get();
+        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
         if (sessStack != null && !sessStack.empty()) {
             session = sessStack.pop();
         }
         if (sessStack == null || sessStack.empty()) {
-            currentThreadSession.remove();
-            logger.info("remove currentThreadSession");
+            THREADLOCAL_SESSIONS.remove();
+            logger.info("remove THREADLOCAL_SESSIONS");
         }
         return session;
     }
@@ -191,7 +192,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     /**
-     * 后台线程专用 打开线程绑定的 session currentThreadSession 事务管理会失效
+     * 后台线程专用 打开线程绑定的 session THREADLOCAL_SESSIONS 事务管理会失效
      *
      * @param requiredNew 强制打开新连接
      */
@@ -217,7 +218,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     /**
-     * 后台线程专用 关闭线程绑定的 session currentThreadSession
+     * 后台线程专用 关闭线程绑定的 session THREADLOCAL_SESSIONS
      */
     public void closeSession() {
         Session session = popTreadSession();

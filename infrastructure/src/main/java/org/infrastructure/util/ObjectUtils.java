@@ -260,10 +260,9 @@ public abstract class ObjectUtils {
     /**
      * 将指定对象具象化(优先)或转换为指定类型
      * <p>1.如果目标类型位于{@code target}的实际类型的的继承树上(上级或同级)，直接转换(具象化)。</p>
-     * <p>
      * <p>2.如果目标类型与{@code target}实际类型没有关系，则判断是否是基本类型之间的转换。<br>
-     * 2.1 如果是，则进行相应转换(可以相容)，如果不相容(如整形转换为byte时的超出范围等),转换失败。<br>
-     * 2.2 如果不是基本类型间互转，转换失败</p>
+     * <i>2.1</i> 如果是，则进行相应转换(可以相容)，如果不相容(如整形转换为byte时的超出范围等),转换失败。<br>
+     * <i>2.2</i> 如果不是基本类型间互转，转换失败</p>
      * <p>3.如果目标类型是{@code String}，则与{@link ObjectUtils#toString(Object)}效果相同。</p>
      * <p>4.如果将{@code null}转换为基本类型，转换失败；否则，将返回{@code null}。</p>
      *
@@ -273,7 +272,7 @@ public abstract class ObjectUtils {
      * @throws ClassCastException 转换失败，抛出异常
      */
     @SuppressWarnings("unchecked")
-    public static <T> T concreteOrParse(Class<T> type, Object target) throws ClassCastException {
+    public static <T> T convert(Class<T> type, Object target) throws ClassCastException {
         if (target != null && (type != null && type.isInstance(target) || ClassUtils.isAssignable(type, target.getClass(), true))) {
             return (T) target;
         } else {
