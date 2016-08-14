@@ -2,21 +2,18 @@ package org.infrastructure.shiro;
 
 /**
  * 在线用户的实体接口
- * 
+ *
  * @author xuweinan
  * @version V1.0
  */
 public interface SessionUser {
+    Long getId();
 
-	public Long getId();
+    String getLoginName();
 
-	public void setId(Long id);
+    String getPassword();
 
-	public String getLoginName();
+    String getRealName();
 
-	public String getPassword();
-
-	public String getRealName();
-
-	public void setSessionId(String sessionId);
+    void setSessionId(String sessionId);
 }

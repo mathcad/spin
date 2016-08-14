@@ -50,7 +50,7 @@ import com.google.gson.reflect.TypeToken;
  * User marry = new User("Marry", "888888", "Female");  
  * userList.add(jack);  
  * userList.add(marry);  
- * Type targetType = new TypeToken<List<User>>(){}.getType();  
+ * Type targetType = new TypeIdentifier<List<User>>(){}.getType();
  * String sUserList1 = JSONUtils.toJson(userList, targetType);  
  * sUserList1 ----> [{"uname":"jack","gender":"Male","sex":"Male"},{"uname":"marry","gender":"Female","sex":"Female"}]  
  * String sUserList2 = JSONUtils.toJson(userList, targetType, false);  
@@ -335,7 +335,7 @@ public class JSONUtil
 	 * @param json
 	 *            给定的 {@code JSON} 字符串。
 	 * @param token
-	 *            {@code com.google.gson.reflect.TypeToken} 的类型指示类对象。
+	 *            {@code com.google.gson.reflect.TypeIdentifier} 的类型指示类对象。
 	 * @param datePattern
 	 *            日期格式模式。
 	 * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
@@ -373,7 +373,7 @@ public class JSONUtil
 	 * @param json
 	 *            给定的 {@code JSON} 字符串。
 	 * @param token
-	 *            {@code com.google.gson.reflect.TypeToken} 的类型指示类对象。
+	 *            {@code com.google.gson.reflect.TypeIdentifier} 的类型指示类对象。
 	 * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
 	 */
 	public static <T> T fromJson(String json, TypeToken<T> token)

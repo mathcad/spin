@@ -1,6 +1,7 @@
 package org.infrastructure.jpa.api;
 
 import org.infrastructure.jpa.core.ARepository;
+import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.shiro.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class CmdContext implements ApplicationContextAware {
     /**
      * 返回自动装配的对象仓储
      */
-    public <T> ARepository<T, Long> getRepo(Class<T> cls) {
+    public <T extends IEntity<Long>> ARepository<T, Long> getRepo(Class<T> cls) {
         try {
             return this.getRepo(cls.getName());
         } catch (BeansException | ClassNotFoundException e) {
@@ -56,13 +57,13 @@ public class CmdContext implements ApplicationContextAware {
     }
 
     /**
-     * 如果系统中已申明了Repo，不再生成
+     * 如果系统中已声明了Repo，不再生成
      *
      * @throws BeansException
      * @throws ClassNotFoundException
      */
     @SuppressWarnings("unchecked")
-    public <T> ARepository<T, Long> getRepo(String cls) throws BeansException, ClassNotFoundException {
+    public <T extends IEntity<Long>> ARepository<T, Long> getRepo(String cls) throws BeansException, ClassNotFoundException {
         ARepository repo = null;
 
         String repoKey = cls + "Repository";
@@ -114,7 +115,7 @@ public class CmdContext implements ApplicationContextAware {
      * @param key 主键
      * @return 实体对象
      */
-    public <T> T getEntity(Class<T> cls, Long key) {
+    public <T extends IEntity<Long>> T getEntity(Class<T> cls, Long key) {
         return this.getRepo(cls).get(key);
     }
 
@@ -125,7 +126,7 @@ public class CmdContext implements ApplicationContextAware {
      * @param key 主键
      * @return 实体对象
      */
-    public <T> T getEntity(Class<T> cls, Long key, int depth) {
+    public <T extends IEntity<Long>> T getEntity(Class<T> cls, Long key, int depth) {
         try {
             return this.getRepo(cls).get(key, depth);
         } catch (Exception e) {
@@ -140,8 +141,8 @@ public class CmdContext implements ApplicationContextAware {
      * @param en 实体
      * @return 已持久化的实体
      */
-    @SuppressWarnings("unchecked")
-    public <T> T saveEntity(T en) {
+    public <T extends IEntity<Long>> T saveEntity(T en) {
+        @SuppressWarnings("unchecked")
         Class<T> cls = (Class<T>) en.getClass();
         this.getRepo(cls).save(en);
         return en;

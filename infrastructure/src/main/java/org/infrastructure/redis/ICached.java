@@ -25,7 +25,7 @@ public interface ICached<V> {
      * @param key
      * @param seconds
      */
-    public void setExpire(final String key,final long seconds);
+    void setExpire(final String key, final long seconds);
 
     /**
      * 存入缓存
@@ -34,7 +34,7 @@ public interface ICached<V> {
      * @param value
      * @version 1.0
      */
-    public void put(final String key, final Object value);
+    void put(final String key, final Object value);
 
     /**
      * 存入对象，并设置期限
@@ -44,7 +44,7 @@ public interface ICached<V> {
      * @param expire
      * @version 1.0
      */
-    public void put(final String key, final Object value, final Long expire);
+    void put(final String key, final Object value, final Long expire);
 
     /**
      * 获取对象
@@ -53,7 +53,7 @@ public interface ICached<V> {
      * @return
      * @version 1.0
      */
-    public Object get(final String key);
+    Object get(final String key);
 
     /**
      * 更新对象
@@ -62,7 +62,7 @@ public interface ICached<V> {
      * @param value
      * @version 1.0
      */
-    public void update(final String key, final Object value);
+    void update(final String key, final Object value);
 
     /**
      * 删除缓存
@@ -71,6 +71,5 @@ public interface ICached<V> {
      * @throws Exception
      * @version 1.0
      */
-    public void deleteCached(String... keys) throws Exception;
-
+    void deleteCached(String... keys) throws Exception;
 }

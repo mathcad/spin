@@ -3,7 +3,7 @@ package org.infrastructure.sys;
 import org.apache.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.internal.PersistentBag;
-import org.infrastructure.jpa.core.AUser;
+import org.infrastructure.jpa.core.GenericUser;
 import org.infrastructure.throwable.BizException;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.ReflectionUtils.FieldCallback;
@@ -106,7 +106,7 @@ public class ElUtils {
                                 List list = new ArrayList();
                                 setMethod.invoke(t, list);
                             }
-                        } else if (f.getType().isAssignableFrom(AUser.class) || f.getType().getAnnotation(Entity.class) != null) {
+                        } else if (f.getType().isAssignableFrom(GenericUser.class) || f.getType().getAnnotation(Entity.class) != null) {
                             /* Entity关联按层次需求来级联copy */
                             if (depth > 0) {
                                 Object d_ = getMethod.invoke(d);

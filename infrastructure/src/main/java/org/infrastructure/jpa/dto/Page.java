@@ -1,5 +1,6 @@
 package org.infrastructure.jpa.dto;
 
+import java.io.Serializable;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlType;
@@ -12,7 +13,7 @@ import javax.xml.bind.annotation.XmlType;
  * @param <T>
  */
 @XmlType(name = "Page")
-public class Page<T> implements java.io.Serializable {
+public class Page<T> implements Serializable {
 	private static final long serialVersionUID = -1433098389717460681L;
 	public List<T> data;
 	public Long total;

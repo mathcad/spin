@@ -1127,4 +1127,8 @@ public abstract class ObjectUtils {
     public static String toString(final Object obj, final String nullStr) {
         return obj == null ? nullStr : obj.toString();
     }
+
+    public static boolean equal(Object a, Object b) {
+        return a == b || (a != null && a.equals(b));
+    }
 }

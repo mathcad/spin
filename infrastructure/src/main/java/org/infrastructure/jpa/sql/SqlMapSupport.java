@@ -1,6 +1,24 @@
-package org.infrastructure.jpa.core.sqlmap;
+/*
+ *  Copyright 2002-2016 the original author or authors.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package org.infrastructure.jpa.sql;
 
 import org.infrastructure.jpa.api.QueryParam;
+import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.jpa.dto.Page;
 import org.infrastructure.throwable.BizException;
 import org.infrastructure.util.HashUtils;
@@ -21,13 +39,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * sqlMap 支撑者
+ * sqlMap 支撑类
+ *
+ * @author xuweinan
+ * @version 1.2
  */
 public class SqlMapSupport {
     private static final Logger logger = LoggerFactory.getLogger(SqlMapSupport.class);
 
     @Autowired
-    private SqlLoader loader;
+    private SQLLoader loader;
 
     private String $sqlName = "$sql";
 
@@ -78,7 +99,7 @@ public class SqlMapSupport {
      * @return sqlmap中的语句
      */
     public String getFromSqlMap(String cmd, Map<String, ?> paramMap) {
-        return loader.getSql(cmd, paramMap);
+        return loader.getSQL(cmd, paramMap).getTemplate();
     }
 
     /**
@@ -89,7 +110,7 @@ public class SqlMapSupport {
      * @return 查询结果
      */
     public List<Map<String, Object>> findList(String cmd, Map<String, ?> paramMap) {
-        String sqlTxt = loader.getSql(cmd, paramMap);
+        String sqlTxt = loader.getSQL(cmd, paramMap).getTemplate();
         try {
             return this.nameJt.queryForList(sqlTxt, paramMap);
         } catch (Exception ex) {
@@ -102,7 +123,7 @@ public class SqlMapSupport {
     /**
      * 查找单行Map
      *
-     * @param cmd 命令名称
+     * @param cmd      命令名称
      * @param paramMap 参数
      */
     public Map<String, Object> findMap(String cmd, Map<String, ?> paramMap) {
@@ -116,11 +137,11 @@ public class SqlMapSupport {
     /**
      * 通过cmd命令查询总数
      *
-     * @param cmd 命令名称
+     * @param cmd      命令名称
      * @param paramMap 参数
      */
     public Long findLong(String cmd, Map<String, ?> paramMap) {
-        String sqlTxt = loader.getSql(cmd, paramMap);
+        String sqlTxt = loader.getSQL(cmd, paramMap).getTemplate();
         Number number = this.nameJt.queryForObject(sqlTxt, paramMap, Long.class);
         return number != null ? number.longValue() : 0;
     }
@@ -133,19 +154,19 @@ public class SqlMapSupport {
      * @return 影响条目
      */
     public int execute(String cmd, Map<String, ?> paramMap) {
-        String sqlTxt = loader.getSql(cmd, paramMap);
+        String sqlTxt = loader.getSQL(cmd, paramMap).getTemplate();
         return this.nameJt.update(sqlTxt, paramMap);
     }
 
     /**
-     * 通过分页查询
+     * 分页查询
      *
      * @param cmd sql模板path
      * @param qp  查询参数
      * @return 分页查询结果
      */
     public Page<Map<String, Object>> findPage(String cmd, QueryParam qp) {
-        String sqlTxt = loader.getSql(cmd, qp.q);
+        String sqlTxt = loader.getSQL(cmd, qp.q).getTemplate();
         String sortInfo = parseOrder(qp);
         // 替换排序为自定义
         if (StringUtils.isNotEmpty(sortInfo)) {
@@ -153,13 +174,12 @@ public class SqlMapSupport {
             sqlTxt = sqlTxt + sortInfo;
         }
 
-        String pageSqlTxt = loader.getSql($sqlName + "." + "findPage",
-                HashUtils.getMap("sqlTxt", sqlTxt, "start", qp.start, "limit", qp.limit));
+        String pageSqlTxt = loader.getSQL($sqlName + "." + "findPage", HashUtils.getMap("sqlTxt", sqlTxt, "start", qp.start, "limit", qp.limit)).getTemplate();
 
         List<Map<String, Object>> list = nameJt.queryForList(pageSqlTxt, qp.q);
 
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = loader.getSql($sqlName + "." + "findTotal", HashUtils.getMap("sqlTxt", sqlTxt));
+        String totalSqlTxt = loader.getSQL($sqlName + "." + "findTotal", HashUtils.getMap("sqlTxt", sqlTxt)).getTemplate();
         SqlParameterSource params = new MapSqlParameterSource(qp.q);
         Number number = this.nameJt.queryForObject(totalSqlTxt, params, Long.class);
         Long total = (number != null ? number.longValue() : 0);
@@ -169,7 +189,7 @@ public class SqlMapSupport {
     private String removeLastOrderBy(String sql) {
         int sortStart = -1;
         int sortEnd = 0;
-        String patter = "(order\\s+by[^\\)]+)";
+        String patter = "(order\\s+by[^)]+)";
         Pattern p = Pattern.compile(patter, Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(sql);
         while (m.find()) {
@@ -184,12 +204,10 @@ public class SqlMapSupport {
 
     private String parseOrder(QueryParam p) {
         List<String> orders = new ArrayList<>();
-
         if (StringUtils.isNotEmpty(p.sort)) {
             for (String s : p.sort.split(",")) {
                 String[] so = s.split("__");
-                String field = so[0];// .indexOf(".")>-1 ? "'" + so[0]+"'" :
-                // so[0];
+                String field = so[0];
                 if (so.length == 1) {
                     orders.add(field + " asc");
                 } else {
@@ -197,19 +215,18 @@ public class SqlMapSupport {
                 }
             }
         }
-
         if (orders.size() > 0) {
             return "order by " + StringUtils.join(orders.toArray(), ",");
         }
-        return null;
+        return StringUtils.EMPTY;
     }
 
     /**
      * 批量更新执行
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     public void batchExec(String cmd, List<Map> argsMap) {
-        String sqlTxt = loader.getSql(cmd, null);
+        String sqlTxt = loader.getSQL(cmd, null).getTemplate();
         this.nameJt.batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
     }
 

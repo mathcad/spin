@@ -41,4 +41,10 @@ public class SimplifiedException extends RuntimeException {
 	public ErrorAndExceptionCode getExceptionType() {
 		return this.exceptionType;
 	}
+
+	@Override
+	public void printStackTrace() {
+		System.err.println(this.exceptionType.getDesc());
+		super.printStackTrace();
+	}
 }

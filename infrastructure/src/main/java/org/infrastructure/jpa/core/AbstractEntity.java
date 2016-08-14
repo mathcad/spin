@@ -12,68 +12,82 @@ import javax.persistence.Version;
 import java.sql.Timestamp;
 
 /**
- * 通用实体类型
+ * 基本实体类型
+ * <p>
+ * 定义了实体的部分通用字段，所有用户实体如无特殊需求，应从此类继承
+ * </p>
  */
 @MappedSuperclass
-public abstract class AbstractEntity implements IEntity {
+public abstract class AbstractEntity implements IEntity<Long> {
     private static final long serialVersionUID = 4497191615275262107L;
 
+    /**
+     * 主键
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    /**
+     * 冗余字段，记录创建者名称
+     */
     @Column(updatable = false)
-    private String createBy;
+    private String createUserName;
 
+    /**
+     * 创建用户，禁止更改
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(updatable = false)
-    private AUser createUser;
+    private GenericUser createUser;
 
-    @Column(name = "create_time", nullable = false, updatable = false)
+    /**
+     * 创建时间，禁止更改
+     */
+    @Column(nullable = false, updatable = false)
     private Timestamp createTime;
 
-    private String lastUpdateBy;
+    /**
+     * 冗余字段，记录更新者名称
+     */
+    @Column
+    private String lastUpdateUserName;
 
+    /**
+     * 最后更新用户
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    private AUser lastUpdateUser;
+    private GenericUser lastUpdateUser;
 
-    @Column(name = "last_update_time", nullable = false)
+    /**
+     * 最后更新时间
+     */
+    @Column(nullable = false)
     private Timestamp lastUpdateTime;
 
+    /**
+     * 排序号
+     */
     @Column(precision = 16, scale = 2)
     private double orderno = 1;
 
     /**
      * 是否有效用于逻辑删除
      */
+    @Column
     private boolean valid = true;
 
+    /**
+     * 版本号用于并发控制
+     */
     @Version
     private int version;
-
-    /**
-     * 创建带Id的引用对象
-     *
-     * @param id 主键
-     */
-    public static <T extends AbstractEntity> T newEntity(Class<T> clazz, Long id) {
-        T entity;
-        try {
-            entity = clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
-            return null;
-        }
-        entity.setId(id);
-        return entity;
-    }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
-
         if (this.getId() == null || obj == null || !(this.getClass().equals(obj.getClass()))) {
             return false;
         }
@@ -86,16 +100,20 @@ public abstract class AbstractEntity implements IEntity {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public String getCreateUserName() {
+        return createUserName;
     }
 
-    public String getCreateBy() {
-        return createBy;
+    public void setCreateUserName(String createUserName) {
+        this.createUserName = createUserName;
     }
 
-    public void setCreateBy(String createBy) {
-        this.createBy = createBy;
+    public GenericUser getCreateUser() {
+        return createUser;
+    }
+
+    public void setCreateUser(GenericUser createUser) {
+        this.createUser = createUser;
     }
 
     public Timestamp getCreateTime() {
@@ -106,12 +124,20 @@ public abstract class AbstractEntity implements IEntity {
         this.createTime = createTime;
     }
 
-    public String getLastUpdateBy() {
-        return lastUpdateBy;
+    public String getLastUpdateUserName() {
+        return lastUpdateUserName;
     }
 
-    public void setLastUpdateBy(String lastUpdateBy) {
-        this.lastUpdateBy = lastUpdateBy;
+    public void setLastUpdateUserName(String lastUpdateUserName) {
+        this.lastUpdateUserName = lastUpdateUserName;
+    }
+
+    public GenericUser getLastUpdateUser() {
+        return lastUpdateUser;
+    }
+
+    public void setLastUpdateUser(GenericUser lastUpdateUser) {
+        this.lastUpdateUser = lastUpdateUser;
     }
 
     public Timestamp getLastUpdateTime() {
@@ -128,22 +154,6 @@ public abstract class AbstractEntity implements IEntity {
 
     public void setOrderno(double orderno) {
         this.orderno = orderno;
-    }
-
-    public AUser getCreateUser() {
-        return createUser;
-    }
-
-    public void setCreateUser(AUser createUser) {
-        this.createUser = createUser;
-    }
-
-    public AUser getLastUpdateUser() {
-        return lastUpdateUser;
-    }
-
-    public void setLastUpdateUser(AUser lastUpdateUser) {
-        this.lastUpdateUser = lastUpdateUser;
     }
 
     public boolean isValid() {

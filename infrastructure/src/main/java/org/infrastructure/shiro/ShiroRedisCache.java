@@ -1,19 +1,9 @@
 package org.infrastructure.shiro;
-//package com.gsh56.infrastructure.shiro;
+
+public class ShiroRedisCache<V> {// implements Cache<String, V>    {
 //
-//import java.util.Collection;
-//import java.util.Set;
-//
-//import org.apache.log4j.Logger;
-//import org.apache.shiro.cache.Cache;
-//import org.apache.shiro.cache.CacheException;
-//
-//import com.gsh56.infrastructure.redis.ICached;
-//
-//public class ShiroRedisCache<V>  implements Cache<String, V>    {
-//	
 //	public Logger logger = Logger.getLogger(ShiroRedisCache.class.getName());
-//	
+//
 //	private String name;
 //	private ICached<V> cached;
 //
@@ -21,7 +11,7 @@ package org.infrastructure.shiro;
 //		this.name=name;
 //		this.cached=cached;
 //	}
-//		
+//
 //	@Override
 //	public V get(String key) throws CacheException {
 //		logger.debug("根据key从Redis中获取对象 key [" + key + "]");
@@ -35,9 +25,9 @@ package org.infrastructure.shiro;
 //		} catch (Throwable t) {
 //			throw new CacheException(t);
 //		}
-//	
+//
 //	}
-//	
+//
 //	@Override
 //	public V put(String key, V value) throws CacheException {
 //		logger.debug("根据key从存储 key [" + key + "]");
@@ -48,7 +38,7 @@ package org.infrastructure.shiro;
 //	            throw new CacheException(t);
 //	        }
 //	}
-//	
+//
 //	@Override
 //	public V remove(String key) throws CacheException {
 //		logger.debug("从redis中删除 key [" + key + "]");
@@ -60,7 +50,7 @@ package org.infrastructure.shiro;
 //	        throw new CacheException(t);
 //	    }
 //	}
-//	
+//
 //	@Override
 //	public void clear() throws CacheException {
 //		logger.debug("从redis中删除所有元素");
@@ -70,7 +60,7 @@ package org.infrastructure.shiro;
 //	        throw new CacheException(t);
 //	    }
 //	}
-//	
+//
 //	@Override
 //	public int size() {
 //		try {
@@ -80,7 +70,7 @@ package org.infrastructure.shiro;
 //	        throw new CacheException(t);
 //	    }
 //	}
-//	
+//
 //	@Override
 //	public Set<String> keys() {
 //		try {
@@ -90,7 +80,7 @@ package org.infrastructure.shiro;
 //	        throw new CacheException(t);
 //	    }
 //	}
-//	
+//
 //	@Override
 //	public Collection<V> values() {
 //		try {
@@ -118,5 +108,5 @@ package org.infrastructure.shiro;
 //	public void setCached(ICached<V> cached) {
 //		this.cached = cached;
 //	}
-//
-//}
+
+}

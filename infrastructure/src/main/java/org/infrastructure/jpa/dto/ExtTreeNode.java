@@ -118,7 +118,7 @@ public class ExtTreeNode extends LinkedHashMap<String, Object> implements Serial
 		if (this.getChildren() == null) {
 			this.setChildren(new ArrayList<ExtTreeNode>());
 		}
-		ExtTree.insertBySort(ObjectUtils.concreteOrParse(List.class, this.get(CHILDREN_KEY)), child);
+		ExtTree.insertBySort(ObjectUtils.convert(List.class, this.get(CHILDREN_KEY)), child);
 		this.put(LEAF_KEY, false);
 
 		if (autoExpanded && this.get(EXPENDED_KEY) == null)

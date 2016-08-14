@@ -19,15 +19,14 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.api.CmdParser.DetachedCriteriaResult;
-import org.infrastructure.jpa.core.sqlmap.SqlMapSupport;
+import org.infrastructure.jpa.sql.SqlMapSupport;
 import org.infrastructure.jpa.dto.Page;
 import org.infrastructure.shiro.SessionManager;
 import org.infrastructure.shiro.SessionUser;
 import org.infrastructure.sys.ElUtils;
-import org.infrastructure.sys.FmtUtils;
 import org.infrastructure.sys.GenericUtils;
 import org.infrastructure.throwable.BizException;
-import org.infrastructure.util.HashUtils;
+import org.infrastructure.util.Assert;
 import org.infrastructure.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -66,10 +65,10 @@ import java.util.Stack;
  * </pre>
  *
  * @author xuweinan
- * @version V1.0
+ * @version V1.1
  */
 @Component
-public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
+public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends SqlMapSupport {
     private static final Log logger = LogFactory.getLog(ARepository.class);
 
     private static HashMap<String, Map<String, Field>> REFER_JOIN_FIELDS = new HashMap<>();
@@ -96,34 +95,31 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         this.entityClazz = entityClass;
     }
 
-    private Session peekThreadSession() {
-        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
-        if (sessStack != null && !sessStack.empty()) {
-            return sessStack.peek();
-        }
-        return null;
+    public Class<T> getEntityClazz() {
+        return entityClazz;
     }
 
-    private void pushTreadSession(Session session) {
-        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
-        if (sessStack == null) {
-            sessStack = new Stack<>();
-            THREADLOCAL_SESSIONS.set(sessStack);
-        }
-        sessStack.push(session);
+    public SessionManager getSessionMgr() {
+        return sessionMgr;
     }
 
-    private Session popTreadSession() {
-        Session session = null;
-        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
-        if (sessStack != null && !sessStack.empty()) {
-            session = sessStack.pop();
-        }
-        if (sessStack == null || sessStack.empty()) {
-            THREADLOCAL_SESSIONS.remove();
-            logger.info("remove THREADLOCAL_SESSIONS");
-        }
-        return session;
+    public void setSessionMgr(SessionManager sessionMgr) {
+        this.sessionMgr = sessionMgr;
+    }
+
+    public LocalSessionFactoryBean getSessFactory() {
+        return sessFactory;
+    }
+
+    /**
+     * 将SessionFactory保存到属性 并根据SessionFactory的数据连接初始化jdbcTemplate的DataSource
+     */
+    @Autowired
+    public void setSessFactory(LocalSessionFactoryBean sessFactory) {
+        this.sessFactory = sessFactory;
+        LocalSessionFactoryBuilder cfg = (LocalSessionFactoryBuilder) sessFactory.getConfiguration();
+        DataSource dataSource = (DataSource) cfg.getProperties().get(Environment.DATASOURCE);
+        super.initDataSource(dataSource);
     }
 
     /**
@@ -233,62 +229,65 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     /**
-     * 保存
+     * 保存,返回保存后的持久态对象
      */
-    public void save(T entity) throws BizException {
+    public T save(T entity) throws BizException {
         try {
-
             if (entity instanceof AbstractEntity) {
                 AbstractEntity aEn = (AbstractEntity) entity;
                 // new Entity
                 SessionUser user = sessionMgr.getCurrentUser();
                 if (aEn.getId() == null) {
                     String createBy = null;
-                    if (StringUtils.isNotEmpty(aEn.getCreateBy()))
-                        createBy = aEn.getCreateBy();
+                    if (StringUtils.isNotEmpty(aEn.getCreateUserName()))
+                        createBy = aEn.getCreateUserName();
                     if (createBy == null && user != null)
                         createBy = StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user.getLoginName();
-                    aEn.setCreateBy(createBy);
+                    aEn.setCreateUserName(createBy);
 
                     if (aEn.getCreateTime() == null)
                         aEn.setCreateTime(new Timestamp(new Date().getTime()));
 
                     if (user != null)
-                        aEn.setCreateUser(AUser.ref(user.getId()));
+                        aEn.setCreateUser(GenericUser.ref(user.getId()));
                 }
 
                 // 追加时间戳
                 Session sess = getSession();
                 if (aEn.getId() == null) {
                     String lastUpdateBy = null;
-                    if (StringUtils.isNotEmpty(aEn.getLastUpdateBy()))
-                        lastUpdateBy = aEn.getCreateBy();
+                    if (StringUtils.isNotEmpty(aEn.getLastUpdateUserName()))
+                        lastUpdateBy = aEn.getCreateUserName();
                     if (lastUpdateBy == null && user != null)
                         lastUpdateBy = StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user.getLoginName();
-                    aEn.setLastUpdateBy(lastUpdateBy);
+                    aEn.setLastUpdateUserName(lastUpdateBy);
 
                     if (aEn.getLastUpdateTime() == null)
                         aEn.setLastUpdateTime(new Timestamp(new Date().getTime()));
 
                     if (user != null)
-                        aEn.setCreateUser(AUser.ref(user.getId()));
+                        aEn.setCreateUser(GenericUser.ref(user.getId()));
                     sess.save(aEn);
                 } else {
-                    aEn.setLastUpdateBy(user == null ? "" : (StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user
+                    aEn.setLastUpdateUserName(user == null ? "" : (StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user
                             .getLoginName()));
                     aEn.setLastUpdateTime(new Timestamp(new Date().getTime()));
                     if (user != null)
-                        aEn.setLastUpdateUser(AUser.ref(user.getId()));
+                        aEn.setLastUpdateUser(GenericUser.ref(user.getId()));
                     sess.update(aEn);
                 }
             } else {
                 Session sess = getSession();
-                sess.saveOrUpdate(entity);
+                if (null == entity.getId())
+                    sess.save(entity);
+                else
+                    sess.update(entity);
             }
         } catch (org.springframework.orm.hibernate4.HibernateOptimisticLockingFailureException ope) {
             logger.error("", ope);
             throw new BizException("实体已经变化，请重置后再编辑");
         }
+        return this.get(entity.getId());
     }
 
     protected void merge(T t) {
@@ -297,7 +296,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     /**
-     * 主键获取对象
+     * 主键获取持久态对象
      */
     public T get(PK k) {
         Session sess = getSession();
@@ -305,7 +304,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     /**
-     * 主键获取对象
+     * 主键获取持久态对象
      */
     public T getWithLock(PK k) {
         Session sess = getSession();
@@ -315,7 +314,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     /**
-     * 主键获取对象的Dto
+     * 主键获取指定深度的属性的瞬态对象
      */
     public T get(PK k, int depth) throws Exception {
         T t = get(k);
@@ -323,11 +322,11 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     /**
-     * 删除实体(物流删除，不可恢复)
+     * 删除实体(物理删除，不可恢复)
      */
     public void delete(T entity) {
-        Session sess = getSession();
-        sess.delete(entity);
+        Assert.notNull(entity, "无法删除引用为null的实体");
+        getSession().delete(entity);
     }
 
     /**
@@ -335,15 +334,13 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      */
     public void delete(PK k) {
         T t = get(k);
-
-        if (t != null)
-            getSession().delete(t);
-        else
-            throw new RuntimeException("未找到实体,或者已经被删除,实体：" + this.entityClazz.getSimpleName() + ",主键:" + k);
+        Assert.notNull(t, "未找到实体,或者已经被删除,实体：" + this.entityClazz.getSimpleName() + ",主键:" + k);
+        getSession().delete(t);
+        getSession().flush();
     }
 
     /**
-     * 批量删除
+     * 批量删除实体(物理删除，不可恢复)
      */
     public void delete(Criterion... cs) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
@@ -354,6 +351,17 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         for (T en : enList) {
             this.delete(en);
         }
+    }
+
+    /**
+     * 批量删除实体(物理删除，不可恢复)
+     */
+    public void delete(String conditions) {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(this.entityClazz.getSimpleName()).append(" ");
+        if (conditions.length() > 0)
+            hql.append("where ").append(conditions);
+        getSession().delete(hql);
     }
 
     @SuppressWarnings("unchecked")
@@ -505,6 +513,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         ct.setFirstResult(0);
         ct.setMaxResults(10000);
         ct.setCacheMode(CacheMode.NORMAL);
+        @SuppressWarnings("unchecked")
         List<T> list = ct.list();
         return list;
     }
@@ -547,9 +556,8 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         ct.setFirstResult(0);
         ct.setMaxResults(10000);
         ct.setCacheMode(CacheMode.NORMAL);
-
+        @SuppressWarnings("unchecked")
         List<T> list = ct.list();
-
         return list;
     }
 
@@ -564,8 +572,9 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
                 q.setParameter(i, args[i]);
             }
         }
-
-        return q.list();
+        @SuppressWarnings("unchecked")
+        List<T> list = q.list();
+        return list;
     }
 
     /**
@@ -594,12 +603,14 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         ct.setFirstResult(0);
         ct.setMaxResults(1);
 
+        @SuppressWarnings("unchecked")
         List<Map> list = ct.list();
+        @SuppressWarnings("unchecked")
         PK pk = list.size() == 1 ? (PK) list.get(0).get(pkf) : null;
         return pk == null ? null : this.get(pk);
     }
 
-    ProjectionList getPropertyProjection(String pkf) {
+    protected ProjectionList getPropertyProjection(String pkf) {
         ProjectionList pj = Projections.projectionList();
         pj.add(Property.forName(pkf), pkf);
         return pj;
@@ -638,6 +649,7 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         ct.setFirstResult(0);
         ct.setMaxResults(1);
 
+        @SuppressWarnings("unchecked")
         List<T> list = ct.list();
         T t = null;
         if (list.size() == 1) {
@@ -769,12 +781,13 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
             ct.setMaxResults(cp.pageRequest.getPageSize());
         }
 
-        List<Map> list = ct.list();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> list = ct.list();
 
         ArrayList<T> enList = new ArrayList<>();
-        /** Map查询后，回填对象 */
-        for (Map map : list) {
-            T t = convertMapToEn(map, referFields);
+        /* Map查询后，回填对象 */
+        for (Map<String, Object> map : list) {
+            T t = convertMapToEn(map);
             enList.add(t);
         }
 
@@ -789,12 +802,10 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
      * 根据条件查询列表
      */
     public List<T> findByArgs(Map<String, Object> map) {
-
         CriteriaParam cp = new CriteriaParam();
         for (String key : map.keySet()) {
             cp.criterions.add(Restrictions.eq(key, map.get(key)));
         }
-
         return list(cp);
     }
 
@@ -827,7 +838,6 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
         // 查询列表数据
         final Map<String, Set<String>> referFields;
         referFields = new HashMap<>();
-        List<Map> list;
         final ProjectionList pj = beforeQueryCriteria(cp, ct, referFields);
 
         ct.setProjection(pj);
@@ -840,12 +850,13 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
             ct.setFirstResult(cp.pageRequest.getOffset());
             ct.setMaxResults(cp.pageRequest.getPageSize());
         }
-        list = ct.list();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> list = ct.list();
 
         ArrayList<T> enList = new ArrayList<>();
-        /** Map查询后，回填对象 */
-        for (Map map : list) {
-            T t = convertMapToEn(map, referFields);
+        /* Map查询后，回填对象 */
+        for (Map<String, Object> map : list) {
+            T t = convertMapToEn(map);
             enList.add(t);
         }
         return enList;
@@ -863,6 +874,8 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
             public void doWith(Field f) throws IllegalArgumentException, IllegalAccessException {
                 ManyToMany m2m = f.getAnnotation(ManyToMany.class);
                 if (m2m != null) {
+                    // TODO: 2016/8/13
+                    System.out.println("");
                 } else {
                     String pjField = f.getName();
                     addProjectionFields(qjoinFields, manyToOneFields, referFields, pj, pjField);
@@ -904,27 +917,30 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
     }
 
     /**
-     * @param map         行对象
-     * @param referFields 引用字段集合
+     * 将Map形式的查询结果转换为实体
+     * <p>
+     * 复合属性，请在语句中指定别名为实体属性的路径。如createUser.id对应createUser的id属性。<br>
+     * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
+     * </p>
+     *
+     * @param entityValues 行对象
+     * @return 返回Transient瞬态的VO
      */
-    T convertMapToEn(Map<String, Object> map, Map<String, Set<String>> referFields) {
+    public T convertMapToEn(Map<String, Object> entityValues) {
         T t = null;
         try {
             t = this.entityClazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e1) {
             e1.printStackTrace();
         }
-
-        for (String key : map.keySet()) {
+        for (String key : entityValues.keySet()) {
             try {
-                Object keyObj = map.get(key);
+                Object keyObj = entityValues.get(key);
                 if (keyObj == null)
                     continue;
-
                 if (key.contains(".")) {
                     // 关联字段，生成关联对象
                     String[] refKeys = key.split("\\.");
-
                     Field refField = ReflectionUtils.findField(this.entityClazz, refKeys[0]);
                     ReflectionUtils.makeAccessible(refField);
                     Object refObj = ReflectionUtils.getField(refField, t);
@@ -949,88 +965,36 @@ public class ARepository<T, PK extends Serializable> extends SqlMapSupport {
                 throw new BizException("转化查询结果到实体错误:" + key, e);
             }
         }
-
         return t;
     }
 
-    /**
-     * 重建TreePath 树形结构实体的集成路径
-     */
-    public void rebuildTreePath(TreePathable<T, PK> t, String tableName) throws Exception {
-        this.getSession().flush();
-
-        if (t.getTreeParent() != null) {
-            T parent = (T) this.get(t.getTreeParent().getTreeNodeId(), 0);
-            t.setTreeParent(parent);
-            logger.info(t.getTreeParent().getTreeNodeId());
-            logger.info(t.getTreeParent().getTreeIdPath());
+    private Session peekThreadSession() {
+        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
+        if (sessStack != null && !sessStack.empty()) {
+            return sessStack.peek();
         }
+        return null;
+    }
 
-        String oldIdPath = t.getTreeIdPath();
-        if (t.getTreeParent() != null) {
-            if (t.getTreeParent().getTreeIdPath() == null)
-                t.setTreeParent(this.get(t.getTreeParent().getTreeNodeId()));
-            t.setTreeIdPath(t.getTreeParent().getTreeIdPath() + t.getTreeNodeId() + ",");
-        } else
-            t.setTreeIdPath(t.getTreeNodeId().toString() + ",");
-
-        //有更换父节点路径，应将所有子节点路径批量更新
-        String newIdPath = t.getTreeIdPath();
-        if (StringUtils.isNotEmpty(oldIdPath) && !oldIdPath.equals(newIdPath)) {
-            String sql = FmtUtils.format("update {tableName} set id_path = REPLACE(id_path,'{oldPath}','{newPath}') where id_path like '{oldPath}%'  and id_path <> '{oldPath}%'",
-                    HashUtils.getMap("oldPath", oldIdPath, "newPath", newIdPath, "tableName", tableName)
-            );
-            super.getJt().update(sql);
+    private void pushTreadSession(Session session) {
+        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
+        if (sessStack == null) {
+            sessStack = new Stack<>();
+            THREADLOCAL_SESSIONS.set(sessStack);
         }
+        sessStack.push(session);
     }
 
-    /**
-     * 查询对象是否已被使用，如果被使用返回异常
-     */
-    public void checkForDelete(String cmd, Long pk) {
-        List<Map<String, Object>> list = this.findList(cmd, HashUtils.getMap("id", pk));
-        if (list.size() > 0) {
-            Map<String, Object> map = list.get(0);
-            Long count = Long.valueOf(map == null || map.get("count") == null ? "0" : map.get("count").toString());
-            if (count > 0) {
-                throw new BizException("已被[" + map.get("name") + "]使用，无法删除");
-            }
+    private Session popTreadSession() {
+        Session session = null;
+        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
+        if (sessStack != null && !sessStack.empty()) {
+            session = sessStack.pop();
         }
+        if (sessStack == null || sessStack.empty()) {
+            THREADLOCAL_SESSIONS.remove();
+            logger.info("remove THREADLOCAL_SESSIONS");
+        }
+        return session;
     }
-
-    public SessionManager getSessionMgr() {
-        return sessionMgr;
-    }
-
-    public void setSessionMgr(SessionManager sessionMgr) {
-        this.sessionMgr = sessionMgr;
-    }
-
-    public LocalSessionFactoryBean getSessFactory() {
-        return sessFactory;
-    }
-
-    @Autowired
-    public void setSessFactory(LocalSessionFactoryBean sessFactory) {
-        initSessionFactory(sessFactory);
-    }
-
-    /**
-     * 将SessionFactory保存到属性 并根据SessionFactory的数据连接初始化jdbcTemplate的DataSource
-     */
-    public void initSessionFactory(LocalSessionFactoryBean sessFactory) {
-        this.sessFactory = sessFactory;
-        LocalSessionFactoryBuilder cfg = (LocalSessionFactoryBuilder) sessFactory.getConfiguration();
-        DataSource dataSource = (DataSource) cfg.getProperties().get(Environment.DATASOURCE);
-        super.initDataSource(dataSource);
-    }
-
-    public Class<T> getEntityClazz() {
-        return entityClazz;
-    }
-
-    public void setEntityClazz(Class<T> entityClazz) {
-        this.entityClazz = entityClazz;
-    }
-
 }

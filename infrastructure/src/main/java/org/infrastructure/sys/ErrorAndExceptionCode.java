@@ -20,7 +20,6 @@ public enum ErrorAndExceptionCode {
         valueStringMapper.put(10, "加密算法执行错误");
         valueStringMapper.put(15, "解密算法执行错误");
         valueStringMapper.put(40, "创建bean实例错误");
-
     }
 
     private int _value;

@@ -3,6 +3,7 @@ package org.infrastructure.web.controller;
 import org.infrastructure.jpa.api.CmdParser;
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.core.ARepository;
+import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.jpa.dto.Page;
 import org.infrastructure.sys.ElUtils;
 import org.infrastructure.throwable.BizException;
@@ -80,7 +81,8 @@ public abstract class MetaController extends BaseController {
         ModelGsonView mv = new ModelGsonView();
         try {
             Class clz = Class.forName(cls);
-            Object m = this.getGson().fromJson(json, clz);
+            @SuppressWarnings("unchecked")
+            IEntity<Long> m = (IEntity<Long>)this.getGson().fromJson(json, clz);
             this.cmdContext.getRepo(cls).save(m);
             mv.ok().add("id", ElUtils.getPK(m));
         } catch (Throwable t) {
@@ -95,9 +97,8 @@ public abstract class MetaController extends BaseController {
     public ModelGsonView delete(String cls, Long[] id) {
         ModelGsonView mv = new ModelGsonView();
         try {
-            Class clz = Class.forName(cls);
             for (Long mid : id) {
-                Object m = this.cmdContext.getRepo(cls).get(mid);
+                IEntity<Long> m = this.cmdContext.getRepo(cls).get(mid);
                 this.cmdContext.getRepo(cls).delete(m);
             }
             mv.ok();

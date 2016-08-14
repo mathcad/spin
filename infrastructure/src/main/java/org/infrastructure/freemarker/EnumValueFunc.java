@@ -23,7 +23,6 @@ public class EnumValueFunc implements TemplateMethodModelEx {
         String enumName = arguments.get(0).toString();
         String field = arguments.get(1).toString();
         String asField = arguments.get(2).toString();
-
         StringBuilder sb = new StringBuilder();
         sb.append("(CASE");
         try {
@@ -50,10 +49,7 @@ public class EnumValueFunc implements TemplateMethodModelEx {
         } catch (Exception e) {
             throw new BizException("解析枚举出错" + enumName);
         }
-
         sb.append("END) AS ").append(asField);
-
         return sb.toString();
     }
-
 }

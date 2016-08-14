@@ -6,8 +6,6 @@ import java.util.List;
 
 /**
  * 业务异常
- *
- * @author zhou
  */
 public class BizException extends RuntimeException {
     private static final long serialVersionUID = -3134828827080936834L;

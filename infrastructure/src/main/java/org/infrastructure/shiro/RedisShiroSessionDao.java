@@ -3,13 +3,12 @@ package org.infrastructure.shiro;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
-import org.infrastructure.jpa.core.AUser;
+import org.infrastructure.jpa.core.GenericUser;
 import org.infrastructure.redis.ICached;
 import org.infrastructure.sys.Constants;
 import org.slf4j.Logger;
@@ -64,7 +63,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
      * @author zx
      * @create 2016年6月13日 下午2:32:43
      */
-    public static interface SessionListener{
+    public interface SessionListener{
 
         void beforeUpdateSession(Session session);
 
@@ -88,7 +87,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
             if(this.sessListener!=null){
                 try{
                     this.sessListener.beforeDeleteSession(session);
-                    AUser user = session.getAttribute(Constants.UserContant.SESSION_KEY) == null ? null : (AUser) session.getAttribute(Constants.UserContant.SESSION_KEY);
+                    GenericUser user = session.getAttribute(Constants.UserContant.SESSION_KEY) == null ? null : (GenericUser) session.getAttribute(Constants.UserContant.SESSION_KEY);
                     if(user !=null){
 
                     }

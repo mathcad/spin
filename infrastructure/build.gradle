@@ -11,16 +11,13 @@ sourceCompatibility = 1.7
 repositories {
     mavenLocal()
     mavenCentral()
-//    maven { url 'http://maven.oschina.net/content/groups/public/' }
 }
 
 ext.springVersion = "4.3.0.RELEASE"
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12',
+    testCompile 'junit:junit:4.12',
                 'org.springframework:spring-test:' + springVersion
-
-    'org.springframework:spring-test:' + springVersion
 
     compile 'org.springframework:spring-context:' + springVersion,
             'org.springframework:spring-aspects:' + springVersion,
@@ -51,7 +48,6 @@ dependencies {
             'org.freemarker:freemarker:2.3.23',
             'log4j:log4j:1.2.17',
             'org.slf4j:slf4j-api:1.7.21'
-    compile group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final'
 
     compile 'javax.servlet:javax.servlet-api:3.1.0'
 }

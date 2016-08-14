@@ -29,8 +29,7 @@ import java.util.Properties;
  *
  * @version V1.0
  */
-public class UserEnumType<E extends Enum<E>>
-        implements EnhancedUserType, DynamicParameterizedType, LoggableUserType, Serializable {
+public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, DynamicParameterizedType, LoggableUserType, Serializable {
     private static final long serialVersionUID = 228011828908024965L;
     private static final Logger LOGGER = LoggerFactory.getLogger(UserEnumType.class);
 
@@ -324,17 +323,17 @@ public class UserEnumType<E extends Enum<E>>
 }
 
 interface EnumValueMapper<E extends Enum<E>> extends Serializable {
-    public int getSqlType();
+    int getSqlType();
 
-    public E getValue(ResultSet rs, String[] names) throws SQLException;
+    E getValue(ResultSet rs, String[] names) throws SQLException;
 
-    public void setValue(PreparedStatement st, E value, int index) throws SQLException;
+    void setValue(PreparedStatement st, E value, int index) throws SQLException;
 
-    public String objectToSQLString(E value);
+    String objectToSQLString(E value);
 
-    public String toXMLString(E value);
+    String toXMLString(E value);
 
-    public E fromXMLString(String xml);
+    E fromXMLString(String xml);
 }
 
 abstract class EnumValueMapperSupport<E extends Enum<E>> implements EnumValueMapper<E> {

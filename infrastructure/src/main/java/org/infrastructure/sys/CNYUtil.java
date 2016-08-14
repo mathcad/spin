@@ -2,11 +2,7 @@ package org.infrastructure.sys;
 
 import java.math.BigDecimal;
 
-public class ChinesizeUtil {
-	// private static char[] s1 = { '零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌',
-	// '玖' };
-	// private static char[] s4 = { '分', '角', '元', '拾', '佰', '仟', '万', '拾', '佰',
-	// '仟', '亿', '拾', '佰', '仟', '万' };
+public class CNYUtil {
 
 	/** 中文简体数字 */
 	private static String CHS_NUMBER = "零一二三四五六七八九";

@@ -6,6 +6,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.data.domain.PageRequest;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,12 +22,12 @@ import java.util.Set;
  * @author xuweinan
  * @version V1.0
  */
-public class CriteriaParam implements java.io.Serializable {
+public class CriteriaParam implements Serializable {
     private static final long serialVersionUID = -944451601973493971L;
-    Set<String> fields = new HashSet<>();
-    List<Criterion> criterions = new ArrayList<>();
-    List<Order> orders = new ArrayList<>();
-    PageRequest pageRequest = null;
+    public Set<String> fields = new HashSet<>();
+    public List<Criterion> criterions = new ArrayList<>();
+    public List<Order> orders = new ArrayList<>();
+    public PageRequest pageRequest = null;
 
     /**
      * 增加分页参数

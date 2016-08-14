@@ -28,7 +28,7 @@ public abstract class HashUtils {
 	 * @param rec
 	 * @param key
 	 */
-	public static String getStringValue(Map<?, Object> rec, Object key) {
+	public static String getStringValue(Map<?, ?> rec, Object key) {
 		return rec == null ? null : ObjectUtils.toString(rec.get(key));
 	}
 
@@ -38,7 +38,7 @@ public abstract class HashUtils {
 	 * @param rec
 	 * @param key
 	 */
-	public static Long getLongValue(Map<?, Object> rec, Object key) {
+	public static Long getLongValue(Map<?, ?> rec, Object key) {
 		String strVal = rec == null ? null : ObjectUtils.toString(rec.get(key));
 		return StringUtils.isBlank(strVal) ? null : Long.valueOf(strVal);
 	}
@@ -49,7 +49,7 @@ public abstract class HashUtils {
 	 * @param rec
 	 * @param key
 	 */
-	public static Integer getIntegerValue(Map<?, Object> rec, Object key) {
+	public static Integer getIntegerValue(Map<?, ?> rec, Object key) {
 		String strVal = rec == null ? null : ObjectUtils.toString(rec.get(key));
 		return StringUtils.isBlank(strVal) ? null : new BigDecimal(strVal).intValue();
 	}
@@ -60,7 +60,7 @@ public abstract class HashUtils {
 	 * @param rec
 	 * @param key
 	 */
-	public static Double getDoubleValue(Map<?, Object> rec, Object key) {
+	public static Double getDoubleValue(Map<?, ?> rec, Object key) {
 		String strVal = rec == null ? null : ObjectUtils.toString(rec.get(key));
 		return StringUtils.isBlank(strVal) ? null : new BigDecimal(strVal).doubleValue();
 	}
@@ -118,8 +118,7 @@ public abstract class HashUtils {
 	 * @version 1.0
 	 */
 	public static Date getDateValue(Map<?, Object> map, String key) {
-		Date v = map.get(key) == null ? null : (Date) map.get(key);
-		return v;
+		return map.get(key) == null ? null : (Date) map.get(key);
 	}
 
 	/**
@@ -131,7 +130,7 @@ public abstract class HashUtils {
 	 * @version 1.0
 	 */
 	public static Set<Object> distinctList(List<Map<?, Object>> list, String key, Comparator<Object> objCpt) {
-		Set<Object> objSet = new HashSet<Object>();
+		Set<Object> objSet = new HashSet<>();
 		for (Map<?, Object> map : list) {
 			if (map.get(key) != null) {
 				Object o = map.get(key);

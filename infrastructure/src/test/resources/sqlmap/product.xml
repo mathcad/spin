@@ -7,7 +7,7 @@
         v.id as vid,
         v.plate,
         v.quote_type,
-        ${E('org.infrastructure.jpa.core.sqlmap.VhcQuoteTypeE','v.quote_type','type_name')},
+        ${E('org.infrastructure.jpa.core.VhcQuoteTypeE','v.quote_type','type_name')},
         FROM
         bs_motorcade_organ_user mu,
         bs_motorcade_vhc_user vu,
