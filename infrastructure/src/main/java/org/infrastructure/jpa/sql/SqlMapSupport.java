@@ -22,6 +22,7 @@ import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.jpa.dto.Page;
 import org.infrastructure.throwable.BizException;
+import org.infrastructure.util.BeanUtils;
 import org.infrastructure.util.HashUtils;
 import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
@@ -41,6 +42,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -303,17 +305,31 @@ public class SqlMapSupport<T extends IEntity> {
      * @return 返回瞬态的实体bean
      */
     public T convertMapToBean(Map<String, Object> entityValues) throws IntrospectionException, IllegalAccessException, InstantiationException, InvocationTargetException {
-        BeanInfo beanInfo = Introspector.getBeanInfo(entityClazz, IEntity.class);
-        T entity = entityClazz.newInstance();
+        T entity = this.entityClazz.newInstance();
+        PropertyDescriptor[] propertyDescriptors = BeanUtils.propertyDescriptors(this.entityClazz);
+        if (null == propertyDescriptors || 0 == propertyDescriptors.length)
+            return entity;
+        Map<String, String> keyMap = new HashMap<>();
+        Map<String, Boolean> complexMap = new HashMap<>();
+        for (Map.Entry<String, Object> entry : entityValues.entrySet()) {
+            int index = entry.getKey().indexOf('.');
+            if (index > 0) {
+                keyMap.put(entry.getKey(), entry.getKey().substring(0, index + 1).toLowerCase());
+                complexMap.put(entry.getKey(), true);
+            } else {
+                keyMap.put(entry.getKey(), entry.getKey().toLowerCase());
+                complexMap.put(entry.getKey(), false);
+            }
+        }
 
-        PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+        // TODO: 2016/8/15 Map到实体的转换尚未完成
         for (PropertyDescriptor descriptor : propertyDescriptors) {
             String propertyName = descriptor.getName();
 
-            if (entityValues.containsKey(propertyName)) {
+            if (keyMap.containsKey(propertyName.toLowerCase())) {
                 // 下面一句可以 try 起来，这样当一个属性赋值失败的时候就不会影响其他属性赋值。
                 Object value = entityValues.get(propertyName);
-
+                //descriptor.getPropertyType()
                 Object[] args = new Object[1];
                 args[0] = value;
 
