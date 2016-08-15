@@ -787,7 +787,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         ArrayList<T> enList = new ArrayList<>();
         /* Map查询后，回填对象 */
         for (Map<String, Object> map : list) {
-            T t = convertMapToEn(map);
+            T t = convertMapToVo(map);
             enList.add(t);
         }
 
@@ -856,7 +856,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         ArrayList<T> enList = new ArrayList<>();
         /* Map查询后，回填对象 */
         for (Map<String, Object> map : list) {
-            T t = convertMapToEn(map);
+            T t = convertMapToVo(map);
             enList.add(t);
         }
         return enList;
@@ -926,7 +926,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * @param entityValues 行对象
      * @return 返回Transient瞬态的VO
      */
-    public T convertMapToEn(Map<String, Object> entityValues) {
+    public T convertMapToVo(Map<String, Object> entityValues) {
         T t = null;
         try {
             t = this.entityClazz.newInstance();

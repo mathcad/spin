@@ -17,24 +17,28 @@
 
 package org.infrastructure.jpa.sql.resolver;
 
+
+import org.infrastructure.util.StringUtils;
+
 import java.util.Map;
 
 /**
- * 模板解析器
- * Created by xuweinan on 2016/8/14.
+ * 简易模板解析器，实现了最简单的变量绑定
+ * <p>模板变量定义格式为${paramName}<br>所有未绑定数据的模板变量将会被移除</p>
+ * Created by xuweinan on 2016/8/15.
  *
  * @author xuweinan
  * @version 1.0
  */
-public interface TemplateResolver {
-
-    /**
-     * 使用指定的数据解析模板，生成解析后的文本
-     *
-     * @param id       模板id
-     * @param template 模板对象
-     * @param model    数据
-     * @return 解析后的文本
-     */
-    String resolve(String id, String template, Map<String, ?> model);
+public class SimpleResolver implements TemplateResolver {
+    @Override
+    public String resolve(String id, String template, Map<String, ?> model) {
+        if (StringUtils.isEmpty(template))
+            return StringUtils.EMPTY;
+        String result = template;
+        for (Map.Entry<String, ?> param : model.entrySet()) {
+            result = template.replace("${" + param.getKey() + "}", param.getValue().toString());
+        }
+        return result.replaceAll("\\$\\{.+\\}", "");
+    }
 }

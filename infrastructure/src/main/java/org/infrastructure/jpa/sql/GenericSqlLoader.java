@@ -18,6 +18,7 @@
 package org.infrastructure.jpa.sql;
 
 import org.infrastructure.jpa.core.SQLLoader;
+import org.infrastructure.jpa.sql.resolver.SimpleResolver;
 import org.infrastructure.jpa.sql.resolver.TemplateResolver;
 
 import java.util.Map;
@@ -26,9 +27,12 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 通用sql装载器基类
  * <p>实现了通用的装载器方法</p>
+ * <p>当装载器未指明模板解析器时，默认使用{@link SimpleResolver}</p>
  * Created by xuweinan on 2016/8/14.
  *
  * @author xuweinan
+ * @version 1.0
+ * @see SimpleResolver
  */
 public abstract class GenericSqlLoader implements SQLLoader {
     protected volatile boolean use_cache = true;
@@ -43,7 +47,7 @@ public abstract class GenericSqlLoader implements SQLLoader {
     /**
      * sql资源根路径
      */
-    private String rootUri = null;
+    private String rootUri;
 
     public GenericSqlLoader() {
         this.rootUri = "sqlmap";
@@ -51,6 +55,8 @@ public abstract class GenericSqlLoader implements SQLLoader {
 
     @Override
     public SQLSource getSQL(String id, Map<String, ?> model) {
+        if (null == this.resolver)
+            this.resolver = new SimpleResolver();
         String sql = this.resolver.resolve(id, this.getSqlTemplateSrc(id), model);
         return new SQLSource(id, sql);
     }

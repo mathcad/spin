@@ -27,6 +27,7 @@ import java.util.Map;
  * Created by xuweinan on 2016/8/13.
  *
  * @author xuweinan
+ * @version 1.0
  */
 
 public interface SQLLoader {
@@ -34,8 +35,8 @@ public interface SQLLoader {
     /**
      * 加载参数化的SQL语句
      *
-     * @param cmdName sql的path
-     * @param model   参数
+     * @param id    sql的path
+     * @param model 参数
      * @return 参数化的sql
      */
     SQLSource getSQL(String id, Map<String, ?> model);

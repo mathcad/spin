@@ -34,6 +34,9 @@ import java.util.Map;
 /**
  * 基于freemarker的解析器
  * Created by xuweinan on 2016/8/14.
+ *
+ * @author xuweinan
+ * @version 1.0
  */
 public class FreemarkerResolver implements TemplateResolver {
     private static final Logger logger = LoggerFactory.getLogger(FreemarkerResolver.class);

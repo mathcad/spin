@@ -49,6 +49,7 @@ import java.nio.charset.Charset;
  * Created by xuweinan on 2016/8/14.
  *
  * @author xuweinan
+ * @version 1.0
  */
 public class ClasspathXmlLoader extends FileSystemSQLLoader {
     private static final Logger logger = LoggerFactory.getLogger(ClasspathXmlLoader.class);
