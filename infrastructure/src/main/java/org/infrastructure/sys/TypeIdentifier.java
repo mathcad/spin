@@ -57,10 +57,6 @@ public class TypeIdentifier<T> {
         this.hashCode = this.type.hashCode();
     }
 
-    /**
-     * Returns the type from super class's type parameter in {@link $Gson$Types#canonicalize
-     * canonical form}.
-     */
     static Type getSuperclassTypeParameter(Class<?> subclass) {
         Type superclass = subclass.getGenericSuperclass();
         if (superclass instanceof Class) {

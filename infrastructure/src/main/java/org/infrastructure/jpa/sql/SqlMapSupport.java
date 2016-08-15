@@ -18,6 +18,7 @@
 package org.infrastructure.jpa.sql;
 
 import org.infrastructure.jpa.api.QueryParam;
+import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.jpa.dto.Page;
 import org.infrastructure.throwable.BizException;
@@ -30,8 +31,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.util.ReflectionUtils;
 
 import javax.sql.DataSource;
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +52,7 @@ import java.util.regex.Pattern;
  * @author xuweinan
  * @version 1.2
  */
-public class SqlMapSupport {
+public class SqlMapSupport<T extends IEntity> {
     private static final Logger logger = LoggerFactory.getLogger(SqlMapSupport.class);
 
     @Autowired
@@ -57,6 +65,8 @@ public class SqlMapSupport {
     private JdbcTemplate jt;
 
     private DataSource dataSource;
+
+    protected Class<T> entityClazz;
 
     /**
      * 利用Datasource 初始化jdbcTemplate和NamedParameterJdbcTemplate
@@ -230,6 +240,89 @@ public class SqlMapSupport {
         this.nameJt.batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
     }
 
+    /**
+     * 将Map形式的查询结果转换为实体
+     * <p>
+     * 复合属性，请在语句中指定别名为实体属性的路径。如createUser.id对应createUser的id属性。<br>
+     * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
+     * </p>
+     *
+     * @param entityValues 行对象
+     * @return 返回Transient瞬态的VO
+     */
+    public T convertMapToVo(Map<String, Object> entityValues) {
+        T t = null;
+        try {
+            t = this.entityClazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException e1) {
+            e1.printStackTrace();
+        }
+        for (String key : entityValues.keySet()) {
+            try {
+                Object keyObj = entityValues.get(key);
+                if (keyObj == null)
+                    continue;
+                if (key.contains(".")) {
+                    // 关联字段，生成关联对象
+                    String[] refKeys = key.split("\\.");
+                    Field refField = ReflectionUtils.findField(this.entityClazz, refKeys[0]);
+                    ReflectionUtils.makeAccessible(refField);
+                    Object refObj = ReflectionUtils.getField(refField, t);
+                    if (refObj == null) {
+                        Class refFieldClass = refField.getType();
+                        refObj = refFieldClass.newInstance();
+                        ReflectionUtils.makeAccessible(refField);
+                        ReflectionUtils.setField(refField, t, refObj);
+                    }
+                    // 赋值关联对象字段的值
+                    Field refObjField = ReflectionUtils.findField(refField.getType(), refKeys[1]);
+                    ReflectionUtils.makeAccessible(refObjField);
+                    ReflectionUtils.setField(refObjField, refObj, keyObj);
+                } else {
+                    // 简单字段
+                    Field field = ReflectionUtils.findField(this.entityClazz, key);
+                    ReflectionUtils.makeAccessible(field);
+                    ReflectionUtils.setField(field, t, keyObj);
+                }
+            } catch (Exception e) {
+                logger.error(key, e);
+                throw new BizException("转化查询结果到实体错误:" + key, e);
+            }
+        }
+        return t;
+    }
+
+    /**
+     * 将Map形式的查询结果转换为实体
+     * <p>
+     * 复合属性，请在语句中指定别名为实体属性的路径。如createUser.id对应createUser的id属性。<br>
+     * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
+     * </p>
+     *
+     * @param entityValues 行对象
+     * @return 返回瞬态的实体bean
+     */
+    public T convertMapToBean(Map<String, Object> entityValues) throws IntrospectionException, IllegalAccessException, InstantiationException, InvocationTargetException {
+        BeanInfo beanInfo = Introspector.getBeanInfo(entityClazz, IEntity.class);
+        T entity = entityClazz.newInstance();
+
+        PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+        for (PropertyDescriptor descriptor : propertyDescriptors) {
+            String propertyName = descriptor.getName();
+
+            if (entityValues.containsKey(propertyName)) {
+                // 下面一句可以 try 起来，这样当一个属性赋值失败的时候就不会影响其他属性赋值。
+                Object value = entityValues.get(propertyName);
+
+                Object[] args = new Object[1];
+                args[0] = value;
+
+                descriptor.getWriteMethod().invoke(entity, args);
+            }
+        }
+        return entity;
+    }
+
     public JdbcTemplate getJt() {
         return jt;
     }
@@ -240,5 +333,9 @@ public class SqlMapSupport {
 
     public DataSource getDataSource() {
         return this.dataSource;
+    }
+
+    public Class<T> getEntityClazz() {
+        return entityClazz;
     }
 }

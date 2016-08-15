@@ -19,8 +19,8 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.api.CmdParser.DetachedCriteriaResult;
-import org.infrastructure.jpa.sql.SqlMapSupport;
 import org.infrastructure.jpa.dto.Page;
+import org.infrastructure.jpa.sql.SqlMapSupport;
 import org.infrastructure.shiro.SessionManager;
 import org.infrastructure.shiro.SessionUser;
 import org.infrastructure.sys.ElUtils;
@@ -68,12 +68,10 @@ import java.util.Stack;
  * @version V1.1
  */
 @Component
-public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends SqlMapSupport {
+public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends SqlMapSupport<T> {
     private static final Log logger = LogFactory.getLog(ARepository.class);
 
     private static HashMap<String, Map<String, Field>> REFER_JOIN_FIELDS = new HashMap<>();
-
-    private Class<T> entityClazz;
 
     @Autowired
     protected SessionManager sessionMgr;
@@ -85,7 +83,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
     @SuppressWarnings("unchecked")
     public ARepository() {
-        entityClazz = (Class<T>) GenericUtils.getSuperClassGenricType(this.getClass());
+        this.entityClazz = (Class<T>) GenericUtils.getSuperClassGenricType(this.getClass());
     }
 
     /**
@@ -93,10 +91,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     public ARepository(Class<T> entityClass) {
         this.entityClazz = entityClass;
-    }
-
-    public Class<T> getEntityClazz() {
-        return entityClazz;
     }
 
     public SessionManager getSessionMgr() {
@@ -914,58 +908,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
                 qjoinFields.add(pjField.split("\\.")[0]);
             }
         }
-    }
-
-    /**
-     * 将Map形式的查询结果转换为实体
-     * <p>
-     * 复合属性，请在语句中指定别名为实体属性的路径。如createUser.id对应createUser的id属性。<br>
-     * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
-     * </p>
-     *
-     * @param entityValues 行对象
-     * @return 返回Transient瞬态的VO
-     */
-    public T convertMapToVo(Map<String, Object> entityValues) {
-        T t = null;
-        try {
-            t = this.entityClazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException e1) {
-            e1.printStackTrace();
-        }
-        for (String key : entityValues.keySet()) {
-            try {
-                Object keyObj = entityValues.get(key);
-                if (keyObj == null)
-                    continue;
-                if (key.contains(".")) {
-                    // 关联字段，生成关联对象
-                    String[] refKeys = key.split("\\.");
-                    Field refField = ReflectionUtils.findField(this.entityClazz, refKeys[0]);
-                    ReflectionUtils.makeAccessible(refField);
-                    Object refObj = ReflectionUtils.getField(refField, t);
-                    if (refObj == null) {
-                        Class refFieldClass = refField.getType();
-                        refObj = refFieldClass.newInstance();
-                        ReflectionUtils.makeAccessible(refField);
-                        ReflectionUtils.setField(refField, t, refObj);
-                    }
-                    // 赋值关联对象字段的值
-                    Field refObjField = ReflectionUtils.findField(refField.getType(), refKeys[1]);
-                    ReflectionUtils.makeAccessible(refObjField);
-                    ReflectionUtils.setField(refObjField, refObj, keyObj);
-                } else {
-                    // 简单字段
-                    Field field = ReflectionUtils.findField(this.entityClazz, key);
-                    ReflectionUtils.makeAccessible(field);
-                    ReflectionUtils.setField(field, t, keyObj);
-                }
-            } catch (Exception e) {
-                logger.error(key, e);
-                throw new BizException("转化查询结果到实体错误:" + key, e);
-            }
-        }
-        return t;
     }
 
     private Session peekThreadSession() {

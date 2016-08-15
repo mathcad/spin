@@ -19,8 +19,8 @@ import java.util.List;
 public class ValidValueFunc implements TemplateMethodModelEx {
     @Override
     public Object exec(List arguments) throws TemplateModelException {
-        boolean valid = false;
-        Object o = null;
+        boolean valid;
+        Object o;
         if (arguments.get(0) == null) {
             o = null;
         } else if (arguments.get(0) instanceof TemplateBooleanModel) {
