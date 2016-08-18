@@ -17,11 +17,17 @@
 
 package org.infrastructure.jpa.sql;
 
+import org.infrastructure.throwable.SQLException;
 import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.LinkedList;
 
 /**
  * 基于Markdown语法的sql装载器
@@ -34,8 +40,69 @@ public class ClasspathMdLoader extends FileSystemSQLLoader {
 
     @Override
     public String getSqlTemplateSrc(String id) {
-        // TODO: 2016/8/14 实现markdown语法的解析
-        return null;
+        // 检查缓存
+        if (this.use_cache && this.sqlSourceMap.containsKey(id) && (!this.autoCheck || !this.isModified(id)))
+            return this.sqlSourceMap.get(id);
+
+        // 物理读取
+        String path = id.substring(0, id.lastIndexOf('.'));
+        File sqlFile = this.getFile(id);
+        Long version = sqlFile.lastModified();
+        LinkedList<String> list = new LinkedList<>();
+        BufferedReader bf = null;
+        try {
+            bf = new BufferedReader(new InputStreamReader(new FileInputStream(sqlFile), charset));
+            String temp;
+            String tempNext;
+            String lastLine = "";
+            StringBuilder sql = new StringBuilder();
+            String key = "";
+            while ((temp = bf.readLine()) != null) {
+                temp = StringUtils.trimTrailingWhitespace(temp);
+                if (temp.startsWith("===") || lastLine.startsWith("===")) {// 读取到===号，说明上一行是key，下面是注释或者SQL语句
+                    if (list.size() != 1)
+                        throw new SQLException(SQLException.CANNOT_GET_SQL, "模板文件格式不正确:" + sqlFile.getName());
+                    key = list.pollLast();
+                    if (lastLine.startsWith("===") && !StringUtils.trimLeadingWhitespace(temp).startsWith("//"))
+                        sql.append(temp).append("\n");
+                    while ((tempNext = bf.readLine()) != null) {
+                        if (StringUtils.isNotBlank(tempNext)) {
+                            tempNext = StringUtils.trimTrailingWhitespace(temp);
+                            if (tempNext.startsWith("===")) {
+                                if (StringUtils.isEmpty(lastLine))
+                                    throw new SQLException(SQLException.CANNOT_GET_SQL, "模板文件格式不正确:" + sqlFile.getName());
+                                list.add(lastLine);
+                                lastLine = tempNext;
+                                this.sqlSourceMap.put(path + "." + key, sql.replace(sql.length() - 1, sql.length(), "").substring(0, sql.lastIndexOf("\n")));
+                                this.sqlSourceVersion.put(path + "." + key, version);
+                                sql = new StringBuilder();
+                                break;
+                            } else if (!StringUtils.trimLeadingWhitespace(tempNext).startsWith("//")) {
+                                sql.append(tempNext).append("\n");
+                                lastLine = tempNext;
+                            }
+                        }
+                    }
+                } else if (!StringUtils.isBlank(temp) && !temp.startsWith("//") && !temp.startsWith("===")) {
+                    list.add(temp);
+                }
+            }
+            this.sqlSourceMap.put(path + "." + key, sql.substring(0, sql.lastIndexOf("\n")));
+            this.sqlSourceVersion.put(path + "." + key, version);
+        } catch (IOException e) {
+            throw new SQLException(SQLException.CANNOT_GET_SQL, "解析模板文件异常:" + sqlFile.getName());
+        } finally {
+            if (bf != null) {
+                try {
+                    bf.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        if (!this.sqlSourceMap.containsKey(id))
+            throw new SQLException(SQLException.CANNOT_GET_SQL, "模板[" + sqlFile.getName() + "]中未找到指定ID的SQL:" + id);
+        return this.sqlSourceMap.get(id);
     }
 
     @Override

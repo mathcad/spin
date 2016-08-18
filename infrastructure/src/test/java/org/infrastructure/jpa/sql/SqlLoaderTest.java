@@ -34,8 +34,9 @@ public class SqlLoaderTest {
     public void testGetSql() {
         Map<String, String> param = new HashMap<>();
         param.put("no", "pp");
-        SQLLoader loader = new ClasspathXmlLoader();
-//        loader.setTemplateResolver(new FreemarkerResolver());
+//        SQLLoader loader = new ClasspathXmlLoader();
+        SQLLoader loader = new ClasspathMdLoader();
+        loader.setTemplateResolver(new FreemarkerResolver());
         String template = loader.getSQL("product.findProductTarget", param).getTemplate();
         template = loader.getSQL("product.findProductTarget", param).getTemplate();
         template = loader.getSQL("product.findProductTarget", param).getTemplate();
