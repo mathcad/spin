@@ -17,31 +17,17 @@
 
 package org.infrastructure.jpa.sql;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 import org.infrastructure.throwable.SQLException;
 import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.nio.charset.Charset;
+import java.util.List;
 
 /**
  * 基于xml格式的sql装载器
@@ -53,81 +39,42 @@ import java.nio.charset.Charset;
 public class ClasspathXmlLoader extends FileSystemSQLLoader {
     private static final Logger logger = LoggerFactory.getLogger(ClasspathXmlLoader.class);
 
-    private XPathFactory xfactory = XPathFactory.newInstance();
+    private SAXReader reader = new SAXReader();
 
     @Override
     public String getSqlTemplateSrc(String id) {
-        String[] cmds = id.split("\\.");
         // 检查缓存
         if (this.use_cache && this.sqlSourceMap.containsKey(id) && (!this.autoCheck || !this.isModified(id)))
             return this.sqlSourceMap.get(id);
+
         // 物理读取
-        String xmlStr = getCmdXml(id);
-        Document cmdDoc = stringToDoc(xmlStr);
-        XPath xpath = xfactory.newXPath();
-        XPathExpression cmdPath;
+        String cmdFileName = id.substring(0, id.lastIndexOf("."));
+        File sqlFile = this.getFile(id);
+        Long version = sqlFile.lastModified();
         try {
-            cmdPath = xpath.compile(String.format("//commands//command[@id=\"%s\"]", cmds[1]));
-            String tempSrc = (String) cmdPath.evaluate(cmdDoc, XPathConstants.STRING);
-            Long version = this.getFile(id).lastModified();
-            this.sqlSourceMap.put(id, tempSrc);
-            this.sqlSourceVersion.put(id, version);
-            return (String) cmdPath.evaluate(cmdDoc, XPathConstants.STRING);
-        } catch (XPathExpressionException e) {
-            throw new SQLException(SQLException.CANNOT_GET_SQL, "解析模板文件异常", e);
+            Document document = reader.read(sqlFile);
+            Element root = document.getRootElement();
+            List nodes = root.elements("sql");
+            for (Object node : nodes) {
+                Element elm = (Element) node;
+                String sqlName = elm.attribute("id").getValue();
+                String sql = elm.getText();
+                this.sqlSourceMap.put(cmdFileName + "." + sqlName, sql);
+                this.sqlSourceVersion.put(cmdFileName + "." + sqlName, version);
+            }
+        } catch (DocumentException e) {
+            throw new SQLException(SQLException.CANNOT_GET_SQL, "解析模板文件异常:" + sqlFile.getName());
         }
-    }
 
-    private String getCmdXml(String id) {
-        String content = null;
-        try {
-            InputStream in = new FileInputStream(this.getFile(id));
-            content = readString(in, Charset.forName(charset));
-        } catch (IOException e) {
-            logger.error("读取命令文件出错", e);
-        }
-        return content;
-    }
-
-    /**
-     * String 转 XML org.w3c.dom.Document
-     */
-    private Document stringToDoc(String xmlStr) {
-        // 字符串转XML
-        Document doc = null;
-        try {
-            StringReader sr = new StringReader(xmlStr);
-            InputSource is = new InputSource(sr);
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder;
-            builder = factory.newDocumentBuilder();
-            doc = builder.parse(is);
-        } catch (ParserConfigurationException e) {
-            logger.error("pc", e);
-        } catch (SAXException e) {
-            logger.error("sax", e);
-        } catch (IOException e) {
-            logger.error("io", e);
-        }
-        return doc;
-    }
-
-    private String readString(InputStream in, Charset charset) throws IOException {
-        Assert.notNull(in, "No InputStream specified");
-        StringBuilder out = new StringBuilder();
-        BufferedReader br = new BufferedReader(new InputStreamReader(in, charset));
-        String tmp;
-        while ((tmp = br.readLine()) != null) {
-            out.append(tmp).append("\n");
-        }
-        br.close();
-        return out.toString();
+        if (!this.sqlSourceMap.containsKey(id))
+            throw new SQLException(SQLException.CANNOT_GET_SQL, "模板[" + sqlFile.getName() + "]中未找到指定ID的SQL:" + id);
+        return this.sqlSourceMap.get(id);
     }
 
     @Override
     protected File getFile(String id) {
         String cmdFileName = id.substring(0, id.lastIndexOf("."));
-        String path = "/" + (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".xml";
+        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".xml";
         String uri;
         try {
             uri = this.getClass().getResource(path).getPath();

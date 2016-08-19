@@ -34,12 +34,12 @@ public class SqlLoaderTest {
     public void testGetSql() {
         Map<String, String> param = new HashMap<>();
         param.put("no", "pp");
-//        SQLLoader loader = new ClasspathXmlLoader();
-        SQLLoader loader = new ClasspathMdLoader();
+        SQLLoader loader = new ClasspathXmlLoader();
+//        SQLLoader loader = new ClasspathMdLoader();
         loader.setTemplateResolver(new FreemarkerResolver());
         String template = loader.getSQL("product.findProductTarget", param).getTemplate();
         template = loader.getSQL("product.findProductTarget", param).getTemplate();
-        template = loader.getSQL("product.findProductTarget", param).getTemplate();
+        template = loader.getSQL("product.test2", param).getTemplate();
         System.out.println(template);
         assertTrue(true);
     }

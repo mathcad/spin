@@ -31,7 +31,6 @@ SELECT
         AND vu.vhc = mv.id
         and mv.vhc=v.id
         and mu.mtcade = m.id
-
         and v.id=q.vhc
         and q.tdo=td.id
         and td.status=1
@@ -75,7 +74,6 @@ test2
            AND vu.vhc = mv.id
            and mv.vhc=v.id
            and mu.mtcade = m.id
-
            and v.id=q.vhc
            and q.tdo=td.id
            and td.status=1

@@ -67,7 +67,7 @@ public class ClasspathMdLoader extends FileSystemSQLLoader {
                         sql.append(temp).append("\n");
                     while ((tempNext = bf.readLine()) != null) {
                         if (StringUtils.isNotBlank(tempNext)) {
-                            tempNext = StringUtils.trimTrailingWhitespace(temp);
+                            tempNext = StringUtils.trimTrailingWhitespace(tempNext);
                             if (tempNext.startsWith("===")) {
                                 if (StringUtils.isEmpty(lastLine))
                                     throw new SQLException(SQLException.CANNOT_GET_SQL, "模板文件格式不正确:" + sqlFile.getName());
@@ -108,7 +108,7 @@ public class ClasspathMdLoader extends FileSystemSQLLoader {
     @Override
     protected File getFile(String id) {
         String cmdFileName = id.substring(0, id.lastIndexOf("."));
-        String path = "/" + (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".md";
+        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".md";
         String uri;
         uri = this.getClass().getResource(path).getPath();
         return new File(uri);

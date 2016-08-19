@@ -50,7 +50,7 @@ public abstract class GenericSqlLoader implements SQLLoader {
     private String rootUri;
 
     public GenericSqlLoader() {
-        this.rootUri = "sqlmap";
+        this.rootUri = "/sqlmap";
     }
 
     @Override
