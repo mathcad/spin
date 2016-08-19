@@ -21,9 +21,12 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Bean工具类
@@ -32,7 +35,7 @@ import java.util.List;
 public class BeanUtils {
 
     public static PropertyDescriptor[] propertyDescriptors(Class<?> c) throws IntrospectionException {
-        BeanInfo beanInfo = null;
+        BeanInfo beanInfo;
         beanInfo = Introspector.getBeanInfo(c);
         return beanInfo.getPropertyDescriptors();
     }
@@ -62,5 +65,80 @@ public class BeanUtils {
         } catch (SecurityException e) {
             return null;
         }
+    }
+
+    /**
+     * 将Map转换为对象
+     * <p>
+     * 复合属性，请在语句中指定别名为实体属性的路径。如createUser.id对应createUser的id属性。<br>
+     * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
+     * </p>
+     */
+    public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values, String propPrefix) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
+        T bean = type.newInstance();
+        PropertyDescriptor[] propertyDescriptors = BeanUtils.propertyDescriptors(type);
+        if (null == propertyDescriptors || 0 == propertyDescriptors.length)
+            return bean;
+        Map<String, PropertyDescriptor> props = new HashMap<>();
+        for (PropertyDescriptor descriptor : propertyDescriptors) {
+            props.put(descriptor.getName().toLowerCase(), descriptor);
+        }
+
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
+            if (StringUtils.isNotEmpty(propPrefix) && !entry.getKey().toLowerCase().startsWith(propPrefix))
+                continue;
+            String propName = StringUtils.isEmpty(propPrefix) ? entry.getKey().toLowerCase() : entry.getKey().substring(propPrefix.length() + 1).toLowerCase();
+            int index = propName.indexOf('.');
+            if (index > 0) {
+                propName = propName.substring(0, index);
+                if (props.containsKey(propName)) {
+                    PropertyDescriptor prop = props.get(propName);
+                    Object tmp = wrapperMapToBean(prop.getPropertyType(), values, StringUtils.isEmpty(propPrefix) ? propName : propPrefix + "." + propName);
+                    Object[] args = new Object[1];
+                    args[0] = tmp;
+                    Method writer = prop.getWriteMethod();
+                    if (null != writer) writer.invoke(bean, args);
+                }
+            } else {
+                if (props.containsKey(propName)) {
+                    PropertyDescriptor prop = props.get(propName);
+                    Object[] args = new Object[1];
+                    args[0] = ObjectUtils.convert(prop.getPropertyType(), entry.getValue());
+                    Method writer = prop.getWriteMethod();
+                    if (null != writer) writer.invoke(bean, args);
+                }
+            }
+        }
+        return bean;
+    }
+
+    public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
+        T bean = type.newInstance();
+        PropertyDescriptor[] propertyDescriptors = BeanUtils.propertyDescriptors(type);
+        if (null == propertyDescriptors || 0 == propertyDescriptors.length)
+            return bean;
+        Map<String, PropertyDescriptor> props = new HashMap<>();
+        for (PropertyDescriptor descriptor : propertyDescriptors) {
+            props.put(descriptor.getName().toLowerCase(), descriptor);
+        }
+
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
+            String[] propName = entry.getKey().replaceAll("_", "").toLowerCase().split("\\.");
+            int depth = propName.length;
+            if (depth != 1) {
+                while (depth != 0) {
+
+                }
+            } else {
+                if (props.containsKey(propName[1])) {
+                    PropertyDescriptor prop = props.get(propName[1]);
+                    Object[] args = new Object[1];
+                    args[0] = ObjectUtils.convert(prop.getPropertyType(), entry.getValue());
+                    Method writer = prop.getWriteMethod();
+                    if (null != writer) writer.invoke(bean, args);
+                }
+            }
+        }
+        return bean;
     }
 }

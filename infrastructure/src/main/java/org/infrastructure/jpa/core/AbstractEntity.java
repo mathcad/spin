@@ -101,6 +101,11 @@ public abstract class AbstractEntity implements IEntity<Long> {
         return id;
     }
 
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getCreateUserName() {
         return createUserName;
     }

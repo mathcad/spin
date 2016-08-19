@@ -20,7 +20,7 @@ import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.api.CmdParser.DetachedCriteriaResult;
 import org.infrastructure.jpa.dto.Page;
-import org.infrastructure.jpa.sql.SqlMapSupport;
+import org.infrastructure.jpa.sql.SQLManager;
 import org.infrastructure.shiro.SessionManager;
 import org.infrastructure.shiro.SessionUser;
 import org.infrastructure.sys.ElUtils;
@@ -68,7 +68,7 @@ import java.util.Stack;
  * @version V1.1
  */
 @Component
-public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends SqlMapSupport<T> {
+public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends SQLManager<T> {
     private static final Log logger = LogFactory.getLog(ARepository.class);
 
     private static HashMap<String, Map<String, Field>> REFER_JOIN_FIELDS = new HashMap<>();
