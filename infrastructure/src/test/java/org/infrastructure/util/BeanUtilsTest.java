@@ -25,19 +25,36 @@ public class BeanUtilsTest {
         values.put("createUser.lastUpdateUserName", "xxxxx");
         values.put("createUser.createUser.id", 3);
         values.put("createUser.createUser.realName", "kilee");
-        long startTime = System.currentTimeMillis();
         GenericUser user = null;
-        // 自己实现的转换方法
-        // 序列化10W次，3.984s
-        for (int i = 0; i != 100000; ++i) {
-            user = BeanUtils.wrapperMapToBean(GenericUser.class, values, "");
+//        values = BeanUtils.wrapperFlatMap(values);
+
+        int SCALE = 1000000;
+        //
+        long startTime = System.currentTimeMillis();
+        for (int i = 0; i != SCALE; ++i) {
+            user = BeanUtils.wrapperMapToBean(GenericUser.class, values);
         }
         long endTime = System.currentTimeMillis();
+
         float seconds = (endTime - startTime) / 1000F;
-        System.out.println(Float.toString(seconds) + " seconds.");
+        System.out.println("非递归：" + Float.toString(seconds) + " seconds.");
+
+        // 自己实现的递归转换方法
+        // 序列化10W次，3.984s
+//        GenericUser user2 = null;
+//        startTime = System.currentTimeMillis();
+//        for (int i = 0; i != SCALE; ++i) {
+//            BeanUtils.wrapperMapToBean(GenericUser.class, values, "");
+//        }
+//        endTime = System.currentTimeMillis();
+//
+//        seconds = (endTime - startTime) / 1000F;
+//        System.out.println("递  归：" + Float.toString(seconds) + " seconds.");
+
 
         // json方式反序列化
         // 序列化10W次，0.423s
+        GenericUser user3 = null;
         Gson gson = new GsonBuilder().create();
         values.clear();
         values.put("id", 1);
@@ -51,15 +68,16 @@ public class BeanUtilsTest {
         tmp1.put("realName", "kilee");
         tmp.put("createUser", tmp1);
         values.put("createUser", tmp);
+
         startTime = System.currentTimeMillis();
-        for (int i = 0; i != 100000; ++i) {
+        for (int i = 0; i != SCALE; ++i) {
             String json = gson.toJson(values);
-            user = gson.fromJson(json, GenericUser.class);
+            user3 = gson.fromJson(json, GenericUser.class);
         }
         endTime = System.currentTimeMillis();
-        seconds = (endTime - startTime) / 1000F;
-        System.out.println(Float.toString(seconds) + " seconds.");
-        assertTrue(user.getCreateUser().getCreateUser().getId() == 3);
-    }
 
+        seconds = (endTime - startTime) / 1000F;
+        System.out.println("JSON：" + Float.toString(seconds) + " seconds.");
+        assertTrue(user3.getCreateUser().getCreateUser().getId() == 3);
+    }
 }

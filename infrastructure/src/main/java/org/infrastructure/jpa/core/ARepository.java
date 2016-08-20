@@ -59,9 +59,8 @@ import java.util.Stack;
  * 通用数据访问层代码
  * <p>所有的Dao均继承此类。支持：
  * <pre>
- * 1、基于Jpa的Repository
- * 2、基于JdbcTemplate和NamedJdbcTemplate的运用
- * 3、基于FreeMaker模板引擎的SqlMap，可配置的动态Sql访问类型
+ * 1、基于Jpa规范的Repository
+ * 2、基于JdbcTemplate和NamedJdbcTemplate的动态SQL查询
  * </pre>
  *
  * @author xuweinan
