@@ -6,18 +6,23 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'idea'
 
-sourceCompatibility = 1.7
+sourceCompatibility = 1.8
 
 repositories {
     mavenLocal()
     mavenCentral()
 }
 
+idea.project {
+    jdkName = '1.8'
+    languageLevel = '1.8'
+}
+
 ext.springVersion = "4.3.0.RELEASE"
 
 dependencies {
     testCompile 'junit:junit:4.12',
-                'org.springframework:spring-test:' + springVersion
+            'org.springframework:spring-test:' + springVersion
 
     compile 'org.springframework:spring-context:' + springVersion,
             'org.springframework:spring-aspects:' + springVersion,
@@ -48,7 +53,6 @@ dependencies {
             'org.freemarker:freemarker:2.3.23',
             'log4j:log4j:1.2.17',
             'org.slf4j:slf4j-api:1.7.21'
-//            'com.alibaba:fastjson:1.2.16'
 
     compile 'javax.servlet:javax.servlet-api:3.1.0'
 }

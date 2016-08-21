@@ -89,7 +89,7 @@ public class BeanUtils {
             for (PropertyDescriptor descriptor : propertyDescriptors) {
                 Method writer = descriptor.getWriteMethod();
                 if (writer != null)
-                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, descriptor.getPropertyType(), descriptor.getReadMethod(), writer));
+                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
             }
             CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
@@ -129,7 +129,7 @@ public class BeanUtils {
             for (PropertyDescriptor descriptor : propertyDescriptors) {
                 writer = descriptor.getWriteMethod();
                 if (writer != null)
-                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, descriptor.getPropertyType(), descriptor.getReadMethod(), writer));
+                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
             }
             CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
@@ -153,7 +153,7 @@ public class BeanUtils {
             for (PropertyDescriptor descriptor : propertyDescriptors) {
                 writer = descriptor.getWriteMethod();
                 if (writer != null)
-                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, descriptor.getPropertyType(), descriptor.getReadMethod(), writer));
+                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
             }
             CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
@@ -196,10 +196,11 @@ public class BeanUtils {
                 propType = prop.protertyType;
                 if (i != depth - 1 && IEntity.class.isAssignableFrom(propType)) {
                     Object ib = prop.reader == null ? null : prop.reader.invoke(worker);
-                    if (null == ib)
+                    if (null == ib) {
                         ib = propType.newInstance();
-                    args[0] = ObjectUtils.convert(propType, ib);
-                    prop.writer.invoke(worker, args);
+                        args[0] = ObjectUtils.convert(propType, ib);
+                        prop.writer.invoke(worker, args);
+                    }
                     workerProps = getBeanPropertyDes(propType);
                     worker = ib;
                     ++i;
@@ -271,10 +272,10 @@ public class BeanUtils {
         public Method reader;
         public Method writer;
 
-        public PropertyDescriptorWrapper(PropertyDescriptor descriptor, Class<?> protertyType, Method reader, Method writer) {
+        public PropertyDescriptorWrapper(PropertyDescriptor descriptor, Method writer) {
             this.descriptor = descriptor;
-            this.protertyType = protertyType;
-            this.reader = reader;
+            this.protertyType = descriptor.getPropertyType();
+            this.reader = descriptor.getReadMethod();
             this.writer = writer;
         }
     }
