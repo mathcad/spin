@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by xuweinan on 2016/8/15.
  */
 public class BeanUtils {
-    public static final Map<String, Map<String, PropertyDescriptor>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
+    public static final Map<String, Map<String, PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
 
     public static PropertyDescriptor[] propertyDescriptors(Class<?> c) throws IntrospectionException {
         BeanInfo beanInfo = Introspector.getBeanInfo(c);
@@ -80,14 +80,16 @@ public class BeanUtils {
      */
     public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values, String propPrefix) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
         T bean = type.newInstance();
-        Map<String, PropertyDescriptor> props = CLASS_PROPERTY_CACHE.get(type.getName());
+        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
         if (null == props) {
             PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
             if (null == propertyDescriptors || 0 == propertyDescriptors.length)
                 return type.newInstance();
             props = new HashMap<>();
             for (PropertyDescriptor descriptor : propertyDescriptors) {
-                props.put(descriptor.getName().toLowerCase(), descriptor);
+                Method writer = descriptor.getWriteMethod();
+                if (writer != null)
+                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, descriptor.getPropertyType(), descriptor.getReadMethod(), writer));
             }
             CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
@@ -100,33 +102,34 @@ public class BeanUtils {
             if (index > 0) {
                 propName = propName.substring(0, index);
                 if (props.containsKey(propName)) {
-                    PropertyDescriptor prop = props.get(propName);
-                    Object tmp = wrapperMapToBean(prop.getPropertyType(), values, StringUtils.isEmpty(propPrefix) ? propName : propPrefix + "." + propName);
+                    PropertyDescriptorWrapper prop = props.get(propName);
+                    Object tmp = wrapperMapToBean(prop.protertyType, values, StringUtils.isEmpty(propPrefix) ? propName : propPrefix + "." + propName);
                     Object[] args = new Object[1];
                     args[0] = tmp;
-                    Method writer = prop.getWriteMethod();
-                    if (null != writer) writer.invoke(bean, args);
+                    prop.writer.invoke(bean, args);
                 }
             } else {
                 if (props.containsKey(propName)) {
-                    PropertyDescriptor prop = props.get(propName);
+                    PropertyDescriptorWrapper prop = props.get(propName);
                     Object[] args = new Object[1];
-                    args[0] = ObjectUtils.convert(prop.getPropertyType(), entry.getValue());
-                    Method writer = prop.getWriteMethod();
-                    if (null != writer) writer.invoke(bean, args);
+                    args[0] = ObjectUtils.convert(prop.protertyType, entry.getValue());
+                    prop.writer.invoke(bean, args);
                 }
             }
         }
         return bean;
     }
 
-    public static Map<String, PropertyDescriptor> getBeanPropertyDes(Class<?> type) throws IntrospectionException {
-        Map<String, PropertyDescriptor> props = CLASS_PROPERTY_CACHE.get(type.getName());
+    private static Map<String, PropertyDescriptorWrapper> getBeanPropertyDes(Class<?> type) throws IntrospectionException {
+        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
         if (null == props) {
             PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
             props = new HashMap<>();
+            Method writer;
             for (PropertyDescriptor descriptor : propertyDescriptors) {
-                props.put(descriptor.getName().toLowerCase(), descriptor);
+                writer = descriptor.getWriteMethod();
+                if (writer != null)
+                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, descriptor.getPropertyType(), descriptor.getReadMethod(), writer));
             }
             CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
@@ -139,11 +142,21 @@ public class BeanUtils {
      * 复合属性，请在语句中指定别名为实体属性的路径。如createUser.id对应createUser的id属性。<br>
      * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
      * </p>
-     * 性能与gson基本持平
      */
     public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
         T bean = type.newInstance();
-        Map<String, PropertyDescriptor> props = getBeanPropertyDes(type);
+        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
+        if (null == props) {
+            PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
+            props = new HashMap<>();
+            Method writer;
+            for (PropertyDescriptor descriptor : propertyDescriptors) {
+                writer = descriptor.getWriteMethod();
+                if (writer != null)
+                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, descriptor.getPropertyType(), descriptor.getReadMethod(), writer));
+            }
+            CLASS_PROPERTY_CACHE.put(type.getName(), props);
+        }
         if (props.size() == 0)
             return bean;
         int off;
@@ -152,7 +165,7 @@ public class BeanUtils {
         String p;
         String[] propName = new String[100];
         Object[] args = new Object[1];
-        Map<String, PropertyDescriptor> workerProps;
+        Map<String, PropertyDescriptorWrapper> workerProps;
         for (Map.Entry<String, Object> entry : values.entrySet()) {
             off = 0;
             depth = 0;
@@ -163,12 +176,11 @@ public class BeanUtils {
             }
             propName[depth++] = (p.substring(off));
             if (depth == 1) {
-                PropertyDescriptor prop = props.get(p);
+                PropertyDescriptorWrapper prop = props.get(p);
                 if (null == prop)
                     continue;
-                args[0] = ObjectUtils.convert(prop.getPropertyType(), entry.getValue());
-                Method writer = prop.getWriteMethod();
-                if (null != writer) writer.invoke(bean, args);
+                args[0] = ObjectUtils.convert(prop.protertyType, entry.getValue());
+                prop.writer.invoke(bean, args);
                 continue;
             }
             int i = 0;
@@ -176,19 +188,18 @@ public class BeanUtils {
             Class<?> propType;
             workerProps = getBeanPropertyDes(type);
             while (depth != i) {
-                PropertyDescriptor prop = workerProps.get(propName[i]);
+                PropertyDescriptorWrapper prop = workerProps.get(propName[i]);
                 if (null == prop) {
                     ++i;
                     continue;
                 }
-                propType = prop.getPropertyType();
+                propType = prop.protertyType;
                 if (i != depth - 1 && IEntity.class.isAssignableFrom(propType)) {
-                    Object ib = prop.getReadMethod().invoke(worker);
+                    Object ib = prop.reader == null ? null : prop.reader.invoke(worker);
                     if (null == ib)
                         ib = propType.newInstance();
                     args[0] = ObjectUtils.convert(propType, ib);
-                    Method writer = prop.getWriteMethod();
-                    if (null != writer) writer.invoke(worker, args);
+                    prop.writer.invoke(worker, args);
                     workerProps = getBeanPropertyDes(propType);
                     worker = ib;
                     ++i;
@@ -196,8 +207,7 @@ public class BeanUtils {
                 }
                 if (i == depth - 1) {
                     args[0] = ObjectUtils.convert(propType, entry.getValue());
-                    Method writer = prop.getWriteMethod();
-                    if (null != writer) writer.invoke(worker, args);
+                    prop.writer.invoke(worker, args);
                 }
                 ++i;
             }
@@ -253,5 +263,19 @@ public class BeanUtils {
             }
         }
         return propValue;
+    }
+
+    private static class PropertyDescriptorWrapper {
+        public PropertyDescriptor descriptor;
+        public Class<?> protertyType;
+        public Method reader;
+        public Method writer;
+
+        public PropertyDescriptorWrapper(PropertyDescriptor descriptor, Class<?> protertyType, Method reader, Method writer) {
+            this.descriptor = descriptor;
+            this.protertyType = protertyType;
+            this.reader = reader;
+            this.writer = writer;
+        }
     }
 }

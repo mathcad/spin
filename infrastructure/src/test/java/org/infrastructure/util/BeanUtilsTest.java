@@ -78,6 +78,6 @@ public class BeanUtilsTest {
 
         seconds = (endTime - startTime) / 1000F;
         System.out.println("JSON：" + Float.toString(seconds) + " seconds.");
-        assertTrue(user3.getCreateUser().getCreateUser().getId() == 3);
+        assertTrue(user.getCreateUser().getCreateUser().getId() == 3);
     }
 }
