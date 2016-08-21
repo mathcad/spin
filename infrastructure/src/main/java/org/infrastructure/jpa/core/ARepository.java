@@ -27,6 +27,7 @@ import org.infrastructure.sys.ElUtils;
 import org.infrastructure.sys.GenericUtils;
 import org.infrastructure.throwable.BizException;
 import org.infrastructure.util.Assert;
+import org.infrastructure.util.BeanUtils;
 import org.infrastructure.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -778,16 +779,16 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         List<Map<String, Object>> list = ct.list();
 
         ArrayList<T> enList = new ArrayList<>();
-        /* Map查询后，回填对象 */
         for (Map<String, Object> map : list) {
-            T t = convertMapToVo(map);
-            enList.add(t);
+            try {
+                enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
+            } catch (Exception e) {
+            }
         }
 
         Page<T> page = new Page<>();
         page.data = enList;
         page.total = total;
-
         return page;
     }
 
@@ -849,8 +850,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         ArrayList<T> enList = new ArrayList<>();
         /* Map查询后，回填对象 */
         for (Map<String, Object> map : list) {
-            T t = convertMapToVo(map);
-            enList.add(t);
+            try {
+                enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
+            } catch (Exception e) {
+            }
         }
         return enList;
     }

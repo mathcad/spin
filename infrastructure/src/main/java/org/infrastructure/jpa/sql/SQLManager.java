@@ -23,9 +23,7 @@ import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.jpa.dto.Page;
 import org.infrastructure.throwable.BizException;
 import org.infrastructure.util.BeanUtils;
-import org.infrastructure.util.HashMultiValueMap;
 import org.infrastructure.util.HashUtils;
-import org.infrastructure.util.MultiValueMap;
 import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,15 +32,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.util.ReflectionUtils;
 
 import javax.sql.DataSource;
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -90,90 +82,41 @@ public class SQLManager<T extends IEntity> {
     /**
      * 通过命令文件查询 + 参数Map数组（HashUtils.getMap构建参数数组）
      *
-     * @param cmd       命令名称
+     * @param sqlId     命令名称
      * @param mapParams key1,value1,key2,value2,key3,value3 ...
      * @return 查询结果
      */
-    public List<Map<String, Object>> findList(String cmd, Object... mapParams) {
-        return findList(cmd, HashUtils.getMap(mapParams));
-    }
-
-    /**
-     * 获取sqlmap中的语句
-     *
-     * @param cmd      sql命令path
-     * @param paramMap 参数
-     * @return sqlmap中的语句
-     */
-    public String getFromSqlMap(String cmd, Map<String, ?> paramMap) {
-        return loader.getSQL(cmd, paramMap).getTemplate();
+    public List<Map<String, Object>> findMapList(String sqlId, Object... mapParams) {
+        return findMapList(sqlId, HashUtils.getMap(mapParams));
     }
 
     /**
      * 通过命令文件查询
      *
-     * @param cmd      命令名称
+     * @param sqlId    命令名称
      * @param paramMap 参数map
      * @return 查询结果
      */
-    public List<Map<String, Object>> findList(String cmd, Map<String, ?> paramMap) {
-        String sqlTxt = loader.getSQL(cmd, paramMap).getTemplate();
+    public List<Map<String, Object>> findMapList(String sqlId, Map<String, ?> paramMap) {
+        String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
         try {
             return this.nameJt.queryForList(sqlTxt, paramMap);
         } catch (Exception ex) {
-            logger.error("执行查询出错：" + cmd);
+            logger.error("执行查询出错：" + sqlId);
             logger.error(sqlTxt);
             throw new BizException("执行查询出错：", ex);
         }
     }
 
     /**
-     * 查找单行Map
-     *
-     * @param cmd      命令名称
-     * @param paramMap 参数
-     */
-    public Map<String, Object> findMap(String cmd, Map<String, ?> paramMap) {
-        List<Map<String, Object>> list = this.findList(cmd, paramMap);
-        if (list.size() > 0) {
-            return list.get(0);
-        } else
-            return null;
-    }
-
-    /**
-     * 通过cmd命令查询总数
-     *
-     * @param cmd      命令名称
-     * @param paramMap 参数
-     */
-    public Long findLong(String cmd, Map<String, ?> paramMap) {
-        String sqlTxt = loader.getSQL(cmd, paramMap).getTemplate();
-        Number number = this.nameJt.queryForObject(sqlTxt, paramMap, Long.class);
-        return number != null ? number.longValue() : 0;
-    }
-
-    /**
-     * 执行update/insert命令
-     *
-     * @param cmd      命令名
-     * @param paramMap 参数
-     * @return 影响条目
-     */
-    public int execute(String cmd, Map<String, ?> paramMap) {
-        String sqlTxt = loader.getSQL(cmd, paramMap).getTemplate();
-        return this.nameJt.update(sqlTxt, paramMap);
-    }
-
-    /**
      * 分页查询
      *
-     * @param cmd sql模板path
-     * @param qp  查询参数
+     * @param sqlId sql模板path
+     * @param qp    查询参数
      * @return 分页查询结果
      */
-    public Page<Map<String, Object>> findPage(String cmd, QueryParam qp) {
-        String sqlTxt = loader.getSQL(cmd, qp.q).getTemplate();
+    public Page<Map<String, Object>> findPage(String sqlId, QueryParam qp) {
+        String sqlTxt = loader.getSQL(sqlId, qp.q).getTemplate();
         String sortInfo = parseOrder(qp);
         // 替换排序为自定义
         if (StringUtils.isNotEmpty(sortInfo)) {
@@ -191,6 +134,75 @@ public class SQLManager<T extends IEntity> {
         Number number = this.nameJt.queryForObject(totalSqlTxt, params, Long.class);
         Long total = (number != null ? number.longValue() : 0);
         return new Page<>(list, total);
+    }
+
+    /**
+     * 查找单个对象
+     *
+     * @param sqlId    命令名称
+     * @param paramMap 参数
+     */
+    public Map<String, Object> findOneMap(String sqlId, Map<String, ?> paramMap) {
+        List<Map<String, Object>> list = this.findMapList(sqlId, paramMap);
+        if (list.size() > 0) {
+            return list.get(0);
+        } else
+            return null;
+    }
+
+    /**
+     * 通过命令文件查询 + 参数Map数组（HashUtils.getMap构建参数数组）
+     *
+     * @param sqlId     命令名称
+     * @param mapParams key1,value1,key2,value2,key3,value3 ...
+     * @return 查询结果
+     */
+    public List<T> findList(String sqlId, Object... mapParams) {
+        List<Map<String, Object>> maps = findMapList(sqlId, HashUtils.getMap(mapParams));
+        List<T> res = new ArrayList<>();
+        for (Map<String, Object> map : maps) {
+            try {
+                res.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
+            } catch (Exception e) {
+            }
+        }
+        return res;
+    }
+
+    /**
+     * 获取sqlmap中的语句
+     *
+     * @param sqlId    sql命令path
+     * @param paramMap 参数
+     * @return sqlmap中的语句
+     */
+    public String getSQL(String sqlId, Map<String, ?> paramMap) {
+        return loader.getSQL(sqlId, paramMap).getTemplate();
+    }
+
+    /**
+     * 通过cmd命令查询总数
+     *
+     * @param sqlId    命令名称
+     * @param paramMap 参数
+     */
+    public Long count(String sqlId, Map<String, ?> paramMap) {
+        String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
+        sqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
+        Long number = this.nameJt.queryForObject(sqlTxt, paramMap, Long.class);
+        return number != null ? number : 0;
+    }
+
+    /**
+     * 执行update/insert/delete命令
+     *
+     * @param sqlId    命令名称
+     * @param paramMap 参数
+     * @return 影响条目
+     */
+    public int executeCUD(String sqlId, Map<String, ?> paramMap) {
+        String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
+        return this.nameJt.update(sqlTxt, paramMap);
     }
 
     private String removeLastOrderBy(String sql) {
@@ -229,119 +241,12 @@ public class SQLManager<T extends IEntity> {
     }
 
     /**
-     * 批量更新执行
+     * 批量更新
      */
     @SuppressWarnings({"unchecked"})
-    public void batchExec(String cmd, List<Map> argsMap) {
-        String sqlTxt = loader.getSQL(cmd, null).getTemplate();
+    public void batchExec(String sqlId, List<Map> argsMap) {
+        String sqlTxt = loader.getSQL(sqlId, null).getTemplate();
         this.nameJt.batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
-    }
-
-    /**
-     * 将Map形式的查询结果转换为实体
-     * <p>
-     * 复合属性，请在语句中指定别名为实体属性的路径。如createUser.id对应createUser的id属性。<br>
-     * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
-     * </p>
-     *
-     * @param entityValues 行对象
-     * @return 返回Transient瞬态的VO
-     */
-    public T convertMapToVo(Map<String, Object> entityValues) {
-        T t = null;
-        try {
-            t = this.entityClazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException e1) {
-            e1.printStackTrace();
-        }
-        for (String key : entityValues.keySet()) {
-            try {
-                Object keyObj = entityValues.get(key);
-                if (keyObj == null)
-                    continue;
-                if (key.contains(".")) {
-                    // 关联字段，生成关联对象
-                    String[] refKeys = key.split("\\.");
-                    Field refField = ReflectionUtils.findField(this.entityClazz, refKeys[0]);
-                    ReflectionUtils.makeAccessible(refField);
-                    Object refObj = ReflectionUtils.getField(refField, t);
-                    if (refObj == null) {
-                        Class refFieldClass = refField.getType();
-                        refObj = refFieldClass.newInstance();
-                        ReflectionUtils.makeAccessible(refField);
-                        ReflectionUtils.setField(refField, t, refObj);
-                    }
-                    // 赋值关联对象字段的值
-                    Field refObjField = ReflectionUtils.findField(refField.getType(), refKeys[1]);
-                    ReflectionUtils.makeAccessible(refObjField);
-                    ReflectionUtils.setField(refObjField, refObj, keyObj);
-                } else {
-                    // 简单字段
-                    Field field = ReflectionUtils.findField(this.entityClazz, key);
-                    ReflectionUtils.makeAccessible(field);
-                    ReflectionUtils.setField(field, t, keyObj);
-                }
-            } catch (Exception e) {
-                logger.error(key, e);
-                throw new BizException("转化查询结果到实体错误:" + key, e);
-            }
-        }
-        return t;
-    }
-
-    /**
-     * 将Map形式的查询结果转换为实体
-     * <p>
-     * 复合属性，请在语句中指定别名为实体属性的路径。如createUser.id对应createUser的id属性。<br>
-     * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
-     * </p>
-     *
-     * @param entityValues 行对象
-     * @return 返回瞬态的实体bean
-     */
-    public T convertMapToBean(Map<String, Object> entityValues) throws IntrospectionException, IllegalAccessException, InstantiationException, InvocationTargetException {
-        T entity = this.entityClazz.newInstance();
-//        PropertyDescriptor[] propertyDescriptors = BeanUtils.propertyDescriptors(this.entityClazz);
-//        if (null == propertyDescriptors || 0 == propertyDescriptors.length)
-//            return entity;
-//        Map<String, PropertyDescriptor> props = new HashMap<>();
-//        for (PropertyDescriptor descriptor : propertyDescriptors) {
-//            props.put(descriptor.getName().toLowerCase(), descriptor);
-//        }
-//
-//
-//        for (Map.Entry<String, Object> entry : entityValues.entrySet()) {
-//            int index = entry.getKey().indexOf('.');
-//            if (index > 0) {
-//                String propName = entry.getKey().substring(0,index).toLowerCase();
-//                if (props.containsKey(propName))
-//
-//            } else {
-////                keyMap.add(entry.getKey().toLowerCase(), entry.getKey());
-//            }
-//        }
-
-        // TODO: 2016/8/15 Map到实体的转换尚未完成
-//        for (PropertyDescriptor descriptor : propertyDescriptors) {
-//            String propertyName = descriptor.getName();
-//
-//            if (keyMap.containsKey(propertyName.toLowerCase())) {
-//                // 下面一句可以 try 起来，这样当一个属性赋值失败的时候就不会影响其他属性赋值。
-//                List<String> entityProps = keyMap.get(propertyName.toLowerCase());
-//                //关联实体的复合属性
-//                if (IEntity.class.isAssignableFrom(descriptor.getPropertyType())) {
-//                    Object prop = descriptor.getPropertyType().newInstance();
-//                }
-//
-//                Object value = entityValues.get(propertyName);
-//                //descriptor.getPropertyType()
-//                Object[] args = new Object[1];
-//                args[0] = value;
-//
-//                descriptor.getWriteMethod().invoke(entity, args);
-//            }
-//        }
-        return entity;
     }
 
     public JdbcTemplate getJt() {
