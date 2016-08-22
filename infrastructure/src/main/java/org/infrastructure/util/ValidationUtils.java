@@ -1,7 +1,6 @@
-package org.infrastructure.sys;
+package org.infrastructure.util;
 
 import org.infrastructure.throwable.BizException;
-import org.infrastructure.util.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

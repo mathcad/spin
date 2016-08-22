@@ -2,7 +2,7 @@ package org.infrastructure.web.view;
 
 import com.google.gson.*;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
-import org.infrastructure.jpa.core.HibernateProxyTypeAdapter;
+import org.infrastructure.jpa.api.HibernateProxyTypeAdapter;
 import org.infrastructure.sys.EnumUtils;
 import org.infrastructure.throwable.BizException;
 import org.infrastructure.util.StringUtils;
@@ -196,8 +196,7 @@ public class GsonView extends AbstractView {
             SimpleDateFormat longFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
             @Override
-            public synchronized java.util.Date deserialize(JsonElement json, Type typeOfT,
-                                                           JsonDeserializationContext context) throws JsonParseException {
+            public synchronized java.util.Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
                 String str = json.getAsString();
                 if (StringUtils.isEmpty(str))
                     return null;
@@ -276,6 +275,7 @@ public class GsonView extends AbstractView {
 		/* 通用的枚举转换 */
         class EnumSerializer implements JsonSerializer<Enum>, JsonDeserializer<Enum> {
 
+            @Override
             public JsonElement serialize(Enum src, Type t, JsonSerializationContext context) {
                 Class enumCls = ((Class) t);
                 Object api = getApi();
@@ -286,6 +286,7 @@ public class GsonView extends AbstractView {
                 }
             }
 
+            @Override
             public Enum deserialize(JsonElement j, Type t, JsonDeserializationContext c) throws JsonParseException {
                 Class enumCls = ((Class) t);
                 if (((JsonPrimitive) j).isNumber()) {
@@ -296,7 +297,6 @@ public class GsonView extends AbstractView {
                     return EnumUtils.getEnum(enumCls, text);
                 }
             }
-
         }
 
         gb.registerTypeHierarchyAdapter(Enum.class, new EnumSerializer());
@@ -312,11 +312,13 @@ public class GsonView extends AbstractView {
         class AbstractPersistentCollectionSerializer implements JsonSerializer<AbstractPersistentCollection>,
                 JsonDeserializer<AbstractPersistentCollection> {
 
+            @Override
             public JsonElement serialize(AbstractPersistentCollection src, Type t, JsonSerializationContext context) {
                 logger.info("lazy AbstractPersistentCollection");
                 return new JsonArray();
             }
 
+            @Override
             public AbstractPersistentCollection deserialize(JsonElement j, Type t, JsonDeserializationContext c)
                     throws JsonParseException {
                 return null;

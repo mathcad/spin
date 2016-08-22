@@ -1,9 +1,11 @@
-package org.infrastructure.sys;
+package org.infrastructure.util;
 
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -39,14 +41,12 @@ public class PackageUtils {
         if (url != null) {
             String type = url.getProtocol();
             if (type.equals("file")) {
-                fileNames = getClassNameByFile(url.getPath(), null,
-                        childPackage);
+                fileNames = getClassNameByFile(url.getPath(), childPackage);
             } else if (type.equals("jar")) {
                 fileNames = getClassNameByJar(url.getPath(), childPackage);
             }
         } else {
-            fileNames = getClassNameByJars(((URLClassLoader) loader).getURLs(),
-                    packagePath, childPackage);
+            fileNames = getClassNameByJars(((URLClassLoader) loader).getURLs(), packagePath, childPackage);
         }
         return fileNames;
     }
@@ -59,28 +59,28 @@ public class PackageUtils {
      * @param childPackage 是否遍历子包
      * @return 类的完整名称
      */
-    private static List<String> getClassNameByFile(String filePath, List<String> className, boolean childPackage) {
-        List<String> myClassName = new ArrayList<String>();
+    private static List<String> getClassNameByFile(String filePath, boolean childPackage) {
+        List<String> myClassName = new ArrayList<>();
         File file = new File(filePath);
         File[] childFiles = file.listFiles();
-        for (File childFile : childFiles) {
-            if (childFile.isDirectory()) {
-                if (childPackage) {
-                    myClassName.addAll(getClassNameByFile(childFile.getPath(),
-                            myClassName, childPackage));
-                }
-            } else {
-                String childFilePath = childFile.getPath();
-                if (childFilePath.endsWith(".class")) {
-                    childFilePath = childFilePath.substring(
-                            childFilePath.indexOf("\\classes") + 9,
-                            childFilePath.lastIndexOf("."));
-                    childFilePath = childFilePath.replace("\\", ".");
-                    myClassName.add(childFilePath);
+        if (childFiles != null && childFiles.length != 0) {
+            for (File childFile : childFiles) {
+                if (childFile.isDirectory()) {
+                    if (childPackage) {
+                        myClassName.addAll(getClassNameByFile(childFile.getPath(), true));
+                    }
+                } else {
+                    String childFilePath = childFile.getPath();
+                    if (childFilePath.endsWith(".class")) {
+                        childFilePath = childFilePath.substring(
+                                childFilePath.indexOf("\\classes") + 9,
+                                childFilePath.lastIndexOf("."));
+                        childFilePath = childFilePath.replace("\\", ".");
+                        myClassName.add(childFilePath);
+                    }
                 }
             }
         }
-
         return myClassName;
     }
 
@@ -92,7 +92,7 @@ public class PackageUtils {
      * @return 类的完整名称
      */
     private static List<String> getClassNameByJar(String jarPath, boolean childPackage) {
-        List<String> myClassName = new ArrayList<String>();
+        List<String> myClassName = new ArrayList<>();
         String[] jarInfo = jarPath.split("!");
         String jarFilePath = jarInfo[0].substring(jarInfo[0].indexOf("/"));
         String packagePath = jarInfo[1].substring(1);
@@ -140,7 +140,7 @@ public class PackageUtils {
      * @return 类的完整名称
      */
     private static List<String> getClassNameByJars(URL[] urls, String packagePath, boolean childPackage) {
-        List<String> myClassName = new ArrayList<String>();
+        List<String> myClassName = new ArrayList<>();
         if (urls != null) {
             for (URL url : urls) {
                 String urlPath = url.getPath();

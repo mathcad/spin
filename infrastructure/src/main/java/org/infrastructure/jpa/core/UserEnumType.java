@@ -201,7 +201,7 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
 
     private void treatAsOrdinal() {
         if (this.enumValueMapper == null || !OrdinalEnumValueMapper.class.isInstance(this.enumValueMapper)) {
-            this.enumValueMapper = new OrdinalEnumValueMapper<E>();
+            this.enumValueMapper = new OrdinalEnumValueMapper<>();
             this.sqlType = this.enumValueMapper.getSqlType();
         }
     }
@@ -222,6 +222,7 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
         return enumType;
     }
 
+    @SuppressWarnings("unchecked")
     private <T extends Annotation> T getAnnotation(Annotation[] annotations, Class<T> anClass) {
         for (Annotation annotation : annotations) {
             if (anClass.isInstance(annotation)) {
@@ -231,11 +232,13 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public String objectToSQLString(Object value) {
         return enumValueMapper.objectToSQLString((E) value);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public String toXMLString(Object value) {
         return enumValueMapper.toXMLString((E) value);
@@ -246,6 +249,7 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
         return enumValueMapper.fromXMLString(xmlValue);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public String toLoggableString(Object value, SessionFactoryImplementor factory) {
         if (enumValueMapper != null) {

@@ -1,6 +1,6 @@
 package org.infrastructure.redis;
 
-import org.infrastructure.sys.SerializeUtil;
+import org.infrastructure.sys.SerializeUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisZSetCommands.Tuple;
@@ -222,7 +222,7 @@ public class RedisCacheSupport<V> implements ICached<V> {
             @Override
             public V doInRedis(RedisConnection connection)
                     throws DataAccessException {
-                connection.set(key.getBytes(), SerializeUtil.serialize(value));
+                connection.set(key.getBytes(), SerializeUtils.serialize(value));
                 return null;
             }
         });
@@ -457,7 +457,7 @@ public class RedisCacheSupport<V> implements ICached<V> {
                     throws DataAccessException {
                 byte[] kb = key.getBytes();
                 connection.openPipeline();
-                connection.set(kb, SerializeUtil.serialize(value));
+                connection.set(kb, SerializeUtils.serialize(value));
                 if (expire != null)
                     connection.expire(kb, expire);
                 return connection.closePipeline();
@@ -485,7 +485,7 @@ public class RedisCacheSupport<V> implements ICached<V> {
         redisTemplate.execute(new RedisCallback<Object>() {
             public String doInRedis(final RedisConnection connection)
                     throws DataAccessException {
-                connection.set(key.getBytes(), SerializeUtil.serialize(value));
+                connection.set(key.getBytes(), SerializeUtils.serialize(value));
                 return null;
             }
         });

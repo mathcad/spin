@@ -6,7 +6,6 @@ import org.hibernate.collection.internal.PersistentBag;
 import org.infrastructure.jpa.core.GenericUser;
 import org.infrastructure.throwable.BizException;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.ReflectionUtils.FieldCallback;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -67,60 +66,56 @@ public class ElUtils {
         try {
             final Object t = tcls.newInstance();
 
-            ReflectionUtils.doWithFields(dcls, new FieldCallback() {
-                @Override
-                public void doWith(Field f) throws IllegalArgumentException,
-                        IllegalAccessException {
-                    try {
-                        String getM = f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
-                        Method getMethod = ReflectionUtils.findMethod(tcls, (f.getType().equals(boolean.class) ? "is" : "get") + getM);
-                        Method setMethod = ReflectionUtils.findMethod(tcls, "set" + getM, f.getType());
+            ReflectionUtils.doWithFields(dcls, f -> {
+                try {
+                    String getM = f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
+                    Method getMethod = ReflectionUtils.findMethod(tcls, (f.getType().equals(boolean.class) ? "is" : "get") + getM);
+                    Method setMethod = ReflectionUtils.findMethod(tcls, "set" + getM, f.getType());
 
-                        //如果在包含字段中
-                        if (includeFieldSet.contains(f.getName())) {
-                            setMethod.invoke(t, getMethod.invoke(d));
-                            return;
-                        }
+                    //如果在包含字段中
+                    if (includeFieldSet.contains(f.getName())) {
+                        setMethod.invoke(t, getMethod.invoke(d));
+                        return;
+                    }
 
-                        //无属性方法
-                        if (setMethod == null || getMethod == null)
-                            return;
-                        /* list集合延迟加载 */
-                        if (f.getType().equals(List.class)) {
-                            if (depth > 0) {
-                                Object d_ = getMethod.invoke(d);
-                                if (d_ != null && d_ instanceof PersistentBag) {
-                                    PersistentBag bag = (PersistentBag) d_;
-                                    bag.clearDirty();
-                                    Object[] array = bag.toArray();
-                                    List list = new ArrayList();
-                                    for (Object o : array) {
-                                        if (javassist.util.proxy.ProxyFactory.isProxyClass(o.getClass())) {
-                                            o = getDto(o, 0);
-                                        }
-                                        list.add(o);
-                                    }
-                                    setMethod.invoke(t, list);
-                                }
-                            } else {
+                    //无属性方法
+                    if (setMethod == null || getMethod == null)
+                        return;
+                    /* list集合延迟加载 */
+                    if (f.getType().equals(List.class)) {
+                        if (depth > 0) {
+                            Object d_ = getMethod.invoke(d);
+                            if (d_ != null && d_ instanceof PersistentBag) {
+                                PersistentBag bag = (PersistentBag) d_;
+                                bag.clearDirty();
+                                Object[] array = bag.toArray();
                                 List list = new ArrayList();
+                                for (Object o : array) {
+                                    if (javassist.util.proxy.ProxyFactory.isProxyClass(o.getClass())) {
+                                        o = getDto(o, 0);
+                                    }
+                                    list.add(o);
+                                }
                                 setMethod.invoke(t, list);
                             }
-                        } else if (f.getType().isAssignableFrom(GenericUser.class) || f.getType().getAnnotation(Entity.class) != null) {
-                            /* Entity关联按层次需求来级联copy */
-                            if (depth > 0) {
-                                Object d_ = getMethod.invoke(d);
-                                setMethod.invoke(t, getDto(d_, depth - 1, includeFields));
-                            } else {
-                                Object d_ = f.getType().newInstance();
-                            }
                         } else {
-                            /* 其他简单类型 copy赋值 */
-                            setMethod.invoke(t, getMethod.invoke(d));
+                            List list = new ArrayList();
+                            setMethod.invoke(t, list);
                         }
-                    } catch (Exception e) {
-                        logger.error("", e);
+                    } else if (f.getType().isAssignableFrom(GenericUser.class) || f.getType().getAnnotation(Entity.class) != null) {
+                        /* Entity关联按层次需求来级联copy */
+                        if (depth > 0) {
+                            Object d_ = getMethod.invoke(d);
+                            setMethod.invoke(t, getDto(d_, depth - 1, includeFields));
+                        } else {
+                            Object d_ = f.getType().newInstance();
+                        }
+                    } else {
+                        /* 其他简单类型 copy赋值 */
+                        setMethod.invoke(t, getMethod.invoke(d));
                     }
+                } catch (Exception e) {
+                    logger.error("", e);
                 }
             });
 
@@ -139,14 +134,9 @@ public class ElUtils {
      */
     public static Field getPKField(Class entityClass) {
         final Field[] fs = new Field[1];
-        ReflectionUtils.doWithFields(entityClass, new FieldCallback() {
-
-            @Override
-            public void doWith(Field f) throws IllegalArgumentException,
-                    IllegalAccessException {
-                if (f.getAnnotation(Id.class) != null) {
-                    fs[0] = f;
-                }
+        ReflectionUtils.doWithFields(entityClass, f -> {
+            if (f.getAnnotation(Id.class) != null) {
+                fs[0] = f;
             }
         });
         return fs[0];
@@ -162,8 +152,7 @@ public class ElUtils {
         Field opkF = ElUtils.getPKField(en.getClass());
         String getM = opkF.getName().substring(0, 1).toUpperCase() + opkF.getName().substring(1);
         Method getMethod = ReflectionUtils.findMethod(en.getClass(), (opkF.getType().equals(boolean.class) || opkF.getType().equals(Boolean.class) ? "is" : "get") + getM);
-        Object opk = ReflectionUtils.invokeMethod(getMethod, en);
-        return opk;
+        return ReflectionUtils.invokeMethod(getMethod, en);
     }
 
     /**

@@ -1,4 +1,4 @@
-package org.infrastructure.jpa.core;
+package org.infrastructure.jpa.api;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
@@ -8,8 +8,6 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.IOException;
@@ -17,12 +15,12 @@ import java.lang.reflect.Field;
 
 /**
  * lazy-load gson序列化 解决方案
+ * 序列化hibernate代理实体对象的id字段
  *
  * @author xuewinan
  */
 public class HibernateProxyTypeAdapter extends TypeAdapter<HibernateProxy> {
-    static final Logger logger = LoggerFactory.getLogger(HibernateProxyTypeAdapter.class);
-
+    private final Gson context;
     public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
         @Override
         @SuppressWarnings("unchecked")
@@ -31,7 +29,6 @@ public class HibernateProxyTypeAdapter extends TypeAdapter<HibernateProxy> {
                     ? (TypeAdapter<T>) new HibernateProxyTypeAdapter(gson) : null);
         }
     };
-    private final Gson context;
 
     private HibernateProxyTypeAdapter(Gson context) {
         this.context = context;
@@ -42,7 +39,7 @@ public class HibernateProxyTypeAdapter extends TypeAdapter<HibernateProxy> {
         throw new UnsupportedOperationException("Not supported");
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"unchecked"})
     @Override
     public void write(JsonWriter out, HibernateProxy value) throws IOException {
         if (value == null) {

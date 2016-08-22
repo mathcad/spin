@@ -13,7 +13,7 @@ public enum ErrorAndExceptionCode {
     ENCRYPT_FAIL(10),
     DEENCRYPT_FAIL(15),
     BEAN_CREATE_FAIL(40);
-    private static final Map<Integer, String> valueStringMapper = new HashMap<Integer, String>();
+    private static final Map<Integer, String> valueStringMapper = new HashMap<>();
 
     static {
         valueStringMapper.put(-1, "其他");

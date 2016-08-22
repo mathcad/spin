@@ -1,4 +1,4 @@
-package org.infrastructure.sys;
+package org.infrastructure.util;
 
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;

@@ -162,10 +162,4 @@ public class CNYUtil {
         }
         return rsult.toString();
     }
-
-    public static void main(String[] args) {
-        BigDecimal str = new BigDecimal("12345");
-        java.text.DecimalFormat df = new java.text.DecimalFormat("#.00");
-        System.out.println(convertCNY(String.valueOf(df.format(str.doubleValue()))));
-    }
 }

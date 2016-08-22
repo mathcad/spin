@@ -15,7 +15,6 @@ import java.util.regex.Pattern;
 /**
  * jedis集群 读取配置
  *
- * @author xuweinan
  * @version V1.0
  */
 public class JedisClusterFactory implements FactoryBean<JedisCluster>, InitializingBean {

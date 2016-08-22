@@ -23,26 +23,25 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.infrastructure.security.Hex;
+import org.infrastructure.security.MessageDigestAlgorithms;
 
 /**
  * 简化摘要算法{@link MessageDigest} 操作。
  * 这个Class是immutable且线程安全的。
  * 默认的字符串返回结果，均为大写形式。
+ *
  * @version 1.0
  */
 public abstract class DigestUtils {
-	private static final int STREAM_BUFFER_LENGTH = 1024;
+    private static final int STREAM_BUFFER_LENGTH = 1024;
 
     /**
      * Read through an InputStream and returns the digest for the data
      *
-     * @param digest
-     *            The MessageDigest to use (e.g. MD5)
-     * @param data
-     *            Data to digest
+     * @param digest The MessageDigest to use (e.g. MD5)
+     * @param data   Data to digest
      * @return the digest
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      */
     private static byte[] digest(final MessageDigest digest, final InputStream data) throws IOException {
         return updateDigest(digest, data).digest();
@@ -51,15 +50,13 @@ public abstract class DigestUtils {
     /**
      * Returns a <code>MessageDigest</code> for the given <code>algorithm</code>.
      *
-     * @param algorithm
-     *            the name of the algorithm requested. See <a
-     *            href="http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#AppA"
-     *            >Appendix A in the Java Cryptography Architecture Reference Guide</a> for information about standard
-     *            algorithm names.
+     * @param algorithm the name of the algorithm requested. See <a
+     *                  href="http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#AppA"
+     *                  >Appendix A in the Java Cryptography Architecture Reference Guide</a> for information about standard
+     *                  algorithm names.
      * @return A digest instance.
+     * @throws IllegalArgumentException when a {@link NoSuchAlgorithmException} is caught.
      * @see MessageDigest#getInstance(String)
-     * @throws IllegalArgumentException
-     *             when a {@link NoSuchAlgorithmException} is caught.
      */
     public static MessageDigest getDigest(final MessageDigestAlgorithms algorithm) {
         try {
@@ -73,9 +70,8 @@ public abstract class DigestUtils {
      * Returns an MD2 MessageDigest.
      *
      * @return An MD2 digest instance.
-     * @throws IllegalArgumentException
-     *             when a {@link NoSuchAlgorithmException} is caught, which should never happen because MD2 is a
-     *             built-in algorithm
+     * @throws IllegalArgumentException when a {@link NoSuchAlgorithmException} is caught, which should never happen because MD2 is a
+     *                                  built-in algorithm
      * @see MessageDigestAlgorithms#MD2
      * @since 1.7
      */
@@ -87,9 +83,8 @@ public abstract class DigestUtils {
      * Returns an MD5 MessageDigest.
      *
      * @return An MD5 digest instance.
-     * @throws IllegalArgumentException
-     *             when a {@link NoSuchAlgorithmException} is caught, which should never happen because MD5 is a
-     *             built-in algorithm
+     * @throws IllegalArgumentException when a {@link NoSuchAlgorithmException} is caught, which should never happen because MD5 is a
+     *                                  built-in algorithm
      * @see MessageDigestAlgorithms#MD5
      */
     public static MessageDigest getMd5Digest() {
@@ -100,9 +95,8 @@ public abstract class DigestUtils {
      * Returns an SHA-1 digest.
      *
      * @return An SHA-1 digest instance.
-     * @throws IllegalArgumentException
-     *             when a {@link NoSuchAlgorithmException} is caught, which should never happen because SHA-1 is a
-     *             built-in algorithm
+     * @throws IllegalArgumentException when a {@link NoSuchAlgorithmException} is caught, which should never happen because SHA-1 is a
+     *                                  built-in algorithm
      * @see MessageDigestAlgorithms#SHA_1
      * @since 1.7
      */
@@ -117,9 +111,8 @@ public abstract class DigestUtils {
      * </p>
      *
      * @return An SHA-256 digest instance.
-     * @throws IllegalArgumentException
-     *             when a {@link NoSuchAlgorithmException} is caught, which should never happen because SHA-256 is a
-     *             built-in algorithm
+     * @throws IllegalArgumentException when a {@link NoSuchAlgorithmException} is caught, which should never happen because SHA-256 is a
+     *                                  built-in algorithm
      * @see MessageDigestAlgorithms#SHA_256
      */
     public static MessageDigest getSha256Digest() {
@@ -133,9 +126,8 @@ public abstract class DigestUtils {
      * </p>
      *
      * @return An SHA-384 digest instance.
-     * @throws IllegalArgumentException
-     *             when a {@link NoSuchAlgorithmException} is caught, which should never happen because SHA-384 is a
-     *             built-in algorithm
+     * @throws IllegalArgumentException when a {@link NoSuchAlgorithmException} is caught, which should never happen because SHA-384 is a
+     *                                  built-in algorithm
      * @see MessageDigestAlgorithms#SHA_384
      */
     public static MessageDigest getSha384Digest() {
@@ -149,9 +141,8 @@ public abstract class DigestUtils {
      * </p>
      *
      * @return An SHA-512 digest instance.
-     * @throws IllegalArgumentException
-     *             when a {@link NoSuchAlgorithmException} is caught, which should never happen because SHA-512 is a
-     *             built-in algorithm
+     * @throws IllegalArgumentException when a {@link NoSuchAlgorithmException} is caught, which should never happen because SHA-512 is a
+     *                                  built-in algorithm
      * @see MessageDigestAlgorithms#SHA_512
      */
     public static MessageDigest getSha512Digest() {
@@ -162,8 +153,7 @@ public abstract class DigestUtils {
      * Returns an SHA-1 digest.
      *
      * @return An SHA-1 digest instance.
-     * @throws IllegalArgumentException
-     *             when a {@link NoSuchAlgorithmException} is caught
+     * @throws IllegalArgumentException when a {@link NoSuchAlgorithmException} is caught
      * @deprecated Use {@link #getSha1Digest()}
      */
     @Deprecated
@@ -174,8 +164,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD2 digest and returns the value as a 16 element <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return MD2 digest
      * @since 1.7
      */
@@ -186,11 +175,9 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD2 digest and returns the value as a 16 element <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return MD2 digest
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.7
      */
     public static byte[] md2(final InputStream data) throws IOException {
@@ -200,8 +187,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD2 digest and returns the value as a 16 element <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
+     * @param data Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
      * @return MD2 digest
      * @since 1.7
      */
@@ -212,8 +198,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD2 digest and returns the value as a 32 character hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return MD2 digest as a hex string
      * @since 1.7
      */
@@ -224,11 +209,9 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD2 digest and returns the value as a 32 character hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return MD2 digest as a hex string
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.7
      */
     public static String md2Hex(final InputStream data) throws IOException {
@@ -238,8 +221,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD2 digest and returns the value as a 32 character hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return MD2 digest as a hex string
      * @since 1.7
      */
@@ -250,8 +232,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD5 digest and returns the value as a 16 element <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return MD5 digest
      */
     public static byte[] md5(final byte[] data) {
@@ -261,11 +242,9 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD5 digest and returns the value as a 16 element <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return MD5 digest
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.4
      */
     public static byte[] md5(final InputStream data) throws IOException {
@@ -275,8 +254,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD5 digest and returns the value as a 16 element <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
+     * @param data Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
      * @return MD5 digest
      */
     public static byte[] md5(final String data) {
@@ -286,8 +264,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD5 digest and returns the value as a 32 character hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return MD5 digest as a hex string
      */
     public static String md5Hex(final byte[] data) {
@@ -297,11 +274,9 @@ public abstract class DigestUtils {
     /**
      * Calculates the MD5 digest and returns the value as a 32 character hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return MD5 digest as a hex string
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.4
      */
     public static String md5Hex(final InputStream data) throws IOException {
@@ -314,45 +289,44 @@ public abstract class DigestUtils {
      * @param data 待计算字符串
      * @return 32位大写MD5
      */
-	public static String md5Hex(final String data) {
-		return Hex.encodeHexStringU(md5(data));
-	}
+    public static String md5Hex(final String data) {
+        return Hex.encodeHexStringU(md5(data));
+    }
 
-	/**
+    /**
      * 计算字符串的MD5值并以32位小写Hex的形式返回
      *
      * @param data 待计算字符串
      * @return 32位小写MD5
      */
-	public static String md5HexL(final String data) {
-		return Hex.encodeHexStringL(md5(data));
-	}
+    public static String md5HexL(final String data) {
+        return Hex.encodeHexStringL(md5(data));
+    }
 
-	/**
+    /**
      * 计算字符串的MD5值并以16位大写Hex的形式返回
      *
      * @param data 待计算字符串
      * @return 16位大写MD5
      */
-	public static String md5Hex16(final String data) {
-		return Hex.encodeHexStringU(md5(data)).substring(8, 24);
-	}
+    public static String md5Hex16(final String data) {
+        return Hex.encodeHexStringU(md5(data)).substring(8, 24);
+    }
 
-	/**
+    /**
      * 计算字符串的MD5值并以16位小写Hex的形式返回
      *
      * @param data 待计算字符串
      * @return 16位小写MD5
      */
-	public static String md5HexL16(final String data) {
-		return Hex.encodeHexStringL(md5(data)).substring(8, 24);
-	}
-    
+    public static String md5HexL16(final String data) {
+        return Hex.encodeHexStringL(md5(data)).substring(8, 24);
+    }
+
     /**
      * Calculates the SHA-1 digest and returns the value as a <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest
      * @deprecated Use {@link #sha1(byte[])}
      */
@@ -364,11 +338,9 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.4
      * @deprecated Use {@link #sha1(InputStream)}
      */
@@ -380,8 +352,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest
      * @deprecated Use {@link #sha1(String)}
      */
@@ -393,8 +364,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest
      * @since 1.7
      */
@@ -405,11 +375,9 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.7
      */
     public static byte[] sha1(final InputStream data) throws IOException {
@@ -419,8 +387,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a <code>byte[]</code>.
      *
-     * @param data
-     *            Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
+     * @param data Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
      * @return SHA-1 digest
      */
     public static byte[] sha1(final String data) {
@@ -430,8 +397,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest as a hex string
      * @since 1.7
      */
@@ -442,11 +408,9 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest as a hex string
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.7
      */
     public static String sha1Hex(final InputStream data) throws IOException {
@@ -456,8 +420,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest as a hex string
      * @since 1.7
      */
@@ -471,8 +434,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-256 digest
      * @since 1.4
      */
@@ -486,11 +448,9 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-256 digest
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.4
      */
     public static byte[] sha256(final InputStream data) throws IOException {
@@ -503,8 +463,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
+     * @param data Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
      * @return SHA-256 digest
      * @since 1.4
      */
@@ -518,8 +477,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-256 digest as a hex string
      * @since 1.4
      */
@@ -533,11 +491,9 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-256 digest as a hex string
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.4
      */
     public static String sha256Hex(final InputStream data) throws IOException {
@@ -550,8 +506,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-256 digest as a hex string
      * @since 1.4
      */
@@ -565,8 +520,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-384 digest
      * @since 1.4
      */
@@ -580,11 +534,9 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-384 digest
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.4
      */
     public static byte[] sha384(final InputStream data) throws IOException {
@@ -597,8 +549,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
+     * @param data Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
      * @return SHA-384 digest
      * @since 1.4
      */
@@ -612,8 +563,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-384 digest as a hex string
      * @since 1.4
      */
@@ -627,11 +577,9 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-384 digest as a hex string
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.4
      */
     public static String sha384Hex(final InputStream data) throws IOException {
@@ -644,8 +592,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-384 digest as a hex string
      * @since 1.4
      */
@@ -659,8 +606,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-512 digest
      * @since 1.4
      */
@@ -674,11 +620,9 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-512 digest
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.4
      */
     public static byte[] sha512(final InputStream data) throws IOException {
@@ -691,8 +635,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
+     * @param data Data to digest; converted to bytes using {@link StringUtils#getBytesUtf8(String)}
      * @return SHA-512 digest
      * @since 1.4
      */
@@ -706,8 +649,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-512 digest as a hex string
      * @since 1.4
      */
@@ -721,11 +663,9 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-512 digest as a hex string
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.4
      */
     public static String sha512Hex(final InputStream data) throws IOException {
@@ -738,8 +678,7 @@ public abstract class DigestUtils {
      * Throws a <code>RuntimeException</code> on JRE versions prior to 1.4.0.
      * </p>
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-512 digest as a hex string
      * @since 1.4
      */
@@ -750,8 +689,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest as a hex string
      * @deprecated Use {@link #sha1Hex(byte[])}
      */
@@ -763,11 +701,9 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest as a hex string
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.4
      * @deprecated Use {@link #sha1Hex(InputStream)}
      */
@@ -779,8 +715,7 @@ public abstract class DigestUtils {
     /**
      * Calculates the SHA-1 digest and returns the value as a hex string.
      *
-     * @param data
-     *            Data to digest
+     * @param data Data to digest
      * @return SHA-1 digest as a hex string
      * @deprecated Use {@link #sha1Hex(String)}
      */
@@ -792,10 +727,8 @@ public abstract class DigestUtils {
     /**
      * Updates the given {@link MessageDigest}.
      *
-     * @param messageDigest
-     *            the {@link MessageDigest} to update
-     * @param valueToDigest
-     *            the value to update the {@link MessageDigest} with
+     * @param messageDigest the {@link MessageDigest} to update
+     * @param valueToDigest the value to update the {@link MessageDigest} with
      * @return the updated {@link MessageDigest}
      * @since 1.7
      */
@@ -807,13 +740,10 @@ public abstract class DigestUtils {
     /**
      * Reads through an InputStream and updates the digest for the data
      *
-     * @param digest
-     *            The MessageDigest to use (e.g. MD5)
-     * @param data
-     *            Data to digest
+     * @param digest The MessageDigest to use (e.g. MD5)
+     * @param data   Data to digest
      * @return the digest
-     * @throws IOException
-     *             On error reading from the stream
+     * @throws IOException On error reading from the stream
      * @since 1.8
      */
     public static MessageDigest updateDigest(final MessageDigest digest, final InputStream data) throws IOException {
@@ -831,11 +761,9 @@ public abstract class DigestUtils {
     /**
      * Updates the given {@link MessageDigest}.
      *
-     * @param messageDigest
-     *            the {@link MessageDigest} to update
-     * @param valueToDigest
-     *            the value to update the {@link MessageDigest} with;
-     *            converted to bytes using {@link StringUtils#getBytesUtf8(String)}
+     * @param messageDigest the {@link MessageDigest} to update
+     * @param valueToDigest the value to update the {@link MessageDigest} with;
+     *                      converted to bytes using {@link StringUtils#getBytesUtf8(String)}
      * @return the updated {@link MessageDigest}
      * @since 1.7
      */
