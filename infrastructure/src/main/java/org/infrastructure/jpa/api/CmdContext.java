@@ -58,9 +58,6 @@ public class CmdContext implements ApplicationContextAware {
 
     /**
      * 如果系统中已声明了Repo，不再生成
-     *
-     * @throws BeansException
-     * @throws ClassNotFoundException
      */
     @SuppressWarnings("unchecked")
     public <T extends IEntity<Long>> ARepository<T, Long> getRepo(String cls) throws BeansException, ClassNotFoundException {

@@ -24,8 +24,6 @@ import org.springframework.web.servlet.ModelAndView;
  * 提供直接操控元数据的接口
  * <p>
  * 动态映射crud操作的rest full api
- *
- * @author xuweinan
  */
 public abstract class MetaController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(MetaController.class);
@@ -58,7 +56,6 @@ public abstract class MetaController extends BaseController {
         try {
             if (StringUtils.isEmpty(q))
                 throw new BizException("空查询无法执行");
-
             QueryParam p = this.getGson().fromJson(q, QueryParam.class);
             ARepository repo = cmdContext.getRepo(p.cls);
             Page result = listByQ(cmdParser, p, repo);
@@ -82,7 +79,7 @@ public abstract class MetaController extends BaseController {
         try {
             Class clz = Class.forName(cls);
             @SuppressWarnings("unchecked")
-            IEntity<Long> m = (IEntity<Long>)this.getGson().fromJson(json, clz);
+            IEntity<Long> m = (IEntity<Long>) this.getGson().fromJson(json, clz);
             this.cmdContext.getRepo(cls).save(m);
             mv.ok().add("id", ElUtils.getPK(m));
         } catch (Throwable t) {

@@ -56,8 +56,6 @@ public class BaseController {
 
     /**
      * 输出utf-8编码的html内容
-     *
-     * @throws IOException
      */
     protected void renderHtml(String responseContent, HttpServletResponse response) throws IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -134,7 +132,6 @@ public class BaseController {
      * 从Json转换到 grid实体
      *
      * @param columns json字符串
-     * @throws Exception
      */
     protected ExcelExtGrid toExcelExtGrid(String columns) throws Exception {
         try {
@@ -170,7 +167,6 @@ public class BaseController {
      * @param repo      Dao
      * @param handlers  自定义查询类
      * @return 查询结果
-     * @throws Exception
      */
     public static Page listByQ(CmdParser cmdParser, QueryParam p, ARepository repo, QueryParamHandler... handlers) throws Exception {
         CmdParser.DetachedCriteriaResult dr = cmdParser.parseDetachedCriteria(p, handlers);
@@ -180,7 +176,7 @@ public class BaseController {
         PageRequest pr = new PageRequest(page, pagesize);
         Order[] orders = cmdParser.parseOrders(p);
 
-        Page result = null;
+        Page result;
         if (p.fields == null || p.fields.size() == 0) {
             // 实体列表查询，不推荐（性能低下）
             result = repo.find(dc, pr, orders);
