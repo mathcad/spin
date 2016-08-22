@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * 异常与错误代码
  *
- * @author Arvin
+ * @author xuweinan
  */
 public enum ErrorAndExceptionCode {
     OTHER(-1),

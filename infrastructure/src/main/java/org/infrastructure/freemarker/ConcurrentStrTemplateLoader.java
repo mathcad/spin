@@ -6,7 +6,6 @@ import freemarker.template.utility.StringUtil;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -82,7 +81,7 @@ public class ConcurrentStrTemplateLoader implements TemplateLoader {
         sb.append(getClassNameForToString(this));
         sb.append("(Map { ");
         int cnt = 0;
-        for (Iterator it = templates.keySet().iterator(); it.hasNext(); ) {
+        for (String s : templates.keySet()) {
             cnt++;
             if (cnt != 1) {
                 sb.append(", ");
@@ -91,7 +90,7 @@ public class ConcurrentStrTemplateLoader implements TemplateLoader {
                 sb.append("...");
                 break;
             }
-            sb.append(StringUtil.jQuote(it.next()));
+            sb.append(StringUtil.jQuote(s));
             sb.append("=...");
         }
         if (cnt != 0) {

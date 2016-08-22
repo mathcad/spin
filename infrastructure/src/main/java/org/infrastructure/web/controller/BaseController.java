@@ -10,7 +10,7 @@ import org.infrastructure.jpa.api.CmdParser;
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.api.QueryParamHandler;
 import org.infrastructure.jpa.core.ARepository;
-import org.infrastructure.jpa.dto.Page;
+import org.infrastructure.jpa.core.Page;
 import org.infrastructure.shiro.SessionManager;
 import org.infrastructure.throwable.BizException;
 import org.infrastructure.util.StringUtils;

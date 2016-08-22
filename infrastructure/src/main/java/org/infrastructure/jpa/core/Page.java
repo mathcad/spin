@@ -1,4 +1,4 @@
-package org.infrastructure.jpa.dto;
+package org.infrastructure.jpa.core;
 
 import java.io.Serializable;
 import java.util.List;
@@ -7,9 +7,6 @@ import javax.xml.bind.annotation.XmlType;
 
 /**
  * 分页数据存放（列表使用)
- * 
- * @author zhouxiang2
- *
  * @param <T>
  */
 @XmlType(name = "Page")

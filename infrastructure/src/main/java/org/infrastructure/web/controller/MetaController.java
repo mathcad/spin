@@ -4,7 +4,7 @@ import org.infrastructure.jpa.api.CmdParser;
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.core.ARepository;
 import org.infrastructure.jpa.core.IEntity;
-import org.infrastructure.jpa.dto.Page;
+import org.infrastructure.jpa.core.Page;
 import org.infrastructure.sys.ElUtils;
 import org.infrastructure.throwable.BizException;
 import org.infrastructure.web.view.ExcelExportView;

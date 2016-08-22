@@ -23,7 +23,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.infrastructure.security.Hex;
-import org.infrastructure.security.MessageDigestAlgorithms;
 
 /**
  * 简化摘要算法{@link MessageDigest} 操作。

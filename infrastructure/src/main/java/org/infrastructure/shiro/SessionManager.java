@@ -1,9 +1,5 @@
 package org.infrastructure.shiro;
 
-import java.util.Arrays;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
@@ -12,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 
 /**
  * 全局Session实现类 基于shiro实现
@@ -24,9 +23,6 @@ public class SessionManager {
 
     /**
      * 获得当前session（默认不创建新Session）
-     *
-     * @return
-     * @version 1.0
      */
     public Session getSession() {
         return getSession(false);
@@ -36,8 +32,6 @@ public class SessionManager {
      * 获得session
      *
      * @param autoCreate 是否自动创建
-     * @return
-     * @version 1.0
      */
     public Session getSession(boolean autoCreate) {
         Subject currentUser = SecurityUtils.getSubject();
@@ -46,8 +40,6 @@ public class SessionManager {
 
     /**
      * 得到Session中，当前登录用户
-     *
-     * @return
      */
     public <T extends SessionUser> T getCurrentUser() {
         try {
@@ -66,8 +58,6 @@ public class SessionManager {
 
     /**
      * 返回当前线程的 request对象
-     *
-     * @return
      */
     public HttpServletRequest getRequest() {
         ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
@@ -76,9 +66,6 @@ public class SessionManager {
 
     /**
      * 返回session中的值
-     *
-     * @param key
-     * @return
      */
     public Object getSessionAttr(String key) {
         Session sess = getSession(true);
@@ -87,9 +74,6 @@ public class SessionManager {
 
     /**
      * 设置session中的值
-     *
-     * @param key
-     * @return
      */
     public void setSessionAttr(String key, Object value) {
         Session sess = getSession(true);
@@ -98,9 +82,6 @@ public class SessionManager {
 
     /**
      * 删除session中的值，并返回
-     *
-     * @param key
-     * @return
      */
     public Object removeSessionAttr(String key) {
         Session sess = getSession();
@@ -113,28 +94,22 @@ public class SessionManager {
 
     /**
      * 移除所有属性
-     *
-     * @version 1.0
      */
     public void removeAllSessionAttr() {
         Session sess = getSession();
         if (sess != null && sess.getAttributeKeys() != null) {
-            for (Object key : sess.getAttributeKeys()) {
-                sess.removeAttribute(key);
-            }
+            sess.getAttributeKeys().forEach(sess::removeAttribute);
         }
     }
 
     /**
      * 移除所有属性，除 attr 以外
-     *
-     * @version 1.0
      */
     public void removeAllSessionAttrExc(String... attr) {
         Session sess = getSession();
         if (sess != null && sess.getAttributeKeys() != null) {
             for (Object key : sess.getAttributeKeys()) {
-                if (attr.length > 0 && Arrays.asList(attr).contains(key))
+                if (attr.length > 0 && Arrays.asList(attr).contains(key.toString()))
                     continue;
                 sess.removeAttribute(key);
             }

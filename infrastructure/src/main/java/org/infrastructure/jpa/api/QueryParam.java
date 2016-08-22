@@ -39,4 +39,8 @@ public class QueryParam implements Serializable {
     public int start = 0;
 
     public int limit = 50;
+
+    public String getOrderSql() {
+        return sort.length() > 0 ? "ORDER BY" + sort.replaceAll("__", " ") : "";
+    }
 }

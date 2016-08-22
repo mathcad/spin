@@ -20,7 +20,7 @@ package org.infrastructure.jpa.sql;
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.jpa.core.SQLLoader;
-import org.infrastructure.jpa.dto.Page;
+import org.infrastructure.jpa.core.Page;
 import org.infrastructure.throwable.BizException;
 import org.infrastructure.util.BeanUtils;
 import org.infrastructure.util.HashUtils;
@@ -86,8 +86,8 @@ public class SQLManager<T extends IEntity> {
      * @param mapParams key1,value1,key2,value2,key3,value3 ...
      * @return 查询结果
      */
-    public List<Map<String, Object>> findMapList(String sqlId, Object... mapParams) {
-        return findMapList(sqlId, HashUtils.getMap(mapParams));
+    public List<Map<String, Object>> findListMap(String sqlId, Object... mapParams) {
+        return findListMap(sqlId, HashUtils.getMap(mapParams));
     }
 
     /**
@@ -97,7 +97,7 @@ public class SQLManager<T extends IEntity> {
      * @param paramMap 参数map
      * @return 查询结果
      */
-    public List<Map<String, Object>> findMapList(String sqlId, Map<String, ?> paramMap) {
+    public List<Map<String, Object>> findListMap(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
         try {
             return this.nameJt.queryForList(sqlTxt, paramMap);
@@ -115,9 +115,9 @@ public class SQLManager<T extends IEntity> {
      * @param qp    查询参数
      * @return 分页查询结果
      */
-    public Page<Map<String, Object>> findPage(String sqlId, QueryParam qp) {
+    public Page<Map<String, Object>> findPageMap(String sqlId, QueryParam qp) {
         String sqlTxt = loader.getSQL(sqlId, qp.q).getTemplate();
-        String sortInfo = parseOrder(qp);
+        String sortInfo = qp.getOrderSql();
         // 替换排序为自定义
         if (StringUtils.isNotEmpty(sortInfo)) {
             sqlTxt = removeLastOrderBy(sqlTxt);
@@ -143,7 +143,7 @@ public class SQLManager<T extends IEntity> {
      * @param paramMap 参数
      */
     public Map<String, Object> findOneMap(String sqlId, Map<String, ?> paramMap) {
-        List<Map<String, Object>> list = this.findMapList(sqlId, paramMap);
+        List<Map<String, Object>> list = this.findListMap(sqlId, paramMap);
         if (list.size() > 0) {
             return list.get(0);
         } else
@@ -154,19 +154,55 @@ public class SQLManager<T extends IEntity> {
      * 通过命令文件查询 + 参数Map数组（HashUtils.getMap构建参数数组）
      *
      * @param sqlId     命令名称
-     * @param mapParams key1,value1,key2,value2,key3,value3 ...
+     * @param mapParams 参数map
      * @return 查询结果
      */
     public List<T> findList(String sqlId, Object... mapParams) {
-        List<Map<String, Object>> maps = findMapList(sqlId, HashUtils.getMap(mapParams));
+        List<Map<String, Object>> maps = findListMap(sqlId, HashUtils.getMap(mapParams));
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : maps) {
             try {
                 res.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
         return res;
+    }
+
+    /**
+     * 通过命令文件查询 + 参数Map数组（HashUtils.getMap构建参数数组）
+     *
+     * @param sqlId    命令名称
+     * @param paramMap key1,value1,key2,value2,key3,value3 ...
+     * @return 查询结果
+     */
+    public List<T> findList(String sqlId, Map<String, ?> paramMap) {
+        List<Map<String, Object>> maps = this.findListMap(sqlId, paramMap);
+        List<T> res = new ArrayList<>();
+        for (Map<String, Object> map : maps) {
+            try {
+                res.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
+            } catch (Exception ignored) {
+            }
+        }
+        return res;
+    }
+
+    /**
+     * 查找单个对象
+     *
+     * @param sqlId    命令名称
+     * @param paramMap 参数
+     */
+    public T findOne(String sqlId, Map<String, ?> paramMap) {
+        List<Map<String, Object>> list = this.findListMap(sqlId, paramMap);
+        if (list.size() > 0) {
+            try {
+                return BeanUtils.wrapperMapToBean(this.entityClazz, list.get(0));
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 
     /**
@@ -176,12 +212,12 @@ public class SQLManager<T extends IEntity> {
      * @param paramMap 参数
      * @return sqlmap中的语句
      */
-    public String getSQL(String sqlId, Map<String, ?> paramMap) {
-        return loader.getSQL(sqlId, paramMap).getTemplate();
+    public SQLSource getSQL(String sqlId, Map<String, ?> paramMap) {
+        return loader.getSQL(sqlId, paramMap);
     }
 
     /**
-     * 通过cmd命令查询总数
+     * 通过sqlId查询总数
      *
      * @param sqlId    命令名称
      * @param paramMap 参数
@@ -221,30 +257,11 @@ public class SQLManager<T extends IEntity> {
         return sql;
     }
 
-    private String parseOrder(QueryParam p) {
-        List<String> orders = new ArrayList<>();
-        if (StringUtils.isNotEmpty(p.sort)) {
-            for (String s : p.sort.split(",")) {
-                String[] so = s.split("__");
-                String field = so[0];
-                if (so.length == 1) {
-                    orders.add(field + " asc");
-                } else {
-                    orders.add(so[1].equalsIgnoreCase("desc") ? field + " desc" : field + " asc");
-                }
-            }
-        }
-        if (orders.size() > 0) {
-            return "order by " + StringUtils.join(orders.toArray(), ",");
-        }
-        return StringUtils.EMPTY;
-    }
-
     /**
      * 批量更新
      */
     @SuppressWarnings({"unchecked"})
-    public void batchExec(String sqlId, List<Map> argsMap) {
+    public void batchExec(String sqlId, List<Map<String, ?>> argsMap) {
         String sqlTxt = loader.getSQL(sqlId, null).getTemplate();
         this.nameJt.batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
     }

@@ -19,7 +19,6 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.api.CmdParser.DetachedCriteriaResult;
-import org.infrastructure.jpa.dto.Page;
 import org.infrastructure.jpa.sql.SQLManager;
 import org.infrastructure.shiro.SessionManager;
 import org.infrastructure.shiro.SessionUser;

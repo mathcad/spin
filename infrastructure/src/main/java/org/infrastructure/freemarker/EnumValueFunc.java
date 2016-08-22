@@ -28,7 +28,7 @@ public class EnumValueFunc implements TemplateMethodModelEx {
         try {
             Class<?> cls = Class.forName(enumName);
             if (cls.isEnum()) {
-                Field vField = null;
+                Field vField;
                 try {
                     vField = cls.getDeclaredField("value");
                     ReflectionUtils.makeAccessible(vField);

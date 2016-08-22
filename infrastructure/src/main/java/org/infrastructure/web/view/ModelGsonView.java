@@ -1,7 +1,7 @@
 package org.infrastructure.web.view;
 
 
-import org.infrastructure.jpa.dto.Page;
+import org.infrastructure.jpa.core.Page;
 import org.springframework.web.servlet.ModelAndView;
 
 

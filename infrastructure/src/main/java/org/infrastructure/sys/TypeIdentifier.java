@@ -36,6 +36,8 @@ import java.util.Map;
  * 通过此类，可以定义带泛型参数的Type
  * Created by xuweinan on 2016/8/13.
  * transplant from google's Gson framework
+ *
+ * @author xuweinan
  */
 public class TypeIdentifier<T> {
     private final Class<? super T> rawType;
@@ -98,7 +100,7 @@ public class TypeIdentifier<T> {
                 t = classType;
             }
             return isAssignableFrom(t, (ParameterizedType) toGenericComponentType,
-                    new HashMap<String, Type>());
+                    new HashMap<>());
         }
         // No generic defined on "to"; therefore, return true and let other
         // checks determine assignability
@@ -221,7 +223,7 @@ public class TypeIdentifier<T> {
      * Gets type literal for the given {@code Type} instance.
      */
     public static TypeIdentifier<?> get(Type type) {
-        return new TypeIdentifier<Object>(type);
+        return new TypeIdentifier<>(type);
     }
 
     /**

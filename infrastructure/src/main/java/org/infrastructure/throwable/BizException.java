@@ -91,7 +91,7 @@ public class BizException extends RuntimeException {
         return null;
     }
 
-    LinkedHashMap<String, List<String>> validationMsgMap = new LinkedHashMap<String, List<String>>();
+    LinkedHashMap<String, List<String>> validationMsgMap = new LinkedHashMap<>();
 
     /**
      * 追加验证异常的消息
@@ -101,7 +101,7 @@ public class BizException extends RuntimeException {
      */
     public void addValidationMsg(String property, String errorMsg) {
         if (!validationMsgMap.containsKey(property)) {
-            validationMsgMap.put(property, new ArrayList<String>());
+            validationMsgMap.put(property, new ArrayList<>());
         }
         validationMsgMap.get(property).add(errorMsg);
     }

@@ -115,7 +115,7 @@ public class ElUtils {
                                 Object d_ = f.getType().newInstance();
                             }
                         } else {
-							/* 其他简单类型 copy赋值 */
+                            /* 其他简单类型 copy赋值 */
                             setMethod.invoke(t, getMethod.invoke(d));
                         }
                     } catch (Exception e) {
@@ -196,11 +196,6 @@ public class ElUtils {
         }
     }
 
-    /**
-     * @param src
-     * @param valuePath
-     * @return
-     */
     public static Object getFieldValue(Object src, String valuePath) {
         String[] valuePaths = valuePath.split("\\.");
         Object o = src;
