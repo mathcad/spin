@@ -17,7 +17,6 @@
 
 package org.infrastructure.sys;
 
-import org.infrastructure.util.Assert;
 import org.infrastructure.util.ObjectUtils;
 
 import java.io.Serializable;

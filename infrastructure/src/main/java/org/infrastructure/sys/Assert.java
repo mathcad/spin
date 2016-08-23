@@ -13,7 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.infrastructure.util;
+package org.infrastructure.sys;
+
+import org.infrastructure.util.CollectionUtils;
+import org.infrastructure.util.ObjectUtils;
+import org.infrastructure.util.StringUtils;
 
 import java.util.Collection;
 import java.util.Map;

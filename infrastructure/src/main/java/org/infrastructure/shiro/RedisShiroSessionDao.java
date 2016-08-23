@@ -5,7 +5,7 @@ import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
 import org.infrastructure.jpa.core.GenericUser;
 import org.infrastructure.redis.ICached;
-import org.infrastructure.sys.Constants;
+import org.infrastructure.sys.AppConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +77,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
             if (this.sessListener != null) {
                 try {
                     this.sessListener.beforeDeleteSession(session);
-                    GenericUser user = session.getAttribute(Constants.UserContant.SESSION_KEY) == null ? null : (GenericUser) session.getAttribute(Constants.UserContant.SESSION_KEY);
+                    GenericUser user = session.getAttribute(AppConstants.USER_SESSION_KEY) == null ? null : (GenericUser) session.getAttribute(AppConstants.USER_SESSION_KEY);
                     if (user != null) {
 
                     }

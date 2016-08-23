@@ -12,7 +12,7 @@ import org.infrastructure.jpa.api.QueryParamHandler;
 import org.infrastructure.jpa.core.ARepository;
 import org.infrastructure.jpa.core.Page;
 import org.infrastructure.shiro.SessionManager;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.StringUtils;
 import org.infrastructure.web.view.ExcelExtGrid;
 import org.infrastructure.web.view.GsonView;
@@ -93,7 +93,7 @@ public class BaseController {
             return this.getGson().fromJson(json, enCls);
         } catch (Exception ex) {
             logger.error("实体Json转换错误:\n" + json);
-            throw new BizException("提交的Json数据转换错误", ex);
+            throw new SimplifiedException("提交的Json数据转换错误", ex);
         }
     }
 
@@ -124,7 +124,7 @@ public class BaseController {
         try {
             return listByQ(cmdParser, p, repo, handlers);
         } catch (Exception e) {
-            throw new BizException("rest查询出错", e);
+            throw new SimplifiedException("rest查询出错", e);
         }
     }
 
@@ -141,7 +141,7 @@ public class BaseController {
             return grid;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new BizException("转化提交的GridColumn出错");
+            throw new SimplifiedException("转化提交的GridColumn出错");
         }
     }
 

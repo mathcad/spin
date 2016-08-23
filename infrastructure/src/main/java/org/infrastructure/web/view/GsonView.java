@@ -2,9 +2,9 @@ package org.infrastructure.web.view;
 
 import com.google.gson.*;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
-import org.infrastructure.jpa.api.HibernateProxyTypeAdapter;
+import org.infrastructure.gson.HibernateProxyTypeAdapter;
 import org.infrastructure.sys.EnumUtils;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,13 +130,13 @@ public class GsonView extends AbstractView {
                 else if (str.length() == 19)
                     dateFmt = longFmt;
                 else
-                    throw new BizException("Time长度不支持Json解析：" + str);
+                    throw new SimplifiedException("Time长度不支持Json解析：" + str);
 
                 try {
                     return new Time(dateFmt.parse(str).getTime());
                 } catch (ParseException e) {
                     e.printStackTrace();
-                    throw new BizException("TimeJson解析失败：" + e.getMessage());
+                    throw new SimplifiedException("TimeJson解析失败：" + e.getMessage());
                 }
             }
 
@@ -169,13 +169,13 @@ public class GsonView extends AbstractView {
                 else if (str.length() == 19)
                     dateFmt = longFmt;
                 else
-                    throw new BizException("Date长度不支持Json解析：" + str);
+                    throw new SimplifiedException("Date长度不支持Json解析：" + str);
 
                 try {
                     return new Date(dateFmt.parse(str).getTime());
                 } catch (ParseException e) {
                     e.printStackTrace();
-                    throw new BizException("日期Json解析失败：" + e.getMessage());
+                    throw new SimplifiedException("日期Json解析失败：" + e.getMessage());
                 }
             }
 
@@ -207,13 +207,13 @@ public class GsonView extends AbstractView {
                 else if (str.length() == 19)
                     dateFmt = longFmt;
                 else
-                    throw new BizException("Date长度不支持Json解析：" + str);
+                    throw new SimplifiedException("Date长度不支持Json解析：" + str);
 
                 try {
                     return new Date(dateFmt.parse(str).getTime());
                 } catch (ParseException e) {
                     e.printStackTrace();
-                    throw new BizException("日期Json解析失败：" + e.getMessage());
+                    throw new SimplifiedException("日期Json解析失败：" + e.getMessage());
                 }
             }
 
@@ -248,13 +248,13 @@ public class GsonView extends AbstractView {
                 else if (str.length() == 19)
                     dateFmt = longFmt;
                 else
-                    throw new BizException("Timestamp长度不支持Json解析：" + str);
+                    throw new SimplifiedException("Timestamp长度不支持Json解析：" + str);
 
                 try {
                     return new Timestamp(dateFmt.parse(str).getTime());
                 } catch (ParseException e) {
                     e.printStackTrace();
-                    throw new BizException("TimestampJson解析失败：" + e.getMessage());
+                    throw new SimplifiedException("TimestampJson解析失败：" + e.getMessage());
                 }
             }
 

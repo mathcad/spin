@@ -1,4 +1,4 @@
-package org.infrastructure.sys;
+package org.infrastructure.util;
 
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
@@ -8,7 +8,7 @@ import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.infrastructure.util.StringUtils;
+import org.infrastructure.gson.TimestampTypeAdapter;
 import org.infrastructure.web.view.GsonView;
 
 import com.google.gson.Gson;
@@ -20,7 +20,7 @@ import com.google.gson.reflect.TypeToken;
  * <p>
  * 该工具类使用的 {@code JSON} 转换引擎是 <a href="http://code.google.com/p/google-gson/"
  * mce_href="http://code.google.com/p/google-gson/" target="_blank">{@code
- * Google Gson}</a>  和  org.apache.struts2.json.JSONUtil。下面是工具类的使用案例：
+ * Google Gson}</a>  和  org.apache.struts2.json.JSONUtils。下面是工具类的使用案例：
  * </p>
  * <p>
  * <pre>
@@ -59,8 +59,8 @@ import com.google.gson.reflect.TypeToken;
  * sUserList3 ----> [{"uname":"jack","sex":"Male"},{"uname":"marry","sex":"Female"}]
  * </pre>
  */
-public class JSONUtil {
-    private static final Log log = LogFactory.getLog(JSONUtil.class);
+public class JSONUtils {
+    private static final Log log = LogFactory.getLog(JSONUtils.class);
 
     public static final String EMPTY = "";
     /**

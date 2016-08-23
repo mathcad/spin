@@ -4,7 +4,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPListParseEngine;
 import org.apache.commons.net.ftp.FTPReply;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +22,8 @@ import java.net.SocketException;
  *
  * @version V1.0
  */
-public class FtpUtil {
-    static final Logger logger = LoggerFactory.getLogger(FtpUtil.class);
+public class FtpOperator {
+    static final Logger logger = LoggerFactory.getLogger(FtpOperator.class);
 
     public String userName;
     public String password;
@@ -34,7 +34,7 @@ public class FtpUtil {
     };
 
 
-    public FtpUtil() {
+    public FtpOperator() {
     }
 
 
@@ -49,7 +49,7 @@ public class FtpUtil {
                 ftpClient.setDefaultPort(port);
                 ftpClient.connect(ip);
                 if (!ftpClient.login(userName, password)) {
-                    throw new BizException("ftp登录出错");
+                    throw new SimplifiedException("ftp登录出错");
                 }
                 reply = ftpClient.getReplyCode();
 
@@ -65,22 +65,22 @@ public class FtpUtil {
                 ftpClient.setFileTransferMode(FTPClient.STREAM_TRANSFER_MODE);
 
                 if (!ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE))
-                    throw new BizException("错误的FileType");
+                    throw new SimplifiedException("错误的FileType");
 
                 threadFtpClient.set(ftpClient);
             } catch (SocketException e) {
                 e.printStackTrace();
-                throw new BizException("登录ftp服务器 " + ip + " 失败,连接超时！");
+                throw new SimplifiedException("登录ftp服务器 " + ip + " 失败,连接超时！");
             } catch (IOException e) {
                 e.printStackTrace();
-                throw new BizException("登录ftp服务器 " + ip + " 失败，FTP服务器无法打开！");
+                throw new SimplifiedException("登录ftp服务器 " + ip + " 失败，FTP服务器无法打开！");
             }
         }
 
         return flag;
     }
 
-    public FtpUtil(String userName, String password, String ip, int port) {
+    public FtpOperator(String userName, String password, String ip, int port) {
         this.userName = userName;
         this.password = password;
         this.ip = ip;
@@ -164,7 +164,7 @@ public class FtpUtil {
             }
         } catch (Exception e) {
             logger.error("下载ftp文件出错" + allPath, e);
-            throw new BizException("下载ftp文件出错");
+            throw new SimplifiedException("下载ftp文件出错");
         }
     }
 

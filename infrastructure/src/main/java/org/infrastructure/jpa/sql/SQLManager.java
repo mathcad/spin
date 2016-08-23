@@ -19,9 +19,9 @@ package org.infrastructure.jpa.sql;
 
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.core.IEntity;
-import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.jpa.core.Page;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.jpa.core.SQLLoader;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.BeanUtils;
 import org.infrastructure.util.HashUtils;
 import org.infrastructure.util.StringUtils;
@@ -104,7 +104,7 @@ public class SQLManager<T extends IEntity> {
         } catch (Exception ex) {
             logger.error("执行查询出错：" + sqlId);
             logger.error(sqlTxt);
-            throw new BizException("执行查询出错：", ex);
+            throw new SimplifiedException("执行查询出错：", ex);
         }
     }
 

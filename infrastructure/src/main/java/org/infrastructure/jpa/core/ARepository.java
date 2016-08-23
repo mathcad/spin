@@ -22,11 +22,11 @@ import org.infrastructure.jpa.api.CmdParser.DetachedCriteriaResult;
 import org.infrastructure.jpa.sql.SQLManager;
 import org.infrastructure.shiro.SessionManager;
 import org.infrastructure.shiro.SessionUser;
-import org.infrastructure.sys.ElUtils;
-import org.infrastructure.sys.GenericUtils;
-import org.infrastructure.throwable.BizException;
-import org.infrastructure.util.Assert;
+import org.infrastructure.sys.Assert;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.BeanUtils;
+import org.infrastructure.util.ElUtils;
+import org.infrastructure.util.GenericUtils;
 import org.infrastructure.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -224,7 +224,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     /**
      * 保存,返回保存后的持久态对象
      */
-    public T save(T entity) throws BizException {
+    public T save(T entity) {
         try {
             if (entity instanceof AbstractEntity) {
                 AbstractEntity aEn = (AbstractEntity) entity;
@@ -278,7 +278,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
             }
         } catch (org.springframework.orm.hibernate4.HibernateOptimisticLockingFailureException ope) {
             logger.error("", ope);
-            throw new BizException("实体已经变化，请重置后再编辑");
+            throw new SimplifiedException("实体已经更新，请重置后再编辑");
         }
         return this.get(entity.getId());
     }

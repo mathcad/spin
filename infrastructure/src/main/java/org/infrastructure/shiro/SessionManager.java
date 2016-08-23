@@ -3,7 +3,7 @@ package org.infrastructure.shiro;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
-import org.infrastructure.sys.Constants.UserContant;
+import org.infrastructure.sys.AppConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -47,8 +47,8 @@ public class SessionManager {
             if (session == null)
                 return null;
             @SuppressWarnings("unchecked")
-            T user = session.getAttribute(UserContant.SESSION_KEY) == null ? null
-                    : (T) session.getAttribute(UserContant.SESSION_KEY);
+            T user = session.getAttribute(AppConstants.USER_SESSION_KEY) == null ? null
+                    : (T) session.getAttribute(AppConstants.USER_SESSION_KEY);
             return user;
         } catch (Throwable t) {
             logger.info("sessionMgr 未获得 currentUser");
@@ -123,6 +123,6 @@ public class SessionManager {
      */
     public void setCurrentUser(SessionUser accInfo) {
         Session sess = getSession(true);
-        sess.setAttribute(UserContant.SESSION_KEY, accInfo);
+        sess.setAttribute(AppConstants.USER_SESSION_KEY, accInfo);
     }
 }

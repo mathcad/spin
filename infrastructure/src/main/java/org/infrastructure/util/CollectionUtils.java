@@ -16,6 +16,8 @@
 
 package org.infrastructure.util;
 
+import org.infrastructure.sys.Assert;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;

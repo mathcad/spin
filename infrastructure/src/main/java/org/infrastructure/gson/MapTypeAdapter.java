@@ -1,4 +1,4 @@
-package org.infrastructure.sys;
+package org.infrastructure.gson;
 
 import java.lang.reflect.Type;
 import java.util.Map;

@@ -19,7 +19,6 @@ import java.util.Map;
  *
  * @author zhou
  */
-@SuppressWarnings("unchecked")
 public class GZipHeaderFilter implements javax.servlet.Filter {
 
     static Logger logger = LoggerFactory.getLogger(GZipHeaderFilter.class);
@@ -30,7 +29,7 @@ public class GZipHeaderFilter implements javax.servlet.Filter {
         MIME_TYPE.put(".js", "text/javascript");
     }
 
-    public Map headers = new HashMap();
+    public Map<String, String> headers = new HashMap<>();
 
     public void destroy() {
     }

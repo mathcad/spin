@@ -1,7 +1,7 @@
 package org.infrastructure.sys;
 
 import org.infrastructure.jpa.core.annotations.UserEnum;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.HashUtils;
 import org.infrastructure.util.ObjectUtils;
 import org.infrastructure.util.PackageUtils;
@@ -59,7 +59,7 @@ public class EnumUtils {
         try {
             valueField = enumCls.getDeclaredField(fieldName);
         } catch (NoSuchFieldException e) {
-            throw new BizException("Enum:" + enumCls.getName() + " has no such field:" + fieldName, e);
+            throw new SimplifiedException("Enum:" + enumCls.getName() + " has no such field:" + fieldName, e);
         }
         ReflectionUtils.makeAccessible(valueField);
         for (T o : enumCls.getEnumConstants()) {

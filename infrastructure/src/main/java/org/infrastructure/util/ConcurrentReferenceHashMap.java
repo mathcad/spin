@@ -17,6 +17,8 @@
 
 package org.infrastructure.util;
 
+import org.infrastructure.sys.Assert;
+
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;

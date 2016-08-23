@@ -3,7 +3,7 @@ package org.infrastructure.freemarker;
 import freemarker.template.TemplateMethodModelEx;
 import freemarker.template.TemplateModelException;
 import org.infrastructure.jpa.core.annotations.UserEnum;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.throwable.SimplifiedException;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
@@ -47,7 +47,7 @@ public class EnumValueFunc implements TemplateMethodModelEx {
                 }
             }
         } catch (Exception e) {
-            throw new BizException("解析枚举出错" + enumName);
+            throw new SimplifiedException("解析枚举出错" + enumName);
         }
         sb.append("END) AS ").append(asField);
         return sb.toString();

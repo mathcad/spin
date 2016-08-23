@@ -4,7 +4,7 @@ import freemarker.template.SimpleScalar;
 import freemarker.template.TemplateBooleanModel;
 import freemarker.template.TemplateMethodModelEx;
 import freemarker.template.TemplateModelException;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.ObjectUtils;
 import org.infrastructure.util.StringUtils;
 
@@ -45,7 +45,7 @@ public class ValidValueFunc implements TemplateMethodModelEx {
                 valid = ObjectUtils.nullSafeEquals(o1, o);
             }
         } else
-            throw new BizException("ValidValue 参数个数不正确（需1,2个）");
+            throw new SimplifiedException("ValidValue 参数个数不正确（需1,2个）");
 
         return valid;
     }

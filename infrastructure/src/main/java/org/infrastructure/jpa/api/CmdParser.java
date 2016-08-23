@@ -9,7 +9,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.sys.EnumUtils;
 import org.infrastructure.sys.FmtUtils;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,7 +156,7 @@ public class CmdParser {
         for (String fieldName : qPath) {
             field = ReflectionUtils.findField(enCls, fieldName);
             if (field == null)
-                throw new BizException(FmtUtils.format("未找到{0}字段{1}", enCls.getName(), fieldName));
+                throw new SimplifiedException(FmtUtils.format("未找到{0}字段{1}", enCls.getName(), fieldName));
             enCls = field.getType();
         }
 

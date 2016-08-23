@@ -1,4 +1,4 @@
-package org.infrastructure.sys;
+package org.infrastructure.util;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -8,7 +8,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.infrastructure.throwable.BizException;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,10 +49,10 @@ public class HttpUtils {
             int code = response.getStatusLine().getStatusCode();
             result = EntityUtils.toString(response.getEntity());
             if (code != 200) {
-                throw new BizException("错误状态码:" + code + result);
+                throw new RuntimeException("错误状态码:" + code + result);
             }
         } catch (Exception e) {
-            throw new BizException("远程连接到" + url + "，发生错误:" + e.getMessage());
+            throw new RuntimeException("远程连接到" + url + "，发生错误:" + e.getMessage());
         } finally {
             if (httpclient != null)
                 try {

@@ -1,7 +1,8 @@
 package org.infrastructure.redis;
 
-import org.infrastructure.sys.SerializeUtils;
+import org.infrastructure.util.SerializeUtils;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.DefaultTuple;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisZSetCommands.Tuple;
 import org.springframework.data.redis.core.RedisCallback;
@@ -359,7 +360,7 @@ public class RedisCacheSupport<V> implements ICached<V> {
                 Set<Tuple> vTuples = new LinkedHashSet<>();
                 double score = 0;
                 for (V value : tuples) {
-                    vTuples.add(new SimpleTuple(redisSerializer.serialize(value), score++));
+                    vTuples.add(new DefaultTuple(redisSerializer.serialize(value), score++));
                 }
                 connection.zAdd(key.getBytes(), vTuples);
                 return null;
@@ -374,7 +375,7 @@ public class RedisCacheSupport<V> implements ICached<V> {
                 Set<Tuple> vTuples = new LinkedHashSet<>();
                 double score = 0;
                 for (String value : tuples) {
-                    vTuples.add(new SimpleTuple(value.getBytes(), score++));
+                    vTuples.add(new DefaultTuple(value.getBytes(), score++));
                 }
                 connection.zAdd(key.getBytes(), vTuples);
                 return null;

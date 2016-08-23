@@ -1,13 +1,7 @@
 package org.infrastructure.web.interceptor;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.hibernate.exception.ConstraintViolationException;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.StringUtils;
 import org.infrastructure.web.view.ModelGsonView;
 import org.slf4j.Logger;
@@ -16,13 +10,18 @@ import org.springframework.orm.hibernate4.HibernateOptimisticLockingFailureExcep
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 项目异常处理方法
  *
  * @author zhou
  */
-public class MyExceptionHandler implements HandlerExceptionResolver {
-    Logger logger = LoggerFactory.getLogger(MyExceptionHandler.class);
+public class WebExceptionHandler implements HandlerExceptionResolver {
+    Logger logger = LoggerFactory.getLogger(WebExceptionHandler.class);
 
     /**
      * 通用异常处理
@@ -35,11 +34,7 @@ public class MyExceptionHandler implements HandlerExceptionResolver {
         String contentType = request.getContentType() == null ? "" : request.getContentType().toLowerCase();
         if (contentType.contains("application/json") || StringUtils.isNotEmpty(requestType)) {
             ModelGsonView mv = new ModelGsonView();
-            // 根据不同错误转向不同页面
-            if (ex instanceof BizException) {
-                logger.error("业务异常", ex);
-                mv.error(ex.getMessage());
-            } else if (ex instanceof HibernateOptimisticLockingFailureException) {
+            if (ex instanceof HibernateOptimisticLockingFailureException) {
                 mv.error("数据已被其他人修改，请重填写后保存");
             } else if (ex.getCause() != null && ex.getCause() instanceof ConstraintViolationException)
                 mv.error("此数据已被业务占用，无法删除");
@@ -51,7 +46,7 @@ public class MyExceptionHandler implements HandlerExceptionResolver {
         }
 
         // 根据不同错误转向不同页面
-        if (ex instanceof BizException) {
+        if (ex instanceof SimplifiedException) {
             model.put("msg", ex.getMessage());
             return new ModelAndView("common/error", model);
         } else {

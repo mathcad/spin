@@ -33,12 +33,8 @@ public class CmdContext implements ApplicationContextAware {
 
     private Map<String, ARepository> repoMap = new HashMap<>();
 
-    private static ApplicationContext applicationContext; // Spring应用上下文环境
+    private static ApplicationContext applicationContext;
 
-    /**
-     * 实现了ApplicationContextAware 接口，必须实现该方法；
-     * 通过传递applicationContext参数初始化成员变量applicationContext
-     */
     @Autowired
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         CmdContext.applicationContext = applicationContext;

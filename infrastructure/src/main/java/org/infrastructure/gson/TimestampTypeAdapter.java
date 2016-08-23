@@ -1,4 +1,4 @@
-package org.infrastructure.sys;
+package org.infrastructure.gson;
 
 
 import com.google.gson.JsonDeserializationContext;

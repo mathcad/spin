@@ -1,17 +1,5 @@
 package org.infrastructure.web.view;
 
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
@@ -23,11 +11,22 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.DateFormatConverter;
-import org.infrastructure.sys.ElUtils;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.throwable.SimplifiedException;
+import org.infrastructure.util.ElUtils;
 import org.infrastructure.util.StringUtils;
 import org.infrastructure.web.view.ExcelExtGrid.GridColumn;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Excel 导出的View
@@ -202,7 +201,7 @@ public class ExcelExportView extends AbstractXlsView {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-            throw new BizException("导出Excel文件[" + grid.fileName + "]出错", e);
+            throw new SimplifiedException("导出Excel文件[" + grid.fileName + "]出错", e);
         }
 	}
 

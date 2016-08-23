@@ -1,4 +1,4 @@
-package org.infrastructure.sys;
+package org.infrastructure.util;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

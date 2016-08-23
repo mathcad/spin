@@ -1,4 +1,4 @@
-package org.infrastructure.jpa.api;
+package org.infrastructure.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;

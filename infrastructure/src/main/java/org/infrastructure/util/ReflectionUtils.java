@@ -16,6 +16,8 @@
 
 package org.infrastructure.util;
 
+import org.infrastructure.sys.Assert;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;

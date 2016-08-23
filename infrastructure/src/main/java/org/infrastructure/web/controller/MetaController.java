@@ -5,8 +5,8 @@ import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.core.ARepository;
 import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.jpa.core.Page;
-import org.infrastructure.sys.ElUtils;
-import org.infrastructure.throwable.BizException;
+import org.infrastructure.throwable.SimplifiedException;
+import org.infrastructure.util.ElUtils;
 import org.infrastructure.web.view.ExcelExportView;
 import org.infrastructure.web.view.ExcelExtGrid;
 import org.infrastructure.web.view.GsonView;
@@ -55,12 +55,12 @@ public abstract class MetaController extends BaseController {
         ModelGsonView mv = new ModelGsonView();
         try {
             if (StringUtils.isEmpty(q))
-                throw new BizException("空查询无法执行");
+                throw new SimplifiedException("空查询无法执行");
             QueryParam p = this.getGson().fromJson(q, QueryParam.class);
             ARepository repo = cmdContext.getRepo(p.cls);
             Page result = listByQ(cmdParser, p, repo);
             mv.ok(result);
-        } catch (BizException e) {
+        } catch (SimplifiedException e) {
             mv.error(e.getMessage());
         } catch (Throwable e) {
             logger.error("api查询异常:" + q, e);
@@ -84,7 +84,7 @@ public abstract class MetaController extends BaseController {
             mv.ok().add("id", ElUtils.getPK(m));
         } catch (Throwable t) {
             logger.error("保存失败", t);
-            throw new BizException(t.getMessage());
+            throw new SimplifiedException(t.getMessage());
         }
         return mv;
     }
@@ -101,7 +101,7 @@ public abstract class MetaController extends BaseController {
             mv.ok();
         } catch (Throwable t) {
             logger.error("删除失败", t);
-            throw new BizException(t.getMessage());
+            throw new SimplifiedException(t.getMessage());
         }
         return mv;
     }

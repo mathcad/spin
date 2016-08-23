@@ -12,7 +12,8 @@ public enum ErrorAndExceptionCode {
     OTHER(-1),
     ENCRYPT_FAIL(10),
     DEENCRYPT_FAIL(15),
-    BEAN_CREATE_FAIL(40);
+    BEAN_CREATE_FAIL(40),
+    BUSS_EXCETION(60);
     private static final Map<Integer, String> valueStringMapper = new HashMap<>();
 
     static {
@@ -20,6 +21,7 @@ public enum ErrorAndExceptionCode {
         valueStringMapper.put(10, "加密算法执行错误");
         valueStringMapper.put(15, "解密算法执行错误");
         valueStringMapper.put(40, "创建bean实例错误");
+        valueStringMapper.put(60, "业务异常");
     }
 
     private int _value;
@@ -34,5 +36,10 @@ public enum ErrorAndExceptionCode {
 
     public String getDesc() {
         return valueStringMapper.get(this._value);
+    }
+
+    @Override
+    public String toString() {
+        return this._value + ": " + valueStringMapper.get(this._value);
     }
 }

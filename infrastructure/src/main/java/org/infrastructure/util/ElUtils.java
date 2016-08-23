@@ -1,10 +1,9 @@
-package org.infrastructure.sys;
+package org.infrastructure.util;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.internal.PersistentBag;
 import org.infrastructure.jpa.core.GenericUser;
-import org.infrastructure.throwable.BizException;
 import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.Entity;
@@ -172,10 +171,10 @@ public class ElUtils {
             Field f2 = ReflectionUtils.findField(dest.getClass(), field);
 
             if (f1 == null)
-                throw new BizException(field + "不存在于" + src.getClass().getSimpleName());
+                throw new RuntimeException(field + "不存在于" + src.getClass().getSimpleName());
 
             if (f2 == null)
-                throw new BizException(field + "不存在于" + dest.getClass().getSimpleName());
+                throw new RuntimeException(field + "不存在于" + dest.getClass().getSimpleName());
 
             ReflectionUtils.makeAccessible(f1);
             ReflectionUtils.makeAccessible(f2);
