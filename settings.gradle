@@ -1,3 +1,5 @@
+include 'test'
 rootProject.name = 'fundamental'
 include 'test'
+include 'service'
 
