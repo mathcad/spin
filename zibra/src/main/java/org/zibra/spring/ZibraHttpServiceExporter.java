@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class HproseHttpServiceExporter extends RemoteExporter implements InitializingBean, HttpRequestHandler {
+public class ZibraHttpServiceExporter extends RemoteExporter implements InitializingBean, HttpRequestHandler {
     private static final String ACCESS_TOKEN_HEADER_NAME = "ACCESS_TOKEN";
     private ZibraHttpService httpService;
     private boolean crossDomain = true;

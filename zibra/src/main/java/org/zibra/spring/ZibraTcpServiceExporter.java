@@ -10,7 +10,7 @@ import java.io.IOException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.remoting.support.RemoteExporter;
 
-public class HproseTcpServiceExporter extends RemoteExporter implements InitializingBean {
+public class ZibraTcpServiceExporter extends RemoteExporter implements InitializingBean {
     private ZibraTcpServer tcpServer;
     private String host;
     private int port = 0;

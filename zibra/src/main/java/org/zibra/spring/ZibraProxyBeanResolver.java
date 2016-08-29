@@ -8,9 +8,9 @@
 \**********************************************************/
 /**********************************************************\
  *                                                        *
- * HproseProxyBeanResolver.java                            *
+ * ZibraProxyBeanResolver.java                            *
  *                                                        *
- * HproseProxyBeanResolver for Java Spring Framework.      *
+ * ZibraProxyBeanResolver for Java Spring Framework.      *
  *                                                        *
  * LastModified: Mar 13, 2016                             *
  * Author: Ma Bingyao <andot@org.zibra.com>                  *
@@ -31,7 +31,7 @@ import org.zibra.common.HproseFilter;
 import org.zibra.common.InvokeHandler;
 import org.zibra.io.ZibraMode;
 
-public class HproseProxyBeanResolver extends UrlBasedRemoteAccessor implements BeanFactoryAware{
+public class ZibraProxyBeanResolver extends UrlBasedRemoteAccessor implements BeanFactoryAware{
     private static final String ACCESS_TOKEN_HEADER_NAME = "ACCESS_TOKEN";
     private ZibraClient client = null;
     private Exception exception = null;
