@@ -1,0 +1,22 @@
+package org.zibra.io.convert;
+
+import org.zibra.util.DateTime;
+import java.lang.reflect.Type;
+
+public class LongConverter implements Converter<Long> {
+
+    public final static LongConverter instance = new LongConverter();
+
+    public Long convertTo(Object obj, Type type) {
+        if (obj instanceof String) {
+            return Long.parseLong((String) obj);
+        }
+        else if (obj instanceof char[]) {
+            return Long.parseLong(new String((char[]) obj));
+        }
+        else if (obj instanceof DateTime) {
+            return ((DateTime) obj).toLong();
+        }
+        return (Long) obj;
+    }
+}

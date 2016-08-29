@@ -34,8 +34,6 @@ import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.ReflectionUtils.FieldCallback;
-import org.springframework.util.ReflectionUtils.FieldFilter;
 
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -53,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 
 /**
@@ -130,26 +129,18 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * 动态捕获要增加Fetch=Join的字段 默认ToOne的都Fetch=Join
      */
     public static void parseForJoinFetch(final Class cls) {
-        REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<String, Field>());
-        ReflectionUtils.doWithFields(cls, new FieldCallback() {
-            @Override
-            public void doWith(Field f) throws IllegalArgumentException, IllegalAccessException {
-                REFER_JOIN_FIELDS.get(cls.getName()).put(f.getName(), f);
+        REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<>());
+        ReflectionUtils.doWithFields(cls, f -> REFER_JOIN_FIELDS.get(cls.getName()).put(f.getName(), f), f -> {
+            boolean result = false;
+            ManyToOne m2o = f.getAnnotation(ManyToOne.class);
+            if (m2o != null) {
+                result = true;
             }
-        }, new FieldFilter() {
-            @Override
-            public boolean matches(Field f) {
-                boolean result = false;
-                ManyToOne m2o = f.getAnnotation(ManyToOne.class);
-                if (m2o != null) {
-                    result = true;
-                }
-                OneToOne o2o = f.getAnnotation(OneToOne.class);
-                if (o2o != null) {
-                    result = true;
-                }
-                return result;
+            OneToOne o2o = f.getAnnotation(OneToOne.class);
+            if (o2o != null) {
+                result = true;
             }
+            return result;
         });
     }
 
@@ -158,7 +149,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * 否则，调用sessFactory的getCurrentSession
      */
     public Session getSession() {
-        Session sess = null;
+        Session sess;
         sess = peekThreadSession();
 
         if (sess == null)
@@ -341,9 +332,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
             dc.add(c);
 
         List<T> enList = this.find(dc);
-        for (T en : enList) {
-            this.delete(en);
-        }
+        enList.forEach(this::delete);
     }
 
     /**
@@ -370,7 +359,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
             // 如果是对象投影，不在查询中体现，后期通过对象Id来初始化
             if (enJoinFields.containsKey(pjField)) {
-                referFields.put(pjField, new HashSet<String>());
+                referFields.put(pjField, new HashSet<>());
                 continue;
             }
 
@@ -393,8 +382,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
             }
         }
 
-        Page<Map> page = null;
-        List<Map> list = null;
+        Page<Map> page;
+        List<Map> list;
         Session sess = getSession();
         DetachedCriteria dc = dr.dc;
         // 总数查询
@@ -404,11 +393,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
         // 查询结果中需外连接的表
         qjoinFields.addAll(referFields.keySet());
-        for (String jf : qjoinFields) {
-            if (!dr.aliasMap.containsKey(jf)) {
-                ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN);
-            }
-        }
+        qjoinFields.stream().filter(jf -> !dr.aliasMap.containsKey(jf)).forEach(jf -> ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
 
         // 关联对象，只抓取Id值
         for (String referField : referFields.keySet()) {
@@ -434,16 +419,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         // 关联对象，填充映射对象
         for (Map m : list) {
             for (String referField : referFields.keySet()) {
-                for (String fetchField : referFields.get(referField)) {
-                    if (m.get(fetchField) != null) {
-                        if (!m.containsKey(referField)) {
-                            m.put(referField, new HashMap<String, Object>());
-                        }
-                        HashMap<String, Object> cell = ((HashMap<String, Object>) m.get(referField));
-                        String[] fetchFields = fetchField.split("\\.");
-                        cell.put(fetchFields[1], m.get(fetchField));
+                referFields.get(referField).stream().filter(fetchField -> m.get(fetchField) != null).forEach(fetchField -> {
+                    if (!m.containsKey(referField)) {
+                        m.put(referField, new HashMap<String, Object>());
                     }
-                }
+                    HashMap<String, Object> cell = ((HashMap<String, Object>) m.get(referField));
+                    String[] fetchFields = fetchField.split("\\.");
+                    cell.put(fetchFields[1], m.get(fetchField));
+                });
             }
         }
 
@@ -460,8 +443,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     @SuppressWarnings("unchecked")
     public Page<T> find(DetachedCriteria dc, PageRequest pr, Order... orders) {
-        Page<T> page = null;
-        List<T> list = null;
+        Page<T> page;
+        List<T> list;
         Session sess = getSession();
 
         // 总数查询
@@ -575,12 +558,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     public T findOne(CriteriaParam cp) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        for (Criterion c : cp.criterions)
-            dc.add(c);
+        cp.criterions.forEach(dc::add);
 
         // 追加排序
-        for (Order order : cp.orders)
-            dc.addOrder(order);
+        cp.orders.forEach(dc::addOrder);
 
         String pkf = ElUtils.getPKField(this.entityClazz).getName();
 
@@ -714,13 +695,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     }
 
     protected void addProjections(final ProjectionList plist, Class enCls) {
-        ReflectionUtils.doWithFields(enCls, new FieldCallback() {
-            @Override
-            public void doWith(Field f) throws IllegalArgumentException, IllegalAccessException {
-                if (f.getAnnotation(Transient.class) == null) {
-                    logger.info(f.getName());
-                    plist.add(Property.forName(f.getName()), f.getName());
-                }
+        ReflectionUtils.doWithFields(enCls, f -> {
+            if (f.getAnnotation(Transient.class) == null) {
+                logger.info(f.getName());
+                plist.add(Property.forName(f.getName()), f.getName());
             }
         });
     }
@@ -730,8 +708,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     public Long count(CriteriaParam cp) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        for (Criterion c : cp.criterions)
-            dc.add(c);
+        cp.criterions.forEach(dc::add);
 
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
@@ -746,8 +723,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     public Page<T> page(CriteriaParam cp) {
 
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        for (Criterion c : cp.criterions)
-            dc.add(c);
+        cp.criterions.forEach(dc::add);
 
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
@@ -766,8 +742,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         ct.setResultTransformer(org.hibernate.criterion.CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
 
         // 追加排序
-        for (Order order : cp.orders)
-            ct.addOrder(order);
+        cp.orders.forEach(ct::addOrder);
 
         if (cp.pageRequest != null) {
             ct.setFirstResult(cp.pageRequest.getOffset());
@@ -781,7 +756,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         for (Map<String, Object> map : list) {
             try {
                 enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
 
@@ -796,9 +771,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     public List<T> findByArgs(Map<String, Object> map) {
         CriteriaParam cp = new CriteriaParam();
-        for (String key : map.keySet()) {
-            cp.criterions.add(Restrictions.eq(key, map.get(key)));
-        }
+        cp.criterions.addAll(map.keySet().stream().map(key -> Restrictions.eq(key, map.get(key))).collect(Collectors.toList()));
         return list(cp);
     }
 
@@ -821,8 +794,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     private List<T> findList(CriteriaParam cp) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        for (Criterion c : cp.criterions)
-            dc.add(c);
+        cp.criterions.forEach(dc::add);
 
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
@@ -836,8 +808,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         ct.setProjection(pj);
         ct.setResultTransformer(org.hibernate.criterion.CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
 
-        for (Order order : cp.orders)
-            ct.addOrder(order);
+        cp.orders.forEach(ct::addOrder);
 
         if (cp.pageRequest != null) {
             ct.setFirstResult(cp.pageRequest.getOffset());
@@ -851,7 +822,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         for (Map<String, Object> map : list) {
             try {
                 enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
         return enList;
@@ -863,18 +834,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
         // 使用投影映射字段,先查询，再反射
         final ProjectionList pj = Projections.projectionList();
-        ReflectionUtils.doWithFields(this.entityClazz, new FieldCallback() {
-
-            @Override
-            public void doWith(Field f) throws IllegalArgumentException, IllegalAccessException {
-                ManyToMany m2m = f.getAnnotation(ManyToMany.class);
-                if (m2m != null) {
-                    // TODO: 2016/8/13
-                    System.out.println("");
-                } else {
-                    String pjField = f.getName();
-                    addProjectionFields(qjoinFields, manyToOneFields, referFields, pj, pjField);
-                }
+        ReflectionUtils.doWithFields(this.entityClazz, f -> {
+            ManyToMany m2m = f.getAnnotation(ManyToMany.class);
+            if (m2m != null) {
+                // TODO: 2016/8/13
+                System.out.println("");
+            } else {
+                String pjField = f.getName();
+                addProjectionFields(qjoinFields, manyToOneFields, referFields, pj, pjField);
             }
         });
 
@@ -902,7 +869,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
                                      final Map<String, Set<String>> referFields, final ProjectionList pj, String pjField) {
         // 如果是对象投影，不在查询中体现，后期通过对象Id来初始化
         if (manyToOneFields.containsKey(pjField) && !referFields.containsKey(pjField)) {
-            referFields.put(pjField, new HashSet<String>());
+            referFields.put(pjField, new HashSet<>());
         } else {
             pj.add(Property.forName(pjField), pjField);
             if (pjField.contains(".")) {

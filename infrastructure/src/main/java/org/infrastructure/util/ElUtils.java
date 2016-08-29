@@ -1,19 +1,17 @@
 package org.infrastructure.util;
 
-import org.apache.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.internal.PersistentBag;
 import org.infrastructure.jpa.core.GenericUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 
 /**
@@ -22,7 +20,7 @@ import java.util.List;
  * @author zhou
  */
 public class ElUtils {
-    static final Logger logger = Logger.getLogger(ElUtils.class);
+    static final Logger logger = LoggerFactory.getLogger(ElUtils.class);
 
     public Object val$(Object v, Object v1) {
         if (v == null)
@@ -31,17 +29,6 @@ public class ElUtils {
             return v1;
 
         return v;
-    }
-
-    /**
-     * 将s对象属性，copy至d，遇到@Entity类型，只copy一层
-     *
-     * @param d     Hibernate的Entity实体
-     * @param depth copy层次
-     * @return 返回一个实体
-     */
-    public static <T> T getDto(final T d, final int depth) {
-        return getDto(d, depth, new String[]{});
     }
 
     /**
@@ -61,6 +48,7 @@ public class ElUtils {
         if (d == null)
             return null;
         final Class dcls = d.getClass();
+        Map<String, BeanUtils.PropertyDescriptorWrapper> props = BeanUtils.CLASS_PROPERTY_CACHE.get(dcls.getName());
         final Class<?> tcls = Hibernate.getClass(d);
         try {
             final Object t = tcls.newInstance();
@@ -143,9 +131,6 @@ public class ElUtils {
 
     /**
      * 获取实体主键值
-     *
-     * @param en
-     * @return
      */
     public static Object getPK(Object en) {
         Field opkF = ElUtils.getPKField(en.getClass());
@@ -156,11 +141,6 @@ public class ElUtils {
 
     /**
      * copy属性到另一个字段
-     *
-     * @param src
-     * @param dest
-     * @param fields
-     * @version 1.0
      */
     public static void copyTo(Object src, Object dest, String... fields) {
         if (src == null || dest == null)

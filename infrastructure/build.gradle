@@ -1,6 +1,7 @@
 description '基础设施'
-group 'org.infrastructure'
-version '1.6.0.4-SNAPSHOT'
+group 'org.arvin'
+version '1.6.0.4'
+def artifactId = 'infrastructure'
 
 apply plugin: 'java'
 apply plugin: 'maven'
@@ -11,11 +12,6 @@ sourceCompatibility = 1.8
 repositories {
     mavenLocal()
     mavenCentral()
-}
-
-idea.project {
-    jdkName = '1.8'
-    languageLevel = '1.8'
 }
 
 ext.springVersion = "4.3.2.RELEASE"
@@ -51,8 +47,15 @@ dependencies {
             'redis.clients:jedis:2.8.1',
             'org.mongodb:mongo-java-driver:3.2.2',
             'org.freemarker:freemarker:2.3.23',
-            'log4j:log4j:1.2.17',
             'org.slf4j:slf4j-api:1.7.21'
 
     compile 'javax.servlet:javax.servlet-api:3.1.0'
+}
+
+install {
+    repositories.mavenInstaller {
+        pom.version = "$project.version"
+        pom.artifactId = "$artifactId"
+        pom.groupId = "$project.group"
+    }
 }

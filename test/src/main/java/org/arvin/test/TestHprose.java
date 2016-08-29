@@ -1,7 +1,7 @@
 package org.arvin.test;
 
-import org.arvin.test.hprose.HproseProxyBeanResolver;
 import org.service.demo.DemoService;
+import org.zibra.spring.HproseProxyBeanResolver;
 
 /**
  * Created by Arvin on 2016/8/27.

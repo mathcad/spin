@@ -7,7 +7,8 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +22,7 @@ import java.util.Map;
  * @version V1.0
  */
 public class HttpUtils {
-    static final Logger logger = Logger.getLogger(HttpUtils.class);
+    static final Logger logger = LoggerFactory.getLogger(HttpUtils.class);
 
     /**
      * 使用get方式请求数据

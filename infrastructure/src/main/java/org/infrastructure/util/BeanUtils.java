@@ -266,7 +266,7 @@ public class BeanUtils {
         return propValue;
     }
 
-    private static class PropertyDescriptorWrapper {
+    public static class PropertyDescriptorWrapper {
         public PropertyDescriptor descriptor;
         public Class<?> protertyType;
         public Method reader;
