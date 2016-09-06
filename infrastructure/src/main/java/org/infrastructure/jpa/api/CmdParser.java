@@ -133,7 +133,7 @@ public class CmdParser {
             val = StringUtils.trimWhitespace(val);
         }
 
-        Object qVal = null;
+        Object qVal;
         if (qOp.contains("in") || qOp.contains("notIn")) {
             List<Object> objList = new ArrayList<>();
             for (String strV : val.split(",")) {
@@ -160,7 +160,7 @@ public class CmdParser {
             enCls = field.getType();
         }
 
-        Object v = null;
+        Object v;
         assert field != null;
         Class fieldType = field.getType();
         try {
@@ -207,7 +207,7 @@ public class CmdParser {
     }
 
     private Criterion addPropQuery(List<String> qPath, String op, Object val, DetachedCriteria dc, Map<String, Integer> aliasMap) {
-        String propName = "";
+        String propName;
         if (qPath.size() == 2) {
             String ofield = qPath.get(0);
 

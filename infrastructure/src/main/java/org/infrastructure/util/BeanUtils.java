@@ -18,6 +18,7 @@
 package org.infrastructure.util;
 
 import org.infrastructure.jpa.core.IEntity;
+import org.infrastructure.sys.EnvCache;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -29,15 +30,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Bean工具类
  * Created by xuweinan on 2016/8/15.
  */
 public class BeanUtils {
-    public static final Map<String, Map<String, PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
-
     public static PropertyDescriptor[] propertyDescriptors(Class<?> c) throws IntrospectionException {
         BeanInfo beanInfo = Introspector.getBeanInfo(c);
         return beanInfo.getPropertyDescriptors();
@@ -80,7 +78,7 @@ public class BeanUtils {
      */
     public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values, String propPrefix) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
         T bean = type.newInstance();
-        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
+        Map<String, PropertyDescriptorWrapper> props = EnvCache.CLASS_PROPERTY_CACHE.get(type.getName());
         if (null == props) {
             PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
             if (null == propertyDescriptors || 0 == propertyDescriptors.length)
@@ -91,7 +89,7 @@ public class BeanUtils {
                 if (writer != null)
                     props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
             }
-            CLASS_PROPERTY_CACHE.put(type.getName(), props);
+            EnvCache.CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
 
         for (Map.Entry<String, Object> entry : values.entrySet()) {
@@ -121,7 +119,7 @@ public class BeanUtils {
     }
 
     private static Map<String, PropertyDescriptorWrapper> getBeanPropertyDes(Class<?> type) throws IntrospectionException {
-        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
+        Map<String, PropertyDescriptorWrapper> props = EnvCache.CLASS_PROPERTY_CACHE.get(type.getName());
         if (null == props) {
             PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
             props = new HashMap<>();
@@ -131,7 +129,7 @@ public class BeanUtils {
                 if (writer != null)
                     props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
             }
-            CLASS_PROPERTY_CACHE.put(type.getName(), props);
+            EnvCache.CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
         return props;
     }
@@ -145,7 +143,7 @@ public class BeanUtils {
      */
     public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
         T bean = type.newInstance();
-        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
+        Map<String, PropertyDescriptorWrapper> props = EnvCache.CLASS_PROPERTY_CACHE.get(type.getName());
         if (null == props) {
             PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
             props = new HashMap<>();
@@ -155,7 +153,7 @@ public class BeanUtils {
                 if (writer != null)
                     props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
             }
-            CLASS_PROPERTY_CACHE.put(type.getName(), props);
+            EnvCache.CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
         if (props.size() == 0)
             return bean;

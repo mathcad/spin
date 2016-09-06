@@ -56,12 +56,12 @@ public class SimplifiedException extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return this.exceptionType.toString() + super.getMessage();
+        return this.exceptionType.toString() + '\n' + super.getMessage();
     }
 
     @Override
     public String getLocalizedMessage() {
-        return this.exceptionType.toString() + super.getLocalizedMessage();
+        return this.exceptionType.toString() + '\n' + super.getLocalizedMessage();
     }
 
     @Override

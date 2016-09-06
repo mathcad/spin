@@ -50,11 +50,11 @@ public class WebExceptionHandler implements HandlerExceptionResolver {
             model.put("msg", ex.getMessage());
             return new ModelAndView("common/error", model);
         } else {
-            if (ex != null)
-                logger.error("WebReq未知异常", ex);
             ModelAndView mv = new ModelAndView("common/error");
-            assert ex != null;
-            mv.addObject("msg", ex.getMessage());
+            if (ex != null) {
+                logger.error("WebReq未知异常", ex);
+                mv.addObject("msg", ex.getMessage());
+            }
             return mv;
         }
     }

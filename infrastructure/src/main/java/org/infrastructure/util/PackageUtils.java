@@ -1,21 +1,28 @@
 package org.infrastructure.util;
 
+import org.infrastructure.throwable.SimplifiedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 /**
  * 通用的枚举类型转换
  *
- * @author zhou
+ * @author xuweinan
  * @version V1.0
  */
-public class PackageUtils {
+public abstract class PackageUtils {
+    private static final Logger logger = LoggerFactory.getLogger(PackageUtils.class);
+
     /**
      * 获取某包下（包括该包的所有子包）所有类
      *
@@ -40,9 +47,9 @@ public class PackageUtils {
         URL url = loader.getResource(packagePath);
         if (url != null) {
             String type = url.getProtocol();
-            if (type.equals("file")) {
+            if ("file".equals(type)) {
                 fileNames = getClassNameByFile(url.getPath(), childPackage);
-            } else if (type.equals("jar")) {
+            } else if ("jar".equals(type)) {
                 fileNames = getClassNameByJar(url.getPath(), childPackage);
             }
         } else {
@@ -55,7 +62,6 @@ public class PackageUtils {
      * 从项目文件获取某包下所有类
      *
      * @param filePath     文件路径
-     * @param className    类名集合
      * @param childPackage 是否遍历子包
      * @return 类的完整名称
      */
@@ -64,22 +70,16 @@ public class PackageUtils {
         File file = new File(filePath);
         File[] childFiles = file.listFiles();
         if (childFiles != null && childFiles.length != 0) {
-            for (File childFile : childFiles) {
-                if (childFile.isDirectory()) {
-                    if (childPackage) {
-                        myClassName.addAll(getClassNameByFile(childFile.getPath(), true));
-                    }
-                } else {
-                    String childFilePath = childFile.getPath();
-                    if (childFilePath.endsWith(".class")) {
-                        childFilePath = childFilePath.substring(
-                                childFilePath.indexOf("\\classes") + 9,
-                                childFilePath.lastIndexOf("."));
-                        childFilePath = childFilePath.replace("\\", ".");
-                        myClassName.add(childFilePath);
-                    }
+            Arrays.stream(childFiles).forEach(childFile -> {
+                String childFilePath = childFile.getPath();
+                if (childFile.isDirectory() && childPackage) {
+                    myClassName.addAll(getClassNameByFile(childFilePath, true));
+                } else if (childFilePath.endsWith(".class")) {
+                    childFilePath = childFilePath.substring(childFilePath.indexOf("\\classes") + 9, childFilePath.lastIndexOf('.'));
+                    childFilePath = childFilePath.replace("\\", ".");
+                    myClassName.add(childFilePath);
                 }
-            }
+            });
         }
         return myClassName;
     }
@@ -98,35 +98,22 @@ public class PackageUtils {
         String packagePath = jarInfo[1].substring(1);
         try {
             JarFile jarFile = new JarFile(jarFilePath);
-            Enumeration<JarEntry> entrys = jarFile.entries();
-            while (entrys.hasMoreElements()) {
-                JarEntry jarEntry = entrys.nextElement();
-                String entryName = jarEntry.getName();
-                if (entryName.endsWith(".class")) {
-                    if (childPackage) {
-                        if (entryName.startsWith(packagePath)) {
-                            entryName = entryName.replace("/", ".").substring(
-                                    0, entryName.lastIndexOf("."));
-                            myClassName.add(entryName);
-                        }
-                    } else {
-                        int index = entryName.lastIndexOf("/");
-                        String myPackagePath;
-                        if (index != -1) {
-                            myPackagePath = entryName.substring(0, index);
-                        } else {
-                            myPackagePath = entryName;
-                        }
-                        if (myPackagePath.equals(packagePath)) {
-                            entryName = entryName.replace("/", ".").substring(
-                                    0, entryName.lastIndexOf("."));
-                            myClassName.add(entryName);
-                        }
+            Stream<String> stream = StreamUtils.enumerationAsStream(jarFile.entries()).map(JarEntry::getName).filter(entryName -> entryName.endsWith(".class"));
+            if (childPackage)
+                stream.filter(n -> n.startsWith(packagePath)).forEach(n -> myClassName.add(n.replace("/", ".").substring(0, n.lastIndexOf('.'))));
+            else
+                stream.forEach(n -> {
+                    int index = n.lastIndexOf('/');
+                    String myPackagePath;
+                    myPackagePath = (index != -1) ? n.substring(0, index) : n;
+                    if (myPackagePath.equals(packagePath)) {
+                        myClassName.add(n.replace("/", ".").substring(0, n.lastIndexOf('.')));
                     }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+                });
+            jarFile.close();
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            throw new SimplifiedException("Read jar file" + jarFilePath + "error", e);
         }
         return myClassName;
     }
@@ -141,17 +128,20 @@ public class PackageUtils {
      */
     private static List<String> getClassNameByJars(URL[] urls, String packagePath, boolean childPackage) {
         List<String> myClassName = new ArrayList<>();
-        if (urls != null) {
-            for (URL url : urls) {
-                String urlPath = url.getPath();
-                // 不必搜索classes文件夹
-                if (urlPath.endsWith("classes/")) {
-                    continue;
-                }
-                String jarPath = urlPath + "!/" + packagePath;
-                myClassName.addAll(getClassNameByJar(jarPath, childPackage));
-            }
-        }
+        Optional.ofNullable(urls).ifPresent(u -> Arrays.stream(u).map(URL::getPath).filter(p -> !p.endsWith("classes/"))
+                .map(urlPath -> urlPath + "!/" + packagePath)
+                .forEach(jarPath -> myClassName.addAll(getClassNameByJar(jarPath, childPackage))));
+//        if (urls != null) {
+//            for (URL url : urls) {
+//                String urlPath = url.getPath();
+//                // 不必搜索classes文件夹
+//                if (urlPath.endsWith("classes/")) {
+//                    continue;
+//                }
+//                String jarPath = urlPath + "!/" + packagePath;
+//                myClassName.addAll(getClassNameByJar(jarPath, childPackage));
+//            }
+//        }
         return myClassName;
     }
 }

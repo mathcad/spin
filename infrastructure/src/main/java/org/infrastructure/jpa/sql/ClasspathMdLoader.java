@@ -90,13 +90,13 @@ public class ClasspathMdLoader extends FileSystemSQLLoader {
             this.sqlSourceMap.put(path + "." + key, sql.substring(0, sql.lastIndexOf("\n")));
             this.sqlSourceVersion.put(path + "." + key, version);
         } catch (IOException e) {
-            throw new SQLException(SQLException.CANNOT_GET_SQL, "解析模板文件异常:" + sqlFile.getName());
+            throw new SQLException(SQLException.CANNOT_GET_SQL, "解析模板文件异常:" + sqlFile.getName(), e);
         } finally {
             if (bf != null) {
                 try {
                     bf.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error(e.getMessage());
                 }
             }
         }

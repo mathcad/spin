@@ -10,6 +10,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
 import java.sql.Timestamp;
+import java.util.Random;
 
 /**
  * 基本实体类型
@@ -86,14 +87,14 @@ public abstract class AbstractEntity implements IEntity<Long> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (this.getId() == null || obj == null || !(this.getClass().equals(obj.getClass()))) {
-            return false;
-        }
-        IEntity that = (IEntity) obj;
-        return this.getId().equals(that.getId());
+        return this == obj || this.id != null && obj != null && this.getClass().equals(obj.getClass()) && this.id.equals(((IEntity) obj).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        Long id = (this.id == null ? new Random().nextLong() : this.id);
+        String identifier = this.getClass().getName() + id.toString();
+        return identifier.hashCode();
     }
 
     @Override

@@ -18,8 +18,10 @@ package org.infrastructure.util;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.security.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -275,6 +277,8 @@ public abstract class ObjectUtils {
     public static <T> T convert(Class<T> type, Object target) throws ClassCastException {
         if (target != null && (type != null && type.isInstance(target) || ClassUtils.isAssignable(type, target.getClass(), true))) {
             return (T) target;
+        } else if (Date.class.equals(type) || Timestamp.class.equals(type) || java.sql.Timestamp.class.equals(type)) {
+
         } else {
             Class<?> typePrimitive = ClassUtils.wrapperToPrimitive(type);
             if (null == target) {

@@ -2,10 +2,8 @@ package org.infrastructure.sys;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import javafx.beans.Observable;
 import org.infrastructure.jpa.api.QueryParam;
 import org.junit.Test;
-import rx.functions.Action1;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -13,8 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by Arvin on 2016/6/26.
@@ -26,12 +22,12 @@ public class EnumUtilsTest {
     public void getEnum() throws Exception {
         String t = "asdf|def";
         String[] a = t.split("\\|");
-        rx.Observable.from(a).forEach(new Action1<String>() {
-            @Override
-            public void call(String s) {
-                System.out.println(s);
-            }
-        });
+//        rx.Observable.from(a).forEach(new Action1<String>() {
+//            @Override
+//            public void call(String s) {
+//                System.out.println(s);
+//            }
+//        });
     }
 
     @Test

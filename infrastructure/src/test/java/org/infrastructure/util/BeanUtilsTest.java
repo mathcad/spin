@@ -6,6 +6,7 @@ import org.infrastructure.jpa.core.GenericUser;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
@@ -79,5 +80,11 @@ public class BeanUtilsTest {
         seconds = (endTime - startTime) / 1000F;
         System.out.println("JSON：" + Float.toString(seconds) + " seconds.");
         assertTrue(user.getCreateUser().getCreateUser().getId() == 3);
+    }
+
+    @Test
+    public void testPackageUtil() {
+        List<String> res = PackageUtils.getClassName("org");
+        assertTrue(null != res && res.size() > 0);
     }
 }

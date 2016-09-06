@@ -2,20 +2,9 @@ package org.infrastructure.jpa.core;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.CacheMode;
-import org.hibernate.Criteria;
-import org.hibernate.FetchMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.*;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Property;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.*;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.api.CmdParser.DetachedCriteriaResult;
@@ -23,17 +12,19 @@ import org.infrastructure.jpa.sql.SQLManager;
 import org.infrastructure.shiro.SessionManager;
 import org.infrastructure.shiro.SessionUser;
 import org.infrastructure.sys.Assert;
+import org.infrastructure.sys.EnvCache;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.BeanUtils;
 import org.infrastructure.util.ElUtils;
-import org.infrastructure.util.GenericUtils;
+import org.infrastructure.util.ReflectionUtils;
 import org.infrastructure.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -42,15 +33,9 @@ import javax.persistence.Transient;
 import javax.sql.DataSource;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -69,7 +54,7 @@ import java.util.stream.Collectors;
 public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends SQLManager<T> {
     private static final Log logger = LogFactory.getLog(ARepository.class);
 
-    private static HashMap<String, Map<String, Field>> REFER_JOIN_FIELDS = new HashMap<>();
+    private boolean checkWriteOperations = true;
 
     @Autowired
     protected SessionManager sessionMgr;
@@ -81,7 +66,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
     @SuppressWarnings("unchecked")
     public ARepository() {
-        this.entityClazz = (Class<T>) GenericUtils.getSuperClassGenricType(this.getClass());
+        this.entityClazz = (Class<T>) ReflectionUtils.getSuperClassGenricType(this.getClass());
     }
 
     /**
@@ -89,6 +74,28 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     public ARepository(Class<T> entityClass) {
         this.entityClazz = entityClass;
+    }
+
+    /**
+     * Return whether to check that the Hibernate Session is not in read-only
+     * mode in case of write operations (save/update/delete).
+     */
+    public boolean isCheckWriteOperations() {
+        return checkWriteOperations;
+    }
+
+    /**
+     * Set whether to check that the Hibernate Session is not in read-only mode
+     * in case of write operations (save/update/delete).
+     * <p>Default is "true", for fail-fast behavior when attempting write operations
+     * within a read-only transaction. Turn this off to allow save/update/delete
+     * on a Session with flush mode MANUAL.
+     *
+     * @see #checkWriteOperationAllowed
+     * @see org.springframework.transaction.TransactionDefinition#isReadOnly
+     */
+    public void setCheckWriteOperations(boolean checkWriteOperations) {
+        this.checkWriteOperations = checkWriteOperations;
     }
 
     public SessionManager getSessionMgr() {
@@ -121,27 +128,19 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     public static Map<String, Field> getJoinFields(final Class cls) {
         String clsName = cls.getName();
-        parseForJoinFetch(cls);
-        return REFER_JOIN_FIELDS.get(clsName);
+        if (!EnvCache.REFER_JOIN_FIELDS.containsKey(clsName))
+            parseForJoinFetch(cls);
+        return EnvCache.REFER_JOIN_FIELDS.get(clsName);
     }
 
     /**
      * 动态捕获要增加Fetch=Join的字段 默认ToOne的都Fetch=Join
      */
     public static void parseForJoinFetch(final Class cls) {
-        REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<>());
-        ReflectionUtils.doWithFields(cls, f -> REFER_JOIN_FIELDS.get(cls.getName()).put(f.getName(), f), f -> {
-            boolean result = false;
-            ManyToOne m2o = f.getAnnotation(ManyToOne.class);
-            if (m2o != null) {
-                result = true;
-            }
-            OneToOne o2o = f.getAnnotation(OneToOne.class);
-            if (o2o != null) {
-                result = true;
-            }
-            return result;
-        });
+        EnvCache.REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<>());
+        ReflectionUtils.doWithFields(cls,
+                f -> EnvCache.REFER_JOIN_FIELDS.get(cls.getName()).put(f.getName(), f),
+                f -> f.getAnnotation(ManyToOne.class) != null || f.getAnnotation(OneToOne.class) != null);
     }
 
     /**
@@ -149,11 +148,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * 否则，调用sessFactory的getCurrentSession
      */
     public Session getSession() {
-        Session sess;
-        sess = peekThreadSession();
-
-        if (sess == null)
+        Session sess = peekThreadSession();
+        if (sess == null) {
             sess = sessFactory.getObject().getCurrentSession();
+            pushTreadSession(sess);
+        }
         return sess;
     }
 
@@ -162,13 +161,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     public Session openSession() {
         return this.openSession(false);
-    }
-
-    /**
-     * 打开事务 如果线程已有事务就返回，不重复打开
-     */
-    public Transaction openTransaction() {
-        return this.openTransaction(false);
     }
 
     /**
@@ -183,18 +175,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
             pushTreadSession(session);
         }
         return session;
-    }
-
-    /**
-     * 后台线程专用 打开线程绑定的 session, 并启动事务
-     *
-     * @param requiredNew 强制启动事务
-     */
-    public Transaction openTransaction(boolean requiredNew) {
-        Session session = openSession(requiredNew);
-        Transaction tran = session.getTransaction() == null ? session.beginTransaction() : session.getTransaction();
-        tran.begin();
-        return tran;
     }
 
     /**
@@ -213,9 +193,35 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     }
 
     /**
-     * 保存,返回保存后的持久态对象
+     * 打开事务 如果线程已有事务就返回，不重复打开
      */
-    public T save(T entity) {
+    public Transaction openTransaction() {
+        return this.openTransaction(false);
+    }
+
+    /**
+     * 后台线程专用 打开线程绑定的 session, 并启动事务
+     *
+     * @param requiredNew 强制启动事务
+     */
+    public Transaction openTransaction(boolean requiredNew) {
+        Session session = openSession(requiredNew);
+        Transaction tran = session.getTransaction() == null ? session.beginTransaction() : session.getTransaction();
+        tran.begin();
+        return tran;
+    }
+
+    /**
+     * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the
+     * entity instance completely.
+     *
+     * @param entity entity to save
+     * @return the saved entity (has id)
+     * @throws IllegalArgumentException in case the given entity is {@literal null}.
+     */
+    public T save(final T entity) throws IllegalArgumentException {
+        if (null == entity)
+            throw new IllegalArgumentException("The entity to save must be a NON-NULL object");
         try {
             if (entity instanceof AbstractEntity) {
                 AbstractEntity aEn = (AbstractEntity) entity;
@@ -271,26 +277,88 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
             logger.error("", ope);
             throw new SimplifiedException("实体已经更新，请重置后再编辑");
         }
-        return this.get(entity.getId());
-    }
-
-    protected void merge(T t) {
-        Session sess = getSession();
-        sess.merge(t);
+        return get(entity.getId());
     }
 
     /**
-     * 主键获取持久态对象
+     * Saves all given entities.
+     *
+     * @param entities entities to save
+     * @return the saved entities
+     * @throws IllegalArgumentException in case the given entity is {@literal null}.
      */
-    public T get(PK k) {
-        Session sess = getSession();
-        return sess.get(this.entityClazz, k);
+    public List<T> save(Iterable<T> entities) throws IllegalArgumentException {
+        List<T> result = new ArrayList<>();
+        if (entities == null) {
+            return result;
+        }
+        for (T entity : entities) {
+            result.add(save(entity));
+        }
+        return result;
+    }
+
+    public T merge(final T entity) {
+        //noinspection unchecked
+        return (T) getSession().merge(entity);
     }
 
     /**
-     * 主键获取持久态对象
+     * Persist the state of the given detached instance according to the
+     * given replication mode, reusing the current identifier value.
+     *
+     * @param entity          the persistent object to replicate
+     * @param replicationMode the Hibernate ReplicationMode
+     * @throws DataAccessException in case of Hibernate errors
+     * @see org.hibernate.Session#replicate(Object, ReplicationMode)
      */
-    public T getWithLock(PK k) {
+    public void replicate(final T entity, final ReplicationMode replicationMode) throws DataAccessException {
+        checkWriteOperationAllowed(getSession());
+        getSession().replicate(entity, replicationMode);
+    }
+
+    /**
+     * Return the persistent instance of the actual entity class
+     * with the given identifier, or {@code null} if not found.
+     * <p>This method is a thin wrapper around
+     * {@link org.hibernate.Session#get(Class, Serializable)} for convenience.
+     * For an explanation of the exact semantics of this method, please do refer to
+     * the Hibernate API documentation in the first instance.
+     *
+     * @param id the identifier of the persistent instance
+     * @return the persistent instance, or {@code null} if not found
+     * @throws DataAccessException in case of Hibernate errors
+     * @see org.hibernate.Session#get(Class, Serializable)
+     */
+    public T get(final PK id) {
+        return getSession().get(this.entityClazz, id);
+    }
+
+    /**
+     * Return the persistent instance of the given identifier, or {@code null} if not found.
+     * <p>Obtains the specified lock mode if the instance exists.
+     * <p>This method is a thin wrapper around
+     * {@link org.hibernate.Session#get(Class, Serializable, LockMode)} for convenience.
+     * For an explanation of the exact semantics of this method, please do refer to
+     * the Hibernate API documentation in the first instance.
+     *
+     * @param id       the identifier of the persistent instance
+     * @param lockMode the lock mode to obtain
+     * @return the persistent instance, or {@code null} if not found
+     * @see org.hibernate.Session#get(Class, Serializable, LockMode)
+     */
+    public T get(final PK id, final LockMode lockMode) {
+        if (lockMode != null) {
+            return getSession().get(this.entityClazz, id, new LockOptions(lockMode));
+        } else {
+            return getSession().get(this.entityClazz, id);
+        }
+    }
+
+    /**
+     * 主键获取持久态对象并锁定(FOR UPDATE悲观锁)
+     */
+    public T getWithLock(final PK k) {
         Session sess = getSession();
         T t = sess.get(this.entityClazz, k);
         sess.buildLockRequest(LockOptions.UPGRADE).lock(t);
@@ -300,9 +368,101 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     /**
      * 主键获取指定深度的属性的瞬态对象
      */
-    public T get(PK k, int depth) throws Exception {
-        T t = get(k);
-        return ElUtils.getDto(t, depth);
+    public T get(final PK k, int depth) throws Exception {
+        return ElUtils.getDto(get(k), depth);
+    }
+
+    /**
+     * Return the persistent instance of the given entity class
+     * with the given identifier, throwing an exception if not found.
+     * <p>This method is a thin wrapper around
+     * {@link org.hibernate.Session#load(Class, Serializable)} for convenience.
+     * For an explanation of the exact semantics of this method, please do refer to
+     * the Hibernate API documentation in the first instance.
+     *
+     * @param id the identifier of the persistent instance
+     * @return the persistent instance
+     * @throws org.springframework.orm.ObjectRetrievalFailureException if not found
+     * @throws DataAccessException                                     in case of Hibernate errors
+     * @see org.hibernate.Session#load(Class, Serializable)
+     */
+    public T load(final PK id) {
+        return getSession().load(this.entityClazz, id);
+    }
+
+    /**
+     * Return the persistent instance of the given entity class
+     * with the given identifier, throwing an exception if not found.
+     * Obtains the specified lock mode if the instance exists.
+     * <p>This method is a thin wrapper around
+     * {@link org.hibernate.Session#load(Class, Serializable, LockMode)} for convenience.
+     * For an explanation of the exact semantics of this method, please do refer to
+     * the Hibernate API documentation in the first instance.
+     *
+     * @param id       the identifier of the persistent instance
+     * @param lockMode the lock mode to obtain
+     * @return the persistent instance
+     * @throws org.springframework.orm.ObjectRetrievalFailureException if not found
+     * @throws DataAccessException                                     in case of Hibernate errors
+     * @see org.hibernate.Session#load(Class, Serializable)
+     */
+    public T load(final PK id, final LockMode lockMode) {
+        if (lockMode != null) {
+            return getSession().load(entityClazz, id, new LockOptions(lockMode));
+        } else {
+            return getSession().load(entityClazz, id);
+        }
+    }
+
+    /**
+     * Re-read the state of the given persistent instance.
+     *
+     * @param entity the persistent instance to re-read
+     * @throws DataAccessException in case of Hibernate errors
+     * @see org.hibernate.Session#refresh(Object)
+     */
+    public void refresh(final T entity) throws DataAccessException {
+        refresh(entity, null);
+    }
+
+    /**
+     * Re-read the state of the given persistent instance.
+     * Obtains the specified lock mode for the instance.
+     *
+     * @param entity   the persistent instance to re-read
+     * @param lockMode the lock mode to obtain
+     * @throws DataAccessException in case of Hibernate errors
+     * @see org.hibernate.Session#refresh(Object, LockMode)
+     */
+    public void refresh(final T entity, final LockMode lockMode) throws DataAccessException {
+        if (lockMode != null) {
+            getSession().refresh(entity, new LockOptions(lockMode));
+        } else {
+            getSession().refresh(entity);
+        }
+    }
+
+    /**
+     * Check whether the given object is in the Session cache.
+     *
+     * @param entity the persistence instance to check
+     * @return whether the given object is in the Session cache
+     * @throws DataAccessException if there is a Hibernate error
+     * @see org.hibernate.Session#contains
+     */
+    public boolean contains(final T entity) throws DataAccessException {
+        return getSession().contains(entity);
+    }
+
+    /**
+     * Remove the given object from the {@link org.hibernate.Session} cache.
+     *
+     * @param entity the persistent instance to evict
+     * @throws DataAccessException in case of Hibernate errors
+     * @see org.hibernate.Session#evict
+     */
+    public void evict(final T entity) throws DataAccessException {
+        getSession().evict(entity);
     }
 
     /**
@@ -325,6 +485,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
     /**
      * 批量删除实体(物理删除，不可恢复)
+     * <p>如果条件为空，删除所有</p>
      */
     public void delete(Criterion... cs) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
@@ -337,6 +498,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
     /**
      * 批量删除实体(物理删除，不可恢复)
+     * <p>如果条件为空，删除所有</p>
      */
     public void delete(String conditions) {
         StringBuilder hql = new StringBuilder("from ");
@@ -354,30 +516,27 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
         // 使用投影映射字段
         ProjectionList pj = Projections.projectionList();
-        for (Object pf : fields) {
-            String pjField = pf.toString();
-
+        for (String pf : fields) {
             // 如果是对象投影，不在查询中体现，后期通过对象Id来初始化
-            if (enJoinFields.containsKey(pjField)) {
-                referFields.put(pjField, new HashSet<>());
+            if (enJoinFields.containsKey(pf)) {
+                referFields.put(pf, new HashSet<>());
                 continue;
             }
 
-            pj.add(Property.forName(pjField), pjField);
-            int pjFieldPtIdx = pjField.indexOf(".");
+            pj.add(Property.forName(pf), pf);
+            int pjFieldPtIdx = pf.indexOf(".");
             if (pjFieldPtIdx > -1) {
-                qjoinFields.add(pjField.split("\\.")[0]);
+                qjoinFields.add(pf.split("\\.")[0]);
             }
         }
 
         //将投影对象字典收集为对象
-        for (Object pf : fields) {
-            String pjField = pf.toString();
-            int pjFieldPtIdx = pjField.indexOf(".");
-            if (pjFieldPtIdx > -1 && pjField.lastIndexOf(".") == pjFieldPtIdx) {
-                String objField = pjField.split("\\.")[0];
+        for (String pf : fields) {
+            int pjFieldPtIdx = pf.indexOf(".");
+            if (pjFieldPtIdx > -1 && pf.lastIndexOf(".") == pjFieldPtIdx) {
+                String objField = pf.split("\\.")[0];
                 if (referFields.containsKey(objField)) {
-                    referFields.get(objField).add(pjField);
+                    referFields.get(objField).add(pf);
                 }
             }
         }
@@ -458,8 +617,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         ct.setResultTransformer(org.hibernate.criterion.CriteriaSpecification.ROOT_ENTITY);
 
         // 自动追加join策略
-        if (REFER_JOIN_FIELDS.containsKey(this.entityClazz.getName())) {
-            for (Field field : REFER_JOIN_FIELDS.get(this.entityClazz.getName()).values()) {
+        if (EnvCache.REFER_JOIN_FIELDS.containsKey(this.entityClazz.getName())) {
+            for (Field field : EnvCache.REFER_JOIN_FIELDS.get(this.entityClazz.getName()).values()) {
                 ct.setFetchMode(field.getName(), FetchMode.JOIN);
             }
         }
@@ -527,8 +686,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     public List<T> findAll() {
         Session sess = getSession();
-        DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        Criteria ct = dc.getExecutableCriteria(sess);
+        Criteria ct = DetachedCriteria.forClass(this.entityClazz).getExecutableCriteria(sess);
         ct.setFirstResult(0);
         ct.setMaxResults(10000);
         ct.setCacheMode(CacheMode.NORMAL);
@@ -542,15 +700,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     public List<T> find(String hql, Object... args) {
         Session sess = getSession();
-        Query q = sess.createQuery(hql);
+        Query<T> q = sess.createQuery(hql, entityClazz);
         if (args != null && args.length > 0) {
             for (int i = 0; i < args.length; i++) {
                 q.setParameter(i, args[i]);
             }
         }
-        @SuppressWarnings("unchecked")
-        List<T> list = q.list();
-        return list;
+        return q.list();
     }
 
     /**
@@ -582,12 +738,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         @SuppressWarnings("unchecked")
         PK pk = list.size() == 1 ? (PK) list.get(0).get(pkf) : null;
         return pk == null ? null : this.get(pk);
-    }
-
-    protected ProjectionList getPropertyProjection(String pkf) {
-        ProjectionList pj = Projections.projectionList();
-        pj.add(Property.forName(pkf), pkf);
-        return pj;
     }
 
     /**
@@ -631,6 +781,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
             sess.buildLockRequest(LockOptions.UPGRADE).lock(t);
         }
         return t;
+    }
+
+    public boolean exist(PK id) {
+        if (id == null) {
+            return false;
+        }
+        Long c = this.count(new CriteriaParam().addCriterion(Restrictions.eq("id", id)));
+        return c > 0;
     }
 
     /**
@@ -692,15 +850,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         }
         Long c = this.count(p);
         return c > 0;
-    }
-
-    protected void addProjections(final ProjectionList plist, Class enCls) {
-        ReflectionUtils.doWithFields(enCls, f -> {
-            if (f.getAnnotation(Transient.class) == null) {
-                logger.info(f.getName());
-                plist.add(Property.forName(f.getName()), f.getName());
-            }
-        });
     }
 
     /**
@@ -787,6 +936,77 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      */
     public List<T> list(CriteriaParam cp) {
         return findList(cp);
+    }
+
+    /**
+     * Flush all pending saves, updates and deletes to the database.
+     * <p>Only invoke this for selective eager flushing, for example when
+     * JDBC code needs to see certain changes within the same transaction.
+     * Else, it is preferable to rely on auto-flushing at transaction
+     * completion.
+     *
+     * @throws DataAccessException in case of Hibernate errors
+     * @see org.hibernate.Session#flush
+     */
+    public void flush() throws DataAccessException {
+        getSession().flush();
+    }
+
+    /**
+     * Remove all objects from the {@link org.hibernate.Session} cache, and
+     * cancel all pending saves, updates and deletes.
+     *
+     * @throws DataAccessException in case of Hibernate errors
+     * @see org.hibernate.Session#clear
+     */
+    public void clear() throws DataAccessException {
+        getSession().clear();
+    }
+
+    protected void addProjections(final ProjectionList plist, Class enCls) {
+        ReflectionUtils.doWithFields(enCls, f -> {
+            if (f.getAnnotation(Transient.class) == null) {
+                logger.info(f.getName());
+                plist.add(Property.forName(f.getName()), f.getName());
+            }
+        });
+    }
+
+    protected ProjectionList getPropertyProjection(String pkf) {
+        ProjectionList pj = Projections.projectionList();
+        pj.add(Property.forName(pkf), pkf);
+        return pj;
+    }
+
+    /**
+     * Check whether write operations are allowed on the given Session.
+     * <p>Default implementation throws an InvalidDataAccessApiUsageException in
+     * case of {@code FlushMode.MANUAL}. Can be overridden in subclasses.
+     *
+     * @param session current Hibernate Session
+     * @throws InvalidDataAccessApiUsageException if write operations are not allowed
+     * @see #setCheckWriteOperations
+     * @see Session#getFlushMode()
+     * @see FlushMode#MANUAL
+     */
+    protected void checkWriteOperationAllowed(Session session) throws InvalidDataAccessApiUsageException {
+        Method getFlushMode;
+        try {
+            // Hibernate 5.2+ getHibernateFlushMode()
+            getFlushMode = Session.class.getMethod("getHibernateFlushMode");
+        } catch (NoSuchMethodException ex) {
+            try {
+                // Hibernate 5.0/5.1 getFlushMode() with FlushMode return type
+                getFlushMode = Session.class.getMethod("getFlushMode");
+            } catch (NoSuchMethodException ex2) {
+                throw new IllegalStateException("No compatible Hibernate getFlushMode signature found", ex2);
+            }
+        }
+        if (isCheckWriteOperations() && ((FlushMode) ReflectionUtils.invokeMethod(getFlushMode, session)).lessThan(FlushMode.COMMIT)) {
+            throw new InvalidDataAccessApiUsageException(
+                    "Write operations are not allowed in read-only mode (FlushMode.MANUAL): " +
+                            "Turn your Session into FlushMode.COMMIT/AUTO or remove 'readOnly' marker from transaction definition.");
+        }
     }
 
     /**

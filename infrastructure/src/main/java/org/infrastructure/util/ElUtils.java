@@ -3,6 +3,7 @@ package org.infrastructure.util;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.internal.PersistentBag;
 import org.infrastructure.jpa.core.GenericUser;
+import org.infrastructure.sys.EnvCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
@@ -48,7 +49,6 @@ public class ElUtils {
         if (d == null)
             return null;
         final Class dcls = d.getClass();
-        Map<String, BeanUtils.PropertyDescriptorWrapper> props = BeanUtils.CLASS_PROPERTY_CACHE.get(dcls.getName());
         final Class<?> tcls = Hibernate.getClass(d);
         try {
             final Object t = tcls.newInstance();

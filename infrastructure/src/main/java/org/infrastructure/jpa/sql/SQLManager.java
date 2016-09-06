@@ -241,22 +241,6 @@ public class SQLManager<T extends IEntity> {
         return this.nameJt.update(sqlTxt, paramMap);
     }
 
-    private String removeLastOrderBy(String sql) {
-        int sortStart = -1;
-        int sortEnd = 0;
-        String patter = "(order\\s+by[^)]+)";
-        Pattern p = Pattern.compile(patter, Pattern.CASE_INSENSITIVE);
-        Matcher m = p.matcher(sql);
-        while (m.find()) {
-            sortStart = m.start(0);
-            sortEnd = m.end(0);
-        }
-        if (sortStart > -1 && sortEnd == sql.length()) {
-            sql = sql.substring(0, sortStart);
-        }
-        return sql;
-    }
-
     /**
      * 批量更新
      */
@@ -280,5 +264,21 @@ public class SQLManager<T extends IEntity> {
 
     public Class<T> getEntityClazz() {
         return entityClazz;
+    }
+
+    private String removeLastOrderBy(String sql) {
+        int sortStart = -1;
+        int sortEnd = 0;
+        String patter = "(order\\s+by[^)]+)";
+        Pattern p = Pattern.compile(patter, Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(sql);
+        while (m.find()) {
+            sortStart = m.start(0);
+            sortEnd = m.end(0);
+        }
+        if (sortStart > -1 && sortEnd == sql.length()) {
+            sql = sql.substring(0, sortStart);
+        }
+        return sql;
     }
 }
