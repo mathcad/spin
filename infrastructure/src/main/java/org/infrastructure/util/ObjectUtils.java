@@ -18,6 +18,7 @@ package org.infrastructure.util;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
 import java.security.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
@@ -275,15 +276,17 @@ public abstract class ObjectUtils {
      */
     @SuppressWarnings("unchecked")
     public static <T> T convert(Class<T> type, Object target) throws ClassCastException {
-        if (target != null && (type != null && type.isInstance(target) || ClassUtils.isAssignable(type, target.getClass(), true))) {
+        if (null == type)
+            throw new IllegalArgumentException("The type witch convert to can not be null");
+        if (target != null && (type.isInstance(target) || ClassUtils.isAssignable(type, target.getClass(), true))) {
             return (T) target;
-        } else if (Date.class.equals(type) || Timestamp.class.equals(type) || java.sql.Timestamp.class.equals(type)) {
-
+        } else if (BigDecimal.class.equals(type)) {
+            return target == null ? null : (T) new BigDecimal(target.toString());
         } else {
             Class<?> typePrimitive = ClassUtils.wrapperToPrimitive(type);
             if (null == target) {
-                if (null != type && type.isPrimitive())
-                    throw new ClassCastException("can not cast null to base type:" + type.getName());
+                if (type.isPrimitive())
+                    throw new ClassCastException("Can not cast null to base type:" + type.getName());
                 else
                     return null;
             }
@@ -308,8 +311,7 @@ public abstract class ObjectUtils {
                     return (T) toString(target);
             }
         }
-        throw new ClassCastException(
-                "can not cast target:" + target.getClass().getName() + " to class type:" + (type != null ? type.getName() : null));
+        throw new ClassCastException("Can not cast target:" + target + "[" + target.getClass().getName() + "] to type:" + type.getName());
     }
 
     /**

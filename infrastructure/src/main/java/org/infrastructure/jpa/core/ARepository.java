@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  * </pre>
  *
  * @author xuweinan
- * @version V1.1
+ * @version V1.2
  */
 @Component
 public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends SQLManager<T> {
@@ -64,14 +64,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     protected static ThreadLocal<Stack<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Stack<Session>>() {
     };
 
-    @SuppressWarnings("unchecked")
     public ARepository() {
+        //noinspection unchecked
         this.entityClazz = (Class<T>) ReflectionUtils.getSuperClassGenricType(this.getClass());
     }
 
-    /**
-     * 通过构造方法指定DAO的具体实现类
-     */
     public ARepository(Class<T> entityClass) {
         this.entityClazz = entityClass;
     }
@@ -151,7 +148,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         Session sess = peekThreadSession();
         if (sess == null) {
             sess = sessFactory.getObject().getCurrentSession();
-            pushTreadSession(sess);
         }
         return sess;
     }
@@ -164,7 +160,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     }
 
     /**
-     * 后台线程专用 打开线程绑定的 session THREADLOCAL_SESSIONS 事务管理会失效
+     * 手动打开线程绑定的session 事务管理会失效
      *
      * @param requiredNew 强制打开新连接
      */
@@ -178,7 +174,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     }
 
     /**
-     * 后台线程专用 关闭线程绑定的 session THREADLOCAL_SESSIONS
+     * 关闭线程中手动打开的session
      */
     public void closeSession() {
         Session session = popTreadSession();
@@ -200,7 +196,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     }
 
     /**
-     * 后台线程专用 打开线程绑定的 session, 并启动事务
+     * 打开线程绑定的session, 并启动事务
      *
      * @param requiredNew 强制启动事务
      */
@@ -356,20 +352,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     }
 
     /**
-     * 主键获取持久态对象并锁定(FOR UPDATE悲观锁)
+     * 获取持久态实体对象并锁定(FOR UPDATE悲观锁)
      */
     public T getWithLock(final PK k) {
         Session sess = getSession();
         T t = sess.get(this.entityClazz, k);
         sess.buildLockRequest(LockOptions.UPGRADE).lock(t);
         return t;
-    }
-
-    /**
-     * 主键获取指定深度的属性的瞬态对象
-     */
-    public T get(final PK k, int depth) throws Exception {
-        return ElUtils.getDto(get(k), depth);
     }
 
     /**
@@ -412,6 +401,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         } else {
             return getSession().load(entityClazz, id);
         }
+    }
+
+    /**
+     * 主键获取指定深度的属性的瞬态对象
+     */
+    public T getDto(final PK k, int depth) throws Exception {
+        return ElUtils.getDto(get(k), depth);
     }
 
     /**

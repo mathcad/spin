@@ -121,7 +121,7 @@ public class CmdContext implements ApplicationContextAware {
      */
     public <T extends IEntity<Long>> T getEntity(Class<T> cls, Long key, int depth) {
         try {
-            return this.getRepo(cls).get(key, depth);
+            return this.getRepo(cls).getDto(key, depth);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

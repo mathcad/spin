@@ -40,9 +40,9 @@ public abstract class MetaController extends BaseController {
             // 标记正在执行 get对象查询，枚举显示为值
             if (get)
                 GsonView.setApi("get");
-            ARepository repo = cmdContext.getRepo(cls);
+            ARepository<?, Long> repo = cmdContext.getRepo(cls);
             depth = depth > 2 ? 2 : depth;
-            mv.ok().add("data", repo.get(id, depth));
+            mv.ok().add("data", repo.getDto(id, depth));
         } catch (Throwable e) {
             logger.error("api查询异常", e);
             mv.error(e.getMessage());
