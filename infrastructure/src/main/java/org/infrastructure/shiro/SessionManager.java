@@ -10,7 +10,11 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.swing.text.html.Option;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * 全局Session实现类 基于shiro实现
@@ -107,13 +111,9 @@ public class SessionManager {
      */
     public void removeAllSessionAttrExc(String... attr) {
         Session sess = getSession();
-        if (sess != null && sess.getAttributeKeys() != null) {
-            for (Object key : sess.getAttributeKeys()) {
-                if (attr.length > 0 && Arrays.asList(attr).contains(key.toString()))
-                    continue;
-                sess.removeAttribute(key);
-            }
-        }
+        List<String> a = attr == null ? new ArrayList<>() : Arrays.asList(attr);
+        Optional.ofNullable(sess).filter(s -> s != null && s.getAttributeKeys() != null)
+                .ifPresent(s -> s.getAttributeKeys().stream().filter(k -> !a.contains(k.toString())).forEach(s::removeAttribute));
     }
 
     /**

@@ -406,7 +406,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     /**
      * 主键获取指定深度的属性的瞬态对象
      */
-    public T getDto(final PK k, int depth) throws Exception {
+    public T getDto(final PK k, int depth) {
         return ElUtils.getDto(get(k), depth);
     }
 

@@ -75,18 +75,6 @@ public class JSONUtils {
      * 默认的 {@code JSON} 日期/时间字段的格式化模式。
      */
     public static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss SSS";
-    /**
-     * {@code Google Gson} 的 {@literal @Since} 注解常用的版本号常量 - {@code 1.0}。
-     */
-    public static final Double SINCE_VERSION_10 = 1.0d;
-    /**
-     * {@code Google Gson} 的 {@literal @Since} 注解常用的版本号常量 - {@code 1.1}。
-     */
-    public static final Double SINCE_VERSION_11 = 1.1d;
-    /**
-     * {@code Google Gson} 的 {@literal @Since} 注解常用的版本号常量 - {@code 1.2}。
-     */
-    public static final Double SINCE_VERSION_12 = 1.2d;
 
     /**
      * 将给定的目标对象根据指定的条件参数转换成 {@code JSON} 格式的字符串。
@@ -106,7 +94,6 @@ public class JSONUtils {
         if (target == null)
             return EMPTY_JSON;
         GsonBuilder builder = new GsonBuilder();
-        builder.setDateFormat("yyyy-MM-dd hh:mm:ss");
         builder.registerTypeAdapter(Timestamp.class, new TimestampTypeAdapter());
 
         if (isSerializeNulls)
@@ -150,7 +137,7 @@ public class JSONUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target) {
-        return toJson(target, null, true, null, null, false);
+        return toJson(target, null, false, null, null, true);
     }
 
     /**
@@ -307,6 +294,7 @@ public class JSONUtils {
         if (StringUtils.isEmpty(datePattern)) {
             datePattern = DEFAULT_DATE_PATTERN;
         }
+        builder.setDateFormat(datePattern);
         Gson gson = builder.create();
         try {
             return gson.fromJson(json, token.getType());
@@ -347,7 +335,7 @@ public class JSONUtils {
         if (StringUtils.isEmpty(datePattern)) {
             datePattern = DEFAULT_DATE_PATTERN;
         }
-//		builder.registerTypeAdapter(Map.class, new HashMapDeserializer());
+        builder.setDateFormat(datePattern);
         Gson gson = builder.create();
         try {
             return gson.fromJson(json, clazz);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.infrastructure.util;
+package org.infrastructure.collection;
 
 import java.io.Serializable;
 import java.util.Collection;

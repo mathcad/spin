@@ -116,21 +116,21 @@ public class SQLManager<T extends IEntity> {
      * @return 分页查询结果
      */
     public Page<Map<String, Object>> findPageMap(String sqlId, QueryParam qp) {
-        String sqlTxt = loader.getSQL(sqlId, qp.q).getTemplate();
-        String sortInfo = qp.getOrderSql();
+        String sqlTxt = loader.getSQL(sqlId, qp.getConditions()).getTemplate();
+        String sortInfo = qp.parseOrder();
         // 替换排序为自定义
         if (StringUtils.isNotEmpty(sortInfo)) {
             sqlTxt = removeLastOrderBy(sqlTxt);
             sqlTxt = sqlTxt + sortInfo;
         }
 
-        String pageSqlTxt = loader.getSQL($sqlName + "." + "findPage", HashUtils.getMap("sqlTxt", sqlTxt, "start", qp.start, "limit", qp.limit)).getTemplate();
+        String pageSqlTxt = loader.getSQL($sqlName + "." + "findPage", HashUtils.getMap("sqlTxt", sqlTxt, "start", qp.getStart(), "limit", qp.getLimit())).getTemplate();
 
-        List<Map<String, Object>> list = nameJt.queryForList(pageSqlTxt, qp.q);
+        List<Map<String, Object>> list = nameJt.queryForList(pageSqlTxt, qp.getConditions());
 
         // 增加总数统计 去除排序语句
         String totalSqlTxt = loader.getSQL($sqlName + "." + "findTotal", HashUtils.getMap("sqlTxt", sqlTxt)).getTemplate();
-        SqlParameterSource params = new MapSqlParameterSource(qp.q);
+        SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
         Number number = this.nameJt.queryForObject(totalSqlTxt, params, Long.class);
         Long total = (number != null ? number.longValue() : 0);
         return new Page<>(list, total);

@@ -17,6 +17,7 @@
 package org.infrastructure.util;
 
 import org.infrastructure.sys.Assert;
+import org.infrastructure.collection.MultiValueMap;
 
 import java.io.Serializable;
 import java.util.ArrayList;

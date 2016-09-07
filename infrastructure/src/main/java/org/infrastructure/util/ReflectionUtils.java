@@ -17,6 +17,7 @@
 package org.infrastructure.util;
 
 import org.infrastructure.sys.Assert;
+import org.infrastructure.collection.ConcurrentReferenceHashMap;
 
 import java.lang.reflect.*;
 import java.sql.SQLException;

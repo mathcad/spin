@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
-import org.infrastructure.jpa.api.CmdContext;
+import org.infrastructure.jpa.api.RepositoryContext;
 import org.infrastructure.jpa.api.CmdParser;
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.api.QueryParamHandler;
@@ -50,7 +50,7 @@ public class BaseController {
     protected SessionManager sessMgr;
 
     @Autowired
-    protected CmdContext cmdContext;
+    protected RepositoryContext cmdContext;
 
     protected CmdParser cmdParser;
 
@@ -105,9 +105,9 @@ public class BaseController {
         QueryParam p = this.getGson().fromJson(q, QueryParam.class);
 
         //全局屏蔽头尾空格占位
-        for (String k : p.q.keySet()) {
-            String qv = p.q.get(k) == null ? null : p.q.get(k);
-            p.q.put(k, StringUtils.trimWhitespace(qv));
+        for (String k : p.getConditions().keySet()) {
+            String qv = p.getConditions().get(k) == null ? null : p.getConditions().get(k);
+            p.getConditions().put(k, StringUtils.trimWhitespace(qv));
         }
         return p;
     }
@@ -171,17 +171,17 @@ public class BaseController {
     public static Page listByQ(CmdParser cmdParser, QueryParam p, ARepository repo, QueryParamHandler... handlers) throws Exception {
         CmdParser.DetachedCriteriaResult dr = cmdParser.parseDetachedCriteria(p, handlers);
         DetachedCriteria dc = dr.dc;
-        int page = p.start / p.limit;
-        int pagesize = p.limit;
+        int page = p.getStart() / p.getLimit();
+        int pagesize = p.getLimit();
         PageRequest pr = new PageRequest(page, pagesize);
         Order[] orders = cmdParser.parseOrders(p);
 
         Page result;
-        if (p.fields == null || p.fields.size() == 0) {
+        if (p.getFields() == null || p.getFields().size() == 0) {
             // 实体列表查询，不推荐（性能低下）
             result = repo.find(dc, pr, orders);
         } else {
-            result = repo.findByFields(p.fields, dr, pr, orders);
+            result = repo.findByFields(p.getFields(), dr, pr, orders);
         }
         return result;
     }

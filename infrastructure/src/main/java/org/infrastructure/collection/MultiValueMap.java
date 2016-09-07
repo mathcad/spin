@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.infrastructure.util;
+package org.infrastructure.collection;
 
 import java.util.List;
 import java.util.Map;

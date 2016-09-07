@@ -39,8 +39,8 @@ public class HibernateProxyTypeAdapter extends TypeAdapter<HibernateProxy> {
         throw new UnsupportedOperationException("Not supported");
     }
 
-    @SuppressWarnings({"unchecked"})
     @Override
+    @SuppressWarnings("unchecked")
     public void write(JsonWriter out, HibernateProxy value) throws IOException {
         if (value == null) {
             out.nullValue();

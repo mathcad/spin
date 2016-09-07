@@ -13,7 +13,8 @@ public enum ErrorAndExceptionCode {
     ENCRYPT_FAIL(10),
     DEENCRYPT_FAIL(15),
     BEAN_CREATE_FAIL(40),
-    BUSS_EXCETION(60);
+    BUSS_EXCETION(60),
+    NETWORK_EXCEPTION(100);
     private static final Map<Integer, String> valueStringMapper = new HashMap<>();
 
     static {
@@ -22,6 +23,7 @@ public enum ErrorAndExceptionCode {
         valueStringMapper.put(15, "解密算法执行错误");
         valueStringMapper.put(40, "创建bean实例错误");
         valueStringMapper.put(60, "业务异常");
+        valueStringMapper.put(100, "网络连接异常");
     }
 
     private int _value;

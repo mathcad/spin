@@ -1,19 +1,29 @@
 package org.infrastructure.util;
 
+import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.infrastructure.sys.ErrorAndExceptionCode;
+import org.infrastructure.throwable.SimplifiedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 利用Apache HttpClient完成请求
@@ -27,94 +37,86 @@ public class HttpUtils {
     /**
      * 使用get方式请求数据
      */
-    public static String httpGetRequest(String url, Map<String, String> params, Charset reqCharset) {
-        String result = null;
+    public static String httpGetRequest(String url, Map<String, String> params) throws URISyntaxException {
         if (!url.startsWith("http"))
             url = "http://" + url;
+        URIBuilder uriBuilder = new URIBuilder(url);
+        if (params != null) {
+            for (String key : params.keySet()) {
+                uriBuilder.setParameter(key, params.get(key));
+            }
+        }
+        return httpGetRequest(uriBuilder.build());
+    }
+
+    public static String httpGetRequest(String url, String... params) throws URISyntaxException {
+        if (!url.startsWith("http"))
+            url = "http://" + url;
+        final StringBuilder u = new StringBuilder(url);
+        Optional.ofNullable(params).ifPresent(p -> Arrays.stream(p).forEach(c -> {
+            int b = u.indexOf("{}");
+            if (b > 0)
+                u.replace(b, b + 2, c);
+        }));
+        return httpGetRequest(new URI(u.toString()));
+    }
+
+    public static String httpGetRequest(URI uri) {
+        String result = null;
         CloseableHttpClient httpclient = null;
         try {
             httpclient = HttpClients.createDefault();
             RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(1000).setConnectTimeout(1000).build();
-            URIBuilder uriBuilder = new URIBuilder(url).setCharset(reqCharset);
-
-            if (params != null) {
-                for (String key : params.keySet()) {
-                    uriBuilder.setParameter(key, params.get(key));
-                }
-            }
-
-            HttpGet request = new HttpGet(uriBuilder.build());
+            HttpGet request = new HttpGet(uri);
             request.setConfig(requestConfig);
-
             CloseableHttpResponse response = httpclient.execute(request);
             int code = response.getStatusLine().getStatusCode();
             result = EntityUtils.toString(response.getEntity());
             if (code != 200) {
-                throw new RuntimeException("错误状态码:" + code + result);
+                throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "错误状态码:" + code + result);
             }
         } catch (Exception e) {
-            throw new RuntimeException("远程连接到" + url + "，发生错误:" + e.getMessage());
+            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "远程连接到" + uri.toString() + "，发生错误:" + e.getMessage());
         } finally {
             if (httpclient != null)
                 try {
                     httpclient.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("Can not close current HttpClient:[{}]", uri.toString(), e);
                 }
         }
         return result;
     }
 
-    /**
-     * 使用get方式利用HttpClient请求数据
-     */
-    public static String post(String url, Map<String, String> params, String respCharset) {
-        /*
-        if(url.startsWith("https")){
-			Protocol https = new Protocol("https",new org.infrastructure.ssl.HTTPSSecureProtocolSocketFactory(), 443);
-	        Protocol.registerProtocol("https", https);
-		}
-		
-		try {
-			
-			HttpClient client = new HttpClient();
-			client.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, "UTF-8");
-			PostMethod method = new PostMethod(url);
-			if (params != null) {
-				List<NameValuePair> nvList = new ArrayList<NameValuePair>();
-				for (String key : params.keySet()) {
-					NameValuePair nvp = new NameValuePair();
-					nvp.setName(key);
-					nvp.setValue(params.get(key));
-					nvList.add(nvp);
-				}
-				method.setQueryString(nvList.toArray(new NameValuePair[] {}));
-			}
-
-			int code = client.executeMethod(method);
-			InputStream resStream = method.getResponseBodyAsStream();
-			BufferedReader br = new BufferedReader(new InputStreamReader(resStream, respCharset));
-			StringBuffer resBuffer = new StringBuffer();
-			String resTemp = "";
-			while ((resTemp = br.readLine()) != null) {
-				resBuffer.append(resTemp);
-			}
-			String response = resBuffer.toString();
-
-			if (code != 200)
-				throw new BizException("错误状态码:" + code + response);
-
-			return response;
-		} catch (Exception e) {
-			logger.error("", e);
-			throw new BizException("远程连接到" + url + "，发生错误:" + e.getMessage());
-		} finally{
-			if(url.startsWith("https")){
-				Protocol.unregisterProtocol("https");
-			}
-		}
-		*/
-        return "";
+    public static String httpPostRequest(String url, Map<String, String> params) throws URISyntaxException {
+        if (!url.startsWith("http"))
+            url = "http://" + url;
+        List<NameValuePair> nvps = params.entrySet().stream().map(p -> new BasicNameValuePair(p.getKey(), p.getValue())).collect(Collectors.toList());
+        String result = null;
+        CloseableHttpClient httpclient = null;
+        try {
+            httpclient = HttpClients.createDefault();
+            RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(1000).setConnectTimeout(1000).build();
+            HttpPost request = new HttpPost(url);
+            request.setConfig(requestConfig);
+            request.setEntity(new UrlEncodedFormEntity(nvps));
+            CloseableHttpResponse response = httpclient.execute(request);
+            int code = response.getStatusLine().getStatusCode();
+            result = EntityUtils.toString(response.getEntity());
+            if (code != 200) {
+                throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "错误状态码:" + code + result);
+            }
+        } catch (Exception e) {
+            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e.getMessage());
+        } finally {
+            if (httpclient != null)
+                try {
+                    httpclient.close();
+                } catch (IOException e) {
+                    logger.error("Can not close current HttpClient:[{}]", url, e);
+                }
+        }
+        return result;
     }
 
     /**
@@ -122,7 +124,7 @@ public class HttpUtils {
      */
     public static String upload(File file, String postname, String url) {
 /*
-		if(url.startsWith("https")){
+        if(url.startsWith("https")){
 			Protocol https = new Protocol("https",new org.infrastructure.ssl.HTTPSSecureProtocolSocketFactory(), 443);
 	        Protocol.registerProtocol("https", https);
 		}

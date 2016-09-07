@@ -50,17 +50,17 @@ public class EnumUtilsTest {
         System.out.println(GTYPE_LIST_MAP);
 
         QueryParam q = new QueryParam();
-        q.cls = "java.lang.String";
-        q.q.put("a", "a");
-        q.q.put("b", "b");
-        q.q.put("c", "c");
-        q.fields.add("field");
-        q.sort = "id__desc";
+        q.setCls("java.lang.String");
+        q.getConditions().put("a", "a");
+        q.getConditions().put("b", "b");
+        q.getConditions().put("c", "c");
+        q.getFields().add("field");
+        q.setSort("id__desc");
         Gson gson = new Gson();
         String str = gson.toJson(q);
         System.out.println(str);
         QueryParam t = gson.fromJson(str, QueryParam.class);
-        System.out.println(t.cls);
+        System.out.println(t.getCls());
     }
 
 }

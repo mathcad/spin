@@ -7,6 +7,7 @@ import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
+import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.sys.EnumUtils;
 import org.infrastructure.sys.FmtUtils;
 import org.infrastructure.throwable.SimplifiedException;
@@ -58,33 +59,36 @@ public class CmdParser {
      * dc.createAlias("ROUTE", "r");
      * </pre>
      */
-    public DetachedCriteriaResult parseDetachedCriteria(QueryParam p, QueryParamHandler... handlers) throws Exception {
+    public DetachedCriteriaResult parseDetachedCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
         DetachedCriteriaResult result = new DetachedCriteriaResult();
-        Class enCls = Class.forName(p.cls);
+        Class enCls = Class.forName(p.getCls());
+        if (!IEntity.class.isAssignableFrom(enCls))
+            throw new ClassNotFoundException(p.getCls() + " is not an Entity Class");
         DetachedCriteria dc = DetachedCriteria.forClass(enCls);
         Map<String, QueryParamHandler> handlersMap = new HashMap<>();
         for (QueryParamHandler qh : handlers) {
-            handlersMap.put(qh.field, qh);
+            handlersMap.put(qh.getField(), qh);
         }
 
-        for (String qKey : p.q.keySet()) {
-            String val = p.q.get(qKey) == null ? null : p.q.get(qKey);
+        for (Map.Entry<String, String> entry : p.getConditions().entrySet()) {
+            String key = entry.getKey();
+            String val = entry.getValue();
             // 值为空，忽略
             if (StringUtils.isEmpty(val))
                 continue;
 
             // 自定义属性处理
-            if (handlersMap.containsKey(qKey)) {
-                handlersMap.get(qKey).processCriteria(dc, val);
+            if (handlersMap.containsKey(key)) {
+                handlersMap.get(entry.getKey()).processCriteria(dc, val);
                 continue;
             }
 
             // 如果没有自定义处理，采用默认处理
             // 属性分隔符
-            if (qKey.contains(SPLITOR)) {
-                if (qKey.contains("|")) {
+            if (key.contains(SPLITOR)) {
+                if (key.contains("|")) {
                     List<Criterion> orInners = new ArrayList<>();
-                    for (String singleKey : qKey.split("\\|")) {
+                    for (String singleKey : key.split("\\|")) {
                         if (logger.isTraceEnabled())
                             logger.trace(singleKey);
                         Criterion ct = parseSinglePropCritetion(result, enCls, dc, singleKey, val);
@@ -95,7 +99,7 @@ public class CmdParser {
                     if (orInners.size() > 0)
                         dc.add(Restrictions.or(orInners.toArray(new Criterion[]{})));
                 } else {
-                    Criterion ct = parseSinglePropCritetion(result, enCls, dc, qKey, val);
+                    Criterion ct = parseSinglePropCritetion(result, enCls, dc, key, val);
                     if (ct != null)
                         dc.add(ct);
                 }
@@ -110,8 +114,8 @@ public class CmdParser {
      */
     public Order[] parseOrders(QueryParam p) {
         List<Order> orders = new ArrayList<>();
-        if (StringUtils.isNotEmpty(p.sort)) {
-            for (String s : p.sort.split(",")) {
+        if (StringUtils.isNotEmpty(p.getSort())) {
+            for (String s : p.getSort().split(",")) {
                 String[] so = s.split(SPLITOR);
                 if (so.length == 1) {
                     orders.add(Order.asc(s));
@@ -124,8 +128,7 @@ public class CmdParser {
     }
 
     private Criterion parseSinglePropCritetion(DetachedCriteriaResult result, Class enCls, DetachedCriteria dc, String qKey, String val) {
-        List<String> qPath = new ArrayList<>();
-        qPath.addAll(Arrays.asList(qKey.split(SPLITOR)));
+        List<String> qPath = Arrays.asList(qKey.split(SPLITOR));
         String qOp = qPath.remove(qPath.size() - 1);
 
         //去除空格
@@ -141,7 +144,7 @@ public class CmdParser {
             }
             qVal = objList.toArray(new Object[]{});
         } else if (qOp.contains("isNull") || qOp.contains("notNull")) {
-            qVal = StringUtils.isNotEmpty(val) ? Boolean.valueOf(val) : false;
+            qVal = StringUtils.isNotEmpty(val) ? Boolean.valueOf(val) : true;
         } else
             qVal = convertValue(enCls, qPath, val);
 
@@ -151,17 +154,11 @@ public class CmdParser {
 
     // 将String类型的val转换为实体属性的类型
     private Object convertValue(Class cls, final List<String> qPath, String val) {
-        Class enCls = cls;
-        Field field = null;
-        for (String fieldName : qPath) {
-            field = ReflectionUtils.findField(enCls, fieldName);
-            if (field == null)
-                throw new SimplifiedException(FmtUtils.format("未找到{0}字段{1}", enCls.getName(), fieldName));
-            enCls = field.getType();
-        }
-
+        Field field;
+        field = ReflectionUtils.findField(cls, qPath.get(0));
+        if (field == null)
+            throw new SimplifiedException(FmtUtils.format("未找到{0}字段{1}", cls.getName(), qPath.get(0)));
         Object v;
-        assert field != null;
         Class fieldType = field.getType();
         try {
             if (fieldType.equals(String.class)) {
@@ -187,13 +184,13 @@ public class CmdParser {
                 if (sdf != null)
                     v = sdf.parse(val);
                 else
-                    throw new RuntimeException("不支持的日期类型值：" + val);
+                    throw new SimplifiedException("不支持的日期类型值：" + val);
             } else if (fieldType.equals(Timestamp.class)) {
                 SimpleDateFormat sdf = FmtUtils.getDateFmt(val.length());
                 if (sdf != null)
                     v = new Timestamp(sdf.parse(val).getTime());
                 else
-                    throw new RuntimeException("不支持的日期类型值：" + val);
+                    throw new SimplifiedException("不支持的日期类型值：" + val);
             } else if (fieldType.isEnum()) {
                 Integer dv = Integer.valueOf(val);
                 v = EnumUtils.getEnum(fieldType, dv);
@@ -201,7 +198,7 @@ public class CmdParser {
                 v = this.gson.fromJson(val, fieldType);
             }
         } catch (Exception e) {
-            throw new RuntimeException(FmtUtils.format("不支持的类型\"{0}\", 值{1}", fieldType.getName(), val));
+            throw new SimplifiedException(FmtUtils.format("不支持的类型\"{0}\", 值{1}", fieldType.getName(), val));
         }
         return v;
     }
@@ -220,7 +217,7 @@ public class CmdParser {
         } else if (qPath.size() == 1)
             propName = qPath.get(0);
         else
-            throw new RuntimeException("查询字段最多2层:" + qPath);
+            throw new SimplifiedException("查询字段最多2层:" + qPath);
 
         return this.createCriterion(propName, op, val);
     }

@@ -57,7 +57,7 @@ public abstract class MetaController extends BaseController {
             if (StringUtils.isEmpty(q))
                 throw new SimplifiedException("空查询无法执行");
             QueryParam p = this.getGson().fromJson(q, QueryParam.class);
-            ARepository repo = cmdContext.getRepo(p.cls);
+            ARepository repo = cmdContext.getRepo(p.getCls());
             Page result = listByQ(cmdParser, p, repo);
             mv.ok(result);
         } catch (SimplifiedException e) {
@@ -111,7 +111,7 @@ public abstract class MetaController extends BaseController {
         try {
             ExcelExtGrid grid = this.toExcelExtGrid(columns);
             QueryParam qp = this.getGson().fromJson(q, QueryParam.class);
-            ARepository repo = cmdContext.getRepo(qp.cls);
+            ARepository repo = cmdContext.getRepo(qp.getCls());
             Page pg = listByQ(cmdParser, qp, repo);
             return new ModelAndView(new ExcelExportView(grid, pg.data));
         } catch (Throwable e) {

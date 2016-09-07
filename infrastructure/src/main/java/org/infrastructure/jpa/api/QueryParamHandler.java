@@ -8,11 +8,11 @@ import org.hibernate.criterion.DetachedCriteria;
  * @author xuweinan
  */
 public abstract class QueryParamHandler {
+    private String field;
+
     public QueryParamHandler(String field) {
         this.field = field;
     }
-
-    public String field;
 
     /**
      * 处理自定义查询条件
@@ -21,4 +21,8 @@ public abstract class QueryParamHandler {
      * @param val 参数值
      */
     public abstract void processCriteria(DetachedCriteria dc, String val);
+
+    public String getField() {
+        return field;
+    }
 }

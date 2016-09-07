@@ -53,13 +53,13 @@ public abstract class HashUtils {
     }
 
     /**
-     * 通过数组快速创建参数Map (有序的LinkedHashMap)
+     * 通过数组快速创建参数Map (HashMap)
      *
      * @param params key1,value1,key2,value2,key3,value3 ...
      * @return map
      */
     public static Map<String, Object> getMap(Object... params) {
-        LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+        Map<String, Object> map = new HashMap<>();
         if (params.length % 2 != 0) {
             throw new IllegalArgumentException("键值对必须为偶数个");
         }
