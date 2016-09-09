@@ -52,9 +52,7 @@ import java.util.regex.Pattern;
 @Component
 public class SQLManager {
     private static final Logger logger = LoggerFactory.getLogger(SQLManager.class);
-
     private SQLLoader loader;
-    private String $sqlName = "$sql";
     private NamedParameterJdbcTemplate nameJt;
     private JdbcTemplate jt;
     private DataSource dataSource;
@@ -70,25 +68,34 @@ public class SQLManager {
     }
 
     /**
-     * 利用Datasource 初始化jdbcTemplate和NamedParameterJdbcTemplate
+     * 查找单个对象
      *
-     * @param dataSource 数据源
+     * @param sqlId    命令名称
+     * @param paramMap 参数
      */
-    public void initDataSource(DataSource dataSource) {
-        this.initDataSource(dataSource, "$sql");
+    public Map<String, Object> findOneAsMap(String sqlId, Map<String, ?> paramMap) {
+        List<Map<String, Object>> list = this.listAsMap(sqlId, paramMap);
+        if (!list.isEmpty()) {
+            return list.get(0);
+        } else
+            return null;
     }
 
     /**
-     * 利用Datasource 初始化jdbcTemplate和NamedParameterJdbcTemplate
+     * 查找单个对象
      *
-     * @param dataSource 数据源
-     * @param $sqlName   默认sqlName
+     * @param sqlId    命令名称
+     * @param paramMap 参数
      */
-    public void initDataSource(DataSource dataSource, String $sqlName) {
-        this.dataSource = dataSource;
-        this.nameJt = new NamedParameterJdbcTemplate(dataSource);
-        this.jt = new JdbcTemplate(dataSource);
-        this.$sqlName = $sqlName;
+    public <T> T findOne(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
+        List<Map<String, Object>> list = listAsMap(sqlId, paramMap);
+        if (!list.isEmpty()) {
+            try {
+                return BeanUtils.wrapperMapToBean(entityClazz, list.get(0));
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 
     /**
@@ -98,8 +105,8 @@ public class SQLManager {
      * @param mapParams key1,value1,key2,value2,key3,value3 ...
      * @return 查询结果
      */
-    public List<Map<String, Object>> findListMap(String sqlId, Object... mapParams) {
-        return findListMap(sqlId, HashUtils.getMap(mapParams));
+    public List<Map<String, Object>> listAsMap(String sqlId, Object... mapParams) {
+        return listAsMap(sqlId, HashUtils.getMap(mapParams));
     }
 
     /**
@@ -109,7 +116,7 @@ public class SQLManager {
      * @param paramMap 参数map
      * @return 查询结果
      */
-    public List<Map<String, Object>> findListMap(String sqlId, Map<String, ?> paramMap) {
+    public List<Map<String, Object>> listAsMap(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
         try {
             return this.nameJt.queryForList(sqlTxt, paramMap);
@@ -127,7 +134,7 @@ public class SQLManager {
      * @param qp    查询参数
      * @return 分页查询结果
      */
-    public Page<Map<String, Object>> findPageMap(String sqlId, QueryParam qp) {
+    public Page<Map<String, Object>> listAsPageMap(String sqlId, QueryParam qp) {
         String sqlTxt = loader.getSQL(sqlId, qp.getConditions()).getTemplate();
         String sortInfo = qp.parseOrder();
         // 替换排序为自定义
@@ -136,6 +143,7 @@ public class SQLManager {
             sqlTxt = sqlTxt + sortInfo;
         }
 
+        String $sqlName = "$sql";
         String pageSqlTxt = loader.getSQL($sqlName + "." + "findPage", HashUtils.getMap("sqlTxt", sqlTxt, "start", qp.getStart(), "limit", qp.getLimit())).getTemplate();
 
         List<Map<String, Object>> list = nameJt.queryForList(pageSqlTxt, qp.getConditions());
@@ -149,28 +157,14 @@ public class SQLManager {
     }
 
     /**
-     * 查找单个对象
-     *
-     * @param sqlId    命令名称
-     * @param paramMap 参数
-     */
-    public Map<String, Object> findOneMap(String sqlId, Map<String, ?> paramMap) {
-        List<Map<String, Object>> list = this.findListMap(sqlId, paramMap);
-        if (!list.isEmpty()) {
-            return list.get(0);
-        } else
-            return null;
-    }
-
-    /**
      * 通过命令文件查询 + 参数Map数组（HashUtils.getMap构建参数数组）
      *
      * @param sqlId     命令名称
      * @param mapParams 参数map
      * @return 查询结果
      */
-    public <T> List<T> findList(String sqlId, Class<T> entityClazz, Object... mapParams) {
-        List<Map<String, Object>> maps = findListMap(sqlId, HashUtils.getMap(mapParams));
+    public <T> List<T> list(String sqlId, Class<T> entityClazz, Object... mapParams) {
+        List<Map<String, Object>> maps = listAsMap(sqlId, HashUtils.getMap(mapParams));
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : maps) {
             try {
@@ -188,8 +182,8 @@ public class SQLManager {
      * @param paramMap key1,value1,key2,value2,key3,value3 ...
      * @return 查询结果
      */
-    public <T> List<T> findList(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
-        List<Map<String, Object>> maps = this.findListMap(sqlId, paramMap);
+    public <T> List<T> list(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
+        List<Map<String, Object>> maps = listAsMap(sqlId, paramMap);
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : maps) {
             try {
@@ -201,20 +195,38 @@ public class SQLManager {
     }
 
     /**
-     * 查找单个对象
+     * 分页查询
      *
-     * @param sqlId    命令名称
-     * @param paramMap 参数
+     * @param sqlId sql模板path
+     * @param qp    查询参数
+     * @return 分页查询结果
      */
-    public <T> T findOne(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
-        List<Map<String, Object>> list = this.findListMap(sqlId, paramMap);
-        if (!list.isEmpty()) {
+    public <T> Page<T> listAsPage(String sqlId, Class<T> entityClazz, QueryParam qp) {
+        String sqlTxt = loader.getSQL(sqlId, qp.getConditions()).getTemplate();
+        String sortInfo = qp.parseOrder();
+        // 替换排序为自定义
+        if (StringUtils.isNotEmpty(sortInfo)) {
+            sqlTxt = removeLastOrderBy(sqlTxt);
+            sqlTxt = sqlTxt + sortInfo;
+        }
+
+        String $sqlName = "$sql";
+        String pageSqlTxt = loader.getSQL($sqlName + "." + "findPage", HashUtils.getMap("sqlTxt", sqlTxt, "start", qp.getStart(), "limit", qp.getLimit())).getTemplate();
+
+        List<Map<String, Object>> list = nameJt.queryForList(pageSqlTxt, qp.getConditions());
+        List<T> res = new ArrayList<>();
+        for (Map<String, Object> map : list) {
             try {
-                return BeanUtils.wrapperMapToBean(entityClazz, list.get(0));
+                res.add(BeanUtils.wrapperMapToBean(entityClazz, map));
             } catch (Exception ignored) {
             }
         }
-        return null;
+        // 增加总数统计 去除排序语句
+        String totalSqlTxt = loader.getSQL($sqlName + "." + "findTotal", HashUtils.getMap("sqlTxt", sqlTxt)).getTemplate();
+        SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
+        Number number = this.nameJt.queryForObject(totalSqlTxt, params, Long.class);
+        Long total = number != null ? number.longValue() : 0;
+        return new Page<>(res, total);
     }
 
     /**

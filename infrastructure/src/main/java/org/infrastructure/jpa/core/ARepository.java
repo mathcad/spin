@@ -21,10 +21,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.*;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -51,7 +54,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     private boolean checkWriteOperations = true;
 
-    protected static ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
+    protected static final ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
     };
 
     @Autowired
@@ -59,9 +62,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     @Autowired
     protected LocalSessionFactoryBean sessFactory;
-
-    @PersistenceContext
-    EntityManager em;
 
     @Autowired
     protected SQLManager sqlManager;
@@ -146,16 +146,17 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 打开新连接 如果线程已有session就返回 不重复打开
+     * Open a new session, if thread has one more session, return the last session.
      */
     public Session openSession() {
         return this.openSession(false);
     }
 
     /**
-     * 手动打开线程绑定的session 事务管理会失效
+     * Open a session manually associated with current thread,
+     * other thread-local transaction may invalid.
      *
-     * @param requiredNew 强制打开新连接
+     * @param requiredNew force to open a new session
      */
     public Session openSession(boolean requiredNew) {
         Session session = peekThreadSession();
@@ -167,7 +168,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 关闭线程中手动打开的session
+     * Close all the session in current thread opened manually
      */
     public void closeSession() {
         Session session = popTreadSession();
@@ -189,9 +190,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 打开线程绑定的session, 并启动事务
+     * Open a session associated with current thread, then open the transaction.
      *
-     * @param requiredNew 强制启动事务
+     * @param requiredNew force to open the transaction
      */
     public Transaction openTransaction(boolean requiredNew) {
         Session session = openSession(requiredNew);
@@ -208,62 +209,27 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return the saved entity (has id)
      */
     public T save(final T entity) {
-        if (null == entity)
-            throw new IllegalArgumentException("The entity to save must be a NON-NULL object");
-        try {
-            if (entity instanceof AbstractEntity) {
-                AbstractEntity aEn = (AbstractEntity) entity;
-                // new Entity
-                SessionUser user = sessionMgr.getCurrentUser();
-                if (aEn.getId() == null) {
-                    String createBy = null;
-                    if (StringUtils.isNotEmpty(aEn.getCreateUserName()))
-                        createBy = aEn.getCreateUserName();
-                    if (createBy == null && user != null)
-                        createBy = StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user.getLoginName();
-                    aEn.setCreateUserName(createBy);
-
-                    if (aEn.getCreateTime() == null)
-                        aEn.setCreateTime(new Timestamp(new Date().getTime()));
-
-                    if (user != null)
-                        aEn.setCreateUser(GenericUser.ref(user.getId()));
-                }
-
-                // 追加时间戳
-                Session sess = getSession();
-                if (aEn.getId() == null) {
-                    String lastUpdateBy = null;
-                    if (StringUtils.isNotEmpty(aEn.getLastUpdateUserName()))
-                        lastUpdateBy = aEn.getCreateUserName();
-                    if (lastUpdateBy == null && user != null)
-                        lastUpdateBy = StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user.getLoginName();
-                    aEn.setLastUpdateUserName(lastUpdateBy);
-
-                    if (aEn.getLastUpdateTime() == null)
-                        aEn.setLastUpdateTime(new Timestamp(new Date().getTime()));
-
-                    if (user != null)
-                        aEn.setCreateUser(GenericUser.ref(user.getId()));
-                    sess.save(aEn);
-                } else {
-                    aEn.setLastUpdateUserName(user == null ? "" : (StringUtils.isNotEmpty(user.getRealName()) ? user.getRealName() : user
-                            .getLoginName()));
-                    aEn.setLastUpdateTime(new Timestamp(new Date().getTime()));
-                    if (user != null)
-                        aEn.setLastUpdateUser(GenericUser.ref(user.getId()));
-                    sess.update(aEn);
-                }
-            } else {
-                Session sess = getSession();
-                if (null == entity.getId())
-                    sess.save(entity);
-                else
-                    sess.update(entity);
+        Assert.notNull(entity, "The entity to save must be a NON-NULL object");
+        if (entity instanceof AbstractEntity) {
+            AbstractEntity aEn = (AbstractEntity) entity;
+            SessionUser user = sessionMgr.getCurrentUser();
+            Assert.notNull(user, "未找到当前登录用户");
+            aEn.setLastUpdateTime(new Timestamp(System.currentTimeMillis()));
+            aEn.setLastUpdateUser(GenericUser.ref(user.getId()));
+            aEn.setLastUpdateUserName(user.getRealName());
+            if (null == aEn.getId()) {
+                aEn.setCreateUserName(user.getRealName());
+                aEn.setCreateTime(new Timestamp(System.currentTimeMillis()));
+                aEn.setCreateUser(GenericUser.ref(user.getId()));
             }
-        } catch (org.springframework.orm.hibernate4.HibernateOptimisticLockingFailureException ope) {
-            logger.error("", ope);
-            throw new SimplifiedException("实体已经更新，请重置后再编辑");
+        }
+        try {
+            if (null == entity.getId())
+                getSession().save(entity);
+            else
+                getSession().update(entity);
+        } catch (org.springframework.orm.hibernate4.HibernateOptimisticLockingFailureException | org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException ope) {
+            throw new SimplifiedException("实体已经更新，请重置后再编辑", ope);
         }
         return get(entity.getId());
     }
@@ -438,7 +404,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @see org.hibernate.Session#contains
      */
     public boolean contains(final T entity) {
-        return em.contains(entity);
+        return getSession().contains(entity);
     }
 
     /**
@@ -448,7 +414,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public void delete(T entity) {
         Assert.notNull(entity, "无法删除引用为null的实体");
-        em.remove(em.contains(entity) ? entity : em.merge(entity));
+        getSession().delete(entity);
     }
 
     /**
@@ -932,6 +898,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return findList(cp);
     }
 
+    public List<Map<String, Object>> listAsMap(String sqlId, Object... mapParams) {
+        return sqlManager.listAsMap(sqlId, mapParams);
+    }
+
     /**
      * Flush all pending saves, updates and deletes to the database.
      * <p>Only invoke this for selective eager flushing, for example when
@@ -1052,9 +1022,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         final ProjectionList pj = Projections.projectionList();
         ReflectionUtils.doWithFields(this.entityClazz, f -> {
             ManyToMany m2m = f.getAnnotation(ManyToMany.class);
-            if (m2m != null) {
-                // TODO: 2016/8/13
-            } else {
+            if (m2m == null) {
                 String pjField = f.getName();
                 addProjectionFields(qjoinFields, manyToOneFields, referFields, pj, pjField);
             }
