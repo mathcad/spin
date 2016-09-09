@@ -23,6 +23,7 @@ import freemarker.template.TemplateException;
 import org.infrastructure.freemarker.ConcurrentStrTemplateLoader;
 import org.infrastructure.freemarker.EnumValueFunc;
 import org.infrastructure.freemarker.ValidValueFunc;
+import org.infrastructure.throwable.SimplifiedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,13 +62,13 @@ public class FreemarkerResolver implements TemplateResolver {
         try {
             template = this.configuration.getTemplate(id);
         } catch (IOException e) {
-            throw new RuntimeException("Freemarker模板处理失败", e);
+            throw new SimplifiedException("Freemarker模板处理失败", e);
         }
         StringWriter writer = new StringWriter();
         try {
             template.process(model, writer);
         } catch (TemplateException | IOException e) {
-            throw new RuntimeException("填充SQL语句模板异常", e);
+            throw new SimplifiedException("填充SQL语句模板异常", e);
         }
         String sql = writer.toString();
         if (logger.isTraceEnabled()) {

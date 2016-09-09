@@ -22,8 +22,11 @@ import java.util.Map;
  * @author xuweinan
  * @version V1.0
  */
-public class EnumUtils {
-    static Logger logger = LoggerFactory.getLogger(EnumUtils.class);
+public final class EnumUtils {
+    private static Logger logger = LoggerFactory.getLogger(EnumUtils.class);
+
+    private EnumUtils() {
+    }
 
     /**
      * 通过枚举文本字段，获得枚举类型的常量
@@ -55,7 +58,7 @@ public class EnumUtils {
             fieldName = field[0];
         else
             fieldName = "value";
-        Field valueField = null;
+        Field valueField;
         try {
             valueField = enumCls.getDeclaredField(fieldName);
         } catch (NoSuchFieldException e) {
@@ -97,20 +100,20 @@ public class EnumUtils {
         if (enumClass == null)
             enumClass = enumValue.getClass();
 
-        Field vField = null;
+        Field vField;
         try {
             vField = enumClass.getDeclaredField("value");
             ReflectionUtils.makeAccessible(vField);
 
         } catch (Exception e) {
-            throw new RuntimeException("Enum" + enumClass + "未声明value字段", e);
+            throw new SimplifiedException("Enum" + enumClass + "未声明value字段", e);
         }
 
         int value;
         try {
             value = Integer.valueOf(vField.get(enumValue).toString());
         } catch (Exception e) {
-            throw new RuntimeException("Enum" + enumClass + "获取value失败", e);
+            throw new SimplifiedException("Enum" + enumClass + "获取value失败", e);
         }
 
         return value;
@@ -124,7 +127,7 @@ public class EnumUtils {
      * @return 包含所有枚举常量name-value的map
      * @throws Exception
      */
-    public static HashMap<String, List<HashMap>> parseEnums(String basePkg) throws Exception {
+    public static Map<String, List<HashMap>> parseEnums(String basePkg) throws Exception {
         List<String> clsList = PackageUtils.getClassName(basePkg);
         HashMap<String, List<HashMap>> enumsMap = new HashMap<>();
         for (String clz : clsList) {
@@ -144,7 +147,7 @@ public class EnumUtils {
                 if (cls.getAnnotation(UserEnum.class) != null && vField != null) {
                     for (Object o : cls.getEnumConstants()) {
                         String name = o.toString();
-                        int value = Integer.valueOf(vField.get(o).toString());
+                        int value = Integer.parseInt(vField.get(o).toString());
                         HashMap<String, String> m = new HashMap<>();
                         m.put("name", name);
                         m.put("value", ObjectUtils.toString(value));

@@ -3,11 +3,10 @@ package org.infrastructure.jpa.core;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.*;
-import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.*;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
-import org.infrastructure.jpa.api.CmdParser.DetachedCriteriaResult;
+import org.infrastructure.jpa.api.QueryParamParser.DetachedCriteriaResult;
 import org.infrastructure.jpa.sql.SQLManager;
 import org.infrastructure.shiro.SessionManager;
 import org.infrastructure.shiro.SessionUser;
@@ -23,14 +22,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
-import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
-import javax.persistence.Transient;
-import javax.sql.DataSource;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -51,18 +45,28 @@ import java.util.stream.Collectors;
  * @version V1.2
  */
 @Component
-public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends SQLManager<T> {
+public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     private static final Log logger = LogFactory.getLog(ARepository.class);
+    private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
 
     private boolean checkWriteOperations = true;
+
+    protected static ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
+    };
 
     @Autowired
     protected SessionManager sessionMgr;
 
+    @Autowired
     protected LocalSessionFactoryBean sessFactory;
 
-    protected static ThreadLocal<Stack<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Stack<Session>>() {
-    };
+    @PersistenceContext
+    EntityManager em;
+
+    @Autowired
+    protected SQLManager sqlManager;
+
+    protected Class<T> entityClazz;
 
     public ARepository() {
         //noinspection unchecked
@@ -105,17 +109,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
     public LocalSessionFactoryBean getSessFactory() {
         return sessFactory;
-    }
-
-    /**
-     * 将SessionFactory保存到属性 并根据SessionFactory的数据连接初始化jdbcTemplate的DataSource
-     */
-    @Autowired
-    public void setSessFactory(LocalSessionFactoryBean sessFactory) {
-        this.sessFactory = sessFactory;
-        LocalSessionFactoryBuilder cfg = (LocalSessionFactoryBuilder) sessFactory.getConfiguration();
-        DataSource dataSource = (DataSource) cfg.getProperties().get(Environment.DATASOURCE);
-        super.initDataSource(dataSource);
     }
 
     /**
@@ -213,9 +206,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      *
      * @param entity entity to save
      * @return the saved entity (has id)
-     * @throws IllegalArgumentException in case the given entity is {@literal null}.
      */
-    public T save(final T entity) throws IllegalArgumentException {
+    public T save(final T entity) {
         if (null == entity)
             throw new IllegalArgumentException("The entity to save must be a NON-NULL object");
         try {
@@ -281,9 +273,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      *
      * @param entities entities to save
      * @return the saved entities
-     * @throws IllegalArgumentException in case the given entity is {@literal null}.
      */
-    public List<T> save(Iterable<T> entities) throws IllegalArgumentException {
+    public List<T> save(Iterable<T> entities) {
         List<T> result = new ArrayList<>();
         if (entities == null) {
             return result;
@@ -308,7 +299,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * @throws DataAccessException in case of Hibernate errors
      * @see org.hibernate.Session#replicate(Object, ReplicationMode)
      */
-    public void replicate(final T entity, final ReplicationMode replicationMode) throws DataAccessException {
+    public void replicate(final T entity, final ReplicationMode replicationMode) {
         checkWriteOperationAllowed(getSession());
         getSession().replicate(entity, replicationMode);
     }
@@ -417,7 +408,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * @throws DataAccessException in case of Hibernate errors
      * @see org.hibernate.Session#refresh(Object)
      */
-    public void refresh(final T entity) throws DataAccessException {
+    public void refresh(final T entity) {
         refresh(entity, null);
     }
 
@@ -430,7 +421,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * @throws DataAccessException in case of Hibernate errors
      * @see org.hibernate.Session#refresh(Object, LockMode)
      */
-    public void refresh(final T entity, final LockMode lockMode) throws DataAccessException {
+    public void refresh(final T entity, final LockMode lockMode) {
         if (lockMode != null) {
             getSession().refresh(entity, new LockOptions(lockMode));
         } else {
@@ -446,37 +437,43 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * @throws DataAccessException if there is a Hibernate error
      * @see org.hibernate.Session#contains
      */
-    public boolean contains(final T entity) throws DataAccessException {
-        return getSession().contains(entity);
+    public boolean contains(final T entity) {
+        return em.contains(entity);
     }
 
     /**
-     * Remove the given object from the {@link org.hibernate.Session} cache.
+     * Deletes a given entity.
      *
-     * @param entity the persistent instance to evict
-     * @throws DataAccessException in case of Hibernate errors
-     * @see org.hibernate.Session#evict
-     */
-    public void evict(final T entity) throws DataAccessException {
-        getSession().evict(entity);
-    }
-
-    /**
-     * 删除实体(物理删除，不可恢复)
+     * @throws IllegalArgumentException in case the given entity is {@literal null}.
      */
     public void delete(T entity) {
         Assert.notNull(entity, "无法删除引用为null的实体");
-        getSession().delete(entity);
+        em.remove(em.contains(entity) ? entity : em.merge(entity));
     }
 
     /**
-     * 删除实体(物理删除，不可恢复)
+     * Deletes the entity with the given id.
+     *
+     * @throws IllegalArgumentException in case the given {@code id} is {@literal null}
      */
     public void delete(PK k) {
-        T t = get(k);
-        Assert.notNull(t, "未找到实体,或者已经被删除,实体：" + this.entityClazz.getSimpleName() + ",主键:" + k);
-        getSession().delete(t);
+        Assert.notNull(k, ID_MUST_NOT_BE_NULL);
+        T entity = get(k);
+        Assert.notNull(entity, "未找到实体,或者已经被删除,实体：" + this.entityClazz.getSimpleName() + ",主键:" + k);
+        getSession().delete(entity);
         getSession().flush();
+    }
+
+    /**
+     * Deletes the given entities.
+     *
+     * @throws IllegalArgumentException in case the given {@link Iterable} is {@literal null}.
+     */
+    public void delete(Iterable<? extends T> entities) {
+        Assert.notNull(entities, "The given Iterable of entities not be null!");
+        for (T entity : entities) {
+            delete(entity);
+        }
     }
 
     /**
@@ -520,7 +517,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
             }
 
             pj.add(Property.forName(pf), pf);
-            int pjFieldPtIdx = pf.indexOf(".");
+            int pjFieldPtIdx = pf.indexOf('.');
             if (pjFieldPtIdx > -1) {
                 qjoinFields.add(pf.split("\\.")[0]);
             }
@@ -528,8 +525,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
         //将投影对象字典收集为对象
         for (String pf : fields) {
-            int pjFieldPtIdx = pf.indexOf(".");
-            if (pjFieldPtIdx > -1 && pf.lastIndexOf(".") == pjFieldPtIdx) {
+            int pjFieldPtIdx = pf.indexOf('.');
+            if (pjFieldPtIdx > -1 && pf.lastIndexOf('.') == pjFieldPtIdx) {
                 String objField = pf.split("\\.")[0];
                 if (referFields.containsKey(objField)) {
                     referFields.get(objField).add(pf);
@@ -551,7 +548,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         qjoinFields.stream().filter(jf -> !dr.aliasMap.containsKey(jf)).forEach(jf -> ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
 
         // 关联对象，只抓取Id值
-        for (String referField : referFields.keySet()) {
+        for (Iterator<String> iterator = referFields.keySet().iterator(); iterator.hasNext(); ) {
+            String referField = iterator.next();
             Field mapField = enJoinFields.get(referField);
             String pkf = ElUtils.getPKField(mapField.getType()).getName();
             String fetchF = referField + "." + pkf;
@@ -573,12 +571,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
 
         // 关联对象，填充映射对象
         for (Map m : list) {
-            for (String referField : referFields.keySet()) {
+            for (Iterator<String> iterator = referFields.keySet().iterator(); iterator.hasNext(); ) {
+                String referField = iterator.next();
                 referFields.get(referField).stream().filter(fetchField -> m.get(fetchField) != null).forEach(fetchField -> {
                     if (!m.containsKey(referField)) {
                         m.put(referField, new HashMap<String, Object>());
                     }
-                    HashMap<String, Object> cell = ((HashMap<String, Object>) m.get(referField));
+                    HashMap<String, Object> cell = (HashMap<String, Object>) m.get(referField);
                     String[] fetchFields = fetchField.split("\\.");
                     cell.put(fetchFields[1], m.get(fetchField));
                 });
@@ -644,9 +643,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         ct.setFirstResult(0);
         ct.setMaxResults(10000);
         ct.setCacheMode(CacheMode.NORMAL);
-        @SuppressWarnings("unchecked")
-        List<T> list = ct.list();
-        return list;
+        //noinspection unchecked
+        return ct.list();
     }
 
     /**
@@ -686,9 +684,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         ct.setFirstResult(0);
         ct.setMaxResults(10000);
         ct.setCacheMode(CacheMode.NORMAL);
-        @SuppressWarnings("unchecked")
-        List<T> list = ct.list();
-        return list;
+        //noinspection unchecked
+        return ct.list();
     }
 
     /**
@@ -818,7 +815,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
             }
         }
 
-        if (criteriaList.size() == 0) {
+        if (criteriaList.isEmpty()) {
             return false;
         }
 
@@ -901,7 +898,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         for (Map<String, Object> map : list) {
             try {
                 enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                logger.error("转换Map到实体异常", e);
             }
         }
 
@@ -941,10 +939,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * Else, it is preferable to rely on auto-flushing at transaction
      * completion.
      *
-     * @throws DataAccessException in case of Hibernate errors
      * @see org.hibernate.Session#flush
      */
-    public void flush() throws DataAccessException {
+    public void flush() {
         getSession().flush();
     }
 
@@ -952,11 +949,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * Remove all objects from the {@link org.hibernate.Session} cache, and
      * cancel all pending saves, updates and deletes.
      *
-     * @throws DataAccessException in case of Hibernate errors
      * @see org.hibernate.Session#clear
      */
-    public void clear() throws DataAccessException {
+    public void clear() {
         getSession().clear();
+    }
+
+    public Class<T> getEntityClazz() {
+        return entityClazz;
     }
 
     protected void addProjections(final ProjectionList plist, Class enCls) {
@@ -980,12 +980,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
      * case of {@code FlushMode.MANUAL}. Can be overridden in subclasses.
      *
      * @param session current Hibernate Session
-     * @throws InvalidDataAccessApiUsageException if write operations are not allowed
      * @see #setCheckWriteOperations
      * @see Session#getFlushMode()
      * @see FlushMode#MANUAL
      */
-    protected void checkWriteOperationAllowed(Session session) throws InvalidDataAccessApiUsageException {
+    protected void checkWriteOperationAllowed(Session session) {
         Method getFlushMode;
         try {
             // Hibernate 5.2+ getHibernateFlushMode()
@@ -1038,7 +1037,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
         for (Map<String, Object> map : list) {
             try {
                 enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                logger.error("转换Map到实体异常", e);
             }
         }
         return enList;
@@ -1054,7 +1054,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
             ManyToMany m2m = f.getAnnotation(ManyToMany.class);
             if (m2m != null) {
                 // TODO: 2016/8/13
-                System.out.println("");
             } else {
                 String pjField = f.getName();
                 addProjectionFields(qjoinFields, manyToOneFields, referFields, pj, pjField);
@@ -1071,7 +1070,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
             ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN);
 
         // 关联对象，默认值抓取id
-        for (String referField : referFields.keySet()) {
+        for (Iterator<String> iterator = referFields.keySet().iterator(); iterator.hasNext(); ) {
+            String referField = iterator.next();
             Field mapField = manyToOneFields.get(referField);
             String pkf = ElUtils.getPKField(mapField.getType()).getName();
             String fetchF = referField + "." + pkf;
@@ -1095,29 +1095,29 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> extends
     }
 
     private Session peekThreadSession() {
-        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
-        if (sessStack != null && !sessStack.empty()) {
-            return sessStack.peek();
+        Deque<Session> sessQueue = THREADLOCAL_SESSIONS.get();
+        if (sessQueue != null && !sessQueue.isEmpty()) {
+            return sessQueue.peek();
         }
         return null;
     }
 
     private void pushTreadSession(Session session) {
-        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
-        if (sessStack == null) {
-            sessStack = new Stack<>();
-            THREADLOCAL_SESSIONS.set(sessStack);
+        Deque<Session> sessQueue = THREADLOCAL_SESSIONS.get();
+        if (sessQueue == null) {
+            sessQueue = new ArrayDeque<>();
+            THREADLOCAL_SESSIONS.set(sessQueue);
         }
-        sessStack.push(session);
+        sessQueue.push(session);
     }
 
     private Session popTreadSession() {
         Session session = null;
-        Stack<Session> sessStack = THREADLOCAL_SESSIONS.get();
-        if (sessStack != null && !sessStack.empty()) {
-            session = sessStack.pop();
+        Deque<Session> sessQueue = THREADLOCAL_SESSIONS.get();
+        if (sessQueue != null && !sessQueue.isEmpty()) {
+            session = sessQueue.pop();
         }
-        if (sessStack == null || sessStack.empty()) {
+        if (sessQueue == null || sessQueue.isEmpty()) {
             THREADLOCAL_SESSIONS.remove();
             logger.info("remove THREADLOCAL_SESSIONS");
         }

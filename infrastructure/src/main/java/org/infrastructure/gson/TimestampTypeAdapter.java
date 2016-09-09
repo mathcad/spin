@@ -1,13 +1,7 @@
 package org.infrastructure.gson;
 
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
@@ -26,7 +20,7 @@ public class TimestampTypeAdapter implements JsonSerializer<Timestamp>, JsonDese
     }
 
     @Override
-    public Timestamp deserialize(JsonElement json, Type t, JsonDeserializationContext jsc) throws JsonParseException {
+    public Timestamp deserialize(JsonElement json, Type t, JsonDeserializationContext jsc) {
         if (!(json instanceof JsonPrimitive)) {
             throw new JsonParseException("The date should be a string value");
         }

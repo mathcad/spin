@@ -10,6 +10,7 @@ import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
 import org.infrastructure.sys.EnumUtils;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,18 +53,17 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
     }
 
     @Override
-    public boolean equals(Object x, Object y) throws HibernateException {
+    public boolean equals(Object x, Object y) {
         return x == y;
     }
 
     @Override
-    public int hashCode(Object x) throws HibernateException {
+    public int hashCode(Object x) {
         return x == null ? 0 : x.hashCode();
     }
 
     @Override
-    public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-            throws HibernateException, SQLException {
+    public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws SQLException {
         if (enumValueMapper == null) {
             this.resolveEnumValueMapper(rs, names[0]);
         }
@@ -82,7 +82,7 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
                     if (Number.class.isInstance(value)) {
                         treatAsOrdinal();
                     } else {
-                        throw new RuntimeException("不支持字符型值枚举列");
+                        throw new SimplifiedException("不支持字符型值枚举列");
                     }
                 } catch (SQLException ignore) {
                     treatAsOrdinal();
@@ -95,14 +95,14 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
         if (isOrdinal(columnType)) {
             treatAsOrdinal();
         } else {
-            throw new RuntimeException("不支持非数值枚举列");
+            throw new SimplifiedException("不支持非数值枚举列");
         }
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
-            throws HibernateException, SQLException {
+            throws SQLException {
         if (enumValueMapper == null) {
             resolveEnumValueMapper(st, index);
         }
@@ -124,7 +124,7 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
     }
 
     @Override
-    public Object deepCopy(Object value) throws HibernateException {
+    public Object deepCopy(Object value) {
         return value;
     }
 
@@ -134,17 +134,17 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
     }
 
     @Override
-    public Serializable disassemble(Object value) throws HibernateException {
+    public Serializable disassemble(Object value) {
         return (Serializable) value;
     }
 
     @Override
-    public Object assemble(Serializable cached, Object owner) throws HibernateException {
+    public Object assemble(Serializable cached, Object owner) {
         return cached;
     }
 
     @Override
-    public Object replace(Object original, Object target, Object owner) throws HibernateException {
+    public Object replace(Object original, Object target, Object owner) {
         return original;
     }
 
@@ -157,9 +157,7 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
 
             final boolean isOrdinal;
             final javax.persistence.EnumType enumType = getEnumType(reader);
-            if (enumType == null) {
-                isOrdinal = true;
-            } else if (javax.persistence.EnumType.ORDINAL.equals(enumType)) {
+            if (enumType == null || javax.persistence.EnumType.ORDINAL.equals(enumType)) {
                 isOrdinal = true;
             } else if (javax.persistence.EnumType.STRING.equals(enumType)) {
                 isOrdinal = false;
@@ -170,7 +168,7 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
             if (isOrdinal) {
                 treatAsOrdinal();
             } else {
-                throw new RuntimeException("不支持字符型值枚举列");
+                throw new SimplifiedException("不支持字符型值枚举列");
             }
             sqlType = enumValueMapper.getSqlType();
         } else {
@@ -185,7 +183,7 @@ public class UserEnumType<E extends Enum<E>> implements EnhancedUserType, Dynami
             if (useNamedSetting != null) {
                 final boolean useNamed = ConfigurationHelper.getBoolean(NAMED, parameters);
                 if (useNamed) {
-                    throw new RuntimeException("不支持字符型值枚举列");
+                    throw new SimplifiedException("不支持字符型值枚举列");
                 } else {
                     treatAsOrdinal();
                 }

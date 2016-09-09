@@ -26,6 +26,7 @@ import java.util.Map;
  * @author xuweinan
  * @version 1.0
  */
+@FunctionalInterface
 public interface TemplateResolver {
 
     /**

@@ -1,6 +1,6 @@
 package org.infrastructure.web.controller;
 
-import org.infrastructure.jpa.api.CmdParser;
+import org.infrastructure.jpa.api.QueryParamParser;
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.core.ARepository;
 import org.infrastructure.jpa.core.IEntity;
@@ -29,7 +29,7 @@ public abstract class MetaController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(MetaController.class);
 
     @Autowired
-    CmdParser cmdParser;
+    QueryParamParser queryParamParser;
 
     @RequestMapping("get")
     public ModelGsonView get(@RequestParam String cls, @RequestParam Long id,
@@ -40,7 +40,7 @@ public abstract class MetaController extends BaseController {
             // 标记正在执行 get对象查询，枚举显示为值
             if (get)
                 GsonView.setApi("get");
-            ARepository<?, Long> repo = cmdContext.getRepo(cls);
+            ARepository<?, Long> repo = repositoryContext.getRepo(cls);
             depth = depth > 2 ? 2 : depth;
             mv.ok().add("data", repo.getDto(id, depth));
         } catch (Throwable e) {
@@ -57,8 +57,8 @@ public abstract class MetaController extends BaseController {
             if (StringUtils.isEmpty(q))
                 throw new SimplifiedException("空查询无法执行");
             QueryParam p = this.getGson().fromJson(q, QueryParam.class);
-            ARepository repo = cmdContext.getRepo(p.getCls());
-            Page result = listByQ(cmdParser, p, repo);
+            ARepository repo = repositoryContext.getRepo(p.getCls());
+            Page result = listByQ(queryParamParser, p, repo);
             mv.ok(result);
         } catch (SimplifiedException e) {
             mv.error(e.getMessage());
@@ -80,7 +80,7 @@ public abstract class MetaController extends BaseController {
             Class clz = Class.forName(cls);
             @SuppressWarnings("unchecked")
             IEntity<Long> m = (IEntity<Long>) this.getGson().fromJson(json, clz);
-            this.cmdContext.getRepo(cls).save(m);
+            this.repositoryContext.getRepo(cls).save(m);
             mv.ok().add("id", ElUtils.getPK(m));
         } catch (Throwable t) {
             logger.error("保存失败", t);
@@ -95,8 +95,8 @@ public abstract class MetaController extends BaseController {
         ModelGsonView mv = new ModelGsonView();
         try {
             for (Long mid : id) {
-                IEntity<Long> m = this.cmdContext.getRepo(cls).get(mid);
-                this.cmdContext.getRepo(cls).delete(m);
+                IEntity<Long> m = this.repositoryContext.getRepo(cls).get(mid);
+                this.repositoryContext.getRepo(cls).delete(m);
             }
             mv.ok();
         } catch (Throwable t) {
@@ -111,8 +111,8 @@ public abstract class MetaController extends BaseController {
         try {
             ExcelExtGrid grid = this.toExcelExtGrid(columns);
             QueryParam qp = this.getGson().fromJson(q, QueryParam.class);
-            ARepository repo = cmdContext.getRepo(qp.getCls());
-            Page pg = listByQ(cmdParser, qp, repo);
+            ARepository repo = repositoryContext.getRepo(qp.getCls());
+            Page pg = listByQ(queryParamParser, qp, repo);
             return new ModelAndView(new ExcelExportView(grid, pg.data));
         } catch (Throwable e) {
             logger.error("api导出异常", e);

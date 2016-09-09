@@ -32,17 +32,19 @@ import java.util.stream.Collectors;
  * @version V1.0
  */
 public class HttpUtils {
-    static final Logger logger = LoggerFactory.getLogger(HttpUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class);
+    private static final String HTTP = "http://";
 
     /**
      * 使用get方式请求数据
      */
     public static String httpGetRequest(String url, Map<String, String> params) throws URISyntaxException {
         if (!url.startsWith("http"))
-            url = "http://" + url;
+            url = HTTP + url;
         URIBuilder uriBuilder = new URIBuilder(url);
         if (params != null) {
-            for (String key : params.keySet()) {
+            for (Iterator<String> iterator = params.keySet().iterator(); iterator.hasNext(); ) {
+                String key = iterator.next();
                 uriBuilder.setParameter(key, params.get(key));
             }
         }
@@ -51,7 +53,7 @@ public class HttpUtils {
 
     public static String httpGetRequest(String url, String... params) throws URISyntaxException {
         if (!url.startsWith("http"))
-            url = "http://" + url;
+            url = HTTP + url;
         final StringBuilder u = new StringBuilder(url);
         Optional.ofNullable(params).ifPresent(p -> Arrays.stream(p).forEach(c -> {
             int b = u.indexOf("{}");
@@ -90,7 +92,7 @@ public class HttpUtils {
 
     public static String httpPostRequest(String url, Map<String, String> params) throws URISyntaxException {
         if (!url.startsWith("http"))
-            url = "http://" + url;
+            url = HTTP + url;
         List<NameValuePair> nvps = params.entrySet().stream().map(p -> new BasicNameValuePair(p.getKey(), p.getValue())).collect(Collectors.toList());
         String result = null;
         CloseableHttpClient httpclient = null;

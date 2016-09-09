@@ -19,14 +19,8 @@ package org.infrastructure.jpa.sql;
 
 import org.infrastructure.throwable.SQLException;
 import org.infrastructure.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.LinkedList;
 
 /**
@@ -36,12 +30,10 @@ import java.util.LinkedList;
  * @author xuweinan
  */
 public class ClasspathMdLoader extends FileSystemSQLLoader {
-    private static final Logger logger = LoggerFactory.getLogger(ClasspathMdLoader.class);
-
     @Override
     public String getSqlTemplateSrc(String id) {
         // 检查缓存
-        if (this.use_cache && this.sqlSourceMap.containsKey(id) && (!this.autoCheck || !this.isModified(id)))
+        if (this.useCache && this.sqlSourceMap.containsKey(id) && (!this.autoCheck || !this.isModified(id)))
             return this.sqlSourceMap.get(id);
 
         // 物理读取
@@ -49,9 +41,7 @@ public class ClasspathMdLoader extends FileSystemSQLLoader {
         File sqlFile = this.getFile(id);
         Long version = sqlFile.lastModified();
         LinkedList<String> list = new LinkedList<>();
-        BufferedReader bf = null;
-        try {
-            bf = new BufferedReader(new InputStreamReader(new FileInputStream(sqlFile), charset));
+        try (BufferedReader bf = new BufferedReader(new InputStreamReader(new FileInputStream(sqlFile), charset))) {
             String temp;
             String tempNext;
             String lastLine = "";
@@ -91,14 +81,6 @@ public class ClasspathMdLoader extends FileSystemSQLLoader {
             this.sqlSourceVersion.put(path + "." + key, version);
         } catch (IOException e) {
             throw new SQLException(SQLException.CANNOT_GET_SQL, "解析模板文件异常:" + sqlFile.getName(), e);
-        } finally {
-            if (bf != null) {
-                try {
-                    bf.close();
-                } catch (IOException e) {
-                    logger.error(e.getMessage());
-                }
-            }
         }
         if (!this.sqlSourceMap.containsKey(id))
             throw new SQLException(SQLException.CANNOT_GET_SQL, "模板[" + sqlFile.getName() + "]中未找到指定ID的SQL:" + id);
@@ -107,7 +89,7 @@ public class ClasspathMdLoader extends FileSystemSQLLoader {
 
     @Override
     protected File getFile(String id) {
-        String cmdFileName = id.substring(0, id.lastIndexOf("."));
+        String cmdFileName = id.substring(0, id.lastIndexOf('.'));
         String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".md";
         String uri;
         uri = this.getClass().getResource(path).getPath();

@@ -31,7 +31,8 @@ public abstract class FileSystemSQLLoader extends GenericSqlLoader {
     @Override
     public boolean isModified(String id) {
         File file = this.getFile(id);
-        if (file == null) return true;
+        if (file == null)
+            return true;
         long lastModify = file.lastModified();
         Long oldVersion = sqlSourceVersion.get(id);
         return oldVersion == null || oldVersion != lastModify;

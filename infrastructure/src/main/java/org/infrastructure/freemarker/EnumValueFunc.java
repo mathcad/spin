@@ -25,29 +25,34 @@ public class EnumValueFunc implements TemplateMethodModelEx {
         String asField = arguments.get(2).toString();
         StringBuilder sb = new StringBuilder();
         sb.append("(CASE");
+        Class<?> cls;
         try {
-            Class<?> cls = Class.forName(enumName);
-            if (cls.isEnum()) {
-                Field vField;
-                try {
-                    vField = cls.getDeclaredField("value");
-                    ReflectionUtils.makeAccessible(vField);
-                } catch (Exception e) {
-                    throw new IllegalArgumentException("Enum" + cls + "未声明value字段", e);
-                }
+            cls = Class.forName(enumName);
+        } catch (ClassNotFoundException e) {
+            throw new SimplifiedException("解析枚举出错" + enumName, e);
+        }
+        if (cls.isEnum()) {
+            Field vField;
+            try {
+                vField = cls.getDeclaredField("value");
+                ReflectionUtils.makeAccessible(vField);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Enum" + cls + "未声明value字段", e);
+            }
 
-                // 初始化转化
-                if (cls.getAnnotation(UserEnum.class) != null) {
-                    for (Object o : cls.getEnumConstants()) {
-                        String name = o.toString();
-                        int value = Integer.valueOf(vField.get(o).toString());
-                        sb.append(" WHEN ").append(field).append("=").append(value).append(" THEN '").append(name)
-                                .append("'");
+            // 初始化转化
+            if (cls.getAnnotation(UserEnum.class) != null) {
+                for (Object o : cls.getEnumConstants()) {
+                    String name = o.toString();
+                    int value;
+                    try {
+                        value = Integer.parseInt(vField.get(o).toString());
+                    } catch (IllegalAccessException e) {
+                        throw new SimplifiedException(e);
                     }
+                    sb.append(" WHEN ").append(field).append("=").append(value).append(" THEN '").append(name).append("'");
                 }
             }
-        } catch (Exception e) {
-            throw new SimplifiedException("解析枚举出错" + enumName);
         }
         sb.append("END) AS ").append(asField);
         return sb.toString();

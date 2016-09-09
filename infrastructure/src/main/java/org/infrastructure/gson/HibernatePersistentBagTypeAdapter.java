@@ -14,18 +14,13 @@ import java.io.IOException;
  * lazy-load 解决方案
  */
 public class HibernatePersistentBagTypeAdapter extends TypeAdapter<PersistentBag> {
-    private Gson context;
     public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
         @Override
         @SuppressWarnings("unchecked")
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-            return (PersistentBag.class.isAssignableFrom(type.getRawType()) ? (TypeAdapter<T>) new HibernatePersistentBagTypeAdapter(gson) : null);
+            return PersistentBag.class.isAssignableFrom(type.getRawType()) ? (TypeAdapter<T>) new HibernatePersistentBagTypeAdapter() : null;
         }
     };
-
-    private HibernatePersistentBagTypeAdapter(Gson context) {
-        this.context = context;
-    }
 
     @Override
     public PersistentBag read(JsonReader in) throws IOException {

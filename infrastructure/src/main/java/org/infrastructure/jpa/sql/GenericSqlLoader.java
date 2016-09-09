@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @see SimpleResolver
  */
 public abstract class GenericSqlLoader implements SQLLoader {
-    protected volatile boolean use_cache = true;
+    protected volatile boolean useCache = true;
     protected boolean autoCheck = true;
     protected String charset = "UTF-8";
     protected Map<String, String> sqlSourceMap = new ConcurrentHashMap<>();
@@ -103,18 +103,18 @@ public abstract class GenericSqlLoader implements SQLLoader {
 
     @Override
     public SQLLoader enableCache() {
-        if (!this.use_cache)
+        if (!this.useCache)
             synchronized (this.mutex) {
-                this.use_cache = true;
+                this.useCache = true;
             }
         return this;
     }
 
     @Override
     public SQLLoader disableCache() {
-        if (this.use_cache)
+        if (this.useCache)
             synchronized (this.mutex) {
-                this.use_cache = false;
+                this.useCache = false;
             }
         return this;
     }

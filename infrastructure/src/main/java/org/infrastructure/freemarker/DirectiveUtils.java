@@ -7,11 +7,13 @@ import org.infrastructure.util.StringUtils;
 
 import java.util.Map;
 
-public class DirectiveUtils {
+public final class DirectiveUtils {
+    public static final String UI_OVERRIDE = "__ftl_override__";
+    public static final String UI_DEFINE = "__ftl_define__";
+    public static final String OVERRIDE_CURRENT_NODE = "__ftl_override_current_node";
 
-    public static String UI_OVERRIDE = "__ftl_override__";
-    public static String UI_DEFINE = "__ftl_define__";
-    public static String OVERRIDE_CURRENT_NODE = "__ftl_override_current_node";
+    private DirectiveUtils() {
+    }
 
     public static String getOverrideVariableName(String name) {
         return UI_OVERRIDE + name;

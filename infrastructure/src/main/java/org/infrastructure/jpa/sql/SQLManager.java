@@ -17,8 +17,8 @@
 
 package org.infrastructure.jpa.sql;
 
+import org.hibernate.cfg.Environment;
 import org.infrastructure.jpa.api.QueryParam;
-import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.jpa.core.Page;
 import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.throwable.SimplifiedException;
@@ -32,6 +32,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
+import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
@@ -46,16 +49,25 @@ import java.util.regex.Pattern;
  * @author xuweinan
  * @version 1.2
  */
-public class SQLManager<T extends IEntity> {
+@Component
+public class SQLManager {
     private static final Logger logger = LoggerFactory.getLogger(SQLManager.class);
 
-    @Autowired
     private SQLLoader loader;
     private String $sqlName = "$sql";
     private NamedParameterJdbcTemplate nameJt;
     private JdbcTemplate jt;
     private DataSource dataSource;
-    protected Class<T> entityClazz;
+
+    @Autowired
+    public SQLManager(LocalSessionFactoryBean sessFactory, SQLLoader loader) {
+        this.loader = loader;
+        LocalSessionFactoryBuilder cfg = (LocalSessionFactoryBuilder) sessFactory.getConfiguration();
+        DataSource dataSource = (DataSource) cfg.getProperties().get(Environment.DATASOURCE);
+        this.dataSource = dataSource;
+        this.nameJt = new NamedParameterJdbcTemplate(dataSource);
+        this.jt = new JdbcTemplate(dataSource);
+    }
 
     /**
      * 利用Datasource 初始化jdbcTemplate和NamedParameterJdbcTemplate
@@ -132,7 +144,7 @@ public class SQLManager<T extends IEntity> {
         String totalSqlTxt = loader.getSQL($sqlName + "." + "findTotal", HashUtils.getMap("sqlTxt", sqlTxt)).getTemplate();
         SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
         Number number = this.nameJt.queryForObject(totalSqlTxt, params, Long.class);
-        Long total = (number != null ? number.longValue() : 0);
+        Long total = number != null ? number.longValue() : 0;
         return new Page<>(list, total);
     }
 
@@ -144,7 +156,7 @@ public class SQLManager<T extends IEntity> {
      */
     public Map<String, Object> findOneMap(String sqlId, Map<String, ?> paramMap) {
         List<Map<String, Object>> list = this.findListMap(sqlId, paramMap);
-        if (list.size() > 0) {
+        if (!list.isEmpty()) {
             return list.get(0);
         } else
             return null;
@@ -157,12 +169,12 @@ public class SQLManager<T extends IEntity> {
      * @param mapParams 参数map
      * @return 查询结果
      */
-    public List<T> findList(String sqlId, Object... mapParams) {
+    public <T> List<T> findList(String sqlId, Class<T> entityClazz, Object... mapParams) {
         List<Map<String, Object>> maps = findListMap(sqlId, HashUtils.getMap(mapParams));
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : maps) {
             try {
-                res.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
+                res.add(BeanUtils.wrapperMapToBean(entityClazz, map));
             } catch (Exception ignored) {
             }
         }
@@ -176,12 +188,12 @@ public class SQLManager<T extends IEntity> {
      * @param paramMap key1,value1,key2,value2,key3,value3 ...
      * @return 查询结果
      */
-    public List<T> findList(String sqlId, Map<String, ?> paramMap) {
+    public <T> List<T> findList(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
         List<Map<String, Object>> maps = this.findListMap(sqlId, paramMap);
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : maps) {
             try {
-                res.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
+                res.add(BeanUtils.wrapperMapToBean(entityClazz, map));
             } catch (Exception ignored) {
             }
         }
@@ -194,11 +206,11 @@ public class SQLManager<T extends IEntity> {
      * @param sqlId    命令名称
      * @param paramMap 参数
      */
-    public T findOne(String sqlId, Map<String, ?> paramMap) {
+    public <T> T findOne(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
         List<Map<String, Object>> list = this.findListMap(sqlId, paramMap);
-        if (list.size() > 0) {
+        if (!list.isEmpty()) {
             try {
-                return BeanUtils.wrapperMapToBean(this.entityClazz, list.get(0));
+                return BeanUtils.wrapperMapToBean(entityClazz, list.get(0));
             } catch (Exception ignored) {
             }
         }
@@ -260,10 +272,6 @@ public class SQLManager<T extends IEntity> {
 
     public DataSource getDataSource() {
         return this.dataSource;
-    }
-
-    public Class<T> getEntityClazz() {
-        return entityClazz;
     }
 
     private String removeLastOrderBy(String sql) {

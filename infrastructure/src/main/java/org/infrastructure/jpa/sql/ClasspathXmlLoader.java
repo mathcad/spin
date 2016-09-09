@@ -22,9 +22,8 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.infrastructure.throwable.SQLException;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
@@ -37,18 +36,16 @@ import java.util.List;
  * @version 1.0
  */
 public class ClasspathXmlLoader extends FileSystemSQLLoader {
-    private static final Logger logger = LoggerFactory.getLogger(ClasspathXmlLoader.class);
-
     private SAXReader reader = new SAXReader();
 
     @Override
     public String getSqlTemplateSrc(String id) {
         // 检查缓存
-        if (this.use_cache && this.sqlSourceMap.containsKey(id) && (!this.autoCheck || !this.isModified(id)))
+        if (this.useCache && this.sqlSourceMap.containsKey(id) && (!this.autoCheck || !this.isModified(id)))
             return this.sqlSourceMap.get(id);
 
         // 物理读取
-        String cmdFileName = id.substring(0, id.lastIndexOf("."));
+        String cmdFileName = id.substring(0, id.lastIndexOf('.'));
         File sqlFile = this.getFile(id);
         Long version = sqlFile.lastModified();
         try {
@@ -73,13 +70,13 @@ public class ClasspathXmlLoader extends FileSystemSQLLoader {
 
     @Override
     protected File getFile(String id) {
-        String cmdFileName = id.substring(0, id.lastIndexOf("."));
+        String cmdFileName = id.substring(0, id.lastIndexOf('.'));
         String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".xml";
         String uri;
         try {
             uri = this.getClass().getResource(path).getPath();
         } catch (Exception e) {
-            throw new RuntimeException("无法获取指定文件资源：" + path, e);
+            throw new SimplifiedException("无法获取指定文件资源：" + path, e);
         }
         return new File(uri);
     }

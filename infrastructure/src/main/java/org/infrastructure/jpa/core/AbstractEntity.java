@@ -92,8 +92,8 @@ public abstract class AbstractEntity implements IEntity<Long> {
 
     @Override
     public int hashCode() {
-        Long id = (this.id == null ? new Random().nextLong() : this.id);
-        String identifier = this.getClass().getName() + id.toString();
+        Long i = this.id == null ? new Random().nextLong() : this.id;
+        String identifier = this.getClass().getName() + i.toString();
         return identifier.hashCode();
     }
 

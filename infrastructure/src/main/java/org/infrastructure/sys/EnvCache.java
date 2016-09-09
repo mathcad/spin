@@ -12,9 +12,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by xuweinan on 2016/9/5.
  * @author xuweinan
  */
-public class EnvCache {
+public final class EnvCache {
     public static final Map<String, Map<String, Field>> REFER_JOIN_FIELDS = new ConcurrentHashMap<>();
     public static final Map<String, Map<String, BeanUtils.PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
+
+    private EnvCache() {
+    }
 
     public static void clearCache() {
         REFER_JOIN_FIELDS.clear();

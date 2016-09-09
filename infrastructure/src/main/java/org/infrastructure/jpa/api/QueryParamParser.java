@@ -34,20 +34,20 @@ import java.util.Map;
  * @author xuweinan
  */
 @Component
-public class CmdParser {
-    private static final Logger logger = LoggerFactory.getLogger(CmdParser.class);
+public class QueryParamParser {
+    private static final Logger logger = LoggerFactory.getLogger(QueryParamParser.class);
     private static final String SPLITOR = "__";
     private Gson gson = new Gson();
 
     public static class DetachedCriteriaResult {
+        public DetachedCriteria dc;
+        public Map<String, Integer> aliasMap = new HashMap<>();
+
         public static DetachedCriteriaResult from(DetachedCriteria dc) {
             DetachedCriteriaResult dr = new DetachedCriteriaResult();
             dr.dc = dc;
             return dr;
         }
-
-        public DetachedCriteria dc;
-        public Map<String, Integer> aliasMap = new HashMap<>();
     }
 
     /**
@@ -60,11 +60,11 @@ public class CmdParser {
      * </pre>
      */
     public DetachedCriteriaResult parseDetachedCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
-        DetachedCriteriaResult result = new DetachedCriteriaResult();
         Class enCls = Class.forName(p.getCls());
         if (!IEntity.class.isAssignableFrom(enCls))
             throw new ClassNotFoundException(p.getCls() + " is not an Entity Class");
-        DetachedCriteria dc = DetachedCriteria.forClass(enCls);
+        DetachedCriteriaResult result = new DetachedCriteriaResult();
+        result.dc = DetachedCriteria.forClass(enCls);
         Map<String, QueryParamHandler> handlersMap = new HashMap<>();
         for (QueryParamHandler qh : handlers) {
             handlersMap.put(qh.getField(), qh);
@@ -79,33 +79,31 @@ public class CmdParser {
 
             // 自定义属性处理
             if (handlersMap.containsKey(key)) {
-                handlersMap.get(entry.getKey()).processCriteria(dc, val);
+                handlersMap.get(entry.getKey()).processCriteria(result.dc, val);
                 continue;
             }
 
             // 如果没有自定义处理，采用默认处理
-            // 属性分隔符
             if (key.contains(SPLITOR)) {
                 if (key.contains("|")) {
                     List<Criterion> orInners = new ArrayList<>();
                     for (String singleKey : key.split("\\|")) {
                         if (logger.isTraceEnabled())
                             logger.trace(singleKey);
-                        Criterion ct = parseSinglePropCritetion(result, enCls, dc, singleKey, val);
+                        Criterion ct = parseSinglePropCritetion(result, enCls, singleKey, val);
                         if (ct != null)
                             orInners.add(ct);
                     }
 
                     if (orInners.size() > 0)
-                        dc.add(Restrictions.or(orInners.toArray(new Criterion[]{})));
+                        result.dc.add(Restrictions.or(orInners.toArray(new Criterion[]{})));
                 } else {
-                    Criterion ct = parseSinglePropCritetion(result, enCls, dc, key, val);
+                    Criterion ct = parseSinglePropCritetion(result, enCls, key, val);
                     if (ct != null)
-                        dc.add(ct);
+                        result.dc.add(ct);
                 }
             }
         }
-        result.dc = dc;
         return result;
     }
 
@@ -127,7 +125,7 @@ public class CmdParser {
         return orders.toArray(new Order[]{});
     }
 
-    private Criterion parseSinglePropCritetion(DetachedCriteriaResult result, Class enCls, DetachedCriteria dc, String qKey, String val) {
+    private Criterion parseSinglePropCritetion(DetachedCriteriaResult result, Class enCls, String qKey, String val) {
         List<String> qPath = Arrays.asList(qKey.split(SPLITOR));
         String qOp = qPath.remove(qPath.size() - 1);
 
@@ -149,7 +147,7 @@ public class CmdParser {
             qVal = convertValue(enCls, qPath, val);
 
         //追加属性查询
-        return addPropQuery(qPath, qOp, qVal, dc, result.aliasMap);
+        return addPropQuery(qPath, qOp, qVal, result);
     }
 
     // 将String类型的val转换为实体属性的类型
@@ -203,22 +201,19 @@ public class CmdParser {
         return v;
     }
 
-    private Criterion addPropQuery(List<String> qPath, String op, Object val, DetachedCriteria dc, Map<String, Integer> aliasMap) {
+    private Criterion addPropQuery(List<String> qPath, String op, Object val, DetachedCriteriaResult dr) {
         String propName;
         if (qPath.size() == 2) {
             String ofield = qPath.get(0);
-
-            if (!aliasMap.containsKey(ofield)) {
-                aliasMap.put(ofield, 0);
-                dc.createAlias(qPath.get(0), ofield, JoinType.LEFT_OUTER_JOIN);
+            if (!dr.aliasMap.containsKey(ofield)) {
+                dr.aliasMap.put(ofield, 0);
+                dr.dc.createAlias(qPath.get(0), ofield, JoinType.LEFT_OUTER_JOIN);
             }
-
             propName = ofield + "." + qPath.get(1);
         } else if (qPath.size() == 1)
             propName = qPath.get(0);
         else
             throw new SimplifiedException("查询字段最多2层:" + qPath);
-
         return this.createCriterion(propName, op, val);
     }
 
@@ -232,38 +227,51 @@ public class CmdParser {
      */
     private Criterion createCriterion(String propName, String op, Object value) {
         Criterion ct = null;
-        if ("eq".equals(op)) {
-            ct = Restrictions.eq(propName, value);
-        } else if ("notEq".equals(op)) {
-            ct = Restrictions.not(Restrictions.eq(propName, value));
-        } else if ("like".equals(op)) {
-            ct = Restrictions.like(propName, StringUtils.trimWhitespace(value.toString()), MatchMode.ANYWHERE);
-        } else if ("startwith".equalsIgnoreCase(op)) {
-            ct = Restrictions.like(propName, StringUtils.trimWhitespace(value.toString()), MatchMode.START);
-        } else if ("endwith".equalsIgnoreCase(op)) {
-            ct = Restrictions.like(propName, StringUtils.trimWhitespace(value.toString()), MatchMode.END);
-        } else if ("gt".equals(op)) {
-            ct = Restrictions.gt(propName, value);
-        } else if ("ge".equals(op)) {
-            ct = Restrictions.ge(propName, value);
-        } else if ("lt".equals(op)) {
-            ct = Restrictions.lt(propName, value);
-        } else if ("le".equals(op)) {
-            ct = Restrictions.le(propName, value);
-        } else if ("in".equals(op)) {
-            ct = Restrictions.in(propName, (Object[]) value);
-        } else if ("notIn".equals(op)) {
-            ct = Restrictions.not(Restrictions.in(propName, (Object[]) value));
-        } else if ("notNull".equals(op)) {
-            boolean need = (boolean) value;
-            if (need)
-                ct = Restrictions.isNotNull(propName);
-        } else if ("isNull".equals(op)) {
-            boolean need = (boolean) value;
-            if (need)
-                ct = Restrictions.isNull(propName);
-        } else
-            throw new RuntimeException(FmtUtils.format("不支持的查询条件[{0}.{1}={2}]", propName, op, value));
+        switch (op) {
+            case "eq":
+                ct = Restrictions.eq(propName, value);
+                break;
+            case "notEq":
+                ct = Restrictions.not(Restrictions.eq(propName, value));
+                break;
+            case "like":
+                ct = Restrictions.like(propName, StringUtils.trimWhitespace(value.toString()), MatchMode.ANYWHERE);
+                break;
+            case "startwith":
+                ct = Restrictions.like(propName, StringUtils.trimWhitespace(value.toString()), MatchMode.START);
+                break;
+            case "endwith":
+                ct = Restrictions.like(propName, StringUtils.trimWhitespace(value.toString()), MatchMode.END);
+                break;
+            case "gt":
+                ct = Restrictions.gt(propName, value);
+                break;
+            case "ge":
+                ct = Restrictions.ge(propName, value);
+                break;
+            case "lt":
+                ct = Restrictions.lt(propName, value);
+                break;
+            case "le":
+                ct = Restrictions.le(propName, value);
+                break;
+            case "in":
+                ct = Restrictions.in(propName, (Object[]) value);
+                break;
+            case "notIn":
+                ct = Restrictions.not(Restrictions.in(propName, (Object[]) value));
+                break;
+            case "notNull":
+                if ((boolean) value)
+                    ct = Restrictions.isNotNull(propName);
+                break;
+            case "isNull":
+                if ((boolean) value)
+                    ct = Restrictions.isNull(propName);
+                break;
+            default:
+                throw new SimplifiedException(FmtUtils.format("不支持的查询条件[{0}.{1}={2}]", propName, op, value));
+        }
         return ct;
     }
 }

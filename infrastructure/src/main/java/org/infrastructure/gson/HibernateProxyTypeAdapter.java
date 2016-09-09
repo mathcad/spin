@@ -8,6 +8,8 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.IOException;
@@ -20,13 +22,13 @@ import java.lang.reflect.Field;
  * @author xuewinan
  */
 public class HibernateProxyTypeAdapter extends TypeAdapter<HibernateProxy> {
+    private static final Logger logger = LoggerFactory.getLogger(HibernateProxyTypeAdapter.class);
     private final Gson context;
     public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
         @Override
         @SuppressWarnings("unchecked")
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-            return (HibernateProxy.class.isAssignableFrom(type.getRawType())
-                    ? (TypeAdapter<T>) new HibernateProxyTypeAdapter(gson) : null);
+            return HibernateProxy.class.isAssignableFrom(type.getRawType()) ? (TypeAdapter<T>) new HibernateProxyTypeAdapter(gson) : null;
         }
     };
 
@@ -46,8 +48,7 @@ public class HibernateProxyTypeAdapter extends TypeAdapter<HibernateProxy> {
             out.nullValue();
             return;
         }
-        Class<?> baseType = (javassist.util.proxy.ProxyFactory.isProxyClass(value.getClass()))
-                ? value.getClass().getSuperclass() : value.getClass();
+        Class<?> baseType = javassist.util.proxy.ProxyFactory.isProxyClass(value.getClass()) ? value.getClass().getSuperclass() : value.getClass();
         TypeAdapter delegate = context.getAdapter(TypeToken.get(baseType));
 
         Object o = null;
@@ -60,7 +61,7 @@ public class HibernateProxyTypeAdapter extends TypeAdapter<HibernateProxy> {
                 ReflectionUtils.makeAccessible(f);
                 f.set(o, value.getHibernateLazyInitializer().getIdentifier());
             } catch (InstantiationException | IllegalAccessException e) {
-                e.printStackTrace();
+                logger.error(e.getMessage());
             }
             delegate.write(out, o);
         }

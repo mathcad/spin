@@ -6,7 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.infrastructure.jpa.api.RepositoryContext;
-import org.infrastructure.jpa.api.CmdParser;
+import org.infrastructure.jpa.api.QueryParamParser;
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.api.QueryParamHandler;
 import org.infrastructure.jpa.core.ARepository;
@@ -50,9 +50,9 @@ public class BaseController {
     protected SessionManager sessMgr;
 
     @Autowired
-    protected RepositoryContext cmdContext;
+    protected RepositoryContext repositoryContext;
 
-    protected CmdParser cmdParser;
+    protected QueryParamParser queryParamParser;
 
     /**
      * 输出utf-8编码的html内容
@@ -122,7 +122,7 @@ public class BaseController {
         String q = this.sessMgr.getRequest().getParameter("q");
         QueryParam p = this.getGson().fromJson(q, QueryParam.class);
         try {
-            return listByQ(cmdParser, p, repo, handlers);
+            return listByQ(queryParamParser, p, repo, handlers);
         } catch (Exception e) {
             throw new SimplifiedException("rest查询出错", e);
         }
@@ -162,19 +162,19 @@ public class BaseController {
     /**
      * 执行实体带fields投影的查询
      *
-     * @param cmdParser sql解析器实例
+     * @param queryParamParser sql解析器实例
      * @param p         通用查询参数
      * @param repo      Dao
      * @param handlers  自定义查询类
      * @return 查询结果
      */
-    public static Page listByQ(CmdParser cmdParser, QueryParam p, ARepository repo, QueryParamHandler... handlers) throws Exception {
-        CmdParser.DetachedCriteriaResult dr = cmdParser.parseDetachedCriteria(p, handlers);
+    public static Page listByQ(QueryParamParser queryParamParser, QueryParam p, ARepository repo, QueryParamHandler... handlers) throws Exception {
+        QueryParamParser.DetachedCriteriaResult dr = queryParamParser.parseDetachedCriteria(p, handlers);
         DetachedCriteria dc = dr.dc;
         int page = p.getStart() / p.getLimit();
         int pagesize = p.getLimit();
         PageRequest pr = new PageRequest(page, pagesize);
-        Order[] orders = cmdParser.parseOrders(p);
+        Order[] orders = queryParamParser.parseOrders(p);
 
         Page result;
         if (p.getFields() == null || p.getFields().size() == 0) {

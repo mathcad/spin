@@ -19,6 +19,8 @@ package org.infrastructure.util;
 
 import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.sys.EnvCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -35,21 +37,21 @@ import java.util.Map;
  * Bean工具类
  * Created by xuweinan on 2016/8/15.
  */
-public class BeanUtils {
+public final class BeanUtils {
+    private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
+
+    private BeanUtils() {
+    }
+
     public static PropertyDescriptor[] propertyDescriptors(Class<?> c) throws IntrospectionException {
         BeanInfo beanInfo = Introspector.getBeanInfo(c);
         return beanInfo.getPropertyDescriptors();
     }
 
-    public static List<Method> getterMethod(Class<?> c) {
+    public static List<Method> getterMethod(Class<?> c) throws IntrospectionException {
         PropertyDescriptor[] ps;
-        try {
-            ps = propertyDescriptors(c);
-        } catch (IntrospectionException e) {
-            e.printStackTrace();
-            return null;
-        }
         List<Method> list = new ArrayList<>();
+        ps = propertyDescriptors(c);
         for (PropertyDescriptor p : ps) {
             if (p.getReadMethod() != null && p.getWriteMethod() != null) {
                 list.add(p.getReadMethod());
@@ -61,9 +63,8 @@ public class BeanUtils {
     public static Method tailMethod(Class<?> type, String name) {
         try {
             return type.getMethod(name, String.class, Object.class);
-        } catch (NoSuchMethodException e) {
-            return null;
-        } catch (SecurityException e) {
+        } catch (NoSuchMethodException | SecurityException e) {
+            logger.error(e.getMessage());
             return null;
         }
     }
