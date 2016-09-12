@@ -6,6 +6,7 @@ import org.hibernate.*;
 import org.hibernate.criterion.*;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
+import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.api.QueryParamParser.DetachedCriteriaResult;
 import org.infrastructure.jpa.sql.SQLManager;
 import org.infrastructure.shiro.SessionManager;
@@ -825,6 +826,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
     }
 
+    public Long count(String sqlId, Map<String, ?> paramMap) {
+        return sqlManager.count(sqlId, paramMap);
+    }
+
     /**
      * 查询实体，返回dto的列表 （已避免性能问题）
      */
@@ -898,8 +903,45 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return findList(cp);
     }
 
-    public List<Map<String, Object>> listAsMap(String sqlId, Object... mapParams) {
+
+    public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
+        return sqlManager.findOneAsMap(sqlId, paramMap);
+    }
+
+    public T findOneBySql(String sqlId, Map<String, ?> paramMap) {
+        return sqlManager.findOne(sqlId, entityClazz, paramMap);
+    }
+
+    public List<T> listBySql(String sqlId, Object... mapParams) {
+        return sqlManager.list(sqlId, entityClazz, mapParams);
+    }
+
+    public List<T> listBySql(String sqlId, Map<String, ?> paramMap) {
+        return sqlManager.list(sqlId, entityClazz, paramMap);
+    }
+
+    public List<Map<String, Object>> listAsMapBySql(String sqlId, Object... mapParams) {
         return sqlManager.listAsMap(sqlId, mapParams);
+    }
+
+    public List<Map<String, Object>> listAsMapBySql(String sqlId, Map<String, ?> paramMap) {
+        return sqlManager.listAsMap(sqlId, paramMap);
+    }
+
+    public Page<Map<String, Object>> listAsPageMap(String sqlId, QueryParam qp) {
+        return sqlManager.listAsPageMap(sqlId, qp);
+    }
+
+    public Page<T> listAsPage(String sqlId, QueryParam qp) {
+        return sqlManager.listAsPage(sqlId, entityClazz, qp);
+    }
+
+    public int executeCUD(String sqlId, Map<String, ?> paramMap) {
+        return sqlManager.executeCUD(sqlId, paramMap);
+    }
+
+    public void batchExec(String sqlId, List<Map<String, ?>> argsMap) {
+        sqlManager.batchExec(sqlId, argsMap);
     }
 
     /**

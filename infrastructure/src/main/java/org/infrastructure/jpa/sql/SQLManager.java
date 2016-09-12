@@ -19,6 +19,7 @@ package org.infrastructure.jpa.sql;
 
 import org.hibernate.cfg.Environment;
 import org.infrastructure.jpa.api.QueryParam;
+import org.infrastructure.jpa.core.DatabaseType;
 import org.infrastructure.jpa.core.Page;
 import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.throwable.SimplifiedException;
@@ -37,6 +38,8 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,15 +59,27 @@ public class SQLManager {
     private NamedParameterJdbcTemplate nameJt;
     private JdbcTemplate jt;
     private DataSource dataSource;
+    private DatabaseType dbType;
 
     @Autowired
     public SQLManager(LocalSessionFactoryBean sessFactory, SQLLoader loader) {
         this.loader = loader;
         LocalSessionFactoryBuilder cfg = (LocalSessionFactoryBuilder) sessFactory.getConfiguration();
-        DataSource dataSource = (DataSource) cfg.getProperties().get(Environment.DATASOURCE);
-        this.dataSource = dataSource;
-        this.nameJt = new NamedParameterJdbcTemplate(dataSource);
-        this.jt = new JdbcTemplate(dataSource);
+        DataSource ds = (DataSource) cfg.getProperties().get(Environment.DATASOURCE);
+        dataSource = ds;
+        try (Connection conn = ds.getConnection()) {
+            String vender = conn.getMetaData().getDatabaseProductName();
+            if ("MySQL".equalsIgnoreCase(vender))
+                this.dbType = new MySQLDatabaseType();
+            else if ("Oracle".equalsIgnoreCase(vender))
+                this.dbType = new OracleDatabaseType();
+            if (dbType == null)
+                throw new SimplifiedException("Unsupported Database vender:" + vender);
+        } catch (SQLException e) {
+            logger.error("Can not fetch Database metadata", e);
+        }
+        this.nameJt = new NamedParameterJdbcTemplate(ds);
+        this.jt = new JdbcTemplate(ds);
     }
 
     /**
@@ -74,7 +89,7 @@ public class SQLManager {
      * @param paramMap 参数
      */
     public Map<String, Object> findOneAsMap(String sqlId, Map<String, ?> paramMap) {
-        List<Map<String, Object>> list = this.listAsMap(sqlId, paramMap);
+        List<Map<String, Object>> list = listAsMap(sqlId, paramMap);
         if (!list.isEmpty()) {
             return list.get(0);
         } else
@@ -119,7 +134,7 @@ public class SQLManager {
     public List<Map<String, Object>> listAsMap(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
         try {
-            return this.nameJt.queryForList(sqlTxt, paramMap);
+            return nameJt.queryForList(sqlTxt, paramMap);
         } catch (Exception ex) {
             logger.error("执行查询出错：" + sqlId);
             logger.error(sqlTxt);
@@ -135,25 +150,22 @@ public class SQLManager {
      * @return 分页查询结果
      */
     public Page<Map<String, Object>> listAsPageMap(String sqlId, QueryParam qp) {
-        String sqlTxt = loader.getSQL(sqlId, qp.getConditions()).getTemplate();
+        SQLSource sql = loader.getSQL(sqlId, qp.getConditions());
+        String sqlTxt = sql.getTemplate();
         String sortInfo = qp.parseOrder();
         // 替换排序为自定义
         if (StringUtils.isNotEmpty(sortInfo)) {
             sqlTxt = removeLastOrderBy(sqlTxt);
             sqlTxt = sqlTxt + sortInfo;
         }
-
-        String $sqlName = "$sql";
-        String pageSqlTxt = loader.getSQL($sqlName + "." + "findPage", HashUtils.getMap("sqlTxt", sqlTxt, "start", qp.getStart(), "limit", qp.getLimit())).getTemplate();
-
-        List<Map<String, Object>> list = nameJt.queryForList(pageSqlTxt, qp.getConditions());
-
+        sql.setTemplate(sqlTxt);
+        SQLSource pageSql = dbType.getPagedSQL(sql, qp.getStart(), qp.getLimit());
+        List<Map<String, Object>> list = nameJt.queryForList(pageSql.getTemplate(), qp.getConditions());
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = loader.getSQL($sqlName + "." + "findTotal", HashUtils.getMap("sqlTxt", sqlTxt)).getTemplate();
+        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
         SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
-        Number number = this.nameJt.queryForObject(totalSqlTxt, params, Long.class);
-        Long total = number != null ? number.longValue() : 0;
-        return new Page<>(list, total);
+        Long total = nameJt.queryForObject(totalSqlTxt, params, Long.class);
+        return new Page<>(list, total != null ? total : 0);
     }
 
     /**
@@ -202,18 +214,19 @@ public class SQLManager {
      * @return 分页查询结果
      */
     public <T> Page<T> listAsPage(String sqlId, Class<T> entityClazz, QueryParam qp) {
-        String sqlTxt = loader.getSQL(sqlId, qp.getConditions()).getTemplate();
+        SQLSource sql = loader.getSQL(sqlId, qp.getConditions());
+        String sqlTxt = sql.getTemplate();
         String sortInfo = qp.parseOrder();
         // 替换排序为自定义
         if (StringUtils.isNotEmpty(sortInfo)) {
             sqlTxt = removeLastOrderBy(sqlTxt);
-            sqlTxt = sqlTxt + sortInfo;
+            sqlTxt += sortInfo;
         }
+        sql.setTemplate(sqlTxt);
 
-        String $sqlName = "$sql";
-        String pageSqlTxt = loader.getSQL($sqlName + "." + "findPage", HashUtils.getMap("sqlTxt", sqlTxt, "start", qp.getStart(), "limit", qp.getLimit())).getTemplate();
+        SQLSource pageSql = dbType.getPagedSQL(sql, qp.getStart(), qp.getLimit());
 
-        List<Map<String, Object>> list = nameJt.queryForList(pageSqlTxt, qp.getConditions());
+        List<Map<String, Object>> list = nameJt.queryForList(pageSql.getTemplate(), qp.getConditions());
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : list) {
             try {
@@ -222,11 +235,10 @@ public class SQLManager {
             }
         }
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = loader.getSQL($sqlName + "." + "findTotal", HashUtils.getMap("sqlTxt", sqlTxt)).getTemplate();
+        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
         SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
-        Number number = this.nameJt.queryForObject(totalSqlTxt, params, Long.class);
-        Long total = number != null ? number.longValue() : 0;
-        return new Page<>(res, total);
+        Long total = nameJt.queryForObject(totalSqlTxt, params, Long.class);
+        return new Page<>(res, total != null ? total : 0);
     }
 
     /**
@@ -249,7 +261,7 @@ public class SQLManager {
     public Long count(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
         sqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
-        Long number = this.nameJt.queryForObject(sqlTxt, paramMap, Long.class);
+        Long number = nameJt.queryForObject(sqlTxt, paramMap, Long.class);
         return number != null ? number : 0;
     }
 
@@ -262,7 +274,7 @@ public class SQLManager {
      */
     public int executeCUD(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
-        return this.nameJt.update(sqlTxt, paramMap);
+        return nameJt.update(sqlTxt, paramMap);
     }
 
     /**
@@ -271,7 +283,7 @@ public class SQLManager {
     @SuppressWarnings({"unchecked"})
     public void batchExec(String sqlId, List<Map<String, ?>> argsMap) {
         String sqlTxt = loader.getSQL(sqlId, null).getTemplate();
-        this.nameJt.batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
+        nameJt.batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
     }
 
     public JdbcTemplate getJt() {
@@ -283,7 +295,7 @@ public class SQLManager {
     }
 
     public DataSource getDataSource() {
-        return this.dataSource;
+        return dataSource;
     }
 
     private String removeLastOrderBy(String sql) {
