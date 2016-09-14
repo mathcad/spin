@@ -44,8 +44,7 @@ public final class DirectiveUtils {
         return (TemplateDirectiveBodyOverrideWraper) env.getVariable(DirectiveUtils.getDefineVariableName(name));
     }
 
-    public static void setTopBodyForParentBody(TemplateDirectiveBodyOverrideWraper topBody,
-                                               TemplateDirectiveBodyOverrideWraper overrideBody) {
+    public static void setTopBodyForParentBody(TemplateDirectiveBodyOverrideWraper topBody, TemplateDirectiveBodyOverrideWraper overrideBody) {
         TemplateDirectiveBodyOverrideWraper parent = overrideBody;
         while (parent.parentBody != null) {
             parent = parent.parentBody;

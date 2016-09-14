@@ -9,7 +9,6 @@ import java.util.Iterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.infrastructure.gson.TimestampTypeAdapter;
-import org.infrastructure.web.view.GsonView;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -331,7 +330,6 @@ public class JSONUtils {
             return null;
         }
         GsonBuilder builder = new GsonBuilder();
-        GsonView.regGson(builder);
         if (StringUtils.isEmpty(datePattern)) {
             datePattern = DEFAULT_DATE_PATTERN;
         }

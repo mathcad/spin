@@ -10,7 +10,7 @@ public class OracleDatabaseType implements DatabaseType {
     public SQLSource getPagedSQL(SQLSource sqlSource, int start, int limit) {
         SQLSource ss = new SQLSource();
         ss.setId(sqlSource.getId());
-        String pagedSql = "SELECT * FROM (SELECT D.*, ROWNUM RN FROM (" + sqlSource.getTemplate() + ") D WHERE ROWNUM > START) WHERE RN <= LIMIT";
+        String pagedSql = "SELECT * FROM (SELECT D.*, ROWNUM RN FROM (" + sqlSource.getTemplate() + ") D WHERE ROWNUM > " + start + ") WHERE RN <= " + (start + limit);
         ss.setTemplate(pagedSql);
         return ss;
     }

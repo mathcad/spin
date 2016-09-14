@@ -4,19 +4,53 @@ version '1.0-SNAPSHOT'
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'idea'
+apply plugin: 'spring-boot'
 
 sourceCompatibility = 1.8
+
+buildscript {
+    ext {
+        springBootVersion = '1.4.0.RELEASE'
+    }
+    // 这里主要添加spring-boot的插件的仓库
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "https://repo.spring.io/libs-release" }
+    }
+
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.0.RELEASE")
+    }
+}
 
 repositories {
     mavenLocal()
     mavenCentral()
+    maven { url "https://repo.spring.io/libs-release" }
+}
+
+// 打包成jar包
+//jar {
+//    baseName = "spring_boot_test"
+//    version = '0.1'
+//}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Brixton.SR5'
+    }
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile 'com.ibeetl:beetlsql:2.4.3',
-            'mysql:mysql-connector-java:5.1.39',
-            'org.springframework:spring-context:4.3.2.RELEASE'
+            'mysql:mysql-connector-java:5.1.39'
+    compile group: 'org.springframework.boot', name: 'spring-boot', version: '1.4.0.RELEASE'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.4.0.RELEASE'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: '1.4.0.RELEASE'
+    compile group: 'com.alibaba', name: 'druid', version: '1.0.25'
 
     compile(project(":zibra"))
+    compile(project(":infrastructure"))
 }

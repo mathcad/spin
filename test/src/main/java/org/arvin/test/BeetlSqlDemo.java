@@ -49,7 +49,7 @@ public class BeetlSqlDemo {
 
 //使用内置的生成的sql 新增用户，如果需要获取主键，可以传入KeyHolder
         User user = new User();
-        user.setAge(19);
+//        user.setAge(19);
         user.setName("xiandafu");
         sqlManager.insert(user);
 
@@ -59,8 +59,8 @@ public class BeetlSqlDemo {
 
 //模板更新,仅仅根据id更新值不为null的列
         User newUser = new User();
-        newUser.setId(1);
-        newUser.setAge(20);
+        newUser.setId(1L);
+//        newUser.setAge(20);
         sqlManager.updateTemplateById(newUser);
 
 //模板查询
