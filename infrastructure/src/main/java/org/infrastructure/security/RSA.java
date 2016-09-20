@@ -1,7 +1,6 @@
-package org.infrastructure.util;
+package org.infrastructure.security;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.infrastructure.security.Base64;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.sys.ErrorAndExceptionCode;
 import org.infrastructure.throwable.SimplifiedException;
@@ -31,7 +30,7 @@ import java.security.spec.X509EncodedKeySpec;
  * RSA 工具类。提供加密，解密，签名，验证，生成密钥对等方法。
  * 需要到http://www.bouncycastle.org下载bcprov-jdk14-123.jar。
  */
-public abstract class RSAUtils {
+public abstract class RSA {
     private static final int KEY_SIZE = 1024;
     private static final String SIGN_ALGORITHMS = "SHA1WithRSA";
     private static final String RSA_ALGORITHMS = "RSA";

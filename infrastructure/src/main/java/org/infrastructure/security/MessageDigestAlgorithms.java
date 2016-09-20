@@ -34,7 +34,7 @@ public enum MessageDigestAlgorithms {
 	
 	private String _value;
 
-	private MessageDigestAlgorithms(String _value) {
+	MessageDigestAlgorithms(String _value) {
 		this._value = _value;
 	}
 
