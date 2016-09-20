@@ -1,4 +1,4 @@
-package org.infrastructure.jpa.core.annotations;
+package org.infrastructure.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

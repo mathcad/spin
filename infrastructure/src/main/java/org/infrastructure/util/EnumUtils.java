@@ -1,11 +1,7 @@
-package org.infrastructure.sys;
+package org.infrastructure.util;
 
-import org.infrastructure.jpa.core.annotations.UserEnum;
+import org.infrastructure.annotations.UserEnum;
 import org.infrastructure.throwable.SimplifiedException;
-import org.infrastructure.util.HashUtils;
-import org.infrastructure.util.ObjectUtils;
-import org.infrastructure.util.PackageUtils;
-import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
@@ -22,11 +18,8 @@ import java.util.Map;
  * @author xuweinan
  * @version V1.0
  */
-public final class EnumUtils {
+public abstract class EnumUtils {
     private static Logger logger = LoggerFactory.getLogger(EnumUtils.class);
-
-    private EnumUtils() {
-    }
 
     /**
      * 通过枚举文本字段，获得枚举类型的常量
@@ -35,10 +28,10 @@ public final class EnumUtils {
      * @param text    枚举文本
      * @return 枚举常量
      */
-    public static <T extends Enum<?>> T getEnum(Class<T> enumCls, String text) {
-        for (T o : enumCls.getEnumConstants()) {
-            if (o.name().equals(text)) {
-                return o;
+    public static Enum getEnum(Class<?> enumCls, String text) {
+        for (Object o : enumCls.getEnumConstants()) {
+            if (o.toString().equals(text)) {
+                return (Enum) o;
             }
         }
         return null;
@@ -52,7 +45,7 @@ public final class EnumUtils {
      * @param field   字段名
      * @return 枚举常量
      */
-    public static <T extends Enum<?>> T getEnum(Class<T> enumCls, int value, String... field) {
+    public static Enum getEnum(Class<?> enumCls, int value, String... field) {
         String fieldName;
         if (null != field && field.length > 0 && StringUtils.isNotEmpty(field[0]))
             fieldName = field[0];
@@ -65,10 +58,10 @@ public final class EnumUtils {
             throw new SimplifiedException("Enum:" + enumCls.getName() + " has no such field:" + fieldName, e);
         }
         ReflectionUtils.makeAccessible(valueField);
-        for (T o : enumCls.getEnumConstants()) {
+        for (Object o : enumCls.getEnumConstants()) {
             int fVal = (Integer) ReflectionUtils.getField(valueField, o);
             if (value == fVal) {
-                return o;
+                return (Enum) o;
             }
         }
         return null;
@@ -82,7 +75,7 @@ public final class EnumUtils {
      * @param key     键
      * @return 枚举常量
      */
-    public static <T extends Enum<?>> T getByValue(Class<T> enumCls, Map<?, Object> map, String key) {
+    public static Enum getByValue(Class<?> enumCls, Map<?, Object> map, String key) {
         Integer v = HashUtils.getIntegerValue(map, key);
         if (null == v)
             return null;
@@ -96,7 +89,7 @@ public final class EnumUtils {
      * @param enumValue 枚举常量
      * @return 枚举常量的value字段值
      */
-    public static int getEnumValue(Class enumClass, Enum enumValue) {
+    public static int getEnumValue(Class<?> enumClass, Enum enumValue) {
         if (enumClass == null)
             enumClass = enumValue.getClass();
 
@@ -125,7 +118,6 @@ public final class EnumUtils {
      *
      * @param basePkg 包名
      * @return 包含所有枚举常量name-value的map
-     * @throws Exception
      */
     public static Map<String, List<HashMap>> parseEnums(String basePkg) throws Exception {
         List<String> clsList = PackageUtils.getClassName(basePkg);
@@ -142,7 +134,6 @@ public final class EnumUtils {
                 } catch (Exception e) {
                     logger.error("Enum" + cls + "未声明value字段", e);
                 }
-
                 //取value值
                 if (cls.getAnnotation(UserEnum.class) != null && vField != null) {
                     for (Object o : cls.getEnumConstants()) {
@@ -157,8 +148,6 @@ public final class EnumUtils {
                 }
             }
         }
-
         return enumsMap;
     }
-
 }

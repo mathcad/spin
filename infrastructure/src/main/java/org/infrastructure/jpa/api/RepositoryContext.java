@@ -1,8 +1,8 @@
 package org.infrastructure.jpa.api;
 
+import org.hibernate.SessionFactory;
 import org.infrastructure.jpa.core.ARepository;
 import org.infrastructure.jpa.core.IEntity;
-import org.infrastructure.shiro.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -11,7 +11,6 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -21,10 +20,7 @@ public class RepositoryContext implements ApplicationContextAware {
     private static final Logger logger = LoggerFactory.getLogger(RepositoryContext.class);
 
     @Autowired
-    private SessionManager sessionMgr;
-
-    @Autowired
-    private LocalSessionFactoryBean sessFactory;
+    private SessionFactory sessFactory;
 
     private static ApplicationContext applicationContext;
 
@@ -47,7 +43,6 @@ public class RepositoryContext implements ApplicationContextAware {
         BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(ARepository.class);
         bdb.addPropertyValue("clazz", cls);
         bdb.addPropertyValue("sessFactory", sessFactory);
-        bdb.addPropertyValue("sessionMgr", sessionMgr);
         String beanName = cls.getName() + "ARepository";
         acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
         return acf.getBean(beanName, ARepository.class);

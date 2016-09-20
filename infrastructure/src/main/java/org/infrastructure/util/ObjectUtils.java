@@ -16,13 +16,13 @@
 
 package org.infrastructure.util;
 
+import org.infrastructure.annotations.UserEnum;
+
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
-import java.security.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -130,7 +130,6 @@ public abstract class ObjectUtils {
      * @return {@code true} if the object is {@code null} or <em>empty</em>
      * @see ObjectUtils#isEmpty(Object[])
      * @see StringUtils#hasLength(CharSequence)
-     * @see StringUtils#isEmpty(String)
      * @see CollectionUtils#isEmpty(Collection)
      * @see CollectionUtils#isEmpty(Map)
      * @since 4.2
@@ -282,6 +281,8 @@ public abstract class ObjectUtils {
             return (T) target;
         } else if (BigDecimal.class.equals(type)) {
             return target == null ? null : (T) new BigDecimal(target.toString());
+        } else if (type.getAnnotation(UserEnum.class) != null && target != null) {
+            return (T) EnumUtils.getEnum(type, Integer.valueOf(target.toString()));
         } else {
             Class<?> typePrimitive = ClassUtils.wrapperToPrimitive(type);
             if (null == target) {

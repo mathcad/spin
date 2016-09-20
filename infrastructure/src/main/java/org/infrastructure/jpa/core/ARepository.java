@@ -9,20 +9,19 @@ import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.api.QueryParamParser.DetachedCriteriaResult;
 import org.infrastructure.jpa.sql.SQLManager;
-import org.infrastructure.shiro.SessionManager;
+import org.infrastructure.shiro.SessionUtils;
 import org.infrastructure.shiro.SessionUser;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.sys.EnvCache;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.BeanUtils;
-import org.infrastructure.util.ElUtils;
+import org.infrastructure.util.EntityUtils;
 import org.infrastructure.util.ReflectionUtils;
 import org.infrastructure.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.ManyToMany;
@@ -52,21 +51,16 @@ import java.util.stream.Collectors;
 public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     private static final Log logger = LogFactory.getLog(ARepository.class);
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
-
-    private boolean checkWriteOperations = true;
-
     protected static final ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
     };
 
-    @Autowired
-    protected SessionManager sessionMgr;
+    private boolean checkWriteOperations = true;
 
     @Autowired
-    protected LocalSessionFactoryBean sessFactory;
+    protected SessionFactory sessFactory;
 
     @Autowired
     protected SQLManager sqlManager;
-
     protected Class<T> entityClazz;
 
     public ARepository() {
@@ -79,69 +73,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Return whether to check that the Hibernate Session is not in read-only
-     * mode in case of write operations (save/update/delete).
-     */
-    public boolean isCheckWriteOperations() {
-        return checkWriteOperations;
-    }
-
-    /**
-     * Set whether to check that the Hibernate Session is not in read-only mode
-     * in case of write operations (save/update/delete).
-     * <p>Default is "true", for fail-fast behavior when attempting write operations
-     * within a read-only transaction. Turn this off to allow save/update/delete
-     * on a Session with flush mode MANUAL.
-     *
-     * @see #checkWriteOperationAllowed
-     * @see org.springframework.transaction.TransactionDefinition#isReadOnly
-     */
-    public void setCheckWriteOperations(boolean checkWriteOperations) {
-        this.checkWriteOperations = checkWriteOperations;
-    }
-
-    public SessionManager getSessionMgr() {
-        return sessionMgr;
-    }
-
-    public void setSessionMgr(SessionManager sessionMgr) {
-        this.sessionMgr = sessionMgr;
-    }
-
-    public LocalSessionFactoryBean getSessFactory() {
-        return sessFactory;
-    }
-
-    /**
-     * 获得引用类型的*ToOne的引用字段列表
-     *
-     * @return 字段列表
-     */
-    public static Map<String, Field> getJoinFields(final Class cls) {
-        String clsName = cls.getName();
-        if (!EnvCache.REFER_JOIN_FIELDS.containsKey(clsName))
-            parseForJoinFetch(cls);
-        return EnvCache.REFER_JOIN_FIELDS.get(clsName);
-    }
-
-    /**
-     * 动态捕获要增加Fetch=Join的字段 默认ToOne的都Fetch=Join
-     */
-    public static void parseForJoinFetch(final Class cls) {
-        EnvCache.REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<>());
-        ReflectionUtils.doWithFields(cls,
-                f -> EnvCache.REFER_JOIN_FIELDS.get(cls.getName()).put(f.getName(), f),
-                f -> f.getAnnotation(ManyToOne.class) != null || f.getAnnotation(OneToOne.class) != null);
-    }
-
-    /**
      * 获得当前线程的session 如果线程Local变量中有绑定，返回该session
      * 否则，调用sessFactory的getCurrentSession
      */
     public Session getSession() {
         Session sess = peekThreadSession();
         if (sess == null) {
-            sess = sessFactory.getObject().getCurrentSession();
+            sess = sessFactory.getCurrentSession();
         }
         return sess;
     }
@@ -162,7 +100,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public Session openSession(boolean requiredNew) {
         Session session = peekThreadSession();
         if (requiredNew || session == null) {
-            session = sessFactory.getObject().openSession();
+            session = sessFactory.openSession();
             pushTreadSession(session);
         }
         return session;
@@ -213,15 +151,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         Assert.notNull(entity, "The entity to save must be a NON-NULL object");
         if (entity instanceof AbstractEntity) {
             AbstractEntity aEn = (AbstractEntity) entity;
-            SessionUser user = sessionMgr.getCurrentUser();
-            Assert.notNull(user, "未找到当前登录用户");
+            SessionUser user = SessionUtils.getCurrentUser();
+            Assert.notNull(user, "Can not find Current user");
             aEn.setLastUpdateTime(new Timestamp(System.currentTimeMillis()));
-            aEn.setLastUpdateUser(GenericUser.ref(user.getId()));
-            aEn.setLastUpdateUserName(user.getRealName());
+            aEn.setLastUpdateUserName(user.getLoginName());
             if (null == aEn.getId()) {
-                aEn.setCreateUserName(user.getRealName());
+                aEn.setCreateUserName(user.getLoginName());
                 aEn.setCreateTime(new Timestamp(System.currentTimeMillis()));
-                aEn.setCreateUser(GenericUser.ref(user.getId()));
             }
         }
         try {
@@ -230,7 +166,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             else
                 getSession().update(entity);
         } catch (org.springframework.orm.hibernate4.HibernateOptimisticLockingFailureException | org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException ope) {
-            throw new SimplifiedException("实体已经更新，请重置后再编辑", ope);
+            throw new SimplifiedException("The entity is expired", ope);
         }
         return get(entity.getId());
     }
@@ -365,7 +301,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 主键获取指定深度的属性的瞬态对象
      */
     public T getDto(final PK k, int depth) {
-        return ElUtils.getDto(get(k), depth);
+        return EntityUtils.getDto(get(k), depth);
     }
 
     /**
@@ -414,7 +350,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @throws IllegalArgumentException in case the given entity is {@literal null}.
      */
     public void delete(T entity) {
-        Assert.notNull(entity, "无法删除引用为null的实体");
+        Assert.notNull(entity, "The entity to be deleted is null");
         getSession().delete(entity);
     }
 
@@ -426,7 +362,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public void delete(PK k) {
         Assert.notNull(k, ID_MUST_NOT_BE_NULL);
         T entity = get(k);
-        Assert.notNull(entity, "未找到实体,或者已经被删除,实体：" + this.entityClazz.getSimpleName() + ",主键:" + k);
+        Assert.notNull(entity, "Entity not found, or was deleted: [" + this.entityClazz.getSimpleName() + "|" + k + "]");
         getSession().delete(entity);
         getSession().flush();
     }
@@ -518,7 +454,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         for (Iterator<String> iterator = referFields.keySet().iterator(); iterator.hasNext(); ) {
             String referField = iterator.next();
             Field mapField = enJoinFields.get(referField);
-            String pkf = ElUtils.getPKField(mapField.getType()).getName();
+            String pkf = EntityUtils.getPKField(mapField.getType()).getName();
             String fetchF = referField + "." + pkf;
             referFields.get(referField).add(fetchF);
             pj.add(Property.forName(fetchF), fetchF);
@@ -679,7 +615,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         // 追加排序
         cp.orders.forEach(dc::addOrder);
 
-        String pkf = ElUtils.getPKField(this.entityClazz).getName();
+        String pkf = EntityUtils.getPKField(this.entityClazz).getName();
 
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
@@ -900,10 +836,43 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 查找对象列表，返回Dto对象
      */
     public List<T> list(CriteriaParam cp) {
-        return findList(cp);
+        DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
+        cp.criterions.forEach(dc::add);
+
+        Session sess = getSession();
+        Criteria ct = dc.getExecutableCriteria(sess);
+        ct.setCacheable(false);
+
+        // 查询列表数据
+        final Map<String, Set<String>> referFields;
+        referFields = new HashMap<>();
+        final ProjectionList pj = beforeQueryCriteria(cp, ct, referFields);
+
+        ct.setProjection(pj);
+        ct.setResultTransformer(org.hibernate.criterion.CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
+
+        cp.orders.forEach(ct::addOrder);
+
+        if (cp.pageRequest != null) {
+            ct.setFirstResult(cp.pageRequest.getOffset());
+            ct.setMaxResults(cp.pageRequest.getPageSize());
+        }
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> list = ct.list();
+
+        ArrayList<T> enList = new ArrayList<>();
+        /* Map查询后，回填对象 */
+        for (Map<String, Object> map : list) {
+            try {
+                enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
+            } catch (Exception e) {
+                logger.error("转换Map到实体异常", e);
+            }
+        }
+        return enList;
     }
 
-
+    /************************委托SQLManager执行SQL语句************************************/
     public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
         return sqlManager.findOneAsMap(sqlId, paramMap);
     }
@@ -931,6 +900,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public Page<Map<String, Object>> listAsPageMap(String sqlId, QueryParam qp) {
         return sqlManager.listAsPageMap(sqlId, qp);
     }
+
+    /************************委托SQLManager执行SQL语句 end********************************/
 
     public Page<T> listAsPage(String sqlId, QueryParam qp) {
         return sqlManager.listAsPage(sqlId, entityClazz, qp);
@@ -969,6 +940,36 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     public Class<T> getEntityClazz() {
         return entityClazz;
+    }
+
+    public void setEntityClazz(Class<T> entityClazz) {
+        this.entityClazz = entityClazz;
+    }
+
+    /**
+     * Return whether to check that the Hibernate Session is not in read-only
+     * mode in case of write operations (save/update/delete).
+     */
+    public boolean isCheckWriteOperations() {
+        return checkWriteOperations;
+    }
+
+    /**
+     * Set whether to check that the Hibernate Session is not in read-only mode
+     * in case of write operations (save/update/delete).
+     * <p>Default is "true", for fail-fast behavior when attempting write operations
+     * within a read-only transaction. Turn this off to allow save/update/delete
+     * on a Session with flush mode MANUAL.
+     *
+     * @see #checkWriteOperationAllowed
+     * @see org.springframework.transaction.TransactionDefinition#isReadOnly
+     */
+    public void setCheckWriteOperations(boolean checkWriteOperations) {
+        this.checkWriteOperations = checkWriteOperations;
+    }
+
+    public SessionFactory getSessFactory() {
+        return sessFactory;
     }
 
     protected void addProjections(final ProjectionList plist, Class enCls) {
@@ -1017,43 +1018,25 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 查询参数
+     * 获得引用类型的*ToOne的引用字段列表
+     *
+     * @return 字段列表
      */
-    private List<T> findList(CriteriaParam cp) {
-        DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        cp.criterions.forEach(dc::add);
+    private Map<String, Field> getJoinFields(final Class cls) {
+        String clsName = cls.getName();
+        if (!EnvCache.REFER_JOIN_FIELDS.containsKey(clsName))
+            parseForJoinFetch(cls);
+        return EnvCache.REFER_JOIN_FIELDS.get(clsName);
+    }
 
-        Session sess = getSession();
-        Criteria ct = dc.getExecutableCriteria(sess);
-        ct.setCacheable(false);
-
-        // 查询列表数据
-        final Map<String, Set<String>> referFields;
-        referFields = new HashMap<>();
-        final ProjectionList pj = beforeQueryCriteria(cp, ct, referFields);
-
-        ct.setProjection(pj);
-        ct.setResultTransformer(org.hibernate.criterion.CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-
-        cp.orders.forEach(ct::addOrder);
-
-        if (cp.pageRequest != null) {
-            ct.setFirstResult(cp.pageRequest.getOffset());
-            ct.setMaxResults(cp.pageRequest.getPageSize());
-        }
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> list = ct.list();
-
-        ArrayList<T> enList = new ArrayList<>();
-        /* Map查询后，回填对象 */
-        for (Map<String, Object> map : list) {
-            try {
-                enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
-            } catch (Exception e) {
-                logger.error("转换Map到实体异常", e);
-            }
-        }
-        return enList;
+    /**
+     * 动态捕获要增加Fetch=Join的字段 默认ToOne的都Fetch=Join
+     */
+    private void parseForJoinFetch(final Class cls) {
+        EnvCache.REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<>());
+        ReflectionUtils.doWithFields(cls,
+                f -> EnvCache.REFER_JOIN_FIELDS.get(cls.getName()).put(f.getName(), f),
+                f -> f.getAnnotation(ManyToOne.class) != null || f.getAnnotation(OneToOne.class) != null);
     }
 
     private ProjectionList beforeQueryCriteria(CriteriaParam cp, Criteria ct, final Map<String, Set<String>> referFields) {
@@ -1083,7 +1066,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         for (Iterator<String> iterator = referFields.keySet().iterator(); iterator.hasNext(); ) {
             String referField = iterator.next();
             Field mapField = manyToOneFields.get(referField);
-            String pkf = ElUtils.getPKField(mapField.getType()).getName();
+            String pkf = EntityUtils.getPKField(mapField.getType()).getName();
             String fetchF = referField + "." + pkf;
             referFields.get(referField).add(fetchF);
             pj.add(Property.forName(fetchF), fetchF);

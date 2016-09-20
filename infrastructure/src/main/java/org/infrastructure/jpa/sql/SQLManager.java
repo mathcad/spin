@@ -107,7 +107,8 @@ public class SQLManager {
         if (!list.isEmpty()) {
             try {
                 return BeanUtils.wrapperMapToBean(entityClazz, list.get(0));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                logger.error("Entity vrappe error", e);
             }
         }
         return null;
@@ -133,6 +134,8 @@ public class SQLManager {
      */
     public List<Map<String, Object>> listAsMap(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
+        if (logger.isDebugEnabled())
+            logger.debug(sqlId + ":\n" + sqlTxt);
         try {
             return nameJt.queryForList(sqlTxt, paramMap);
         } catch (Exception ex) {
@@ -160,6 +163,8 @@ public class SQLManager {
         }
         sql.setTemplate(sqlTxt);
         SQLSource pageSql = dbType.getPagedSQL(sql, qp.getStart(), qp.getLimit());
+        if (logger.isDebugEnabled())
+            logger.debug(sqlId + ":\n" + pageSql.getTemplate());
         List<Map<String, Object>> list = nameJt.queryForList(pageSql.getTemplate(), qp.getConditions());
         // 增加总数统计 去除排序语句
         String totalSqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
@@ -181,7 +186,8 @@ public class SQLManager {
         for (Map<String, Object> map : maps) {
             try {
                 res.add(BeanUtils.wrapperMapToBean(entityClazz, map));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                logger.error("Entity vrappe error", e);
             }
         }
         return res;
@@ -200,7 +206,8 @@ public class SQLManager {
         for (Map<String, Object> map : maps) {
             try {
                 res.add(BeanUtils.wrapperMapToBean(entityClazz, map));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                logger.error("Entity vrappe error", e);
             }
         }
         return res;
@@ -223,15 +230,16 @@ public class SQLManager {
             sqlTxt += sortInfo;
         }
         sql.setTemplate(sqlTxt);
-
         SQLSource pageSql = dbType.getPagedSQL(sql, qp.getStart(), qp.getLimit());
-
+        if (logger.isDebugEnabled())
+            logger.debug(sqlId + ":\n" + pageSql.getTemplate());
         List<Map<String, Object>> list = nameJt.queryForList(pageSql.getTemplate(), qp.getConditions());
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : list) {
             try {
                 res.add(BeanUtils.wrapperMapToBean(entityClazz, map));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                logger.error("Entity vrappe error", e);
             }
         }
         // 增加总数统计 去除排序语句
@@ -261,6 +269,8 @@ public class SQLManager {
     public Long count(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
         sqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
+        if (logger.isDebugEnabled())
+            logger.debug(sqlId + ":\n" + sqlTxt);
         Long number = nameJt.queryForObject(sqlTxt, paramMap, Long.class);
         return number != null ? number : 0;
     }
@@ -274,6 +284,8 @@ public class SQLManager {
      */
     public int executeCUD(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
+        if (logger.isDebugEnabled())
+            logger.debug(sqlId + ":\n" + sqlTxt);
         return nameJt.update(sqlTxt, paramMap);
     }
 
@@ -283,6 +295,8 @@ public class SQLManager {
     @SuppressWarnings({"unchecked"})
     public void batchExec(String sqlId, List<Map<String, ?>> argsMap) {
         String sqlTxt = loader.getSQL(sqlId, null).getTemplate();
+        if (logger.isDebugEnabled())
+            logger.debug(sqlId + ":\n" + sqlTxt);
         nameJt.batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
     }
 

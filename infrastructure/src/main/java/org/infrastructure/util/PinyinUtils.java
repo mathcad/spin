@@ -9,7 +9,7 @@ import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombi
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class PinyinUtils {
+public abstract class PinyinUtils {
     /**
      * Description : 根据汉字获得此汉字的拼音
      */

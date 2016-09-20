@@ -37,11 +37,8 @@ import java.util.Map;
  * Bean工具类
  * Created by xuweinan on 2016/8/15.
  */
-public final class BeanUtils {
+public abstract class BeanUtils {
     private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
-
-    private BeanUtils() {
-    }
 
     public static PropertyDescriptor[] propertyDescriptors(Class<?> c) throws IntrospectionException {
         BeanInfo beanInfo = Introspector.getBeanInfo(c);
@@ -119,7 +116,7 @@ public final class BeanUtils {
         return bean;
     }
 
-    private static Map<String, PropertyDescriptorWrapper> getBeanPropertyDes(Class<?> type) throws IntrospectionException {
+    public static Map<String, PropertyDescriptorWrapper> getBeanPropertyDes(Class<?> type) throws IntrospectionException {
         Map<String, PropertyDescriptorWrapper> props = EnvCache.CLASS_PROPERTY_CACHE.get(type.getName());
         if (null == props) {
             PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);

@@ -1,7 +1,7 @@
 package org.arvin.test.domain;
 
 
-import org.infrastructure.jpa.core.annotations.UserEnum;
+import org.infrastructure.annotations.UserEnum;
 
 /**
  * 机构团队类型

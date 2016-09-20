@@ -2,127 +2,163 @@ package org.arvin.test.domain;
 
 import org.hibernate.annotations.Type;
 import org.infrastructure.jpa.core.AbstractEntity;
+import org.infrastructure.jpa.core.IEntity;
 
 import javax.persistence.*;
 
 
-/**   
+/**
  * 机构表实体类
+ *
  * @author lijian
+ * @version V1.0
  * @contact 电话: 18055335518, QQ: 2630418388
  * @create 2015-4-21 21:28:24
- * @version V1.0   
  */
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "sys_organ")
-public class Organ extends AbstractEntity implements java.io.Serializable {
+public class Organ implements java.io.Serializable, IEntity<Long> {
 
-	/** 编码 */
-	@Column(length = 10)
-	String code;
+    /**
+     * 主键
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    /**
+     * 编码
+     */
+    @Column(length = 10)
+    String code;
 
-	/** 机构名称 */
-	@Column(length = 50)
-	String name;
-	
-	/** 机构别名（简称） */
-	@Column(length = 50)
-	String alias;
-	
-	/** 上级机构*/
-	@ManyToOne(fetch = FetchType.LAZY)
-	Organ parent;
-	
-	/** 继承的路径编码，id，分割组合 */
-	@Column(length = 200)
-	String idPath;
+    /**
+     * 机构名称
+     */
+    @Column(length = 50)
+    String name;
 
-	/** 地址*/
-	@Column(length = 100)
-	String address;
+    /**
+     * 机构别名（简称）
+     */
+    @Column(length = 50)
+    String alias;
 
-	/** 联系电话*/
-	@Column(length = 20)
-	String phone;
+    /**
+     * 上级机构
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    Organ parent;
 
-	/** 备注*/
-	@Column(length = 100)
-	String remark;
-	
-	/** 团队类型 */
-	@Type(type = "com.gsh56.infrastructure.jpa.core.UserEnumType")
-	OrganTeamTypeE teamType;
+    /**
+     * 继承的路径编码，id，分割组合
+     */
+    @Column(length = 200)
+    String idPath;
 
-	public String getCode() {
-		return code;
-	}
+    /**
+     * 地址
+     */
+    @Column(length = 100)
+    String address;
 
-	public void setCode(String code) {
-		this.code = code;
-	}
-	
-	public String getName() {
-		return name;
-	}
+    /**
+     * 联系电话
+     */
+    @Column(length = 20)
+    String phone;
 
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	public String getAlias() {
-		return alias;
-	}
+    /**
+     * 备注
+     */
+    @Column(length = 100)
+    String remark;
 
-	public void setAlias(String alias) {
-		this.alias = alias;
-	}
+    /**
+     * 团队类型
+     */
+    @Type(type = "org.infrastructure.jpa.core.UserEnumType")
+    OrganTeamTypeE teamType;
 
-	public Organ getParent() {
-		return parent;
-	}
+    public String getCode() {
+        return code;
+    }
 
-	public void setParent(Organ parent) {
-		this.parent = parent;
-	}
+    public void setCode(String code) {
+        this.code = code;
+    }
 
-	public String getAddress() {
-		return address;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setAddress(String address) {
-		this.address = address;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public String getPhone() {
-		return phone;
-	}
+    public String getAlias() {
+        return alias;
+    }
 
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
 
-	public String getRemark() {
-		return remark;
-	}
+    public Organ getParent() {
+        return parent;
+    }
 
-	public void setRemark(String remark) {
-		this.remark = remark;
-	}
+    public void setParent(Organ parent) {
+        this.parent = parent;
+    }
 
-	public String getIdPath() {
-		return idPath;
-	}
+    public String getAddress() {
+        return address;
+    }
 
-	public void setIdPath(String idPath) {
-		this.idPath = idPath;
-	}
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
-	public OrganTeamTypeE getTeamType() {
-		return teamType;
-	}
+    public String getPhone() {
+        return phone;
+    }
 
-	public void setTeamType(OrganTeamTypeE teamType) {
-		this.teamType = teamType;
-	}
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public String getIdPath() {
+        return idPath;
+    }
+
+    public void setIdPath(String idPath) {
+        this.idPath = idPath;
+    }
+
+    public OrganTeamTypeE getTeamType() {
+        return teamType;
+    }
+
+    public void setTeamType(OrganTeamTypeE teamType) {
+        this.teamType = teamType;
+    }
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 }

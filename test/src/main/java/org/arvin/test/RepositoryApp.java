@@ -1,21 +1,22 @@
 package org.arvin.test;
 
 import com.alibaba.druid.pool.DruidDataSource;
-import org.arvin.test.domain.User;
-import org.infrastructure.jpa.core.ARepository;
+import org.hibernate.SessionFactory;
 import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.jpa.sql.ClasspathMdLoader;
 import org.infrastructure.jpa.sql.resolver.FreemarkerResolver;
 import org.infrastructure.jpa.sql.resolver.TemplateResolver;
-import org.infrastructure.shiro.SessionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -23,17 +24,14 @@ import java.util.Properties;
 /**
  * Created by Arvin on 2016/9/14.
  */
-@RestController
-@SpringBootApplication
-@EnableTransactionManagement
+
+@SpringBootApplication(exclude = HibernateJpaAutoConfiguration.class)
+@EnableAspectJAutoProxy(proxyTargetClass = true)
+@EnableTransactionManagement(proxyTargetClass = true)
+@ComponentScan({"org.infrastructure", "org.arvin"})
 public class RepositoryApp {
     public static void main(String[] args) {
         SpringApplication.run(RepositoryApp.class, args);
-    }
-
-    @RequestMapping("/")
-    public String demo() {
-        return new UserDao().get(1L).toString();
     }
 
     @Bean
@@ -45,22 +43,12 @@ public class RepositoryApp {
     }
 
     @Bean
-    public SessionManager sessionManager() {
-        return new SessionManager();
-    }
-
-    @Bean
     public TemplateResolver templateResolver() {
         return new FreemarkerResolver();
     }
 
-//    @Bean
-//    public UserDao userDao() {
-//        return new UserDao();
-//    }
-
     @Bean
-    public DataSource dataSource() {
+    public DataSource getDataSource() {
         DruidDataSource dataSource = new DruidDataSource();
         dataSource.setUrl("jdbc:mysql://192.168.20.235:3306/gsh56tms?useUnicode\\=true&autoReconnect\\=true&failOverReadOnly\\=false");
         dataSource.setUsername("tms");
@@ -79,14 +67,22 @@ public class RepositoryApp {
 
     @Bean
     @Autowired
-    public LocalSessionFactoryBean sessionFactory(DataSource dataSource) {
+    public LocalSessionFactoryBean getSessionFactory(DataSource dataSource) {
         LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
         sessionFactory.setDataSource(dataSource);
         sessionFactory.setPhysicalNamingStrategy(new ImprovedNamingStrategy());
+        sessionFactory.setPackagesToScan("org.arvin.test");
+        Properties proper = new Properties();
+//        proper.setProperty("hibernate.current_session_context_class", "org.springframework.orm.hibernate5.SpringSessionContext");
+        proper.setProperty("hibernate.show_sql", "true");
+        proper.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+        sessionFactory.setHibernateProperties(proper);
         return sessionFactory;
     }
 
-    private class UserDao extends ARepository<User, Long> {
-
+    @Bean
+    @Autowired
+    public PlatformTransactionManager getTransactionManager(SessionFactory sessionFactory) {
+        return new HibernateTransactionManager(sessionFactory);
     }
 }

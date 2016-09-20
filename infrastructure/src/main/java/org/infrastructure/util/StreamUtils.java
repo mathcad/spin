@@ -13,7 +13,7 @@ import java.util.stream.StreamSupport;
  *
  * @author xuweinan
  */
-public class StreamUtils {
+public abstract class StreamUtils {
     public static <T> Stream<T> enumerationAsStream(Enumeration<T> e) {
         return StreamSupport.stream(
                 new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED) {

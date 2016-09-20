@@ -58,7 +58,7 @@ import com.google.gson.reflect.TypeToken;
  * sUserList3 ----> [{"uname":"jack","sex":"Male"},{"uname":"marry","sex":"Female"}]
  * </pre>
  */
-public class JSONUtils {
+public abstract class JSONUtils {
     private static final Log log = LogFactory.getLog(JSONUtils.class);
 
     public static final String EMPTY = "";

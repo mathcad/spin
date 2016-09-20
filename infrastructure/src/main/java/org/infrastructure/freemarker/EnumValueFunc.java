@@ -2,7 +2,7 @@ package org.infrastructure.freemarker;
 
 import freemarker.template.TemplateMethodModelEx;
 import freemarker.template.TemplateModelException;
-import org.infrastructure.jpa.core.annotations.UserEnum;
+import org.infrastructure.annotations.UserEnum;
 import org.infrastructure.throwable.SimplifiedException;
 import org.springframework.util.ReflectionUtils;
 

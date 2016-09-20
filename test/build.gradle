@@ -49,7 +49,9 @@ dependencies {
     compile group: 'org.springframework.boot', name: 'spring-boot', version: '1.4.0.RELEASE'
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.4.0.RELEASE'
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: '1.4.0.RELEASE'
-    compile group: 'com.alibaba', name: 'druid', version: '1.0.25'
+    compile group: 'org.hibernate', name: 'hibernate-core', version: '5.2.2.Final'
+//    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '1.4.0.RELEASE'
+    compile group: 'com.alibaba', name: 'druid', version: '1.0.26'
 
     compile(project(":zibra"))
     compile(project(":infrastructure"))

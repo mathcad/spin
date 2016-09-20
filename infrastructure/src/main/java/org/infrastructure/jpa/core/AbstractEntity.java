@@ -31,17 +31,10 @@ public abstract class AbstractEntity implements IEntity<Long> {
     private Long id;
 
     /**
-     * 冗余字段，记录创建者名称
+     * 记录创建者名称
      */
     @Column(updatable = false)
     private String createUserName;
-
-    /**
-     * 创建用户，禁止更改
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(updatable = false)
-    private GenericUser createUser;
 
     /**
      * 创建时间，禁止更改
@@ -50,16 +43,10 @@ public abstract class AbstractEntity implements IEntity<Long> {
     private Timestamp createTime;
 
     /**
-     * 冗余字段，记录更新者名称
+     * 记录更新者名称
      */
     @Column
     private String lastUpdateUserName;
-
-    /**
-     * 最后更新用户
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    private GenericUser lastUpdateUser;
 
     /**
      * 最后更新时间
@@ -115,14 +102,6 @@ public abstract class AbstractEntity implements IEntity<Long> {
         this.createUserName = createUserName;
     }
 
-    public GenericUser getCreateUser() {
-        return createUser;
-    }
-
-    public void setCreateUser(GenericUser createUser) {
-        this.createUser = createUser;
-    }
-
     public Timestamp getCreateTime() {
         return createTime;
     }
@@ -137,14 +116,6 @@ public abstract class AbstractEntity implements IEntity<Long> {
 
     public void setLastUpdateUserName(String lastUpdateUserName) {
         this.lastUpdateUserName = lastUpdateUserName;
-    }
-
-    public GenericUser getLastUpdateUser() {
-        return lastUpdateUser;
-    }
-
-    public void setLastUpdateUser(GenericUser lastUpdateUser) {
-        this.lastUpdateUser = lastUpdateUser;
     }
 
     public Timestamp getLastUpdateTime() {

@@ -3,9 +3,7 @@ package org.infrastructure.shiro;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
-import org.infrastructure.jpa.core.GenericUser;
 import org.infrastructure.redis.ICached;
-import org.infrastructure.sys.AppConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +14,6 @@ import java.util.Set;
 
 /**
  * redis Session存储
- *
- * @author xuweinan
- * @version V1.0
  */
 public class RedisShiroSessionDao extends AbstractSessionDAO {
     static Logger logger = LoggerFactory.getLogger(RedisShiroSessionDao.class.getName());
@@ -77,7 +72,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
             if (this.sessListener != null) {
                 try {
                     this.sessListener.beforeDeleteSession(session);
-                    GenericUser user = session.getAttribute(AppConstants.USER_SESSION_KEY) == null ? null : (GenericUser) session.getAttribute(AppConstants.USER_SESSION_KEY);
+                    SessionUser user = session.getAttribute(SessionUtils.USER_SESSION_KEY) == null ? null : (SessionUser) session.getAttribute(SessionUtils.USER_SESSION_KEY);
                     if (user != null) {
 
                     }

@@ -18,8 +18,7 @@
 package org.arvin.test.domain;
 
 import org.hibernate.annotations.Type;
-import org.infrastructure.jpa.core.AbstractEntity;
-import org.infrastructure.shiro.SessionUser;
+import org.infrastructure.jpa.core.IEntity;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -31,70 +30,90 @@ import java.util.List;
  * 系统用户信息
  *
  * @author zhou
+ * @version V1.0
  * @contact 电话: 18963752887, QQ: 251915460
  * @create 2015年3月18日 上午10:48:13
- * @version V1.0
  */
 @Entity
 @Table(name = "sys_user")
-public class User extends AbstractEntity implements SessionUser, java.io.Serializable {
+public class User implements java.io.Serializable, IEntity<Long> {
+    /**
+     * 主键
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
-    /** 登录名 */
+    /**
+     * 登录名
+     */
     @Column(length = 50)
     String name;
 
-    /** 真实姓名 */
+    /**
+     * 真实姓名
+     */
     @Column(length = 50)
     String realName;
 
-    /** 加密密码 */
+    /**
+     * 加密密码
+     */
     @Column(length = 250)
     String password;
 
-    /** 手机号码（需验证） */
+    /**
+     * 手机号码（需验证）
+     */
     @Column(length = 20)
     String mobile;
 
-    /** 邮箱（需验证） */
+    /**
+     * 邮箱（需验证）
+     */
     String email;
 
-    /** 邮箱验证 */
+    /**
+     * 邮箱验证
+     */
     boolean emailValid;
 
-    /** 内部用户(0), 货主(1), 司机(2); */
+    /**
+     * 内部用户(0), 货主(1), 司机(2);
+     */
     @Column(length = 2)
-    @Type(type = "com.gsh56.infrastructure.jpa.core.UserEnumType")
+    @Type(type = "org.infrastructure.jpa.core.UserEnumType")
+//    @Type(type = "org.hibernate.type.EnumType")
     UserTypeE type;
 
     /** 人事机构 */
-    @ManyToOne(fetch = FetchType.LAZY)
-    public Organ organ;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    public Organ organ;
 
-    /** 拥有角色 */
-    @JoinTable(name = "sys_user_role", inverseJoinColumns = @JoinColumn(name = "role"), joinColumns = @JoinColumn(name = "user"))
-    @ManyToMany(cascade = CascadeType.REFRESH, targetEntity = Role.class, fetch = FetchType.LAZY)
-    List<Role> roles = new ArrayList<Role>();
 
-    /** 分管机构 */
-    @JoinTable(name = "sys_user_organ", inverseJoinColumns = @JoinColumn(name = "organ"), joinColumns = @JoinColumn(name = "user"))
-    @ManyToMany(cascade = CascadeType.REFRESH, targetEntity = Organ.class, fetch = FetchType.LAZY)
-    List<Organ> organs = new ArrayList<Organ>();
-
-    /** 注册时间 */
+    /**
+     * 注册时间
+     */
     @Temporal(TemporalType.TIMESTAMP)
     Date registerTime;
 
-    /** 最后登录时间 */
+    /**
+     * 最后登录时间
+     */
     @Temporal(TemporalType.TIMESTAMP)
     Date lastLoginTime;
 
     boolean firstLogin = false;
 
-    /**用于单点登录的access_token*/
+    /**
+     * 用于单点登录的access_token
+     */
     @Column(length = 50)
     String accessToken;
 
-    /** 单点登录access_token令牌有效期 */
+    /**
+     * 单点登录access_token令牌有效期
+     */
     @Temporal(TemporalType.TIMESTAMP)
     Date accessTokenExpired;
 
@@ -105,7 +124,7 @@ public class User extends AbstractEntity implements SessionUser, java.io.Seriali
         this.name = name;
         this.password = password;
         this.mobile = mobile;
-        this.type = userType;
+//        this.type = userType;
         this.registerTime = registerTime;
     }
 
@@ -117,7 +136,6 @@ public class User extends AbstractEntity implements SessionUser, java.io.Seriali
      *
      * @see com.gsh56.infrastructure.shiro.AUser#getLoginName()
      */
-    @Override
     public String getLoginName() {
         return this.name;
     }
@@ -127,7 +145,6 @@ public class User extends AbstractEntity implements SessionUser, java.io.Seriali
      *
      * @see com.gsh56.infrastructure.shiro.AUser#setSessionId(java.lang.String)
      */
-    @Override
     public void setSessionId(String sessionId) {
 
     }
@@ -188,29 +205,13 @@ public class User extends AbstractEntity implements SessionUser, java.io.Seriali
         this.type = type;
     }
 
-    public Organ getOrgan() {
-        return organ;
-    }
-
-    public void setOrgan(Organ organ) {
-        this.organ = organ;
-    }
-
-    public List<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(List<Role> roles) {
-        this.roles = roles;
-    }
-
-    public List<Organ> getOrgans() {
-        return organs;
-    }
-
-    public void setOrgans(List<Organ> organs) {
-        this.organs = organs;
-    }
+//    public Organ getOrgan() {
+//        return organ;
+//    }
+//
+//    public void setOrgan(Organ organ) {
+//        this.organ = organ;
+//    }
 
     public Date getRegisterTime() {
         return registerTime;
@@ -252,5 +253,14 @@ public class User extends AbstractEntity implements SessionUser, java.io.Seriali
         this.accessTokenExpired = accessTokenExpired;
     }
 
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 }
 

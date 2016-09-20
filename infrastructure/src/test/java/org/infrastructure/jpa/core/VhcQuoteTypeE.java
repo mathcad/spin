@@ -18,7 +18,7 @@
 package org.infrastructure.jpa.core;
 
 
-import org.infrastructure.jpa.core.annotations.UserEnum;
+import org.infrastructure.annotations.UserEnum;
 
 /**
  * 车辆报价设置

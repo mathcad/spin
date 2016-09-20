@@ -8,7 +8,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.core.IEntity;
-import org.infrastructure.sys.EnumUtils;
+import org.infrastructure.util.EnumUtils;
 import org.infrastructure.sys.FmtUtils;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.StringUtils;
