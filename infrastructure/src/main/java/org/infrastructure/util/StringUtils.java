@@ -80,6 +80,7 @@ public abstract class StringUtils {
      * 该方法接受一个{@code Object}作为参数，与{@code null}和空字符串比较。
      * 如果参数是一个非String的非空对象，则一律返回{@code false}
      * </p>
+     *
      * @param str 待判断对象
      * @return 参数如果为空或null，返回{@code true}，否则返回{@code false}
      */
@@ -98,7 +99,7 @@ public abstract class StringUtils {
      * </pre>
      *
      * @param str 待检查字符串，可以为{@code null}
-     * @return  参数如果为空或null，返回{@code false}，否则返回{@code true}
+     * @return 参数如果为空或null，返回{@code false}，否则返回{@code true}
      */
     public static boolean isNotEmpty(String str) {
         return !StringUtils.isEmpty(str);
@@ -2957,6 +2958,21 @@ public abstract class StringUtils {
         return timeZone;
     }
 
+    /**
+     * 格式化String
+     *
+     * @param tplt   模板字符串参数{0},参数{1}
+     * @param params 格式化参数数值
+     * @return 格式化后的字符串
+     */
+    public static String format(String tplt, Object... params) {
+        String rslt = tplt;
+        for (int i = 0; i < params.length; i++) {
+            String strVal = (params[i] == null ? "" : params[i].toString());
+            rslt = rslt.replace("{" + i + "}", strVal);
+        }
+        return rslt.replaceAll("\\$\\{.+\\}", "");
+    }
 
     //---------------------------------------------------------------------
     // Convenience methods for working with String arrays

@@ -36,7 +36,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "sys_user")
-public class User implements java.io.Serializable, IEntity<Long> {
+public class User implements IEntity<Long> {
     /**
      * 主键
      */

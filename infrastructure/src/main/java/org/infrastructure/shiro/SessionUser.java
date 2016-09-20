@@ -9,7 +9,7 @@ package org.infrastructure.shiro;
 public interface SessionUser {
     Long getId();
 
-    String getLoginName();
+    String getUserName();
 
     String getPassword();
 

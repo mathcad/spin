@@ -1,90 +1,120 @@
 package org.infrastructure.security;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.infrastructure.sys.ErrorAndExceptionCode;
+import org.infrastructure.throwable.SimplifiedException;
+
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.Security;
 
 /**
  * AES工具类
- * <p>需要JCE无限制权限策略文件
+ * <p>使用强度超过{@link KeyLength#WEAK}的密钥需要JCE无限制权限策略文件
  */
 public class AES {
-    public static final String KEY_ALGORITHM = "AES";
-    public static final String CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
-    public static final String BOUNCYCASTLE = "BC";
+    private static final String KEY_ALGORITHM = "AES";
+    private static final String CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
+    private static final String BOUNCYCASTLE = "BC";
 
     /**
-     * 生成密钥
+     * 密钥强度，WEAK为128bit，MEDIAM为192bit，STRONG为256bit
      */
-    public static String initkey() throws NoSuchAlgorithmException {
-        return initkey(128);
+    public enum KeyLength {
+        WEAK(128),
+        MEDIAM(192),
+        STRONG(256);
+        private int _value;
+
+        KeyLength(int value) {
+            this._value = value;
+        }
+
+        public int getValue() {
+            return this._value;
+        }
     }
 
     /**
-     * 生成密钥
+     * 生成密钥，默认使用最低强度
      */
-    public static String initkey(int keySize) throws NoSuchAlgorithmException {
-        KeyGenerator kg = KeyGenerator.getInstance(KEY_ALGORITHM);
-        kg.init(keySize);
-        SecretKey secretKey = kg.generateKey();
-        return Base64.encode(secretKey.getEncoded());
+    public static SecretKey generateKey(String keySeed) {
+        return generateKey(keySeed, KeyLength.WEAK);
     }
 
     /**
-     * 转换密钥
+     * 生成指定强度的密钥
      */
+    public static SecretKey generateKey(String keySeed, KeyLength keySize) {
+        KeyGenerator kg;
+        SecureRandom secureRandom;
+        try {
+            kg = KeyGenerator.getInstance(KEY_ALGORITHM);
+            secureRandom = SecureRandom.getInstance("SHA1PRNG");
+            secureRandom.setSeed(keySeed.getBytes("UTF-8"));
+        } catch (Exception e) {
+            throw new SimplifiedException(ErrorAndExceptionCode.KEY_FAIL, e);
+        }
+        kg.init(keySize.getValue(), secureRandom);
+        return kg.generateKey();
+    }
+
     public static Key toKey(byte[] key) throws Exception {
         return new SecretKeySpec(key, KEY_ALGORITHM);
     }
 
-    public static String encrypt(String data, String key) throws Exception {
-        return encrypt(data, key, null, "UTF-8");
-    }
-
-    public static String encrypt(String data, String key, String padType, String charset) throws Exception {
-        Key k = toKey(Base64.decode(key));
-        Cipher cipher = null;
-        if (BOUNCYCASTLE.equals(padType)) {
-            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-            cipher = Cipher.getInstance(CIPHER_ALGORITHM, BOUNCYCASTLE);
-        } else {
-            cipher = Cipher.getInstance(CIPHER_ALGORITHM);
-        }
-        cipher.init(Cipher.ENCRYPT_MODE, k);
-        return Base64.encode(cipher.doFinal(data.getBytes(charset)));
-    }
-
-    public static String decrypt(String data, String key) throws Exception {
-        return decrypt(data, key, null, "UTF-8");
-    }
-
-    public static String decrypt(String data, String key, String charset) throws Exception {
-        return decrypt(data, key, null, charset);
-    }
-
-    public static String decrypt(String data, String key, String padType, String charset) throws Exception {
-        Key k = toKey(Base64.decode(key));
-        Cipher cipher = null;
-        if (BOUNCYCASTLE.equals(padType)) {
-            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-            cipher = Cipher.getInstance(CIPHER_ALGORITHM, BOUNCYCASTLE);
-        } else {
-            cipher = Cipher.getInstance(CIPHER_ALGORITHM);
-        }
-        cipher.init(Cipher.DECRYPT_MODE, k); // 初始化Cipher对象，设置为解密模式
-        return new String(cipher.doFinal(Base64.decode(data)), charset); // 执行解密操作
-    }
-
-    public static void main(String[] args) {
+    public static String encrypt(SecretKey key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
         try {
-            System.out.println(">>>>>>>>>>>>>encrypt>>>>>" + encrypt("8rmuhetm4we3rrqzse2sepsx38moldrx", "0NlyDhKu1HKCnZw5mSzK0Q=="));
+            return encrypt(key, data.getBytes("UTF-8"), null);
+        } catch (UnsupportedEncodingException e) {
+            throw new SimplifiedException(ErrorAndExceptionCode.ENCRYPT_FAIL, e);
+        }
+    }
+
+    public static String encrypt(SecretKey key, byte[] data, String padType) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher = null;
+        try {
+            if (BOUNCYCASTLE.equals(padType)) {
+                Security.addProvider(new BouncyCastleProvider());
+                cipher = Cipher.getInstance(CIPHER_ALGORITHM, BOUNCYCASTLE);
+            } else
+                cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new SimplifiedException(ErrorAndExceptionCode.ENCRYPT_FAIL, e);
+        }
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return Base64.encode(cipher.doFinal(data));
+    }
+
+    public static String decrypt(SecretKey key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+        return decrypt(key, data, null, "UTF-8");
+    }
+
+
+    public static String decrypt(SecretKey key, String data, String padType, String charset) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher = null;
+        try {
+            if (BOUNCYCASTLE.equals(padType)) {
+                Security.addProvider(new BouncyCastleProvider());
+                cipher = Cipher.getInstance(CIPHER_ALGORITHM, BOUNCYCASTLE);
+            } else
+                cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+        } catch (Exception e) {
+            throw new SimplifiedException(ErrorAndExceptionCode.DEENCRYPT_FAIL, e);
+        }
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        try {
+            return new String(cipher.doFinal(Base64.decode(data)), charset);
+        } catch (UnsupportedEncodingException e) {
+            throw new SimplifiedException(ErrorAndExceptionCode.ENCRYPT_FAIL, e);
         }
     }
 }

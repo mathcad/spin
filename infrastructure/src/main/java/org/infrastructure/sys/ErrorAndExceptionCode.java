@@ -10,7 +10,8 @@ import java.util.Map;
  */
 public enum ErrorAndExceptionCode {
     OTHER(-1),
-    ENCRYPT_FAIL(10),
+    KEY_FAIL(10),
+    ENCRYPT_FAIL(11),
     DEENCRYPT_FAIL(15),
     BEAN_CREATE_FAIL(40),
     BUSS_EXCETION(60),
@@ -19,8 +20,9 @@ public enum ErrorAndExceptionCode {
 
     static {
         valueStringMapper.put(-1, "其他");
-        valueStringMapper.put(10, "加密算法执行错误");
-        valueStringMapper.put(15, "解密算法执行错误");
+        valueStringMapper.put(10, "获取密钥失败");
+        valueStringMapper.put(11, "加密算法执行失败");
+        valueStringMapper.put(15, "解密算法执行失败");
         valueStringMapper.put(40, "创建bean实例错误");
         valueStringMapper.put(60, "业务异常");
         valueStringMapper.put(100, "网络连接异常");

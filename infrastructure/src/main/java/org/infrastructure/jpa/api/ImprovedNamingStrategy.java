@@ -1,14 +1,14 @@
-package org.arvin.test;
-
-/**
- * Created by Arvin on 2016/9/14.
- */
+package org.infrastructure.jpa.api;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.infrastructure.util.StringUtils;
 
+/**
+ * hibernate命名策略
+ * Created by xuweinan on 2016/9/14.
+ */
 public class ImprovedNamingStrategy implements PhysicalNamingStrategy {
 
     @Override

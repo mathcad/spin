@@ -2,6 +2,7 @@ package org.arvin.test;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import org.hibernate.SessionFactory;
+import org.infrastructure.jpa.api.ImprovedNamingStrategy;
 import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.jpa.sql.ClasspathMdLoader;
 import org.infrastructure.jpa.sql.resolver.FreemarkerResolver;

@@ -10,21 +10,13 @@ import java.text.SimpleDateFormat;
  */
 public class FmtUtils {
 
-    /**
-     * 格式化消息
-     *
-     * @param tplt   模板字符串参数{0},参数2{1}
-     * @param params 格式化参数数值
-     * @return 格式化后的消息
-     */
-    public static String format(String tplt, Object... params) {
-        String rslt = tplt;
-        for (int i = 0; i < params.length; i++) {
-            String strVal = (params[i] == null ? "" : params[i].toString());
-            rslt = rslt.replace("{" + i + "}", strVal);
-        }
-        return rslt;
-    }
+    private static final String yearPattern = "\\d{4}";
+    private static final String shortYearPattern = "\\d{2}";
+    private static final String alignMonthPattern = "0[1-9]|1[0-2]";
+    private static final String alignDayPattern = "0[1-9]|[1-2]\\d|3[0-1]";
+    private static final String alignHourPattern = "0[1-9]|1[0-2]";
+    private static final String alignMinutePattern = "[0-5]\\d";
+    private static final String alignSecondPattern = "[0-5]\\d";
 
     public static SimpleDateFormat getDateFmt(int len) {
         SimpleDateFormat dateFmt = null;
