@@ -16,7 +16,7 @@ import java.security.SecureRandom;
 
 /**
  * AES工具类
- * <p>使用强度超过{@link KeyLength#WEAK}的密钥需要JCE无限制权限策略文件</p>
+ * <p>使用强度超过 {@link KeyLength#WEAK} 的密钥需要JCE无限制权限策略文件</p>
  * <p>Created by xuweinan on 2016/8/15.</p>
  *
  * @author xuweinan
@@ -30,8 +30,19 @@ public class AES {
      * 密钥强度，WEAK为128bit，MEDIAM为192bit，STRONG为256bit
      */
     public enum KeyLength {
+        /**
+         * 最低强度(128bit)
+         */
         WEAK(128),
+
+        /**
+         * 中等强度(192bit)
+         */
         MEDIAM(192),
+
+        /**
+         * 最高强度(256bit)
+         */
         STRONG(256);
         private int _value;
 
@@ -72,6 +83,13 @@ public class AES {
         return new SecretKeySpec(key, KEY_ALGORITHM);
     }
 
+    /**
+     * 使用指定的Key生成最低强度的密钥进行加密
+     */
+    public static String encrypt(String key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+        return encrypt(generateKey(key), data);
+    }
+
     public static String encrypt(SecretKey key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
         try {
             return encrypt(key, data.getBytes("UTF-8"));
@@ -89,6 +107,13 @@ public class AES {
         }
         cipher.init(Cipher.ENCRYPT_MODE, key);
         return Base64.encode(cipher.doFinal(data));
+    }
+
+    /**
+     * 使用指定的Key生成最低强度的密钥进行解密
+     */
+    public static String decrypt(String key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+        return decrypt(generateKey(key), data, "UTF-8");
     }
 
     public static String decrypt(SecretKey key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {

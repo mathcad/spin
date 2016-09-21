@@ -32,7 +32,7 @@ import java.security.spec.X509EncodedKeySpec;
  * @author xuweinan
  * @version 1.0
  */
-public abstract class RSA {
+public class RSA {
     private static final int KEY_SIZE = 1024;
     private static final String SIGN_ALGORITHMS = "SHA1WithRSA";
     private static final String RSA_ALGORITHMS = "RSA";

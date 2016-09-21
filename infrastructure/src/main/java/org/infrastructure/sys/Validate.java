@@ -614,7 +614,7 @@ public class Validate {
      * @since 3.0
      */
     public static void validState(final boolean expression) {
-        if (expression == false) {
+        if (!expression) {
             throw new IllegalStateException(DEFAULT_VALID_STATE_EX_MESSAGE);
         }
     }
@@ -635,7 +635,7 @@ public class Validate {
      * @since 3.0
      */
     public static void validState(final boolean expression, final String message, final Object... values) {
-        if (expression == false) {
+        if (!expression) {
             throw new IllegalStateException(String.format(message, values));
         }
     }
@@ -659,7 +659,7 @@ public class Validate {
      */
     public static void matchesPattern(final CharSequence input, final String pattern) {
         // TODO when breaking BC, consider returning input
-        if (Pattern.matches(pattern, input) == false) {
+        if (!Pattern.matches(pattern, input)) {
             throw new IllegalArgumentException(String.format(DEFAULT_MATCHES_PATTERN_EX, input, pattern));
         }
     }
@@ -682,7 +682,7 @@ public class Validate {
      */
     public static void matchesPattern(final CharSequence input, final String pattern, final String message, final Object... values) {
         // TODO when breaking BC, consider returning input
-        if (Pattern.matches(pattern, input) == false) {
+        if (!Pattern.matches(pattern, input)) {
             throw new IllegalArgumentException(String.format(message, values));
         }
     }
@@ -747,7 +747,6 @@ public class Validate {
      * @throws IllegalArgumentException if the value falls outside the boundaries (inclusive)
      * @since 3.3
      */
-    @SuppressWarnings("boxing")
     public static void inclusiveBetween(final long start, final long end, final long value) {
         // TODO when breaking BC, consider returning value
         if (value < start || value > end) {
@@ -772,7 +771,7 @@ public class Validate {
     public static void inclusiveBetween(final long start, final long end, final long value, final String message) {
         // TODO when breaking BC, consider returning value
         if (value < start || value > end) {
-            throw new IllegalArgumentException(String.format(message));
+            throw new IllegalArgumentException(message);
         }
     }
 
@@ -788,7 +787,6 @@ public class Validate {
      * @throws IllegalArgumentException if the value falls outside the boundaries (inclusive)
      * @since 3.3
      */
-    @SuppressWarnings("boxing")
     public static void inclusiveBetween(final double start, final double end, final double value) {
         // TODO when breaking BC, consider returning value
         if (value < start || value > end) {
@@ -813,7 +811,7 @@ public class Validate {
     public static void inclusiveBetween(final double start, final double end, final double value, final String message) {
         // TODO when breaking BC, consider returning value
         if (value < start || value > end) {
-            throw new IllegalArgumentException(String.format(message));
+            throw new IllegalArgumentException(message);
         }
     }
 
@@ -902,7 +900,7 @@ public class Validate {
     public static void exclusiveBetween(final long start, final long end, final long value, final String message) {
         // TODO when breaking BC, consider returning value
         if (value <= start || value >= end) {
-            throw new IllegalArgumentException(String.format(message));
+            throw new IllegalArgumentException(message);
         }
     }
 
@@ -943,7 +941,7 @@ public class Validate {
     public static void exclusiveBetween(final double start, final double end, final double value, final String message) {
         // TODO when breaking BC, consider returning value
         if (value <= start || value >= end) {
-            throw new IllegalArgumentException(String.format(message));
+            throw new IllegalArgumentException(message);
         }
     }
 
@@ -967,7 +965,7 @@ public class Validate {
      */
     public static void isInstanceOf(final Class<?> type, final Object obj) {
         // TODO when breaking BC, consider returning obj
-        if (type.isInstance(obj) == false) {
+        if (!type.isInstance(obj)) {
             throw new IllegalArgumentException(String.format(DEFAULT_IS_INSTANCE_OF_EX_MESSAGE, type.getName(),
                     obj == null ? "null" : obj.getClass().getName()));
         }
@@ -991,7 +989,7 @@ public class Validate {
      */
     public static void isInstanceOf(final Class<?> type, final Object obj, final String message, final Object... values) {
         // TODO when breaking BC, consider returning obj
-        if (type.isInstance(obj) == false) {
+        if (!type.isInstance(obj)) {
             throw new IllegalArgumentException(String.format(message, values));
         }
     }
@@ -1016,8 +1014,8 @@ public class Validate {
      */
     public static void isAssignableFrom(final Class<?> superType, final Class<?> type) {
         // TODO when breaking BC, consider returning type
-        if (superType.isAssignableFrom(type) == false) {
-            throw new IllegalArgumentException(String.format(DEFAULT_IS_ASSIGNABLE_EX_MESSAGE, type == null ? "null" : type.getName(),
+        if (!superType.isAssignableFrom(type)) {
+            throw new IllegalArgumentException(String.format(DEFAULT_IS_ASSIGNABLE_EX_MESSAGE, type.getName(),
                     superType.getName()));
         }
     }
@@ -1041,7 +1039,7 @@ public class Validate {
      */
     public static void isAssignableFrom(final Class<?> superType, final Class<?> type, final String message, final Object... values) {
         // TODO when breaking BC, consider returning type
-        if (superType.isAssignableFrom(type) == false) {
+        if (!superType.isAssignableFrom(type)) {
             throw new IllegalArgumentException(String.format(message, values));
         }
     }
