@@ -3,20 +3,27 @@ package org.infrastructure.jpa.core;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.*;
-import org.hibernate.criterion.*;
+import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.ProjectionList;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.api.QueryParamParser.DetachedCriteriaResult;
 import org.infrastructure.jpa.sql.SQLManager;
-import org.infrastructure.util.SessionUtils;
-import org.infrastructure.sys.SessionUser;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.sys.EnvCache;
+import org.infrastructure.sys.SessionUser;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.BeanUtils;
 import org.infrastructure.util.EntityUtils;
 import org.infrastructure.util.ReflectionUtils;
+import org.infrastructure.util.SessionUtils;
 import org.infrastructure.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -32,7 +39,14 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -404,82 +418,66 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         getSession().delete(hql);
     }
 
-    @SuppressWarnings("unchecked")
-    public Page<Map> findByFields(List<String> fields, DetachedCriteriaResult dr, PageRequest pr, Order... orders) {
-        Set<String> qjoinFields = new HashSet<>();
-        Map<String, Field> enJoinFields = getJoinFields(this.entityClazz);
+    public Page<Map<String, Object>> findByFields(List<String> fields, DetachedCriteriaResult dr, PageRequest pr, Order... orders) {
+        Map<String, Field> entityJoinFields = getJoinFields(this.entityClazz);
         Map<String, Set<String>> referFields = new HashMap<>();
+        Set<String> queryjoinFields = new HashSet<>();
 
         // 使用投影映射字段
-        ProjectionList pj = Projections.projectionList();
+        ProjectionList projectionList = Projections.projectionList();
         for (String pf : fields) {
             // 如果是对象投影，不在查询中体现，后期通过对象Id来初始化
-            if (enJoinFields.containsKey(pf)) {
+            if (entityJoinFields.containsKey(pf)) {
                 referFields.put(pf, new HashSet<>());
                 continue;
             }
-
-            pj.add(Property.forName(pf), pf);
+            projectionList.add(Property.forName(pf), pf);
             int pjFieldPtIdx = pf.indexOf('.');
             if (pjFieldPtIdx > -1) {
-                qjoinFields.add(pf.split("\\.")[0]);
-            }
-        }
-
-        //将投影对象字典收集为对象
-        for (String pf : fields) {
-            int pjFieldPtIdx = pf.indexOf('.');
-            if (pjFieldPtIdx > -1 && pf.lastIndexOf('.') == pjFieldPtIdx) {
                 String objField = pf.split("\\.")[0];
-                if (referFields.containsKey(objField)) {
+                queryjoinFields.add(objField);
+                if (pf.lastIndexOf('.') == pjFieldPtIdx && referFields.containsKey(objField))
                     referFields.get(objField).add(pf);
-                }
             }
         }
 
-        Page<Map> page;
-        List<Map> list;
-        Session sess = getSession();
-        DetachedCriteria dc = dr.dc;
         // 总数查询
-        Criteria ct = dc.getExecutableCriteria(sess);
+        Criteria ct = dr.dc.getExecutableCriteria(getSession());
         ct.setCacheable(false);
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
 
         // 查询结果中需外连接的表
-        qjoinFields.addAll(referFields.keySet());
-        qjoinFields.stream().filter(jf -> !dr.aliasMap.containsKey(jf)).forEach(jf -> ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
+        queryjoinFields.addAll(referFields.keySet());
+        queryjoinFields.stream().filter(jf -> !dr.aliasMap.containsKey(jf)).forEach(jf -> ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
 
         // 关联对象，只抓取Id值
-        for (Iterator<String> iterator = referFields.keySet().iterator(); iterator.hasNext(); ) {
-            String referField = iterator.next();
-            Field mapField = enJoinFields.get(referField);
+        for (String referField : referFields.keySet()) {
+            Field mapField = entityJoinFields.get(referField);
             String pkf = EntityUtils.getPKField(mapField.getType()).getName();
             String fetchF = referField + "." + pkf;
             referFields.get(referField).add(fetchF);
-            pj.add(Property.forName(fetchF), fetchF);
+            projectionList.add(Property.forName(fetchF), fetchF);
         }
-
-        ct.setProjection(pj);
-        ct.setResultTransformer(org.hibernate.criterion.CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-
+        ct.setProjection(projectionList);
+        ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         if (orders != null) {
             for (Order order : orders)
                 ct.addOrder(order);
         }
-
         ct.setFirstResult(pr.getOffset());
         ct.setMaxResults(pr.getPageSize());
-        list = ct.list();
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> list = ct.list();
 
         // 关联对象，填充映射对象
-        for (Map m : list) {
-            for (Iterator<String> iterator = referFields.keySet().iterator(); iterator.hasNext(); ) {
-                String referField = iterator.next();
+        for (Map<String, Object> m : list) {
+            for (String referField : referFields.keySet()) {
                 referFields.get(referField).stream().filter(fetchField -> m.get(fetchField) != null).forEach(fetchField -> {
                     if (!m.containsKey(referField)) {
-                        m.put(referField, new HashMap<String, Object>());
+                        m.put(referField, new HashMap<>());
                     }
+                    @SuppressWarnings("unchecked")
                     HashMap<String, Object> cell = (HashMap<String, Object>) m.get(referField);
                     String[] fetchFields = fetchField.split("\\.");
                     cell.put(fetchFields[1], m.get(fetchField));
@@ -487,8 +485,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             }
         }
 
-        page = new Page<>(list, total);
-        return page;
+        return new Page<>(list, total);
+    }
+
+    public Page<Map<String, Object>> findByFields(List<String> fields, PageRequest pr, Order... orders) {
+        return new Page<>(null, 0L);
     }
 
     /**
@@ -498,10 +499,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param pr 分页请求
      * @return Page列表
      */
-    @SuppressWarnings("unchecked")
     public Page<T> find(DetachedCriteria dc, PageRequest pr, Order... orders) {
-        Page<T> page;
-        List<T> list;
         Session sess = getSession();
 
         // 总数查询
@@ -520,18 +518,15 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
                 ct.setFetchMode(field.getName(), FetchMode.JOIN);
             }
         }
-
         if (orders != null) {
             for (Order order : orders)
                 ct.addOrder(order);
         }
-
         ct.setFirstResult(pr.getOffset());
         ct.setMaxResults(pr.getPageSize());
-        list = ct.list();
-
-        page = new Page<>(list, total);
-        return page;
+        @SuppressWarnings("unchecked")
+        List<T> list = ct.list();
+        return new Page<>(list, total);
     }
 
     /**
@@ -1024,19 +1019,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     private Map<String, Field> getJoinFields(final Class cls) {
         String clsName = cls.getName();
-        if (!EnvCache.REFER_JOIN_FIELDS.containsKey(clsName))
-            parseForJoinFetch(cls);
+        if (!EnvCache.REFER_JOIN_FIELDS.containsKey(clsName)) {
+            EnvCache.REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<>());
+            ReflectionUtils.doWithFields(cls,
+                    f -> EnvCache.REFER_JOIN_FIELDS.get(cls.getName()).put(f.getName(), f),
+                    f -> f.getAnnotation(ManyToOne.class) != null || f.getAnnotation(OneToOne.class) != null);
+        }
         return EnvCache.REFER_JOIN_FIELDS.get(clsName);
-    }
-
-    /**
-     * 动态捕获要增加Fetch=Join的字段 默认ToOne的都Fetch=Join
-     */
-    private void parseForJoinFetch(final Class cls) {
-        EnvCache.REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<>());
-        ReflectionUtils.doWithFields(cls,
-                f -> EnvCache.REFER_JOIN_FIELDS.get(cls.getName()).put(f.getName(), f),
-                f -> f.getAnnotation(ManyToOne.class) != null || f.getAnnotation(OneToOne.class) != null);
     }
 
     private ProjectionList beforeQueryCriteria(CriteriaParam cp, Criteria ct, final Map<String, Set<String>> referFields) {
