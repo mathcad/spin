@@ -1,4 +1,4 @@
-package org.infrastructure.shiro;
+package org.infrastructure.sys;
 
 /**
  * 在线用户的实体接口

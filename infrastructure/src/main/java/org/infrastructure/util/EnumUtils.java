@@ -1,6 +1,7 @@
 package org.infrastructure.util;
 
 import org.infrastructure.annotations.UserEnum;
+import org.infrastructure.sys.Validate;
 import org.infrastructure.throwable.SimplifiedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,18 +9,118 @@ import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 通用的枚举类型转换
+ * 枚举工具类
  *
  * @author xuweinan
  * @version V1.0
  */
 public abstract class EnumUtils {
     private static Logger logger = LoggerFactory.getLogger(EnumUtils.class);
+    private static final String NULL_ELEMENTS_NOT_PERMITTED = "null elements not permitted";
+    private static final String CANNOT_STORE_S_S_VALUES_IN_S_BITS = "Cannot store %s %s values in %s bits";
+    private static final String S_DOES_NOT_SEEM_TO_BE_AN_ENUM_TYPE = "%s does not seem to be an Enum type";
+    private static final String ENUM_CLASS_MUST_BE_DEFINED = "EnumClass must be defined.";
+
+    /**
+     * This constructor is public to permit tools that require a JavaBean
+     * instance to operate.
+     */
+    public EnumUtils() {
+    }
+
+    /**
+     * <p>Gets the {@code Map} of enums by name.</p>
+     * <p>
+     * <p>This method is useful when you need a map of enums by name.</p>
+     *
+     * @param <E>       the type of the enumeration
+     * @param enumClass the class of the enum to query, not null
+     * @return the modifiable map of enum names to enums, never null
+     */
+    public static <E extends Enum<E>> Map<String, E> getEnumMap(final Class<E> enumClass) {
+        final Map<String, E> map = new LinkedHashMap<>();
+        for (final E e : enumClass.getEnumConstants()) {
+            map.put(e.name(), e);
+        }
+        return map;
+    }
+
+    /**
+     * <p>Gets the {@code List} of enums.</p>
+     * <p>
+     * <p>This method is useful when you need a list of enums rather than an array.</p>
+     *
+     * @param <E>       the type of the enumeration
+     * @param enumClass the class of the enum to query, not null
+     * @return the modifiable list of enums, never null
+     */
+    public static <E extends Enum<E>> List<E> getEnumList(final Class<E> enumClass) {
+        return new ArrayList<>(Arrays.asList(enumClass.getEnumConstants()));
+    }
+
+    /**
+     * <p>Checks if the specified name is a valid enum for the class.</p>
+     * <p>
+     * <p>This method differs from {@link Enum#valueOf} in that checks if the name is
+     * a valid enum without needing to catch the exception.</p>
+     *
+     * @param <E>       the type of the enumeration
+     * @param enumClass the class of the enum to query, not null
+     * @param enumName  the enum name, null returns false
+     * @return true if the enum name is valid, otherwise false
+     */
+    public static <E extends Enum<E>> boolean isValidEnum(final Class<E> enumClass, final String enumName) {
+        if (enumName == null) {
+            return false;
+        }
+        try {
+            Enum.valueOf(enumClass, enumName);
+            return true;
+        } catch (final IllegalArgumentException ex) {
+            return false;
+        }
+    }
+
+    /**
+     * Validate that {@code enumClass} is compatible with representation in a {@code long}.
+     *
+     * @param <E>       the type of the enumeration
+     * @param enumClass to check
+     * @return {@code enumClass}
+     * @throws NullPointerException     if {@code enumClass} is {@code null}
+     * @throws IllegalArgumentException if {@code enumClass} is not an enum class or has more than 64 values
+     * @since 3.0.1
+     */
+    private static <E extends Enum<E>> Class<E> checkBitVectorable(final Class<E> enumClass) {
+        final E[] constants = asEnum(enumClass).getEnumConstants();
+        Validate.isTrue(constants.length <= Long.SIZE, CANNOT_STORE_S_S_VALUES_IN_S_BITS,
+                constants.length, enumClass.getSimpleName(), Long.SIZE);
+
+        return enumClass;
+    }
+
+    /**
+     * Validate {@code enumClass}.
+     *
+     * @param <E>       the type of the enumeration
+     * @param enumClass to check
+     * @return {@code enumClass}
+     * @throws NullPointerException     if {@code enumClass} is {@code null}
+     * @throws IllegalArgumentException if {@code enumClass} is not an enum class
+     * @since 3.2
+     */
+    private static <E extends Enum<E>> Class<E> asEnum(final Class<E> enumClass) {
+        Validate.notNull(enumClass, ENUM_CLASS_MUST_BE_DEFINED);
+        Validate.isTrue(enumClass.isEnum(), S_DOES_NOT_SEEM_TO_BE_AN_ENUM_TYPE, enumClass);
+        return enumClass;
+    }
 
     /**
      * 通过枚举文本字段，获得枚举类型的常量

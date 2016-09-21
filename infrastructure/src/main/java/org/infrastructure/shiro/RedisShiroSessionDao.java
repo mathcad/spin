@@ -4,6 +4,8 @@ import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
 import org.infrastructure.redis.ICached;
+import org.infrastructure.sys.SessionUser;
+import org.infrastructure.util.SessionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

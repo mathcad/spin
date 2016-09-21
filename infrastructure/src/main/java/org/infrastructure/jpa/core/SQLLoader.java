@@ -30,7 +30,6 @@ import java.util.Map;
  * @author xuweinan
  * @version 1.0
  */
-
 public interface SQLLoader {
 
     /**

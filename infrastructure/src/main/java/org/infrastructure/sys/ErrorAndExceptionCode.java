@@ -10,6 +10,7 @@ import java.util.Map;
  */
 public enum ErrorAndExceptionCode {
     OTHER(-1),
+    DATEFORMAT_UNSUPPORT(5),
     KEY_FAIL(10),
     ENCRYPT_FAIL(11),
     DEENCRYPT_FAIL(15),
@@ -20,6 +21,7 @@ public enum ErrorAndExceptionCode {
 
     static {
         valueStringMapper.put(-1, "其他");
+        valueStringMapper.put(5, "时间/日期格式不支持");
         valueStringMapper.put(10, "获取密钥失败");
         valueStringMapper.put(11, "加密算法执行失败");
         valueStringMapper.put(15, "解密算法执行失败");

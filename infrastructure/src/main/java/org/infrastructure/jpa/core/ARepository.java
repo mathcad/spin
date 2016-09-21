@@ -9,8 +9,8 @@ import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.api.QueryParamParser.DetachedCriteriaResult;
 import org.infrastructure.jpa.sql.SQLManager;
-import org.infrastructure.shiro.SessionUtils;
-import org.infrastructure.shiro.SessionUser;
+import org.infrastructure.util.SessionUtils;
+import org.infrastructure.sys.SessionUser;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.sys.EnvCache;
 import org.infrastructure.throwable.SimplifiedException;
@@ -154,9 +154,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             SessionUser user = SessionUtils.getCurrentUser();
             Assert.notNull(user, "Can not find Current user");
             aEn.setLastUpdateTime(new Timestamp(System.currentTimeMillis()));
-            aEn.setLastUpdateUserName(user.getLoginName());
+            aEn.setLastUpdateUserName(user.getUserName());
             if (null == aEn.getId()) {
-                aEn.setCreateUserName(user.getLoginName());
+                aEn.setCreateUserName(user.getUserName());
                 aEn.setCreateTime(new Timestamp(System.currentTimeMillis()));
             }
         }
@@ -1063,8 +1063,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN);
 
         // 关联对象，默认值抓取id
-        for (Iterator<String> iterator = referFields.keySet().iterator(); iterator.hasNext(); ) {
-            String referField = iterator.next();
+        for (String referField : referFields.keySet()) {
             Field mapField = manyToOneFields.get(referField);
             String pkf = EntityUtils.getPKField(mapField.getType()).getName();
             String fetchF = referField + "." + pkf;

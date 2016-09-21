@@ -74,6 +74,7 @@ public abstract class BeanUtils {
      * </p>
      * 由于递归实现效率低下，不建议使用
      */
+    @Deprecated
     public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values, String propPrefix) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
         T bean = type.newInstance();
         Map<String, PropertyDescriptorWrapper> props = EnvCache.CLASS_PROPERTY_CACHE.get(type.getName());

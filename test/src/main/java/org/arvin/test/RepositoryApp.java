@@ -11,13 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.orm.hibernate5.support.OpenSessionInViewFilter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.filter.CharacterEncodingFilter;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -26,17 +28,16 @@ import java.util.Properties;
  * Created by Arvin on 2016/9/14.
  */
 
-@SpringBootApplication(exclude = HibernateJpaAutoConfiguration.class)
+@SpringBootApplication(exclude = HibernateJpaAutoConfiguration.class, scanBasePackages = {"org.infrastructure", "org.arvin"})
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableTransactionManagement(proxyTargetClass = true)
-@ComponentScan({"org.infrastructure", "org.arvin"})
 public class RepositoryApp {
     public static void main(String[] args) {
         SpringApplication.run(RepositoryApp.class, args);
     }
 
-    @Bean
     @Autowired
+    @Bean
     public SQLLoader sqlLoader(TemplateResolver resolver) {
         SQLLoader loader = new ClasspathMdLoader();
         loader.setTemplateResolver(resolver);
@@ -66,8 +67,8 @@ public class RepositoryApp {
         return dataSource;
     }
 
-    @Bean
     @Autowired
+    @Bean(name = "sessionFactory")
     public LocalSessionFactoryBean getSessionFactory(DataSource dataSource) {
         LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
         sessionFactory.setDataSource(dataSource);
@@ -81,9 +82,31 @@ public class RepositoryApp {
         return sessionFactory;
     }
 
-    @Bean
     @Autowired
+    @Bean(name = "transactionManager")
     public PlatformTransactionManager getTransactionManager(SessionFactory sessionFactory) {
         return new HibernateTransactionManager(sessionFactory);
+    }
+
+    @Bean
+    public FilterRegistrationBean openSessionInViewFilterRegistration() {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setFilter(new OpenSessionInViewFilter());
+        registration.addUrlPatterns("/*");
+        registration.addInitParameter("sessionFactoryBeanName", "sessionFactory");
+        registration.setName("openSessionInViewFilter");
+        registration.setOrder(1);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean encodingFilterRegistration() {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setFilter(new CharacterEncodingFilter());
+        registration.addUrlPatterns("/*");
+        registration.addInitParameter("encoding", "UTF-8");
+        registration.setName("encodingFilter");
+        registration.setOrder(2);
+        return registration;
     }
 }

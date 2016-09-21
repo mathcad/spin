@@ -1,6 +1,5 @@
 package org.infrastructure.security;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.sys.ErrorAndExceptionCode;
 import org.infrastructure.throwable.SimplifiedException;
@@ -10,7 +9,6 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,7 +26,11 @@ import java.security.spec.X509EncodedKeySpec;
 
 /**
  * RSA 工具类。提供加密，解密，签名，验证，生成密钥对等方法。
- * 需要到http://www.bouncycastle.org下载bcprov-jdk14-123.jar。
+ * <p>
+ * Created by xuweinan on 2016/8/15.
+ *
+ * @author xuweinan
+ * @version 1.0
  */
 public abstract class RSA {
     private static final int KEY_SIZE = 1024;
@@ -38,7 +40,7 @@ public abstract class RSA {
     public static KeyPair generateKeyPair() {
         KeyPairGenerator keyPairGen;
         try {
-            keyPairGen = KeyPairGenerator.getInstance(RSA_ALGORITHMS, new BouncyCastleProvider());
+            keyPairGen = KeyPairGenerator.getInstance(RSA_ALGORITHMS);
         } catch (NoSuchAlgorithmException e) {
             throw new SimplifiedException(ErrorAndExceptionCode.ENCRYPT_FAIL);
         }
@@ -92,30 +94,12 @@ public abstract class RSA {
     public static byte[] encrypt(PublicKey pk, byte[] data) throws NoSuchPaddingException, InvalidKeyException, BadPaddingException, ShortBufferException, IllegalBlockSizeException {
         Cipher cipher;
         try {
-            cipher = Cipher.getInstance(RSA_ALGORITHMS, new BouncyCastleProvider());
+            cipher = Cipher.getInstance(RSA_ALGORITHMS);
         } catch (NoSuchAlgorithmException e) {
             return new byte[0];
         }
         cipher.init(Cipher.ENCRYPT_MODE, pk);
-        int blockSize = 128;// 获得加密块大小，如：加密前数据为128个byte，而key_size=1024
-        // 加密块大小为127byte,加密后为128个byte;因此共有2个加密块，第一个127byte第二个为1个byte
-        int outputSize = cipher.getOutputSize(data.length);// 获得加密块加密后块大小
-        int leavedSize = data.length % blockSize;
-        int blocksSize = leavedSize != 0 ? data.length / blockSize + 1
-                : data.length / blockSize;
-        byte[] raw = new byte[outputSize * blocksSize];
-        int i = 0;
-        while (data.length - i * blockSize > 0) {
-            if (data.length - i * blockSize > blockSize)
-                cipher.doFinal(data, i * blockSize, blockSize, raw, i * outputSize);
-            else
-                cipher.doFinal(data, i * blockSize, data.length - i * blockSize, raw, i * outputSize);
-            // 这里面doUpdate方法不可用，查看源代码后发现每次doUpdate后并没有什么实际动作除了把byte[]放到
-            // ByteArrayOutputStream中，而最后doFinal的时候才将所有的byte[]进行加密，可是到了此时加密块大小很可能已经超出了
-            // OutputSize所以只好用dofinal方法。
-            ++i;
-        }
-        return raw;
+        return cipher.doFinal(data);
     }
 
     public static String encrypt(String publicKey, String content) throws InvalidKeySpecException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, ShortBufferException, NoSuchPaddingException {
@@ -123,27 +107,24 @@ public abstract class RSA {
         return Base64.encode(encrypt(key, getBytes(content)));
     }
 
-    public static byte[] decrypt(PrivateKey pk, byte[] raw) throws NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, IOException {
+    public static byte[] decrypt(PrivateKey pk, byte[] raw) throws NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher;
         try {
-            cipher = Cipher.getInstance(RSA_ALGORITHMS, new BouncyCastleProvider());
+            cipher = Cipher.getInstance(RSA_ALGORITHMS);
         } catch (NoSuchAlgorithmException e) {
             return new byte[0];
         }
         cipher.init(Cipher.DECRYPT_MODE, pk);
-        int blockSize = cipher.getBlockSize();
-        ByteArrayOutputStream bout = new ByteArrayOutputStream(64);
-        int j = 0;
-        while (raw.length - j * blockSize > 0) {
-            bout.write(cipher.doFinal(raw, j * blockSize, blockSize));
-            ++j;
-        }
-        return bout.toByteArray();
+        return cipher.doFinal(raw);
     }
 
-    public static String decrypt(String privateKey, String content) throws InvalidKeySpecException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchPaddingException, IOException {
+    public static String decrypt(String privateKey, String content) throws InvalidKeySpecException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchPaddingException {
         PrivateKey key = getRSAPrivateKey(privateKey);
-        return new String(decrypt(key, Base64.decode(content)), "UTF-8");
+        try {
+            return new String(decrypt(key, Base64.decode(content)), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new SimplifiedException(ErrorAndExceptionCode.DEENCRYPT_FAIL, e);
+        }
     }
 
     /**
@@ -199,7 +180,7 @@ public abstract class RSA {
     private static KeyFactory getRSAKeyFactory() {
         KeyFactory keyFactory;
         try {
-            keyFactory = KeyFactory.getInstance(RSA_ALGORITHMS, new BouncyCastleProvider());
+            keyFactory = KeyFactory.getInstance(RSA_ALGORITHMS);
         } catch (NoSuchAlgorithmException e) {
             return null;
         }

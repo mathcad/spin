@@ -8,6 +8,14 @@ import javax.crypto.KeyGenerator;
 import java.security.Key;
 import java.security.SecureRandom;
 
+/**
+ * DES工具类
+ * <p>
+ * Created by xuweinan on 2016/8/15.
+ *
+ * @author xuweinan
+ * @version 1.0
+ */
 public class DES {
     public static Key generateKey(String keySeed) {
         KeyGenerator keyGenerator;

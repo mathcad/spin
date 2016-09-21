@@ -1,6 +1,5 @@
 package org.infrastructure.security;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.infrastructure.sys.ErrorAndExceptionCode;
 import org.infrastructure.throwable.SimplifiedException;
 
@@ -14,16 +13,18 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.SecureRandom;
-import java.security.Security;
 
 /**
  * AES工具类
- * <p>使用强度超过{@link KeyLength#WEAK}的密钥需要JCE无限制权限策略文件
+ * <p>使用强度超过{@link KeyLength#WEAK}的密钥需要JCE无限制权限策略文件</p>
+ * <p>Created by xuweinan on 2016/8/15.</p>
+ *
+ * @author xuweinan
+ * @version 1.0
  */
 public class AES {
     private static final String KEY_ALGORITHM = "AES";
     private static final String CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
-    private static final String BOUNCYCASTLE = "BC";
 
     /**
      * 密钥强度，WEAK为128bit，MEDIAM为192bit，STRONG为256bit
@@ -73,20 +74,16 @@ public class AES {
 
     public static String encrypt(SecretKey key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
         try {
-            return encrypt(key, data.getBytes("UTF-8"), null);
+            return encrypt(key, data.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
             throw new SimplifiedException(ErrorAndExceptionCode.ENCRYPT_FAIL, e);
         }
     }
 
-    public static String encrypt(SecretKey key, byte[] data, String padType) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        Cipher cipher = null;
+    public static String encrypt(SecretKey key, byte[] data) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher;
         try {
-            if (BOUNCYCASTLE.equals(padType)) {
-                Security.addProvider(new BouncyCastleProvider());
-                cipher = Cipher.getInstance(CIPHER_ALGORITHM, BOUNCYCASTLE);
-            } else
-                cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+            cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         } catch (Exception e) {
             throw new SimplifiedException(ErrorAndExceptionCode.ENCRYPT_FAIL, e);
         }
@@ -95,18 +92,13 @@ public class AES {
     }
 
     public static String decrypt(SecretKey key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
-        return decrypt(key, data, null, "UTF-8");
+        return decrypt(key, data, "UTF-8");
     }
 
-
-    public static String decrypt(SecretKey key, String data, String padType, String charset) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        Cipher cipher = null;
+    public static String decrypt(SecretKey key, String data, String charset) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher;
         try {
-            if (BOUNCYCASTLE.equals(padType)) {
-                Security.addProvider(new BouncyCastleProvider());
-                cipher = Cipher.getInstance(CIPHER_ALGORITHM, BOUNCYCASTLE);
-            } else
-                cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+            cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         } catch (Exception e) {
             throw new SimplifiedException(ErrorAndExceptionCode.DEENCRYPT_FAIL, e);
         }
@@ -118,4 +110,3 @@ public class AES {
         }
     }
 }
-

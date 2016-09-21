@@ -1,6 +1,7 @@
 package org.infrastructure.util;
 
-import java.lang.annotation.Annotation;
+import org.infrastructure.throwable.NullArgumentException;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,8 +9,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.infrastructure.throwable.NullArgumentException;
 
 /**
  * <p>

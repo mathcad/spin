@@ -229,24 +229,23 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public String objectToSQLString(Object value) {
         return enumValueMapper.objectToSQLString((Enum) value);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+    @Deprecated
     public String toXMLString(Object value) {
         return enumValueMapper.toXMLString((Enum) value);
     }
 
     @Override
+    @Deprecated
     public Object fromXMLString(String xmlValue) {
         return enumValueMapper.fromXMLString(xmlValue);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public String toLoggableString(Object value, SessionFactoryImplementor factory) {
         if (enumValueMapper != null) {
@@ -359,7 +358,6 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
             return Types.INTEGER;
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public Enum getValue(ResultSet rs, String[] names) throws SQLException {
             final int value = rs.getInt(names[0]);
@@ -384,7 +382,6 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
             return ClassUtils.getFieldValue(value, "value").get("value").toString();
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public Enum fromXMLString(String xml) {
             return EnumUtils.getEnum(enumClass, Integer.parseInt(xml));

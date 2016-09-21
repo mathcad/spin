@@ -9,7 +9,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.util.EnumUtils;
-import org.infrastructure.sys.FmtUtils;
+import org.infrastructure.util.DateUtils;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
@@ -20,7 +20,6 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -155,7 +154,7 @@ public class QueryParamParser {
         Field field;
         field = ReflectionUtils.findField(cls, qPath.get(0));
         if (field == null)
-            throw new SimplifiedException(FmtUtils.format("未找到{0}字段{1}", cls.getName(), qPath.get(0)));
+            throw new SimplifiedException(StringUtils.format("未找到{0}字段{1}", cls.getName(), qPath.get(0)));
         Object v;
         Class fieldType = field.getType();
         try {
@@ -178,25 +177,16 @@ public class QueryParamParser {
             } else if (fieldType.equals(Character.class) || fieldType.equals(char.class)) {
                 v = val.charAt(0);
             } else if (fieldType.equals(java.sql.Date.class) || fieldType.equals(Date.class)) {
-                SimpleDateFormat sdf = FmtUtils.getDateFmt(val.length());
-                if (sdf != null)
-                    v = sdf.parse(val);
-                else
-                    throw new SimplifiedException("不支持的日期类型值：" + val);
+                v = DateUtils.parseDate(val);
             } else if (fieldType.equals(Timestamp.class)) {
-                SimpleDateFormat sdf = FmtUtils.getDateFmt(val.length());
-                if (sdf != null)
-                    v = new Timestamp(sdf.parse(val).getTime());
-                else
-                    throw new SimplifiedException("不支持的日期类型值：" + val);
+                v = new Timestamp(DateUtils.parseDate(val).getTime());
             } else if (fieldType.isEnum()) {
-                Integer dv = Integer.valueOf(val);
-                v = EnumUtils.getEnum(fieldType, dv);
+                v = EnumUtils.getEnum(fieldType, Integer.valueOf(val));
             } else {
                 v = this.gson.fromJson(val, fieldType);
             }
         } catch (Exception e) {
-            throw new SimplifiedException(FmtUtils.format("不支持的类型\"{0}\", 值{1}", fieldType.getName(), val));
+            throw new SimplifiedException(StringUtils.format("不支持的类型\"{0}\", 值{1}", fieldType.getName(), val));
         }
         return v;
     }
@@ -270,7 +260,7 @@ public class QueryParamParser {
                     ct = Restrictions.isNull(propName);
                 break;
             default:
-                throw new SimplifiedException(FmtUtils.format("不支持的查询条件[{0}.{1}={2}]", propName, op, value));
+                throw new SimplifiedException(StringUtils.format("不支持的查询条件[{0}.{1}={2}]", propName, op, value));
         }
         return ct;
     }
