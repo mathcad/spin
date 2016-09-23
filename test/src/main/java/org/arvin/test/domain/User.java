@@ -48,35 +48,46 @@ public class User implements IEntity<Long> {
      * 登录名
      */
     @Column(length = 50)
-    String name;
+    private String name;
 
     /**
      * 真实姓名
      */
     @Column(length = 50)
-    String realName;
+    private String realName;
 
     /**
      * 加密密码
      */
     @Column(length = 250)
-    String password;
+    private String password;
 
     /**
      * 手机号码（需验证）
      */
     @Column(length = 20)
-    String mobile;
+    private String mobile;
+
+
+    /** 人事机构 */
+    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "organ")
+    private Organ organ;
+
+    /** 拥有角色 */
+    @JoinTable(name = "sys_user_role", inverseJoinColumns = @JoinColumn(name = "role"), joinColumns = @JoinColumn(name = "user"))
+    @ManyToMany(cascade = CascadeType.REFRESH, targetEntity = Role.class, fetch = FetchType.LAZY)
+    List<Role> roles = new ArrayList<>();
 
     /**
      * 邮箱（需验证）
      */
-    String email;
+    private String email;
 
     /**
      * 邮箱验证
      */
-    boolean emailValid;
+    private boolean emailValid;
 
     /**
      * 内部用户(0), 货主(1), 司机(2);
@@ -84,7 +95,7 @@ public class User implements IEntity<Long> {
     @Column(length = 2)
     @Type(type = "org.infrastructure.jpa.core.UserEnumType")
 //    @Type(type = "org.hibernate.type.EnumType")
-    UserTypeE type;
+    private UserTypeE type;
 
     /** 人事机构 */
 //    @ManyToOne(fetch = FetchType.LAZY)
@@ -95,27 +106,27 @@ public class User implements IEntity<Long> {
      * 注册时间
      */
     @Temporal(TemporalType.TIMESTAMP)
-    Date registerTime;
+    private Date registerTime;
 
     /**
      * 最后登录时间
      */
     @Temporal(TemporalType.TIMESTAMP)
-    Date lastLoginTime;
+    private Date lastLoginTime;
 
-    boolean firstLogin = false;
+    private boolean firstLogin = false;
 
     /**
      * 用于单点登录的access_token
      */
     @Column(length = 50)
-    String accessToken;
+    private String accessToken;
 
     /**
      * 单点登录access_token令牌有效期
      */
     @Temporal(TemporalType.TIMESTAMP)
-    Date accessTokenExpired;
+    private Date accessTokenExpired;
 
     public User() {
     }
@@ -251,6 +262,22 @@ public class User implements IEntity<Long> {
 
     public void setAccessTokenExpired(Date accessTokenExpired) {
         this.accessTokenExpired = accessTokenExpired;
+    }
+
+    public Organ getOrgan() {
+        return organ;
+    }
+
+    public void setOrgan(Organ organ) {
+        this.organ = organ;
+    }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
     }
 
     @Override

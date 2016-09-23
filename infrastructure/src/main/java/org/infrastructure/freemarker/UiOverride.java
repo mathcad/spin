@@ -1,4 +1,4 @@
-package org.infrastructure.freemarker; 
+package org.infrastructure.freemarker;
 
 import java.io.IOException;
 import java.util.Map;
@@ -14,24 +14,22 @@ import freemarker.template.TemplateModel;
  * 用法：
  * <@uiOverride name="body">
  * 参数：name 区域的名称
- * @author zx
  *
+ * @author zx
  */
-public class UiOverride implements TemplateDirectiveModel{
-	
-	public final static String DIRECTIVE_NAME = "ui_override";
-	
-	public void execute(Environment env,
-            @SuppressWarnings("rawtypes") Map params, TemplateModel[] loopVars,
-            TemplateDirectiveBody body) throws TemplateException, IOException {
-		String name = DirectiveUtils.getRequiredParam(params, "name");
-		String overrideVariableName = DirectiveUtils.getOverrideVariableName(name);
-		
-		TemplateDirectiveBodyOverrideWraper current = new TemplateDirectiveBodyOverrideWraper(body,env);
-		
-		if(body != null) {
-			env.setVariable(overrideVariableName, current);
-		}
-	}
-		
+public class UiOverride implements TemplateDirectiveModel {
+
+    public final static String DIRECTIVE_NAME = "ui_override";
+
+    public void execute(Environment env, Map params, TemplateModel[] loopVars, TemplateDirectiveBody body) throws TemplateException, IOException {
+        String name = DirectiveUtils.getRequiredParam(params, "name");
+        String overrideVariableName = DirectiveUtils.getOverrideVariableName(name);
+
+        TemplateDirectiveBodyOverrideWraper current = new TemplateDirectiveBodyOverrideWraper(body, env);
+
+        if (body != null) {
+            env.setVariable(overrideVariableName, current);
+        }
+    }
+
 }

@@ -4,7 +4,8 @@ import org.infrastructure.jpa.sql.SQLSource;
 
 /**
  * 描述不同数据库之间的差异，如分页等
- * Created by xuweinan on 2016/8/22.
+ * <p>Created by xuweinan on 2016/8/22.
+ *
  * @author xuweinan
  */
 public interface DatabaseType {

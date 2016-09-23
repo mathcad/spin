@@ -51,9 +51,9 @@ public class RepositoryContext implements ApplicationContextAware {
     /**
      * 获取指定实体的持久化对象
      */
-    public <T extends IEntity<Long>> ARepository<T, Long> getRepo(String cls) throws BeansException, ClassNotFoundException {
+    public ARepository<IEntity<Long>, Long> getRepo(String cls) throws BeansException, ClassNotFoundException {
         @SuppressWarnings("unchecked")
-        Class<T> enCls = (Class<T>) Class.forName(cls);
+        Class<IEntity<Long>> enCls = (Class<IEntity<Long>>) Class.forName(cls);
         return this.getRepo(enCls);
     }
 

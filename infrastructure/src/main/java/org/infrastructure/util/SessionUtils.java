@@ -55,7 +55,7 @@ public abstract class SessionUtils {
                 return null;
             return session.getAttribute(USER_SESSION_KEY) == null ? null : (SessionUser) session.getAttribute(USER_SESSION_KEY);
         } catch (Throwable t) {
-            logger.info("sessionMgr 未获得 currentUser");
+            logger.info("当前会话未获得登录用户");
             return null;
         }
     }
@@ -119,10 +119,11 @@ public abstract class SessionUtils {
     /**
      * 更新session中的 user
      *
-     * @param accInfo 账户
+     * @param sessionUser 账户
      */
-    public static void setCurrentUser(SessionUser accInfo) {
+    public static void setCurrentUser(SessionUser sessionUser) {
         Session sess = getSession(true);
-        sess.setAttribute(USER_SESSION_KEY, accInfo);
+        sessionUser.setSessionId(sess.getId().toString());
+        sess.setAttribute(USER_SESSION_KEY, sessionUser);
     }
 }

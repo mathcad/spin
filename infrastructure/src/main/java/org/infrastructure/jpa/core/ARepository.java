@@ -19,20 +19,22 @@ import org.infrastructure.jpa.sql.SQLManager;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.sys.EnvCache;
 import org.infrastructure.sys.SessionUser;
+import org.infrastructure.throwable.SQLException;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.BeanUtils;
 import org.infrastructure.util.EntityUtils;
 import org.infrastructure.util.ReflectionUtils;
 import org.infrastructure.util.SessionUtils;
-import org.infrastructure.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import java.io.Serializable;
@@ -179,7 +181,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
                 getSession().save(entity);
             else
                 getSession().update(entity);
-        } catch (org.springframework.orm.hibernate4.HibernateOptimisticLockingFailureException | org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException ope) {
+        } catch (HibernateOptimisticLockingFailureException ope) {
             throw new SimplifiedException("The entity is expired", ope);
         }
         return get(entity.getId());
@@ -394,7 +396,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 批量删除实体(物理删除，不可恢复)
+     * 批量删除实体
      * <p>如果条件为空，删除所有</p>
      */
     public void delete(Criterion... cs) {
@@ -407,7 +409,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 批量删除实体(物理删除，不可恢复)
+     * 批量删除实体
      * <p>如果条件为空，删除所有</p>
      */
     public void delete(String conditions) {
@@ -485,32 +487,30 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             }
         }
 
-        return new Page<>(list, total);
+        return new Page<>(list, total, pr.getPageSize());
     }
 
-    public Page<Map<String, Object>> findByFields(List<String> fields, PageRequest pr, Order... orders) {
-        return new Page<>(null, 0L);
+    public Page<Map<String, Object>> findByFields(QueryParam qp) {
+        // TODO: 2016/9/22 基于hql的投影查询
+        return new Page<>(null, 0L, 0);
     }
 
     /**
-     * 分页查询，有性能问题
+     * 分页条件查询，有性能问题
      *
      * @param dc 离线条件
      * @param pr 分页请求
      * @return Page列表
      */
-    public Page<T> find(DetachedCriteria dc, PageRequest pr, Order... orders) {
+    public Page<T> find(DetachedCriteria dc, PageRequest pr) {
         Session sess = getSession();
-
-        // 总数查询
         Criteria ct = dc.getExecutableCriteria(sess);
         ct.setCacheable(true);
         ct.setCacheMode(CacheMode.NORMAL);
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
 
-        // 分页查询
         ct.setProjection(null);
-        ct.setResultTransformer(org.hibernate.criterion.CriteriaSpecification.ROOT_ENTITY);
+        ct.setResultTransformer(CriteriaSpecification.ROOT_ENTITY);
 
         // 自动追加join策略
         if (EnvCache.REFER_JOIN_FIELDS.containsKey(this.entityClazz.getName())) {
@@ -518,19 +518,15 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
                 ct.setFetchMode(field.getName(), FetchMode.JOIN);
             }
         }
-        if (orders != null) {
-            for (Order order : orders)
-                ct.addOrder(order);
-        }
         ct.setFirstResult(pr.getOffset());
         ct.setMaxResults(pr.getPageSize());
         @SuppressWarnings("unchecked")
         List<T> list = ct.list();
-        return new Page<>(list, total);
+        return new Page<>(list, total, pr.getPageSize());
     }
 
     /**
-     * 无分页的列表查询，最多1000条记录 （会产生性能问题）
+     * 条件查询
      *
      * @param dc 离线条件
      * @return 结果数据
@@ -538,52 +534,32 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public List<T> find(DetachedCriteria dc) {
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
-        ct.setFirstResult(0);
-        ct.setMaxResults(10000);
         ct.setCacheMode(CacheMode.NORMAL);
         //noinspection unchecked
         return ct.list();
     }
 
     /**
-     * 通过条件查询
+     * 条件查询
      */
     public List<T> find(Criterion... cs) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
         for (Criterion c : cs)
             dc.add(c);
-
-        return this.find(dc);
+        return find(dc);
     }
 
     /**
-     * 通过条件查询，并排序
-     *
-     * @param cs     条件组合
-     * @param orders 排序
+     * 通过条件查询
      */
-    public List<T> find(Criterion[] cs, Order... orders) {
+    public List<T> find(CriteriaParam cp) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        for (Criterion c : cs)
-            dc.add(c);
-        for (Order order : orders)
-            dc.addOrder(order);
-        return this.find(dc);
-    }
-
-    /**
-     * 分页的全记录查询，最多10000条记录
-     *
-     * @return 结果数据
-     */
-    public List<T> findAll() {
-        Session sess = getSession();
-        Criteria ct = DetachedCriteria.forClass(this.entityClazz).getExecutableCriteria(sess);
-        ct.setFirstResult(0);
-        ct.setMaxResults(10000);
-        ct.setCacheMode(CacheMode.NORMAL);
-        //noinspection unchecked
-        return ct.list();
+        cp.criterions.forEach(dc::add);
+        cp.orders.forEach(dc::addOrder);
+        if (cp.pageRequest != null)
+            return find(dc, cp.pageRequest).getData();
+        else
+            return find(dc);
     }
 
     /**
@@ -601,38 +577,38 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
+     * 全记录查询
+     *
+     * @return 结果数据
+     */
+    public List<T> findAll() {
+        Session sess = getSession();
+        Criteria ct = DetachedCriteria.forClass(this.entityClazz).getExecutableCriteria(sess);
+        ct.setCacheMode(CacheMode.NORMAL);
+        //noinspection unchecked
+        return ct.list();
+    }
+
+    /**
      * 通过唯一属性查询
      */
     public T findOne(CriteriaParam cp) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
         cp.criterions.forEach(dc::add);
-
-        // 追加排序
         cp.orders.forEach(dc::addOrder);
-
-        String pkf = EntityUtils.getPKField(this.entityClazz).getName();
-
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
-
-        final Map<String, Set<String>> referFields = new HashMap<>();
-        beforeQueryCriteria(cp, ct, referFields);
-
-        ct.setCacheable(false);
-        ct.setProjection(getPropertyProjection(pkf));
-        ct.setResultTransformer(org.hibernate.criterion.CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         ct.setFirstResult(0);
         ct.setMaxResults(1);
-
         @SuppressWarnings("unchecked")
-        List<Map> list = ct.list();
-        @SuppressWarnings("unchecked")
-        PK pk = list.size() == 1 ? (PK) list.get(0).get(pkf) : null;
-        return pk == null ? null : this.get(pk);
+        List<T> list = ct.list();
+        if (list.size() < 1)
+            throw new SQLException(SQLException.RESULT_NOT_FOUND);
+        return list.get(0);
     }
 
     /**
-     * 通过唯一属性查询
+     * 通过属性查询
      *
      * @param cts 条件数组
      */
@@ -643,9 +619,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 通过唯一属性查询
+     * 通过属性查询
+     * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      *
-     * @param prop  唯一属性名称
+     * @param prop  属性名称
      * @param value 值
      */
     public T findOne(String prop, Object value) {
@@ -666,11 +643,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
         @SuppressWarnings("unchecked")
         List<T> list = ct.list();
-        T t = null;
-        if (list.size() == 1) {
-            t = list.get(0);
-            sess.buildLockRequest(LockOptions.UPGRADE).lock(t);
-        }
+        T t;
+        if (list.size() < 1)
+            throw new SQLException(SQLException.RESULT_NOT_FOUND);
+        t = list.get(0);
+        sess.buildLockRequest(LockOptions.UPGRADE).lock(t);
         return t;
     }
 
@@ -683,48 +660,49 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 判断是否有存在已有实体 默认多个字段条件为，or匹配
+     * 判断是否有存在已有实体 默认多个字段条件为，条件并列and
+     * <p>
+     * * @param params 查询参数
      *
-     * @param props  属性数组
-     * @param values 对应的只数据组
-     * @param notId  忽略匹配的Id
      * @return 是/否
      */
-    public boolean exist(String[] props, Object[] values, PK notId) {
-        return exist(props, values, notId, false);
+    public boolean exist(Map<String, Object> params) {
+        return exist(params, null, false);
+    }
+
+    /**
+     * 判断是否有存在已有实体 默认多个字段条件为，条件并列and
+     * <p>
+     * * @param params 查询参数
+     *
+     * @param notId 忽略匹配的Id
+     * @return 是/否
+     */
+    public boolean exist(Map<String, Object> params, PK notId) {
+        return exist(params, notId, true);
     }
 
     /**
      * 判断是否有存在已有实体
      *
-     * @param props  属性数组
-     * @param values 对应的只数据组
+     * @param params 查询参数
      * @param notId  忽略匹配的Id
      * @param isAnd  使用and / or 连接条件
      * @return 是/否
      */
-    public boolean exist(String[] props, Object[] values, PK notId, boolean isAnd) {
+    public boolean exist(Map<String, Object> params, PK notId, boolean isAnd) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-
-        List<Criterion> criteriaList = new ArrayList<>();
-        for (int i = 0; i < props.length; i++) {
-            if (values[i] != null && StringUtils.isNotEmpty(values[i].toString())) {
-                criteriaList.add(Restrictions.eq(props[i], values[i]));
-            }
-        }
-
+        List<Criterion> criteriaList = params.entrySet().stream().filter(e -> e.getValue() != null)
+                .map(entry -> Restrictions.eq(entry.getKey(), entry.getValue())).collect(Collectors.toList());
         if (criteriaList.isEmpty()) {
             return false;
         }
-
         if (isAnd)
             dc.add(Restrictions.and(criteriaList.toArray(new Criterion[]{})));
         else
             dc.add(Restrictions.or(criteriaList.toArray(new Criterion[]{})));
-
         if (notId != null)
             dc.add(Restrictions.ne("id", notId));
-
         Session sess = getSession();
         // 总数查询
         Criteria ct = dc.getExecutableCriteria(sess);
@@ -736,24 +714,18 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 是否存在实体
      */
     public boolean exist(CriteriaParam p, PK notId) {
-        if (notId != null) {
+        if (notId != null)
             p.addCriterion(Restrictions.not(Restrictions.eq("id", notId)));
-        }
         Long c = this.count(p);
         return c > 0;
     }
 
-    /**
-     * 统计数量
-     */
     public Long count(CriteriaParam cp) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
         cp.criterions.forEach(dc::add);
-
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
         ct.setCacheable(false);
-        // 总数查询
         return (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
     }
 
@@ -762,40 +734,24 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 查询实体，返回dto的列表 （已避免性能问题）
+     * 查询实体，返回dto的列表
      */
     public Page<T> page(CriteriaParam cp) {
-
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
         cp.criterions.forEach(dc::add);
-
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
         ct.setCacheable(false);
-
-        // 查询列表数据
-        final Map<String, Set<String>> referFields = new HashMap<>();
-
-        final ProjectionList pj = beforeQueryCriteria(cp, ct, referFields);
-
-        // 总数查询
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
-
-        // 申明查询字段
-        ct.setProjection(pj);
-        ct.setResultTransformer(org.hibernate.criterion.CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-
-        // 追加排序
+        processProjectionQueryCriteria(cp, ct);
+        ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         cp.orders.forEach(ct::addOrder);
-
         if (cp.pageRequest != null) {
             ct.setFirstResult(cp.pageRequest.getOffset());
             ct.setMaxResults(cp.pageRequest.getPageSize());
         }
-
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
-
         ArrayList<T> enList = new ArrayList<>();
         for (Map<String, Object> map : list) {
             try {
@@ -804,27 +760,16 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
                 logger.error("转换Map到实体异常", e);
             }
         }
-
-        Page<T> page = new Page<>();
-        page.data = enList;
-        page.total = total;
-        return page;
+        return new Page<>(enList, total, cp.pageRequest.getPageSize());
     }
 
     /**
      * 根据条件查询列表
      */
-    public List<T> findByArgs(Map<String, Object> map) {
+    public List<T> list(Map<String, Object> map) {
         CriteriaParam cp = new CriteriaParam();
         cp.criterions.addAll(map.keySet().stream().map(key -> Restrictions.eq(key, map.get(key))).collect(Collectors.toList()));
         return list(cp);
-    }
-
-    /**
-     * 根据条件查询列表 与 findByArgs逻辑一致
-     */
-    public List<T> list(Map<String, Object> map) {
-        return findByArgs(map);
     }
 
     /**
@@ -838,23 +783,15 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         Criteria ct = dc.getExecutableCriteria(sess);
         ct.setCacheable(false);
 
-        // 查询列表数据
-        final Map<String, Set<String>> referFields;
-        referFields = new HashMap<>();
-        final ProjectionList pj = beforeQueryCriteria(cp, ct, referFields);
-
-        ct.setProjection(pj);
-        ct.setResultTransformer(org.hibernate.criterion.CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-
+        processProjectionQueryCriteria(cp, ct);
+        ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         cp.orders.forEach(ct::addOrder);
-
         if (cp.pageRequest != null) {
             ct.setFirstResult(cp.pageRequest.getOffset());
             ct.setMaxResults(cp.pageRequest.getPageSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
-
         ArrayList<T> enList = new ArrayList<>();
         /* Map查询后，回填对象 */
         for (Map<String, Object> map : list) {
@@ -867,7 +804,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return enList;
     }
 
-    /************************委托SQLManager执行SQL语句************************************/
+    /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */
     public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
         return sqlManager.findOneAsMap(sqlId, paramMap);
     }
@@ -896,8 +833,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return sqlManager.listAsPageMap(sqlId, qp);
     }
 
-    /************************委托SQLManager执行SQL语句 end********************************/
-
     public Page<T> listAsPage(String sqlId, QueryParam qp) {
         return sqlManager.listAsPage(sqlId, entityClazz, qp);
     }
@@ -909,6 +844,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public void batchExec(String sqlId, List<Map<String, ?>> argsMap) {
         sqlManager.batchExec(sqlId, argsMap);
     }
+    /* ---END---***********************委托SQLManager执行SQL语句******************************* */
 
     /**
      * Flush all pending saves, updates and deletes to the database.
@@ -1013,7 +949,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 获得引用类型的*ToOne的引用字段列表
+     * 获得引用类型的n对一的引用字段列表
      *
      * @return 字段列表
      */
@@ -1028,51 +964,42 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return EnvCache.REFER_JOIN_FIELDS.get(clsName);
     }
 
-    private ProjectionList beforeQueryCriteria(CriteriaParam cp, Criteria ct, final Map<String, Set<String>> referFields) {
+    /**
+     * 生成要查询的投影字段列表并添加到Criteria中，并在Criteria中为所有join属性创建连接查询
+     * <p>
+     * 投影字段列表, 包括所有非关联属性与所有n对一关联属性的ID与用户指定的属性)
+     */
+    private void processProjectionQueryCriteria(CriteriaParam cp, Criteria ct) {
         final Set<String> qjoinFields = new HashSet<>();
-        final Map<String, Field> manyToOneFields = getJoinFields(this.entityClazz);
+        final Map<String, Field> someToOneFields = getJoinFields(this.entityClazz);
 
-        // 使用投影映射字段,先查询，再反射
         final ProjectionList pj = Projections.projectionList();
-        ReflectionUtils.doWithFields(this.entityClazz, f -> {
-            ManyToMany m2m = f.getAnnotation(ManyToMany.class);
-            if (m2m == null) {
-                String pjField = f.getName();
-                addProjectionFields(qjoinFields, manyToOneFields, referFields, pj, pjField);
-            }
-        });
+        // 所有非join字段加入投影字段
+        ReflectionUtils.doWithFields(this.entityClazz,
+                f -> pj.add(Property.forName(f.getName()), f.getName()),
+                f -> f.getAnnotation(ManyToMany.class) == null && f.getAnnotation(OneToMany.class) == null && !someToOneFields.containsKey(f.getName()));
 
-        for (String pjField : cp.fields) {
-            addProjectionFields(qjoinFields, manyToOneFields, referFields, pj, pjField);
-        }
-
-        // 查询结果中需外连接的表
-        qjoinFields.addAll(referFields.keySet());
-        for (String jf : qjoinFields)
-            ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN);
-
-        // 关联对象，默认值抓取id
-        for (String referField : referFields.keySet()) {
-            Field mapField = manyToOneFields.get(referField);
-            String pkf = EntityUtils.getPKField(mapField.getType()).getName();
-            String fetchF = referField + "." + pkf;
-            referFields.get(referField).add(fetchF);
-            pj.add(Property.forName(fetchF), fetchF);
-        }
-        return pj;
-    }
-
-    private void addProjectionFields(final Set<String> qjoinFields, final Map<String, Field> manyToOneFields,
-                                     final Map<String, Set<String>> referFields, final ProjectionList pj, String pjField) {
-        // 如果是对象投影，不在查询中体现，后期通过对象Id来初始化
-        if (manyToOneFields.containsKey(pjField) && !referFields.containsKey(pjField)) {
-            referFields.put(pjField, new HashSet<>());
-        } else {
+        // 所有用户自定义字段加入投影字段
+        cp.fields.stream().filter(pjField -> !someToOneFields.containsKey(pjField)).forEach(pjField -> {
             pj.add(Property.forName(pjField), pjField);
             if (pjField.contains(".")) {
                 qjoinFields.add(pjField.split("\\.")[0]);
             }
+        });
+
+        // 合并join字段到连接集合中
+        qjoinFields.addAll(someToOneFields.keySet());
+        // 为所有join字段，创建连接查询
+        qjoinFields.forEach(jf -> ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
+
+        // 将所有n对一关联属性的主键，加入投影字段
+        for (String referField : someToOneFields.keySet()) {
+            Field mapField = someToOneFields.get(referField);
+            String pkf = EntityUtils.getPKField(mapField.getType()).getName();
+            String fetchF = referField + "." + pkf;
+            pj.add(Property.forName(fetchF), fetchF);
         }
+        ct.setProjection(pj);
     }
 
     private Session peekThreadSession() {

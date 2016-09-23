@@ -62,6 +62,8 @@ public class SQLException extends RuntimeException {
 
     public static final int ID_AUTOGEN_ERROR = 15;
 
+    public static final int RESULT_NOT_FOUND = 16;
+
     int code;
 
     public SQLException(int code) {

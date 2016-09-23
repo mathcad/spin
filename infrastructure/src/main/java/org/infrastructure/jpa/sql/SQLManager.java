@@ -84,9 +84,6 @@ public class SQLManager {
 
     /**
      * 查找单个对象
-     *
-     * @param sqlId    命令名称
-     * @param paramMap 参数
      */
     public Map<String, Object> findOneAsMap(String sqlId, Map<String, ?> paramMap) {
         List<Map<String, Object>> list = listAsMap(sqlId, paramMap);
@@ -98,9 +95,6 @@ public class SQLManager {
 
     /**
      * 查找单个对象
-     *
-     * @param sqlId    命令名称
-     * @param paramMap 参数
      */
     public <T> T findOne(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
         List<Map<String, Object>> list = listAsMap(sqlId, paramMap);
@@ -115,11 +109,7 @@ public class SQLManager {
     }
 
     /**
-     * 通过命令文件查询 + 参数Map数组（HashUtils.getMap构建参数数组）
-     *
-     * @param sqlId     命令名称
-     * @param mapParams key1,value1,key2,value2,key3,value3 ...
-     * @return 查询结果
+     * 通过命令文件查询
      */
     public List<Map<String, Object>> listAsMap(String sqlId, Object... mapParams) {
         return listAsMap(sqlId, HashUtils.getMap(mapParams));
@@ -127,10 +117,6 @@ public class SQLManager {
 
     /**
      * 通过命令文件查询
-     *
-     * @param sqlId    命令名称
-     * @param paramMap 参数map
-     * @return 查询结果
      */
     public List<Map<String, Object>> listAsMap(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = loader.getSQL(sqlId, paramMap).getTemplate();
@@ -147,10 +133,6 @@ public class SQLManager {
 
     /**
      * 分页查询
-     *
-     * @param sqlId sql模板path
-     * @param qp    查询参数
-     * @return 分页查询结果
      */
     public Page<Map<String, Object>> listAsPageMap(String sqlId, QueryParam qp) {
         SQLSource sql = loader.getSQL(sqlId, qp.getConditions());
@@ -170,15 +152,11 @@ public class SQLManager {
         String totalSqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
         SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
         Long total = nameJt.queryForObject(totalSqlTxt, params, Long.class);
-        return new Page<>(list, total != null ? total : 0);
+        return new Page<>(list, total != null ? total : 0, qp.getLimit());
     }
 
     /**
-     * 通过命令文件查询 + 参数Map数组（HashUtils.getMap构建参数数组）
-     *
-     * @param sqlId     命令名称
-     * @param mapParams 参数map
-     * @return 查询结果
+     * 通过命令文件查询
      */
     public <T> List<T> list(String sqlId, Class<T> entityClazz, Object... mapParams) {
         List<Map<String, Object>> maps = listAsMap(sqlId, HashUtils.getMap(mapParams));
@@ -194,11 +172,7 @@ public class SQLManager {
     }
 
     /**
-     * 通过命令文件查询 + 参数Map数组（HashUtils.getMap构建参数数组）
-     *
-     * @param sqlId    命令名称
-     * @param paramMap key1,value1,key2,value2,key3,value3 ...
-     * @return 查询结果
+     * 通过命令文件查询
      */
     public <T> List<T> list(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
         List<Map<String, Object>> maps = listAsMap(sqlId, paramMap);
@@ -215,10 +189,6 @@ public class SQLManager {
 
     /**
      * 分页查询
-     *
-     * @param sqlId sql模板path
-     * @param qp    查询参数
-     * @return 分页查询结果
      */
     public <T> Page<T> listAsPage(String sqlId, Class<T> entityClazz, QueryParam qp) {
         SQLSource sql = loader.getSQL(sqlId, qp.getConditions());
@@ -246,7 +216,7 @@ public class SQLManager {
         String totalSqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
         SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
         Long total = nameJt.queryForObject(totalSqlTxt, params, Long.class);
-        return new Page<>(res, total != null ? total : 0);
+        return new Page<>(res, total != null ? total : 0, qp.getLimit());
     }
 
     /**

@@ -15,18 +15,33 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 使用Hibernate条件组合查询
+ * Hibernate组合条件参数
  * <p>
- * Criterition 条件 Order 排序
+ * 非线程安全
  *
  * @author xuweinan
  * @version V1.0
  */
 public class CriteriaParam implements Serializable {
     private static final long serialVersionUID = -944451601973493971L;
+
+    /**
+     * 查询字段列表
+     */
     public Set<String> fields = new HashSet<>();
+    /**
+     * 条件列表
+     */
     public List<Criterion> criterions = new ArrayList<>();
+
+    /**
+     * 排序列表
+     */
     public List<Order> orders = new ArrayList<>();
+
+    /**
+     * 分页请求参数
+     */
     public PageRequest pageRequest = null;
 
     /**
