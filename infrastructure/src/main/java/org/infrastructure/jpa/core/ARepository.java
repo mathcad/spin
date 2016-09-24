@@ -18,6 +18,7 @@ import org.infrastructure.jpa.api.QueryParamParser.DetachedCriteriaResult;
 import org.infrastructure.jpa.sql.SQLManager;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.sys.EnvCache;
+import org.infrastructure.sys.ErrorAndExceptionCode;
 import org.infrastructure.sys.SessionUser;
 import org.infrastructure.throwable.SQLException;
 import org.infrastructure.throwable.SimplifiedException;
@@ -651,6 +652,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return t;
     }
 
+    public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
+        return sqlManager.findOneAsMap(sqlId, paramMap);
+    }
+
+    public T findOneBySql(String sqlId, Map<String, ?> paramMap) {
+        return sqlManager.findOne(sqlId, entityClazz, paramMap);
+    }
+
     public boolean exist(PK id) {
         if (id == null) {
             return false;
@@ -734,9 +743,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 查询实体，返回dto的列表
+     * 根据条件查询DTO列表
      */
     public Page<T> page(CriteriaParam cp) {
+        Assert.notNull(cp, "CriteriaParam need a non-null value");
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
         cp.criterions.forEach(dc::add);
         Session sess = getSession();
@@ -752,19 +762,19 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
-        ArrayList<T> enList = new ArrayList<>();
-        for (Map<String, Object> map : list) {
+        List<T> enList = new ArrayList<>();
+        list.forEach(map -> {
             try {
                 enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
             } catch (Exception e) {
-                logger.error("转换Map到实体异常", e);
+                throw new SimplifiedException(ErrorAndExceptionCode.BEAN_CREATE_FAIL, e);
             }
-        }
+        });
         return new Page<>(enList, total, cp.pageRequest.getPageSize());
     }
 
     /**
-     * 根据条件查询列表
+     * 根据条件查询DTO列表
      */
     public List<T> list(Map<String, Object> map) {
         CriteriaParam cp = new CriteriaParam();
@@ -773,46 +783,38 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 查找对象列表，返回Dto对象
+     * 根据条件查询DTO列表
      */
     public List<T> list(CriteriaParam cp) {
+        Assert.notNull(cp, "CriteriaParam need a non-null value");
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
         cp.criterions.forEach(dc::add);
 
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
         ct.setCacheable(false);
-
+        cp.orders.forEach(ct::addOrder);
         processProjectionQueryCriteria(cp, ct);
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-        cp.orders.forEach(ct::addOrder);
         if (cp.pageRequest != null) {
             ct.setFirstResult(cp.pageRequest.getOffset());
             ct.setMaxResults(cp.pageRequest.getPageSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
-        ArrayList<T> enList = new ArrayList<>();
+        List<T> enList = new ArrayList<>();
         /* Map查询后，回填对象 */
-        for (Map<String, Object> map : list) {
+        list.forEach(map -> {
             try {
                 enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
             } catch (Exception e) {
-                logger.error("转换Map到实体异常", e);
+                throw new SimplifiedException(ErrorAndExceptionCode.BEAN_CREATE_FAIL, e);
             }
-        }
+        });
         return enList;
     }
 
     /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */
-    public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
-        return sqlManager.findOneAsMap(sqlId, paramMap);
-    }
-
-    public T findOneBySql(String sqlId, Map<String, ?> paramMap) {
-        return sqlManager.findOne(sqlId, entityClazz, paramMap);
-    }
-
     public List<T> listBySql(String sqlId, Object... mapParams) {
         return sqlManager.list(sqlId, entityClazz, mapParams);
     }
@@ -965,11 +967,15 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 生成要查询的投影字段列表并添加到Criteria中，并在Criteria中为所有join属性创建连接查询
+     * 根据查询参数生成要查询的投影字段列表并添加到Criteria中，并在Criteria中为所有join属性创建连接查询
      * <p>
-     * 投影字段列表, 包括所有非关联属性与所有n对一关联属性的ID与用户指定的属性)
+     * 投影字段列表, 包括所有非关联属性与所有n对一关联属性的ID与用户指定的属性
+     * <p>
+     * 如果查询参数的字段列表为空，不做任何操作
      */
     private void processProjectionQueryCriteria(CriteriaParam cp, Criteria ct) {
+        if (cp == null || cp.fields.isEmpty())
+            return;
         final Set<String> qjoinFields = new HashSet<>();
         final Map<String, Field> someToOneFields = getJoinFields(this.entityClazz);
 

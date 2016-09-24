@@ -145,9 +145,16 @@ public class SQLManager {
         }
         sql.setTemplate(sqlTxt);
         SQLSource pageSql = dbType.getPagedSQL(sql, qp.getStart(), qp.getLimit());
+        List<Map<String, Object>> list;
         if (logger.isDebugEnabled())
             logger.debug(sqlId + ":\n" + pageSql.getTemplate());
-        List<Map<String, Object>> list = nameJt.queryForList(pageSql.getTemplate(), qp.getConditions());
+        try {
+            list = nameJt.queryForList(pageSql.getTemplate(), qp.getConditions());
+        } catch (Exception ex) {
+            logger.error("执行查询出错：" + sqlId);
+            logger.error(pageSql.getTemplate());
+            throw new SimplifiedException("执行查询出错：", ex);
+        }
         // 增加总数统计 去除排序语句
         String totalSqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
         SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
@@ -201,9 +208,16 @@ public class SQLManager {
         }
         sql.setTemplate(sqlTxt);
         SQLSource pageSql = dbType.getPagedSQL(sql, qp.getStart(), qp.getLimit());
+        List<Map<String, Object>> list;
         if (logger.isDebugEnabled())
             logger.debug(sqlId + ":\n" + pageSql.getTemplate());
-        List<Map<String, Object>> list = nameJt.queryForList(pageSql.getTemplate(), qp.getConditions());
+        try {
+            list = nameJt.queryForList(pageSql.getTemplate(), qp.getConditions());
+        } catch (Exception ex) {
+            logger.error("执行查询出错：" + sqlId);
+            logger.error(pageSql.getTemplate());
+            throw new SimplifiedException("执行查询出错：", ex);
+        }
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : list) {
             try {
