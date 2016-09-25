@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class EnvCache {
     public static final Map<String, Map<String, Field>> REFER_JOIN_FIELDS = new ConcurrentHashMap<>();
     public static final Map<String, Map<String, BeanUtils.PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
+    public static boolean devMode = false;
 
     private EnvCache() {
     }

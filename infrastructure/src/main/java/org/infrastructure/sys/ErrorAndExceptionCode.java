@@ -14,6 +14,7 @@ public enum ErrorAndExceptionCode {
     KEY_FAIL(10),
     ENCRYPT_FAIL(11),
     DEENCRYPT_FAIL(15),
+    SIGNATURE_FAIL(20),
     BEAN_CREATE_FAIL(40),
     BUSS_EXCETION(60),
     NETWORK_EXCEPTION(100);
@@ -25,6 +26,7 @@ public enum ErrorAndExceptionCode {
         valueStringMapper.put(10, "获取密钥失败");
         valueStringMapper.put(11, "加密算法执行失败");
         valueStringMapper.put(15, "解密算法执行失败");
+        valueStringMapper.put(20, "签名验证失败");
         valueStringMapper.put(40, "创建bean实例错误");
         valueStringMapper.put(60, "业务异常");
         valueStringMapper.put(100, "网络连接异常");

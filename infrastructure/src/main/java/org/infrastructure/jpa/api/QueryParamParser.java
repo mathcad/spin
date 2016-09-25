@@ -65,9 +65,10 @@ public class QueryParamParser {
         DetachedCriteriaResult result = new DetachedCriteriaResult();
         result.dc = DetachedCriteria.forClass(enCls);
         Map<String, QueryParamHandler> handlersMap = new HashMap<>();
-        for (QueryParamHandler qh : handlers) {
-            handlersMap.put(qh.getField(), qh);
-        }
+        if (handlers != null)
+            for (QueryParamHandler qh : handlers) {
+                handlersMap.put(qh.getField(), qh);
+            }
 
         for (Map.Entry<String, String> entry : p.getConditions().entrySet()) {
             String key = entry.getKey();

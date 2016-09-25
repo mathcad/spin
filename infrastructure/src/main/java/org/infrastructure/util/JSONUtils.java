@@ -1,18 +1,17 @@
 package org.infrastructure.util;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.infrastructure.gson.TimestampTypeAdapter;
+import org.infrastructure.sys.TypeIdentifier;
+
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.infrastructure.gson.TimestampTypeAdapter;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
 /**
  * 包含操作 {@code JSON} 数据的常用方法的工具类。
@@ -280,11 +279,11 @@ public abstract class JSONUtils {
      *
      * @param <T>         要转换的目标类型。
      * @param json        给定的 {@code JSON} 字符串。
-     * @param token       {@code com.google.gson.reflect.TypeIdentifier} 的类型指示类对象。
+     * @param token       {@code TypeIdentifier} 的类型指示类对象。
      * @param datePattern 日期格式模式。
      * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
      */
-    public static <T> T fromJson(String json, TypeToken<T> token, String datePattern) {
+    public static <T> T fromJson(String json, TypeIdentifier<T> token, String datePattern) {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
@@ -308,10 +307,10 @@ public abstract class JSONUtils {
      *
      * @param <T>   要转换的目标类型。
      * @param json  给定的 {@code JSON} 字符串。
-     * @param token {@code com.google.gson.reflect.TypeIdentifier} 的类型指示类对象。
+     * @param token {@code TypeIdentifier} 的类型指示类对象。
      * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
      */
-    public static <T> T fromJson(String json, TypeToken<T> token) {
+    public static <T> T fromJson(String json, TypeIdentifier<T> token) {
         return fromJson(json, token, null);
     }
 

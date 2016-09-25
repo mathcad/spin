@@ -55,7 +55,7 @@ public class EnumUtilsTest {
         q.getConditions().put("b", "b");
         q.getConditions().put("c", "c");
         q.getFields().add("field");
-        q.setSort("id__desc");
+        q.getPredicate().setSort("id__desc");
         Gson gson = new Gson();
         String str = gson.toJson(q);
         System.out.println(str);
