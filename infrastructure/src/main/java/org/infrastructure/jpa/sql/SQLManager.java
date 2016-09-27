@@ -19,13 +19,11 @@ package org.infrastructure.jpa.sql;
 
 import org.hibernate.cfg.Environment;
 import org.infrastructure.jpa.api.QueryParam;
-import org.infrastructure.jpa.core.DatabaseType;
 import org.infrastructure.jpa.core.Page;
 import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.BeanUtils;
 import org.infrastructure.util.HashUtils;
-import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +57,6 @@ public class SQLManager {
     private NamedParameterJdbcTemplate nameJt;
     private JdbcTemplate jt;
     private DataSource dataSource;
-    private DatabaseType dbType;
 
     @Autowired
     public SQLManager(LocalSessionFactoryBean sessFactory, SQLLoader loader) {
@@ -70,10 +67,10 @@ public class SQLManager {
         try (Connection conn = ds.getConnection()) {
             String vender = conn.getMetaData().getDatabaseProductName();
             if ("MySQL".equalsIgnoreCase(vender))
-                this.dbType = new MySQLDatabaseType();
+                loader.setDbType(new MySQLDatabaseType());
             else if ("Oracle".equalsIgnoreCase(vender))
-                this.dbType = new OracleDatabaseType();
-            if (dbType == null)
+                loader.setDbType(new OracleDatabaseType());
+            if (loader.getDbType() == null)
                 throw new SimplifiedException("Unsupported Database vender:" + vender);
         } catch (SQLException e) {
             logger.error("Can not fetch Database metadata", e);
@@ -136,15 +133,7 @@ public class SQLManager {
      */
     public Page<Map<String, Object>> listAsPageMap(String sqlId, QueryParam qp) {
         SQLSource sql = loader.getSQL(sqlId, qp.getConditions());
-        String sqlTxt = sql.getTemplate();
-        String sortInfo = qp.parseOrder();
-        // 替换排序为自定义
-        if (StringUtils.isNotEmpty(sortInfo)) {
-            sqlTxt = removeLastOrderBy(sqlTxt);
-            sqlTxt = sqlTxt + sortInfo;
-        }
-        sql.setTemplate(sqlTxt);
-        SQLSource pageSql = dbType.getPagedSQL(sql, qp.getStart(), qp.getLimit());
+        SQLSource pageSql = loader.getPagedSQL(sqlId, qp.getConditions(), qp);
         List<Map<String, Object>> list;
         if (logger.isDebugEnabled())
             logger.debug(sqlId + ":\n" + pageSql.getTemplate());
@@ -156,7 +145,7 @@ public class SQLManager {
             throw new SimplifiedException("执行查询出错：", ex);
         }
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
+        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ")";
         SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
         Long total = nameJt.queryForObject(totalSqlTxt, params, Long.class);
         return new Page<>(list, total != null ? total : 0, qp.getLimit());
@@ -199,15 +188,7 @@ public class SQLManager {
      */
     public <T> Page<T> listAsPage(String sqlId, Class<T> entityClazz, QueryParam qp) {
         SQLSource sql = loader.getSQL(sqlId, qp.getConditions());
-        String sqlTxt = sql.getTemplate();
-        String sortInfo = qp.parseOrder();
-        // 替换排序为自定义
-        if (StringUtils.isNotEmpty(sortInfo)) {
-            sqlTxt = removeLastOrderBy(sqlTxt);
-            sqlTxt += sortInfo;
-        }
-        sql.setTemplate(sqlTxt);
-        SQLSource pageSql = dbType.getPagedSQL(sql, qp.getStart(), qp.getLimit());
+        SQLSource pageSql = loader.getPagedSQL(sqlId, qp.getConditions(), qp);
         List<Map<String, Object>> list;
         if (logger.isDebugEnabled())
             logger.debug(sqlId + ":\n" + pageSql.getTemplate());
@@ -227,7 +208,7 @@ public class SQLManager {
             }
         }
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
+        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ")";
         SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
         Long total = nameJt.queryForObject(totalSqlTxt, params, Long.class);
         return new Page<>(res, total != null ? total : 0, qp.getLimit());

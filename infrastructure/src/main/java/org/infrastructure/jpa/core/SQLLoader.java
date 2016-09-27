@@ -17,6 +17,7 @@
 
 package org.infrastructure.jpa.core;
 
+import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.sql.SQLSource;
 import org.infrastructure.jpa.sql.resolver.TemplateResolver;
 
@@ -28,9 +29,13 @@ import java.util.Map;
  * Created by xuweinan on 2016/8/13.
  *
  * @author xuweinan
- * @version 1.0
+ * @version 1.1
  */
 public interface SQLLoader {
+
+    DatabaseType getDbType();
+
+    void setDbType(DatabaseType dbType);
 
     /**
      * 加载参数化的SQL语句
@@ -40,6 +45,16 @@ public interface SQLLoader {
      * @return 参数化的sql
      */
     SQLSource getSQL(String id, Map<String, ?> model);
+
+    /**
+     * 加载分页的参数化SQL语句
+     *
+     * @param id         sql的path
+     * @param model      参数
+     * @param queryParam 分页参数
+     * @return 参数化的sql
+     */
+    SQLSource getPagedSQL(String id, Map<String, ?> model, QueryParam queryParam);
 
     /**
      * 加载SQL模板

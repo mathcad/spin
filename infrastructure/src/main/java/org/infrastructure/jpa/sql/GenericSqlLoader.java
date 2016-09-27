@@ -17,6 +17,8 @@
 
 package org.infrastructure.jpa.sql;
 
+import org.infrastructure.jpa.api.QueryParam;
+import org.infrastructure.jpa.core.DatabaseType;
 import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.jpa.sql.resolver.SimpleResolver;
 import org.infrastructure.jpa.sql.resolver.TemplateResolver;
@@ -43,6 +45,7 @@ public abstract class GenericSqlLoader implements SQLLoader {
 
     private final Object mutex = new Object();
     private TemplateResolver resolver;
+    private DatabaseType dbType;
 
     /**
      * sql资源根路径
@@ -57,8 +60,22 @@ public abstract class GenericSqlLoader implements SQLLoader {
     public SQLSource getSQL(String id, Map<String, ?> model) {
         if (null == this.resolver)
             this.resolver = new SimpleResolver();
-        String sql = this.resolver.resolve(id, this.getSqlTemplateSrc(id), model);
+        String sql = this.resolver.resolve(id, getSqlTemplateSrc(id), model);
         return new SQLSource(id, sql);
+    }
+
+    public SQLSource getPagedSQL(String id, Map<String, ?> model, QueryParam queryParam) {
+        return dbType.getPagedSQL(getSQL(id, model), queryParam);
+    }
+
+    @Override
+    public DatabaseType getDbType() {
+        return dbType;
+    }
+
+    @Override
+    public void setDbType(DatabaseType dbType) {
+        this.dbType = dbType;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.infrastructure.jpa.core;
 
+import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.sql.SQLSource;
 
 /**
@@ -9,5 +10,5 @@ import org.infrastructure.jpa.sql.SQLSource;
  * @author xuweinan
  */
 public interface DatabaseType {
-    SQLSource getPagedSQL(SQLSource sqlSource, int start, int limit);
+    SQLSource getPagedSQL(SQLSource sqlSource, QueryParam queryParam);
 }

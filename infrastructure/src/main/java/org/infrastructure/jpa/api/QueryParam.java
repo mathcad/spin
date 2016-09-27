@@ -7,7 +7,6 @@ import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -38,14 +37,12 @@ public class QueryParam implements Serializable {
     /**
      * 解析order部分
      */
-    public String parseOrder() {
-        return predicate.getSort().length() > 0 ? "ORDER BY" + predicate.getSort().replaceAll("__", " ") : "";
+    public String parseOrder(String tableAlias) {
+        return predicate.getSort().length() > 0 ? "ORDER BY" + predicate.getSort().replaceAll("__", " ").replaceAll(",\\s*", ", " + tableAlias + ".") : "";
     }
 
     /**
      * 验证查询条件是否被客户端篡改
-     *
-     * @return
      */
     public boolean validation() {
         String sign = predicate.calcSignature();

@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class QueryPredicate implements Serializable {
     private static final long serialVersionUID = 1381761812232116307L;
-    private static final String salt = "54b4ad54eddb38";
+    private static final String salt = "54b4ad84eddb38";
 
     private Map<String, String> conditions = new HashMap<>();
     private String sort;
