@@ -126,4 +126,8 @@ public abstract class SessionUtils {
         sessionUser.setSessionId(sess.getId().toString());
         sess.setAttribute(USER_SESSION_KEY, sessionUser);
     }
+
+    public static void setSessionUser(Session session, SessionUser sessionUser) {
+        session.setAttribute(USER_SESSION_KEY, sessionUser);
+    }
 }
