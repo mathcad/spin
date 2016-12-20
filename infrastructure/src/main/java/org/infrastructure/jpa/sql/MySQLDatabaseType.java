@@ -1,7 +1,7 @@
 package org.infrastructure.jpa.sql;
 
-import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.core.DatabaseType;
+import org.infrastructure.jpa.query.QueryParam;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.util.StringUtils;
 
@@ -15,8 +15,10 @@ public class MySQLDatabaseType implements DatabaseType {
         Assert.notNull(queryParam, "Page request must be a NON-NULL value");
         SQLSource ss = new SQLSource();
         ss.setId(sqlSource.getId());
-        String order = queryParam.parseOrder("d");
-        String pagedSql = "SELECT * FROM (" + sqlSource.getTemplate() + ") as d " + (StringUtils.isBlank(order) ? "" : order) + " LIMIT " + queryParam.getStart() + ", " + queryParam.getLimit();
+        String order = queryParam.parseOrder("out_alias");
+        String pagedSql = "SELECT * FROM (" + sqlSource.getTemplate() + ") as out_alias " + (StringUtils.isBlank(order) ? "" : order);
+        if (null != queryParam.getPageSize())
+            pagedSql += " LIMIT " + (queryParam.getPageIdx() - 1) * queryParam.getPageSize() + ", " + queryParam.getPageSize();
         ss.setTemplate(pagedSql);
         return ss;
     }

@@ -19,10 +19,6 @@ public interface SessionUser {
 
     String getUserName();
 
-    String getPassword();
-
-    String getRealName();
-
     Date getLoginTime();
 
     String getSessionId();

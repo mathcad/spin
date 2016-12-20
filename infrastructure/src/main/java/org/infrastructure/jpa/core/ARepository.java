@@ -1,20 +1,18 @@
 package org.infrastructure.jpa.core;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.*;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
-import org.infrastructure.jpa.api.QueryParam;
-import org.infrastructure.jpa.api.QueryParamParser.DetachedCriteriaResult;
+import org.infrastructure.jpa.query.DetachedCriteriaBag;
+import org.infrastructure.jpa.query.QueryParam;
+import org.infrastructure.jpa.query.QueryParamParser;
 import org.infrastructure.jpa.sql.SQLManager;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.sys.EnvCache;
@@ -23,9 +21,12 @@ import org.infrastructure.sys.SessionUser;
 import org.infrastructure.throwable.SQLException;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.BeanUtils;
+import org.infrastructure.util.CollectionUtils;
 import org.infrastructure.util.EntityUtils;
 import org.infrastructure.util.ReflectionUtils;
 import org.infrastructure.util.SessionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -33,17 +34,22 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.Column;
+import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Temporal;
 import javax.persistence.Transient;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,12 +72,15 @@ import java.util.stream.Collectors;
  */
 @Component
 public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
-    private static final Log logger = LogFactory.getLog(ARepository.class);
+    private static final Logger logger = LoggerFactory.getLogger(ARepository.class);
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
     protected static final ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
     };
 
     private boolean checkWriteOperations = true;
+
+    @Autowired
+    private QueryParamParser queryParamParser;
 
     @Autowired
     protected SessionFactory sessFactory;
@@ -169,11 +178,12 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         if (entity instanceof AbstractEntity) {
             AbstractEntity aEn = (AbstractEntity) entity;
             SessionUser user = SessionUtils.getCurrentUser();
-            Assert.notNull(user, "Can not find Current user");
-            aEn.setLastUpdateTime(new Timestamp(System.currentTimeMillis()));
-            aEn.setLastUpdateUserName(user.getUserName());
+            if (null == user)
+                user = AbstractUser.ref(1L);
+            aEn.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+            aEn.setUpdateUser(AbstractUser.ref(user.getId()));
             if (null == aEn.getId()) {
-                aEn.setCreateUserName(user.getUserName());
+                aEn.setCreateUser(AbstractUser.ref(user.getId()));
                 aEn.setCreateTime(new Timestamp(System.currentTimeMillis()));
             }
         }
@@ -421,20 +431,26 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         getSession().delete(hql);
     }
 
-    public Page<Map<String, Object>> findByFields(List<String> fields, DetachedCriteriaResult dr, PageRequest pr, Order... orders) {
-        Map<String, Field> entityJoinFields = getJoinFields(this.entityClazz);
+    public Page<Map<String, Object>> findByFields(List<String> fields, DetachedCriteriaBag dr) {
+        List<String> fieldsList = fields;
+        if (CollectionUtils.isEmpty(fields))
+            fieldsList = parseEntityColumns(dr.getEnCls());
+        Map<String, Field> entityJoinFields = getJoinFields(dr.getEnCls());
         Map<String, Set<String>> referFields = new HashMap<>();
         Set<String> queryjoinFields = new HashSet<>();
 
         // 使用投影映射字段
         ProjectionList projectionList = Projections.projectionList();
-        for (String pf : fields) {
+
+        for (String pf : fieldsList) {
             // 如果是对象投影，不在查询中体现，后期通过对象Id来初始化
             if (entityJoinFields.containsKey(pf)) {
                 referFields.put(pf, new HashSet<>());
                 continue;
             }
-            projectionList.add(Property.forName(pf), pf);
+
+            projectionList.add(Property.forName(pf), dr.getAliasMap().containsKey(pf) ? dr.getAliasMap().get(pf) : pf);
+
             int pjFieldPtIdx = pf.indexOf('.');
             if (pjFieldPtIdx > -1) {
                 String objField = pf.split("\\.")[0];
@@ -445,13 +461,12 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         }
 
         // 总数查询
-        Criteria ct = dr.dc.getExecutableCriteria(getSession());
+        Criteria ct = dr.getDeCriteria().getExecutableCriteria(getSession());
         ct.setCacheable(false);
-        Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
 
         // 查询结果中需外连接的表
         queryjoinFields.addAll(referFields.keySet());
-        queryjoinFields.stream().filter(jf -> !dr.aliasMap.containsKey(jf)).forEach(jf -> ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
+        queryjoinFields.stream().filter(jf -> !dr.getAliasMap().containsKey(jf)).forEach(jf -> ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
 
         // 关联对象，只抓取Id值
         for (String referField : referFields.keySet()) {
@@ -463,12 +478,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         }
         ct.setProjection(projectionList);
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-        if (orders != null) {
-            for (Order order : orders)
-                ct.addOrder(order);
+        if (null != dr.getPageRequest()) {
+            ct.setFirstResult(dr.getPageRequest().getOffset());
+            ct.setMaxResults(dr.getPageRequest().getPageSize());
         }
-        ct.setFirstResult(pr.getOffset());
-        ct.setMaxResults(pr.getPageSize());
 
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
@@ -488,12 +501,23 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             }
         }
 
-        return new Page<>(list, total, pr.getPageSize());
+        Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
+        return new Page<>(list, total, null == dr.getPageRequest() ? total.intValue() : dr.getPageRequest().getPageSize());
     }
 
+    /**
+     * 基于QueryParam的投影查询
+     *
+     * @param qp 通用查询参数
+     */
     public Page<Map<String, Object>> findByFields(QueryParam qp) {
-        // TODO: 2016/9/22 基于hql的投影查询
-        return new Page<>(null, 0L, 0);
+        DetachedCriteriaBag dr;
+        try {
+            dr = queryParamParser.parseDetachedCriteria(qp);
+        } catch (ClassNotFoundException e) {
+            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
+        }
+        return this.findByFields(qp.getFields(), dr);
     }
 
     /**
@@ -592,6 +616,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 通过唯一属性查询
+     * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      */
     public T findOne(CriteriaParam cp) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
@@ -604,12 +629,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         @SuppressWarnings("unchecked")
         List<T> list = ct.list();
         if (list.size() < 1)
-            throw new SQLException(SQLException.RESULT_NOT_FOUND);
+            return null;
         return list.get(0);
     }
 
     /**
      * 通过属性查询
+     * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      *
      * @param cts 条件数组
      */
@@ -951,6 +977,39 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
+     * 解析实体中所有映射到数据库列的字段
+     */
+    private List<String> parseEntityColumns(Class entityClazz) {
+        if (EnvCache.ENTITY_COLUMNS.containsKey(entityClazz.getName()))
+            return EnvCache.ENTITY_COLUMNS.get(entityClazz.getName());
+
+        Field[] fields = entityClazz.getDeclaredFields();
+        List<String> columns = Arrays.stream(fields).filter(this::isColumn).map(Field::getName).collect(Collectors.toList());
+        Class<?> superClass = entityClazz.getSuperclass();
+        if (null != superClass)
+            columns.addAll(parseEntityColumns(superClass));
+        EnvCache.ENTITY_COLUMNS.put(entityClazz.getName(), columns);
+        return columns;
+    }
+
+    /**
+     * 判断字段是否是映射到数据库
+     */
+    private boolean isColumn(Field field) {
+        Annotation[] annotations = field.getAnnotations();
+        for (Annotation annotation : annotations) {
+            if (annotation instanceof Column
+                    || annotation instanceof Id
+                    || annotation instanceof OneToOne
+                    || annotation instanceof ManyToOne
+                    || annotation instanceof Temporal
+                    || annotation instanceof org.hibernate.annotations.Type)
+                return true;
+        }
+        return false;
+    }
+
+    /**
      * 获得引用类型的n对一的引用字段列表
      *
      * @return 字段列表
@@ -958,10 +1017,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     private Map<String, Field> getJoinFields(final Class cls) {
         String clsName = cls.getName();
         if (!EnvCache.REFER_JOIN_FIELDS.containsKey(clsName)) {
-            EnvCache.REFER_JOIN_FIELDS.put(cls.getName(), new HashMap<>());
+            Map<String, Field> referJoinFields = new HashMap<>();
             ReflectionUtils.doWithFields(cls,
-                    f -> EnvCache.REFER_JOIN_FIELDS.get(cls.getName()).put(f.getName(), f),
+                    f -> referJoinFields.put(f.getName(), f),
                     f -> f.getAnnotation(ManyToOne.class) != null || f.getAnnotation(OneToOne.class) != null);
+            EnvCache.REFER_JOIN_FIELDS.put(cls.getName(), referJoinFields);
         }
         return EnvCache.REFER_JOIN_FIELDS.get(clsName);
     }

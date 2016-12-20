@@ -1,11 +1,9 @@
 package org.infrastructure.jpa.core;
 
 import javax.persistence.Column;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
@@ -31,10 +29,10 @@ public abstract class AbstractEntity implements IEntity<Long> {
     private Long id;
 
     /**
-     * 记录创建者名称
+     * 记录创建者
      */
-    @Column(updatable = false)
-    private String createUserName;
+    @ManyToOne
+    private AbstractUser createUser;
 
     /**
      * 创建时间，禁止更改
@@ -46,13 +44,13 @@ public abstract class AbstractEntity implements IEntity<Long> {
      * 记录更新者名称
      */
     @Column
-    private String lastUpdateUserName;
+    private AbstractUser updateUser;
 
     /**
      * 最后更新时间
      */
     @Column(nullable = false)
-    private Timestamp lastUpdateTime;
+    private Timestamp updateTime;
 
     /**
      * 排序号
@@ -94,12 +92,12 @@ public abstract class AbstractEntity implements IEntity<Long> {
         this.id = id;
     }
 
-    public String getCreateUserName() {
-        return createUserName;
+    public AbstractUser getCreateUser() {
+        return createUser;
     }
 
-    public void setCreateUserName(String createUserName) {
-        this.createUserName = createUserName;
+    public void setCreateUser(AbstractUser createUser) {
+        this.createUser = createUser;
     }
 
     public Timestamp getCreateTime() {
@@ -110,20 +108,20 @@ public abstract class AbstractEntity implements IEntity<Long> {
         this.createTime = createTime;
     }
 
-    public String getLastUpdateUserName() {
-        return lastUpdateUserName;
+    public AbstractUser getUpdateUser() {
+        return updateUser;
     }
 
-    public void setLastUpdateUserName(String lastUpdateUserName) {
-        this.lastUpdateUserName = lastUpdateUserName;
+    public void setUpdateUser(AbstractUser updateUser) {
+        this.updateUser = updateUser;
     }
 
-    public Timestamp getLastUpdateTime() {
-        return lastUpdateTime;
+    public Timestamp getUpdateTime() {
+        return updateTime;
     }
 
-    public void setLastUpdateTime(Timestamp lastUpdateTime) {
-        this.lastUpdateTime = lastUpdateTime;
+    public void setUpdateTime(Timestamp updateTime) {
+        this.updateTime = updateTime;
     }
 
     public double getOrderno() {

@@ -1,4 +1,5 @@
-package org.infrastructure.jpa.api;
+package org.infrastructure.jpa.extend;
+
 
 import org.infrastructure.jpa.core.EntityParser;
 import org.infrastructure.sys.ErrorAndExceptionCode;

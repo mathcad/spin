@@ -1,4 +1,4 @@
-package org.infrastructure.jpa.api;
+package org.infrastructure.jpa.extend;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;

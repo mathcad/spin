@@ -1,7 +1,7 @@
 package org.infrastructure.jpa.sql;
 
-import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.core.DatabaseType;
+import org.infrastructure.jpa.query.QueryParam;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.util.StringUtils;
 
@@ -18,7 +18,11 @@ public class OracleDatabaseType implements DatabaseType {
         String order = queryParam.parseOrder("D");
         if (StringUtils.isNotEmpty(order))
             sql = "SELECT * FROM (" + sqlSource.getTemplate() + ") D " + order;
-        String pagedSql = "SELECT * FROM (SELECT O.*, ROWNUM RN FROM (" + sql + ") O WHERE ROWNUM > " + queryParam.getStart() + ") WHERE RN <= " + (queryParam.getStart() + queryParam.getLimit());
+        String pagedSql = sql;
+        if (null != queryParam.getPageSize())
+            pagedSql = "SELECT * FROM (SELECT O.*, ROWNUM RN FROM (" + sql + ") O WHERE ROWNUM > "
+                    + (queryParam.getPageIdx() - 1) * queryParam.getPageSize() + ") WHERE RN <= "
+                    + ((queryParam.getPageIdx() - 1) * queryParam.getPageSize() + queryParam.getPageSize());
         ss.setTemplate(pagedSql);
         return ss;
     }

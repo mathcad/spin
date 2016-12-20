@@ -84,14 +84,16 @@ public class RSA {
         return keyFactory.generatePublic(pubKeySpec);
     }
 
-    public static PrivateKey generateRSAPrivateKey(byte[] modulus, byte[] privateExponent) throws InvalidKeySpecException {
+    public static PrivateKey generateRSAPrivateKey(byte[] modulus, byte[] privateExponent) throws
+            InvalidKeySpecException {
         KeyFactory keyFactory = getRSAKeyFactory();
         Assert.notNull(keyFactory);
         RSAPrivateKeySpec priKeySpec = new RSAPrivateKeySpec(new BigInteger(modulus), new BigInteger(privateExponent));
         return keyFactory.generatePrivate(priKeySpec);
     }
 
-    public static byte[] encrypt(PublicKey pk, byte[] data) throws NoSuchPaddingException, InvalidKeyException, BadPaddingException, ShortBufferException, IllegalBlockSizeException {
+    public static byte[] encrypt(PublicKey pk, byte[] data) throws NoSuchPaddingException, InvalidKeyException,
+            BadPaddingException, ShortBufferException, IllegalBlockSizeException {
         Cipher cipher;
         try {
             cipher = Cipher.getInstance(RSA_ALGORITHMS);
@@ -102,12 +104,20 @@ public class RSA {
         return cipher.doFinal(data);
     }
 
-    public static String encrypt(String publicKey, String content) throws InvalidKeySpecException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, ShortBufferException, NoSuchPaddingException {
+    public static String encrypt(String publicKey, String content) throws InvalidKeySpecException,
+            IllegalBlockSizeException, InvalidKeyException, BadPaddingException, ShortBufferException,
+            NoSuchPaddingException {
         PublicKey key = getRSAPublicKey(publicKey);
         return Base64.encode(encrypt(key, getBytes(content)));
     }
 
-    public static byte[] decrypt(PrivateKey pk, byte[] raw) throws NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public static String encrypt(PublicKey publicKey, String content) throws IllegalBlockSizeException,
+            InvalidKeyException, BadPaddingException, ShortBufferException, NoSuchPaddingException {
+        return Base64.encode(encrypt(publicKey, getBytes(content)));
+    }
+
+    public static byte[] decrypt(PrivateKey pk, byte[] raw) throws NoSuchPaddingException, InvalidKeyException,
+            BadPaddingException, IllegalBlockSizeException {
         Cipher cipher;
         try {
             cipher = Cipher.getInstance(RSA_ALGORITHMS);
@@ -118,13 +128,19 @@ public class RSA {
         return cipher.doFinal(raw);
     }
 
-    public static String decrypt(String privateKey, String content) throws InvalidKeySpecException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchPaddingException {
+    public static String decrypt(String privateKey, String content) throws InvalidKeySpecException,
+            IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchPaddingException {
         PrivateKey key = getRSAPrivateKey(privateKey);
         try {
             return new String(decrypt(key, Base64.decode(content)), "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new SimplifiedException(ErrorAndExceptionCode.DEENCRYPT_FAIL, e);
         }
+    }
+
+    public static String decrypt(PrivateKey privateKey, String content) throws IllegalBlockSizeException,
+            InvalidKeyException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException {
+        return new String(decrypt(privateKey, Base64.decode(content)), "UTF-8");
     }
 
     /**
@@ -134,7 +150,8 @@ public class RSA {
      * @param privateKey 私钥
      * @return 签名值
      */
-    public static String sign(String content, String privateKey) throws InvalidKeySpecException, InvalidKeyException, SignatureException {
+    public static String sign(String content, String privateKey) throws InvalidKeySpecException, InvalidKeyException,
+            SignatureException {
         PrivateKey priKey = getRSAPrivateKey(privateKey);
         Signature signature;
         try {
@@ -156,7 +173,8 @@ public class RSA {
      * @param publicKey 公钥
      * @return 是否匹配s
      */
-    public static boolean verify(String content, String sign, String publicKey) throws InvalidKeySpecException, InvalidKeyException, SignatureException {
+    public static boolean verify(String content, String sign, String publicKey) throws InvalidKeySpecException,
+            InvalidKeyException, SignatureException {
         PublicKey pubKey = getRSAPublicKey(publicKey);
         Signature signature;
         try {

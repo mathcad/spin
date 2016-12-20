@@ -51,9 +51,10 @@ public abstract class SessionUtils {
     public static SessionUser getCurrentUser() {
         try {
             Session session = getSession();
-            if (session == null)
+            if (session != null)
+                return (SessionUser) session.getAttribute(USER_SESSION_KEY);
+            else
                 return null;
-            return session.getAttribute(USER_SESSION_KEY) == null ? null : (SessionUser) session.getAttribute(USER_SESSION_KEY);
         } catch (Throwable t) {
             logger.info("当前会话未获得登录用户");
             return null;
@@ -125,6 +126,14 @@ public abstract class SessionUtils {
         Session sess = getSession(true);
         sessionUser.setSessionId(sess.getId().toString());
         sess.setAttribute(USER_SESSION_KEY, sessionUser);
+    }
+
+    /**
+     * 登出session
+     */
+    public static void logout() {
+        setCurrentUser(null);
+        SecurityUtils.getSubject().logout();
     }
 
     public static void setSessionUser(Session session, SessionUser sessionUser) {

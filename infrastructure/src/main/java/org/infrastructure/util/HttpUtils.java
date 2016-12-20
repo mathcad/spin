@@ -1,6 +1,9 @@
 package org.infrastructure.util;
 
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
+import org.apache.http.ParseException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -16,12 +19,13 @@ import org.infrastructure.throwable.SimplifiedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,8 +49,7 @@ public abstract class HttpUtils {
             url = HTTP + url;
         URIBuilder uriBuilder = new URIBuilder(url);
         if (params != null) {
-            for (Iterator<String> iterator = params.keySet().iterator(); iterator.hasNext(); ) {
-                String key = iterator.next();
+            for (String key : params.keySet()) {
                 uriBuilder.setParameter(key, params.get(key));
             }
         }
@@ -54,15 +57,7 @@ public abstract class HttpUtils {
     }
 
     public static String httpGetRequest(String url, String... params) throws URISyntaxException {
-        if (!url.startsWith("http"))
-            url = HTTP + url;
-        final StringBuilder u = new StringBuilder(url);
-        Optional.ofNullable(params).ifPresent(p -> Arrays.stream(p).forEach(c -> {
-            int b = u.indexOf("{}");
-            if (b > 0)
-                u.replace(b, b + 2, c);
-        }));
-        return httpGetRequest(new URI(u.toString()));
+        return httpGetRequest(getUriFromString(url, params));
     }
 
     public static String httpGetRequest(URI uri) {
@@ -75,12 +70,14 @@ public abstract class HttpUtils {
             request.setConfig(requestConfig);
             CloseableHttpResponse response = httpclient.execute(request);
             int code = response.getStatusLine().getStatusCode();
-            result = EntityUtils.toString(response.getEntity());
+            HttpEntity entity = response.getEntity();
+            result = EntityUtils.toString(entity, getContentCharSet(entity));
             if (code != 200) {
                 throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "错误状态码:" + code + result);
             }
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "远程连接到" + uri.toString() + "，发生错误:" + e.getMessage());
+            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "远程连接到" + uri.toString() +
+                    "，发生错误:" + e.getMessage());
         } finally {
             if (httpclient != null)
                 try {
@@ -95,7 +92,8 @@ public abstract class HttpUtils {
     public static String httpPostRequest(String url, Map<String, String> params) throws URISyntaxException {
         if (!url.startsWith("http"))
             url = HTTP + url;
-        List<NameValuePair> nvps = params.entrySet().stream().map(p -> new BasicNameValuePair(p.getKey(), p.getValue())).collect(Collectors.toList());
+        List<NameValuePair> nvps = params.entrySet().stream().map(p -> new BasicNameValuePair(p.getKey(), p.getValue
+                ())).collect(Collectors.toList());
         String result = null;
         CloseableHttpClient httpclient = null;
         try {
@@ -106,12 +104,14 @@ public abstract class HttpUtils {
             request.setEntity(new UrlEncodedFormEntity(nvps));
             CloseableHttpResponse response = httpclient.execute(request);
             int code = response.getStatusLine().getStatusCode();
-            result = EntityUtils.toString(response.getEntity());
+            HttpEntity entity = response.getEntity();
+            result = EntityUtils.toString(entity, getContentCharSet(entity));
             if (code != 200) {
                 throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "错误状态码:" + code + result);
             }
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e.getMessage());
+            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e
+                    .getMessage());
         } finally {
             if (httpclient != null)
                 try {
@@ -123,47 +123,71 @@ public abstract class HttpUtils {
         return result;
     }
 
-    /**
-     * 上传文件
-     */
-    public static String upload(File file, String postname, String url) {
-/*
-        if(url.startsWith("https")){
-			Protocol https = new Protocol("https",new org.infrastructure.ssl.HTTPSSecureProtocolSocketFactory(), 443);
-	        Protocol.registerProtocol("https", https);
-		}
-		
-		PostMethod filePost = new PostMethod(url);
-		HttpClient client = new HttpClient();
+    public static Map<String, String> download(String url, String savePath) throws IOException {
+        Map<String, String> rs = new HashMap<>();
+        URI uri;
+        try {
+            uri = getUriFromString(url);
+        } catch (URISyntaxException e) {
+            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "无法打开指定的URL连接", e);
+        }
+        CloseableHttpClient httpclient;
+        httpclient = HttpClients.createDefault();
+        RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(1000).setConnectTimeout(1000).build();
+        HttpGet request = new HttpGet(uri);
+        request.setConfig(requestConfig);
+        CloseableHttpResponse response = httpclient.execute(request);
+        int code = response.getStatusLine().getStatusCode();
+        if (code != 200) {
+            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "错误状态码:" + code);
+        }
+        HttpEntity entity = response.getEntity();
+        String saveFile = savePath;
+        String contentType = entity.getContentType().getValue();
+        String extention = contentType.substring(contentType.indexOf('/') + 1, contentType.length());
+        if (StringUtils.isNotBlank(savePath))
+            saveFile = savePath + "." + extention;
+        byte[] bytes = EntityUtils.toByteArray(entity);
+        try (FileOutputStream fos = new FileOutputStream(saveFile)) {
+            fos.write(bytes);
+        } catch (FileNotFoundException e) {
+            throw new SimplifiedException("无法保存文件:[" + saveFile + "]", e);
+        }
+        rs.put("extention", StringUtils.isBlank(extention) ? "" : "." + extention);
+        rs.put("bytes", Integer.toString(bytes.length));
+        return rs;
+    }
 
-		try {
-			// 通过以下方法可以模拟页面参数提交
-			
-			Part[] parts = { new FilePart(postname, file) };
-			
-			filePost.setRequestEntity(new MultipartRequestEntity(parts,	filePost.getParams()));
-			
-			client.getHttpConnectionManager().getParams()
-					.setConnectionTimeout(5000);
+    private static URI getUriFromString(String url, String... params) throws URISyntaxException {
+        if (!url.startsWith("http"))
+            url = HTTP + url;
+        final StringBuilder u = new StringBuilder(url);
+        Optional.ofNullable(params).ifPresent(p -> Arrays.stream(p).forEach(c -> {
+            int b = u.indexOf("{}");
+            if (b > 0)
+                u.replace(b, b + 2, c);
+        }));
+        return new URI(u.toString());
+    }
 
-			int status = client.executeMethod(filePost);
-			if (status == HttpStatus.SC_OK) {
-				logger.info("上传成功");
-				return filePost.getResponseBodyAsString();
-			} else {
-				logger.error("上传失败");
-				throw new BizException("错误码:" + status + "," + filePost.getResponseBodyAsString());
-			}
-		} catch (Exception ex) {
-			logger.error("上传失败",ex);
-			throw new BizException("上传失败" + ex.getMessage());
-		} finally {
-			if(url.startsWith("https")){
-				Protocol.unregisterProtocol("https");
-			}
-			filePost.releaseConnection();
-		}
-		*/
-        return "";
+    private static String getContentCharSet(final HttpEntity entity) throws ParseException {
+        if (entity == null) {
+            throw new IllegalArgumentException("HTTP entity may not be null");
+        }
+        String charset = null;
+        if (entity.getContentType() != null) {
+            HeaderElement values[] = entity.getContentType().getElements();
+            if (values.length > 0) {
+                NameValuePair param = values[0].getParameterByName("charset");
+                if (param != null) {
+                    charset = param.getValue();
+                }
+            }
+        }
+
+        if (StringUtils.isEmpty(charset)) {
+            charset = "UTF-8";
+        }
+        return charset;
     }
 }

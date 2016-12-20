@@ -1,4 +1,5 @@
-package org.infrastructure.jpa.api;
+package org.infrastructure.jpa.query;
+
 
 import org.infrastructure.util.DigestUtils;
 
@@ -18,8 +19,8 @@ public class QueryPredicate implements Serializable {
 
     private Map<String, String> conditions = new HashMap<>();
     private String sort;
-    private int start = 0;
-    private int limit = 50;
+    private int pageIdx = 1;
+    private Integer pageSize;
 
     /**
      * 计算当前查询谓词的签名
@@ -27,7 +28,7 @@ public class QueryPredicate implements Serializable {
     public String calcSignature() {
         StringBuilder msg = new StringBuilder();
         conditions.entrySet().stream().map(entry -> entry.getKey() + entry.getValue()).forEach(msg::append);
-        msg.append(sort).append(start).append("~").append(limit).append(salt);
+        msg.append(sort).append(pageIdx).append("~").append(pageSize).append(salt);
         return DigestUtils.md5Hex(msg.toString());
     }
 
@@ -53,23 +54,39 @@ public class QueryPredicate implements Serializable {
         return sort;
     }
 
+    /**
+     * 多个排序字段用,隔开
+     * name__desc,id__desc
+     */
     public void setSort(String sort) {
         this.sort = sort;
     }
 
-    public int getStart() {
-        return start;
+    /**
+     * 分页页码，从1开始
+     */
+    public int getPageIdx() {
+        return pageIdx;
     }
 
-    public void setStart(int start) {
-        this.start = start;
+    /**
+     * 分页页码，从1开始
+     */
+    public void setPageIdx(int start) {
+        this.pageIdx = start;
     }
 
-    public int getLimit() {
-        return limit;
+    /**
+     * 分页大小
+     */
+    public Integer getPageSize() {
+        return pageSize;
     }
 
-    public void setLimit(int limit) {
-        this.limit = limit;
+    /**
+     * 分页大小
+     */
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
     }
 }

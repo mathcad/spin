@@ -1,6 +1,6 @@
 package org.infrastructure.jpa.core;
 
-import org.infrastructure.jpa.api.QueryParam;
+import org.infrastructure.jpa.query.QueryParam;
 import org.infrastructure.jpa.sql.SQLSource;
 
 /**

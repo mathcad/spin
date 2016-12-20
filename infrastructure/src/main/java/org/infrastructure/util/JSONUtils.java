@@ -72,7 +72,7 @@ public abstract class JSONUtils {
     /**
      * 默认的 {@code JSON} 日期/时间字段的格式化模式。
      */
-    public static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss SSS";
+    public static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     /**
      * 将给定的目标对象根据指定的条件参数转换成 {@code JSON} 格式的字符串。
@@ -90,7 +90,7 @@ public abstract class JSONUtils {
      */
     public static String toJson(Object target, Type targetType, boolean isSerializeNulls, Double version, String datePattern, boolean excludesFieldsWithoutExpose) {
         if (target == null)
-            return EMPTY_JSON;
+            return EMPTY;
         GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Timestamp.class, new TimestampTypeAdapter());
 
@@ -105,6 +105,7 @@ public abstract class JSONUtils {
             builder.excludeFieldsWithoutExposeAnnotation();
         String result;
         Gson gson = builder.create();
+
         try {
             if (targetType != null) {
                 result = gson.toJson(target, targetType);
@@ -135,7 +136,7 @@ public abstract class JSONUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target) {
-        return toJson(target, null, false, null, null, true);
+        return toJson(target, null, false, null, null, false);
     }
 
     /**

@@ -29,7 +29,6 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -138,8 +137,7 @@ public abstract class BeanUtils {
      * 将Map转换为对象
      * <p>
      * 复合属性，请在语句中指定别名为实体属性的路径。如createUser.id对应createUser的id属性。<br>
-     * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。<br>
-     * 注：出于性能考虑，且Sql查询不能查出集合类型的value，所以只处理单层的Map(即Map的value不能再是Map或List等集合对象，遇到集合属性，将会舍弃)。
+     * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
      * </p>
      */
     public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
@@ -176,7 +174,7 @@ public abstract class BeanUtils {
             propName[depth++] = (p.substring(off));
             if (depth == 1) {
                 PropertyDescriptorWrapper prop = props.get(p);
-                if (null == prop || Collection.class.isAssignableFrom(prop.protertyType) || Map.class.isAssignableFrom(prop.protertyType))
+                if (null == prop)
                     continue;
                 args[0] = ObjectUtils.convert(prop.protertyType, entry.getValue());
                 prop.writer.invoke(bean, args);
@@ -205,7 +203,7 @@ public abstract class BeanUtils {
                     ++i;
                     continue;
                 }
-                if (i == depth - 1 && !(Collection.class.isAssignableFrom(prop.protertyType) || Map.class.isAssignableFrom(prop.protertyType))) {
+                if (i == depth - 1) {
                     args[0] = ObjectUtils.convert(propType, entry.getValue());
                     prop.writer.invoke(worker, args);
                 }

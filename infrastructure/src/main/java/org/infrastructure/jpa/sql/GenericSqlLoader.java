@@ -17,9 +17,9 @@
 
 package org.infrastructure.jpa.sql;
 
-import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.core.DatabaseType;
 import org.infrastructure.jpa.core.SQLLoader;
+import org.infrastructure.jpa.query.QueryParam;
 import org.infrastructure.jpa.sql.resolver.SimpleResolver;
 import org.infrastructure.jpa.sql.resolver.TemplateResolver;
 

@@ -2,10 +2,10 @@ package org.infrastructure.util;
 
 import org.infrastructure.sys.ErrorAndExceptionCode;
 import org.infrastructure.throwable.SimplifiedException;
-import org.infrastructure.util.StringUtils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +24,12 @@ public class DateUtils {
     private static final String alignHourPattern = "([0-1]\\d|2[0-3])";
     private static final String alignMinutePattern = "([0-5]\\d)";
     private static final String alignSecondPattern = "([0-5]\\d)";
+
+    private static SimpleDateFormat day = new SimpleDateFormat("yyyy-MM-dd");
+    private static SimpleDateFormat second = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static SimpleDateFormat zhDay = new SimpleDateFormat("yyyy年MM月dd日");
+    private static SimpleDateFormat zhSecond = new SimpleDateFormat("yyyy年MM月dd日 HH时mm分ss秒");
+    private static SimpleDateFormat fullDay = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_S");
 
     private static final String[] datePatten = {
             yearPattern + "(.)" + alignMonthPattern + "(.)" + alignDayPattern,
@@ -74,7 +80,8 @@ public class DateUtils {
             sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
         else {
             if (index < datePatten.length * timePatten.length)
-                sdf = new SimpleDateFormat(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2), matcher.group(4)) + matcher.group(6) + timeFormat[index % timeFormat.length]);
+                sdf = new SimpleDateFormat(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2)
+                        , matcher.group(4)) + matcher.group(6) + timeFormat[index % timeFormat.length]);
             else
                 sdf = new SimpleDateFormat(dateFormat[index % (datePatten.length * timePatten.length)]);
         }
@@ -84,4 +91,74 @@ public class DateUtils {
             throw new SimplifiedException(ErrorAndExceptionCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
         }
     }
+
+    /**
+     * 计算提前多少秒时间
+     *
+     * @param date   日期
+     * @param second 秒数
+     * @return 结果时间
+     */
+    public static Date beforeSecond(Date date, int second) {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.SECOND, calendar.get(Calendar.SECOND) - second);
+
+        return calendar.getTime();
+
+    }
+
+    /**
+     * 计算延后多少小时时间
+     *
+     * @param date  日期
+     * @param hours 小时数
+     * @return 结果时间
+     */
+    public static Date afterhours(Date date, int hours) {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR, calendar.get(Calendar.HOUR) + hours);
+
+        return calendar.getTime();
+    }
+
+    /**
+     * 将日期格式化作为yyyy_MM_dd_HH_mm_ss_S
+     */
+    public static String formatDateForFullName(Date date) {
+        return fullDay.format(date);
+    }
+
+
+    /**
+     * 格式化日期(精确到日)
+     */
+    public static String formatDateForDay(Date date) {
+        return day.format(date);
+    }
+
+    /**
+     * 格式化日期(精确到秒)
+     */
+    public static String formatDateForSecond(Date date) {
+        return second.format(date);
+    }
+
+    /**
+     * 格式化中文日期(精确到日)
+     */
+    public static String formatDateForZhDay(Date date) {
+        return zhDay.format(date);
+    }
+
+    /**
+     * 格式化中文日期(精确到秒)
+     */
+    public static String formatDateForZhSecond(Date date) {
+        return zhSecond.format(date);
+    }
+
 }

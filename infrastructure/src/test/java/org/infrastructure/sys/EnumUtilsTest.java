@@ -2,7 +2,7 @@ package org.infrastructure.sys;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.infrastructure.jpa.api.QueryParam;
+import org.infrastructure.jpa.query.QueryParam;
 import org.junit.Test;
 
 import java.lang.reflect.ParameterizedType;
@@ -49,13 +49,10 @@ public class EnumUtilsTest {
         System.out.println(Arrays.toString(((ParameterizedType) a.getClass().getGenericSuperclass()).getActualTypeArguments()));
         System.out.println(GTYPE_LIST_MAP);
 
-        QueryParam q = new QueryParam();
-        q.setCls("java.lang.String");
-        q.getConditions().put("a", "a");
-        q.getConditions().put("b", "b");
-        q.getConditions().put("c", "c");
-        q.getFields().add("field");
-        q.getPredicate().setSort("id__desc");
+        QueryParam q = QueryParam.create().from("java.lang.String");
+        q.addField("field");
+        q.where("a","a").where("b","c").where("b","c");
+        q.desc("id");
         Gson gson = new Gson();
         String str = gson.toJson(q);
         System.out.println(str);

@@ -1,4 +1,4 @@
-package org.infrastructure.jpa.api;
+package org.infrastructure.jpa.extend;
 
 import org.hibernate.SessionFactory;
 import org.infrastructure.jpa.core.ARepository;

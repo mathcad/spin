@@ -1,22 +1,24 @@
-package org.infrastructure.jpa.api;
+package org.infrastructure.jpa.query;
 
 import com.google.gson.Gson;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.core.IEntity;
-import org.infrastructure.util.EnumUtils;
-import org.infrastructure.util.DateUtils;
+import org.infrastructure.throwable.SQLException;
 import org.infrastructure.throwable.SimplifiedException;
+import org.infrastructure.util.DateUtils;
+import org.infrastructure.util.EnumUtils;
 import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
+import javax.persistence.Entity;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -38,38 +40,35 @@ public class QueryParamParser {
     private static final String SPLITOR = "__";
     private Gson gson = new Gson();
 
-    public static class DetachedCriteriaResult {
-        public DetachedCriteria dc;
-        public Map<String, Integer> aliasMap = new HashMap<>();
-
-        public static DetachedCriteriaResult from(DetachedCriteria dc) {
-            DetachedCriteriaResult dr = new DetachedCriteriaResult();
-            dr.dc = dc;
-            return dr;
-        }
-    }
-
     /**
      * 将通用查询参数转换为DetachedCriteria
      * <pre>
      * PageRequest pr = new PageRequest(args.page, args.pageSize);
-     * DetachedCriteria dc = DetachedCriteria.forClass(SpTransOrder.class);
-     * dc.createAlias("CUSTOMER", "c");
-     * dc.createAlias("ROUTE", "r");
+     * DetachedCriteria deCriteria = DetachedCriteria.forClass(SpTransOrder.class);
+     * deCriteria.createAlias("CUSTOMER", "c");
+     * deCriteria.createAlias("ROUTE", "r");
      * </pre>
      */
-    public DetachedCriteriaResult parseDetachedCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
-        Class enCls = Class.forName(p.getCls());
-        if (!IEntity.class.isAssignableFrom(enCls))
-            throw new ClassNotFoundException(p.getCls() + " is not an Entity Class");
-        DetachedCriteriaResult result = new DetachedCriteriaResult();
-        result.dc = DetachedCriteria.forClass(enCls);
-        Map<String, QueryParamHandler> handlersMap = new HashMap<>();
-        if (handlers != null)
-            for (QueryParamHandler qh : handlers) {
-                handlersMap.put(qh.getField(), qh);
-            }
+    public DetachedCriteriaBag parseDetachedCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
+        // 解析查询实体类型
+        if (StringUtils.isEmpty(p.getCls()))
+            throw new SimplifiedException("未指定查询实体");
+        Class<?> enCls = Class.forName(p.getCls());
+        if (!IEntity.class.isAssignableFrom(enCls) || null == enCls.getAnnotation(Entity.class))
+            throw new SimplifiedException(p.getCls() + " is not an Entity Class");
+        DetachedCriteriaBag result = new DetachedCriteriaBag();
+        result.setEnCls(enCls);
 
+        // 设置字段别名
+        result.setAliasMap(p.getAliasMap());
+
+        // 自定义字段处理handler
+        Map<String, QueryParamHandler> handlersMap = new HashMap<>();
+        for (QueryParamHandler qh : handlers) {
+            handlersMap.put(qh.getField(), qh);
+        }
+
+        // 处理查询条件
         for (Map.Entry<String, String> entry : p.getConditions().entrySet()) {
             String key = entry.getKey();
             String val = entry.getValue();
@@ -79,7 +78,7 @@ public class QueryParamParser {
 
             // 自定义属性处理
             if (handlersMap.containsKey(key)) {
-                handlersMap.get(entry.getKey()).processCriteria(result.dc, val);
+                handlersMap.get(entry.getKey()).processCriteria(result.getDeCriteria(), val);
                 continue;
             }
 
@@ -95,38 +94,48 @@ public class QueryParamParser {
                             orInners.add(ct);
                     }
 
-                    if (orInners.size() > 0)
-                        result.dc.add(Restrictions.or(orInners.toArray(new Criterion[]{})));
+                    if (!orInners.isEmpty())
+                        result.getDeCriteria().add(Restrictions.or(orInners.toArray(new Criterion[]{})));
                 } else {
                     Criterion ct = parseSinglePropCritetion(result, enCls, key, val);
                     if (ct != null)
-                        result.dc.add(ct);
+                        result.getDeCriteria().add(ct);
                 }
             }
         }
+
+        // 处理排序
+        this.parseOrders(p).forEach(result.getDeCriteria()::addOrder);
+
+        // 处理分页
+        if (null != p.getPageSize())
+            result.setPageRequest(new PageRequest(p.getPageIdx() - 1, p.getPageSize()));
         return result;
     }
 
     /**
+     * 处理排序字段
      * order__desc,id__desc
      */
-    public Order[] parseOrders(QueryParam p) {
+    public List<Order> parseOrders(QueryParam p) {
         List<Order> orders = new ArrayList<>();
         if (StringUtils.isNotEmpty(p.getSort())) {
-            for (String s : p.getSort().split(",")) {
-                String[] so = s.split(SPLITOR);
-                if (so.length == 1) {
-                    orders.add(Order.asc(s));
-                } else {
-                    orders.add(so[1].equalsIgnoreCase("desc") ? Order.desc(so[0]) : Order.asc(so[0]));
-                }
+            String[] sorts = p.getSort().split(",");
+            for (String sort : sorts) {
+                String[] t = sort.split(SPLITOR);
+                if (t.length == 1 || "asc".equalsIgnoreCase(t[1]))
+                    orders.add(Order.asc(t[0]));
+                else if ("desc".equalsIgnoreCase(t[1]))
+                    orders.add(Order.desc(t[0]));
+                else
+                    throw new SQLException(SQLException.UNKNOW_MAPPER_SQL_TYPE, "查询参数存在非法的排序字段: [" + sort + "]");
             }
         }
-        return orders.toArray(new Order[]{});
+        return orders;
     }
 
-    private Criterion parseSinglePropCritetion(DetachedCriteriaResult result, Class enCls, String qKey, String val) {
-        List<String> qPath = Arrays.asList(qKey.split(SPLITOR));
+    private Criterion parseSinglePropCritetion(DetachedCriteriaBag result, Class enCls, String qKey, String val) {
+        List<String> qPath = new ArrayList<>(Arrays.asList(qKey.split(SPLITOR)));
         String qOp = qPath.remove(qPath.size() - 1);
 
         //去除空格
@@ -157,7 +166,7 @@ public class QueryParamParser {
         if (field == null)
             throw new SimplifiedException(StringUtils.format("未找到{0}字段{1}", cls.getName(), qPath.get(0)));
         Object v;
-        Class fieldType = field.getType();
+        Class<?> fieldType = field.getType();
         try {
             if (fieldType.equals(String.class)) {
                 v = val;
@@ -182,7 +191,8 @@ public class QueryParamParser {
             } else if (fieldType.equals(Timestamp.class)) {
                 v = new Timestamp(DateUtils.parseDate(val).getTime());
             } else if (fieldType.isEnum()) {
-                v = EnumUtils.getEnum(fieldType, Integer.valueOf(val));
+                //noinspection unchecked
+                v = EnumUtils.getEnum((Class<Enum>) fieldType, Integer.valueOf(val));
             } else {
                 v = this.gson.fromJson(val, fieldType);
             }
@@ -192,13 +202,13 @@ public class QueryParamParser {
         return v;
     }
 
-    private Criterion addPropQuery(List<String> qPath, String op, Object val, DetachedCriteriaResult dr) {
+    private Criterion addPropQuery(List<String> qPath, String op, Object val, DetachedCriteriaBag dr) {
         String propName;
         if (qPath.size() == 2) {
             String ofield = qPath.get(0);
-            if (!dr.aliasMap.containsKey(ofield)) {
-                dr.aliasMap.put(ofield, 0);
-                dr.dc.createAlias(qPath.get(0), ofield, JoinType.LEFT_OUTER_JOIN);
+            if (!dr.getAliasMap().containsKey(ofield)) {
+                dr.getAliasMap().put(ofield, ofield);
+                dr.getDeCriteria().createAlias(qPath.get(0), ofield, JoinType.LEFT_OUTER_JOIN);
             }
             propName = ofield + "." + qPath.get(1);
         } else if (qPath.size() == 1)
@@ -261,7 +271,7 @@ public class QueryParamParser {
                     ct = Restrictions.isNull(propName);
                 break;
             default:
-                throw new SimplifiedException(StringUtils.format("不支持的查询条件[{0}.{1}={2}]", propName, op, value));
+                throw new SQLException(SQLException.UNKNOW_MAPPER_SQL_TYPE, StringUtils.format("不支持的查询条件[{0}.{1}={2}]", propName, op, value));
         }
         return ct;
     }

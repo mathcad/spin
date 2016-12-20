@@ -17,10 +17,11 @@
 
 package org.infrastructure.jpa.sql;
 
+import com.github.lwhite1.tablesaw.api.Table;
 import org.hibernate.cfg.Environment;
-import org.infrastructure.jpa.api.QueryParam;
 import org.infrastructure.jpa.core.Page;
 import org.infrastructure.jpa.core.SQLLoader;
+import org.infrastructure.jpa.query.QueryParam;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.BeanUtils;
 import org.infrastructure.util.HashUtils;
@@ -28,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -37,6 +39,7 @@ import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -148,7 +151,7 @@ public class SQLManager {
         String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ")";
         SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
         Long total = nameJt.queryForObject(totalSqlTxt, params, Long.class);
-        return new Page<>(list, total != null ? total : 0, qp.getLimit());
+        return new Page<>(list, total != null ? total : 0, qp.getPageSize());
     }
 
     /**
@@ -211,7 +214,7 @@ public class SQLManager {
         String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ")";
         SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
         Long total = nameJt.queryForObject(totalSqlTxt, params, Long.class);
-        return new Page<>(res, total != null ? total : 0, qp.getLimit());
+        return new Page<>(res, total != null ? total : 0, qp.getPageSize());
     }
 
     /**
@@ -263,6 +266,16 @@ public class SQLManager {
         if (logger.isDebugEnabled())
             logger.debug(sqlId + ":\n" + sqlTxt);
         nameJt.batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
+    }
+
+    public Table queryAsTable(String sqlId, Map<String, Object> paramMap) {
+        ResultSet rs = nameJt.query(sqlId, paramMap, (ResultSetExtractor<ResultSet>) rs1 -> rs1);
+        try {
+            return Table.create(rs, sqlId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new SimplifiedException("查询错误");
+        }
     }
 
     public JdbcTemplate getJt() {

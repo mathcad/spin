@@ -282,7 +282,7 @@ public abstract class ObjectUtils {
         } else if (BigDecimal.class.equals(type)) {
             return target == null ? null : (T) new BigDecimal(target.toString());
         } else if (type.getAnnotation(UserEnum.class) != null && target != null) {
-            return (T) EnumUtils.getEnum(type, Integer.valueOf(target.toString()));
+            return (T) EnumUtils.getEnum((Class<Enum>) type, Integer.valueOf(target.toString()));
         } else {
             Class<?> typePrimitive = ClassUtils.wrapperToPrimitive(type);
             if (null == target) {

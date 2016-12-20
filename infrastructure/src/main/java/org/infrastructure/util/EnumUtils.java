@@ -129,10 +129,10 @@ public abstract class EnumUtils {
      * @param text    枚举文本
      * @return 枚举常量
      */
-    public static Enum getEnum(Class<?> enumCls, String text) {
-        for (Object o : enumCls.getEnumConstants()) {
+    public static <E extends Enum<E>> E getEnum(Class<E> enumCls, String text) {
+        for (E o : enumCls.getEnumConstants()) {
             if (o.toString().equals(text)) {
-                return (Enum) o;
+                return o;
             }
         }
         return null;
@@ -146,7 +146,7 @@ public abstract class EnumUtils {
      * @param field   字段名
      * @return 枚举常量
      */
-    public static Enum getEnum(Class<?> enumCls, int value, String... field) {
+    public static <E extends Enum<E>> E getEnum(Class<E> enumCls, int value, String... field) {
         String fieldName;
         if (null != field && field.length > 0 && StringUtils.isNotEmpty(field[0]))
             fieldName = field[0];
@@ -159,10 +159,10 @@ public abstract class EnumUtils {
             throw new SimplifiedException("Enum:" + enumCls.getName() + " has no such field:" + fieldName, e);
         }
         ReflectionUtils.makeAccessible(valueField);
-        for (Object o : enumCls.getEnumConstants()) {
+        for (E o : enumCls.getEnumConstants()) {
             int fVal = (Integer) ReflectionUtils.getField(valueField, o);
             if (value == fVal) {
-                return (Enum) o;
+                return o;
             }
         }
         return null;
@@ -176,7 +176,7 @@ public abstract class EnumUtils {
      * @param key     键
      * @return 枚举常量
      */
-    public static Enum getByValue(Class<?> enumCls, Map<?, Object> map, String key) {
+    public static <E extends Enum<E>> Enum getByValue(Class<E> enumCls, Map<?, Object> map, String key) {
         Integer v = HashUtils.getIntegerValue(map, key);
         if (null == v)
             return null;

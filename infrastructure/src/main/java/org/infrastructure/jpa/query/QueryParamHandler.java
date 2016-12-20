@@ -1,4 +1,4 @@
-package org.infrastructure.jpa.api;
+package org.infrastructure.jpa.query;
 
 import org.hibernate.criterion.DetachedCriteria;
 
