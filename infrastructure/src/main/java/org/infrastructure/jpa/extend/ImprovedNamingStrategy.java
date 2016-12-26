@@ -1,9 +1,9 @@
 package org.infrastructure.jpa.extend;
 
+import org.infrastructure.util.StringUtils;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.infrastructure.util.StringUtils;
 
 /**
  * hibernate命名策略

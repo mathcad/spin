@@ -42,7 +42,7 @@ public class RestfulApiAspect {
     @Autowired
     Authenticator authenticator;
 
-    @Pointcut("@annotation(com.ly.arch.annotations.RestfulApi)")
+    @Pointcut("@annotation(org.infrastructure.annotations.RestfulApi)")
     private void restfulMethod() {
     }
 

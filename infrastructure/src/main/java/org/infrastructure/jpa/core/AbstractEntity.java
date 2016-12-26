@@ -6,8 +6,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Version;
-import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Random;
 
 /**
@@ -19,56 +21,48 @@ import java.util.Random;
  */
 @MappedSuperclass
 public abstract class AbstractEntity implements IEntity<Long> {
-    private static final long serialVersionUID = 4497191615275262107L;
 
     /**
      * 主键
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /**
-     * 记录创建者
+     * 记录创建者名称
      */
     @ManyToOne
-    private AbstractUser createUser;
+    private AbstractUser createBy;
 
     /**
      * 创建时间，禁止更改
      */
     @Column(nullable = false, updatable = false)
-    private Timestamp createTime;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createTime;
 
     /**
-     * 记录更新者名称
+     * 记录更新者
      */
-    @Column
-    private AbstractUser updateUser;
+    @ManyToOne
+    private AbstractUser updateBy;
 
     /**
      * 最后更新时间
      */
     @Column(nullable = false)
-    private Timestamp updateTime;
-
-    /**
-     * 排序号
-     */
-    @Column(precision = 16, scale = 2)
-    private double orderno = 1;
-
-    /**
-     * 是否有效用于逻辑删除
-     */
-    @Column
-    private boolean valid = true;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updateTime;
 
     /**
      * 版本号用于并发控制
      */
     @Version
     private int version;
+
+    @Column
+    private boolean active = true;
 
     @Override
     public boolean equals(Object obj) {
@@ -92,52 +86,36 @@ public abstract class AbstractEntity implements IEntity<Long> {
         this.id = id;
     }
 
-    public AbstractUser getCreateUser() {
-        return createUser;
+    public AbstractUser getCreateBy() {
+        return createBy;
     }
 
-    public void setCreateUser(AbstractUser createUser) {
-        this.createUser = createUser;
+    public void setCreateBy(AbstractUser createBy) {
+        this.createBy = createBy;
     }
 
-    public Timestamp getCreateTime() {
+    public Date getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Timestamp createTime) {
+    public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
 
-    public AbstractUser getUpdateUser() {
-        return updateUser;
+    public AbstractUser getUpdateBy() {
+        return updateBy;
     }
 
-    public void setUpdateUser(AbstractUser updateUser) {
-        this.updateUser = updateUser;
+    public void setUpdateBy(AbstractUser updateBy) {
+        this.updateBy = updateBy;
     }
 
-    public Timestamp getUpdateTime() {
+    public Date getUpdateTime() {
         return updateTime;
     }
 
-    public void setUpdateTime(Timestamp updateTime) {
+    public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
-    }
-
-    public double getOrderno() {
-        return orderno;
-    }
-
-    public void setOrderno(double orderno) {
-        this.orderno = orderno;
-    }
-
-    public boolean isValid() {
-        return valid;
-    }
-
-    public void setValid(boolean valid) {
-        this.valid = valid;
     }
 
     public int getVersion() {
@@ -146,5 +124,13 @@ public abstract class AbstractEntity implements IEntity<Long> {
 
     public void setVersion(int version) {
         this.version = version;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean isActive) {
+        this.active = isActive;
     }
 }

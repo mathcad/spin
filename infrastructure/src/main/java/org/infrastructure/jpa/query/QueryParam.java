@@ -1,20 +1,20 @@
 package org.infrastructure.jpa.query;
 
-import org.apache.commons.lang3.StringUtils;
 import org.infrastructure.sys.EnvCache;
 import org.infrastructure.sys.ErrorAndExceptionCode;
 import org.infrastructure.sys.TypeIdentifier;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.JSONUtils;
+import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 通用查询参数
@@ -27,7 +27,7 @@ public class QueryParam implements Serializable {
 
     ///页面查询需要携带的信息，其中cls必填////////////////////////////////////////////////////////////////
     private String cls;
-    private List<String> fields = new ArrayList<>();
+    private Set<String> fields = new HashSet<>();
     private Map<String, String> aliasMap = new HashMap<>();
     private QueryPredicate predicate = new QueryPredicate();
     private String signature;
@@ -44,8 +44,7 @@ public class QueryParam implements Serializable {
      * 解析order部分
      */
     public String parseOrder(String tableAlias) {
-        return predicate.getSort() != null && predicate.getSort().length() > 0 ?
-                "ORDER BY" + predicate.getSort().replaceAll("__", " ").replaceAll(",\\s*", ", " + tableAlias + ".") : "";
+        return StringUtils.isNotEmpty(predicate.getSort()) ? "ORDER BY" + predicate.getSort().replaceAll("__", " ").replaceAll(",\\s*", ", " + tableAlias + ".") : "";
     }
 
     /**
@@ -102,7 +101,7 @@ public class QueryParam implements Serializable {
     /**
      * 增加查询字段别名
      */
-    public QueryParam createAlias(String... params) {
+    public QueryParam createAliases(String... params) {
         if (params.length % 2 != 0) {
             throw new IllegalArgumentException("别名映射参数长度必须为偶数");
         }
@@ -164,14 +163,14 @@ public class QueryParam implements Serializable {
     /**
      * 查询的字段列表
      */
-    public List<String> getFields() {
+    public Set<String> getFields() {
         return fields;
     }
 
     /**
      * 查询的字段列表
      */
-    public void setFields(List<String> fields) {
+    public void setFields(Set<String> fields) {
         this.fields = fields;
     }
 

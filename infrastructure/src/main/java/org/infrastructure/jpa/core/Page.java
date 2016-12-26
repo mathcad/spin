@@ -1,9 +1,8 @@
 package org.infrastructure.jpa.core;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
-
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * 分页数据（列表使用)
@@ -12,25 +11,25 @@ import javax.xml.bind.annotation.XmlType;
  */
 public class Page<T> implements Serializable {
     private static final long serialVersionUID = -1433098389717460681L;
-    private List<T> data;
+    private List<T> rows = new ArrayList<>();
     private Long total;
     private int pageSize;
 
     public Page() {
     }
 
-    public Page(List<T> data, Long total, int pageSize) {
-        this.data = data;
+    public Page(List<T> rows, Long total, int pageSize) {
+        this.rows = rows;
         this.total = total;
         this.pageSize = pageSize;
     }
 
-    public List<T> getData() {
-        return data;
+    public List<T> getRows() {
+        return rows;
     }
 
-    public void setData(List<T> data) {
-        this.data = data;
+    public void setRows(List<T> rows) {
+        this.rows = rows;
     }
 
     public Long getTotal() {

@@ -1,6 +1,14 @@
 package org.infrastructure.jpa.core;
 
-import org.hibernate.*;
+import org.hibernate.CacheMode;
+import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.ReplicationMode;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
@@ -9,19 +17,15 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
-import org.hibernate.sql.JoinType;
-import org.infrastructure.jpa.query.DetachedCriteriaBag;
+import org.infrastructure.jpa.query.DetachedCriteriaBuilder;
 import org.infrastructure.jpa.query.QueryParam;
 import org.infrastructure.jpa.query.QueryParamParser;
 import org.infrastructure.jpa.sql.SQLManager;
 import org.infrastructure.sys.Assert;
-import org.infrastructure.sys.EnvCache;
-import org.infrastructure.sys.ErrorAndExceptionCode;
 import org.infrastructure.sys.SessionUser;
 import org.infrastructure.throwable.SQLException;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.BeanUtils;
-import org.infrastructure.util.CollectionUtils;
 import org.infrastructure.util.EntityUtils;
 import org.infrastructure.util.ReflectionUtils;
 import org.infrastructure.util.SessionUtils;
@@ -34,28 +38,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Temporal;
 import javax.persistence.Transient;
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.sql.Timestamp;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -74,6 +65,7 @@ import java.util.stream.Collectors;
 public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     private static final Logger logger = LoggerFactory.getLogger(ARepository.class);
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
+    private static final int MAX_RECORDS = 100000000;
     protected static final ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
     };
 
@@ -114,7 +106,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * Open a new session, if thread has one more session, return the last session.
      */
     public Session openSession() {
-        return this.openSession(false);
+        return openSession(false);
     }
 
     /**
@@ -151,7 +143,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 打开事务 如果线程已有事务就返回，不重复打开
      */
     public Transaction openTransaction() {
-        return this.openTransaction(false);
+        return openTransaction(false);
     }
 
     /**
@@ -180,11 +172,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             SessionUser user = SessionUtils.getCurrentUser();
             if (null == user)
                 user = AbstractUser.ref(1L);
-            aEn.setUpdateTime(new Timestamp(System.currentTimeMillis()));
-            aEn.setUpdateUser(AbstractUser.ref(user.getId()));
+            aEn.setUpdateTime(new Date());
+            aEn.setUpdateBy(AbstractUser.ref(user.getId()));
             if (null == aEn.getId()) {
-                aEn.setCreateUser(AbstractUser.ref(user.getId()));
-                aEn.setCreateTime(new Timestamp(System.currentTimeMillis()));
+                aEn.setCreateBy(AbstractUser.ref(user.getId()));
+                aEn.setCreateTime(new Date());
             }
         }
         try {
@@ -227,7 +219,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param entity          the persistent object to replicate
      * @param replicationMode the Hibernate ReplicationMode
      * @throws DataAccessException in case of Hibernate errors
-     * @see org.hibernate.Session#replicate(Object, ReplicationMode)
+     * @see Session#replicate(Object, ReplicationMode)
      */
     public void replicate(final T entity, final ReplicationMode replicationMode) {
         checkWriteOperationAllowed(getSession());
@@ -238,14 +230,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * Return the persistent instance of the actual entity class
      * with the given identifier, or {@code null} if not found.
      * <p>This method is a thin wrapper around
-     * {@link org.hibernate.Session#get(Class, Serializable)} for convenience.
+     * {@link Session#get(Class, Serializable)} for convenience.
      * For an explanation of the exact semantics of this method, please do refer to
      * the Hibernate API documentation in the first instance.
      *
      * @param id the identifier of the persistent instance
      * @return the persistent instance, or {@code null} if not found
      * @throws DataAccessException in case of Hibernate errors
-     * @see org.hibernate.Session#get(Class, Serializable)
+     * @see Session#get(Class, Serializable)
      */
     public T get(final PK id) {
         return getSession().get(this.entityClazz, id);
@@ -255,14 +247,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * Return the persistent instance of the given identifier, or {@code null} if not found.
      * <p>Obtains the specified lock mode if the instance exists.
      * <p>This method is a thin wrapper around
-     * {@link org.hibernate.Session#get(Class, Serializable, LockMode)} for convenience.
+     * {@link Session#get(Class, Serializable, LockMode)} for convenience.
      * For an explanation of the exact semantics of this method, please do refer to
      * the Hibernate API documentation in the first instance.
      *
      * @param id       the identifier of the persistent instance
      * @param lockMode the lock mode to obtain
      * @return the persistent instance, or {@code null} if not found
-     * @see org.hibernate.Session#get(Class, Serializable, LockMode)
+     * @see Session#get(Class, Serializable, LockMode)
      */
     public T get(final PK id, final LockMode lockMode) {
         if (lockMode != null) {
@@ -286,7 +278,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * Return the persistent instance of the given entity class
      * with the given identifier, throwing an exception if not found.
      * <p>This method is a thin wrapper around
-     * {@link org.hibernate.Session#load(Class, Serializable)} for convenience.
+     * {@link Session#load(Class, Serializable)} for convenience.
      * For an explanation of the exact semantics of this method, please do refer to
      * the Hibernate API documentation in the first instance.
      *
@@ -294,7 +286,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return the persistent instance
      * @throws org.springframework.orm.ObjectRetrievalFailureException if not found
      * @throws DataAccessException                                     in case of Hibernate errors
-     * @see org.hibernate.Session#load(Class, Serializable)
+     * @see Session#load(Class, Serializable)
      */
     public T load(final PK id) {
         return getSession().load(this.entityClazz, id);
@@ -305,7 +297,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * with the given identifier, throwing an exception if not found.
      * Obtains the specified lock mode if the instance exists.
      * <p>This method is a thin wrapper around
-     * {@link org.hibernate.Session#load(Class, Serializable, LockMode)} for convenience.
+     * {@link Session#load(Class, Serializable, LockMode)} for convenience.
      * For an explanation of the exact semantics of this method, please do refer to
      * the Hibernate API documentation in the first instance.
      *
@@ -314,7 +306,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return the persistent instance
      * @throws org.springframework.orm.ObjectRetrievalFailureException if not found
      * @throws DataAccessException                                     in case of Hibernate errors
-     * @see org.hibernate.Session#load(Class, Serializable)
+     * @see Session#load(Class, Serializable)
      */
     public T load(final PK id, final LockMode lockMode) {
         if (lockMode != null) {
@@ -336,7 +328,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      *
      * @param entity the persistent instance to re-read
      * @throws DataAccessException in case of Hibernate errors
-     * @see org.hibernate.Session#refresh(Object)
+     * @see Session#refresh(Object)
      */
     public void refresh(final T entity) {
         refresh(entity, null);
@@ -349,7 +341,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param entity   the persistent instance to re-read
      * @param lockMode the lock mode to obtain
      * @throws DataAccessException in case of Hibernate errors
-     * @see org.hibernate.Session#refresh(Object, LockMode)
+     * @see Session#refresh(Object, LockMode)
      */
     public void refresh(final T entity, final LockMode lockMode) {
         if (lockMode != null) {
@@ -365,7 +357,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param entity the persistence instance to check
      * @return whether the given object is in the Session cache
      * @throws DataAccessException if there is a Hibernate error
-     * @see org.hibernate.Session#contains
+     * @see Session#contains
      */
     public boolean contains(final T entity) {
         return getSession().contains(entity);
@@ -415,7 +407,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         for (Criterion c : cs)
             dc.add(c);
 
-        List<T> enList = this.find(dc);
+        List<T> enList = find(dc);
         enList.forEach(this::delete);
     }
 
@@ -431,134 +423,32 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         getSession().delete(hql);
     }
 
-    public Page<Map<String, Object>> findByFields(List<String> fields, DetachedCriteriaBag dr) {
-        List<String> fieldsList = fields;
-        if (CollectionUtils.isEmpty(fields))
-            fieldsList = parseEntityColumns(dr.getEnCls());
-        Map<String, Field> entityJoinFields = getJoinFields(dr.getEnCls());
-        Map<String, Set<String>> referFields = new HashMap<>();
-        Set<String> queryjoinFields = new HashSet<>();
-
-        // 使用投影映射字段
-        ProjectionList projectionList = Projections.projectionList();
-
-        for (String pf : fieldsList) {
-            // 如果是对象投影，不在查询中体现，后期通过对象Id来初始化
-            if (entityJoinFields.containsKey(pf)) {
-                referFields.put(pf, new HashSet<>());
-                continue;
-            }
-
-            projectionList.add(Property.forName(pf), dr.getAliasMap().containsKey(pf) ? dr.getAliasMap().get(pf) : pf);
-
-            int pjFieldPtIdx = pf.indexOf('.');
-            if (pjFieldPtIdx > -1) {
-                String objField = pf.split("\\.")[0];
-                queryjoinFields.add(objField);
-                if (pf.lastIndexOf('.') == pjFieldPtIdx && referFields.containsKey(objField))
-                    referFields.get(objField).add(pf);
-            }
-        }
-
-        // 总数查询
-        Criteria ct = dr.getDeCriteria().getExecutableCriteria(getSession());
-        ct.setCacheable(false);
-
-        // 查询结果中需外连接的表
-        queryjoinFields.addAll(referFields.keySet());
-        queryjoinFields.stream().filter(jf -> !dr.getAliasMap().containsKey(jf)).forEach(jf -> ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
-
-        // 关联对象，只抓取Id值
-        for (String referField : referFields.keySet()) {
-            Field mapField = entityJoinFields.get(referField);
-            String pkf = EntityUtils.getPKField(mapField.getType()).getName();
-            String fetchF = referField + "." + pkf;
-            referFields.get(referField).add(fetchF);
-            projectionList.add(Property.forName(fetchF), fetchF);
-        }
-        ct.setProjection(projectionList);
-        ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-        if (null != dr.getPageRequest()) {
-            ct.setFirstResult(dr.getPageRequest().getOffset());
-            ct.setMaxResults(dr.getPageRequest().getPageSize());
-        }
-
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> list = ct.list();
-
-        // 关联对象，填充映射对象
-        for (Map<String, Object> m : list) {
-            for (String referField : referFields.keySet()) {
-                referFields.get(referField).stream().filter(fetchField -> m.get(fetchField) != null).forEach(fetchField -> {
-                    if (!m.containsKey(referField)) {
-                        m.put(referField, new HashMap<>());
-                    }
-                    @SuppressWarnings("unchecked")
-                    HashMap<String, Object> cell = (HashMap<String, Object>) m.get(referField);
-                    String[] fetchFields = fetchField.split("\\.");
-                    cell.put(fetchFields[1], m.get(fetchField));
-                });
-            }
-        }
-
-        Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
-        return new Page<>(list, total, null == dr.getPageRequest() ? total.intValue() : dr.getPageRequest().getPageSize());
-    }
-
     /**
-     * 基于QueryParam的投影查询
-     *
-     * @param qp 通用查询参数
-     */
-    public Page<Map<String, Object>> findByFields(QueryParam qp) {
-        DetachedCriteriaBag dr;
-        try {
-            dr = queryParamParser.parseDetachedCriteria(qp);
-        } catch (ClassNotFoundException e) {
-            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
-        }
-        return this.findByFields(qp.getFields(), dr);
-    }
-
-    /**
-     * 分页条件查询，有性能问题
+     * 分页条件查询
      *
      * @param dc 离线条件
      * @param pr 分页请求
-     * @return Page列表
      */
-    public Page<T> find(DetachedCriteria dc, PageRequest pr) {
+    public List<T> find(DetachedCriteria dc, PageRequest pr) {
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
+        if (null != pr) {
+            ct.setFirstResult(pr.getOffset());
+            ct.setMaxResults(pr.getPageSize());
+        }
         ct.setCacheable(true);
         ct.setCacheMode(CacheMode.NORMAL);
-        Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
-
-        ct.setProjection(null);
-        ct.setResultTransformer(CriteriaSpecification.ROOT_ENTITY);
-
-        // 自动追加join策略
-        if (EnvCache.REFER_JOIN_FIELDS.containsKey(this.entityClazz.getName())) {
-            for (Field field : EnvCache.REFER_JOIN_FIELDS.get(this.entityClazz.getName()).values()) {
-                ct.setFetchMode(field.getName(), FetchMode.JOIN);
-            }
-        }
-        ct.setFirstResult(pr.getOffset());
-        ct.setMaxResults(pr.getPageSize());
-        @SuppressWarnings("unchecked")
-        List<T> list = ct.list();
-        return new Page<>(list, total, pr.getPageSize());
+        //noinspection unchecked
+        return ct.list();
     }
 
     /**
      * 条件查询
-     *
-     * @param dc 离线条件
-     * @return 结果数据
      */
     public List<T> find(DetachedCriteria dc) {
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
+        ct.setCacheable(true);
         ct.setCacheMode(CacheMode.NORMAL);
         //noinspection unchecked
         return ct.list();
@@ -575,16 +465,24 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 通过条件查询
+     * 分页条件查询
      */
-    public List<T> find(CriteriaParam cp) {
-        DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        cp.criterions.forEach(dc::add);
-        cp.orders.forEach(dc::addOrder);
-        if (cp.pageRequest != null)
-            return find(dc, cp.pageRequest).getData();
-        else
-            return find(dc);
+    public List<T> find(DetachedCriteriaBuilder dc) {
+        DetachedCriteria detachedCriteria = dc.buildDeCriteria(false);
+        return find(detachedCriteria, dc.getPageRequest());
+    }
+
+    /**
+     * 分页条件查询
+     */
+    public List<T> find(QueryParam qp) {
+        DetachedCriteriaBuilder dr;
+        try {
+            dr = queryParamParser.parseDetachedCriteria(qp);
+        } catch (ClassNotFoundException e) {
+            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
+        }
+        return find(dr);
     }
 
     /**
@@ -615,34 +513,36 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 通过唯一属性查询
-     * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
-     */
-    public T findOne(CriteriaParam cp) {
-        DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        cp.criterions.forEach(dc::add);
-        cp.orders.forEach(dc::addOrder);
-        Session sess = getSession();
-        Criteria ct = dc.getExecutableCriteria(sess);
-        ct.setFirstResult(0);
-        ct.setMaxResults(1);
-        @SuppressWarnings("unchecked")
-        List<T> list = ct.list();
-        if (list.size() < 1)
-            return null;
-        return list.get(0);
-    }
-
-    /**
      * 通过属性查询
      * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      *
      * @param cts 条件数组
      */
     public T findOne(Criterion... cts) {
-        CriteriaParam cp = new CriteriaParam();
-        cp.addCriterion(cts);
-        return findOne(cp);
+        DetachedCriteriaBuilder dc = DetachedCriteriaBuilder.forClass(this.entityClazz);
+        for (Criterion ct : cts) {
+            dc.addCriterion(ct);
+        }
+        return findOne(dc);
+    }
+
+    /**
+     * 通过属性查询
+     * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
+     */
+    public T findOne(DetachedCriteriaBuilder dc) {
+        Criteria ct = dc.buildDeCriteria(false).getExecutableCriteria(getSession());
+        ct.setCacheable(true);
+        ct.setFirstResult(0);
+        ct.setMaxResults(1);
+
+        @SuppressWarnings("unchecked")
+        List<T> list = ct.list();
+        T t;
+        if (list.size() < 1)
+            throw new SQLException(SQLException.RESULT_NOT_FOUND);
+        t = list.get(0);
+        return t;
     }
 
     /**
@@ -690,7 +590,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         if (id == null) {
             return false;
         }
-        Long c = this.count(new CriteriaParam().addCriterion(Restrictions.eq("id", id)));
+        Long c = count(DetachedCriteriaBuilder.forClass(this.entityClazz).addCriterion(Restrictions.eq("id", id)));
         return c > 0;
     }
 
@@ -748,18 +648,16 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 是否存在实体
      */
-    public boolean exist(CriteriaParam p, PK notId) {
+    public boolean exist(DetachedCriteriaBuilder p, PK notId) {
         if (notId != null)
             p.addCriterion(Restrictions.not(Restrictions.eq("id", notId)));
-        Long c = this.count(p);
+        Long c = count(p);
         return c > 0;
     }
 
-    public Long count(CriteriaParam cp) {
-        DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        cp.criterions.forEach(dc::add);
+    public Long count(DetachedCriteriaBuilder dc) {
         Session sess = getSession();
-        Criteria ct = dc.getExecutableCriteria(sess);
+        Criteria ct = dc.buildDeCriteria(false).getExecutableCriteria(sess);
         ct.setCacheable(false);
         return (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
     }
@@ -771,73 +669,139 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 根据条件查询DTO列表
      */
-    public Page<T> page(CriteriaParam cp) {
-        Assert.notNull(cp, "CriteriaParam need a non-null value");
-        DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        cp.criterions.forEach(dc::add);
+    public Page<T> page(DetachedCriteriaBuilder dc) {
+        Assert.notNull(dc, "CriteriaParam need a non-null value");
         Session sess = getSession();
-        Criteria ct = dc.getExecutableCriteria(sess);
+        Criteria ct = dc.buildDeCriteria(true).getExecutableCriteria(sess);
         ct.setCacheable(false);
-        Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
-        processProjectionQueryCriteria(cp, ct);
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-        cp.orders.forEach(ct::addOrder);
-        if (cp.pageRequest != null) {
-            ct.setFirstResult(cp.pageRequest.getOffset());
-            ct.setMaxResults(cp.pageRequest.getPageSize());
+        if (dc.getPageRequest() != null) {
+            ct.setFirstResult(dc.getPageRequest().getOffset());
+            ct.setMaxResults(dc.getPageRequest().getPageSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
-        List<T> enList = new ArrayList<>();
-        list.forEach(map -> {
-            try {
-                enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
-            } catch (Exception e) {
-                throw new SimplifiedException(ErrorAndExceptionCode.BEAN_CREATE_FAIL, e);
-            }
-        });
-        return new Page<>(enList, total, cp.pageRequest.getPageSize());
+        ct.setFirstResult(0);
+        ct.setMaxResults(MAX_RECORDS);
+        Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
+        List<T> res = BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
+        return new Page<>(res, total, dc.getPageRequest() == null ? total.intValue() : dc.getPageRequest().getPageSize());
+    }
+
+    /**
+     * 根据条件查询DTO列表
+     *
+     * @param qp 通用查询参数
+     */
+    public Page<T> page(QueryParam qp) {
+        DetachedCriteriaBuilder dr;
+        try {
+            dr = queryParamParser.parseDetachedCriteria(qp);
+        } catch (ClassNotFoundException e) {
+            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
+        }
+        return page(dr);
+    }
+
+    /**
+     * 根据条件查询DTO（HashMap）
+     */
+    public Page<Map<String, Object>> pageMap(DetachedCriteriaBuilder dr) {
+        // 总数查询
+        Criteria ct = dr.buildDeCriteria(true).getExecutableCriteria(getSession());
+        ct.setCacheable(false);
+
+        ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
+        if (null != dr.getPageRequest()) {
+            ct.setFirstResult(dr.getPageRequest().getOffset());
+            ct.setMaxResults(dr.getPageRequest().getPageSize());
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> list = ct.list();
+
+        ct.setFirstResult(0);
+        ct.setMaxResults(MAX_RECORDS);
+        Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
+        // 关联对象，填充映射对象
+        list = list.stream().map(BeanUtils::wrapperFlatMap).collect(Collectors.toList());
+        return new Page<>(list, total, null == dr.getPageRequest() ? total.intValue() : dr.getPageRequest().getPageSize());
+    }
+
+    /**
+     * 根据条件查询DTO（HashMap）
+     *
+     * @param qp 通用查询参数
+     */
+    public Page<Map<String, Object>> pageMap(QueryParam qp) {
+        DetachedCriteriaBuilder dr;
+        try {
+            dr = queryParamParser.parseDetachedCriteria(qp);
+        } catch (ClassNotFoundException e) {
+            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
+        }
+        return pageMap(dr);
     }
 
     /**
      * 根据条件查询DTO列表
      */
     public List<T> list(Map<String, Object> map) {
-        CriteriaParam cp = new CriteriaParam();
-        cp.criterions.addAll(map.keySet().stream().map(key -> Restrictions.eq(key, map.get(key))).collect(Collectors.toList()));
-        return list(cp);
+        DetachedCriteriaBuilder dc = DetachedCriteriaBuilder.forClass(this.entityClazz);
+        map.keySet().stream().map(key -> Restrictions.eq(key, map.get(key))).forEach(dc::addCriterion);
+        return list(dc);
     }
 
     /**
      * 根据条件查询DTO列表
      */
-    public List<T> list(CriteriaParam cp) {
-        Assert.notNull(cp, "CriteriaParam need a non-null value");
-        DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
-        cp.criterions.forEach(dc::add);
+    public List<T> list(DetachedCriteriaBuilder dc) {
+        List<Map<String, Object>> list = listMap(dc);
+        return BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
+    }
 
+    /**
+     * 根据条件查询DTO列表
+     */
+    public List<T> list(QueryParam qp) {
+        DetachedCriteriaBuilder dc;
+        try {
+            dc = queryParamParser.parseDetachedCriteria(qp);
+        } catch (ClassNotFoundException e) {
+            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
+        }
+        return list(dc);
+    }
+
+    /**
+     * 根据条件查询DTO（HashMap）
+     */
+    public List<Map<String, Object>> listMap(DetachedCriteriaBuilder dc) {
+        Assert.notNull(dc, "CriteriaParam need a non-null value");
         Session sess = getSession();
-        Criteria ct = dc.getExecutableCriteria(sess);
+        Criteria ct = dc.buildDeCriteria(true).getExecutableCriteria(sess);
         ct.setCacheable(false);
-        cp.orders.forEach(ct::addOrder);
-        processProjectionQueryCriteria(cp, ct);
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-        if (cp.pageRequest != null) {
-            ct.setFirstResult(cp.pageRequest.getOffset());
-            ct.setMaxResults(cp.pageRequest.getPageSize());
+        if (dc.getPageRequest() != null) {
+            ct.setFirstResult(dc.getPageRequest().getOffset());
+            ct.setMaxResults(dc.getPageRequest().getPageSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
-        List<T> enList = new ArrayList<>();
-        /* Map查询后，回填对象 */
-        list.forEach(map -> {
-            try {
-                enList.add(BeanUtils.wrapperMapToBean(this.entityClazz, map));
-            } catch (Exception e) {
-                throw new SimplifiedException(ErrorAndExceptionCode.BEAN_CREATE_FAIL, e);
-            }
-        });
-        return enList;
+        return list;
+    }
+
+    /**
+     * 根据条件查询DTO（HashMap）
+     */
+    public List<Map<String, Object>> listMap(QueryParam qp) {
+        DetachedCriteriaBuilder dc;
+        try {
+            dc = queryParamParser.parseDetachedCriteria(qp);
+        } catch (ClassNotFoundException e) {
+            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
+        }
+        return listMap(dc);
     }
 
     /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */
@@ -849,20 +813,20 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return sqlManager.list(sqlId, entityClazz, paramMap);
     }
 
-    public List<Map<String, Object>> listAsMapBySql(String sqlId, Object... mapParams) {
+    public List<Map<String, Object>> listMapBySql(String sqlId, Object... mapParams) {
         return sqlManager.listAsMap(sqlId, mapParams);
     }
 
-    public List<Map<String, Object>> listAsMapBySql(String sqlId, Map<String, ?> paramMap) {
+    public List<Map<String, Object>> listMapBySql(String sqlId, Map<String, ?> paramMap) {
         return sqlManager.listAsMap(sqlId, paramMap);
     }
 
-    public Page<Map<String, Object>> listAsPageMap(String sqlId, QueryParam qp) {
-        return sqlManager.listAsPageMap(sqlId, qp);
+    public Page<T> pageBySql(String sqlId, QueryParam qp) {
+        return sqlManager.listAsPage(sqlId, entityClazz, qp);
     }
 
-    public Page<T> listAsPage(String sqlId, QueryParam qp) {
-        return sqlManager.listAsPage(sqlId, entityClazz, qp);
+    public Page<Map<String, Object>> pageMapBySql(String sqlId, QueryParam qp) {
+        return sqlManager.listAsPageMap(sqlId, qp);
     }
 
     public int executeCUD(String sqlId, Map<String, ?> paramMap) {
@@ -881,17 +845,17 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * Else, it is preferable to rely on auto-flushing at transaction
      * completion.
      *
-     * @see org.hibernate.Session#flush
+     * @see Session#flush
      */
     public void flush() {
         getSession().flush();
     }
 
     /**
-     * Remove all objects from the {@link org.hibernate.Session} cache, and
+     * Remove all objects from the {@link Session} cache, and
      * cancel all pending saves, updates and deletes.
      *
-     * @see org.hibernate.Session#clear
+     * @see Session#clear
      */
     public void clear() {
         getSession().clear();
@@ -974,98 +938,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
                     "Write operations are not allowed in read-only mode (FlushMode.MANUAL): " +
                             "Turn your Session into FlushMode.COMMIT/AUTO or remove 'readOnly' marker from transaction definition.");
         }
-    }
-
-    /**
-     * 解析实体中所有映射到数据库列的字段
-     */
-    private List<String> parseEntityColumns(Class entityClazz) {
-        if (EnvCache.ENTITY_COLUMNS.containsKey(entityClazz.getName()))
-            return EnvCache.ENTITY_COLUMNS.get(entityClazz.getName());
-
-        Field[] fields = entityClazz.getDeclaredFields();
-        List<String> columns = Arrays.stream(fields).filter(this::isColumn).map(Field::getName).collect(Collectors.toList());
-        Class<?> superClass = entityClazz.getSuperclass();
-        if (null != superClass)
-            columns.addAll(parseEntityColumns(superClass));
-        EnvCache.ENTITY_COLUMNS.put(entityClazz.getName(), columns);
-        return columns;
-    }
-
-    /**
-     * 判断字段是否是映射到数据库
-     */
-    private boolean isColumn(Field field) {
-        Annotation[] annotations = field.getAnnotations();
-        for (Annotation annotation : annotations) {
-            if (annotation instanceof Column
-                    || annotation instanceof Id
-                    || annotation instanceof OneToOne
-                    || annotation instanceof ManyToOne
-                    || annotation instanceof Temporal
-                    || annotation instanceof org.hibernate.annotations.Type)
-                return true;
-        }
-        return false;
-    }
-
-    /**
-     * 获得引用类型的n对一的引用字段列表
-     *
-     * @return 字段列表
-     */
-    private Map<String, Field> getJoinFields(final Class cls) {
-        String clsName = cls.getName();
-        if (!EnvCache.REFER_JOIN_FIELDS.containsKey(clsName)) {
-            Map<String, Field> referJoinFields = new HashMap<>();
-            ReflectionUtils.doWithFields(cls,
-                    f -> referJoinFields.put(f.getName(), f),
-                    f -> f.getAnnotation(ManyToOne.class) != null || f.getAnnotation(OneToOne.class) != null);
-            EnvCache.REFER_JOIN_FIELDS.put(cls.getName(), referJoinFields);
-        }
-        return EnvCache.REFER_JOIN_FIELDS.get(clsName);
-    }
-
-    /**
-     * 根据查询参数生成要查询的投影字段列表并添加到Criteria中，并在Criteria中为所有join属性创建连接查询
-     * <p>
-     * 投影字段列表, 包括所有非关联属性与所有n对一关联属性的ID与用户指定的属性
-     * <p>
-     * 如果查询参数的字段列表为空，不做任何操作
-     */
-    private void processProjectionQueryCriteria(CriteriaParam cp, Criteria ct) {
-        if (cp == null || cp.fields.isEmpty())
-            return;
-        final Set<String> qjoinFields = new HashSet<>();
-        final Map<String, Field> someToOneFields = getJoinFields(this.entityClazz);
-
-        final ProjectionList pj = Projections.projectionList();
-        // 所有非join字段加入投影字段
-        ReflectionUtils.doWithFields(this.entityClazz,
-                f -> pj.add(Property.forName(f.getName()), f.getName()),
-                f -> f.getAnnotation(ManyToMany.class) == null && f.getAnnotation(OneToMany.class) == null && !someToOneFields.containsKey(f.getName()));
-
-        // 所有用户自定义字段加入投影字段
-        cp.fields.stream().filter(pjField -> !someToOneFields.containsKey(pjField)).forEach(pjField -> {
-            pj.add(Property.forName(pjField), pjField);
-            if (pjField.contains(".")) {
-                qjoinFields.add(pjField.split("\\.")[0]);
-            }
-        });
-
-        // 合并join字段到连接集合中
-        qjoinFields.addAll(someToOneFields.keySet());
-        // 为所有join字段，创建连接查询
-        qjoinFields.forEach(jf -> ct.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
-
-        // 将所有n对一关联属性的主键，加入投影字段
-        for (String referField : someToOneFields.keySet()) {
-            Field mapField = someToOneFields.get(referField);
-            String pkf = EntityUtils.getPKField(mapField.getType()).getName();
-            String fetchF = referField + "." + pkf;
-            pj.add(Property.forName(fetchF), fetchF);
-        }
-        ct.setProjection(pj);
     }
 
     private Session peekThreadSession() {

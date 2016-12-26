@@ -7,6 +7,8 @@ import org.infrastructure.util.StringUtils;
 
 /**
  * Created by xuweinan on 2016/9/12.
+ *
+ * @author xuweinan
  */
 public class MySQLDatabaseType implements DatabaseType {
 

@@ -17,7 +17,6 @@
 
 package org.infrastructure.jpa.sql;
 
-
 import org.infrastructure.throwable.SQLException;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.StringUtils;

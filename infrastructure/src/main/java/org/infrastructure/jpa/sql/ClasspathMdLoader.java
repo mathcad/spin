@@ -18,13 +18,18 @@
 package org.infrastructure.jpa.sql;
 
 import org.infrastructure.throwable.SQLException;
+import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.StringUtils;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.LinkedList;
 
 /**
- * 基于Markdown语法的sql装载器
+ * 基于Markdown语法的sql装载器(从classpath文件系统加载)
  * Created by xuweinan on 2016/8/14.
  *
  * @author xuweinan
@@ -80,7 +85,7 @@ public class ClasspathMdLoader extends FileSystemSQLLoader {
             this.sqlSourceMap.put(path + "." + key, sql.substring(0, sql.lastIndexOf("\n")));
             this.sqlSourceVersion.put(path + "." + key, version);
         } catch (IOException e) {
-            throw new SQLException(SQLException.CANNOT_GET_SQL, "解析模板文件异常:" + sqlFile.getName(), e);
+            throw new SQLException(SQLException.CANNOT_GET_SQL, "读取模板文件异常:" + sqlFile.getName(), e);
         }
         if (!this.sqlSourceMap.containsKey(id))
             throw new SQLException(SQLException.CANNOT_GET_SQL, "模板[" + sqlFile.getName() + "]中未找到指定ID的SQL:" + id);
@@ -92,7 +97,11 @@ public class ClasspathMdLoader extends FileSystemSQLLoader {
         String cmdFileName = id.substring(0, id.lastIndexOf('.'));
         String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".md";
         String uri;
-        uri = this.getClass().getResource(path).getPath();
+        try {
+            uri = this.getClass().getResource(path).getPath();
+        } catch (Exception e) {
+            throw new SimplifiedException("加载sql模板文件异常:[" + path + "]", e);
+        }
         return new File(uri);
     }
 }

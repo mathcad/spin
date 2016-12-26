@@ -1,8 +1,8 @@
 package org.infrastructure.jpa.extend;
 
-import org.hibernate.SessionFactory;
 import org.infrastructure.jpa.core.ARepository;
 import org.infrastructure.jpa.core.IEntity;
+import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;

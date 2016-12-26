@@ -7,23 +7,27 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 框架缓存
  * <p>集中管理缓存，可以集中清空，以应对热加载后的不一致问题</p>
  * Created by xuweinan on 2016/9/5.
+ *
  * @author xuweinan
  */
 public final class EnvCache {
-    public static final Map<String, Map<String, Field>> REFER_JOIN_FIELDS = new ConcurrentHashMap<>();
     public static final Map<String, Map<String, BeanUtils.PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
-    public static final Map<String, Map<String, Field>> INSTANT_FIELDS = new ConcurrentHashMap<>();
+    public static final Map<String, Map<String, Field>> BEAN_FIELDS = new ConcurrentHashMap<>();
     public static final ThreadLocal<Map<String, Object>> THREAD_LOCAL_PARAMETERS = new ThreadLocal<>();
     public static final Map<String, List<Integer>> CHECKED_METHOD_PARAM = new ConcurrentHashMap<>();
 
+    /** 实体中*ToOne字段列表缓存 */
+    public static final Map<String, Map<String, Field>> ENTITY_SOMETOONE_JOIN_FIELDS = new ConcurrentHashMap<>();
+
     /** 实体对应列名列表缓存 */
-    public static final Map<String, List<String>> ENTITY_COLUMNS = new ConcurrentHashMap<>();
+    public static final Map<String, Set<String>> ENTITY_COLUMNS = new ConcurrentHashMap<>();
 
     /** 对订单付款行为进行同步控制 */
     public static final Map<Long, Long> PAY_SYNC_LOCK = new ConcurrentHashMap<>();
@@ -44,8 +48,8 @@ public final class EnvCache {
     }
 
     public synchronized static void clearCache() {
-        REFER_JOIN_FIELDS.clear();
+        ENTITY_SOMETOONE_JOIN_FIELDS.clear();
         CLASS_PROPERTY_CACHE.clear();
-        INSTANT_FIELDS.clear();
+        BEAN_FIELDS.clear();
     }
 }

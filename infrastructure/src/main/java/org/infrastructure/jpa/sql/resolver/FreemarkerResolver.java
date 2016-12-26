@@ -17,13 +17,13 @@
 
 package org.infrastructure.jpa.sql.resolver;
 
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
 import org.infrastructure.freemarker.ConcurrentStrTemplateLoader;
 import org.infrastructure.freemarker.EnumValueFunc;
 import org.infrastructure.freemarker.ValidValueFunc;
 import org.infrastructure.throwable.SimplifiedException;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

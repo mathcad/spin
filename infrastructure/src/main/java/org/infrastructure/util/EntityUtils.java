@@ -2,20 +2,30 @@ package org.infrastructure.util;
 
 import javassist.util.proxy.ProxyFactory;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Type;
 import org.hibernate.collection.internal.PersistentBag;
+import org.infrastructure.sys.EnvCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Temporal;
+import javax.persistence.Version;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
-
 
 /**
  * 实体工具类
@@ -130,5 +140,56 @@ public abstract class EntityUtils {
             o = ReflectionUtils.getField(f, o);
         }
         return o;
+    }
+
+    /**
+     * 解析实体中所有映射到数据库列的字段
+     */
+    public static Set<String> parseEntityColumns(Class entityClazz) {
+        if (EnvCache.ENTITY_COLUMNS.containsKey(entityClazz.getName()))
+            return EnvCache.ENTITY_COLUMNS.get(entityClazz.getName());
+
+        Field[] fields = entityClazz.getDeclaredFields();
+        Set<String> columns = Arrays.stream(fields).filter(EntityUtils::isColumn).map(Field::getName).collect(Collectors.toSet());
+        Class<?> superClass = entityClazz.getSuperclass();
+        if (null != superClass)
+            columns.addAll(parseEntityColumns(superClass));
+        EnvCache.ENTITY_COLUMNS.put(entityClazz.getName(), columns);
+        return columns;
+    }
+
+    /**
+     * 获得引用类型的n对一的引用字段列表
+     *
+     * @return 字段列表
+     */
+    public static Map<String, Field> getJoinFields(final Class cls) {
+        String clsName = cls.getName();
+        if (!EnvCache.ENTITY_SOMETOONE_JOIN_FIELDS.containsKey(clsName)) {
+            Map<String, Field> referJoinFields = new HashMap<>();
+            ReflectionUtils.doWithFields(cls,
+                    f -> referJoinFields.put(f.getName(), f),
+                    f -> f.getAnnotation(ManyToOne.class) != null || f.getAnnotation(OneToOne.class) != null);
+            EnvCache.ENTITY_SOMETOONE_JOIN_FIELDS.put(cls.getName(), referJoinFields);
+        }
+        return EnvCache.ENTITY_SOMETOONE_JOIN_FIELDS.get(clsName);
+    }
+
+    /**
+     * 判断字段是否是映射到数据库
+     */
+    private static boolean isColumn(Field field) {
+        Annotation[] annotations = field.getAnnotations();
+        for (Annotation annotation : annotations) {
+            if (annotation instanceof Column
+                    || annotation instanceof Id
+                    || annotation instanceof OneToOne
+                    || annotation instanceof ManyToOne
+                    || annotation instanceof Temporal
+                    || annotation instanceof Type
+                    || annotation instanceof Version)
+                return true;
+        }
+        return false;
     }
 }

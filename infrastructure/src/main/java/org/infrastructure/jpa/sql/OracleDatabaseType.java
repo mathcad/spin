@@ -7,6 +7,8 @@ import org.infrastructure.util.StringUtils;
 
 /**
  * Created by Arvin on 2016/9/12.
+ *
+ * @author xuweinan
  */
 public class OracleDatabaseType implements DatabaseType {
     @Override

@@ -1,6 +1,5 @@
 package org.infrastructure.jpa.query;
 
-
 import org.infrastructure.util.DigestUtils;
 
 import java.io.Serializable;

@@ -1,7 +1,5 @@
 package org.infrastructure.jpa.query;
 
-import org.hibernate.criterion.DetachedCriteria;
-
 /**
  * 自定义查询条件处理
  *
@@ -20,7 +18,7 @@ public abstract class QueryParamHandler {
      * @param dc  离线查询条件
      * @param val 参数值
      */
-    public abstract void processCriteria(DetachedCriteria dc, String val);
+    public abstract void processCriteria(DetachedCriteriaBuilder dc, String val);
 
     public String getField() {
         return field;

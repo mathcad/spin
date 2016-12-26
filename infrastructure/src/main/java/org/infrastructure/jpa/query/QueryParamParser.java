@@ -1,22 +1,20 @@
 package org.infrastructure.jpa.query;
 
 import com.google.gson.Gson;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.MatchMode;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.sql.JoinType;
 import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.throwable.SQLException;
 import org.infrastructure.throwable.SimplifiedException;
 import org.infrastructure.util.DateUtils;
 import org.infrastructure.util.EnumUtils;
+import org.infrastructure.util.ReflectionUtils;
 import org.infrastructure.util.StringUtils;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.Entity;
 import java.lang.reflect.Field;
@@ -49,16 +47,16 @@ public class QueryParamParser {
      * deCriteria.createAlias("ROUTE", "r");
      * </pre>
      */
-    public DetachedCriteriaBag parseDetachedCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
+    public DetachedCriteriaBuilder parseDetachedCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
         // 解析查询实体类型
         if (StringUtils.isEmpty(p.getCls()))
             throw new SimplifiedException("未指定查询实体");
         Class<?> enCls = Class.forName(p.getCls());
         if (!IEntity.class.isAssignableFrom(enCls) || null == enCls.getAnnotation(Entity.class))
             throw new SimplifiedException(p.getCls() + " is not an Entity Class");
-        DetachedCriteriaBag result = new DetachedCriteriaBag();
-        result.setEnCls(enCls);
 
+        DetachedCriteriaBuilder result = DetachedCriteriaBuilder.forClass(enCls);
+        result.setFields(p.getFields());
         // 设置字段别名
         result.setAliasMap(p.getAliasMap());
 
@@ -78,7 +76,7 @@ public class QueryParamParser {
 
             // 自定义属性处理
             if (handlersMap.containsKey(key)) {
-                handlersMap.get(entry.getKey()).processCriteria(result.getDeCriteria(), val);
+                handlersMap.get(entry.getKey()).processCriteria(result, val);
                 continue;
             }
 
@@ -89,27 +87,27 @@ public class QueryParamParser {
                     for (String singleKey : key.split("\\|")) {
                         if (logger.isTraceEnabled())
                             logger.trace(singleKey);
-                        Criterion ct = parseSinglePropCritetion(result, enCls, singleKey, val);
+                        Criterion ct = parseSinglePropCritetion(result, singleKey, val);
                         if (ct != null)
                             orInners.add(ct);
                     }
 
                     if (!orInners.isEmpty())
-                        result.getDeCriteria().add(Restrictions.or(orInners.toArray(new Criterion[]{})));
+                        result.addCriterion(Restrictions.or(orInners.toArray(new Criterion[]{})));
                 } else {
-                    Criterion ct = parseSinglePropCritetion(result, enCls, key, val);
+                    Criterion ct = parseSinglePropCritetion(result, key, val);
                     if (ct != null)
-                        result.getDeCriteria().add(ct);
+                        result.addCriterion(ct);
                 }
             }
         }
 
         // 处理排序
-        this.parseOrders(p).forEach(result.getDeCriteria()::addOrder);
+        this.parseOrders(p).forEach(result::orderBy);
 
         // 处理分页
         if (null != p.getPageSize())
-            result.setPageRequest(new PageRequest(p.getPageIdx() - 1, p.getPageSize()));
+            result.page(p.getPageIdx(), p.getPageSize());
         return result;
     }
 
@@ -134,7 +132,7 @@ public class QueryParamParser {
         return orders;
     }
 
-    private Criterion parseSinglePropCritetion(DetachedCriteriaBag result, Class enCls, String qKey, String val) {
+    private Criterion parseSinglePropCritetion(DetachedCriteriaBuilder result, String qKey, String val) {
         List<String> qPath = new ArrayList<>(Arrays.asList(qKey.split(SPLITOR)));
         String qOp = qPath.remove(qPath.size() - 1);
 
@@ -144,19 +142,19 @@ public class QueryParamParser {
         }
 
         Object qVal;
-        if (qOp.contains("in") || qOp.contains("notIn")) {
+        if ("in".equals(qOp) || "notIn".equals(qOp)) {
             List<Object> objList = new ArrayList<>();
             for (String strV : val.split(",")) {
-                objList.add(convertValue(enCls, qPath, strV));
+                objList.add(convertValue(result.getEnCls(), qPath, strV));
             }
             qVal = objList.toArray(new Object[]{});
-        } else if (qOp.contains("isNull") || qOp.contains("notNull")) {
+        } else if ("isNull".equals(qOp) || "notNull".equals(qOp)) {
             qVal = StringUtils.isNotEmpty(val) ? Boolean.valueOf(val) : true;
         } else
-            qVal = convertValue(enCls, qPath, val);
+            qVal = convertValue(result.getEnCls(), qPath, val);
 
         //追加属性查询
-        return addPropQuery(qPath, qOp, qVal, result);
+        return createCriterion(qPath, qOp, qVal);
     }
 
     // 将String类型的val转换为实体属性的类型
@@ -202,31 +200,14 @@ public class QueryParamParser {
         return v;
     }
 
-    private Criterion addPropQuery(List<String> qPath, String op, Object val, DetachedCriteriaBag dr) {
+    private Criterion createCriterion(List<String> qPath, String op, Object value) {
         String propName;
         if (qPath.size() == 2) {
-            String ofield = qPath.get(0);
-            if (!dr.getAliasMap().containsKey(ofield)) {
-                dr.getAliasMap().put(ofield, ofield);
-                dr.getDeCriteria().createAlias(qPath.get(0), ofield, JoinType.LEFT_OUTER_JOIN);
-            }
-            propName = ofield + "." + qPath.get(1);
+            propName = qPath.get(0) + "." + qPath.get(1);
         } else if (qPath.size() == 1)
             propName = qPath.get(0);
         else
             throw new SimplifiedException("查询字段最多2层:" + qPath);
-        return this.createCriterion(propName, op, val);
-    }
-
-    /**
-     * 创建Criterion
-     *
-     * @param propName 条件字段
-     * @param op       操作符
-     * @param value    条件值
-     * @return Criterion实例
-     */
-    private Criterion createCriterion(String propName, String op, Object value) {
         Criterion ct = null;
         switch (op) {
             case "eq":

@@ -19,6 +19,7 @@ package org.infrastructure.util;
 
 import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.sys.EnvCache;
+import org.infrastructure.throwable.SimplifiedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +31,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Bean工具类
@@ -213,11 +217,21 @@ public abstract class BeanUtils {
         return bean;
     }
 
+    public static <T> List<T> wrapperMapToBeanList(Class<T> type, List<Map<String, Object>> values) {
+        return values.stream().map(m -> {
+            try {
+                return wrapperMapToBean(type, m);
+            } catch (Exception e) {
+                throw new SimplifiedException("Bean convert fail");
+            }
+        }).collect(Collectors.toList());
+    }
+
     /**
      * 将平面的Map转换成树状组织的Map
      */
     @SuppressWarnings("unchecked")
-    public static Map<String, Object> wrapperFlatMap(Map<String, Object> values) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
+    public static Map<String, Object> wrapperFlatMap(Map<String, Object> values) {
         Map<String, Object> propValue = new HashMap<>();
         int off;
         int next;
@@ -230,7 +244,7 @@ public abstract class BeanUtils {
         for (Map.Entry<String, Object> entry : values.entrySet()) {
             off = 0;
             depth = 0;
-            p = entry.getKey().toLowerCase();
+            p = entry.getKey();
             while ((next = p.indexOf('.', off)) != -1) {
                 propName[depth++] = p.substring(off, next);
                 off = next + 1;

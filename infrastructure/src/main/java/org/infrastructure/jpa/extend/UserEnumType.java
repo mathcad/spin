@@ -1,5 +1,8 @@
-package org.infrastructure.jpa.core;
+package org.infrastructure.jpa.extend;
 
+import org.infrastructure.throwable.SimplifiedException;
+import org.infrastructure.util.ClassUtils;
+import org.infrastructure.util.EnumUtils;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -9,9 +12,6 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
-import org.infrastructure.throwable.SimplifiedException;
-import org.infrastructure.util.ClassUtils;
-import org.infrastructure.util.EnumUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

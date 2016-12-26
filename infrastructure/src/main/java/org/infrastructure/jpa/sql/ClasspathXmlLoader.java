@@ -17,13 +17,13 @@
 
 package org.infrastructure.jpa.sql;
 
+import org.infrastructure.throwable.SQLException;
+import org.infrastructure.throwable.SimplifiedException;
+import org.infrastructure.util.StringUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
-import org.infrastructure.throwable.SQLException;
-import org.infrastructure.throwable.SimplifiedException;
-import org.infrastructure.util.StringUtils;
 
 import java.io.File;
 import java.util.List;
@@ -60,7 +60,7 @@ public class ClasspathXmlLoader extends FileSystemSQLLoader {
                 this.sqlSourceVersion.put(cmdFileName + "." + sqlName, version);
             }
         } catch (DocumentException e) {
-            throw new SQLException(SQLException.CANNOT_GET_SQL, "解析模板文件异常:" + sqlFile.getName());
+            throw new SQLException(SQLException.CANNOT_GET_SQL, "读取模板文件异常:" + sqlFile.getName());
         }
 
         if (!this.sqlSourceMap.containsKey(id))
@@ -76,7 +76,7 @@ public class ClasspathXmlLoader extends FileSystemSQLLoader {
         try {
             uri = this.getClass().getResource(path).getPath();
         } catch (Exception e) {
-            throw new SimplifiedException("无法获取指定文件资源：" + path, e);
+            throw new SimplifiedException("加载sql模板文件异常:[" + path + "]", e);
         }
         return new File(uri);
     }

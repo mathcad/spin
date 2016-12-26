@@ -21,12 +21,12 @@ public class InstantExclusionStrategy implements ExclusionStrategy {
 
     @Override
     public boolean shouldSkipField(FieldAttributes f) {
-        if (!EnvCache.INSTANT_FIELDS.containsKey(testCazz.getName())) {
+        if (!EnvCache.BEAN_FIELDS.containsKey(testCazz.getName())) {
             Map<String, Field> tmp = new HashMap<>();
             Arrays.stream(testCazz.getDeclaredFields()).forEach(fd -> tmp.put(fd.getName(), fd));
-            EnvCache.INSTANT_FIELDS.put(testCazz.getName(), tmp);
+            EnvCache.BEAN_FIELDS.put(testCazz.getName(), tmp);
         }
-        return EnvCache.INSTANT_FIELDS.get(testCazz.getName()).containsKey(f.getName());
+        return EnvCache.BEAN_FIELDS.get(testCazz.getName()).containsKey(f.getName());
     }
 
     @Override

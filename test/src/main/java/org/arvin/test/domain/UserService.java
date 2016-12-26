@@ -1,8 +1,7 @@
 package org.arvin.test.domain;
 
 import org.hibernate.criterion.Restrictions;
-import org.infrastructure.jpa.core.CriteriaParam;
-import org.infrastructure.util.EntityUtils;
+import org.infrastructure.jpa.query.DetachedCriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +14,9 @@ public class UserService {
     UserDao userDao;
 
     public User getUser() {
-        CriteriaParam cp = new CriteriaParam();
-        cp.addField("organ.code");
-        cp.addField("organ.name");
-        cp.addField("roles");
-        cp.addCriterion(Restrictions.eq("id", 1L));
-        return userDao.list(cp).get(0);
+        DetachedCriteriaBuilder dc = DetachedCriteriaBuilder.forClass(User.class);
+        dc.addField("organ.code","organ.name","roles");
+        dc.addCriterion(Restrictions.eq("id", 1L));
+        return userDao.list(dc).get(0);
     }
 }
