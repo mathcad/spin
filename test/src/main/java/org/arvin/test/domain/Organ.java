@@ -77,7 +77,7 @@ public class Organ implements java.io.Serializable, IEntity<Long> {
     /**
      * 团队类型
      */
-    @Type(type = "org.infrastructure.jpa.core.UserEnumType")
+    @Type(type = "org.infrastructure.jpa.extend.UserEnumType")
     OrganTeamTypeE teamType;
 
     public String getCode() {

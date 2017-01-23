@@ -38,7 +38,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
             String sessionId = session.getId().toString();
             long timeout = session.getTimeout() / 1000;
             cached.put(sessionId, session);
-            cached.setExpire(sessionId, timeout);
+            cached.expire(sessionId, timeout);
 
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -48,9 +48,6 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
 
     /**
      * session处理监听器
-     *
-     * @author zx
-     * @create 2016年6月13日 下午2:32:43
      */
     public interface SessionListener {
 
@@ -83,7 +80,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
                 }
             }
 
-            cached.deleteCached(session.getId().toString());
+            cached.delete(session.getId().toString());
             logger.info("delete session:" + session.getId());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -96,7 +93,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
         String keys = sessionprefix + "*";
         Set<Session> list = null;
         try {
-            list = cached.getKeys(keys);
+            list = cached.getValues(keys);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -121,7 +118,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
     public Session doReadSession(Serializable sessionId) {
         Session session = null;
         try {
-            session = (Session) cached.get(sessionId.toString());
+            session = cached.get(sessionId.toString());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

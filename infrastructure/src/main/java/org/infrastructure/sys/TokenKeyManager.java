@@ -3,12 +3,14 @@ package org.infrastructure.sys;
 import org.infrastructure.security.RSA;
 import org.infrastructure.util.RandomStringUtils;
 import org.infrastructure.util.StringUtils;
+import org.springframework.stereotype.Component;
 
 /**
  * Token与密钥管理类
  *
  * @author X
  */
+@Component
 public class TokenKeyManager {
 
     /**

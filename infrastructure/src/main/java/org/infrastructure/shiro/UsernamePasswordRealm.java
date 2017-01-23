@@ -7,6 +7,7 @@ import org.apache.shiro.authc.DisabledAccountException;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
@@ -21,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xuweinan
  */
 public class UsernamePasswordRealm extends AuthorizingRealm {
-    @Autowired
+    @Autowired(required = false)
     Authenticator authenticator;
 
     @Override
@@ -32,6 +33,8 @@ public class UsernamePasswordRealm extends AuthorizingRealm {
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) {
         String username = (String) authenticationToken.getPrincipal();
+        if (null == authenticator)
+            throw new AccountException("未配置认证功能");
         AbstractUser user = authenticator.getSubject(username);
         if (user == null) {
             throw new UnknownAccountException("用户不存在");
@@ -50,6 +53,8 @@ public class UsernamePasswordRealm extends AuthorizingRealm {
 
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+        if (null == authenticator)
+            throw new AuthorizationException("未配置认证功能");
         String username = principalCollection.getPrimaryPrincipal().toString();
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
         RolePermission rp = authenticator.getRolePermissionList(username);

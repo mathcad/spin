@@ -35,7 +35,7 @@ public class Role extends AbstractEntity implements java.io.Serializable {
 	
 	/** 内部用户(0), 货主(1), 司机(2); */
 	@Column(length = 2)
-	@Type(type = "org.infrastructure.jpa.core.UserEnumType")
+	@Type(type = "org.infrastructure.jpa.extend.UserEnumType")
 	UserTypeE type;
 
 	/**	备注**/

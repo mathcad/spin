@@ -39,8 +39,8 @@ public class RestfulApiAspect {
     @Autowired
     TokenKeyManager tokenKeyManager;
 
-    @Autowired
-    Authenticator authenticator;
+    @Autowired(required = false)
+    Authenticator authenticator = null;
 
     @Pointcut("@annotation(org.infrastructure.annotations.RestfulApi)")
     private void restfulMethod() {

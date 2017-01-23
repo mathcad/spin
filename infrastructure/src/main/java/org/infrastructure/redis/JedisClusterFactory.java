@@ -104,5 +104,4 @@ public class JedisClusterFactory implements FactoryBean<JedisCluster>, Initializ
     public void setGenericObjectPoolConfig(GenericObjectPoolConfig genericObjectPoolConfig) {
         this.genericObjectPoolConfig = genericObjectPoolConfig;
     }
-
 }
