@@ -1,6 +1,10 @@
 package org.infrastructure.jpa.query;
 
 import com.google.gson.Gson;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 import org.infrastructure.jpa.core.IEntity;
 import org.infrastructure.throwable.SQLException;
 import org.infrastructure.throwable.SimplifiedException;
@@ -8,10 +12,6 @@ import org.infrastructure.util.DateUtils;
 import org.infrastructure.util.EnumUtils;
 import org.infrastructure.util.ReflectionUtils;
 import org.infrastructure.util.StringUtils;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.MatchMode;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -47,7 +47,7 @@ public class QueryParamParser {
      * deCriteria.createAlias("ROUTE", "r");
      * </pre>
      */
-    public DetachedCriteriaBuilder parseDetachedCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
+    public CriteriaBuilder parseCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
         // 解析查询实体类型
         if (StringUtils.isEmpty(p.getCls()))
             throw new SimplifiedException("未指定查询实体");
@@ -55,7 +55,7 @@ public class QueryParamParser {
         if (!IEntity.class.isAssignableFrom(enCls) || null == enCls.getAnnotation(Entity.class))
             throw new SimplifiedException(p.getCls() + " is not an Entity Class");
 
-        DetachedCriteriaBuilder result = DetachedCriteriaBuilder.forClass(enCls);
+        CriteriaBuilder result = CriteriaBuilder.forClass(enCls);
         result.setFields(p.getFields());
         // 设置字段别名
         result.setAliasMap(p.getAliasMap());
@@ -132,7 +132,7 @@ public class QueryParamParser {
         return orders;
     }
 
-    private Criterion parseSinglePropCritetion(DetachedCriteriaBuilder result, String qKey, String val) {
+    private Criterion parseSinglePropCritetion(CriteriaBuilder result, String qKey, String val) {
         List<String> qPath = new ArrayList<>(Arrays.asList(qKey.split(SPLITOR)));
         String qOp = qPath.remove(qPath.size() - 1);
 

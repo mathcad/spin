@@ -3,7 +3,7 @@ package org.arvin.test;
 import com.alibaba.druid.pool.DruidDataSource;
 import org.hibernate.SessionFactory;
 import org.infrastructure.jpa.core.SQLLoader;
-import org.infrastructure.jpa.sql.ClasspathMdLoader;
+import org.infrastructure.jpa.sql.loader.ClasspathMdLoader;
 import org.infrastructure.jpa.sql.resolver.FreemarkerResolver;
 import org.infrastructure.jpa.sql.resolver.TemplateResolver;
 import org.springframework.beans.factory.annotation.Autowired;

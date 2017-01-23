@@ -1,19 +1,3 @@
-/*
- * Copyright 2002-2015 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.infrastructure.util;
 
 import java.io.UnsupportedEncodingException;
@@ -21,9 +5,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import org.apache.commons.codec.CharEncoding;
-
-import static java.lang.Character.*;
+import static java.lang.Character.isLetterOrDigit;
+import static java.lang.Character.isWhitespace;
 
 /**
  * Miscellaneous {@link String} utility methods.
@@ -44,6 +27,7 @@ import static java.lang.Character.*;
  * @author Rick Evans
  * @author Arjen Poutsma
  * @author Sam Brannen
+ * @author xuweinan
  * @since 16 April 2001
  */
 public abstract class StringUtils {
@@ -84,8 +68,8 @@ public abstract class StringUtils {
      * @param str 待判断对象
      * @return 参数如果为空或null，返回{@code true}，否则返回{@code false}
      */
-    public static boolean isEmpty(Object str) {
-        return (str == null || "".equals(str));
+    public static boolean isEmpty(CharSequence str) {
+        return (str == null || str.length() == 0);
     }
 
     /**
@@ -101,8 +85,8 @@ public abstract class StringUtils {
      * @param str 待检查字符串，可以为{@code null}
      * @return 参数如果为空或null，返回{@code false}，否则返回{@code true}
      */
-    public static boolean isNotEmpty(String str) {
-        return !StringUtils.isEmpty(str);
+    public static boolean isNotEmpty(CharSequence str) {
+        return (str != null && str.length() > 0);
     }
 
     /**
@@ -118,7 +102,7 @@ public abstract class StringUtils {
      * @param str 待检查字符串，可以为null
      * @return 参数如果为空白，空("")或{@code null}，返回{@code true}，否则返回{@code false}
      */
-    public static boolean isBlank(String str) {
+    public static boolean isBlank(CharSequence str) {
         int strLen;
         if (str == null || (strLen = str.length()) == 0) {
             return true;
@@ -144,67 +128,18 @@ public abstract class StringUtils {
      * @param str 待检查字符串，可以为null
      * @return 如果字符串含有非空白字符，返回{@code true}，除此以外，一律返回{@code false}
      */
-    public static boolean isNotBlank(String str) {
+    public static boolean isNotBlank(CharSequence str) {
         return !StringUtils.isBlank(str);
     }
 
     /**
-     * Check that the given {@code CharSequence} is neither {@code null} nor
-     * of length 0.
-     * <p>Note: this method returns {@code true} for a {@code CharSequence}
-     * that purely consists of whitespace.
-     * <p><pre class="code">
-     * StringUtils.hasLength(null) = false
-     * StringUtils.hasLength("") = false
-     * StringUtils.hasLength(" ") = true
-     * StringUtils.hasLength("Hello") = true
-     * </pre>
+     * <p>检查字符串是否是含有空白字符</p>
      *
-     * @param str the {@code CharSequence} to check (may be {@code null})
-     * @return {@code true} if the {@code CharSequence} is not {@code null} and has length
-     * @see #isNotEmpty(String)
+     * @param str 待检查字符串，可以为null
+     * @return 如果字符串含有非空白字符，返回{@code true}，除此以外，一律返回{@code false}
      */
-    public static boolean hasLength(CharSequence str) {
-        return (str != null && str.length() > 0);
-    }
-
-    /**
-     * Check that the given {@code String} is neither {@code null} nor of length 0.
-     * <p>Note: this method returns {@code true} for a {@code String} that
-     * purely consists of whitespace.
-     *
-     * @param str the {@code String} to check (may be {@code null})
-     * @return {@code true} if the {@code String} is not {@code null} and has length
-     * @see #hasLength(CharSequence)
-     * @see #isNotEmpty(String)
-     */
-    public static boolean hasLength(String str) {
-        return hasLength((CharSequence) str);
-    }
-
     public static boolean containsWhitespace(CharSequence str) {
-        if (!hasLength(str)) {
-            return false;
-        }
-        int strLen = str.length();
-        for (int i = 0; i < strLen; i++) {
-            if (isWhitespace(str.charAt(i))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check whether the given {@code String} contains any whitespace characters.
-     *
-     * @param str the {@code String} to check (may be {@code null})
-     * @return {@code true} if the {@code String} is not empty and
-     * contains at least 1 whitespace character
-     * @see #containsWhitespace(CharSequence)
-     */
-    public static boolean containsWhitespace(String str) {
-        if (!hasLength(str)) {
+        if (isEmpty(str)) {
             return false;
         }
         int strLen = str.length();
@@ -281,7 +216,7 @@ public abstract class StringUtils {
      * @return the index where str2 and str1 begin to differ; -1 if they are equal
      * @since 2.0
      */
-    public static int indexOfDifference(String str1, String str2) {
+    public static int indexOfDifference(CharSequence str1, CharSequence str2) {
         if (Objects.equals(str1, str2)) {
             return -1;
         }
@@ -344,14 +279,14 @@ public abstract class StringUtils {
         // find the min and max string lengths; this avoids checking to make
         // sure we are not exceeding the length of the string each time through
         // the bottom loop.
-        for (int i = 0; i < arrayLen; i++) {
-            if (strs[i] == null) {
+        for (String str : strs) {
+            if (str == null) {
                 anyStringNull = true;
                 shortestStrLen = 0;
             } else {
                 allStringsNull = false;
-                shortestStrLen = Math.min(strs[i].length(), shortestStrLen);
-                longestStrLen = Math.max(strs[i].length(), longestStrLen);
+                shortestStrLen = Math.min(str.length(), shortestStrLen);
+                longestStrLen = Math.max(str.length(), longestStrLen);
             }
         }
 
@@ -397,7 +332,7 @@ public abstract class StringUtils {
      * @see Character#isWhitespace
      */
     public static String trimWhitespace(String str) {
-        if (!hasLength(str)) {
+        if (isEmpty(str)) {
             return str;
         }
         StringBuilder sb = new StringBuilder(str);
@@ -418,18 +353,12 @@ public abstract class StringUtils {
      * @return the trimmed {@code String}
      * @see Character#isWhitespace
      */
-    public static String trimAllWhitespace(String str) {
-        if (!hasLength(str)) {
-            return str;
+    public static String trimAllWhitespace(CharSequence str) {
+        if (isEmpty(str)) {
+            return str.toString();
         }
-        int len = str.length();
-        StringBuilder sb = new StringBuilder(str.length());
-        for (int i = 0; i < len; i++) {
-            char c = str.charAt(i);
-            if (!isWhitespace(c)) {
-                sb.append(c);
-            }
-        }
+        StringBuilder sb = new StringBuilder();
+        str.chars().filter(c -> !isWhitespace(c)).forEach(sb::append);
         return sb.toString();
     }
 
@@ -440,9 +369,9 @@ public abstract class StringUtils {
      * @return the trimmed {@code String}
      * @see Character#isWhitespace
      */
-    public static String trimLeadingWhitespace(String str) {
-        if (!hasLength(str)) {
-            return str;
+    public static String trimLeadingWhitespace(CharSequence str) {
+        if (isEmpty(str)) {
+            return str.toString();
         }
         StringBuilder sb = new StringBuilder(str);
         while (sb.length() > 0 && isWhitespace(sb.charAt(0))) {
@@ -458,9 +387,9 @@ public abstract class StringUtils {
      * @return the trimmed {@code String}
      * @see Character#isWhitespace
      */
-    public static String trimTrailingWhitespace(String str) {
-        if (!hasLength(str)) {
-            return str;
+    public static String trimTrailingWhitespace(CharSequence str) {
+        if (isEmpty(str)) {
+            return str.toString();
         }
         StringBuilder sb = new StringBuilder(str);
         while (sb.length() > 0 && isWhitespace(sb.charAt(sb.length() - 1))) {
@@ -476,9 +405,9 @@ public abstract class StringUtils {
      * @param leadingCharacter the leading character to be trimmed
      * @return the trimmed {@code String}
      */
-    public static String trimLeadingCharacter(String str, char leadingCharacter) {
-        if (!hasLength(str)) {
-            return str;
+    public static String trimLeadingCharacter(CharSequence str, char leadingCharacter) {
+        if (isEmpty(str)) {
+            return str.toString();
         }
         StringBuilder sb = new StringBuilder(str);
         while (sb.length() > 0 && sb.charAt(0) == leadingCharacter) {
@@ -494,9 +423,9 @@ public abstract class StringUtils {
      * @param trailingCharacter the trailing character to be trimmed
      * @return the trimmed {@code String}
      */
-    public static String trimTrailingCharacter(String str, char trailingCharacter) {
-        if (!hasLength(str)) {
-            return str;
+    public static String trimTrailingCharacter(CharSequence str, char trailingCharacter) {
+        if (isEmpty(str)) {
+            return str.toString();
         }
         StringBuilder sb = new StringBuilder(str);
         while (sb.length() > 0 && sb.charAt(sb.length() - 1) == trailingCharacter) {
@@ -872,8 +801,8 @@ public abstract class StringUtils {
         }
         for (int i = 0; i < str.length(); i++) {
             char ch = str.charAt(i);
-            for (int j = 0; j < searchChars.length; j++) {
-                if (searchChars[j] == ch) {
+            for (char searchChar : searchChars) {
+                if (searchChar == ch) {
                     return i;
                 }
             }
@@ -944,14 +873,12 @@ public abstract class StringUtils {
         if ((str == null) || (searchStrs == null)) {
             return -1;
         }
-        int sz = searchStrs.length;
 
         // String's can't have a MAX_VALUEth index.
         int ret = Integer.MAX_VALUE;
 
-        int tmp = 0;
-        for (int i = 0; i < sz; i++) {
-            String search = searchStrs[i];
+        int tmp;
+        for (String search : searchStrs) {
             if (search == null) {
                 continue;
             }
@@ -996,8 +923,8 @@ public abstract class StringUtils {
         outer:
         for (int i = 0; i < str.length(); i++) {
             char ch = str.charAt(i);
-            for (int j = 0; j < searchChars.length; j++) {
-                if (searchChars[j] == ch) {
+            for (char searchChar : searchChars) {
+                if (searchChar == ch) {
                     continue outer;
                 }
             }
@@ -1313,11 +1240,9 @@ public abstract class StringUtils {
         if ((str == null) || (searchStrs == null)) {
             return -1;
         }
-        int sz = searchStrs.length;
         int ret = -1;
-        int tmp = 0;
-        for (int i = 0; i < sz; i++) {
-            String search = searchStrs[i];
+        int tmp;
+        for (String search : searchStrs) {
             if (search == null) {
                 continue;
             }
@@ -1450,8 +1375,8 @@ public abstract class StringUtils {
         }
         for (int i = 0; i < str.length(); i++) {
             char ch = str.charAt(i);
-            for (int j = 0; j < searchChars.length; j++) {
-                if (searchChars[j] == ch) {
+            for (char searchChar : searchChars) {
+                if (searchChar == ch) {
                     return true;
                 }
             }
@@ -1573,11 +1498,10 @@ public abstract class StringUtils {
             return true;
         }
         int strSize = str.length();
-        int validSize = invalidChars.length;
         for (int i = 0; i < strSize; i++) {
             char ch = str.charAt(i);
-            for (int j = 0; j < validSize; j++) {
-                if (invalidChars[j] == ch) {
+            for (char invalidChar : invalidChars) {
+                if (invalidChar == ch) {
                     return false;
                 }
             }
@@ -2561,7 +2485,7 @@ public abstract class StringUtils {
      * @return a {@code String} with the replacements
      */
     public static String replace(String inString, String oldPattern, String newPattern) {
-        if (!hasLength(inString) || !hasLength(oldPattern) || newPattern == null) {
+        if (isEmpty(inString) || isEmpty(oldPattern) || newPattern == null) {
             return inString;
         }
         StringBuilder sb = new StringBuilder();
@@ -2600,7 +2524,7 @@ public abstract class StringUtils {
      * @return the resulting {@code String}
      */
     public static String deleteAny(String inString, String charsToDelete) {
-        if (!hasLength(inString) || !hasLength(charsToDelete)) {
+        if (isEmpty(inString) || isEmpty(charsToDelete)) {
             return inString;
         }
         StringBuilder sb = new StringBuilder();
@@ -2725,9 +2649,9 @@ public abstract class StringUtils {
         }
         StringBuilder sb = new StringBuilder(str.length());
         if (capitalize) {
-            sb.append(toUpperCase(str.charAt(0)));
+            sb.append(upper(str.charAt(0)));
         } else {
-            sb.append(toLowerCase(str.charAt(0)));
+            sb.append(lower(str.charAt(0)));
         }
         sb.append(str.substring(1));
         return sb.toString();
@@ -2971,7 +2895,7 @@ public abstract class StringUtils {
             String strVal = (params[i] == null ? "" : params[i].toString());
             rslt = rslt.replace("{" + i + "}", strVal);
         }
-        return rslt.replaceAll("\\$\\{.+\\}", "");
+        return rslt.replaceAll("\\$\\{.+}", "");
     }
 
     //---------------------------------------------------------------------
@@ -3037,13 +2961,9 @@ public abstract class StringUtils {
         if (ObjectUtils.isEmpty(array2)) {
             return array1;
         }
-        List<String> result = new ArrayList<>();
+        Set<String> result = new HashSet<>();
         result.addAll(Arrays.asList(array1));
-        for (String str : array2) {
-            if (!result.contains(str)) {
-                result.add(str);
-            }
-        }
+        result.addAll(Arrays.asList(array2));
         return toStringArray(result);
     }
 
@@ -3138,7 +3058,7 @@ public abstract class StringUtils {
      * or {@code null} if the delimiter wasn't found in the given input {@code String}
      */
     public static String[] split(String toSplit, String delimiter) {
-        if (!hasLength(toSplit) || !hasLength(delimiter)) {
+        if (isEmpty(toSplit) || isEmpty(delimiter)) {
             return null;
         }
         int offset = toSplit.indexOf(delimiter);
@@ -3480,7 +3400,6 @@ public abstract class StringUtils {
      * @return encoded bytes, or <code>null</code> if the input string was <code>null</code>
      * @throws IllegalStateException Thrown when a {@link UnsupportedEncodingException} is caught, which should never happen for a
      *                               required charset name.
-     * @see CharEncoding
      * @see String#getBytes(String)
      */
     public static byte[] getBytesUnchecked(final String string, final String charsetName) {
@@ -3606,7 +3525,6 @@ public abstract class StringUtils {
      * or <code>null</code> if the input byte array was <code>null</code>.
      * @throws IllegalStateException Thrown when a {@link UnsupportedEncodingException} is caught, which should never happen for a
      *                               required charset name.
-     * @see CharEncoding
      * @see String#String(byte[], String)
      */
     public static String newString(final byte[] bytes, final String charsetName) {
@@ -3702,5 +3620,53 @@ public abstract class StringUtils {
      */
     public static String newStringUtf8(final byte[] bytes) {
         return newString(bytes, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Converts the first character of string to upper case.
+     *
+     * @param input The string to convert.
+     * @return Returns the converted string.
+     */
+    public static String upperFirst(String input) {
+        if (input == null || input.length() == 0) return input;
+        char f = upper(input.charAt(0));
+        return f + input.substring(1);
+    }
+
+    /**
+     * Converts all of the characters in this {@code String} to upper
+     *
+     * @return the {@code String}, converted to uppercase.
+     */
+    public static String toUpperCase(final String input) {
+        if (input == null || input.length() == 0) return input;
+        final char[] chars = input.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = upper(chars[i]);
+        }
+        return String.copyValueOf(chars);
+    }
+
+    /**
+     * Converts all of the characters in this {@code String} to lower
+     *
+     * @return the {@code String}, converted to lowercase.
+     */
+    public static String toLowerCase(final String input) {
+        if (input == null || input.length() == 0) return input;
+        final char[] chars = input.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = lower(chars[i]);
+        }
+        return String.copyValueOf(chars);
+    }
+
+    public static char upper(char c) {
+        return (char) (c > 96 && c < 123 ? c ^ 32 : c);
+    }
+
+    public static char lower(char c) {
+        return (char) (c > 64 && c < 91 ? c ^ 32 : c);
     }
 }

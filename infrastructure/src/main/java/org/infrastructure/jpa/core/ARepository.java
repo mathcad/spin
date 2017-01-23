@@ -17,7 +17,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
-import org.infrastructure.jpa.query.DetachedCriteriaBuilder;
+import org.infrastructure.jpa.query.CriteriaBuilder;
 import org.infrastructure.jpa.query.QueryParam;
 import org.infrastructure.jpa.query.QueryParamParser;
 import org.infrastructure.jpa.sql.SQLManager;
@@ -166,6 +166,18 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return the saved entity (has id)
      */
     public T save(final T entity) {
+        return save(entity, false);
+    }
+
+    /**
+     * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the
+     * entity instance completely.
+     *
+     * @param entity     entity to save
+     * @param saveWithPk insert with a assigned primary key
+     * @return the saved entity (has id)
+     */
+    public T save(final T entity, boolean saveWithPk) {
         Assert.notNull(entity, "The entity to save must be a NON-NULL object");
         if (entity instanceof AbstractEntity) {
             AbstractEntity aEn = (AbstractEntity) entity;
@@ -174,13 +186,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
                 user = AbstractUser.ref(1L);
             aEn.setUpdateTime(new Date());
             aEn.setUpdateBy(AbstractUser.ref(user.getId()));
-            if (null == aEn.getId()) {
+            if (null == aEn.getId() || saveWithPk) {
                 aEn.setCreateBy(AbstractUser.ref(user.getId()));
                 aEn.setCreateTime(new Date());
             }
         }
         try {
-            if (null == entity.getId())
+            if (null == entity.getId() || saveWithPk)
                 getSession().save(entity);
             else
                 getSession().update(entity);
@@ -240,6 +252,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @see Session#get(Class, Serializable)
      */
     public T get(final PK id) {
+
+        if (null == id) {
+            return null;
+        }
+
         return getSession().get(this.entityClazz, id);
     }
 
@@ -412,7 +429,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 批量删除实体
+     * 通过hql批量删除实体
      * <p>如果条件为空，删除所有</p>
      */
     public void delete(String conditions) {
@@ -429,25 +446,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param dc 离线条件
      * @param pr 分页请求
      */
-    public List<T> find(DetachedCriteria dc, PageRequest pr) {
+    public List<T> find(DetachedCriteria dc, PageRequest... pr) {
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
-        if (null != pr) {
-            ct.setFirstResult(pr.getOffset());
-            ct.setMaxResults(pr.getPageSize());
+        if (null != pr && pr.length > 0 && null != pr[0]) {
+            ct.setFirstResult(pr[0].getOffset());
+            ct.setMaxResults(pr[0].getPageSize());
         }
-        ct.setCacheable(true);
-        ct.setCacheMode(CacheMode.NORMAL);
-        //noinspection unchecked
-        return ct.list();
-    }
-
-    /**
-     * 条件查询
-     */
-    public List<T> find(DetachedCriteria dc) {
-        Session sess = getSession();
-        Criteria ct = dc.getExecutableCriteria(sess);
         ct.setCacheable(true);
         ct.setCacheMode(CacheMode.NORMAL);
         //noinspection unchecked
@@ -460,29 +465,30 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public List<T> find(Criterion... cs) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
         for (Criterion c : cs)
-            dc.add(c);
+            if (null != c)
+                dc.add(c);
         return find(dc);
     }
 
     /**
      * 分页条件查询
      */
-    public List<T> find(DetachedCriteriaBuilder dc) {
-        DetachedCriteria detachedCriteria = dc.buildDeCriteria(false);
-        return find(detachedCriteria, dc.getPageRequest());
+    public List<T> find(CriteriaBuilder cb) {
+        DetachedCriteria detachedCriteria = cb.buildDeCriteria(false);
+        return find(detachedCriteria, cb.getPageRequest());
     }
 
     /**
      * 分页条件查询
      */
     public List<T> find(QueryParam qp) {
-        DetachedCriteriaBuilder dr;
+        CriteriaBuilder cb;
         try {
-            dr = queryParamParser.parseDetachedCriteria(qp);
+            cb = queryParamParser.parseCriteria(qp);
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }
-        return find(dr);
+        return find(cb);
     }
 
     /**
@@ -513,36 +519,30 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
+     * 通过唯一属性查询
+     * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
+     */
+    public T findOne(CriteriaBuilder cb) {
+        DetachedCriteria dc = cb.buildDeCriteria(false);
+        Session sess = getSession();
+        Criteria ct = dc.getExecutableCriteria(sess);
+        ct.setFirstResult(0);
+        ct.setMaxResults(1);
+        @SuppressWarnings("unchecked")
+        List<T> list = ct.list();
+        if (list.size() < 1)
+            return null;
+        return list.get(0);
+    }
+
+    /**
      * 通过属性查询
      * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      *
      * @param cts 条件数组
      */
     public T findOne(Criterion... cts) {
-        DetachedCriteriaBuilder dc = DetachedCriteriaBuilder.forClass(this.entityClazz);
-        for (Criterion ct : cts) {
-            dc.addCriterion(ct);
-        }
-        return findOne(dc);
-    }
-
-    /**
-     * 通过属性查询
-     * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
-     */
-    public T findOne(DetachedCriteriaBuilder dc) {
-        Criteria ct = dc.buildDeCriteria(false).getExecutableCriteria(getSession());
-        ct.setCacheable(true);
-        ct.setFirstResult(0);
-        ct.setMaxResults(1);
-
-        @SuppressWarnings("unchecked")
-        List<T> list = ct.list();
-        T t;
-        if (list.size() < 1)
-            throw new SQLException(SQLException.RESULT_NOT_FOUND);
-        t = list.get(0);
-        return t;
+        return findOne(CriteriaBuilder.forClass(entityClazz).addCriterion(cts));
     }
 
     /**
@@ -586,11 +586,18 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return sqlManager.findOne(sqlId, entityClazz, paramMap);
     }
 
+    /**
+     * 判断是否有存在已有实体
+     * <p>
+     *
+     * @param id 指定ID
+     * @return 是/否
+     */
     public boolean exist(PK id) {
         if (id == null) {
             return false;
         }
-        Long c = count(DetachedCriteriaBuilder.forClass(this.entityClazz).addCriterion(Restrictions.eq("id", id)));
+        Long c = count(CriteriaBuilder.forClass(entityClazz).eq("id", id));
         return c > 0;
     }
 
@@ -646,18 +653,18 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 是否存在实体
+     * 判断是否有存在已有实体
      */
-    public boolean exist(DetachedCriteriaBuilder p, PK notId) {
+    public boolean exist(CriteriaBuilder cb, PK notId) {
         if (notId != null)
-            p.addCriterion(Restrictions.not(Restrictions.eq("id", notId)));
-        Long c = count(p);
+            cb.notEq("id", notId);
+        Long c = count(cb);
         return c > 0;
     }
 
-    public Long count(DetachedCriteriaBuilder dc) {
+    public Long count(CriteriaBuilder cb) {
         Session sess = getSession();
-        Criteria ct = dc.buildDeCriteria(false).getExecutableCriteria(sess);
+        Criteria ct = cb.buildDeCriteria(false).getExecutableCriteria(sess);
         ct.setCacheable(false);
         return (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
     }
@@ -669,15 +676,15 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 根据条件查询DTO列表
      */
-    public Page<T> page(DetachedCriteriaBuilder dc) {
-        Assert.notNull(dc, "CriteriaParam need a non-null value");
+    public Page<T> page(CriteriaBuilder cb) {
+        Assert.notNull(cb, "CriteriaBuilder need a non-null value");
         Session sess = getSession();
-        Criteria ct = dc.buildDeCriteria(true).getExecutableCriteria(sess);
+        Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
         ct.setCacheable(false);
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-        if (dc.getPageRequest() != null) {
-            ct.setFirstResult(dc.getPageRequest().getOffset());
-            ct.setMaxResults(dc.getPageRequest().getPageSize());
+        if (cb.getPageRequest() != null) {
+            ct.setFirstResult(cb.getPageRequest().getOffset());
+            ct.setMaxResults(cb.getPageRequest().getPageSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
@@ -685,7 +692,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         ct.setMaxResults(MAX_RECORDS);
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         List<T> res = BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
-        return new Page<>(res, total, dc.getPageRequest() == null ? total.intValue() : dc.getPageRequest().getPageSize());
+        return new Page<>(res, total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
     }
 
     /**
@@ -694,27 +701,27 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param qp 通用查询参数
      */
     public Page<T> page(QueryParam qp) {
-        DetachedCriteriaBuilder dr;
+        CriteriaBuilder cb;
         try {
-            dr = queryParamParser.parseDetachedCriteria(qp);
+            cb = queryParamParser.parseCriteria(qp);
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }
-        return page(dr);
+        return page(cb);
     }
 
     /**
      * 根据条件查询DTO（HashMap）
      */
-    public Page<Map<String, Object>> pageMap(DetachedCriteriaBuilder dr) {
+    public Page<Map<String, Object>> pageMap(CriteriaBuilder cb) {
         // 总数查询
-        Criteria ct = dr.buildDeCriteria(true).getExecutableCriteria(getSession());
+        Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(getSession());
         ct.setCacheable(false);
 
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-        if (null != dr.getPageRequest()) {
-            ct.setFirstResult(dr.getPageRequest().getOffset());
-            ct.setMaxResults(dr.getPageRequest().getPageSize());
+        if (null != cb.getPageRequest()) {
+            ct.setFirstResult(cb.getPageRequest().getOffset());
+            ct.setMaxResults(cb.getPageRequest().getPageSize());
         }
 
         @SuppressWarnings("unchecked")
@@ -725,7 +732,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         // 关联对象，填充映射对象
         list = list.stream().map(BeanUtils::wrapperFlatMap).collect(Collectors.toList());
-        return new Page<>(list, total, null == dr.getPageRequest() ? total.intValue() : dr.getPageRequest().getPageSize());
+        return new Page<>(list, total, null == cb.getPageRequest() ? total.intValue() : cb.getPageRequest().getPageSize());
     }
 
     /**
@@ -734,29 +741,29 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param qp 通用查询参数
      */
     public Page<Map<String, Object>> pageMap(QueryParam qp) {
-        DetachedCriteriaBuilder dr;
+        CriteriaBuilder cb;
         try {
-            dr = queryParamParser.parseDetachedCriteria(qp);
+            cb = queryParamParser.parseCriteria(qp);
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }
-        return pageMap(dr);
+        return pageMap(cb);
     }
 
     /**
      * 根据条件查询DTO列表
      */
     public List<T> list(Map<String, Object> map) {
-        DetachedCriteriaBuilder dc = DetachedCriteriaBuilder.forClass(this.entityClazz);
-        map.keySet().stream().map(key -> Restrictions.eq(key, map.get(key))).forEach(dc::addCriterion);
-        return list(dc);
+        CriteriaBuilder cb = CriteriaBuilder.forClass(entityClazz)
+                .addCriterion(map.entrySet().stream().map(entry -> Restrictions.eq(entry.getKey(), entry.getValue())).collect(Collectors.toList()));
+        return list(cb);
     }
 
     /**
      * 根据条件查询DTO列表
      */
-    public List<T> list(DetachedCriteriaBuilder dc) {
-        List<Map<String, Object>> list = listMap(dc);
+    public List<T> list(CriteriaBuilder cb) {
+        List<Map<String, Object>> list = listMap(cb);
         return BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
     }
 
@@ -764,27 +771,27 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 根据条件查询DTO列表
      */
     public List<T> list(QueryParam qp) {
-        DetachedCriteriaBuilder dc;
+        CriteriaBuilder cb;
         try {
-            dc = queryParamParser.parseDetachedCriteria(qp);
+            cb = queryParamParser.parseCriteria(qp);
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }
-        return list(dc);
+        return list(cb);
     }
 
     /**
      * 根据条件查询DTO（HashMap）
      */
-    public List<Map<String, Object>> listMap(DetachedCriteriaBuilder dc) {
-        Assert.notNull(dc, "CriteriaParam need a non-null value");
+    public List<Map<String, Object>> listMap(CriteriaBuilder cb) {
+        Assert.notNull(cb, "CriteriaBuilder need a non-null value");
         Session sess = getSession();
-        Criteria ct = dc.buildDeCriteria(true).getExecutableCriteria(sess);
+        Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
         ct.setCacheable(false);
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-        if (dc.getPageRequest() != null) {
-            ct.setFirstResult(dc.getPageRequest().getOffset());
-            ct.setMaxResults(dc.getPageRequest().getPageSize());
+        if (cb.getPageRequest() != null) {
+            ct.setFirstResult(cb.getPageRequest().getOffset());
+            ct.setMaxResults(cb.getPageRequest().getPageSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
@@ -795,13 +802,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 根据条件查询DTO（HashMap）
      */
     public List<Map<String, Object>> listMap(QueryParam qp) {
-        DetachedCriteriaBuilder dc;
+        CriteriaBuilder cb;
         try {
-            dc = queryParamParser.parseDetachedCriteria(qp);
+            cb = queryParamParser.parseCriteria(qp);
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }
-        return listMap(dc);
+        return listMap(cb);
     }
 
     /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */

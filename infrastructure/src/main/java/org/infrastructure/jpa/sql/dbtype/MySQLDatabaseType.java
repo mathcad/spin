@@ -1,7 +1,8 @@
-package org.infrastructure.jpa.sql;
+package org.infrastructure.jpa.sql.dbtype;
 
 import org.infrastructure.jpa.core.DatabaseType;
 import org.infrastructure.jpa.query.QueryParam;
+import org.infrastructure.jpa.sql.SQLSource;
 import org.infrastructure.sys.Assert;
 import org.infrastructure.util.StringUtils;
 

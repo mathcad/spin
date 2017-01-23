@@ -18,6 +18,8 @@ import java.util.Set;
 
 /**
  * 通用查询参数
+ *
+ * @author xuweinan
  */
 public class QueryParam implements Serializable {
     private static final long serialVersionUID = 4033669191222887528L;
@@ -35,7 +37,7 @@ public class QueryParam implements Serializable {
 
     public static QueryParam parseFromJson(String jsonString) {
         QueryParam qp = JSONUtils.fromJson(jsonString, thisType);
-        if (!EnvCache.devMode && !qp.validation())
+        if (!EnvCache.devMode && null != qp && !qp.validation())
             throw new SimplifiedException(ErrorAndExceptionCode.SIGNATURE_FAIL, "请求参数被客户端篡改");
         return qp;
     }

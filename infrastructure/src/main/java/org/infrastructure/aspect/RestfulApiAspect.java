@@ -96,7 +96,9 @@ public class RestfulApiAspect {
                 return "{\"code\": 200, \"des\": \"OK\"" + (StringUtils.isNotEmpty((String) r) ? ", \"data\": " + r : "") + "}";
             } catch (SimplifiedException e) {
                 logger.info("Invoke api fail: [" + apiMethod.toGenericString() + "]");
-                return "{\"code\": 500, \"des\": \"" + e.getMessage() + "\"}";
+                logger.trace("Exception: ", e);
+                int code = e.getExceptionType().getValue() > 400 ? e.getExceptionType().getValue() : 500;
+                return StringUtils.format("{\"code\": {0}, \"des\": \"{1}\"}", code, e.getMessage());
             } catch (Throwable throwable) {
                 logger.error("Invoke api fail: [" + apiMethod.toGenericString() + "]", throwable);
                 if (EnvCache.devMode)

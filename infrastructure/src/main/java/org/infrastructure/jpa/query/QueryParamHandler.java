@@ -18,7 +18,7 @@ public abstract class QueryParamHandler {
      * @param dc  离线查询条件
      * @param val 参数值
      */
-    public abstract void processCriteria(DetachedCriteriaBuilder dc, String val);
+    public abstract void processCriteria(CriteriaBuilder dc, String val);
 
     public String getField() {
         return field;

@@ -1,7 +1,5 @@
 package org.infrastructure.jpa.query;
 
-import org.infrastructure.util.CollectionUtils;
-import org.infrastructure.util.EntityUtils;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.MatchMode;
@@ -11,11 +9,14 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
+import org.infrastructure.util.CollectionUtils;
+import org.infrastructure.util.EntityUtils;
+import org.infrastructure.util.StringUtils;
 import org.springframework.data.domain.PageRequest;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -27,7 +28,7 @@ import java.util.Set;
  *
  * @author xuweinan
  */
-public class DetachedCriteriaBuilder {
+public class CriteriaBuilder {
 
     /**
      * 包含所有字段
@@ -40,11 +41,11 @@ public class DetachedCriteriaBuilder {
     private Map<String, String> aliasMap = new HashMap<>();
     private PageRequest pageRequest;
 
-    private DetachedCriteriaBuilder() {
+    private CriteriaBuilder() {
     }
 
-    public static DetachedCriteriaBuilder forClass(Class<?> enCls) {
-        DetachedCriteriaBuilder instance = new DetachedCriteriaBuilder();
+    public static CriteriaBuilder forClass(Class<?> enCls) {
+        CriteriaBuilder instance = new CriteriaBuilder();
         instance.enCls = enCls;
         instance.deCriteria = DetachedCriteria.forClass(enCls);
         return instance;
@@ -56,19 +57,20 @@ public class DetachedCriteriaBuilder {
      * @param page 页码(从1开始)
      * @param size 页参数
      */
-    public void page(int page, int size) {
+    public CriteriaBuilder page(int page, int size) {
         pageRequest = new PageRequest(page - 1, size);
+        return this;
     }
 
-    public DetachedCriteriaBuilder addField(String... fields) {
-        Collections.addAll(this.fields, fields);
+    public CriteriaBuilder addFields(String... fields) {
+        Arrays.stream(fields).filter(StringUtils::isNotEmpty).forEach(this.fields::add);
         return this;
     }
 
     /**
      * 增加查询字段别名
      */
-    public DetachedCriteriaBuilder createAlias(String field, String alias) {
+    public CriteriaBuilder createAlias(String field, String alias) {
         aliasMap.put(field, alias);
         return this;
     }
@@ -76,26 +78,44 @@ public class DetachedCriteriaBuilder {
     /**
      * 增加查询字段别名
      */
-    public DetachedCriteriaBuilder createAliases(String... params) {
-        if (params.length % 2 != 0) {
-            throw new IllegalArgumentException("别名映射参数长度必须为偶数");
-        }
-        for (int i = 0; i < params.length; ) {
-            this.aliasMap.put(params[i], params[i + 1]);
-            i += 2;
+    public CriteriaBuilder createAliases(String... params) {
+        if (null != params) {
+            if (params.length % 2 != 0) {
+                throw new IllegalArgumentException("别名映射参数长度必须为偶数");
+            }
+            for (int i = 0; i < params.length; ) {
+                this.aliasMap.put(params[i], params[i + 1]);
+                i += 2;
+            }
         }
         return this;
     }
 
-    public DetachedCriteriaBuilder addCriterion(Criterion criterion) {
-        deCriteria.add(criterion);
+    public CriteriaBuilder addCriterion(Criterion... criterions) {
+        if (null != criterions) {
+            for (Criterion ct : criterions) {
+                if (null != ct)
+                    deCriteria.add(ct);
+            }
+        }
         return this;
     }
 
-    public DetachedCriteriaBuilder orderBy(Order... ords) {
+    public CriteriaBuilder addCriterion(Iterable<Criterion> criterions) {
+        if (null != criterions) {
+            for (Criterion ct : criterions) {
+                if (null != ct)
+                    deCriteria.add(ct);
+            }
+        }
+        return this;
+    }
+
+    public CriteriaBuilder orderBy(Order... ords) {
         if (null != ords)
             for (Order ord : ords) {
-                deCriteria.addOrder(ord);
+                if (null != ord)
+                    deCriteria.addOrder(ord);
             }
         return this;
     }
@@ -103,15 +123,23 @@ public class DetachedCriteriaBuilder {
     /**
      * 快速eq条件
      */
-    public DetachedCriteriaBuilder eq(String prop, Object value) {
+    public CriteriaBuilder eq(String prop, Object value) {
         this.addCriterion(Restrictions.eq(prop, value));
+        return this;
+    }
+
+    /**
+     * 快速not eq条件
+     */
+    public CriteriaBuilder notEq(String prop, Object value) {
+        this.addCriterion(Restrictions.not(Restrictions.eq(prop, value)));
         return this;
     }
 
     /**
      * like '%%' 全模糊
      */
-    public DetachedCriteriaBuilder like(String prop, String value) {
+    public CriteriaBuilder like(String prop, String value) {
         this.addCriterion(Restrictions.like(prop, value, MatchMode.ANYWHERE));
         return this;
     }
@@ -119,7 +147,7 @@ public class DetachedCriteriaBuilder {
     /**
      * 快速gt条件 >
      */
-    public DetachedCriteriaBuilder gt(String prop, Object value) {
+    public CriteriaBuilder gt(String prop, Object value) {
         this.addCriterion(Restrictions.gt(prop, value));
         return this;
     }
@@ -127,7 +155,7 @@ public class DetachedCriteriaBuilder {
     /**
      * 快速ge条件 >=
      */
-    public DetachedCriteriaBuilder gte(String prop, Object value) {
+    public CriteriaBuilder gte(String prop, Object value) {
         this.addCriterion(Restrictions.ge(prop, value));
         return this;
     }
@@ -135,7 +163,7 @@ public class DetachedCriteriaBuilder {
     /**
      * 快速lt条件 <
      */
-    public DetachedCriteriaBuilder lt(String prop, Object value) {
+    public CriteriaBuilder lt(String prop, Object value) {
         this.addCriterion(Restrictions.lt(prop, value));
         return this;
     }
@@ -143,7 +171,7 @@ public class DetachedCriteriaBuilder {
     /**
      * 快速le条件 <=
      */
-    public DetachedCriteriaBuilder le(String prop, Object value) {
+    public CriteriaBuilder le(String prop, Object value) {
         this.addCriterion(Restrictions.le(prop, value));
         return this;
     }
@@ -151,7 +179,7 @@ public class DetachedCriteriaBuilder {
     /**
      * 附件in查询
      */
-    public DetachedCriteriaBuilder in(String prop, Collection<?> value) {
+    public CriteriaBuilder in(String prop, Collection<?> value) {
         this.addCriterion(Restrictions.in(prop, value));
         return this;
     }
@@ -159,7 +187,7 @@ public class DetachedCriteriaBuilder {
     /**
      * 附加in条件
      */
-    public DetachedCriteriaBuilder in(String prop, Object... value) {
+    public CriteriaBuilder in(String prop, Object... value) {
         this.addCriterion(Restrictions.in(prop, value));
         return this;
     }

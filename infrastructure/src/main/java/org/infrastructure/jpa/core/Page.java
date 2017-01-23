@@ -12,7 +12,7 @@ import java.util.List;
 public class Page<T> implements Serializable {
     private static final long serialVersionUID = -1433098389717460681L;
     private List<T> rows = new ArrayList<>();
-    private Long total;
+    private Long total = 0L;
     private int pageSize;
 
     public Page() {

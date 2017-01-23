@@ -62,11 +62,11 @@ public abstract class AbstractEntity implements IEntity<Long> {
     private int version;
 
     @Column
-    private boolean active = true;
+    private boolean valid = true;
 
     @Override
     public boolean equals(Object obj) {
-        return this == obj || this.id != null && obj != null && this.getClass().equals(obj.getClass()) && this.id.equals(((IEntity) obj).getId());
+        return this == obj || this.getId() != null && obj != null && this.getClass().equals(obj.getClass()) && this.getId().equals(((IEntity) obj).getId());
     }
 
     @Override
@@ -126,11 +126,11 @@ public abstract class AbstractEntity implements IEntity<Long> {
         this.version = version;
     }
 
-    public boolean isActive() {
-        return active;
+    public boolean isValid() {
+        return valid;
     }
 
-    public void setActive(boolean isActive) {
-        this.active = isActive;
+    public void setValid(boolean valid) {
+        this.valid = valid;
     }
 }

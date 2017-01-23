@@ -15,7 +15,7 @@
  *
  */
 
-package org.infrastructure.jpa.sql;
+package org.infrastructure.jpa.sql.loader;
 
 import java.io.File;
 

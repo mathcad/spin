@@ -19,6 +19,8 @@ public interface SessionUser {
 
     String getUserName();
 
+    boolean isActive();
+
     Date getLoginTime();
 
     String getSessionId();

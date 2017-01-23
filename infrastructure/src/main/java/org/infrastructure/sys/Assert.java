@@ -15,6 +15,7 @@
  */
 package org.infrastructure.sys;
 
+
 import org.infrastructure.util.CollectionUtils;
 import org.infrastructure.util.ObjectUtils;
 import org.infrastructure.util.StringUtils;
@@ -56,7 +57,7 @@ import java.util.Map;
  * @author Sam Brannen
  * @since 1.1.2
  */
-public class Assert {
+public abstract class Assert {
 
     /**
      * Assert a boolean expression, throwing {@code IllegalArgumentException}
@@ -143,10 +144,10 @@ public class Assert {
      * @param text    the String to check
      * @param message the exception message to use if the assertion fails
      * @throws IllegalArgumentException if the text is empty
-     * @see StringUtils#hasLength
+     * @see StringUtils#isEmpty
      */
     public static void hasLength(String text, String message) {
-        if (!StringUtils.hasLength(text)) {
+        if (StringUtils.isEmpty(text)) {
             throw new IllegalArgumentException(message);
         }
     }
@@ -158,7 +159,7 @@ public class Assert {
      *
      * @param text the String to check
      * @throws IllegalArgumentException if the text is empty
-     * @see StringUtils#hasLength
+     * @see StringUtils#isEmpty
      */
     public static void hasLength(String text) {
         hasLength(text,
@@ -173,7 +174,6 @@ public class Assert {
      * @param text    the String to check
      * @param message the exception message to use if the assertion fails
      * @throws IllegalArgumentException if the text does not contain valid text content
-     * @see StringUtils#isEmpty(String)
      */
     public static void hasText(String text, String message) {
         if (StringUtils.isBlank(text)) {
@@ -188,7 +188,6 @@ public class Assert {
      *
      * @param text the String to check
      * @throws IllegalArgumentException if the text does not contain valid text content
-     * @see StringUtils#isEmpty(String)
      */
     public static void hasText(String text) {
         hasText(text,
@@ -205,7 +204,7 @@ public class Assert {
      * @throws IllegalArgumentException if the text contains the substring
      */
     public static void doesNotContain(String textToSearch, String substring, String message) {
-        if (StringUtils.hasLength(textToSearch) && StringUtils.hasLength(substring) &&
+        if (StringUtils.isNotEmpty(textToSearch) && StringUtils.isNotEmpty(substring) &&
                 textToSearch.contains(substring)) {
             throw new IllegalArgumentException(message);
         }
@@ -367,7 +366,7 @@ public class Assert {
         notNull(type, "Type to check against must not be null");
         if (!type.isInstance(obj)) {
             throw new IllegalArgumentException(
-                    (StringUtils.hasLength(message) ? message + " " : "") +
+                    (StringUtils.isNotEmpty(message) ? message + " " : "") +
                             "Object of class [" + (obj != null ? obj.getClass().getName() : "null") +
                             "] must be an instance of " + type);
         }
@@ -400,7 +399,7 @@ public class Assert {
     public static void isAssignable(Class<?> superType, Class<?> subType, String message) {
         notNull(superType, "Type to check against must not be null");
         if (subType == null || !superType.isAssignableFrom(subType)) {
-            throw new IllegalArgumentException((StringUtils.hasLength(message) ? message + " " : "") +
+            throw new IllegalArgumentException((StringUtils.isNotEmpty(message) ? message + " " : "") +
                     subType + " is not assignable to " + superType);
         }
     }

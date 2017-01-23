@@ -18,6 +18,7 @@
 package org.infrastructure.jpa.sql;
 
 import org.infrastructure.jpa.core.SQLLoader;
+import org.infrastructure.jpa.sql.loader.ClasspathXmlLoader;
 import org.infrastructure.jpa.sql.resolver.FreemarkerResolver;
 import org.junit.Test;
 

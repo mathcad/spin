@@ -1,4 +1,4 @@
-package org.infrastructure.shiro;
+package org.infrastructure.shiro.redis;
 
 import org.apache.shiro.cache.AbstractCacheManager;
 import org.apache.shiro.cache.Cache;

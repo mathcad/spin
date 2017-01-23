@@ -17,17 +17,17 @@ public class QueryPredicate implements Serializable {
     private static final String salt = "54b4ad84eddb38";
 
     private Map<String, String> conditions = new HashMap<>();
-    private String sort;
+    private String sort = null;
     private int pageIdx = 1;
-    private Integer pageSize;
+    private Integer pageSize = null;
 
     /**
      * 计算当前查询谓词的签名
      */
     public String calcSignature() {
         StringBuilder msg = new StringBuilder();
-        conditions.entrySet().stream().map(entry -> entry.getKey() + entry.getValue()).forEach(msg::append);
-        msg.append(sort).append(pageIdx).append("~").append(pageSize).append(salt);
+        conditions.entrySet().stream().map(entry -> entry.getKey() + entry.getValue()).sorted().forEach(msg::append);
+        msg.append(salt);
         return DigestUtils.md5Hex(msg.toString());
     }
 
@@ -71,8 +71,8 @@ public class QueryPredicate implements Serializable {
     /**
      * 分页页码，从1开始
      */
-    public void setPageIdx(int start) {
-        this.pageIdx = start;
+    public void setPageIdx(int pageIdx) {
+        this.pageIdx = pageIdx;
     }
 
     /**

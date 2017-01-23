@@ -18,8 +18,17 @@ import java.util.Date;
 @Table(name = "sys_user")
 public class AbstractUser extends AbstractEntity implements SessionUser {
 
-    @Column(length = 64)
+    @Column(length = 32)
     private String userName;
+
+    @Column(length = 32)
+    private String password;
+
+    @Column(length = 16)
+    private String salt;
+
+    @Column
+    private boolean active;
 
     @Transient
     private Date loginTime = new Date();
@@ -42,6 +51,31 @@ public class AbstractUser extends AbstractEntity implements SessionUser {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public void setSalt(String salt) {
+        this.salt = salt;
+    }
+
+    @Override
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     @Override

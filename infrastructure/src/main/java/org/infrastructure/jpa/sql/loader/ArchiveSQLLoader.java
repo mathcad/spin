@@ -1,4 +1,4 @@
-package org.infrastructure.jpa.sql;
+package org.infrastructure.jpa.sql.loader;
 
 /**
  * 基于jar\war\ear包的SQL装载器

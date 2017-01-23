@@ -1,4 +1,4 @@
-package org.infrastructure.shiro;
+package org.infrastructure.shiro.redis;
 
 public class ShiroRedisCache<V> {// implements Cache<String, V>    {
 //

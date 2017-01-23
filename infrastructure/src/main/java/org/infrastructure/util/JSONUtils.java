@@ -9,7 +9,6 @@ import org.infrastructure.sys.TypeIdentifier;
 
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 
@@ -60,19 +59,35 @@ import java.util.Iterator;
 public abstract class JSONUtils {
     private static final Log log = LogFactory.getLog(JSONUtils.class);
 
-    public static final String EMPTY = "";
+    private static final String EMPTY = "";
     /**
      * 空的 {@code JSON} 数据 - <code>"{}"</code>。
      */
-    public static final String EMPTY_JSON = "{}";
+    private static final String EMPTY_JSON = "{}";
     /**
      * 空的 {@code JSON} 数组(集合)数据 - {@code "[]"}。
      */
-    public static final String EMPTY_JSON_ARRAY = "[]";
+    private static final String EMPTY_JSON_ARRAY = "[]";
     /**
      * 默认的 {@code JSON} 日期/时间字段的格式化模式。
      */
-    public static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
+
+    private static final Gson defaultGson;
+
+    static {
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(Timestamp.class, new TimestampTypeAdapter(DEFAULT_DATE_PATTERN));
+        builder.setDateFormat(DEFAULT_DATE_PATTERN);
+        defaultGson = builder.create();
+    }
+
+    /**
+     * 获取一个默认的GSON实例
+     */
+    public static Gson getDefaultGson() {
+        return defaultGson;
+    }
 
     /**
      * 将给定的目标对象根据指定的条件参数转换成 {@code JSON} 格式的字符串。
@@ -91,16 +106,14 @@ public abstract class JSONUtils {
     public static String toJson(Object target, Type targetType, boolean isSerializeNulls, Double version, String datePattern, boolean excludesFieldsWithoutExpose) {
         if (target == null)
             return EMPTY;
+        String pattern = StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern;
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Timestamp.class, new TimestampTypeAdapter());
-
+        builder.registerTypeAdapter(Timestamp.class, new TimestampTypeAdapter(pattern));
         if (isSerializeNulls)
             builder.serializeNulls();
         if (version != null)
             builder.setVersion(version);
-        if (StringUtils.isEmpty(datePattern))
-            datePattern = DEFAULT_DATE_PATTERN;
-        builder.setDateFormat(datePattern);
+        builder.setDateFormat(pattern);
         if (excludesFieldsWithoutExpose)
             builder.excludeFieldsWithoutExposeAnnotation();
         String result;
@@ -114,7 +127,7 @@ public abstract class JSONUtils {
             }
         } catch (Exception ex) {
             log.warn("目标对象 " + target.getClass().getName() + " 转换 JSON 字符串时，发生异常！", ex);
-            if (target instanceof Collection || target instanceof Iterator || target instanceof Enumeration || target.getClass().isArray()) {
+            if (target instanceof Iterable || target instanceof Iterator || target instanceof Enumeration || target.getClass().isArray()) {
                 result = EMPTY_JSON_ARRAY;
             } else
                 result = EMPTY_JSON;
@@ -136,7 +149,7 @@ public abstract class JSONUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target) {
-        return toJson(target, null, false, null, null, false);
+        return defaultGson.toJson(target);
     }
 
     /**
@@ -288,12 +301,9 @@ public abstract class JSONUtils {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
+        String pattern = StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern;
         GsonBuilder builder = new GsonBuilder();
-
-        if (StringUtils.isEmpty(datePattern)) {
-            datePattern = DEFAULT_DATE_PATTERN;
-        }
-        builder.setDateFormat(datePattern);
+        builder.setDateFormat(pattern);
         Gson gson = builder.create();
         try {
             return gson.fromJson(json, token.getType());
@@ -312,7 +322,12 @@ public abstract class JSONUtils {
      * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
      */
     public static <T> T fromJson(String json, TypeIdentifier<T> token) {
-        return fromJson(json, token, null);
+        try {
+            return defaultGson.fromJson(json, token.getType());
+        } catch (Exception ex) {
+            log.error(json + " 无法转换为 " + token.getRawType().getName() + " 对象!", ex);
+            return null;
+        }
     }
 
     /**
@@ -329,11 +344,10 @@ public abstract class JSONUtils {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
+        String pattern = StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern;
         GsonBuilder builder = new GsonBuilder();
-        if (StringUtils.isEmpty(datePattern)) {
-            datePattern = DEFAULT_DATE_PATTERN;
-        }
-        builder.setDateFormat(datePattern);
+        builder.registerTypeAdapter(Timestamp.class, new TimestampTypeAdapter(pattern));
+        builder.setDateFormat(pattern);
         Gson gson = builder.create();
         try {
             return gson.fromJson(json, clazz);
