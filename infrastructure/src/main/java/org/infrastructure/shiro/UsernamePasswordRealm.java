@@ -22,8 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xuweinan
  */
 public class UsernamePasswordRealm extends AuthorizingRealm {
-    @Autowired(required = false)
-    Authenticator authenticator;
+    private Authenticator authenticator;
 
     @Override
     public boolean supports(AuthenticationToken token) {
