@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -95,6 +96,14 @@ public class RestfulApiAspect {
             for (Integer i : nonNullArgs) {
                 if (null == args[i])
                     return "{\"code\": 412, \"des\": \"请求参数不完整\"}";
+            }
+
+            if (EnvCache.devMode && logger.isTraceEnabled()) {
+                Parameter[] parameters = apiMethod.getParameters();
+                logger.trace("Invoke method: {0}", apiMethod.getName());
+                for (int idx = 0; idx != parameters.length; ++idx) {
+                    logger.trace("Parameter info: index[{0}] name[{1}], value[{2}]", idx, parameters[idx].getName(), JSONUtils.toJson(args[idx]));
+                }
             }
 
             String returnType = apiMethod.getReturnType().getName();
