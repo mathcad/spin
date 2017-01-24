@@ -16,7 +16,7 @@ import org.infrastructure.wx.wx.base.WxUserInfo;
  *
  * @author xuweinan
  */
-public class OAuth2Realm extends AuthorizingRealm {
+public class WxRealm extends AuthorizingRealm {
     private String clientId;
     private String clientSecret;
     private String accessTokenUrl;

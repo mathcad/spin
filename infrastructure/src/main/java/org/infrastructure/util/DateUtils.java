@@ -10,13 +10,12 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 /**
  * 日期工具类
  *
  * @author xuweinan
  */
-public class DateUtils {
+public abstract class DateUtils {
     private static final String yearPattern = "(\\d{4})";
     private static final String shortYearPattern = "(\\d{2})";
     private static final String alignMonthPattern = "(0[1-9]|1[0-2])";
@@ -25,11 +24,12 @@ public class DateUtils {
     private static final String alignMinutePattern = "([0-5]\\d)";
     private static final String alignSecondPattern = "([0-5]\\d)";
 
-    private static SimpleDateFormat day = new SimpleDateFormat("yyyy-MM-dd");
-    private static SimpleDateFormat second = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private static SimpleDateFormat zhDay = new SimpleDateFormat("yyyy年MM月dd日");
-    private static SimpleDateFormat zhSecond = new SimpleDateFormat("yyyy年MM月dd日 HH时mm分ss秒");
-    private static SimpleDateFormat fullDay = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_S");
+    private static final SimpleDateFormat day = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat second = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final SimpleDateFormat zhDay = new SimpleDateFormat("yyyy年MM月dd日");
+    private static final SimpleDateFormat zhSecond = new SimpleDateFormat("yyyy年MM月dd日 HH时mm分ss秒");
+    private static final SimpleDateFormat fullDay = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_S");
+    private static final SimpleDateFormat noFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
     private static final String[] datePatten = {
             yearPattern + "(.)" + alignMonthPattern + "(.)" + alignDayPattern,
@@ -93,35 +93,85 @@ public class DateUtils {
     }
 
     /**
-     * 计算提前多少秒时间
+     * 增加秒
      *
-     * @param date   日期
-     * @param second 秒数
+     * @param date    日期
+     * @param seconds 秒数
      * @return 结果时间
      */
-    public static Date beforeSecond(Date date, int second) {
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.SECOND, calendar.get(Calendar.SECOND) - second);
-
-        return calendar.getTime();
-
+    public static Date addSeconds(Date date, int seconds) {
+        return new Date(date.getTime() + seconds * 1000L);
     }
 
     /**
-     * 计算延后多少小时时间
+     * 增加分
+     *
+     * @param date    日期
+     * @param minutes 分钟数
+     * @return 结果时间
+     */
+    public static Date addMinutes(Date date, int minutes) {
+        return new Date(date.getTime() + minutes * 60000L);
+    }
+
+    /**
+     * 增加小时
      *
      * @param date  日期
      * @param hours 小时数
      * @return 结果时间
      */
-    public static Date afterhours(Date date, int hours) {
+    public static Date addHours(Date date, int hours) {
+        return new Date(date.getTime() + hours * 3600000L);
+    }
 
+    /**
+     * 增加天
+     *
+     * @param date 日期
+     * @param days 分钟数
+     * @return 结果时间
+     */
+    public static Date addDays(Date date, int days) {
+        return new Date(date.getTime() + days * 86400000L);
+    }
+
+    /**
+     * 增加周
+     *
+     * @param date  日期
+     * @param weeks 周数
+     * @return 结果时间
+     */
+    public static Date addWeeks(Date date, int weeks) {
+        return new Date(date.getTime() + weeks * 604800000L);
+    }
+
+    /**
+     * 增加月
+     *
+     * @param date  日期
+     * @param months 月数
+     * @return 结果时间
+     */
+    public static Date addMonths(Date date, int months) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
-        calendar.set(Calendar.HOUR, calendar.get(Calendar.HOUR) + hours);
+        calendar.add(Calendar.MONTH, months);
+        return calendar.getTime();
+    }
 
+    /**
+     * 增加年
+     *
+     * @param date  日期
+     * @param years 年数
+     * @return 结果时间
+     */
+    public static Date addYears(Date date, int years) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.YEAR, years);
         return calendar.getTime();
     }
 
@@ -161,4 +211,7 @@ public class DateUtils {
         return zhSecond.format(date);
     }
 
+    public static String formatDateForNoFormat(Date date) {
+        return noFormat.format(date);
+    }
 }

@@ -1,6 +1,7 @@
 package org.infrastructure.aspect;
 
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.ShiroException;
 import org.apache.shiro.subject.Subject;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -67,7 +68,13 @@ public class RestfulApiAspect {
                 }
             }
         } else {
-            SessionUtils.setCurrentUser(AbstractUser.ref(1L));
+            try {
+                SessionUtils.setCurrentUser(AbstractUser.ref(1L));
+            } catch (ShiroException e) {
+                logger.warn("Shiro未配置，不能启用Session支持");
+                if (EnvCache.devMode)
+                    logger.trace("Exception:", e);
+            }
         }
         if (isAllowed || !needAuth) {
             // 接口参数检查

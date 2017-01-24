@@ -60,6 +60,6 @@ public enum ErrorAndExceptionCode {
 
     @Override
     public String toString() {
-        return "Exception Type[" + this._value + ": " + valueStringMapper.get(this._value) + ']';
+        return "Exception Type[" + this._value + "-" + valueStringMapper.get(this._value) + ']';
     }
 }

@@ -2,6 +2,8 @@ package org.infrastructure.shiro;
 
 import org.infrastructure.jpa.core.AbstractUser;
 
+import java.util.Date;
+
 /**
  * 自定义身份验证接口
  * <p>
@@ -46,4 +48,13 @@ public interface Authenticator {
      * @param privs 权限列表
      */
     boolean checkAuthorities(Object id, Object[] privs);
+
+    /**
+     * 记录访问日志
+     *
+     * @param subject    访问人
+     * @param accessTime 访问时间
+     * @param msg        日志
+     */
+    void logAccess(Object subject, Date accessTime, String msg);
 }

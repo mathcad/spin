@@ -1,13 +1,16 @@
 package org.arvin.test;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.realm.Realm;
+import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
+import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.hibernate.SessionFactory;
 import org.infrastructure.jpa.core.SQLLoader;
 import org.infrastructure.jpa.sql.loader.ClasspathMdLoader;
 import org.infrastructure.jpa.sql.resolver.FreemarkerResolver;
-import org.infrastructure.jpa.sql.resolver.TemplateResolver;
-import org.infrastructure.redis.RedisCacheSupport;
-import org.infrastructure.sys.TokenKeyManager;
+import org.infrastructure.shiro.AnyoneSuccessfulStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,9 +21,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.orm.hibernate5.support.OpenSessionInViewFilter;
@@ -30,7 +30,9 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import redis.clients.jedis.JedisPoolConfig;
 
 import javax.sql.DataSource;
-import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -47,15 +49,10 @@ public class RepositoryApp {
 
     @Autowired
     @Bean
-    public SQLLoader sqlLoader(TemplateResolver resolver) {
+    public SQLLoader sqlLoader() {
         SQLLoader loader = new ClasspathMdLoader();
-        loader.setTemplateResolver(resolver);
+        loader.setTemplateResolver(new FreemarkerResolver());
         return loader;
-    }
-
-    @Bean
-    public TemplateResolver templateResolver() {
-        return new FreemarkerResolver();
     }
 
     @Bean
@@ -135,18 +132,19 @@ public class RepositoryApp {
     }
 
     @Bean
-    public RedisTemplate<String, ?> getRedisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, ?> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
-        return template;
+    public SecurityManager securityManager() {
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        ((ModularRealmAuthenticator) securityManager.getAuthenticator()).setAuthenticationStrategy(new AnyoneSuccessfulStrategy());
+        return securityManager;
     }
 
-    @Bean
-    public RedisCacheSupport<?> getRedisCacheSupport(RedisTemplate<String, Object> template) {
-        RedisCacheSupport<Object> redisCacheSupport = new RedisCacheSupport<>();
-        redisCacheSupport.setRedisTemplate(template);
-        redisCacheSupport.setRedisSerializer(new JdkSerializationRedisSerializer());
-        redisCacheSupport.setExpire(1800000);
-        return redisCacheSupport;
-    }
+//    @Bean
+//    public ShiroFilterFactoryBean shirFilter(SecurityManager securityManager) {
+//        ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
+//        shiroFilterFactoryBean.setSecurityManager(securityManager);
+//        Map<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
+//        filterChainDefinitionMap.put("/**", "anon");
+//        shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
+//        return shiroFilterFactoryBean;
+//    }
 }

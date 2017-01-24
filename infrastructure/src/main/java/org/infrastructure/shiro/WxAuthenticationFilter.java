@@ -20,7 +20,7 @@ import java.io.IOException;
  *
  * @author xuweinan
  */
-public class OAuth2AuthenticationFilter extends AuthenticatingFilter {
+public class WxAuthenticationFilter extends AuthenticatingFilter {
     private String authcCodeParam = "code";
     //服务器端登录成功/失败后重定向到的客户端地址
     private String failureUrl;

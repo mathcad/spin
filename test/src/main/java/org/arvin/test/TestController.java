@@ -1,6 +1,8 @@
 package org.arvin.test;
 
+import org.infrastructure.annotations.RestfulApi;
 import org.infrastructure.redis.RedisCacheSupport;
+import org.infrastructure.util.JSONUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,12 +19,12 @@ public class TestController {
     @Autowired
     private RedisCacheSupport<Map<String, String>> cacheSupport;
 
-    @RequestMapping("test")
-    public Object test(String s) {
+    @RestfulApi(auth = false, path = "test")
+    public String test(String s) {
         Map<String, String> map = new HashMap<>();
         map.put("name", s);
         cacheSupport.put("user", map);
         cacheSupport.updateHashValue("users","a", map);
-        return cacheSupport.getHashValue("users", "a");
+        return JSONUtils.toJson(cacheSupport.getHashValue("users", "a"));
     }
 }

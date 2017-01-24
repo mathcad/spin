@@ -8,6 +8,7 @@ import org.infrastructure.util.SessionUtils;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import java.util.Date;
 
 /**
  * 自定义登录处理
@@ -22,7 +23,7 @@ public class EnhancedAuthenticationFilter extends FormAuthenticationFilter {
     protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
         SessionUser user = authenticator.getSubject(token.getPrincipal());
         SessionUtils.setSessionUser(subject.getSession(), user);
-        // TODO: 2016/9/27 记录登录成功日志
+        authenticator.logAccess(user, new Date(), "登录成功");
         return super.onLoginSuccess(token, subject, request, response);
     }
 
