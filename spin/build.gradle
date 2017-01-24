@@ -1,6 +1,6 @@
 description '基础设施'
 group 'org.mathcat'
-version '1.7.0.1'
+version '1.8.0'
 def artifactId = 'spin'
 
 apply plugin: 'java'
