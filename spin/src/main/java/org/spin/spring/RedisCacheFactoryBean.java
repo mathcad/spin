@@ -1,6 +1,6 @@
 package org.spin.spring;
 
-import org.spin.redis.RedisCacheSupport;
+import org.spin.cache.RedisCache;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -15,29 +15,29 @@ import org.springframework.stereotype.Component;
  * @author xuweinan
  */
 @Component
-public class RedisCacheSupportFactoryBean implements FactoryBean<RedisCacheSupport> {
+public class RedisCacheFactoryBean implements FactoryBean<RedisCache> {
 
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;
 
     @Override
-    public RedisCacheSupport<?> getObject() throws Exception {
+    public RedisCache<?> getObject() throws Exception {
         if (null != redisConnectionFactory) {
             RedisTemplate<String, Object> template = new RedisTemplate<>();
             template.setConnectionFactory(redisConnectionFactory);
             template.afterPropertiesSet();
 
-            RedisCacheSupport<Object> redisCacheSupport = new RedisCacheSupport<>();
-            redisCacheSupport.setRedisTemplate(template);
-            redisCacheSupport.setRedisSerializer(new JdkSerializationRedisSerializer());
-            return redisCacheSupport;
+            RedisCache<Object> redisCache = new RedisCache<>();
+            redisCache.setRedisTemplate(template);
+            redisCache.setRedisSerializer(new JdkSerializationRedisSerializer());
+            return redisCache;
         }
         return null;
     }
 
     @Override
     public Class<?> getObjectType() {
-        return RedisCacheSupport.class;
+        return RedisCacheFactoryBean.class;
     }
 
     @Override

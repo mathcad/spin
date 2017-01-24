@@ -1,4 +1,4 @@
-package org.spin.redis;
+package org.spin.cache;
 
 import java.util.Set;
 
@@ -8,7 +8,7 @@ import java.util.Set;
  * @author xuweinan
  * @version 1.0
  */
-public interface ICached<V> {
+public interface Cache<V> {
 
     /**
      * 获取所有满足pattern的Key

@@ -1,4 +1,4 @@
-package org.spin.redis;
+package org.spin.cache;
 
 import org.spin.util.SerializeUtils;
 import org.spin.util.StringUtils;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version V1.0
  */
-public class RedisCacheSupport<V> implements ICached<V> {
+public class RedisCache<V> implements Cache<V> {
     private int expire = -1;
 
     private RedisTemplate<String, V> redisTemplate;

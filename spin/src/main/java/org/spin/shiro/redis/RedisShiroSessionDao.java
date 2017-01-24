@@ -3,7 +3,7 @@ package org.spin.shiro.redis;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
-import org.spin.redis.ICached;
+import org.spin.cache.Cache;
 import org.spin.sys.SessionUser;
 import org.spin.util.SessionUtils;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import java.util.Set;
 public class RedisShiroSessionDao extends AbstractSessionDAO {
     static Logger logger = LoggerFactory.getLogger(RedisShiroSessionDao.class.getName());
     private String sessionprefix = "ss-";
-    private ICached<Session> cached;
+    private Cache<Session> cache;
 
     Date lastSyncTime = null;
 
@@ -37,8 +37,8 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
 
             String sessionId = session.getId().toString();
             long timeout = session.getTimeout() / 1000;
-            cached.put(sessionId, session);
-            cached.expire(sessionId, timeout);
+            cache.put(sessionId, session);
+            cache.expire(sessionId, timeout);
 
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -80,7 +80,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
                 }
             }
 
-            cached.delete(session.getId().toString());
+            cache.delete(session.getId().toString());
             logger.info("delete session:" + session.getId());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -93,7 +93,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
         String keys = sessionprefix + "*";
         Set<Session> list = null;
         try {
-            list = cached.getValues(keys);
+            list = cache.getValues(keys);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -118,19 +118,19 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
     public Session doReadSession(Serializable sessionId) {
         Session session = null;
         try {
-            session = cached.get(sessionId.toString());
+            session = cache.get(sessionId.toString());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
         return session;
     }
 
-    public ICached<Session> getCached() {
-        return cached;
+    public Cache<Session> getCache() {
+        return cache;
     }
 
-    public void setCached(ICached<Session> cached) {
-        this.cached = cached;
+    public void setCache(Cache<Session> cache) {
+        this.cache = cache;
     }
 
     public String getSessionprefix() {

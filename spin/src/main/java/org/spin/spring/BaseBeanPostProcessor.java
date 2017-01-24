@@ -26,7 +26,7 @@ public class BaseBeanPostProcessor implements BeanPostProcessor, ApplicationCont
 //            template.afterPropertiesSet();
 //
 //            DefaultListableBeanFactory acf = (DefaultListableBeanFactory) this.applicationContext.getAutowireCapableBeanFactory();
-//            BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(RedisCacheSupport.class);
+//            BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(RedisCache.class);
 //            bdb.addPropertyValue("redisTemplate", template);
 //            bdb.addPropertyValue("redisSerializer", new JdkSerializationRedisSerializer());
 //            AbstractBeanDefinition abd = bdb.getBeanDefinition();
