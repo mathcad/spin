@@ -1,15 +1,16 @@
 package org.spin.ftp;
 
-import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPListParseEngine;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.throwable.SimplifiedException;
+import org.spin.util.EnumUtils;
+import org.spin.util.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,9 +18,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -41,6 +39,19 @@ public class FtpOperator {
     private int port = 21;
     private FTPClient client;
 
+    public enum Protocal {
+        FTP("ftp"), FTPS("ftps");
+        private String value;
+
+        Protocal(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+
     private static final Map<String, FtpOperator> ftpClients = new ConcurrentHashMap<>();
     private static final Pattern protocalPattern = Pattern.compile("^(ftp[s]?)://(.+:.+@)?([^:]+)(:\\d{2,5})?$", Pattern.CASE_INSENSITIVE);
 
@@ -57,92 +68,60 @@ public class FtpOperator {
         if (!matcher.matches())
             throw new SimplifiedException("FTP连接URL格式错误");
 
-        String protocal = matcher.group(1).toLowerCase();
+        Protocal protocal = EnumUtils.getEnum(Protocal.class, matcher.group(1).toLowerCase());
         String token = matcher.group(2);
+        String userName = null;
+        String password = null;
+        if (StringUtils.isNotEmpty(token)) {
+            int idx = token.indexOf(':');
+            userName = token.substring(0, idx);
+            password = token.substring(idx + 1, token.length() - 1);
+        }
         String host = matcher.group(3).toLowerCase();
         String port = matcher.group(4);
 
-        String key = protocal + token + host + port;
+        return connect(protocal, userName, password, host, StringUtils.isEmpty(port) ? 21 : Integer.parseInt(port.substring(1)));
+    }
+
+    public static FtpOperator connect(Protocal protocal, String userName, String password, String host) {
+        return connect(protocal, userName, password, host, 21);
+    }
+
+    public static FtpOperator connect(String userName, String password, String host) {
+        return connect(Protocal.FTP, userName, password, host, 21);
+    }
+
+    public static FtpOperator connect(Protocal protocal, String userName, String password, String host, int port) {
+        Protocal p = protocal;
+        if (null == protocal)
+            p = Protocal.FTP;
+        String key = p.getValue() + userName + host + port;
         FtpOperator ftp = ftpClients.get(key);
         if (null == ftp) {
             ftp = new FtpOperator();
             ftp.key = key;
-            ftp.protocal = protocal;
-            if (protocal.equals("ftp"))
+            ftp.protocal = "ftp";
+            if (p.equals(Protocal.FTP))
                 ftp.client = new FTPClient();
-            else if (protocal.equals("ftps"))
+            else if (p.equals(Protocal.FTPS))
                 ftp.client = new FTPSClient("SSL");
             ftp.host = host;
-            if (StringUtils.isNotEmpty(port)) {
-                ftp.port = Integer.parseInt(port.substring(1));
-            }
-            if (StringUtils.isNotEmpty(token)) {
-                int idx = token.indexOf(':');
-                ftp.userName = token.substring(0, idx);
-                ftp.password = token.substring(idx + 1, token.length() - 1);
-            }
+            ftp.port = port;
+            ftp.userName = userName;
+            ftp.password = password;
             ftp.conn();
             ftpClients.put(key, ftp);
         }
         return ftp;
     }
 
-//    public boolean connectServer() {
-//        boolean flag = true;
-//        FTPClient ftpClient = threadFtpClient.get();
-//
-//        if (ftpClient == null) {
-//            int reply;
-//            try {
-//                ftpClient = new FTPClient();
-//                ftpClient.setDefaultPort(port);
-//                ftpClient.connect(ip);
-//                if (!ftpClient.login(userName, password)) {
-//                    throw new SimplifiedException("ftp登录出错");
-//                }
-//                reply = ftpClient.getReplyCode();
-//
-//                if (!FTPReply.isPositiveCompletion(reply)) {
-//                    ftpClient.disconnect();
-//                    logger.error("FTP server refused connection  " + ip + ":" + port);
-//                    flag = false;
-//                }
-//
-//                ftpClient.setDataTimeout(30000);
-//                ftpClient.setControlEncoding("UTF-8");
-//                ftpClient.enterLocalPassiveMode();
-//                ftpClient.setFileTransferMode(FTPClient.STREAM_TRANSFER_MODE);
-//
-//                if (!ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE))
-//                    throw new SimplifiedException("错误的FileType");
-//
-//                threadFtpClient.set(ftpClient);
-//            } catch (SocketException e) {
-//                e.printStackTrace();
-//                throw new SimplifiedException("登录ftp服务器 " + ip + " 失败,连接超时！");
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                throw new SimplifiedException("登录ftp服务器 " + ip + " 失败，FTP服务器无法打开！");
-//            }
-//        }
-//
-//        return flag;
-//    }
-
-    public static FtpOperator connect(String userName, String password, String host, int port) {
-        this.userName = userName;
-        this.password = password;
-        this.host = host;
-        this.port = port;
-    }
-
     public int sendCommands(String command) {
         try {
             return client.sendCommand(command);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("执行命令失败: {}", client.getReplyString(), e);
         }
-        return 0;
+        return -1;
     }
 
     public void listRemoteAllFiles(String path) {
@@ -155,9 +134,8 @@ public class FtpOperator {
                     disFile(file, path);
                 }
             }
-
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("列出文件失败: ", e);
         }
     }
 
@@ -170,47 +148,52 @@ public class FtpOperator {
         }
     }
 
-    public void downFile(String remotePath, String fileName, String localPath) {
-        FTPFile[] fs;
+    public boolean downFile(String remotePath, String fileName, String localPath) {
+        boolean flag = false;
         try {
-            logger.info(remotePath);
-            client.changeWorkingDirectory(remotePath);//转移到FTP服务器目录
-            fs = client.listFiles();
-            for (FTPFile ff : fs) {
-                if (ff.getName().equals(fileName)) {
-                    File localFile = new File(localPath + File.separator + ff.getName());
-                    logger.info(localPath + File.separator + ff.getName());
-                    FileOutputStream is = new FileOutputStream(localFile);
-                    client.retrieveFile(ff.getName(), is);
-                    is.close();
-                }
-            }
+            client.changeWorkingDirectory(remotePath);
+            File localFile = new File(localPath + File.separator + fileName);
+            logger.info(localPath + File.separator + fileName);
+            FileOutputStream is = new FileOutputStream(localFile);
+            flag = client.retrieveFile(fileName, is);
+            is.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("下载文件失败: {}", client.getReplyString(), e);
         }
+        return flag;
     }
 
-    public void downFile(String allPath, OutputStream os) {
+    public boolean downFile(String fullPath, String localPath) {
+        int lastIdx = fullPath.lastIndexOf("/") + 1;
+        if (lastIdx <= 0)
+            lastIdx = fullPath.lastIndexOf("\\") + 1;
+        String dir = fullPath.substring(0, lastIdx);
+        String fileName = fullPath.substring(lastIdx);
+        return downFile(dir, fileName, localPath);
+    }
+
+    public boolean downFile(String fullPath, OutputStream os) {
+        boolean flag = false;
         FTPFile[] fs;
         try {
-            int lastIdx = allPath.lastIndexOf("/") + 1;
+            int lastIdx = fullPath.lastIndexOf("/") + 1;
             if (lastIdx <= 0)
-                lastIdx = allPath.lastIndexOf("\\") + 1;
+                lastIdx = fullPath.lastIndexOf("\\") + 1;
 
-            String dir = allPath.substring(0, lastIdx);
-            String fileName = allPath.substring(lastIdx);
+            String dir = fullPath.substring(0, lastIdx);
+            String fileName = fullPath.substring(lastIdx);
             client.changeWorkingDirectory(dir);//进到FTP服务器目录
             fs = client.listFiles();
             for (FTPFile ff : fs) {
                 if (ff.getName().equals(fileName)) {
-                    client.retrieveFile(ff.getName(), os);
+                    flag = client.retrieveFile(ff.getName(), os);
                     break;
                 }
             }
         } catch (Exception e) {
-            logger.error("下载ftp文件出错" + allPath, e);
-            throw new SimplifiedException("下载ftp文件出错");
+            logger.error("下载文件失败", fullPath, e);
         }
+        return flag;
     }
 
     public boolean upFile(String path, String filename, String localFilePath) {
@@ -221,9 +204,8 @@ public class FtpOperator {
                 client.changeWorkingDirectory(path);
             flag = client.storeFile(filename, in);
             in.close();
-
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("上传文件失败", e);
         }
         return flag;
     }
@@ -270,27 +252,42 @@ public class FtpOperator {
         if (null == client)
             throw new SimplifiedException("FTP客户端未初始化");
         client.setDefaultPort(port);
-        client.connect(host);
+
+        try {
+            client.connect(host);
+        } catch (IOException e) {
+            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "FTP连接失败");
+        }
         if (StringUtils.isNotEmpty(userName)) {
-            if (!client.login(userName, password)) {
-                throw new SimplifiedException("FTP登录失败");
+
+            try {
+                if (!client.login(userName, password)) {
+                    throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "FTP登录失败");
+                }
+            } catch (IOException e) {
+                throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "FTP登录失败");
             }
         }
 
         int reply = client.getReplyCode();
 
         if (!FTPReply.isPositiveCompletion(reply)) {
-            client.disconnect();
-            throw new SimplifiedException("FTP server refused connection  " + host + ":" + port);
+            try {
+                client.disconnect();
+            } catch (IOException e) {
+                throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "FTP访问被拒绝，断开连接失败");
+            }
+            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "FTP访问被拒绝: " + host + ":" + port);
         }
 
         client.setDataTimeout(30000);
         client.setControlEncoding("UTF-8");
         client.enterLocalPassiveMode();
-        client.setFileTransferMode(FTPClient.STREAM_TRANSFER_MODE);
-
-        if (!client.setFileType(FTPClient.BINARY_FILE_TYPE))
-            throw new SimplifiedException("错误的FileType");
-
+        try {
+            if (!client.setFileType(FTPClient.BINARY_FILE_TYPE))
+                throw new SimplifiedException("无法设置FileType到BIN模式");
+        } catch (IOException e) {
+            throw new SimplifiedException("无法设置FileType到BIN模式");
+        }
     }
 }
