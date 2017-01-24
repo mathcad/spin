@@ -1,4 +1,4 @@
 rootProject.name = 'fundamental'
 include 'test'
 include 'zibra'
-include 'infrastructure'
+include 'spin'

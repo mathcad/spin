@@ -1,7 +1,7 @@
 package org.arvin.test.domain;
 
 import org.hibernate.criterion.Restrictions;
-import org.infrastructure.jpa.query.CriteriaBuilder;
+import org.spin.jpa.query.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

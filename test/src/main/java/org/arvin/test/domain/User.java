@@ -18,7 +18,7 @@
 package org.arvin.test.domain;
 
 import org.hibernate.annotations.Type;
-import org.infrastructure.jpa.core.IEntity;
+import org.spin.jpa.core.IEntity;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -93,7 +93,7 @@ public class User implements IEntity<Long> {
      * 内部用户(0), 货主(1), 司机(2);
      */
     @Column(length = 2)
-    @Type(type = "org.infrastructure.jpa.extend.UserEnumType")
+    @Type(type = "org.spin.jpa.extend.UserEnumType")
 //    @Type(type = "org.hibernate.type.EnumType")
     private UserTypeE type;
 
@@ -145,7 +145,7 @@ public class User implements IEntity<Long> {
     /*
      * (non-Javadoc)
      *
-     * @see com.gsh56.infrastructure.shiro.AUser#getLoginName()
+     * @see com.gsh56.spin.shiro.AUser#getLoginName()
      */
     public String getLoginName() {
         return this.name;
@@ -154,7 +154,7 @@ public class User implements IEntity<Long> {
     /*
      * (non-Javadoc)
      *
-     * @see com.gsh56.infrastructure.shiro.AUser#setSessionId(java.lang.String)
+     * @see com.gsh56.spin.shiro.AUser#setSessionId(java.lang.String)
      */
     public void setSessionId(String sessionId) {
 

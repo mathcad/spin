@@ -1,9 +1,6 @@
 package org.arvin.test;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.collections.map.HashedMap;
 import org.arvin.test.domain.User;
-import org.infrastructure.util.ObjectUtils;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
@@ -41,7 +38,7 @@ public class Test {
             int i = -1;
             Long start = System.currentTimeMillis();
             while (++i != 100000)
-              u = org.infrastructure.util.BeanUtils.wrapperMapToBean(User.class, a);
+              u = org.spin.util.BeanUtils.wrapperMapToBean(User.class, a);
             Long end = System.currentTimeMillis();
 
             System.out.println(u.getRoles());

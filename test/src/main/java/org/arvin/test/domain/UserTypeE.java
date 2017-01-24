@@ -1,7 +1,7 @@
 package org.arvin.test.domain;
 
 
-import org.infrastructure.annotations.UserEnum;
+import org.spin.annotations.UserEnum;
 
 /**
  * 用户类型

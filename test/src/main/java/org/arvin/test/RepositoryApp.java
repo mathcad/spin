@@ -3,14 +3,12 @@ package org.arvin.test;
 import com.alibaba.druid.pool.DruidDataSource;
 import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.realm.Realm;
-import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.hibernate.SessionFactory;
-import org.infrastructure.jpa.core.SQLLoader;
-import org.infrastructure.jpa.sql.loader.ClasspathMdLoader;
-import org.infrastructure.jpa.sql.resolver.FreemarkerResolver;
-import org.infrastructure.shiro.AnyoneSuccessfulStrategy;
+import org.spin.jpa.core.SQLLoader;
+import org.spin.jpa.sql.loader.ClasspathMdLoader;
+import org.spin.jpa.sql.resolver.FreemarkerResolver;
+import org.spin.shiro.AnyoneSuccessfulStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -30,16 +28,13 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import redis.clients.jedis.JedisPoolConfig;
 
 import javax.sql.DataSource;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 /**
  * Created by Arvin on 2016/9/14.
  */
 
-@SpringBootApplication(exclude = HibernateJpaAutoConfiguration.class, scanBasePackages = {"org.infrastructure", "org.arvin"})
+@SpringBootApplication(exclude = HibernateJpaAutoConfiguration.class, scanBasePackages = {"org.spin", "org.arvin"})
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableTransactionManagement(proxyTargetClass = true)
 public class RepositoryApp {
@@ -79,7 +74,7 @@ public class RepositoryApp {
         LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
         sessionFactory.setDataSource(dataSource);
         sessionFactory.setPhysicalNamingStrategy(new SpringPhysicalNamingStrategy());
-        sessionFactory.setPackagesToScan("org.arvin.test", "org.infrastructure");
+        sessionFactory.setPackagesToScan("org.arvin.test", "org.spin");
         Properties proper = new Properties();
 //        proper.setProperty("hibernate.current_session_context_class", "org.springframework.orm.hibernate5.SpringSessionContext");
         proper.setProperty("hibernate.show_sql", "true");

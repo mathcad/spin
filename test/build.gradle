@@ -1,4 +1,4 @@
-group 'org.arvin'
+group 'org.mathcat'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
@@ -55,5 +55,5 @@ dependencies {
     compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
 
     compile(project(":zibra"))
-    compile(project(":infrastructure"))
+    compile(project(":spin"))
 }

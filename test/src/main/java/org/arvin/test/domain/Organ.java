@@ -1,8 +1,7 @@
 package org.arvin.test.domain;
 
 import org.hibernate.annotations.Type;
-import org.infrastructure.jpa.core.AbstractEntity;
-import org.infrastructure.jpa.core.IEntity;
+import org.spin.jpa.core.IEntity;
 
 import javax.persistence.*;
 
@@ -77,7 +76,7 @@ public class Organ implements java.io.Serializable, IEntity<Long> {
     /**
      * 团队类型
      */
-    @Type(type = "org.infrastructure.jpa.extend.UserEnumType")
+    @Type(type = "org.spin.jpa.extend.UserEnumType")
     OrganTeamTypeE teamType;
 
     public String getCode() {
