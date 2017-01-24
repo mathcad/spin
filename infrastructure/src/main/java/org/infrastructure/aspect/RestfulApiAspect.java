@@ -15,6 +15,7 @@ import org.infrastructure.shiro.Authenticator;
 import org.infrastructure.sys.EnvCache;
 import org.infrastructure.sys.TokenKeyManager;
 import org.infrastructure.throwable.SimplifiedException;
+import org.infrastructure.util.JSONUtils;
 import org.infrastructure.util.SessionUtils;
 import org.infrastructure.util.StringUtils;
 import org.slf4j.Logger;
@@ -96,11 +97,15 @@ public class RestfulApiAspect {
                     return "{\"code\": 412, \"des\": \"请求参数不完整\"}";
             }
 
+            String returnType = apiMethod.getReturnType().getName();
+            if (!(returnType.equals(String.class.getName())
+                    || returnType.equals(Object.class.getName())
+                    || returnType.equals(CharSequence.class.getName())))
+                throw new SimplifiedException("RestfulApi接口的返回类型错误，必须为String, CharSequence或者Object");
             try {
                 Object r = joinPoint.proceed();
-                if (!(r instanceof String))
-                    throw new SimplifiedException("RestfulApi接口需要返回String的结果");
-                return "{\"code\": 200, \"des\": \"OK\"" + (StringUtils.isNotEmpty((String) r) ? ", \"data\": " + r : "") + "}";
+                String content = r instanceof CharSequence ? r.toString() : JSONUtils.toJson(r);
+                return "{\"code\": 200, \"des\": \"OK\"" + (StringUtils.isNotEmpty(content) ? ", \"data\": " + content : "") + "}";
             } catch (SimplifiedException e) {
                 logger.info("Invoke api fail: [" + apiMethod.toGenericString() + "]");
                 logger.trace("Exception: ", e);
