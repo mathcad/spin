@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
+import java.io.Serializable;
 import java.util.Optional;
 
 @Component
@@ -34,7 +35,7 @@ public class RepositoryContext implements ApplicationContextAware {
      * 获取指定实体的持久化对象
      */
     @SuppressWarnings("unchecked")
-    public <T extends IEntity<Long>> ARepository<T, Long> getRepo(Class<T> cls) throws BeansException {
+    public <T extends IEntity<S>, S extends Serializable> ARepository<T, S> getRepo(Class<T> cls) throws BeansException {
         Optional<ARepository> optional = applicationContext.getBeansOfType(ARepository.class).values().stream().filter(entry -> cls.getName().equals(entry.getEntityClazz().getName())).findAny();
         if (optional.isPresent())
             return optional.get();

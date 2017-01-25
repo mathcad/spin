@@ -1,4 +1,4 @@
-package org.spin.redis;
+package org.spin.cache;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.FactoryBean;
