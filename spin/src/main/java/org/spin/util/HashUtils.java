@@ -82,7 +82,7 @@ public abstract class HashUtils {
      */
     public static Set<Object> distinctList(List<Map<?, Object>> list, String key, Comparator<Object> objCpt) {
         Set<Object> objSet = new HashSet<>();
-        list.stream().map(map -> map.get(key)).filter(object -> object!= null).forEach(o -> {
+        list.stream().map(map -> map.get(key)).filter(object -> object != null).forEach(o -> {
 //            objSet.stream().filter(obj -> objCpt.compare(obj, o)!=0).forEach();
         });
         for (Map<?, Object> map : list) {

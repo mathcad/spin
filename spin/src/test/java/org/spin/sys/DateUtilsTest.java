@@ -6,7 +6,6 @@ import org.spin.util.DateUtils;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 import static org.junit.Assert.assertTrue;
 
@@ -21,7 +20,7 @@ public class DateUtilsTest {
 //        Pattern p = Pattern.compile(patten);
 //        Matcher m = p.matcher(date);
 //        System.out.println(m.matches());
-        System.out.println(DateUtils.parseDate(date));
+        System.out.println(DateUtils.toDate(date));
     }
 
     @Test

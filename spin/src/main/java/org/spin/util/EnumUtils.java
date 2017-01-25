@@ -1,10 +1,10 @@
 package org.spin.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.annotations.UserEnum;
 import org.spin.sys.Validate;
 import org.spin.throwable.SimplifiedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;

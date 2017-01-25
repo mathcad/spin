@@ -19,6 +19,7 @@ import java.io.Serializable;
  * @author xuweinan
  */
 public class BytesMultipartFile implements MultipartFile, Serializable {
+    private static final long serialVersionUID = 3858250164636170128L;
     private final byte[] fileContent;
     private final long size;
     private final String fileName;

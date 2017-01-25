@@ -1,5 +1,7 @@
 package org.spin.wx;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.security.Hex;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.DigestUtils;
@@ -7,14 +9,9 @@ import org.spin.util.HttpUtils;
 import org.spin.util.JSONUtils;
 import org.spin.util.RandomStringUtils;
 import org.spin.wx.wx.base.WxUserInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,23 +116,5 @@ public class WxHelper {
         logger.info("微信签名参数：stringA:" + stringA);
 
         return DigestUtils.md5Hex(stringA + "key=" + WxConfig.mchKey).toUpperCase();
-    }
-
-    /**
-     * 转换微信传入的时间
-     *
-     * @param date yyyyMMddHHmmss格式的时间
-     */
-    public static Date transDateForWxDate(String date) {
-
-        SimpleDateFormat fullDay = new SimpleDateFormat("yyyyMMddHHmmss");
-
-        Date d = null;
-        try {
-            d = fullDay.parse(date);
-        } catch (ParseException e) {
-            logger.error("日期转换错误", e);
-        }
-        return d;
     }
 }

@@ -17,11 +17,11 @@
 
 package org.spin.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.jpa.core.IEntity;
 import org.spin.sys.EnvCache;
 import org.spin.throwable.SimplifiedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;

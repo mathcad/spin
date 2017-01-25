@@ -17,13 +17,13 @@
 
 package org.spin.util;
 
+import org.spin.security.Hex;
+import org.spin.security.MessageDigestAlgorithms;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-import org.spin.security.Hex;
-import org.spin.security.MessageDigestAlgorithms;
 
 /**
  * 简化摘要算法{@link MessageDigest} 操作。

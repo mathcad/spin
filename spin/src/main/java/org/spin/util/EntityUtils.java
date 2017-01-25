@@ -4,9 +4,9 @@ import javassist.util.proxy.ProxyFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
 import org.hibernate.collection.internal.PersistentBag;
-import org.spin.sys.EnvCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.sys.EnvCache;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

@@ -185,9 +185,9 @@ public class QueryParamParser {
             } else if (fieldType.equals(Character.class) || fieldType.equals(char.class)) {
                 v = val.charAt(0);
             } else if (fieldType.equals(java.sql.Date.class) || fieldType.equals(Date.class)) {
-                v = DateUtils.parseDate(val);
+                v = DateUtils.toDate(val);
             } else if (fieldType.equals(Timestamp.class)) {
-                v = new Timestamp(DateUtils.parseDate(val).getTime());
+                v = new Timestamp(DateUtils.toDate(val).getTime());
             } else if (fieldType.isEnum()) {
                 //noinspection unchecked
                 v = EnumUtils.getEnum((Class<Enum>) fieldType, Integer.valueOf(val));

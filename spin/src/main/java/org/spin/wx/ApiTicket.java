@@ -73,7 +73,7 @@ public class ApiTicket {
     private static ApiTicket parseTicket(String json) {
         ApiTicket tmp = new ApiTicket();
         Map<String, String> resMap = JSONUtils.fromJson(json, type);
-        if (resMap.containsKey("ticket")) {
+        if (null != resMap && resMap.containsKey("ticket")) {
             tmp.setExpiresIn(Integer.parseInt(resMap.get("expires_in")));
             tmp.jsapiTicket = resMap.get("ticket");
             if (logger.isDebugEnabled())
