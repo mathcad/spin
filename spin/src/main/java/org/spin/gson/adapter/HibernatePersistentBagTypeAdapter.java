@@ -1,9 +1,6 @@
-package org.spin.gson;
+package org.spin.gson.adapter;
 
-import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
-import com.google.gson.TypeAdapterFactory;
-import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.hibernate.collection.internal.PersistentBag;
@@ -14,13 +11,6 @@ import java.io.IOException;
  * lazy-load 解决方案
  */
 public class HibernatePersistentBagTypeAdapter extends TypeAdapter<PersistentBag> {
-    public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
-        @Override
-        @SuppressWarnings("unchecked")
-        public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-            return PersistentBag.class.isAssignableFrom(type.getRawType()) ? (TypeAdapter<T>) new HibernatePersistentBagTypeAdapter() : null;
-        }
-    };
 
     @Override
     public PersistentBag read(JsonReader in) throws IOException {

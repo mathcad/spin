@@ -4,11 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.spin.gson.TimestampTypeAdapter;
+import org.spin.gson.SpinTypeAdapterFactory;
 import org.spin.sys.TypeIdentifier;
 
 import java.lang.reflect.Type;
-import java.sql.Timestamp;
 import java.util.Enumeration;
 import java.util.Iterator;
 
@@ -76,10 +75,7 @@ public abstract class JSONUtils {
     private static final Gson defaultGson;
 
     static {
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Timestamp.class, new TimestampTypeAdapter(DEFAULT_DATE_PATTERN));
-        builder.setDateFormat(DEFAULT_DATE_PATTERN);
-        defaultGson = builder.create();
+        defaultGson = baseBuilder(DEFAULT_DATE_PATTERN).create();
     }
 
     /**
@@ -106,14 +102,11 @@ public abstract class JSONUtils {
     public static String toJson(Object target, Type targetType, boolean isSerializeNulls, Double version, String datePattern, boolean excludesFieldsWithoutExpose) {
         if (target == null)
             return EMPTY;
-        String pattern = StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern;
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Timestamp.class, new TimestampTypeAdapter(pattern));
+        GsonBuilder builder = baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern);
         if (isSerializeNulls)
             builder.serializeNulls();
         if (version != null)
             builder.setVersion(version);
-        builder.setDateFormat(pattern);
         if (excludesFieldsWithoutExpose)
             builder.excludeFieldsWithoutExposeAnnotation();
         String result;
@@ -301,12 +294,8 @@ public abstract class JSONUtils {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
-        String pattern = StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern;
-        GsonBuilder builder = new GsonBuilder();
-        builder.setDateFormat(pattern);
-        Gson gson = builder.create();
         try {
-            return gson.fromJson(json, token.getType());
+            return baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern).create().fromJson(json, token.getType());
         } catch (Exception ex) {
             log.error(json + " 无法转换为 " + token.getRawType().getName() + " 对象!", ex);
             return null;
@@ -344,13 +333,8 @@ public abstract class JSONUtils {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
-        String pattern = StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern;
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Timestamp.class, new TimestampTypeAdapter(pattern));
-        builder.setDateFormat(pattern);
-        Gson gson = builder.create();
         try {
-            return gson.fromJson(json, clazz);
+            return baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern).create().fromJson(json, clazz);
         } catch (Exception ex) {
             log.error(json + " 无法转换为 " + clazz.getName() + " 对象!", ex);
             return null;
@@ -368,5 +352,12 @@ public abstract class JSONUtils {
      */
     public static <T> T fromJson(String json, Class<T> clazz) {
         return fromJson(json, clazz, null);
+    }
+
+    private static GsonBuilder baseBuilder(String datePattern) {
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapterFactory(new SpinTypeAdapterFactory(datePattern));
+        builder.setDateFormat(datePattern);
+        return builder;
     }
 }

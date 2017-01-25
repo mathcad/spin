@@ -41,6 +41,7 @@ import org.springframework.stereotype.Component;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Date;
@@ -184,11 +185,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             SessionUser user = SessionUtils.getCurrentUser();
             if (null == user)
                 user = AbstractUser.ref(1L);
-            aEn.setUpdateTime(new Date());
+            aEn.setUpdateTime(LocalDateTime.now());
             aEn.setUpdateBy(AbstractUser.ref(user.getId()));
             if (null == aEn.getId() || saveWithPk) {
                 aEn.setCreateBy(AbstractUser.ref(user.getId()));
-                aEn.setCreateTime(new Date());
+                aEn.setCreateTime(LocalDateTime.now());
             }
         }
         try {

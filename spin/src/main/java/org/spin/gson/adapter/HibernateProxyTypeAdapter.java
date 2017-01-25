@@ -1,8 +1,7 @@
-package org.spin.gson;
+package org.spin.gson.adapter;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
-import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -24,15 +23,8 @@ import java.lang.reflect.Field;
 public class HibernateProxyTypeAdapter extends TypeAdapter<HibernateProxy> {
     private static final Logger logger = LoggerFactory.getLogger(HibernateProxyTypeAdapter.class);
     private final Gson context;
-    public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
-        @Override
-        @SuppressWarnings("unchecked")
-        public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-            return HibernateProxy.class.isAssignableFrom(type.getRawType()) ? (TypeAdapter<T>) new HibernateProxyTypeAdapter(gson) : null;
-        }
-    };
 
-    private HibernateProxyTypeAdapter(Gson context) {
+    public HibernateProxyTypeAdapter(Gson context) {
         this.context = context;
     }
 

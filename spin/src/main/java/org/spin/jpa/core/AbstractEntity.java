@@ -1,16 +1,17 @@
 package org.spin.jpa.core;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.persistence.Version;
-import java.util.Date;
-import java.util.Random;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * 基本实体类型
@@ -21,6 +22,8 @@ import java.util.Random;
  */
 @MappedSuperclass
 public abstract class AbstractEntity implements IEntity<Long> {
+
+    private static final long serialVersionUID = 6743852340006194359L;
 
     /**
      * 主键
@@ -39,8 +42,7 @@ public abstract class AbstractEntity implements IEntity<Long> {
      * 创建时间，禁止更改
      */
     @Column(nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 记录更新者
@@ -52,8 +54,7 @@ public abstract class AbstractEntity implements IEntity<Long> {
      * 最后更新时间
      */
     @Column(nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
     /**
      * 版本号用于并发控制
@@ -65,15 +66,23 @@ public abstract class AbstractEntity implements IEntity<Long> {
     private boolean valid = true;
 
     @Override
-    public boolean equals(Object obj) {
-        return this == obj || this.getId() != null && obj != null && this.getClass().equals(obj.getClass()) && this.getId().equals(((IEntity) obj).getId());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AbstractEntity that = (AbstractEntity) o;
+
+        return new EqualsBuilder()
+                .append(getId(), that.getId())
+                .isEquals();
     }
 
     @Override
     public int hashCode() {
-        Long i = this.id == null ? new Random().nextLong() : this.id;
-        String identifier = this.getClass().getName() + i.toString();
-        return identifier.hashCode();
+        return new HashCodeBuilder(17, 37)
+                .append(getId())
+                .toHashCode();
     }
 
     @Override
@@ -94,11 +103,11 @@ public abstract class AbstractEntity implements IEntity<Long> {
         this.createBy = createBy;
     }
 
-    public Date getCreateTime() {
+    public LocalDateTime getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
     }
 
@@ -110,11 +119,11 @@ public abstract class AbstractEntity implements IEntity<Long> {
         this.updateBy = updateBy;
     }
 
-    public Date getUpdateTime() {
+    public LocalDateTime getUpdateTime() {
         return updateTime;
     }
 
-    public void setUpdateTime(Date updateTime) {
+    public void setUpdateTime(LocalDateTime updateTime) {
         this.updateTime = updateTime;
     }
 
