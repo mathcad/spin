@@ -19,7 +19,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
- * Created by Arvin on 2017/1/25.
+ * Gson TypeAdapter
+ * Created by xuweinan on 2017/1/25.
+ *
+ * @author xuweinan
  */
 public class SpinTypeAdapterFactory implements TypeAdapterFactory {
     private String datePattern = "yyyy-MM-dd HH:mm:ss";
