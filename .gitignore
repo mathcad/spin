@@ -1,7 +1,8 @@
 *.iml
 *.bin
 *.lock
-build/
+out/
+/*/build/
 target/
 .gradle/
 .idea/
