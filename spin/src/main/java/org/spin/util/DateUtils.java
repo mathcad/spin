@@ -28,10 +28,11 @@ public abstract class DateUtils {
     private static final String alignHourPattern = "([0-1]\\d|2[0-3])";
     private static final String alignMinutePattern = "([0-5]\\d)";
     private static final String alignSecondPattern = "([0-5]\\d)";
-
+    private static final String millionSecondPattern = "(\\d{3})";
 
     private static final String day = "yyyy-MM-dd";
     private static final String second = "yyyy-MM-dd HH:mm:ss";
+    private static final String millSec = "yyyy-MM-dd HH:mm:ss SSS";
     private static final String zhDay = "yyyy年MM月dd日";
     private static final String zhSecond = "yyyy年MM月dd日 HH时mm分ss秒";
     private static final String fullDay = "yyyy_MM_dd_HH_mm_ss_S";
@@ -39,17 +40,19 @@ public abstract class DateUtils {
 
     private static final SimpleDateFormat daySdf = new SimpleDateFormat(day);
     private static final SimpleDateFormat secondSdf = new SimpleDateFormat(second);
-    private static final SimpleDateFormat zhDaySdf = new SimpleDateFormat(second);
-    private static final SimpleDateFormat zhSecondSdf = new SimpleDateFormat(second);
-    private static final SimpleDateFormat fullDaySdf = new SimpleDateFormat(second);
-    private static final SimpleDateFormat noFormatSdf = new SimpleDateFormat(second);
+    private static final SimpleDateFormat millSecSdf = new SimpleDateFormat(millSec);
+    private static final SimpleDateFormat zhDaySdf = new SimpleDateFormat(zhDay);
+    private static final SimpleDateFormat zhSecondSdf = new SimpleDateFormat(zhSecond);
+    private static final SimpleDateFormat fullDaySdf = new SimpleDateFormat(fullDay);
+    private static final SimpleDateFormat noFormatSdf = new SimpleDateFormat(noFormat);
 
     private static final DateTimeFormatter dayDtf = DateTimeFormatter.ofPattern(day);
     private static final DateTimeFormatter secondDtf = DateTimeFormatter.ofPattern(second);
-    private static final DateTimeFormatter zhDayDtf = DateTimeFormatter.ofPattern(second);
-    private static final DateTimeFormatter zhSecondDtf = DateTimeFormatter.ofPattern(second);
-    private static final DateTimeFormatter fullDayDtf = DateTimeFormatter.ofPattern(second);
-    private static final DateTimeFormatter noFormatDtf = DateTimeFormatter.ofPattern(second);
+    private static final DateTimeFormatter millSecDtf = DateTimeFormatter.ofPattern(millSec);
+    private static final DateTimeFormatter zhDayDtf = DateTimeFormatter.ofPattern(zhDay);
+    private static final DateTimeFormatter zhSecondDtf = DateTimeFormatter.ofPattern(zhSecond);
+    private static final DateTimeFormatter fullDayDtf = DateTimeFormatter.ofPattern(fullDay);
+    private static final DateTimeFormatter noFormatDtf = DateTimeFormatter.ofPattern(noFormat);
 
 
     private static final String[] datePatten = {
@@ -62,6 +65,8 @@ public abstract class DateUtils {
     private static final String[] timePatten = {
             alignHourPattern + ":" + alignMinutePattern + ":" + alignSecondPattern,
             alignHourPattern + "时" + alignMinutePattern + "分" + alignSecondPattern + "秒",
+            alignHourPattern + ":" + alignMinutePattern + ":" + alignSecondPattern + " " + millionSecondPattern,
+            alignHourPattern + "时" + alignMinutePattern + "分" + alignSecondPattern + "秒" + " " + millionSecondPattern,
             alignHourPattern + ":" + alignMinutePattern,
             alignHourPattern + "时" + alignMinutePattern + "分"
     };
@@ -69,6 +74,8 @@ public abstract class DateUtils {
     private static final String[] timeFormat = {
             "HH:mm:ss",
             "HH时mm分ss",
+            "HH:mm:ss SSS",
+            "HH时mm分ss SSS",
             "HH:mm",
             "HH时mm分",
     };
@@ -116,6 +123,14 @@ public abstract class DateUtils {
         }
     }
 
+    public static Date toDate(TemporalAccessor date) {
+        try {
+            return millSecSdf.parse(millSecDtf.format(date));
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+
     /**
      * 将日期字符串转换为日期(自动推断日期格式)
      */
@@ -145,6 +160,13 @@ public abstract class DateUtils {
         } catch (DateTimeParseException e) {
             throw new SimplifiedException(ErrorAndExceptionCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
         }
+    }
+
+    /**
+     * 将Date转换为LocalDateTime
+     */
+    public static LocalDateTime toLocalDateTime(Date date) {
+        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
     }
 
     /**
@@ -267,10 +289,24 @@ public abstract class DateUtils {
     }
 
     /**
+     * 格式化日期(精确到毫秒)
+     */
+    public static String formatDateForMillSec(Date date) {
+        return millSecSdf.format(date);
+    }
+
+    /**
      * 格式化日期(精确到秒)
      */
     public static String formatDateForSecond(TemporalAccessor date) {
         return secondDtf.format(date);
+    }
+
+    /**
+     * 格式化日期(精确到毫秒)
+     */
+    public static String formatDateForMillSec(TemporalAccessor date) {
+        return millSecDtf.format(date);
     }
 
     /**
@@ -313,12 +349,5 @@ public abstract class DateUtils {
      */
     public static String formatDateForNoFormat(TemporalAccessor date) {
         return noFormatDtf.format(date);
-    }
-
-    /**
-     * 将Date转换为LocalDateTime
-     */
-    public static LocalDateTime toLocalDateTime(Date date) {
-        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
     }
 }
