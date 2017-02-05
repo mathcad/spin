@@ -1,10 +1,10 @@
-package org.spin.sys;
+package org.spin.util;
 
 import org.junit.Test;
-import org.spin.util.DateUtils;
 
 import java.sql.Time;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static org.junit.Assert.assertTrue;
@@ -30,6 +30,16 @@ public class DateUtilsTest {
 //        System.out.println(time.format(formatter));
         Time t = Time.valueOf(time);
         System.out.println(sdf.format(t));
+        assertTrue(true);
+    }
+
+    @Test
+    public void testDateCalc() {
+        LocalDateTime dateTime = LocalDateTime.now();
+        System.out.println(dateTime);
+        dateTime = DateUtils.addMonths(dateTime, -3);
+        System.out.println(dateTime);
+        System.out.println(DateUtils.formatDateForSecond(DateUtils.toLocalDateTime("2016/11-05啊10:05:52.326")));
         assertTrue(true);
     }
 }
