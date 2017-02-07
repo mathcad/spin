@@ -1,54 +1,54 @@
 package org.spin.web.view;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Arvin on 2017/2/7.
+ * Created by xuweinan on 2017/2/7.
+ *
+ * @author xuweinan
  */
-public class ExcelGrid {
+public class ExcelGrid implements Serializable {
+    private static final long serialVersionUID = 3306654738869974692L;
 
-    public String fileId;
+    private String fileId;
 
-    public String fileName;
+    private String fileName;
 
-    public void addGridColumn(String header, Integer width, String dataIndex, String xtype) {
+    private List<GridColumn> columns = new ArrayList<>();
+
+    public void addGridColumn(String header, Integer width, String dataIndex, String dataType) {
         GridColumn col = new GridColumn();
-        col.header = header;
-        col.width = width;
-        col.dataIndex = dataIndex;
-        col.xtype = xtype;
+        col.setHeader(header);
+        col.setWidth(width);
+        col.setDataIndex(dataIndex);
+        col.setDataType(dataType);
         this.columns.add(col);
     }
 
-    /**
-     * 表列布局
-     */
-    public List<GridColumn> columns = new ArrayList<>();
+    public String getFileId() {
+        return fileId;
+    }
 
-    /**
-     * extjs grid的属性映射
-     */
-    public static class GridColumn {
-        /**
-         * 列头
-         */
-        public String header;
+    public void setFileId(String fileId) {
+        this.fileId = fileId;
+    }
 
-        /**
-         * 列宽度
-         */
-        public Integer width;
+    public String getFileName() {
+        return fileName;
+    }
 
-        /**
-         * 访问值
-         */
-        public String dataIndex;
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 
-        /**
-         * 数据类型
-         */
-        public String xtype;
+    public List<GridColumn> getColumns() {
+        return columns;
+    }
+
+    public void setColumns(List<GridColumn> columns) {
+        this.columns = columns;
     }
 }
 

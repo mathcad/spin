@@ -1,6 +1,7 @@
 package org.spin.util;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -3668,5 +3669,13 @@ public abstract class StringUtils {
 
     public static char lower(char c) {
         return (char) (c > 64 && c < 91 ? c ^ 32 : c);
+    }
+
+    public static String urlEncode(String input) {
+        try {
+            return URLEncoder.encode(input, "UTF-8");
+        } catch (UnsupportedEncodingException ignore) {
+            return input;
+        }
     }
 }
