@@ -8,7 +8,7 @@ apply plugin: 'idea'
 
 buildscript {
     ext {
-        springBootVersion = '1.4.3.RELEASE'
+        springBootVersion = '1.5.1.RELEASE'
     }
     repositories {
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
@@ -43,8 +43,6 @@ repositories {
     mavenCentral()
 }
 
-ext.springVersion = "4.3.5.RELEASE"
-
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
@@ -69,7 +67,9 @@ dependencies {
     compile group: 'com.ibeetl', name: 'beetlsql', version: '2.4.3'
     compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-freemarker', version: springBootVersion
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
+    compile (group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion) {
+        exclude(module: 'jackson-databind')
+    }
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion

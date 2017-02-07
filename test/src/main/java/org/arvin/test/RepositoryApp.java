@@ -5,20 +5,24 @@ import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.hibernate.SessionFactory;
+import org.spin.gson.JsonHttpMessageConverter;
 import org.spin.jpa.core.SQLLoader;
 import org.spin.jpa.sql.loader.ClasspathMdLoader;
 import org.spin.jpa.sql.resolver.FreemarkerResolver;
 import org.spin.shiro.AnyoneSuccessfulStrategy;
+import org.spin.util.JSONUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.orm.hibernate5.support.OpenSessionInViewFilter;
@@ -28,6 +32,8 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import redis.clients.jedis.JedisPoolConfig;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Properties;
 
 /**
@@ -42,7 +48,6 @@ public class RepositoryApp {
         SpringApplication.run(RepositoryApp.class, args);
     }
 
-    @Autowired
     @Bean
     public SQLLoader sqlLoader() {
         SQLLoader loader = new ClasspathMdLoader();
@@ -53,7 +58,7 @@ public class RepositoryApp {
     @Bean
     public DataSource getDataSource() {
         DruidDataSource dataSource = new DruidDataSource();
-        dataSource.setUrl("jdbc:mysql://192.168.20.235:3306/gsh56tms?useUnicode\\=true&autoReconnect\\=true&failOverReadOnly\\=false");
+        dataSource.setUrl("jdbc:mysql://192.168.20.235:3306/gsh56tms?useUnicode=true&autoReconnect=true&failOverReadOnly=false");
         dataSource.setUsername("tms");
         dataSource.setPassword("tms56");
         dataSource.setMaxActive(5);
@@ -142,4 +147,13 @@ public class RepositoryApp {
 //        shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
 //        return shiroFilterFactoryBean;
 //    }
+
+    @Bean
+    public HttpMessageConverters customConverters() {
+        Collection<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
+        JsonHttpMessageConverter jsonHttpMessageConverter = new JsonHttpMessageConverter();
+        jsonHttpMessageConverter.setGson(JSONUtils.getDefaultGson());
+        messageConverters.add(jsonHttpMessageConverter);
+        return new HttpMessageConverters(true, messageConverters);
+    }
 }

@@ -3,8 +3,6 @@ package org.spin.sys;
 import org.spin.util.BeanUtils;
 
 import java.lang.reflect.Field;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,18 +27,10 @@ public final class EnvCache {
     /** 实体对应列名列表缓存 */
     public static final Map<String, Set<String>> ENTITY_COLUMNS = new ConcurrentHashMap<>();
 
-    /** 对订单付款行为进行同步控制 */
-    public static final Map<Long, Long> PAY_SYNC_LOCK = new ConcurrentHashMap<>();
-
-    public static final Map<String, TokenInfo> TOKEN_INFO_CACHE = new ConcurrentHashMap<>();
-    public static final Map<Long, String> USERID_TOKEN_CACHE = new ConcurrentHashMap<>();
-    public static final Map<String, Long> KEY_USERID_CACHE = new ConcurrentHashMap<>();
-    public static final Map<Long, String> USERID_KEY_CACHE = new ConcurrentHashMap<>();
-
-    public static PublicKey RSA_PUBKEY;
-    public static PrivateKey RSA_PRIKEY;
     public static boolean devMode;
-    public static Long TokenExpireTime;
+
+    /** token过期时间 */
+    public static Long TokenExpireTime = 7200000L;
     public static String FileUploadDir;
     public static String TemplateDir;
 

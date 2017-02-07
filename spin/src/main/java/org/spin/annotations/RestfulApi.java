@@ -34,25 +34,28 @@ public @interface RestfulApi {
     /**
      * RequestMapping的名称
      */
+    @AliasFor(annotation = RequestMapping.class, attribute = "name")
     String name() default "";
 
     /**
      * RequestMapping的路径
      */
-    @AliasFor("path")
+    @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] value() default {};
 
     /**
      * RequestMapping的路径
      */
-    @AliasFor("value")
+    @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] path() default {};
 
     /**
      * 请求的方法
      */
+    @AliasFor(annotation = RequestMapping.class, attribute = "method")
     RequestMethod[] method() default {};
 
+    @AliasFor(annotation = RequestMapping.class, attribute = "params")
     String[] params() default {};
 
     /**
@@ -64,9 +67,12 @@ public @interface RestfulApi {
      *
      * @see org.springframework.http.MediaType
      */
+    @AliasFor(annotation = RequestMapping.class, attribute = "headers")
     String[] headers() default {};
 
+    @AliasFor(annotation = RequestMapping.class, attribute = "consumes")
     String[] consumes() default {};
 
+    @AliasFor(annotation = RequestMapping.class, attribute = "produces")
     String[] produces() default {};
 }
