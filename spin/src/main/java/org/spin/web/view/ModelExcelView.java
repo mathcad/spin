@@ -7,6 +7,7 @@ import org.apache.poi.ss.util.DateFormatConverter;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.sys.Assert;
+import org.spin.sys.FileType;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.EntityUtils;
 import org.spin.util.StringUtils;
@@ -29,17 +30,16 @@ import java.util.Map;
  */
 public class ModelExcelView extends AbstractView {
 
-    private ExcelType fileType;
+    private FileType.Excel fileType;
 
     /**
      * 一个像素转换为多少宽度
      */
     private static final int PIX_TO_WIDTH = 100 * 50 / 132;
 
-    private static final String DATE_COLUMN_TYPE = "datecolumn";
-    private static final String LINK_COLUMN_TYPE = "linkcolumn";
-    private static final String NUMBER_COLUMN_TYPE = "numbercolumn ";
-    private static final String BOOLEAN_COLUMN_TYPE = "booleancolumn";
+    private static final String DATE_COLUMN_TYPE = "date";
+    private static final String NUMBER_COLUMN_TYPE = "number";
+    private static final String BOOLEAN_COLUMN_TYPE = "boolean";
 
     private static final String defaultFileName = "export";
 
@@ -47,7 +47,7 @@ public class ModelExcelView extends AbstractView {
     private List<?> data = null;
     private Map<String, String> dataTypeFormat = null;
 
-    public ModelExcelView(ExcelType fileType, ExcelGrid grid, List<?> data) {
+    public ModelExcelView(FileType.Excel fileType, ExcelGrid grid, List<?> data) {
         Assert.notNull(fileType, "Excel文件类型不能为空");
         this.fileType = fileType;
         setContentType(this.fileType.getContentType());
@@ -57,10 +57,10 @@ public class ModelExcelView extends AbstractView {
 
     /**
      * Default Constructor.
-     * Sets the ExcelType to XLSX.
+     * Sets the FileType to XLSX.
      */
     public ModelExcelView(ExcelGrid grid, List<?> data) {
-        this(ExcelType.Xlsx, grid, data);
+        this(FileType.Excel.XLSX, grid, data);
     }
 
 
@@ -89,13 +89,13 @@ public class ModelExcelView extends AbstractView {
     }
 
     protected Workbook createWorkbook() {
-        switch (fileType) {
-            case Xls:
+        switch (fileType.getExtension()) {
+            case ".xls":
                 return new HSSFWorkbook();
-            case Xlsx:
+            case ".xlsx":
                 return new XSSFWorkbook();
             default:
-                return new XSSFWorkbook();
+                throw new SimplifiedException("");
         }
     }
 
@@ -129,7 +129,7 @@ public class ModelExcelView extends AbstractView {
             return;
         this.generateExcel(workbook, grid, data);
         String fileName = StringUtils.isNotEmpty(grid.getFileName()) ? grid.getFileName() : defaultFileName;
-        fileName = StringUtils.urlEncode(fileName.endsWith(fileType.getValue()) ? fileName : fileName + fileType.getValue());
+        fileName = StringUtils.urlEncode(fileName.endsWith(fileType.getExtension()) ? fileName : fileName + fileType.getExtension());
         response.setHeader("Content-disposition", "attachment;filename=" + fileName);
     }
 
@@ -162,9 +162,9 @@ public class ModelExcelView extends AbstractView {
 
                 Cell cell = row0.createCell(i);
                 cell.setCellStyle(columnHeadStyle);
-                if (ExcelType.Xlsx.equals(fileType))
+                if (FileType.Excel.XLSX.equals(fileType))
                     cell.setCellValue(new XSSFRichTextString(col.getHeader()));
-                else if (ExcelType.Xlsx.equals(fileType))
+                else if (FileType.Excel.XLSX.equals(fileType))
                     cell.setCellValue(new HSSFRichTextString(col.getHeader()));
 
                 columnStyleMap.put(col.getDataIndex(), getDataCellStyle(workbook, col.getDataType()));
@@ -204,8 +204,8 @@ public class ModelExcelView extends AbstractView {
 
         CellStyle columnHeadStyle = workbook.createCellStyle();
         columnHeadStyle.setFont(columnHeadFont);
-        columnHeadStyle.setAlignment(HorizontalAlignment.CENTER);// 左右居中
-        columnHeadStyle.setVerticalAlignment(VerticalAlignment.CENTER);// 上下居中
+        columnHeadStyle.setAlignment(HorizontalAlignment.CENTER);
+        columnHeadStyle.setVerticalAlignment(VerticalAlignment.CENTER);
         columnHeadStyle.setLocked(true);
         columnHeadStyle.setWrapText(true);
         columnHeadStyle.setBorderTop(BorderStyle.THIN);
@@ -286,7 +286,7 @@ public class ModelExcelView extends AbstractView {
         return dataTypeFormat;
     }
 
-    public ExcelType getFileType() {
+    public FileType.Excel getFileType() {
         return fileType;
     }
 }
