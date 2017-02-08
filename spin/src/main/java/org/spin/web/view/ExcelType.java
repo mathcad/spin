@@ -10,12 +10,12 @@ public enum ExcelType {
     /**
      * Excel 97-2003
      */
-    Xls("xls", "application/vnd.ms-excel"),
+    Xls(".xls", "application/vnd.ms-excel"),
 
     /**
      * Excel 2007
      */
-    Xlsx("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    Xlsx(".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
     private String value;
     private String contentType;

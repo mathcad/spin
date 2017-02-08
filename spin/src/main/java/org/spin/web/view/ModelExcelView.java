@@ -34,19 +34,18 @@ public class ModelExcelView extends AbstractView {
     /**
      * 一个像素转换为多少宽度
      */
-    private static final float PIX_TO_WIDTH = 100 * 50 / 132;
+    private static final int PIX_TO_WIDTH = 100 * 50 / 132;
 
-    private static final String DATE_COLUMN_XTYPE = "datecolumn";
-    private static final String LINK_COLUMN_XTYPE = "linkcolumn";
-    private static final String NUMBER_COLUMN_XTYPE = "numbercolumn ";
-    private static final String BOOLEAN_COLUMN_XTYPE = "booleancolumn";
-    private static final String COLUMN_XTYPE = "gridcolumn";
+    private static final String DATE_COLUMN_TYPE = "datecolumn";
+    private static final String LINK_COLUMN_TYPE = "linkcolumn";
+    private static final String NUMBER_COLUMN_TYPE = "numbercolumn ";
+    private static final String BOOLEAN_COLUMN_TYPE = "booleancolumn";
 
     private static final String defaultFileName = "export";
 
     private ExcelGrid grid = null;
     private List<?> data = null;
-    private Map<String, String> gridColumnXtypeFormat = null;
+    private Map<String, String> dataTypeFormat = null;
 
     public ModelExcelView(ExcelType fileType, ExcelGrid grid, List<?> data) {
         Assert.notNull(fileType, "Excel文件类型不能为空");
@@ -130,7 +129,7 @@ public class ModelExcelView extends AbstractView {
             return;
         this.generateExcel(workbook, grid, data);
         String fileName = StringUtils.isNotEmpty(grid.getFileName()) ? grid.getFileName() : defaultFileName;
-        fileName = StringUtils.urlEncode(fileName.endsWith(".xlsx") ? fileName : fileName + ".xlsx");
+        fileName = StringUtils.urlEncode(fileName.endsWith(fileType.getValue()) ? fileName : fileName + fileType.getValue());
         response.setHeader("Content-disposition", "attachment;filename=" + fileName);
     }
 
@@ -143,7 +142,7 @@ public class ModelExcelView extends AbstractView {
         sheet.createFreezePane(1, 1);
 
         // 列头的样式
-        CellStyle columnHeadStyle = getColumnHeaderStyle(workbook);
+        CellStyle columnHeadStyle = getHeaderCellStyle(workbook);
 
         try {
             // 创建第一行
@@ -157,9 +156,9 @@ public class ModelExcelView extends AbstractView {
             for (int i = 0; i < grid.getColumns().size(); i++) {
                 GridColumn col = grid.getColumns().get(i);
                 if (col.getWidth() != null) {
-                    sheet.setColumnWidth(i, toColumnWidth(col.getWidth()));// 70pix宽度
+                    sheet.setColumnWidth(i, col.getWidth() * PIX_TO_WIDTH);// 70pix宽度
                 } else
-                    sheet.setColumnWidth(i, toColumnWidth(100));
+                    sheet.setColumnWidth(i, 100 * PIX_TO_WIDTH);
 
                 Cell cell = row0.createCell(i);
                 cell.setCellStyle(columnHeadStyle);
@@ -197,7 +196,7 @@ public class ModelExcelView extends AbstractView {
     /**
      * 生成列头样式
      */
-    private CellStyle getColumnHeaderStyle(Workbook workbook) {
+    private CellStyle getHeaderCellStyle(Workbook workbook) {
         Font columnHeadFont = workbook.createFont();
         columnHeadFont.setFontName("宋体");
         columnHeadFont.setFontHeightInPoints((short) 10);
@@ -209,20 +208,24 @@ public class ModelExcelView extends AbstractView {
         columnHeadStyle.setVerticalAlignment(VerticalAlignment.CENTER);// 上下居中
         columnHeadStyle.setLocked(true);
         columnHeadStyle.setWrapText(true);
-        columnHeadStyle.setLeftBorderColor((short) 8);// 左边框的颜色
-        columnHeadStyle.setBorderLeft(BorderStyle.THIN);// 边框的大小
-        columnHeadStyle.setRightBorderColor((short) 8);// 右边框的颜色
-        columnHeadStyle.setBorderRight(BorderStyle.THIN);// 边框的大小
-        columnHeadStyle.setBorderBottom(BorderStyle.THIN); // 设置单元格的边框为粗体
-        columnHeadStyle.setBottomBorderColor((short) 8); // 设置单元格的边框颜色
-        columnHeadStyle.setFillForegroundColor((short) 9); // 设置单元格的背景颜色（单元格的样式会覆盖列或行的样式）
+        columnHeadStyle.setBorderTop(BorderStyle.THIN);
+        columnHeadStyle.setBorderRight(BorderStyle.THIN);
+        columnHeadStyle.setBorderBottom(BorderStyle.THIN);
+        columnHeadStyle.setBorderLeft(BorderStyle.THIN);
+
+        columnHeadStyle.setTopBorderColor((short) 8);
+        columnHeadStyle.setRightBorderColor((short) 8);
+        columnHeadStyle.setBottomBorderColor((short) 8);
+        columnHeadStyle.setLeftBorderColor((short) 8);
+
+        columnHeadStyle.setFillForegroundColor((short) 9);
         return columnHeadStyle;
     }
 
     /**
      * 获取每个数据内容单元格的样式
      */
-    private CellStyle getDataCellStyle(Workbook workbook, String gridColumnXtype) {
+    private CellStyle getDataCellStyle(Workbook workbook, String dataType) {
         Font font = workbook.createFont();
         CreationHelper createHelper = workbook.getCreationHelper();
         font.setFontName("宋体");
@@ -231,18 +234,23 @@ public class ModelExcelView extends AbstractView {
         // 普通单元格样式
         CellStyle style = workbook.createCellStyle();
         style.setFont(font);
-        style.setAlignment(HorizontalAlignment.LEFT);// 左右居中
-        style.setVerticalAlignment(VerticalAlignment.TOP);// 上下居中
+        style.setAlignment(HorizontalAlignment.LEFT);
+        style.setVerticalAlignment(VerticalAlignment.TOP);
         style.setWrapText(true);
-        style.setLeftBorderColor((short) 8);
-        style.setBorderLeft(BorderStyle.THIN);
-        style.setRightBorderColor((short) 8);
-        style.setBorderRight(BorderStyle.THIN);
-        style.setBorderBottom(BorderStyle.THIN); // 设置单元格的边框为粗体
-        style.setBottomBorderColor((short) 8); // 设置单元格的边框颜色．
-        style.setFillForegroundColor((short) 9);// 设置单元格的背景颜色．
 
-        String format = getGridColumnXtypeFormat().get(gridColumnXtype);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+
+        style.setTopBorderColor((short) 8);
+        style.setRightBorderColor((short) 8);
+        style.setBottomBorderColor((short) 8);
+        style.setLeftBorderColor((short) 8);
+
+        style.setFillForegroundColor((short) 9);
+
+        String format = getColumnDataTypeFormat().get(dataType);
         if (StringUtils.isNotEmpty(format)) {
             style.setDataFormat(createHelper.createDataFormat().getFormat(format));
         }
@@ -250,46 +258,32 @@ public class ModelExcelView extends AbstractView {
         return style;
     }
 
-    /**
-     * 设置列值 （日期类型赋值date，默认类型String
-     *
-     * @param rdata 汗数据
-     * @param cell  单元格
-     * @param col   列
-     */
     private void setDataCellValue(Object rdata, Cell cell, GridColumn col) {
         Object o;
-
-        if (rdata instanceof Map) {
+        if (rdata instanceof Map)
             o = ((Map) rdata).get(col.getDataIndex());
-        } else {
+        else
             o = EntityUtils.getFieldValue(rdata, col.getDataIndex());
-        }
-
         if (o == null)
             return;
 
-        if (DATE_COLUMN_XTYPE.equals(col.getDataType())) {
-            if (o instanceof Date) {
-                cell.setCellValue((Date) o);
-            }
-        } else {
-            String value = o.toString();
-            cell.setCellValue(value);
+        switch (col.getDataType()) {
+            case DATE_COLUMN_TYPE:
+                if (o instanceof Date)
+                    cell.setCellValue((Date) o);
+                break;
+            default:
+                cell.setCellValue(o.toString());
+                break;
         }
     }
 
-    private Map<String, String> getGridColumnXtypeFormat() {
-        if (gridColumnXtypeFormat == null)
-            gridColumnXtypeFormat = new HashMap<>();
+    private Map<String, String> getColumnDataTypeFormat() {
+        if (dataTypeFormat == null)
+            dataTypeFormat = new HashMap<>();
         String dateFormat = DateFormatConverter.convert(Locale.SIMPLIFIED_CHINESE, "yyyy-MM-dd HH:mm:ss");
-        gridColumnXtypeFormat.put(DATE_COLUMN_XTYPE, dateFormat);// "yyyy-MM-dd HH:mm:ss");
-        return gridColumnXtypeFormat;
-    }
-
-    private int toColumnWidth(int pixWidth) {
-        Float colWdt = pixWidth * PIX_TO_WIDTH;
-        return colWdt.intValue();
+        dataTypeFormat.put(DATE_COLUMN_TYPE, dateFormat);
+        return dataTypeFormat;
     }
 
     public ExcelType getFileType() {
