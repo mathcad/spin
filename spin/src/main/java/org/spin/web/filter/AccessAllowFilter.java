@@ -21,21 +21,18 @@ public class AccessAllowFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         String originHeader = httpResponse.getHeader("Access-Control-Allow-Origin");
-        if (StringUtils.isBlank(originHeader)) {
+        if (StringUtils.isBlank(originHeader))
             httpResponse.addHeader("Access-Control-Allow-Origin", "*");
-        }
         chain.doFilter(request, response);
     }
 
     @Override
     public void destroy() {
-
     }
 }

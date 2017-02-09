@@ -51,6 +51,3 @@ public class ExcelGrid implements Serializable {
         this.columns = columns;
     }
 }
-
-
-

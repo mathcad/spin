@@ -39,9 +39,6 @@ import java.util.List;
 public class RestfulApiAspect {
     private static final Logger logger = LoggerFactory.getLogger(RestfulApiAspect.class);
 
-    @Autowired
-    TokenKeyManager tokenKeyManager;
-
     @Autowired(required = false)
     Authenticator authenticator = null;
 
@@ -61,7 +58,7 @@ public class RestfulApiAspect {
             if (user != null && user.isAuthenticated() && user.isPermittedAll(authorities))
                 isAllowed = true;
             else {
-                String token = EnvCache.THREAD_LOCAL_PARAMETERS.get() == null ? null : (String) EnvCache.THREAD_LOCAL_PARAMETERS.get().get("token");
+                String token = (String) EnvCache.getLocalParam("token");
                 Object userId = checkAccess(token, authorities);
                 if (userId != null) {
                     SessionUtils.setCurrentUser(AbstractUser.ref((Long) userId));
@@ -132,7 +129,7 @@ public class RestfulApiAspect {
 
     private Object checkAccess(String token, String[] authorities) {
         // token是否有效
-        Object userId = tokenKeyManager.validateToken(token);
+        Object userId = TokenKeyManager.validateToken(token);
         // token对应用户是否拥有权限
         if (authenticator.checkAuthorities(userId, authorities))
             return userId;

@@ -77,11 +77,7 @@ public class HashMultiValueMap<K, V> implements MultiValueMap<K, V>, Serializabl
 
     @Override
     public void add(K key, V value) {
-        List<V> values = this.targetMap.get(key);
-        if (values == null) {
-            values = new ArrayList<>();
-            this.targetMap.put(key, values);
-        }
+        List<V> values = this.targetMap.computeIfAbsent(key, k -> new ArrayList<>());
         values.add(value);
     }
 

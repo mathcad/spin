@@ -9,9 +9,9 @@ package org.spin.sys;
  */
 public class TokenInfo {
     private Long generateTime = System.currentTimeMillis();
-    private Long userId;
+    private String userId;
 
-    public TokenInfo(Long userId) {
+    public TokenInfo(String userId) {
         this.userId = userId;
     }
 
@@ -19,7 +19,7 @@ public class TokenInfo {
         return generateTime;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 }

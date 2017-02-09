@@ -1,6 +1,6 @@
 package org.spin.sys;
 
-import org.spin.security.Hex;
+import org.spin.util.HexUtils;
 import org.spin.throwable.SimplifiedException;
 
 import java.io.File;
@@ -187,7 +187,7 @@ public abstract class FileType {
          * @return 文件类型，如果不支持，则返回null
          */
         public static FileType detectFileType(byte[] trait) {
-            String traitStr = Hex.encodeHexStringU(trait);
+            String traitStr = HexUtils.encodeHexStringU(trait);
             for (Map.Entry<String, FileType> t : traits.entrySet()) {
                 if (traitStr.startsWith(t.getKey()))
                     return t.getValue();

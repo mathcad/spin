@@ -15,50 +15,53 @@
  * limitations under the License.
  */
 
-package org.spin.security;
-
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+package org.spin.util;
 
 import org.spin.throwable.DecoderException;
 import org.spin.throwable.EncoderException;
+import org.spin.throwable.SimplifiedException;
+
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
- * Converts hexadecimal Strings. The charset used for certain operation can be set, the default is set in
+ * 16进制工具类
  * {@link #DEFAULT_CHARSET_NAME}
- *
+ * <p>
  * This class is thread-safe.
  *
+ * @author xuweinan
+ * @version $Id: HexUtils.java 1619948 2014-08-22 22:53:55Z ggregory $
  * @since 1.1
- * @version $Id: Hex.java 1619948 2014-08-22 22:53:55Z ggregory $
  */
-public class Hex{
+public abstract class HexUtils {
 
     /**
      * 默认字符集： {@link StandardCharsets#UTF_8}
      *
      * @since 1.7
      */
-    public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+    private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
     /**
      * 默认字符集名称： {@code UTF-8}
      *
      * @since 1.4
      */
-    public static final String DEFAULT_CHARSET_NAME = StandardCharsets.UTF_8.name();
+    private static final String DEFAULT_CHARSET_NAME = StandardCharsets.UTF_8.name();
 
     /**
-     * Used to build output as Hex
+     * Used to build output as HexUtils
      */
     private static final char[] DIGITS_LOWER =
-        {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+            {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     /**
-     * Used to build output as Hex
+     * Used to build output as HexUtils
      */
     private static final char[] DIGITS_UPPER =
-        {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+            {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     /**
      * 将字符数组表示的16进制数值转换为等值字节数组。返回的字节数组长度应该是参数数组长度的一半(两个16进制字符转换出一个字节)
@@ -92,6 +95,7 @@ public class Hex{
 
     /**
      * 将输入的字节数组转换为通过16进制字符按顺序等值表示的字符数组。返回字符数组长度会是输入数组的两倍（一个byte需要两个16进制字符表示）
+     *
      * @param data 待转换的字节数组
      * @return 16进制字符的字符数组(默认小写形式表示)
      */
@@ -101,9 +105,9 @@ public class Hex{
 
     /**
      * 将输入的字节数组转换为通过16进制字符按顺序等值表示的字符数组。返回字符数组长度会是输入数组的两倍（一个byte需要两个16进制字符表示）
-     * @param data 待转换的字节数组
-     * @param toLowerCase
-     *            <code>true</code> 结果转换为小写形式, <code>false</code> 大写形式
+     *
+     * @param data        待转换的字节数组
+     * @param toLowerCase <code>true</code> 结果转换为小写形式, <code>false</code> 大写形式
      * @return 16进制字符的字符数组
      * @since 1.4
      */
@@ -113,12 +117,13 @@ public class Hex{
 
     /**
      * 将输入的字节数组转换为通过16进制字符按顺序等值表示的字符数组。返回字符数组长度会是输入数组的两倍（一个byte需要两个16进制字符表示）
-     * @param data 待转换的字节数组
+     *
+     * @param data     待转换的字节数组
      * @param toDigits 数字字符对应表
      * @return 16进制字符的字符数组
      * @since 1.4
      */
-    protected static char[] encodeHex(final byte[] data, final char[] toDigits) {
+    public static char[] encodeHex(final byte[] data, final char[] toDigits) {
         final int l = data.length;
         final char[] out = new char[l << 1];
         // two characters form the hex value.
@@ -131,6 +136,7 @@ public class Hex{
 
     /**
      * 将输入的字节数组转换为通过16进制字符按顺序等值表示的字符串。返回字符串长度会是输入数组长度的两倍（一个byte需要两个16进制字符表示）
+     *
      * @param data 待转换的字节数组
      * @return 16进制字符组成的字符串(小写形式)
      * @since 1.4
@@ -138,22 +144,23 @@ public class Hex{
     public static String encodeHexStringL(final byte[] data) {
         return new String(encodeHex(data));
     }
-    
+
     /**
      * 将输入的字节数组转换为通过16进制字符按顺序等值表示的字符串。返回字符串长度会是输入数组长度的两倍（一个byte需要两个16进制字符表示）
+     *
      * @param data 待转换的字节数组
      * @return 16进制字符组成的字符串(大写形式)
      * @since 1.4
      */
-	public static String encodeHexStringU(final byte[] data) {
-		return new String(encodeHex(data, false));
-	}
-	
-	/**
+    public static String encodeHexStringU(final byte[] data) {
+        return new String(encodeHex(data, false));
+    }
+
+    /**
      * 将输入的字节数组转换为通过16进制字符按顺序等值表示的字符串。返回字符串长度会是输入数组长度的两倍（一个byte需要两个16进制字符表示）
-     * @param data 待转换的字节数组
-     * @param toLowerCase
-     *            <code>true</code> 结果转换为小写形式, <code>false</code> 大写形式
+     *
+     * @param data        待转换的字节数组
+     * @param toLowerCase <code>true</code> 结果转换为小写形式, <code>false</code> 大写形式
      * @return 16进制字符组成的字符串
      * @since 1.4
      */
@@ -164,15 +171,12 @@ public class Hex{
     /**
      * 将16进制字符，转换为int
      *
-     * @param ch
-     *            待转换字符
-     * @param index
-     *            字符在源集合中的位置
+     * @param ch    待转换字符
+     * @param index 字符在源集合中的位置
      * @return int数值
-     * @throws DecoderException
-     *             如果是非法的16进制字符，抛出该异常
+     * @throws DecoderException 如果是非法的16进制字符，抛出该异常
      */
-    protected static int toDigit(final char ch, final int index) throws DecoderException {
+    public static int toDigit(final char ch, final int index) throws DecoderException {
         final int digit = Character.digit(ch, 16);
         if (digit == -1) {
             throw new DecoderException("Illegal hexadecimal character " + ch + " at index " + index);
@@ -180,52 +184,22 @@ public class Hex{
         return digit;
     }
 
-    private final Charset charset;
-
-    /**
-     * 使用默认的字符集创建codec： {@link #DEFAULT_CHARSET}
-     */
-    public Hex() {
-        // use default encoding
-        this.charset = DEFAULT_CHARSET;
-    }
-
-    /**
-     * 通过指定的字符集创建codec
-     *
-     * @param charset
-     *            the charset.
-     * @since 1.7
-     */
-    public Hex(final Charset charset) {
-        this.charset = charset;
-    }
-
-    /**
-     * 通过指定的字符集名称创建codec
-     *
-     * @param charsetName 字符集名称
-     * @throws java.nio.charset.UnsupportedCharsetException 如果字符集名称不合法，将抛出异常
-     * @since 1.4
-     */
-    public Hex(final String charsetName) {
-        this(Charset.forName(charsetName));
-    }
-
     /**
      * Converts an array of character bytes representing hexadecimal values into an array of bytes of those same values.
      * The returned array will be half the length of the passed array, as it takes two characters to represent any given
      * byte. An exception is thrown if the passed char array has an odd number of elements.
      *
-     * @param array
-     *            An array of character bytes containing hexadecimal digits
+     * @param array An array of character bytes containing hexadecimal digits
      * @return A byte array containing binary data decoded from the supplied byte array (representing characters).
-     * @throws DecoderException
-     *             Thrown if an odd number of characters is supplied to this function
+     * @throws DecoderException Thrown if an odd number of characters is supplied to this function
      * @see #decodeHex(char[])
      */
-    public byte[] decode(final byte[] array) throws DecoderException {
-        return decodeHex(new String(array, getCharset()).toCharArray());
+    public static byte[] decode(final byte[] array, String charset) throws DecoderException {
+        try {
+            return decodeHex(new String(array, charset).toCharArray());
+        } catch (UnsupportedEncodingException e) {
+            throw new SimplifiedException("不支持的字符编码" + charset);
+        }
     }
 
     /**
@@ -233,15 +207,13 @@ public class Hex{
      * same values. The returned array will be half the length of the passed String or array, as it takes two characters
      * to represent any given byte. An exception is thrown if the passed char array has an odd number of elements.
      *
-     * @param object
-     *            A String or, an array of character bytes containing hexadecimal digits
+     * @param object A String or, an array of character bytes containing hexadecimal digits
      * @return A byte array containing binary data decoded from the supplied byte array (representing characters).
-     * @throws DecoderException
-     *             Thrown if an odd number of characters is supplied to this function or the object is not a String or
-     *             char[]
+     * @throws DecoderException Thrown if an odd number of characters is supplied to this function or the object is not a String or
+     *                          char[]
      * @see #decodeHex(char[])
      */
-    public Object decode(final Object object) throws DecoderException {
+    public static Object decode(final Object object) throws DecoderException {
         try {
             final char[] charArray = object instanceof String ? ((String) object).toCharArray() : (char[]) object;
             return decodeHex(charArray);
@@ -254,74 +226,39 @@ public class Hex{
      * Converts an array of bytes into an array of bytes for the characters representing the hexadecimal values of each
      * byte in order. The returned array will be double the length of the passed array, as it takes two characters to
      * represent any given byte.
-     * <p>
-     * The conversion from hexadecimal characters to the returned bytes is performed with the charset named by
-     * {@link #getCharset()}.
-     * </p>
      *
-     * @param array
-     *            a byte[] to convert to Hex characters
+     * @param array a byte[] to convert to HexUtils characters
      * @return A byte[] containing the bytes of the hexadecimal characters
-     * @since 1.7 No longer throws IllegalStateException if the charsetName is invalid.
      * @see #encodeHex(byte[])
+     * @since 1.7 No longer throws IllegalStateException if the charsetName is invalid.
      */
-    public byte[] encode(final byte[] array) {
-        return encodeHexStringL(array).getBytes(this.getCharset());
+    public static byte[] encode(final byte[] array, String charset) {
+        try {
+            return encodeHexStringL(array).getBytes(charset);
+        } catch (UnsupportedEncodingException e) {
+            throw new SimplifiedException("不支持的字符编码" + charset);
+        }
     }
 
     /**
      * Converts a String or an array of bytes into an array of characters representing the hexadecimal values of each
      * byte in order. The returned array will be double the length of the passed String or array, as it takes two
      * characters to represent any given byte.
-     * <p>
-     * The conversion from hexadecimal characters to bytes to be encoded to performed with the charset named by
-     * {@link #getCharset()}.
-     * </p>
      *
-     * @param object
-     *            a String, or byte[] to convert to Hex characters
+     * @param object a String, or byte[] to convert to HexUtils characters
      * @return A char[] containing hexadecimal characters
-     * @throws EncoderException
-     *             Thrown if the given object is not a String or byte[]
+     * @throws EncoderException Thrown if the given object is not a String or byte[]
      * @see #encodeHex(byte[])
      */
-    public Object encode(final Object object) throws EncoderException {
+    public static Object encode(final Object object, String charset) throws EncoderException {
         try {
             final byte[] byteArray = object instanceof String ?
-                                   ((String) object).getBytes(this.getCharset()) : (byte[]) object;
+                    ((String) object).getBytes(charset) : (byte[]) object;
             return encodeHex(byteArray);
         } catch (final ClassCastException e) {
             throw new EncoderException(e.getMessage(), e);
+        } catch (UnsupportedEncodingException e) {
+            throw new SimplifiedException("不支持的字符编码" + charset);
         }
-    }
-
-    /**
-     * Gets the charset.
-     *
-     * @return the charset.
-     * @since 1.7
-     */
-    public Charset getCharset() {
-        return this.charset;
-    }
-
-    /**
-     * Gets the charset name.
-     *
-     * @return the charset name.
-     * @since 1.4
-     */
-    public String getCharsetName() {
-        return this.charset.name();
-    }
-
-    /**
-     * Returns a string representation of the object, which includes the charset name.
-     *
-     * @return a string representation of the object.
-     */
-    @Override
-    public String toString() {
-        return super.toString() + "[charsetName=" + this.charset + "]";
     }
 }

@@ -2,7 +2,7 @@ package org.spin.wx;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.security.Hex;
+import org.spin.util.HexUtils;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.DigestUtils;
 import org.spin.util.HttpUtils;
@@ -97,7 +97,7 @@ public class WxHelper {
         String timestamp = Long.toString(System.currentTimeMillis() / 1000);
         String jsapi_ticket = ApiTicket.getInstance().getTicket();
         String string1 = "jsapi_ticket=" + jsapi_ticket + "&noncestr=" + nonce_str + "&timestamp=" + timestamp + "&url=" + url;
-        String signature = Hex.encodeHexStringL(DigestUtils.sha1(string1));
+        String signature = HexUtils.encodeHexStringL(DigestUtils.sha1(string1));
         ret.put("url", url);
         ret.put("nonceStr", nonce_str);
         ret.put("timestamp", timestamp);

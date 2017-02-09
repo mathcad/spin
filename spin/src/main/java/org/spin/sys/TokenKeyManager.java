@@ -16,9 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TokenKeyManager {
     private static final Map<String, TokenInfo> TOKEN_INFO_CACHE = new ConcurrentHashMap<>();
-    private static final Map<Long, String> USERID_TOKEN_CACHE = new ConcurrentHashMap<>();
-    private static final Map<String, Long> KEY_USERID_CACHE = new ConcurrentHashMap<>();
-    private static final Map<Long, String> USERID_KEY_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, String> USERID_TOKEN_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, String> KEY_USERID_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, String> USERID_KEY_CACHE = new ConcurrentHashMap<>();
 
     private static PublicKey RSA_PUBKEY;
     private static PrivateKey RSA_PRIKEY;
@@ -26,7 +26,7 @@ public class TokenKeyManager {
     /**
      * 分隔符
      */
-    private static final String SEPARATOR = "@";
+    private static final String SEPARATOR = "~~~";
 
     public static void clearTokenKeyCache() {
         if (TOKEN_INFO_CACHE.isEmpty()) {
@@ -75,7 +75,7 @@ public class TokenKeyManager {
      * @return 返回token, 如果key无效，返回null
      */
     public static String generateToken(String key) {
-        Long userId = KEY_USERID_CACHE.get(key);
+        String userId = KEY_USERID_CACHE.get(key);
         if (userId != null) {
             String oldToken = USERID_TOKEN_CACHE.get(userId);
             String token = RandomStringUtils.randomAlphanumeric(32);
@@ -89,7 +89,7 @@ public class TokenKeyManager {
         return null;
     }
 
-    public static String generateKey(Long userId, String pwd) {
+    public static String generateKey(String userId, String pwd) {
         String ecodeStr = userId + SEPARATOR + pwd + SEPARATOR + System.currentTimeMillis();
 
         // 生成密钥
