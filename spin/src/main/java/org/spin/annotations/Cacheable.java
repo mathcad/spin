@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  *
  * @author xuweinan
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Cacheable {
 
@@ -29,7 +29,7 @@ public @interface Cacheable {
     /**
      * 是否启用严格模式
      * <p>参数的变化会视为不同的调用，使用不同的参数调用方法，会单独为其缓存结果</p>
-     * <p>对参数频繁变化的方法，启用严格模式缓存会占用大量内存，甚至导致内存耗尽</p>
+     * <p>对参数频繁变化的方法，启用严格模式缓存会占用大量缓存空间，如果是内存缓存，甚至会导致内存耗尽</p>
      */
     boolean strict() default false;
 

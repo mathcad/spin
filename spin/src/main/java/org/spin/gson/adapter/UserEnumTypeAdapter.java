@@ -8,7 +8,8 @@ import org.spin.util.EnumUtils;
 import java.io.IOException;
 
 /**
- * Created by Arvin on 2017/1/25.
+ * GSON的枚举适配器
+ * Created by xuweinan on 2017/1/25.
  */
 public class UserEnumTypeAdapter<E extends Enum<E>> extends TypeAdapter<E> {
     private Class<E> clazz;
