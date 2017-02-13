@@ -1,15 +1,15 @@
 package org.spin.sys;
 
-import org.spin.util.HexUtils;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import org.spin.throwable.SimplifiedException;
+import org.spin.util.HexUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 文件类型
@@ -133,16 +133,16 @@ public abstract class FileType {
     }
 
     public static final class Toolkit {
-        private static final Map<String, FileType> traits = new HashMap<>();
+        private static final Table<String, String, FileType> traits = HashBasedTable.create();
 
         static {
-            traits.put("D0CF11E0", Excel.XLS);
-            traits.put("504B030414", Excel.XLSX);
-            traits.put("FFD8FF", Image.JPG);
-            traits.put("424D", Image.BMP);
-            traits.put("89504E47", Image.PNG);
-            traits.put("47494638", Image.GIG);
-            traits.put("49492A00", Image.TIFF);
+            traits.put("xls", "D0CF11E0", Excel.XLS);
+            traits.put("xlsx", "504B030414", Excel.XLSX);
+            traits.put("jpg", "FFD8FF", Image.JPG);
+            traits.put("bmp", "424D", Image.BMP);
+            traits.put("png", "89504E47", Image.PNG);
+            traits.put("gif", "47494638", Image.GIG);
+            traits.put("tiff", "49492A00", Image.TIFF);
         }
 
         /**
@@ -153,6 +153,11 @@ public abstract class FileType {
          */
         public static FileType detectFileType(File file) {
             try {
+                String fileName = file.getName();
+                int idx = fileName.lastIndexOf('.');
+                String ext = idx > 0 ? fileName.substring(idx + 1) : "";
+                if (traits.containsRow(ext))
+                    return traits.row(ext).entrySet().iterator().next().getValue();
                 return detectFileType(new FileInputStream(file));
             } catch (FileNotFoundException e) {
                 throw new SimplifiedException(ErrorAndExceptionCode.IO_FAIL, "文件不存在");
@@ -188,9 +193,9 @@ public abstract class FileType {
          */
         public static FileType detectFileType(byte[] trait) {
             String traitStr = HexUtils.encodeHexStringU(trait);
-            for (Map.Entry<String, FileType> t : traits.entrySet()) {
-                if (traitStr.startsWith(t.getKey()))
-                    return t.getValue();
+            for (String t : traits.columnKeySet()) {
+                if (traitStr.startsWith(t))
+                    return traits.column(t).entrySet().iterator().next().getValue();
             }
             return null;
         }
