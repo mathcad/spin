@@ -1,13 +1,12 @@
 package org.spin.wx;
 
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.sys.TypeIdentifier;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.HttpUtils;
 import org.spin.util.JSONUtils;
 import org.spin.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 import java.util.Date;
@@ -27,7 +26,7 @@ public class AccessToken {
     private static final Logger logger = LoggerFactory.getLogger(AccessToken.class);
     private static final TypeIdentifier<HashMap<String, String>> type = new TypeIdentifier<HashMap<String, String>>() {
     };
-    private static Map<String, AccessToken> instances;
+    private static final Map<String, AccessToken> instances = new ConcurrentHashMap<>();
     private String token;
     private String refreshToken;
     private String openId;
@@ -48,22 +47,27 @@ public class AccessToken {
      * 获取AccessToken的对象，根据生命周期对token自管理
      */
     public static AccessToken getInstance(String name, String appId, String appSecret, String... code) {
+        logger.info("getInstance({}, {}, {}, {})", name, appId, appSecret, code);
+
         if (code != null && code.length != 0 && StringUtils.isNotEmpty(code[0])) {
             try {
                 String result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/access_token?appid={}&secret={}&code={}&grant_type=authorization_code", appId, appSecret, code[0]);
-                return parseToken(result);
+                AccessToken token = parseToken(result);
+                instances.put(name, token);
+                return token;
             } catch (URISyntaxException e) {
                 throw new SimplifiedException("获取access_token失败", e);
             }
         }
-        if (null == instances)
-            instances = new ConcurrentHashMap<>();
         AccessToken token = instances.get(name);
         if (null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
             synchronized (AccessToken.class) {
                 String result;
                 try {
-                    result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}", appId, appSecret);
+                    if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L))
+                        result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/refresh_token?appid={}&grant_type=refresh_token&refresh_token={}", appId, token.getRefreshToken());
+                    else
+                        result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}", appId, appSecret);
                 } catch (Throwable e) {
                     throw new SimplifiedException("获取access_token失败", e);
                 }
@@ -118,6 +122,7 @@ public class AccessToken {
             tmp.setExpiresIn(Integer.parseInt(resMap.get("expires_in")));
             tmp.setToken(resMap.get("access_token"));
             tmp.setOpenId(resMap.get("openid"));
+            tmp.setRefreshToken(resMap.get("refresh_token"));
             if (logger.isDebugEnabled())
                 logger.debug("Current AccessToken is: {}, expired since: {}", tmp.getToken(), new Date(tmp.getExpiredSince()));
             return tmp;
