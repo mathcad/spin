@@ -26,7 +26,7 @@ public class AccessToken {
     private static final Logger logger = LoggerFactory.getLogger(AccessToken.class);
     private static final TypeIdentifier<HashMap<String, String>> type = new TypeIdentifier<HashMap<String, String>>() {
     };
-    private static final Map<String, AccessToken> instances = new ConcurrentHashMap<>();
+    private static Map<String, AccessToken> instances;
     private String token;
     private String refreshToken;
     private String openId;
@@ -39,19 +39,45 @@ public class AccessToken {
     /**
      * 获取默认的AccessToken对象，根据生命周期对token自管理
      */
-    public static AccessToken getDefaultInstance(String... code) {
-        return getInstance("default", WxConfig.appId, WxConfig.appSecret, code);
+    public static AccessToken getDefaultInstance() {
+        return getInstance("default");
+    }
+
+    /**
+     * 获取AccessToken对象，根据生命周期对token自管理
+     */
+    public static AccessToken getDefaultInstanceWithCode(String code) {
+        return getInstanceWithCode("default", code);
+    }
+
+    /**
+     * 获取AccessToken对象，根据生命周期对token自管理
+     */
+    public static AccessToken getInstance(String name) {
+        WxConfig.ConfigInfo info = WxConfig.getConfig(name);
+        return getInstance(name, info.getAppId(), info.getAppSecret(), null);
+    }
+
+    /**
+     * 获取AccessToken对象，根据生命周期对token自管理
+     */
+    public static AccessToken getInstanceWithCode(String name, String code) {
+        WxConfig.ConfigInfo info = WxConfig.getConfig(name);
+        return getInstance(name, info.getAppId(), info.getAppSecret(), code);
     }
 
     /**
      * 获取AccessToken的对象，根据生命周期对token自管理
      */
-    public static AccessToken getInstance(String name, String appId, String appSecret, String... code) {
+    public static AccessToken getInstance(String name, String appId, String appSecret, String code) {
         logger.info("getInstance({}, {}, {}, {})", name, appId, appSecret, code);
 
-        if (code != null && code.length != 0 && StringUtils.isNotEmpty(code[0])) {
+        if (null == instances) {
+            instances = new ConcurrentHashMap<>();
+        }
+        if (StringUtils.isNotEmpty(code)) {
             try {
-                String result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/access_token?appid={}&secret={}&code={}&grant_type=authorization_code", appId, appSecret, code[0]);
+                String result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/access_token?appid={}&secret={}&code={}&grant_type=authorization_code", appId, appSecret, code);
                 AccessToken token = parseToken(result);
                 instances.put(name, token);
                 return token;

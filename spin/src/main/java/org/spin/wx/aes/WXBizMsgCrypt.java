@@ -13,12 +13,12 @@
  */
 package org.spin.wx.aes;
 
-import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spin.security.Base64;
 import org.spin.util.RandomStringUtils;
 import org.spin.wx.WxConfig;
 import org.spin.wx.WxHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -44,8 +44,6 @@ import java.util.Arrays;
 public class WXBizMsgCrypt {
     private static final Logger logger = LoggerFactory.getLogger(WXBizMsgCrypt.class);
     private static final Charset CHARSET = Charset.forName("UTF-8");
-    private static final Base64 base64 = new Base64();
-    private static final byte[] aesKey = Base64.decodeBase64(WxConfig.encodingAesKey + "=");
 
 
     // 生成4个字节的网络字节序
@@ -75,12 +73,12 @@ public class WXBizMsgCrypt {
      * @return 加密后base64编码的字符串
      * @throws AesException aes加密失败
      */
-    private static String encrypt(String randomStr, String text) throws AesException {
+    private static String encrypt(String randomStr, String text, String appId, byte[] aesKey) throws AesException {
         ByteGroup byteCollector = new ByteGroup();
         byte[] randomStrBytes = randomStr.getBytes(CHARSET);
         byte[] textBytes = text.getBytes(CHARSET);
         byte[] networkBytesOrder = getNetworkBytesOrder(textBytes.length);
-        byte[] appidBytes = WxConfig.appId.getBytes(CHARSET);
+        byte[] appidBytes = appId.getBytes(CHARSET);
 
         // randomStr + networkBytesOrder + text + appid
         byteCollector.addBytes(randomStrBytes);
@@ -107,7 +105,7 @@ public class WXBizMsgCrypt {
 
             // 使用BASE64对加密后的字符串进行编码
 
-            return base64.encodeToString(encrypted);
+            return Base64.encode(encrypted);
         } catch (Exception e) {
             logger.error("微信接口aes加密失败", e);
             throw new AesException(AesException.EncryptAESError);
@@ -121,7 +119,7 @@ public class WXBizMsgCrypt {
      * @return 解密得到的明文
      * @throws AesException aes解密失败
      */
-    private static String decrypt(String text) throws AesException {
+    private static String decrypt(String text, String appId, byte[] aesKey) throws AesException {
         byte[] original;
         try {
             // 设置解密模式为AES的CBC模式
@@ -131,7 +129,7 @@ public class WXBizMsgCrypt {
             cipher.init(Cipher.DECRYPT_MODE, key_spec, iv);
 
             // 使用BASE64对密文进行解码
-            byte[] encrypted = Base64.decodeBase64(text);
+            byte[] encrypted = Base64.decode(text);
 
             // 解密
             original = cipher.doFinal(encrypted);
@@ -158,7 +156,7 @@ public class WXBizMsgCrypt {
         }
 
         // appid不相同的情况
-        if (!from_appid.equals(WxConfig.appId)) {
+        if (!from_appid.equals(appId)) {
             throw new AesException(AesException.ValidateAppidError);
         }
         return xmlContent;
@@ -175,17 +173,18 @@ public class WXBizMsgCrypt {
      * @param replyMsg  公众平台待回复用户的消息，xml格式的字符串
      * @param timeStamp 时间戳，可以自己生成，也可以用URL参数的timestamp
      * @param nonce     随机串，可以自己生成，也可以用URL参数的nonce
+     * @param token     微信token
      * @return 加密后的可以直接回复用户的密文，包括msg_signature, timestamp, nonce, encrypt的xml格式的字符串
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
      */
-    public static String encryptMsg(String replyMsg, String timeStamp, String nonce) throws AesException {
+    public static String encryptMsg(String replyMsg, String timeStamp, String nonce, String token, WxConfig.ConfigInfo configInfo) throws AesException {
         // 加密
-        String encrypt = encrypt(RandomStringUtils.randomAlphabetic(16), replyMsg);
+        String encrypt = encrypt(RandomStringUtils.randomAlphabetic(16), replyMsg, configInfo.getAppId(), configInfo.getEncodingAesKey());
         // 生成安全签名
         if ("".equals(timeStamp)) {
             timeStamp = Long.toString(System.currentTimeMillis());
         }
-        String signature = WxHelper.sha1(WxConfig.token, timeStamp, nonce, encrypt);
+        String signature = WxHelper.sha1(token, timeStamp, nonce, encrypt);
 
         // System.out.println("发送给平台的签名是: " + signature[1].toString());
         // 生成发送的xml
@@ -204,14 +203,15 @@ public class WXBizMsgCrypt {
      * @param timeStamp    时间戳，对应URL参数的timestamp
      * @param nonce        随机串，对应URL参数的nonce
      * @param postData     密文，对应POST请求的数据
+     * @param token        微信token
      * @return 解密后的原文
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
      */
-    public static String decryptMsg(String msgSignature, String timeStamp, String nonce, String postData) throws AesException {
+    public static String decryptMsg(String msgSignature, String timeStamp, String nonce, String postData, String token, WxConfig.ConfigInfo configInfo) throws AesException {
         Object[] encrypt = XMLParse.extract(postData);
-        if (!WxHelper.verifySign(msgSignature, WxConfig.token, timeStamp, nonce)) {
+        if (!WxHelper.verifySign(msgSignature, token, timeStamp, nonce)) {
             throw new AesException(AesException.ValidateSignatureError);
         }
-        return decrypt(encrypt[1].toString());
+        return decrypt(encrypt[1].toString(), configInfo.getAppId(), configInfo.getEncodingAesKey());
     }
 }

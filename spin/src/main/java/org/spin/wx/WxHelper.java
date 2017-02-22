@@ -66,7 +66,7 @@ public class WxHelper {
      * 根据code获取微信用户信息
      */
     public static WxUserInfo getUserInfo(String code) {
-        AccessToken access_token = AccessToken.getDefaultInstance(code);
+        AccessToken access_token = AccessToken.getDefaultInstanceWithCode(code);
         return getUserInfo(access_token.getToken(), access_token.getOpenId());
     }
 
@@ -105,7 +105,7 @@ public class WxHelper {
         return ret;
     }
 
-    public static String sign4Parameters(SortedMap<String, Object> parameters) {
+    public static String sign4Parameters(SortedMap<String, Object> parameters, String configKey) {
 
         String stringA = "";
 
@@ -115,6 +115,6 @@ public class WxHelper {
 
         logger.info("微信签名参数：stringA:" + stringA);
 
-        return DigestUtils.md5Hex(stringA + "key=" + WxConfig.mchKey).toUpperCase();
+        return DigestUtils.md5Hex(stringA + "key=" + WxConfig.getConfig(configKey).getMchKey()).toUpperCase();
     }
 }

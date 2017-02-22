@@ -1,4 +1,4 @@
-package org.spin.shiro.redis;
+package org.spin.shiro.session;
 
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
@@ -15,12 +15,13 @@ import java.util.Date;
 import java.util.Set;
 
 /**
- * redis Session存储
+ * session Session存储
  */
 public class RedisShiroSessionDao extends AbstractSessionDAO {
     static Logger logger = LoggerFactory.getLogger(RedisShiroSessionDao.class.getName());
-    private String sessionprefix = "ss-";
+    private String sessionPrefix = "session";
     private Cache<Session> cache;
+    private SessionListener sessListener;
 
     Date lastSyncTime = null;
 
@@ -43,26 +44,6 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
-
-    }
-
-    /**
-     * session处理监听器
-     */
-    public interface SessionListener {
-
-        void beforeUpdateSession(Session session);
-
-        void beforeDeleteSession(Session session);
-    }
-
-    SessionListener sessListener;
-
-    /**
-     * sess监听器
-     */
-    public void setSessListener(SessionListener sessListener) {
-        this.sessListener = sessListener;
     }
 
     @Override
@@ -71,7 +52,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
             if (this.sessListener != null) {
                 try {
                     this.sessListener.beforeDeleteSession(session);
-                    SessionUser user = session.getAttribute(SessionUtils.USER_SESSION_KEY) == null ? null : (SessionUser) session.getAttribute(SessionUtils.USER_SESSION_KEY);
+                    SessionUser user = (SessionUser) session.getAttribute(SessionUtils.USER_SESSION_KEY);
                     if (user != null) {
 
                     }
@@ -90,7 +71,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
 
     @Override
     public Collection<Session> getActiveSessions() {
-        String keys = sessionprefix + "*";
+        String keys = sessionPrefix + "-*";
         Set<Session> list = null;
         try {
             list = cache.getValues(keys);
@@ -104,7 +85,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
     public Serializable doCreate(Session session) {
         Serializable sessionId = session.getId();
         try {
-            super.assignSessionId(session, sessionprefix + super.generateSessionId(session));
+            super.assignSessionId(session, sessionPrefix + "-" + super.generateSessionId(session));
             update(session);
             sessionId = session.getId();
         } catch (Exception e) {
@@ -133,11 +114,26 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
         this.cache = cache;
     }
 
-    public String getSessionprefix() {
-        return sessionprefix;
+    public String getSessionPrefix() {
+        return sessionPrefix;
     }
 
-    public void setSessionprefix(String sessionprefix) {
-        this.sessionprefix = sessionprefix;
+    public void setSessionPrefix(String sessionPrefix) {
+        this.sessionPrefix = sessionPrefix;
+    }
+
+    /**
+     * sess监听器
+     */
+    public void setSessListener(SessionListener sessListener) {
+        this.sessListener = sessListener;
+    }
+
+    /**
+     * session处理监听器
+     */
+    public interface SessionListener {
+        void beforeUpdateSession(Session session);
+        void beforeDeleteSession(Session session);
     }
 }
