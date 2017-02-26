@@ -3,6 +3,7 @@ package org.spin.annotations;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,13 +11,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 定义resetful接口，组合了 {@link RequestMapping}与{@link Cacheable}，拦截并验证身份
+ * 定义resetful接口，组合了 {@link RequestMapping}，{@link ResponseBody}与{@link Cacheable}，拦截并验证身份
  * <p>该注解修饰的方法，返回类型必须为String, CharSequence或者Object</p>
  * Created by xuweinan on 2016/10/2.
  *
  * @author xuweinan
  */
 @RequestMapping
+@ResponseBody
 @Cacheable
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

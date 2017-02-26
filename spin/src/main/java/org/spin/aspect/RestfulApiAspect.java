@@ -43,7 +43,7 @@ public class RestfulApiAspect {
     @Autowired(required = false)
     Authenticator authenticator = null;
 
-    @Pointcut("@annotation(org.spin.annotations.RestfulApi)")
+    @Pointcut("execution(org.spin.web.RestfulResponse *.*(..)) && @annotation(org.spin.annotations.RestfulApi)")
     private void restfulMethod() {
     }
 
