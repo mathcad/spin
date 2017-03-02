@@ -1,7 +1,7 @@
 package org.spin.security;
 
 import org.spin.sys.Assert;
-import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 
 import javax.crypto.BadPaddingException;
@@ -42,7 +42,7 @@ public class RSA {
         try {
             keyPairGen = KeyPairGenerator.getInstance(RSA_ALGORITHMS);
         } catch (NoSuchAlgorithmException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.ENCRYPT_FAIL);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL);
         }
         keyPairGen.initialize(KEY_SIZE, new SecureRandom());
         return keyPairGen.generateKeyPair();
@@ -134,7 +134,7 @@ public class RSA {
         try {
             return new String(decrypt(key, Base64.decode(content)), "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.DEENCRYPT_FAIL, e);
+            throw new SimplifiedException(ErrorCode.DEENCRYPT_FAIL, e);
         }
     }
 

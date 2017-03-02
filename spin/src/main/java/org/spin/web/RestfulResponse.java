@@ -8,7 +8,7 @@ import org.spin.throwable.SimplifiedException;
  * @author xuweinan
  */
 public class RestfulResponse {
-    private int code;
+    private int code = -1;
     private String message;
     private Object data;
 
@@ -35,7 +35,7 @@ public class RestfulResponse {
     }
 
     public static RestfulResponse error(SimplifiedException exception) {
-        int code = exception.getExceptionType().getValue() > 400 ? exception.getExceptionType().getValue() : 500;
+        int code = exception.getExceptionType().getCode() > 400 ? exception.getExceptionType().getCode() : 500;
         return new RestfulResponse(code, exception.getMessage());
     }
 

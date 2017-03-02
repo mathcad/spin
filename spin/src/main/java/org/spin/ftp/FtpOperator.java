@@ -7,7 +7,7 @@ import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.EnumUtils;
 import org.spin.util.StringUtils;
@@ -256,16 +256,16 @@ public class FtpOperator {
         try {
             client.connect(host);
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "FTP连接失败");
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP连接失败");
         }
         if (StringUtils.isNotEmpty(userName)) {
 
             try {
                 if (!client.login(userName, password)) {
-                    throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "FTP登录失败");
+                    throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP登录失败");
                 }
             } catch (IOException e) {
-                throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "FTP登录失败");
+                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP登录失败");
             }
         }
 
@@ -275,9 +275,9 @@ public class FtpOperator {
             try {
                 client.disconnect();
             } catch (IOException e) {
-                throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "FTP访问被拒绝，断开连接失败");
+                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP访问被拒绝，断开连接失败");
             }
-            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "FTP访问被拒绝: " + host + ":" + port);
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP访问被拒绝: " + host + ":" + port);
         }
 
         client.setDataTimeout(30000);

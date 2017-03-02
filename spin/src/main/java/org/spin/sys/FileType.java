@@ -160,7 +160,7 @@ public abstract class FileType {
                     return traits.row(ext).entrySet().iterator().next().getValue();
                 return detectFileType(new FileInputStream(file));
             } catch (FileNotFoundException e) {
-                throw new SimplifiedException(ErrorAndExceptionCode.IO_FAIL, "文件不存在");
+                throw new SimplifiedException(ErrorCode.IO_FAIL, "文件不存在");
             }
         }
 
@@ -175,13 +175,13 @@ public abstract class FileType {
             try {
                 int total = inputStream.read(trait, 0, 16);
                 if (total == -1)
-                    throw new SimplifiedException(ErrorAndExceptionCode.IO_FAIL, "END OF FILE");
+                    throw new SimplifiedException(ErrorCode.IO_FAIL, "END OF FILE");
                 else if (total == 0)
                     return Text.PLAIN;
                 else
                     return detectFileType(trait);
             } catch (IOException e) {
-                throw new SimplifiedException(ErrorAndExceptionCode.IO_FAIL, "流读取错误");
+                throw new SimplifiedException(ErrorCode.IO_FAIL, "流读取错误");
             }
         }
 

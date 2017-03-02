@@ -9,7 +9,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 
 import java.io.File;
@@ -41,7 +41,7 @@ public class ExcelUtils {
             else
                 workbook = new XSSFWorkbook(is);
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.IO_FAIL, "读取文件失败", e);
+            throw new SimplifiedException(ErrorCode.IO_FAIL, "读取文件失败", e);
         }
         // 循环工作表Sheet
         for (int numSheet = 0; numSheet < workbook.getNumberOfSheets(); numSheet++) {
@@ -76,12 +76,12 @@ public class ExcelUtils {
         else if (workbookFile.getName().toLowerCase().endsWith("xlsx"))
             type = Type.XLSX;
         else
-            throw new SimplifiedException(ErrorAndExceptionCode.IO_FAIL, "不支持的文件类型");
+            throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
         InputStream is;
         try {
             is = new FileInputStream(workbookFile);
         } catch (FileNotFoundException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.IO_FAIL, "读取文件失败", e);
+            throw new SimplifiedException(ErrorCode.IO_FAIL, "读取文件失败", e);
         }
         readWorkBook(is, type, reader);
     }

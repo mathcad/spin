@@ -1,6 +1,6 @@
 package org.spin.security;
 
-import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 
 import javax.crypto.BadPaddingException;
@@ -73,7 +73,7 @@ public class AES {
             secureRandom = SecureRandom.getInstance("SHA1PRNG");
             secureRandom.setSeed(keySeed.getBytes("UTF-8"));
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.KEY_FAIL, e);
+            throw new SimplifiedException(ErrorCode.KEY_FAIL, e);
         }
         kg.init(keySize.getValue(), secureRandom);
         return kg.generateKey();
@@ -94,7 +94,7 @@ public class AES {
         try {
             return encrypt(key, data.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.ENCRYPT_FAIL, e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, e);
         }
     }
 
@@ -103,7 +103,7 @@ public class AES {
         try {
             cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.ENCRYPT_FAIL, e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, e);
         }
         cipher.init(Cipher.ENCRYPT_MODE, key);
         return Base64.encode(cipher.doFinal(data));
@@ -125,13 +125,13 @@ public class AES {
         try {
             cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.DEENCRYPT_FAIL, e);
+            throw new SimplifiedException(ErrorCode.DEENCRYPT_FAIL, e);
         }
         cipher.init(Cipher.DECRYPT_MODE, key);
         try {
             return new String(cipher.doFinal(Base64.decode(data)), charset);
         } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.ENCRYPT_FAIL, e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, e);
         }
     }
 }

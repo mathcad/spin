@@ -15,7 +15,7 @@ import org.spin.annotations.RestfulApi;
 import org.spin.jpa.core.AbstractUser;
 import org.spin.shiro.Authenticator;
 import org.spin.sys.EnvCache;
-import org.spin.sys.TokenKeyManager;
+import org.spin.sys.auth.TokenKeyManager;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.JSONUtils;
 import org.spin.util.SessionUtils;

@@ -1,6 +1,6 @@
 package org.spin.util;
 
-import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 
 import java.sql.Timestamp;
@@ -124,7 +124,7 @@ public abstract class DateUtils {
         try {
             return sdf.parse(matcher == null ? date : matcher.group(0));
         } catch (ParseException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
+            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
         }
     }
 
@@ -139,7 +139,7 @@ public abstract class DateUtils {
         try {
             return sdf.parse(date);
         } catch (ParseException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
+            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
         }
     }
 
@@ -180,7 +180,7 @@ public abstract class DateUtils {
         try {
             return LocalDateTime.parse(matcher == null ? date : matcher.group(0), formatter);
         } catch (DateTimeParseException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
+            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
         }
     }
 
@@ -195,7 +195,7 @@ public abstract class DateUtils {
         try {
             return LocalDateTime.parse(date, dtf);
         } catch (DateTimeParseException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
+            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
         }
     }
 

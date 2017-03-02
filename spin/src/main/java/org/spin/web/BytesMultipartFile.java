@@ -1,6 +1,6 @@
 package org.spin.web;
 
-import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +36,7 @@ public class BytesMultipartFile implements MultipartFile, Serializable {
         try {
             this.fileContent = file.getBytes();
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.IO_FAIL, "文件读取错误");
+            throw new SimplifiedException(ErrorCode.IO_FAIL, "文件读取错误");
         }
         this.size = fileContent.length;
         this.fileName = file.getName();

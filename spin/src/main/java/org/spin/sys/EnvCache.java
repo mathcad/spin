@@ -39,6 +39,7 @@ public final class EnvCache {
      * token过期时间
      */
     public static Long TokenExpireTime = 7200000L;
+    public static Long KeyExpireTime = 1296000000L;
     public static String FileUploadDir;
     public static String TemplateDir;
 
