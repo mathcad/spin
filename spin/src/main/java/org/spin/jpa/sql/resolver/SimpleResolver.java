@@ -39,6 +39,6 @@ public class SimpleResolver implements TemplateResolver {
             for (Map.Entry<String, ?> param : model.entrySet()) {
                 result = template.replace("${" + param.getKey() + "}", param.getValue().toString());
             }
-        return result.replaceAll("\\$\\{.+\\}", "");
+        return result.replaceAll("\\$\\{.+}", "");
     }
 }

@@ -9,8 +9,17 @@ import java.util.List;
  * @author xuweinan
  */
 public class RolePermission {
+    private String userIdentifier;
     private List<String> roles;
     private List<String> permissions;
+
+    public String getUserIdentifier() {
+        return userIdentifier;
+    }
+
+    public void setUserIdentifier(String userIdentifier) {
+        this.userIdentifier = userIdentifier;
+    }
 
     public List<String> getRoles() {
         return roles;
