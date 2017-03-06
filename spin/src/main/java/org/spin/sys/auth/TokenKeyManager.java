@@ -1,6 +1,11 @@
-package org.spin.sys;
+package org.spin.sys.auth;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.security.RSA;
+import org.spin.sys.EnvCache;
+import org.spin.sys.ErrorCode;
+import org.spin.throwable.SimplifiedException;
 import org.spin.util.RandomStringUtils;
 import org.spin.util.StringUtils;
 
@@ -15,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author X
  */
 public class TokenKeyManager {
+    private static final Logger logger = LoggerFactory.getLogger(TokenKeyManager.class);
     private static final Map<String, TokenInfo> TOKEN_INFO_CACHE = new ConcurrentHashMap<>();
     private static final Map<String, String> USERID_TOKEN_CACHE = new ConcurrentHashMap<>();
     private static final Map<String, String> KEY_USERID_CACHE = new ConcurrentHashMap<>();
@@ -43,27 +49,32 @@ public class TokenKeyManager {
     /**
      * 从密钥中获取用户信息
      */
-    public static String[] getKeyInfo(String key) throws Exception {
-        return RSA.decrypt(RSA_PRIKEY, key).split(SEPARATOR);
+    public static String[] getKeyInfo(String key) {
+        try {
+            return RSA.decrypt(RSA_PRIKEY, key).split(SEPARATOR);
+        } catch (Exception e) {
+            logger.debug("Extract info from key Error: {}", e);
+            throw new SimplifiedException(ErrorCode.SECRET_INVALID, "无效的密钥");
+        }
     }
 
     /**
      * 判断token是否有效
      *
      * @param token token
-     * @return null 无效 userId 正常
+     * @return 正常情况返回userId，否则抛出异常
      */
     public static Object validateToken(String token) {
         if (StringUtils.isEmpty(token))
-            return null;
+            throw new SimplifiedException(ErrorCode.TOKEN_INVALID, "无效的token");
         TokenInfo tokenInfo = TOKEN_INFO_CACHE.get(token);
-        // token不存在，返回-1
+        // token不存在
         if (tokenInfo == null)
-            return null;
+            throw new SimplifiedException(ErrorCode.TOKEN_INVALID, "无效的token");
         Long generateTime = tokenInfo.getGenerateTime();
-        // token过期，返回-1，否则返回token对应的UserId
+        // token过期，否则返回token对应的UserId
         if (isTimeOut(generateTime)) {
-            return null;
+            throw new SimplifiedException(ErrorCode.TOKEN_EXPIRED, "token已经过期，请重新获取");
         } else {
             return tokenInfo.getUserId();
         }
@@ -72,21 +83,21 @@ public class TokenKeyManager {
     /**
      * 通过密钥换取token
      *
-     * @return 返回token, 如果key无效，返回null
+     * @return 返回token, 如果key无效，抛出异常
      */
     public static String generateToken(String key) {
         String userId = KEY_USERID_CACHE.get(key);
         if (userId != null) {
             String oldToken = USERID_TOKEN_CACHE.get(userId);
             String token = RandomStringUtils.randomAlphanumeric(32);
-            TokenInfo info = new TokenInfo(userId);
+            TokenInfo info = new TokenInfo(userId, token);
             TOKEN_INFO_CACHE.put(token, info);
             USERID_TOKEN_CACHE.put(userId, token);
             if (StringUtils.isNotBlank(oldToken))
                 TOKEN_INFO_CACHE.remove(oldToken);
             return token;
         }
-        return null;
+        throw new SimplifiedException(ErrorCode.SECRET_INVALID, "无效的密钥");
     }
 
     public static String generateKey(String userId, String pwd) {

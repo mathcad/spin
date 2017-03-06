@@ -7,7 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * Created by xuweinan on 2016/10/5.
@@ -17,6 +17,7 @@ import java.util.Date;
 @Entity
 @Table(name = "sys_user")
 public class AbstractUser extends AbstractEntity implements SessionUser {
+    private static final long serialVersionUID = -5165281965534714968L;
 
     @Column(length = 32)
     private String userName;
@@ -31,7 +32,7 @@ public class AbstractUser extends AbstractEntity implements SessionUser {
     private boolean active;
 
     @Transient
-    private Date loginTime = new Date();
+    private LocalDateTime loginTime = LocalDateTime.now();
 
     @Transient
     private String sessionId;
@@ -79,7 +80,7 @@ public class AbstractUser extends AbstractEntity implements SessionUser {
     }
 
     @Override
-    public Date getLoginTime() {
+    public LocalDateTime getLoginTime() {
         return loginTime;
     }
 

@@ -1,6 +1,6 @@
 package org.spin.sys;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 在线用户接口
@@ -21,7 +21,7 @@ public interface SessionUser {
 
     boolean isActive();
 
-    Date getLoginTime();
+    LocalDateTime getLoginTime();
 
     String getSessionId();
 

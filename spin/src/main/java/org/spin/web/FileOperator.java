@@ -3,7 +3,7 @@ package org.spin.web;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.sys.EnvCache;
-import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.HttpUtils;
 import org.spin.util.RandomStringUtils;
@@ -52,7 +52,7 @@ public class FileOperator {
         String path = storeName.substring(0, storeName.indexOf("/") + 1);
         File uploadDir = new File(bDir + path);
         if (!uploadDir.exists() && !uploadDir.mkdirs())
-            throw new SimplifiedException(ErrorAndExceptionCode.IO_FAIL, "创建文件夹失败");
+            throw new SimplifiedException(ErrorCode.IO_FAIL, "创建文件夹失败");
         String fullName = bDir + storeName + extention;
         File storedFile = new File(fullName);
         if (compress) {
@@ -98,11 +98,11 @@ public class FileOperator {
         File uploadDir = new File(EnvCache.FileUploadDir + path);
         Map<String, String> downloadRs;
         if (!uploadDir.exists() && !uploadDir.mkdirs())
-            throw new SimplifiedException(ErrorAndExceptionCode.IO_FAIL, "创建文件夹失败");
+            throw new SimplifiedException(ErrorCode.IO_FAIL, "创建文件夹失败");
         try {
             downloadRs = HttpUtils.download(url, EnvCache.FileUploadDir + storeName);
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "下载文件错误", e);
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "下载文件错误", e);
         }
         rs.setFullName(EnvCache.FileUploadDir + storeName + downloadRs.get("extention"));
         rs.setStoreName(storeName + downloadRs.get("extention"));

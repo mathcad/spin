@@ -1,34 +1,35 @@
 package org.spin.throwable;
 
-import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.sys.ErrorCode;
+import org.spin.util.StringUtils;
 
 /**
  * <p>这个异常类用来简化处理异常</p>
- * <p>遇到无需明确分类处理的异常，可以统一用此异常处理，封装{@link ErrorAndExceptionCode}枚举作为参数，用于区分异常类别</p>
+ * <p>遇到无需明确分类处理的异常，可以统一用此异常处理，封装{@link ErrorCode}枚举作为参数，用于区分异常类别</p>
  *
  * @author xuweinan
  * @version 1.0
  */
 public class SimplifiedException extends RuntimeException {
     private static final long serialVersionUID = 3761977150343281224L;
-    private ErrorAndExceptionCode exceptionType = ErrorAndExceptionCode.OTHER;
+    private ErrorCode exceptionType = ErrorCode.OTHER;
 
-    public SimplifiedException(ErrorAndExceptionCode exceptionType, Throwable e) {
+    public SimplifiedException(ErrorCode exceptionType, Throwable e) {
         super(e);
         this.exceptionType = exceptionType;
     }
 
-    public SimplifiedException(ErrorAndExceptionCode exceptionType) {
+    public SimplifiedException(ErrorCode exceptionType) {
         super();
         this.exceptionType = exceptionType;
     }
 
-    public SimplifiedException(ErrorAndExceptionCode exceptionType, String message) {
+    public SimplifiedException(ErrorCode exceptionType, String message) {
         super(message);
         this.exceptionType = exceptionType;
     }
 
-    public SimplifiedException(ErrorAndExceptionCode exceptionType, String message, Throwable e) {
+    public SimplifiedException(ErrorCode exceptionType, String message, Throwable e) {
         super(message, e);
         this.exceptionType = exceptionType;
     }
@@ -47,21 +48,21 @@ public class SimplifiedException extends RuntimeException {
 
     public SimplifiedException() {
         super();
-        this.exceptionType = ErrorAndExceptionCode.OTHER;
+        this.exceptionType = ErrorCode.OTHER;
     }
 
-    public ErrorAndExceptionCode getExceptionType() {
+    public ErrorCode getExceptionType() {
         return this.exceptionType;
     }
 
     @Override
     public String getMessage() {
-        return this.exceptionType.toString() + ':' + super.getMessage();
+        return StringUtils.isEmpty(super.getMessage()) ? this.exceptionType.toString() : this.exceptionType.toString() + ':' + super.getMessage();
     }
 
     @Override
     public String getLocalizedMessage() {
-        return this.exceptionType.toString() + ':' + super.getLocalizedMessage();
+        return StringUtils.isEmpty(super.getLocalizedMessage()) ? this.exceptionType.toString() : this.exceptionType.toString() + ':' + super.getLocalizedMessage();
     }
 
     @Override

@@ -16,7 +16,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 
 import java.io.FileNotFoundException;
@@ -73,10 +73,10 @@ public abstract class HttpUtils {
             HttpEntity entity = response.getEntity();
             result = EntityUtils.toString(entity, getContentCharSet(entity));
             if (code != 200) {
-                throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "错误状态码:" + code + result);
+                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "错误状态码:" + code + result);
             }
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "远程连接到" + uri.toString() +
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到" + uri.toString() +
                     "，发生错误:" + e.getMessage());
         } finally {
             if (httpclient != null)
@@ -107,10 +107,10 @@ public abstract class HttpUtils {
             HttpEntity entity = response.getEntity();
             result = EntityUtils.toString(entity, getContentCharSet(entity));
             if (code != 200) {
-                throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "错误状态码:" + code + result);
+                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "错误状态码:" + code + result);
             }
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e
                     .getMessage());
         } finally {
             if (httpclient != null)
@@ -129,7 +129,7 @@ public abstract class HttpUtils {
         try {
             uri = getUriFromString(url);
         } catch (URISyntaxException e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "无法打开指定的URL连接", e);
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "无法打开指定的URL连接", e);
         }
         CloseableHttpClient httpclient;
         httpclient = HttpClients.createDefault();
@@ -139,7 +139,7 @@ public abstract class HttpUtils {
         CloseableHttpResponse response = httpclient.execute(request);
         int code = response.getStatusLine().getStatusCode();
         if (code != 200) {
-            throw new SimplifiedException(ErrorAndExceptionCode.NETWORK_EXCEPTION, "错误状态码:" + code);
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "错误状态码:" + code);
         }
         HttpEntity entity = response.getEntity();
         String saveFile = savePath;

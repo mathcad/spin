@@ -77,7 +77,7 @@ dependencies {
 //    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '1.4.0.RELEASE'
     compile group: 'com.alibaba', name: 'druid', version: '1.0.26'
     compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
-
+    compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
     compile(project(":zibra"))
     compile(project(":spin"))
 

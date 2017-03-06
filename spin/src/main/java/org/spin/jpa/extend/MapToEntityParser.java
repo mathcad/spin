@@ -1,7 +1,7 @@
 package org.spin.jpa.extend;
 
 import org.spin.jpa.core.EntityParser;
-import org.spin.sys.ErrorAndExceptionCode;
+import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.BeanUtils;
 
@@ -19,7 +19,7 @@ public class MapToEntityParser implements EntityParser<Map<String, Object>> {
         try {
             return BeanUtils.wrapperMapToBean(entityClazz, value);
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorAndExceptionCode.BEAN_CREATE_FAIL, e);
+            throw new SimplifiedException(ErrorCode.BEAN_CREATE_FAIL, e);
         }
     }
 }
