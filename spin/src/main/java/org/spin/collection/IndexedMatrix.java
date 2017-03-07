@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author xuweinan
  */
-public class IndexedTable<T> {
+public class IndexedMatrix<T> {
 
     private final List<List<T>> values = new ArrayList<>();
 
@@ -26,7 +26,7 @@ public class IndexedTable<T> {
      * @param columnNumber 列数
      * @param indexColumns 需要建索引的列，从第2列开始；第一列为默认的主键。列编号从0开始
      */
-    public IndexedTable(int columnNumber, int... indexColumns) {
+    public IndexedMatrix(int columnNumber, int... indexColumns) {
         this.columnNumber = columnNumber;
         if (null != indexColumns && indexColumns.length > 0) {
             for (int i : indexColumns) {
@@ -62,7 +62,7 @@ public class IndexedTable<T> {
      * 向表中插入一条记录
      */
     @SafeVarargs
-    public final IndexedTable insert(T... values) {
+    public final IndexedMatrix insert(T... values) {
         if (null == values || values.length != columnNumber) {
             throw new IllegalArgumentException("插入数据的列数与定义不一至。 需要" + columnNumber + "列");
         }

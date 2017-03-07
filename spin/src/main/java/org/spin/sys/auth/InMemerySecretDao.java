@@ -6,7 +6,7 @@ import org.apache.commons.collections4.map.MultiKeyMap;
  * 内存中的认证信息存储
  * Created by xuweinan on 2017/3/2.
  *
- * @xuweinan
+ * @author xuweinan
  */
 public class InMemerySecretDao implements SecretDao {
     private final MultiKeyMap<String, TokenInfo> tokenCache = new MultiKeyMap<>();

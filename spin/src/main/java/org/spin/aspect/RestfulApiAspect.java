@@ -15,11 +15,12 @@ import org.spin.annotations.RestfulApi;
 import org.spin.jpa.core.AbstractUser;
 import org.spin.shiro.Authenticator;
 import org.spin.sys.EnvCache;
+import org.spin.sys.ErrorCode;
 import org.spin.sys.auth.TokenKeyManager;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.JSONUtils;
 import org.spin.util.SessionUtils;
-import org.spin.util.StringUtils;
+import org.spin.web.RestfulResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -93,7 +94,7 @@ public class RestfulApiAspect {
             Object[] args = joinPoint.getArgs();
             for (Integer i : nonNullArgs) {
                 if (null == args[i])
-                    return "{\"code\": 412, \"des\": \"请求参数不完整\"}";
+                    return RestfulResponse.error(ErrorCode.INVALID_PARAM);
             }
 
             if (EnvCache.devMode && logger.isTraceEnabled()) {
@@ -105,27 +106,27 @@ public class RestfulApiAspect {
             }
 
             String returnType = apiMethod.getReturnType().getName();
-            if (!(returnType.equals(String.class.getName())
-                    || returnType.equals(Object.class.getName())
-                    || returnType.equals(CharSequence.class.getName())))
-                throw new SimplifiedException("RestfulApi接口的返回类型错误，必须为String, CharSequence或者Object");
+            if (!(returnType.equals(RestfulResponse.class.getName())))
+                throw new SimplifiedException("RestfulApi接口的返回类型错误，必须为RestfulResponse");
             try {
-                Object r = joinPoint.proceed();
-                String content = r instanceof CharSequence ? r.toString() : JSONUtils.toJson(r);
-                return "{\"code\": 200, \"des\": \"OK\"" + (StringUtils.isNotEmpty(content) ? ", \"data\": " + content : "") + "}";
+                RestfulResponse r = (RestfulResponse) joinPoint.proceed();
+                if (null == r)
+                    return RestfulResponse.ok();
+                else
+                    return r.setCodeAndMsg(ErrorCode.OK);
             } catch (SimplifiedException e) {
                 logger.info("Invoke api fail: [" + apiMethod.toGenericString() + "]");
                 logger.trace("Exception: ", e);
-                int code = e.getExceptionType().getValue() > 400 ? e.getExceptionType().getValue() : 500;
-                return StringUtils.format("{\"code\": {0}, \"des\": \"{1}\"}", code, e.getMessage());
+                return RestfulResponse.error(e);
             } catch (Throwable throwable) {
                 logger.error("Invoke api fail: [" + apiMethod.toGenericString() + "]", throwable);
+                RestfulResponse response = RestfulResponse.error(ErrorCode.INTERNAL_ERROR);
                 if (EnvCache.devMode)
-                    return "{\"code\": 500, \"des\": \"" + throwable.getMessage() + "\"}";
-                return "{\"code\": 500, \"des\": \"服务端内部错误\"}";
+                    response.setMessage(throwable.getMessage());
+                return response;
             }
         } else
-            return "{\"code\": 401, \"des\": \"未授权的访问\"}";
+            return RestfulResponse.error(ErrorCode.ACCESS_DENINED);
     }
 
     private Object checkAccess(String token, String[] authorities) {

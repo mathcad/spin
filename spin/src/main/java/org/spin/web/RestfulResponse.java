@@ -1,5 +1,6 @@
 package org.spin.web;
 
+import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 
 /**
@@ -12,22 +13,20 @@ public class RestfulResponse {
     private String message;
     private Object data;
 
-    public RestfulResponse() {
+    private RestfulResponse(ErrorCode errorCode) {
+        ErrorCode code = errorCode.getCode() > 400  || errorCode.getCode() == 200 ? errorCode : ErrorCode.INTERNAL_ERROR;
+        this.code = code.getCode();
+        this.message = code.getDesc();
     }
 
-    public RestfulResponse(int code, String message) {
-        this.code = code;
-        this.message = message;
-    }
-
-    public RestfulResponse(int code, String message, Object data) {
+    private RestfulResponse(int code, String message, Object data) {
         this.code = code;
         this.message = message;
         this.data = data;
     }
 
     public static RestfulResponse ok() {
-        return new RestfulResponse(200, "OK");
+        return new RestfulResponse(ErrorCode.OK);
     }
 
     public static RestfulResponse ok(Object data) {
@@ -35,8 +34,17 @@ public class RestfulResponse {
     }
 
     public static RestfulResponse error(SimplifiedException exception) {
-        int code = exception.getExceptionType().getCode() > 400 ? exception.getExceptionType().getCode() : 500;
-        return new RestfulResponse(code, exception.getMessage());
+        return new RestfulResponse(exception.getExceptionType());
+    }
+
+    public static RestfulResponse error(ErrorCode errorCode) {
+        return new RestfulResponse(errorCode);
+    }
+
+    public RestfulResponse setCodeAndMsg(ErrorCode errorCode) {
+        this.code = errorCode.getCode();
+        this.message = errorCode.getDesc();
+        return this;
     }
 
     public int getCode() {

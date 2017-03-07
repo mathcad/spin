@@ -1,22 +1,17 @@
 package org.spin.spring;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 /**
- * Created by Arvin on 2017/1/23.
+ * Created by xuweinan on 2017/1/23.
  */
 //@Component
-public class BaseBeanPostProcessor implements BeanPostProcessor, ApplicationContextAware {
+public class SpinBeanPostProcessor implements BeanPostProcessor, ApplicationContextAware {
 
     private ApplicationContext applicationContext;
-
-    @Autowired(required = false)
-    private RedisConnectionFactory redisConnectionFactory;
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
