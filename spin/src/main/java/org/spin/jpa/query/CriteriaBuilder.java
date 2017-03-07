@@ -137,6 +137,22 @@ public class CriteriaBuilder {
     }
 
     /**
+     * like '*%' 模糊
+     */
+    public CriteriaBuilder startWith(String prop, String value) {
+        this.addCriterion(Restrictions.like(prop, value, MatchMode.START));
+        return this;
+    }
+
+    /**
+     * like '%*' 模糊
+     */
+    public CriteriaBuilder endWith(String prop, String value) {
+        this.addCriterion(Restrictions.like(prop, value, MatchMode.END));
+        return this;
+    }
+
+    /**
      * like '%%' 全模糊
      */
     public CriteriaBuilder like(String prop, String value) {
@@ -155,7 +171,7 @@ public class CriteriaBuilder {
     /**
      * 快速ge条件 >=
      */
-    public CriteriaBuilder gte(String prop, Object value) {
+    public CriteriaBuilder ge(String prop, Object value) {
         this.addCriterion(Restrictions.ge(prop, value));
         return this;
     }
