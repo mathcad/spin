@@ -100,7 +100,7 @@ public class Matrix<T> {
         if (null == values || values.length != columnNumber) {
             throw new IllegalArgumentException("插入数据的列数与定义不一致 需要" + columnNumber + "列");
         }
-        Row<T> row = new Row<>();
+        Row<T> row = new Row<>(columnNumber);
         row.addAll(Arrays.asList(values));
         int idx;
         synchronized (this.rows) {
