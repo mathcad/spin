@@ -261,7 +261,7 @@ public class CriteriaBuilder {
                 continue;
             }
 
-            projectionList.add(Property.forName(pf), aliasMap.containsKey(pf) ? aliasMap.get(pf) : pf);
+            projectionList.add(Property.forName(pf), aliasMap.getOrDefault(pf, pf));
 
             int pjFieldPtIdx = pf.indexOf('.');
             if (pjFieldPtIdx > -1) {

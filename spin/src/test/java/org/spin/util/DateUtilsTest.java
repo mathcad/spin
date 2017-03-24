@@ -3,6 +3,7 @@ package org.spin.util;
 import org.junit.Test;
 
 import java.sql.Time;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -41,5 +42,13 @@ public class DateUtilsTest {
         System.out.println(dateTime);
         System.out.println(DateUtils.formatDateForSecond(DateUtils.toLocalDateTime("2016/11-05啊10:05:52.326")));
         assertTrue(true);
+    }
+
+    @Test
+    public void testFormat() throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String date = "2016-1-5 10:5:52";
+        System.out.println(sdf.parse(date));
+        System.out.println(DateUtils.toDate(date));
     }
 }

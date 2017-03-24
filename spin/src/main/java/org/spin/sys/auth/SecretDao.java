@@ -12,7 +12,17 @@ public interface SecretDao {
 
     TokenInfo getTokenInfoByToken(String token);
 
+    TokenInfo getTokenInfoByKey(String key);
+
+    KeyInfo getKeyInfoByIdentifier(String identifier);
+
+    KeyInfo getKeyInfoByToken(String token);
+
+    KeyInfo getKeyInfoByKey(String key);
+
     void saveTokenInfo(String identifier, String token);
+
+    void saveKeyInfo(String identifier, String key);
 
     void clearExpiredInfo(Long expiredIn);
 }

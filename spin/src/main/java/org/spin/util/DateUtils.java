@@ -24,13 +24,21 @@ import java.util.regex.Pattern;
  * @author xuweinan
  */
 public abstract class DateUtils {
+    // 2017
     private static final String yearPattern = "(\\d{4})";
+    // 17
     private static final String shortYearPattern = "(\\d{2})";
-    private static final String alignMonthPattern = "(0[1-9]|1[0-2])";
-    private static final String alignDayPattern = "(0[1-9]|[1-2]\\d|3[0-1])";
-    private static final String alignHourPattern = "([0-1]\\d|2[0-3])";
-    private static final String alignMinutePattern = "([0-5]\\d)";
-    private static final String alignSecondPattern = "([0-5]\\d)";
+    // 01-12 或 1-12
+    private static final String monthPattern = "(0?[1-9]|1[0-2])";
+    // 01-31 或 1-31
+    private static final String dayPattern = "(0?[1-9]|[1-2]\\d|3[0-1])";
+    // 00-23 或 0-23
+    private static final String hourPattern = "(0?\\d|1\\d|2[0-3])";
+    // 00-59 或 0-59
+    private static final String minutePattern = "(0?\\d|[1-5]\\d)";
+    // 00-59 或 0-59
+    private static final String secondPattern = minutePattern;
+    // 123
     private static final String millionSecondPattern = "(\\d{3})";
 
     private static final String day = "yyyy-MM-dd";
@@ -41,13 +49,13 @@ public abstract class DateUtils {
     private static final String fullDay = "yyyy_MM_dd_HH_mm_ss_S";
     private static final String noFormat = "yyyyMMddHHmmss";
 
-    private static final SimpleDateFormat daySdf = new SimpleDateFormat(day);
-    private static final SimpleDateFormat secondSdf = new SimpleDateFormat(second);
-    private static final SimpleDateFormat millSecSdf = new SimpleDateFormat(millSec);
-    private static final SimpleDateFormat zhDaySdf = new SimpleDateFormat(zhDay);
-    private static final SimpleDateFormat zhSecondSdf = new SimpleDateFormat(zhSecond);
-    private static final SimpleDateFormat fullDaySdf = new SimpleDateFormat(fullDay);
-    private static final SimpleDateFormat noFormatSdf = new SimpleDateFormat(noFormat);
+    private static final ThreadLocal<SimpleDateFormat> daySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(day));
+    private static final ThreadLocal<SimpleDateFormat> secondSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(second));
+    private static final ThreadLocal<SimpleDateFormat> millSecSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(millSec));
+    private static final ThreadLocal<SimpleDateFormat> zhDaySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(zhDay));
+    private static final ThreadLocal<SimpleDateFormat> zhSecondSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(zhSecond));
+    private static final ThreadLocal<SimpleDateFormat> fullDaySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(fullDay));
+    private static final ThreadLocal<SimpleDateFormat> noFormatSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(noFormat));
 
     private static final DateTimeFormatter dayDtf = DateTimeFormatter.ofPattern(day);
     private static final DateTimeFormatter secondDtf = DateTimeFormatter.ofPattern(second);
@@ -59,28 +67,32 @@ public abstract class DateUtils {
 
 
     private static final String[] datePatten = {
-            yearPattern + "(.)" + alignMonthPattern + "(.)" + alignDayPattern,
+            yearPattern + "(.)" + monthPattern + "(.)" + dayPattern,
     };
     private static final String[] dateFormat = {
             "yyyy{0}MM{1}dd",
     };
 
     private static final String[] timePatten = {
-            alignHourPattern + ":" + alignMinutePattern + ":" + alignSecondPattern,
-            alignHourPattern + "时" + alignMinutePattern + "分" + alignSecondPattern + "秒",
-            alignHourPattern + ":" + alignMinutePattern + ":" + alignSecondPattern + "\\." + millionSecondPattern,
-            alignHourPattern + "时" + alignMinutePattern + "分" + alignSecondPattern + "秒" + "\\." + millionSecondPattern,
-            alignHourPattern + ":" + alignMinutePattern,
-            alignHourPattern + "时" + alignMinutePattern + "分"
+            hourPattern + ":" + minutePattern + ":" + secondPattern + "\\." + millionSecondPattern,
+            hourPattern + "时" + minutePattern + "分" + secondPattern + "秒" + "\\." + millionSecondPattern,
+            hourPattern + ":" + minutePattern + ":" + secondPattern,
+            hourPattern + "时" + minutePattern + "分" + secondPattern + "秒",
+            hourPattern + ":" + minutePattern,
+            hourPattern + "时" + minutePattern + "分",
+            hourPattern + "时",
+            hourPattern + "点"
     };
 
     private static final String[] timeFormat = {
-            "HH:mm:ss",
-            "HH时mm分ss",
             "HH:mm:ss.SSS",
             "HH时mm分ss.SSS",
+            "HH:mm:ss",
+            "HH时mm分ss",
             "HH:mm",
             "HH时mm分",
+            "HH时",
+            "HH点"
     };
 
     private static final Pattern[] pattens = new Pattern[datePatten.length * timePatten.length + datePatten.length];
@@ -89,7 +101,7 @@ public abstract class DateUtils {
         for (int i = 0; i < datePatten.length; i++) {
             pattens[datePatten.length * timePatten.length + i] = Pattern.compile(datePatten[i]);
             for (int j = 0; j < timePatten.length; j++) {
-                Pattern pattern = Pattern.compile(datePatten[i] + "(.+)" + timePatten[j]);
+                Pattern pattern = Pattern.compile(datePatten[i] + "([^0-9]+)" + timePatten[j]);
                 pattens[i * (timePatten.length) + j] = pattern;
             }
         }
@@ -133,7 +145,7 @@ public abstract class DateUtils {
             return null;
         SimpleDateFormat sdf;
         if (StringUtils.isEmpty(pattern))
-            sdf = secondSdf;
+            sdf = secondSdf.get();
         else
             sdf = new SimpleDateFormat(pattern);
         try {
@@ -145,7 +157,7 @@ public abstract class DateUtils {
 
     public static Date toDate(TemporalAccessor date) {
         try {
-            return null == date ? null : millSecSdf.parse(millSecDtf.format(date));
+            return null == date ? null : millSecSdf.get().parse(millSecDtf.format(date));
         } catch (ParseException e) {
             return null;
         }
@@ -395,7 +407,7 @@ public abstract class DateUtils {
      * 将日期格式化作为yyyy_MM_dd_HH_mm_ss_S
      */
     public static String formatDateForFullName(Date date) {
-        return null == date ? null : fullDaySdf.format(date);
+        return null == date ? null : fullDaySdf.get().format(date);
     }
 
     /**
@@ -410,7 +422,7 @@ public abstract class DateUtils {
      * 格式化日期(精确到日)
      */
     public static String formatDateForDay(Date date) {
-        return null == date ? null : daySdf.format(date);
+        return null == date ? null : daySdf.get().format(date);
     }
 
     /**
@@ -424,14 +436,14 @@ public abstract class DateUtils {
      * 格式化日期(精确到秒)
      */
     public static String formatDateForSecond(Date date) {
-        return null == date ? null : secondSdf.format(date);
+        return null == date ? null : secondSdf.get().format(date);
     }
 
     /**
      * 格式化日期(精确到毫秒)
      */
     public static String formatDateForMillSec(Date date) {
-        return null == date ? null : millSecSdf.format(date);
+        return null == date ? null : millSecSdf.get().format(date);
     }
 
     /**
@@ -452,7 +464,7 @@ public abstract class DateUtils {
      * 格式化中文日期(精确到日)
      */
     public static String formatDateForZhDay(Date date) {
-        return null == date ? null : zhDaySdf.format(date);
+        return null == date ? null : zhDaySdf.get().format(date);
     }
 
     /**
@@ -466,7 +478,7 @@ public abstract class DateUtils {
      * 格式化中文日期(精确到秒)
      */
     public static String formatDateForZhSecond(Date date) {
-        return null == date ? null : zhSecondSdf.format(date);
+        return null == date ? null : zhSecondSdf.get().format(date);
     }
 
     /**
@@ -480,7 +492,7 @@ public abstract class DateUtils {
      * 格式化日期(无格式)
      */
     public static String formatDateForNoFormat(Date date) {
-        return null == date ? null : noFormatSdf.format(date);
+        return null == date ? null : noFormatSdf.get().format(date);
     }
 
     /**
@@ -495,7 +507,7 @@ public abstract class DateUtils {
      */
     public static String format(Date date, String pattern) {
         if (StringUtils.isEmpty(pattern))
-            return null == date ? null : secondSdf.format(date);
+            return null == date ? null : secondSdf.get().format(date);
         return null == date ? null : new SimpleDateFormat(pattern).format(date);
     }
 

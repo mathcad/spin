@@ -22,6 +22,26 @@ public class InMemerySecretDao implements SecretDao {
     }
 
     @Override
+    public TokenInfo getTokenInfoByKey(String key) {
+        return null;
+    }
+
+    @Override
+    public KeyInfo getKeyInfoByIdentifier(String identifier) {
+        return null;
+    }
+
+    @Override
+    public KeyInfo getKeyInfoByToken(String token) {
+        return null;
+    }
+
+    @Override
+    public KeyInfo getKeyInfoByKey(String key) {
+        return null;
+    }
+
+    @Override
     public void saveTokenInfo(String identifier, String token) {
         TokenInfo tokenInfo = tokenCache.remove(identifier);
         if (null == tokenInfo)
@@ -33,6 +53,11 @@ public class InMemerySecretDao implements SecretDao {
         synchronized (this.tokenCache) {
             this.tokenCache.put(identifier, token, tokenInfo);
         }
+    }
+
+    @Override
+    public void saveKeyInfo(String identifier, String key) {
+
     }
 
     @Override

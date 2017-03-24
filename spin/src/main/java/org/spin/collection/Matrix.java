@@ -4,6 +4,7 @@ import org.spin.sys.Assert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
  *
  * @author xuweinan
  */
-public class Matrix<T> {
+public class Matrix<T> implements RowUpdateListener {
 
     private final List<Row<T>> rows = new ArrayList<>();
 
@@ -63,7 +64,7 @@ public class Matrix<T> {
      *
      * @param column 列
      * @param key    搜索键
-     * @return 返回所有满足key的行的第column列的集合
+     * @return 返回所有满足key的行的集合
      */
     public List<Row<T>> findRows(int column, T key) {
         List<Row<T>> result = new ArrayList<>();
@@ -83,13 +84,27 @@ public class Matrix<T> {
     }
 
     /**
+     * 查找
+     *
+     * @param columnHeader 列名
+     * @param key          搜索键
+     * @return 返回所有满足key的行的集合
+     */
+    public List<Row<T>> findRows(String columnHeader, T key) {
+        Integer column = matrixHeader.get(columnHeader);
+        if (null == column)
+            return null;
+        return findRows(column, key);
+    }
+
+    /**
      * 通过主键查找。第一列为主键
      * <p>主键允许重复</p>
      *
      * @param pk 主键
      */
-    public Row<T> findByPrimaryKey(T pk) {
-        return null;
+    public List<Row<T>> findByPrimaryKey(T pk) {
+        return findRows(0, pk);
     }
 
     /**
@@ -100,19 +115,18 @@ public class Matrix<T> {
         if (null == values || values.length != columnNumber) {
             throw new IllegalArgumentException("插入数据的列数与定义不一致 需要" + columnNumber + "列");
         }
-        Row<T> row = new Row<>(columnNumber);
-        row.addAll(Arrays.asList(values));
-        int idx;
+        ArrayRow<T> row = new ArrayRow<>(Arrays.asList(values));
+        row.setUpdateLestener(this);
         synchronized (this.rows) {
             // 插入数据
             rows.add(row);
-            idx = rows.size() - 1;
+            row.setRownum(rows.size() - 1);
         }
         // 构建索引
         for (Map.Entry<Integer, MultiValueMap<T, Integer>> indexEntry : this.index.entrySet()) {
             MultiValueMap<T, Integer> indexMap = indexEntry.getValue();
             int indexCol = indexEntry.getKey();
-            indexMap.add(values[indexCol], idx);
+            indexMap.add(values[indexCol], row.rownum());
         }
         return this;
     }
@@ -151,7 +165,7 @@ public class Matrix<T> {
      * @param column 列编号，从0开始
      * @param key    索引
      */
-    public Row<T> delete(int column, T key) {
+    public ArrayRow<T> delete(int column, T key) {
         Assert.isTrue(column < columnNumber, "列索引超出范围");
         // TODO 删除操作
         return null;
@@ -163,16 +177,69 @@ public class Matrix<T> {
      * @param columnHeader 列名
      * @param key          索引
      */
-    public Row<T> delete(String columnHeader, T key) {
+    public ArrayRow<T> delete(String columnHeader, T key) {
         Integer column = matrixHeader.get(columnHeader);
         Assert.notNull(column, "指定的列名不存在");
         return delete(column, key);
     }
 
-    public final Matrix<T> setHeader(int column, String header) {
+    public final Matrix<T> setHeader(int column, String columnHeader) {
         Assert.isTrue(column < columnNumber, "列索引超出范围");
-        Assert.hasText(header, "列名不能为空");
-        matrixHeader.put(header, column);
+        Assert.hasText(columnHeader, "列名不能为空");
+        matrixHeader.put(columnHeader, column);
         return this;
+    }
+
+    public final Matrix<T> createIndex(int column) {
+        // TODO 在column列上创建索引
+        return this;
+    }
+
+    public final Matrix<T> createIndex(String columnHeader) {
+        Integer column = matrixHeader.get(columnHeader);
+        Assert.notNull(column, "指定的列名不存在");
+        return createIndex(column);
+    }
+
+    @Override
+    public void updated(RowUpdateEvent event) {
+        // TODO 数据被更新时，更新索引
+        //noinspection unchecked
+        buildIndex((Row<T>) event.getSource(), event.getUpdatedCols());
+    }
+
+    /**
+     * 构建索引
+     */
+    private void buildIndex(Row<T> row) {
+        for (Map.Entry<Integer, MultiValueMap<T, Integer>> indexEntry : this.index.entrySet()) {
+            MultiValueMap<T, Integer> indexMap = indexEntry.getValue();
+            int indexCol = indexEntry.getKey();
+            indexMap.add(row.get(indexCol), row.rownum());
+        }
+    }
+
+    /**
+     * 构建索引
+     */
+    private void buildIndex(Row<T> row, int... cols) {
+        for (int indexCol : cols) {
+            MultiValueMap<T, Integer> indexMap = index.get(indexCol);
+            if (null != indexMap) {
+                indexMap.add(row.get(indexCol), row.rownum());
+            }
+        }
+    }
+
+    /**
+     * 构建索引
+     */
+    private void buildIndex(Row<T> row, Collection<Integer> cols) {
+        for (int indexCol : cols) {
+            MultiValueMap<T, Integer> indexMap = index.get(indexCol);
+            if (null != indexMap) {
+                indexMap.add(row.get(indexCol), row.rownum());
+            }
+        }
     }
 }
