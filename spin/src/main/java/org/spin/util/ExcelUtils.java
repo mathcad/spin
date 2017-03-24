@@ -17,13 +17,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 
-public class ExcelUtils {
+public abstract class ExcelUtils {
     private static final Logger logger = LoggerFactory.getLogger(ExcelUtils.class);
 
     public enum Type {
@@ -44,8 +41,8 @@ public class ExcelUtils {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "读取文件失败", e);
         }
         // 循环工作表Sheet
-        for (int numSheet = 0; numSheet < workbook.getNumberOfSheets(); numSheet++) {
-            Sheet sheet = workbook.getSheetAt(numSheet);
+        for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+            Sheet sheet = workbook.getSheetAt(sheetIndex);
             if (sheet == null) {
                 continue;
             }
@@ -57,13 +54,14 @@ public class ExcelUtils {
                     continue;
                 }
 
-                List<String> rowData = new ArrayList<>();
+                String[] rowData = new String[row.getLastCellNum()];
 
                 Iterator<Cell> cells = row.cellIterator();
                 while (cells.hasNext()) {
-                    rowData.add(getCellValue(cells.next()));
+                    Cell cell = cells.next();
+                    rowData[cell.getColumnIndex()] = getCellValue(cell);
                 }
-                reader.readRow(rowIndex, rowData);
+                reader.readRow(sheetIndex, sheet.getSheetName(), rowIndex, rowData);
                 rowIndex++;
             }
         }
@@ -95,25 +93,44 @@ public class ExcelUtils {
      * 得到Excel表中的值
      *
      * @param cell Excel中的每一个单元格
-     * @return Excel中每一个单元格中的值
+     * @return 单元格的值(字符串形式)
      */
     private static String getCellValue(Cell cell) {
-        if (cell.getCellType() == Cell.CELL_TYPE_BOOLEAN) {
-            return String.valueOf(cell.getBooleanCellValue());
-        } else if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
-            if (DateUtil.isCellDateFormatted(cell)) {
-                Date date = DateUtil.getJavaDate(cell.getNumericCellValue());
-                return DateUtils.formatDateForSecond(date);
-            } else {
-                DecimalFormat nf = new DecimalFormat("####################.################");
-                return nf.format(cell.getNumericCellValue());
-            }
-        } else if (cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
-            cell.setCellType(Cell.CELL_TYPE_NUMERIC);
-            return String.valueOf(cell.getNumericCellValue());
-        } else {
-            return String.valueOf(cell.getStringCellValue());
+        String result;
+        switch (cell.getCellTypeEnum()) {
+            case STRING:
+                result = cell.getStringCellValue();
+                break;
+            case NUMERIC:
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    Date date = cell.getDateCellValue();
+                    result = DateUtils.formatDateForSecond(date);
+                } else {
+                    result = String.valueOf(cell.getNumericCellValue());
+                }
+                break;
+            case FORMULA:
+                try {
+                    result = cell.getStringCellValue();
+                } catch (IllegalStateException ignore) {
+                    if (DateUtil.isCellDateFormatted(cell)) {
+                        result = DateUtils.formatDateForSecond(cell.getDateCellValue());
+                    } else {
+                        result = String.valueOf(cell.getNumericCellValue());
+                    }
+                }
+                break;
+            case BOOLEAN:
+                result = String.valueOf(cell.getBooleanCellValue());
+                break;
+            case BLANK:
+                result = "";
+                break;
+            default:
+                result = String.valueOf(cell.getStringCellValue());
+
         }
+        return result;
     }
 
     /**
@@ -121,6 +138,14 @@ public class ExcelUtils {
      */
     @FunctionalInterface
     public interface RowReader {
-        void readRow(int rowIndex, List<String> row);
+        /**
+         * 顺序读取行
+         *
+         * @param sheetIndex 工作簿索引
+         * @param sheetName  工作簿名称
+         * @param rowIndex   行索引
+         * @param row        行数据
+         */
+        void readRow(int sheetIndex, String sheetName, int rowIndex, String[] row);
     }
 }

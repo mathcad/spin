@@ -109,11 +109,6 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
         return -1;
     }
 
-    @SuppressWarnings("unchecked")
-    private E elementData(int index) {
-        return (E) elementData[index];
-    }
-
     @Override
     public E get(int index) {
         rangeCheckForAdd(index);
@@ -129,8 +124,7 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
         elementData[index] = element;
         RowUpdateEvent event = new RowUpdateEvent(this);
         event.setUpdateCols(index);
-        if (null != observer)
-            observer.updated(event);
+        notifyModified(event);
         return oldValue;
     }
 
@@ -147,8 +141,41 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
             elementData[i] = null;
             event.addUpdateCols(i);
         }
-        if (null != observer)
+        notifyModified(event);
+    }
+
+    @Override
+    public Iterator<E> iterator() {
+        return new Itr();
+    }
+
+    @Override
+    public void forEach(Consumer<? super E> action) {
+        Objects.requireNonNull(action);
+        final int expectedModCount = modCount;
+        @SuppressWarnings("unchecked") final E[] elementData = (E[]) this.elementData;
+        final int size = this.size;
+        for (int i = 0; modCount == expectedModCount && i < size; i++) {
+            action.accept(elementData[i]);
+        }
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+    }
+
+    public void setUpdateLestener(RowUpdateListener listener) {
+        this.observer = listener;
+    }
+
+    private void notifyModified(RowUpdateEvent event) {
+        if (null != observer) {
             observer.updated(event);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private E elementData(int index) {
+        return (E) elementData[index];
     }
 
     private void rangeCheckForAdd(int index) {
@@ -158,11 +185,6 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
 
     private String outOfBoundsMsg(int index) {
         return "Index: " + index + ", Size: " + size;
-    }
-
-    @Override
-    public Iterator<E> iterator() {
-        return new Itr();
     }
 
     private class Itr implements Iterator<E> {
@@ -218,25 +240,5 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
             if (modCount != expectedModCount)
                 throw new ConcurrentModificationException();
         }
-    }
-
-
-    @Override
-    public void forEach(Consumer<? super E> action) {
-        Objects.requireNonNull(action);
-        final int expectedModCount = modCount;
-        @SuppressWarnings("unchecked")
-        final E[] elementData = (E[]) this.elementData;
-        final int size = this.size;
-        for (int i = 0; modCount == expectedModCount && i < size; i++) {
-            action.accept(elementData[i]);
-        }
-        if (modCount != expectedModCount) {
-            throw new ConcurrentModificationException();
-        }
-    }
-
-    public void setUpdateLestener(RowUpdateListener listener) {
-        this.observer = listener;
     }
 }
