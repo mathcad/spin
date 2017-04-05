@@ -1,8 +1,5 @@
 package org.spin.aspect;
 
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.ShiroException;
-import org.apache.shiro.subject.Subject;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -13,13 +10,15 @@ import org.slf4j.LoggerFactory;
 import org.spin.annotations.Needed;
 import org.spin.annotations.RestfulApi;
 import org.spin.jpa.core.AbstractUser;
-import org.spin.shiro.Authenticator;
 import org.spin.sys.EnvCache;
 import org.spin.sys.ErrorCode;
+import org.spin.sys.SessionUser;
+import org.spin.sys.auth.Authenticator;
 import org.spin.sys.auth.TokenKeyManager;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.JSONUtils;
 import org.spin.util.SessionUtils;
+import org.spin.util.StringUtils;
 import org.spin.web.RestfulResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -55,26 +54,20 @@ public class RestfulApiAspect {
         RestfulApi anno = apiMethod.getAnnotation(RestfulApi.class);
         boolean needAuth = anno.auth();
         if (needAuth) {
-            String[] authorities = anno.authorities();
-            Subject user = SecurityUtils.getSubject();
-            if (user != null && user.isAuthenticated() && user.isPermittedAll(authorities))
-                isAllowed = true;
-            else {
-                String token = (String) EnvCache.getLocalParam("token");
-                Object userId = checkAccess(token, authorities);
+            String authRouter = anno.authRouter();
+            String token = (String) EnvCache.getLocalParam("token");
+            if (StringUtils.isNotBlank(token)) {
+                Object userId = checkAccess(token, authRouter);
                 if (userId != null) {
                     SessionUtils.setCurrentUser(AbstractUser.ref((Long) userId));
 //                    EnvCache.THREAD_LOCAL_PARAMETERS.get().put(SessionUtils.USER_SESSION_KEY, userId);
                     isAllowed = true;
                 }
-            }
-        } else {
-            try {
-                SessionUtils.setCurrentUser(AbstractUser.ref(1L));
-            } catch (ShiroException e) {
-                logger.warn("Shiro未配置，不能启用Session支持");
-                if (EnvCache.devMode)
-                    logger.trace("Exception:", e);
+            } else {
+                SessionUser user = SessionUtils.getCurrentUser();
+                if (user != null && authenticator.checkAuthorities(user.getId(), authRouter)) {
+                    isAllowed = true;
+                }
             }
         }
         if (isAllowed || !needAuth) {
@@ -85,16 +78,18 @@ public class RestfulApiAspect {
                 Annotation[][] annotations = apiMethod.getParameterAnnotations();
                 for (int idx = 0; idx < annotations.length; ++idx) {
                     for (int j = 0; j < annotations[idx].length; ++j) {
-                        if (annotations[idx][j] instanceof Needed)
+                        if (annotations[idx][j] instanceof Needed) {
                             nonNullArgs.add(idx);
+                        }
                     }
                 }
                 EnvCache.CHECKED_METHOD_PARAM.put(apiMethod.toGenericString(), nonNullArgs);
             }
             Object[] args = joinPoint.getArgs();
             for (Integer i : nonNullArgs) {
-                if (null == args[i])
+                if (null == args[i]) {
                     return RestfulResponse.error(ErrorCode.INVALID_PARAM);
+                }
             }
 
             if (EnvCache.devMode && logger.isTraceEnabled()) {
@@ -105,15 +100,13 @@ public class RestfulApiAspect {
                 }
             }
 
-            String returnType = apiMethod.getReturnType().getName();
-            if (!(returnType.equals(RestfulResponse.class.getName())))
-                throw new SimplifiedException("RestfulApi接口的返回类型错误，必须为RestfulResponse");
             try {
                 RestfulResponse r = (RestfulResponse) joinPoint.proceed();
-                if (null == r)
+                if (null == r) {
                     return RestfulResponse.ok();
-                else
+                } else {
                     return r.setCodeAndMsg(ErrorCode.OK);
+                }
             } catch (SimplifiedException e) {
                 logger.info("Invoke api fail: [" + apiMethod.toGenericString() + "]");
                 logger.trace("Exception: ", e);
@@ -121,20 +114,22 @@ public class RestfulApiAspect {
             } catch (Throwable throwable) {
                 logger.error("Invoke api fail: [" + apiMethod.toGenericString() + "]", throwable);
                 RestfulResponse response = RestfulResponse.error(ErrorCode.INTERNAL_ERROR);
-                if (EnvCache.devMode)
+                if (EnvCache.devMode) {
                     response.setMessage(throwable.getMessage());
+                }
                 return response;
             }
         } else
             return RestfulResponse.error(ErrorCode.ACCESS_DENINED);
     }
 
-    private Object checkAccess(String token, String[] authorities) {
+    private Object checkAccess(String token, String authRouter) {
         // token是否有效
         Object userId = TokenKeyManager.validateToken(token);
         // token对应用户是否拥有权限
-        if (authenticator.checkAuthorities(userId, authorities))
+        if (authenticator.checkAuthorities(userId, authRouter)) {
             return userId;
+        }
         return null;
     }
 }

@@ -367,6 +367,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
                 }
                 return null;
             }
+            @SuppressWarnings("unchecked")
             Enum enumValue = EnumUtils.getEnum(enumClass, value);
             logger.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
             return enumValue;
@@ -384,6 +385,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
         @Override
         public Enum fromXMLString(String xml) {
+            //noinspection unchecked
             return EnumUtils.getEnum(enumClass, Integer.parseInt(xml));
         }
 

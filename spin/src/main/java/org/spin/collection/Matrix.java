@@ -5,6 +5,7 @@ import org.spin.sys.Assert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +81,7 @@ public class Matrix<T> implements RowUpdateListener {
             // 无索引，全搜索
             rows.stream().filter(r -> null == key ? r.get(column) == null : key.equals(r.get(column))).forEach(result::add);
         }
-        return result;
+        return Collections.unmodifiableList(result);
     }
 
     /**

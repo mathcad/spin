@@ -4,6 +4,7 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
 import org.spin.sys.SessionUser;
+import org.spin.sys.auth.Authenticator;
 import org.spin.util.SessionUtils;
 
 import javax.servlet.ServletRequest;

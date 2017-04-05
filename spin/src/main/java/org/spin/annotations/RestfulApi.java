@@ -30,9 +30,9 @@ public @interface RestfulApi {
     boolean auth() default true;
 
     /**
-     * 需要的权限列表
+     * 权限路径
      */
-    String[] authorities() default {};
+    String authRouter() default "";
 
     /**
      * RequestMapping的名称

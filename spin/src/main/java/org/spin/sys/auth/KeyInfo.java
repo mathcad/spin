@@ -1,11 +1,7 @@
 package org.spin.sys.auth;
 
-import org.spin.security.RSA;
-import org.spin.sys.ErrorCode;
-import org.spin.throwable.SimplifiedException;
-
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * 密钥信息
@@ -13,64 +9,50 @@ import java.security.PublicKey;
  *
  * @author xuweinan
  */
-public class KeyInfo {
-    private static final String SEPARATOR = "~~~";
+public class KeyInfo implements Serializable {
     private String identifier;
+    private String key;
     private String secret;
-    private Long generateTime;
+    private Long generateTime = 0L;
 
-    private static PublicKey RSA_PUBKEY;
-    private static PrivateKey RSA_PRIKEY;
-
-    public KeyInfo(String key) {
-        String info[];
-        try {
-            info = RSA.decrypt(RSA_PRIKEY, key).split(SEPARATOR);
-        } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.SECRET_INVALID, "无效的密钥");
-        }
-        if (info.length != 3)
-            throw new SimplifiedException(ErrorCode.SECRET_INVALID, "无效的密钥");
-        this.identifier = info[0];
-        this.secret = info[1];
-        this.generateTime = Long.parseLong(info[2]);
-    }
-
-    public KeyInfo(String identifier, String secret) {
+    public KeyInfo(String identifier, String key, String secret, Long generateTime) {
         this.identifier = identifier;
+        this.key = key;
         this.secret = secret;
-        this.generateTime = System.currentTimeMillis();
+        this.generateTime = generateTime;
     }
 
-    public String encode() {
-        this.generateTime = System.currentTimeMillis();
-        String ecodeStr = identifier + SEPARATOR + secret + SEPARATOR + generateTime;
-        String key;
-        try {
-            key = RSA.encrypt(RSA_PUBKEY, ecodeStr);
-        } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "生成密钥失败");
-        }
-        return key;
+    public void updateKey(String key, Long generateTime) {
+        this.key = key;
+        this.generateTime = generateTime;
     }
 
     public String getIdentifier() {
         return identifier;
     }
 
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
+    public String getKey() {
+        return key;
     }
 
     public String getSecret() {
         return secret;
     }
 
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
-
     public Long getGenerateTime() {
         return generateTime;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        KeyInfo keyInfo = (KeyInfo) o;
+        return Objects.equals(key, keyInfo.key);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(key);
     }
 }

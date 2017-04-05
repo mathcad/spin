@@ -14,6 +14,8 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
 import org.spin.jpa.core.AbstractUser;
+import org.spin.sys.auth.Authenticator;
+import org.spin.sys.auth.RolePermission;
 
 /**
  * 基于用户标识符与密码的Realm
