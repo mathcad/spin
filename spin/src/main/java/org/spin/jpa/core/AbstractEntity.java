@@ -21,9 +21,7 @@ import java.time.LocalDateTime;
  * @version 1.0
  */
 @MappedSuperclass
-public abstract class AbstractEntity implements IEntity<Long> {
-
-    private static final long serialVersionUID = 6743852340006194359L;
+public abstract class AbstractEntity implements IEntity<Long>, Serializable {
 
     /**
      * 主键
