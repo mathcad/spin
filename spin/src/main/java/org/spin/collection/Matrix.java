@@ -67,6 +67,7 @@ public class Matrix<T> implements RowUpdateListener {
      * @return 返回所有满足key的行的集合
      */
     public List<Row<T>> findRows(int column, T key) {
+        rangeCheck(column);
         List<Row<T>> result = new ArrayList<>();
 
         MultiValueMap<T, Integer> indexMap = index.get(column);
@@ -133,13 +134,19 @@ public class Matrix<T> implements RowUpdateListener {
 
     @SafeVarargs
     public final Matrix<T> update(int column, T key, T... values) {
-        Assert.isTrue(column < columnNumber, "列索引超出范围");
+        Assert.isTrue(null != values && values.length == columnNumber, "更新数据的列数与定义不符 需要" + columnNumber + "列");
         // TODO 更新操作
+        List<Row<T>> row = findRows(column, key);
+        row.forEach(r -> {
+            for (int i = 0; i != columnNumber; ++i)
+                r.set(i, values[i]);
+        });
         return this;
     }
 
     public final Matrix<T> update(int column, T key, int updateColumn, T values) {
-        Assert.isTrue(column < columnNumber && updateColumn < columnNumber, "列索引超出范围");
+        rangeCheck(column);
+        rangeCheck(updateColumn);
         // TODO 更新操作
         return this;
     }
@@ -166,7 +173,7 @@ public class Matrix<T> implements RowUpdateListener {
      * @param key    索引
      */
     public ArrayRow<T> delete(int column, T key) {
-        Assert.isTrue(column < columnNumber, "列索引超出范围");
+        rangeCheck(column);
         // TODO 删除操作
         return null;
     }
@@ -184,7 +191,7 @@ public class Matrix<T> implements RowUpdateListener {
     }
 
     public final Matrix<T> setHeader(int column, String columnHeader) {
-        Assert.isTrue(column < columnNumber, "列索引超出范围");
+        rangeCheck(column);
         Assert.hasText(columnHeader, "列名不能为空");
         matrixHeader.put(columnHeader, column);
         return this;
@@ -203,9 +210,12 @@ public class Matrix<T> implements RowUpdateListener {
 
     @Override
     public void updated(RowUpdateEvent event) {
-        // TODO 数据被更新时，更新索引
-        //noinspection unchecked
+        //noinspection unchecked 数据被更新时，更新索引
         buildIndex((Row<T>) event.getSource(), event.getUpdatedCols());
+    }
+
+    private void rangeCheck(int column) {
+        Assert.isTrue(column < columnNumber && column >= 0, "列索引超出范围");
     }
 
     /**

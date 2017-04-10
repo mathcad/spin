@@ -96,6 +96,7 @@ public class RSA {
             BadPaddingException, ShortBufferException, IllegalBlockSizeException {
         Cipher cipher;
         try {
+//            cipher = Cipher.getInstance(RSA_ALGORITHMS, new BouncyCastleProvider());
             cipher = Cipher.getInstance(RSA_ALGORITHMS);
         } catch (NoSuchAlgorithmException e) {
             return new byte[0];
@@ -120,6 +121,7 @@ public class RSA {
             BadPaddingException, IllegalBlockSizeException {
         Cipher cipher;
         try {
+//            cipher = Cipher.getInstance(RSA_ALGORITHMS, new BouncyCastleProvider());
             cipher = Cipher.getInstance(RSA_ALGORITHMS);
         } catch (NoSuchAlgorithmException e) {
             return new byte[0];
@@ -171,7 +173,7 @@ public class RSA {
      * @param content   待签名数据
      * @param sign      签名值
      * @param publicKey 公钥
-     * @return 是否匹配s
+     * @return 是否匹配
      */
     public static boolean verify(String content, String sign, String publicKey) throws InvalidKeySpecException,
             InvalidKeyException, SignatureException {
