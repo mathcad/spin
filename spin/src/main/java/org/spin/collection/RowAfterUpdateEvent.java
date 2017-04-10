@@ -11,7 +11,7 @@ import java.util.List;
  *
  * @author xuweinan
  */
-public class RowUpdateEvent extends EventObject {
+public class RowAfterUpdateEvent extends EventObject {
 
     private List<Integer> updatedCols = new ArrayList<>();
 
@@ -21,7 +21,7 @@ public class RowUpdateEvent extends EventObject {
      * @param source The object on which the Event initially occurred.
      * @throws IllegalArgumentException if source is null.
      */
-    public RowUpdateEvent(Object source) {
+    public RowAfterUpdateEvent(Object source) {
         super(source);
     }
 

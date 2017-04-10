@@ -203,8 +203,13 @@ public class Matrix<T> implements RowUpdateListener {
     }
 
     @Override
-    public void updated(RowUpdateEvent event) {
-        // TODO 数据被更新时，更新索引
+    public void beforeUpdate(RowBeforeUpdateEvent event) {
+        // TODO 数据更新前，删除对应索引
+    }
+
+    @Override
+    public void afterUpdate(RowAfterUpdateEvent event) {
+        // TODO 数据被更新后，建立索引
         //noinspection unchecked
         buildIndex((Row<T>) event.getSource(), event.getUpdatedCols());
     }

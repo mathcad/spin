@@ -8,5 +8,7 @@ import java.util.EventListener;
  * @author xuweinan
  */
 public interface RowUpdateListener extends EventListener {
-    void updated(RowUpdateEvent event);
+    void beforeUpdate(RowBeforeUpdateEvent event);
+
+    void afterUpdate(RowAfterUpdateEvent event);
 }

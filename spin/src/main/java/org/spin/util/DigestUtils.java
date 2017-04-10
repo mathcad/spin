@@ -728,7 +728,7 @@ public abstract class DigestUtils {
      *
      * @param messageDigest the {@link MessageDigest} to update
      * @param valueToDigest the value to update the {@link MessageDigest} with
-     * @return the updated {@link MessageDigest}
+     * @return the afterUpdate {@link MessageDigest}
      * @since 1.7
      */
     public static MessageDigest updateDigest(final MessageDigest messageDigest, final byte[] valueToDigest) {
@@ -763,7 +763,7 @@ public abstract class DigestUtils {
      * @param messageDigest the {@link MessageDigest} to update
      * @param valueToDigest the value to update the {@link MessageDigest} with;
      *                      converted to bytes using {@link StringUtils#getBytesUtf8(String)}
-     * @return the updated {@link MessageDigest}
+     * @return the afterUpdate {@link MessageDigest}
      * @since 1.7
      */
     public static MessageDigest updateDigest(final MessageDigest messageDigest, final String valueToDigest) {
