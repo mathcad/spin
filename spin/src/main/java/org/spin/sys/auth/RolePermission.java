@@ -1,4 +1,4 @@
-package org.spin.shiro;
+package org.spin.sys.auth;
 
 import java.util.List;
 
@@ -9,15 +9,15 @@ import java.util.List;
  * @author xuweinan
  */
 public class RolePermission {
-    private String userIdentifier;
+    private Object userIdentifier;
     private List<String> roles;
     private List<String> permissions;
 
-    public String getUserIdentifier() {
+    public Object getUserIdentifier() {
         return userIdentifier;
     }
 
-    public void setUserIdentifier(String userIdentifier) {
+    public void setUserIdentifier(Object userIdentifier) {
         this.userIdentifier = userIdentifier;
     }
 

@@ -121,10 +121,17 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
         rangeCheckForAdd(index);
 
         E oldValue = elementData(index);
+
+        RowBeforeUpdateEvent beforeEvent = new RowBeforeUpdateEvent(this);
+        beforeEvent.addUpdateCols(index);
+        notifyBeforeModify(beforeEvent);
+
         elementData[index] = element;
-        RowUpdateEvent event = new RowUpdateEvent(this);
-        event.setUpdateCols(index);
-        notifyModified(event);
+
+        RowAfterUpdateEvent afterEvent = new RowAfterUpdateEvent(this);
+        afterEvent.setUpdateCols(index);
+        notifyModified(afterEvent);
+
         return oldValue;
     }
 
@@ -136,12 +143,17 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
     @Override
     public void clear() {
         // clear to let GC do its work
-        RowUpdateEvent event = new RowUpdateEvent(this);
+        RowBeforeUpdateEvent beforeEvent = new RowBeforeUpdateEvent(this);
+        RowAfterUpdateEvent afterEvent = new RowAfterUpdateEvent(this);
+        for (int i = 0; i < size; i++) {
+            beforeEvent.addUpdateCols(i);
+            afterEvent.addUpdateCols(i);
+        }
+        notifyBeforeModify(beforeEvent);
         for (int i = 0; i < size; i++) {
             elementData[i] = null;
-            event.addUpdateCols(i);
         }
-        notifyModified(event);
+        notifyModified(afterEvent);
     }
 
     @Override
@@ -167,9 +179,15 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
         this.observer = listener;
     }
 
-    private void notifyModified(RowUpdateEvent event) {
+    private void notifyBeforeModify(RowBeforeUpdateEvent event) {
         if (null != observer) {
-            observer.updated(event);
+            observer.beforeUpdate(event);
+        }
+    }
+
+    private void notifyModified(RowAfterUpdateEvent event) {
+        if (null != observer) {
+            observer.afterUpdate(event);
         }
     }
 

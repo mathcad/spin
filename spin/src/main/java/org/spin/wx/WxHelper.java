@@ -107,10 +107,10 @@ public class WxHelper {
 
     public static String sign4Parameters(SortedMap<String, Object> parameters, String configKey) {
 
-        String stringA = "";
+        StringBuilder stringA = new StringBuilder();
 
         for (String key : parameters.keySet()) {
-            stringA += key + "=" + parameters.get(key) + "&";
+            stringA.append(key).append("=").append(parameters.get(key)).append("&");
         }
 
         logger.info("微信签名参数：stringA:" + stringA);

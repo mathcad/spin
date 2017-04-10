@@ -182,12 +182,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         if (entity instanceof AbstractEntity) {
             AbstractEntity aEn = (AbstractEntity) entity;
             SessionUser user = SessionUtils.getCurrentUser();
-            if (null == user)
-                user = AbstractUser.ref(1L);
             aEn.setUpdateTime(LocalDateTime.now());
-            aEn.setUpdateBy(AbstractUser.ref(user.getId()));
+            aEn.setUpdateBy(user == null ? null : AbstractUser.ref(user.getId()));
             if (null == aEn.getId() || saveWithPk) {
-                aEn.setCreateBy(AbstractUser.ref(user.getId()));
+                aEn.setCreateBy(user == null ? null : AbstractUser.ref(user.getId()));
                 aEn.setCreateTime(LocalDateTime.now());
             }
         }

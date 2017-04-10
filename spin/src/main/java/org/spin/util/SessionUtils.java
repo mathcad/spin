@@ -113,7 +113,7 @@ public abstract class SessionUtils {
     public static void removeAllSessionAttrExc(String... attr) {
         Session sess = getSession();
         List<String> a = attr == null ? new ArrayList<>() : Arrays.asList(attr);
-        Optional.ofNullable(sess).filter(s -> s != null && s.getAttributeKeys() != null)
+        Optional.ofNullable(sess).filter(s -> s.getAttributeKeys() != null)
                 .ifPresent(s -> s.getAttributeKeys().stream().filter(k -> !a.contains(k.toString())).forEach(s::removeAttribute));
     }
 
@@ -124,7 +124,9 @@ public abstract class SessionUtils {
      */
     public static void setCurrentUser(SessionUser sessionUser) {
         Session sess = getSession(true);
-        sessionUser.setSessionId(sess.getId().toString());
+        if (null != sessionUser) {
+            sessionUser.setSessionId(sess.getId().toString());
+        }
         sess.setAttribute(USER_SESSION_KEY, sessionUser);
     }
 

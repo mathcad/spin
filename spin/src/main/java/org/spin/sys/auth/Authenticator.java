@@ -1,4 +1,4 @@
-package org.spin.shiro;
+package org.spin.sys.auth;
 
 import org.spin.jpa.core.AbstractUser;
 
@@ -44,10 +44,10 @@ public interface Authenticator {
     /**
      * 返回权限验证结果
      *
-     * @param id    用户ID
-     * @param privs 权限列表
+     * @param id         用户ID
+     * @param authRouter 权限路径
      */
-    boolean checkAuthorities(Object id, Object[] privs);
+    boolean checkAuthorities(Object id, String authRouter);
 
     /**
      * 记录访问日志

@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author X
  */
+@Deprecated
 public class TokenKeyManager {
     private static final Logger logger = LoggerFactory.getLogger(TokenKeyManager.class);
     private static final Map<String, TokenInfo> TOKEN_INFO_CACHE = new ConcurrentHashMap<>();
@@ -41,7 +42,7 @@ public class TokenKeyManager {
         TOKEN_INFO_CACHE.entrySet().stream()
                 .filter(i -> (System.currentTimeMillis() - i.getValue().getGenerateTime()) > EnvCache.TokenExpireTime)
                 .forEach(i -> {
-                    USERID_TOKEN_CACHE.remove(i.getValue().getUserId());
+                    USERID_TOKEN_CACHE.remove(i.getValue().getIdentifier());
                     TOKEN_INFO_CACHE.remove(i.getKey());
                 });
     }
@@ -76,7 +77,7 @@ public class TokenKeyManager {
         if (isTimeOut(generateTime)) {
             throw new SimplifiedException(ErrorCode.TOKEN_EXPIRED, "token已经过期，请重新获取");
         } else {
-            return tokenInfo.getUserId();
+            return tokenInfo.getIdentifier();
         }
     }
 
