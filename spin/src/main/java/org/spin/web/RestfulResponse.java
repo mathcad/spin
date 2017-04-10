@@ -35,7 +35,9 @@ public class RestfulResponse {
     }
 
     public static RestfulResponse error(SimplifiedException exception) {
-        return new RestfulResponse(exception.getExceptionType());
+        RestfulResponse response = new RestfulResponse(exception.getExceptionType());
+        response.setMessage(exception.getMessage());
+        return response;
     }
 
     public static RestfulResponse error(ErrorCode errorCode) {

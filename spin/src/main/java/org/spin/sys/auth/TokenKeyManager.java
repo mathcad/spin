@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author X
  */
+@Deprecated
 public class TokenKeyManager {
     private static final Logger logger = LoggerFactory.getLogger(TokenKeyManager.class);
     private static final Map<String, TokenInfo> TOKEN_INFO_CACHE = new ConcurrentHashMap<>();

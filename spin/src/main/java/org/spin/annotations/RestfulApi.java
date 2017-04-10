@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 
 /**
  * 定义resetful接口，组合了 {@link RequestMapping}，{@link ResponseBody}与{@link Cacheable}，拦截并验证身份
- * <p>该注解修饰的方法，返回类型必须为String, CharSequence或者Object</p>
+ * <p>该注解修饰的方法，返回类型必须为RestfulResponse</p>
  * Created by xuweinan on 2016/10/2.
  *
  * @author xuweinan
