@@ -68,13 +68,13 @@ public abstract class ReflectionUtils {
      * from Java 8 based interfaces, allowing for fast iteration.
      */
     private static final Map<Class<?>, Method[]> declaredMethodsCache =
-            new ConcurrentReferenceHashMap<>(256);
+        new ConcurrentReferenceHashMap<>(256);
 
     /**
      * Cache for {@link Class#getDeclaredFields()}, allowing for fast iteration.
      */
     private static final Map<Class<?>, Field[]> declaredFieldsCache =
-            new ConcurrentReferenceHashMap<>(256);
+        new ConcurrentReferenceHashMap<>(256);
 
 
     /**
@@ -107,7 +107,7 @@ public abstract class ReflectionUtils {
             Field[] fields = getDeclaredFields(searchType);
             for (Field field : fields) {
                 if ((name == null || name.equals(field.getName())) &&
-                        (type == null || type.equals(field.getType()))) {
+                    (type == null || type.equals(field.getType()))) {
                     return field;
                 }
             }
@@ -133,7 +133,7 @@ public abstract class ReflectionUtils {
         } catch (IllegalAccessException ex) {
             handleReflectionException(ex);
             throw new IllegalStateException(
-                    "Unexpected reflection exception - " + ex.getClass().getName() + ": " + ex.getMessage());
+                "Unexpected reflection exception - " + ex.getClass().getName() + ": " + ex.getMessage());
         }
     }
 
@@ -154,7 +154,7 @@ public abstract class ReflectionUtils {
         } catch (IllegalAccessException ex) {
             handleReflectionException(ex);
             throw new IllegalStateException(
-                    "Unexpected reflection exception - " + ex.getClass().getName() + ": " + ex.getMessage());
+                "Unexpected reflection exception - " + ex.getClass().getName() + ": " + ex.getMessage());
         }
     }
 
@@ -190,7 +190,7 @@ public abstract class ReflectionUtils {
             Method[] methods = (searchType.isInterface() ? searchType.getMethods() : getDeclaredMethods(searchType));
             for (Method method : methods) {
                 if (name.equals(method.getName()) &&
-                        (paramTypes == null || Arrays.equals(paramTypes, method.getParameterTypes()))) {
+                    (paramTypes == null || Arrays.equals(paramTypes, method.getParameterTypes()))) {
                     return method;
                 }
             }
@@ -446,7 +446,7 @@ public abstract class ReflectionUtils {
                 i--;
             }
             return ((i > CGLIB_RENAMED_METHOD_PREFIX.length()) &&
-                    (i < name.length() - 1) && name.charAt(i) == '$');
+                (i < name.length() - 1) && name.charAt(i) == '$');
         }
         return false;
     }
@@ -462,8 +462,8 @@ public abstract class ReflectionUtils {
      */
     public static void makeAccessible(Field field) {
         if ((!Modifier.isPublic(field.getModifiers()) ||
-                !Modifier.isPublic(field.getDeclaringClass().getModifiers()) ||
-                Modifier.isFinal(field.getModifiers())) && !field.isAccessible()) {
+            !Modifier.isPublic(field.getDeclaringClass().getModifiers()) ||
+            Modifier.isFinal(field.getModifiers())) && !field.isAccessible()) {
             field.setAccessible(true);
         }
     }
@@ -479,7 +479,7 @@ public abstract class ReflectionUtils {
      */
     public static void makeAccessible(Method method) {
         if ((!Modifier.isPublic(method.getModifiers()) ||
-                !Modifier.isPublic(method.getDeclaringClass().getModifiers())) && !method.isAccessible()) {
+            !Modifier.isPublic(method.getDeclaringClass().getModifiers())) && !method.isAccessible()) {
             method.setAccessible(true);
         }
     }
@@ -495,7 +495,7 @@ public abstract class ReflectionUtils {
      */
     public static void makeAccessible(Constructor<?> ctor) {
         if ((!Modifier.isPublic(ctor.getModifiers()) ||
-                !Modifier.isPublic(ctor.getDeclaringClass().getModifiers())) && !ctor.isAccessible()) {
+            !Modifier.isPublic(ctor.getDeclaringClass().getModifiers())) && !ctor.isAccessible()) {
             ctor.setAccessible(true);
         }
     }
@@ -593,10 +593,10 @@ public abstract class ReflectionUtils {
             Method methodBeingOverriddenWithCovariantReturnType = null;
             for (Method existingMethod : methods) {
                 if (method.getName().equals(existingMethod.getName()) &&
-                        Arrays.equals(method.getParameterTypes(), existingMethod.getParameterTypes())) {
+                    Arrays.equals(method.getParameterTypes(), existingMethod.getParameterTypes())) {
                     // Is this a covariant return type situation?
                     if (existingMethod.getReturnType() != method.getReturnType() &&
-                            existingMethod.getReturnType().isAssignableFrom(method.getReturnType())) {
+                        existingMethod.getReturnType().isAssignableFrom(method.getReturnType())) {
                         methodBeingOverriddenWithCovariantReturnType = existingMethod;
                     } else {
                         knownSignature = true;
@@ -749,7 +749,7 @@ public abstract class ReflectionUtils {
         }
         if (!src.getClass().isAssignableFrom(dest.getClass())) {
             throw new IllegalArgumentException("Destination class [" + dest.getClass().getName() +
-                    "] must be same or subclass as source class [" + src.getClass().getName() + "]");
+                "] must be same or subclass as source class [" + src.getClass().getName() + "]");
         }
         doWithFields(src.getClass(), field -> {
             makeAccessible(field);

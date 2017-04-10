@@ -37,7 +37,7 @@ public class WxAuthenticationFilter extends AuthenticatingFilter {
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) {
         return SecurityUtils.getSubject().getPrincipal() instanceof WxUserInfo
-                || (!isLoginRequest(request, response) && isPermissive(mappedValue));
+            || (!isLoginRequest(request, response) && isPermissive(mappedValue));
     }
 
     @Override
@@ -78,7 +78,7 @@ public class WxAuthenticationFilter extends AuthenticatingFilter {
                 e.printStackTrace();
             }
         } else {
-            try { //登录失败时重定向到失败页面  
+            try { //登录失败时重定向到失败页面
                 WebUtils.issueRedirect(request, response, failureUrl);
             } catch (IOException e) {
                 e.printStackTrace();

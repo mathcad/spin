@@ -20,7 +20,7 @@ import java.util.List;
  * @see org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer
  */
 public class SimpleFreeMarkerConfigurer extends FreeMarkerConfigurationFactory
-        implements InitializingBean, ResourceLoaderAware {
+    implements InitializingBean, ResourceLoaderAware {
 
     private Configuration configuration;
 

@@ -65,8 +65,8 @@ public class SpinConfiguration {
     public DataSource getDataSource(DataBaseConfiguration configuration) {
         DruidDataSource dataSource = new DruidDataSource();
         if (StringUtils.isEmpty(configuration.getUrl())
-                || StringUtils.isEmpty(configuration.getUsername())
-                || StringUtils.isEmpty(configuration.getPassword())) {
+            || StringUtils.isEmpty(configuration.getUsername())
+            || StringUtils.isEmpty(configuration.getPassword())) {
             throw new BeanCreationException("数据库连接必需配置url, username, password");
         }
         dataSource.setUrl(configuration.getUrl());

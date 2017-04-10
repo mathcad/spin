@@ -14,125 +14,125 @@ import freemarker.ext.jsp.TaglibFactory;
 import freemarker.template.Configuration;
 
 public class FreeMarkerConfigurerWrapper {
-	
-	private Resource configLocation;
 
-	private Properties freemarkerSettings;
+    private Resource configLocation;
 
-	private Map<String, Object> freemarkerVariables;
+    private Properties freemarkerSettings;
 
-	private String defaultEncoding;
+    private Map<String, Object> freemarkerVariables;
 
-	private final List<TemplateLoader> templateLoaders = new ArrayList<TemplateLoader>();
+    private String defaultEncoding;
 
-	private List<TemplateLoader> preTemplateLoaders;
+    private final List<TemplateLoader> templateLoaders = new ArrayList<TemplateLoader>();
 
-	private List<TemplateLoader> postTemplateLoaders;
+    private List<TemplateLoader> preTemplateLoaders;
 
-	private String[] templateLoaderPaths;
+    private List<TemplateLoader> postTemplateLoaders;
 
-	private ResourceLoader resourceLoader = new DefaultResourceLoader();
+    private String[] templateLoaderPaths;
 
-	private boolean preferFileSystemAccess = true;
-	
-	
-	private Configuration configuration;
+    private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
-	private TaglibFactory taglibFactory;
+    private boolean preferFileSystemAccess = true;
 
-	public Configuration getConfiguration() {
-		return configuration;
-	}
 
-	public void setConfiguration(Configuration configuration) {
-		this.configuration = configuration;
-	}
+    private Configuration configuration;
 
-	public TaglibFactory getTaglibFactory() {
-		return taglibFactory;
-	}
+    private TaglibFactory taglibFactory;
 
-	public Resource getConfigLocation() {
-		return configLocation;
-	}
+    public Configuration getConfiguration() {
+        return configuration;
+    }
 
-	public void setConfigLocation(Resource configLocation) {
-		this.configLocation = configLocation;
-	}
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
+    }
 
-	public Properties getFreemarkerSettings() {
-		return freemarkerSettings;
-	}
+    public TaglibFactory getTaglibFactory() {
+        return taglibFactory;
+    }
 
-	public void setFreemarkerSettings(Properties freemarkerSettings) {
-		this.freemarkerSettings = freemarkerSettings;
-	}
+    public Resource getConfigLocation() {
+        return configLocation;
+    }
 
-	public Map<String, Object> getFreemarkerVariables() {
-		return freemarkerVariables;
-	}
+    public void setConfigLocation(Resource configLocation) {
+        this.configLocation = configLocation;
+    }
 
-	public void setFreemarkerVariables(Map<String, Object> freemarkerVariables) {
-		this.freemarkerVariables = freemarkerVariables;
-	}
+    public Properties getFreemarkerSettings() {
+        return freemarkerSettings;
+    }
 
-	public String getDefaultEncoding() {
-		return defaultEncoding;
-	}
+    public void setFreemarkerSettings(Properties freemarkerSettings) {
+        this.freemarkerSettings = freemarkerSettings;
+    }
 
-	public void setDefaultEncoding(String defaultEncoding) {
-		this.defaultEncoding = defaultEncoding;
-	}
+    public Map<String, Object> getFreemarkerVariables() {
+        return freemarkerVariables;
+    }
 
-	public List<TemplateLoader> getPreTemplateLoaders() {
-		return preTemplateLoaders;
-	}
+    public void setFreemarkerVariables(Map<String, Object> freemarkerVariables) {
+        this.freemarkerVariables = freemarkerVariables;
+    }
 
-	public void setPreTemplateLoaders(List<TemplateLoader> preTemplateLoaders) {
-		this.preTemplateLoaders = preTemplateLoaders;
-	}
+    public String getDefaultEncoding() {
+        return defaultEncoding;
+    }
 
-	public List<TemplateLoader> getPostTemplateLoaders() {
-		return postTemplateLoaders;
-	}
+    public void setDefaultEncoding(String defaultEncoding) {
+        this.defaultEncoding = defaultEncoding;
+    }
 
-	public void setPostTemplateLoaders(List<TemplateLoader> postTemplateLoaders) {
-		this.postTemplateLoaders = postTemplateLoaders;
-	}
+    public List<TemplateLoader> getPreTemplateLoaders() {
+        return preTemplateLoaders;
+    }
 
-	public String[] getTemplateLoaderPaths() {
-		return templateLoaderPaths;
-	}
+    public void setPreTemplateLoaders(List<TemplateLoader> preTemplateLoaders) {
+        this.preTemplateLoaders = preTemplateLoaders;
+    }
 
-	public void setTemplateLoaderPath(String templateLoaderPath) {
-		this.templateLoaderPaths = new String[] {templateLoaderPath};
-	}
-	
-	public void setTemplateLoaderPaths(String... templateLoaderPaths) {
-		this.templateLoaderPaths = templateLoaderPaths;
-	}
+    public List<TemplateLoader> getPostTemplateLoaders() {
+        return postTemplateLoaders;
+    }
 
-	public ResourceLoader getResourceLoader() {
-		return resourceLoader;
-	}
+    public void setPostTemplateLoaders(List<TemplateLoader> postTemplateLoaders) {
+        this.postTemplateLoaders = postTemplateLoaders;
+    }
 
-	public void setResourceLoader(ResourceLoader resourceLoader) {
-		this.resourceLoader = resourceLoader;
-	}
+    public String[] getTemplateLoaderPaths() {
+        return templateLoaderPaths;
+    }
 
-	public boolean isPreferFileSystemAccess() {
-		return preferFileSystemAccess;
-	}
+    public void setTemplateLoaderPath(String templateLoaderPath) {
+        this.templateLoaderPaths = new String[]{templateLoaderPath};
+    }
 
-	public void setPreferFileSystemAccess(boolean preferFileSystemAccess) {
-		this.preferFileSystemAccess = preferFileSystemAccess;
-	}
+    public void setTemplateLoaderPaths(String... templateLoaderPaths) {
+        this.templateLoaderPaths = templateLoaderPaths;
+    }
 
-	public List<TemplateLoader> getTemplateLoaders() {
-		return templateLoaders;
-	}
+    public ResourceLoader getResourceLoader() {
+        return resourceLoader;
+    }
 
-	public void setTaglibFactory(TaglibFactory taglibFactory) {
-		this.taglibFactory = taglibFactory;
-	}
+    public void setResourceLoader(ResourceLoader resourceLoader) {
+        this.resourceLoader = resourceLoader;
+    }
+
+    public boolean isPreferFileSystemAccess() {
+        return preferFileSystemAccess;
+    }
+
+    public void setPreferFileSystemAccess(boolean preferFileSystemAccess) {
+        this.preferFileSystemAccess = preferFileSystemAccess;
+    }
+
+    public List<TemplateLoader> getTemplateLoaders() {
+        return templateLoaders;
+    }
+
+    public void setTaglibFactory(TaglibFactory taglibFactory) {
+        this.taglibFactory = taglibFactory;
+    }
 }

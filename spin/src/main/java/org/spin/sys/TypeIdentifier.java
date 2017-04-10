@@ -99,7 +99,7 @@ public class TypeIdentifier<T> {
                 t = classType;
             }
             return isAssignableFrom(t, (ParameterizedType) toGenericComponentType,
-                    new HashMap<>());
+                new HashMap<>());
         }
         // No generic defined on "to"; therefore, return true and let other
         // checks determine assignability
@@ -177,16 +177,16 @@ public class TypeIdentifier<T> {
     }
 
     private static AssertionError buildUnexpectedTypeError(
-            Type token, Class<?>... expected) {
+        Type token, Class<?>... expected) {
 
         // Build exception message
         StringBuilder exceptionMessage =
-                new StringBuilder("Unexpected type. Expected one of: ");
+            new StringBuilder("Unexpected type. Expected one of: ");
         for (Class<?> clazz : expected) {
             exceptionMessage.append(clazz.getName()).append(", ");
         }
         exceptionMessage.append("but got: ").append(token.getClass().getName())
-                .append(", for type token: ").append(token.toString()).append('.');
+            .append(", for type token: ").append(token.toString()).append('.');
 
         return new AssertionError(exceptionMessage.toString());
     }
@@ -197,8 +197,8 @@ public class TypeIdentifier<T> {
      */
     private static boolean matches(Type from, Type to, Map<String, Type> typeMap) {
         return to.equals(from)
-                || (from instanceof TypeVariable
-                && to.equals(typeMap.get(((TypeVariable<?>) from).getName())));
+            || (from instanceof TypeVariable
+            && to.equals(typeMap.get(((TypeVariable<?>) from).getName())));
 
     }
 
@@ -210,7 +210,7 @@ public class TypeIdentifier<T> {
     @Override
     public final boolean equals(Object o) {
         return o instanceof TypeIdentifier<?>
-                && TypeIdentifier.equals(type, ((TypeIdentifier<?>) o).type);
+            && TypeIdentifier.equals(type, ((TypeIdentifier<?>) o).type);
     }
 
     @Override
@@ -249,7 +249,7 @@ public class TypeIdentifier<T> {
         } else if (type instanceof ParameterizedType) {
             ParameterizedType p = (ParameterizedType) type;
             return new ParameterizedTypeImpl(p.getOwnerType(),
-                    p.getRawType(), p.getActualTypeArguments());
+                p.getRawType(), p.getActualTypeArguments());
 
         } else if (type instanceof GenericArrayType) {
             GenericArrayType g = (GenericArrayType) type;
@@ -295,7 +295,7 @@ public class TypeIdentifier<T> {
         } else {
             String className = type == null ? "null" : type.getClass().getName();
             throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
-                    + "GenericArrayType, but <" + type + "> is of type " + className);
+                + "GenericArrayType, but <" + type + "> is of type " + className);
         }
     }
 
@@ -319,8 +319,8 @@ public class TypeIdentifier<T> {
             ParameterizedType pa = (ParameterizedType) a;
             ParameterizedType pb = (ParameterizedType) b;
             return ObjectUtils.equal(pa.getOwnerType(), pb.getOwnerType())
-                    && pa.getRawType().equals(pb.getRawType())
-                    && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+                && pa.getRawType().equals(pb.getRawType())
+                && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
 
         } else if (a instanceof GenericArrayType) {
             if (!(b instanceof GenericArrayType)) {
@@ -339,7 +339,7 @@ public class TypeIdentifier<T> {
             WildcardType wa = (WildcardType) a;
             WildcardType wb = (WildcardType) b;
             return Arrays.equals(wa.getUpperBounds(), wb.getUpperBounds())
-                    && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
+                && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
 
         } else if (a instanceof TypeVariable) {
             if (!(b instanceof TypeVariable)) {
@@ -348,7 +348,7 @@ public class TypeIdentifier<T> {
             TypeVariable<?> va = (TypeVariable<?>) a;
             TypeVariable<?> vb = (TypeVariable<?>) b;
             return va.getGenericDeclaration() == vb.getGenericDeclaration()
-                    && va.getName().equals(vb.getName());
+                && va.getName().equals(vb.getName());
 
         } else {
             // This isn't a type we support. Could be a generic array type, wildcard type, etc.
@@ -370,7 +370,7 @@ public class TypeIdentifier<T> {
         @Override
         public boolean equals(Object o) {
             return o instanceof GenericArrayType
-                    && ObjectUtils.equal(this, o);
+                && ObjectUtils.equal(this, o);
         }
 
         @Override
@@ -396,7 +396,7 @@ public class TypeIdentifier<T> {
             if (rawType instanceof Class<?>) {
                 Class<?> rawTypeAsClass = (Class<?>) rawType;
                 boolean isStaticOrTopLevelClass = Modifier.isStatic(rawTypeAsClass.getModifiers())
-                        || rawTypeAsClass.getEnclosingClass() == null;
+                    || rawTypeAsClass.getEnclosingClass() == null;
                 Assert.isTrue(ownerType != null || isStaticOrTopLevelClass);
             }
 
@@ -425,14 +425,14 @@ public class TypeIdentifier<T> {
         @Override
         public boolean equals(Object other) {
             return other instanceof ParameterizedType
-                    && TypeIdentifier.equals(this, (ParameterizedType) other);
+                && TypeIdentifier.equals(this, (ParameterizedType) other);
         }
 
         @Override
         public int hashCode() {
             return Arrays.hashCode(typeArguments)
-                    ^ rawType.hashCode()
-                    ^ (ownerType != null ? ownerType.hashCode() : 0);
+                ^ rawType.hashCode()
+                ^ (ownerType != null ? ownerType.hashCode() : 0);
         }
 
         @Override
@@ -494,14 +494,14 @@ public class TypeIdentifier<T> {
         @Override
         public boolean equals(Object other) {
             return other instanceof WildcardType
-                    && TypeIdentifier.equals(this, (WildcardType) other);
+                && TypeIdentifier.equals(this, (WildcardType) other);
         }
 
         @Override
         public int hashCode() {
             // this equals Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds());
             return (lowerBound != null ? 31 + lowerBound.hashCode() : 1)
-                    ^ (31 + upperBound.hashCode());
+                ^ (31 + upperBound.hashCode());
         }
 
         @Override

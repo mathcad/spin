@@ -47,7 +47,7 @@ public abstract class PinyinUtils {
             // 对汉字进行转换成拼音
             try {
                 String[] t2 = PinyinHelper.toHanyuPinyinStringArray(c,
-                        formatParam);
+                    formatParam);
                 if (isHeadChar) {
                     py.append(t2[0].charAt(0));
                 } else {

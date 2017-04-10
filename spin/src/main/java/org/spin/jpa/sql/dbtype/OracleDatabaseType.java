@@ -7,7 +7,7 @@ import org.spin.sys.Assert;
 import org.spin.util.StringUtils;
 
 /**
- * Created by Arvin on 2016/9/12.
+ * Created by xuweinan on 2016/9/12.
  *
  * @author xuweinan
  */
@@ -24,8 +24,8 @@ public class OracleDatabaseType implements DatabaseType {
         String pagedSql = sql;
         if (null != queryParam.getPageSize())
             pagedSql = "SELECT * FROM (SELECT O.*, ROWNUM RN FROM (" + sql + ") O WHERE ROWNUM > "
-                    + (queryParam.getPageIdx() - 1) * queryParam.getPageSize() + ") WHERE RN <= "
-                    + ((queryParam.getPageIdx() - 1) * queryParam.getPageSize() + queryParam.getPageSize());
+                + (queryParam.getPageIdx() - 1) * queryParam.getPageSize() + ") WHERE RN <= "
+                + ((queryParam.getPageIdx() - 1) * queryParam.getPageSize() + queryParam.getPageSize());
         ss.setTemplate(pagedSql);
         return ss;
     }

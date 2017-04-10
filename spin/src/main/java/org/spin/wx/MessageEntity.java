@@ -40,7 +40,7 @@ public class MessageEntity {
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             logger.trace("maps of msgEntity: propName={}&propValue={}", entry.getKey(), entry.getValue());
             result.append("<").append(entry.getKey()).append(">").append("<![CDATA[").append(entry.getValue())
-                    .append("]]></").append(entry.getKey()).append(">");
+                .append("]]></").append(entry.getKey()).append(">");
         }
         result.append("</xml>");
         logger.trace("composited xml string: {}", result);

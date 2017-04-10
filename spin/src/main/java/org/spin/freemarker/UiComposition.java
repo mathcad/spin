@@ -16,55 +16,54 @@ import freemarker.template.TemplateModel;
  * <@uiComposition src="layout.ftl">
  * <@uiOverride name="body"> Override body Content </@uiOverride>
  * </@uiComposition> 参数：src：布局文件
- * 
  */
 public class UiComposition implements TemplateDirectiveModel {
 
-	public final static String DIRECTIVE_NAME = "ui_composition";
+    public final static String DIRECTIVE_NAME = "ui_composition";
 
-	@Override
-	public void execute(Environment env, @SuppressWarnings("rawtypes") Map params, TemplateModel[] loopVars,
-			TemplateDirectiveBody body) throws TemplateException, IOException {
+    @Override
+    public void execute(Environment env, @SuppressWarnings("rawtypes") Map params, TemplateModel[] loopVars,
+                        TemplateDirectiveBody body) throws TemplateException, IOException {
 
-		Writer freekMarkerWriter = env.getOut();
-		env.setOut(new EmptyWriter(env.getOut()));
-		if (body != null) {
-			body.render(env.getOut());
-		}
-		env.setOut(freekMarkerWriter);
+        Writer freekMarkerWriter = env.getOut();
+        env.setOut(new EmptyWriter(env.getOut()));
+        if (body != null) {
+            body.render(env.getOut());
+        }
+        env.setOut(freekMarkerWriter);
 
-		String name = DirectiveUtils.getRequiredParam(params, "src");
-		String encoding = DirectiveUtils.getParam(params, "encoding", null);
-		String includeTemplateName = env.toFullTemplateName(getTemplatePath(env), name);
-		env.include(includeTemplateName, encoding, true);
+        String name = DirectiveUtils.getRequiredParam(params, "src");
+        String encoding = DirectiveUtils.getParam(params, "encoding", null);
+        String includeTemplateName = env.toFullTemplateName(getTemplatePath(env), name);
+        env.include(includeTemplateName, encoding, true);
 
-	}
+    }
 
-	private class EmptyWriter extends Writer {
+    private class EmptyWriter extends Writer {
 
-		private Writer out;
+        private Writer out;
 
-		public EmptyWriter(Writer out) {
-			this.out = out;
-		}
+        public EmptyWriter(Writer out) {
+            this.out = out;
+        }
 
-		@Override
-		public void write(char[] cbuf, int off, int len) throws IOException {
-		}
+        @Override
+        public void write(char[] cbuf, int off, int len) throws IOException {
+        }
 
-		@Override
-		public void flush() throws IOException {
-			out.flush();
-		}
+        @Override
+        public void flush() throws IOException {
+            out.flush();
+        }
 
-		@Override
-		public void close() throws IOException {
-			out.close();
-		}
-	}
+        @Override
+        public void close() throws IOException {
+            out.close();
+        }
+    }
 
-	private String getTemplatePath(Environment env) {
-		String templateName = env.getMainTemplate().getName();
-		return templateName.lastIndexOf('/') == -1 ? "" : templateName.substring(0, templateName.lastIndexOf('/') + 1);
-	}
+    private String getTemplatePath(Environment env) {
+        String templateName = env.getMainTemplate().getName();
+        return templateName.lastIndexOf('/') == -1 ? "" : templateName.substring(0, templateName.lastIndexOf('/') + 1);
+    }
 }

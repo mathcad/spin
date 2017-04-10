@@ -633,7 +633,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public boolean exist(Map<String, Object> params, PK notId, boolean isAnd) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
         List<Criterion> criteriaList = params.entrySet().stream().filter(e -> e.getValue() != null)
-                .map(entry -> Restrictions.eq(entry.getKey(), entry.getValue())).collect(Collectors.toList());
+            .map(entry -> Restrictions.eq(entry.getKey(), entry.getValue())).collect(Collectors.toList());
         if (criteriaList.isEmpty()) {
             return false;
         }
@@ -753,7 +753,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public List<T> list(Map<String, Object> map) {
         CriteriaBuilder cb = CriteriaBuilder.forClass(entityClazz)
-                .addCriterion(map.entrySet().stream().map(entry -> Restrictions.eq(entry.getKey(), entry.getValue())).collect(Collectors.toList()));
+            .addCriterion(map.entrySet().stream().map(entry -> Restrictions.eq(entry.getKey(), entry.getValue())).collect(Collectors.toList()));
         return list(cb);
     }
 
@@ -940,8 +940,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         }
         if (isCheckWriteOperations() && ((FlushMode) ReflectionUtils.invokeMethod(getFlushMode, session)).lessThan(FlushMode.COMMIT)) {
             throw new InvalidDataAccessApiUsageException(
-                    "Write operations are not allowed in read-only mode (FlushMode.MANUAL): " +
-                            "Turn your Session into FlushMode.COMMIT/AUTO or remove 'readOnly' marker from transaction definition.");
+                "Write operations are not allowed in read-only mode (FlushMode.MANUAL): " +
+                    "Turn your Session into FlushMode.COMMIT/AUTO or remove 'readOnly' marker from transaction definition.");
         }
     }
 

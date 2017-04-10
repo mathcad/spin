@@ -114,7 +114,7 @@ public abstract class SessionUtils {
         Session sess = getSession();
         List<String> a = attr == null ? new ArrayList<>() : Arrays.asList(attr);
         Optional.ofNullable(sess).filter(s -> s.getAttributeKeys() != null)
-                .ifPresent(s -> s.getAttributeKeys().stream().filter(k -> !a.contains(k.toString())).forEach(s::removeAttribute));
+            .ifPresent(s -> s.getAttributeKeys().stream().filter(k -> !a.contains(k.toString())).forEach(s::removeAttribute));
     }
 
     /**

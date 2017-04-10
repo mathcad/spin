@@ -67,32 +67,32 @@ public abstract class DateUtils {
 
 
     private static final String[] datePatten = {
-            yearPattern + "(.)" + monthPattern + "(.)" + dayPattern,
+        yearPattern + "(.)" + monthPattern + "(.)" + dayPattern,
     };
     private static final String[] dateFormat = {
-            "yyyy{0}MM{1}dd",
+        "yyyy{0}MM{1}dd",
     };
 
     private static final String[] timePatten = {
-            hourPattern + ":" + minutePattern + ":" + secondPattern + "\\." + millionSecondPattern,
-            hourPattern + "时" + minutePattern + "分" + secondPattern + "秒" + "\\." + millionSecondPattern,
-            hourPattern + ":" + minutePattern + ":" + secondPattern,
-            hourPattern + "时" + minutePattern + "分" + secondPattern + "秒",
-            hourPattern + ":" + minutePattern,
-            hourPattern + "时" + minutePattern + "分",
-            hourPattern + "时",
-            hourPattern + "点"
+        hourPattern + ":" + minutePattern + ":" + secondPattern + "\\." + millionSecondPattern,
+        hourPattern + "时" + minutePattern + "分" + secondPattern + "秒" + "\\." + millionSecondPattern,
+        hourPattern + ":" + minutePattern + ":" + secondPattern,
+        hourPattern + "时" + minutePattern + "分" + secondPattern + "秒",
+        hourPattern + ":" + minutePattern,
+        hourPattern + "时" + minutePattern + "分",
+        hourPattern + "时",
+        hourPattern + "点"
     };
 
     private static final String[] timeFormat = {
-            "HH:mm:ss.SSS",
-            "HH时mm分ss.SSS",
-            "HH:mm:ss",
-            "HH时mm分ss",
-            "HH:mm",
-            "HH时mm分",
-            "HH时",
-            "HH点"
+        "HH:mm:ss.SSS",
+        "HH时mm分ss.SSS",
+        "HH:mm:ss",
+        "HH时mm分ss",
+        "HH:mm",
+        "HH时mm分",
+        "HH时",
+        "HH点"
     };
 
     private static final Pattern[] pattens = new Pattern[datePatten.length * timePatten.length + datePatten.length];
@@ -129,7 +129,7 @@ public abstract class DateUtils {
         else {
             if (index < datePatten.length * timePatten.length)
                 sdf = new SimpleDateFormat(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2)
-                        , matcher.group(4)) + "'" + matcher.group(6) + "'" + timeFormat[index % timeFormat.length]);
+                    , matcher.group(4)) + "'" + matcher.group(6) + "'" + timeFormat[index % timeFormat.length]);
             else
                 sdf = new SimpleDateFormat(dateFormat[index % (datePatten.length * timePatten.length)]);
         }
@@ -185,7 +185,7 @@ public abstract class DateUtils {
         else {
             if (index < datePatten.length * timePatten.length)
                 formatter = DateTimeFormatter.ofPattern(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2)
-                        , matcher.group(4)) + "'" + matcher.group(6) + "'" + timeFormat[index % timeFormat.length]);
+                    , matcher.group(4)) + "'" + matcher.group(6) + "'" + timeFormat[index % timeFormat.length]);
             else
                 formatter = DateTimeFormatter.ofPattern(dateFormat[index % (datePatten.length * timePatten.length)]);
         }

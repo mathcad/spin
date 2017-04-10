@@ -61,14 +61,15 @@ public class XMLParse {
     public static String generate(String encrypt, String signature, String timestamp, String nonce) {
 
         String format = "<xml>\n" + "<Encrypt><![CDATA[%1$s]]></Encrypt>\n"
-                + "<MsgSignature><![CDATA[%2$s]]></MsgSignature>\n"
-                + "<TimeStamp>%3$s</TimeStamp>\n" + "<Nonce><![CDATA[%4$s]]></Nonce>\n" + "</xml>";
+            + "<MsgSignature><![CDATA[%2$s]]></MsgSignature>\n"
+            + "<TimeStamp>%3$s</TimeStamp>\n" + "<Nonce><![CDATA[%4$s]]></Nonce>\n" + "</xml>";
         return String.format(format, encrypt, signature, timestamp, nonce);
 
     }
 
     /**
      * 拼装xml，专为微信设计
+     *
      * @param map 请求参数
      * @return
      */
@@ -86,6 +87,7 @@ public class XMLParse {
 
     /**
      * 微信返回xml转换成map
+     *
      * @param xml 返回xml
      * @return
      * @throws Exception

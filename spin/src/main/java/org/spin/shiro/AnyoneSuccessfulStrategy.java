@@ -22,30 +22,30 @@ public class AnyoneSuccessfulStrategy extends AbstractAuthenticationStrategy {
     public AuthenticationInfo afterAllAttempts(AuthenticationToken token, AuthenticationInfo aggregate) throws AuthenticationException {
         if (aggregate == null || CollectionUtils.isEmpty(aggregate.getPrincipals())) {
             throw new AuthenticationException("Authentication token of type [" + token.getClass() + "] " +
-                    "could not be authenticated by any configured realms.  Please ensure that at least one realm can " +
-                    "authenticate these tokens.");
+                "could not be authenticated by any configured realms.  Please ensure that at least one realm can " +
+                "authenticate these tokens.");
         }
 
         return aggregate;
     }
 
     public AuthenticationInfo afterAttempt(Realm realm, AuthenticationToken token, AuthenticationInfo info, AuthenticationInfo aggregate, Throwable t)
-            throws AuthenticationException {
+        throws AuthenticationException {
         if (t != null) {
             if (t instanceof AuthenticationException) {
                 throw ((AuthenticationException) t);
             } else {
                 String msg = "Unable to acquire account data from realm [" + realm + "].  The [" +
-                        getClass().getName() + " implementation requires all configured realm(s) to operate successfully " +
-                        "for a successful authentication.";
+                    getClass().getName() + " implementation requires all configured realm(s) to operate successfully " +
+                    "for a successful authentication.";
                 throw new AuthenticationException(msg, t);
             }
         }
         if (info == null) {
             String msg = "Realm [" + realm + "] could not find any associated account data for the submitted " +
-                    "AuthenticationToken [" + token + "].  The [" + getClass().getName() + "] implementation requires " +
-                    "all configured realm(s) to acquire valid account data for a submitted token during the " +
-                    "log-in process.";
+                "AuthenticationToken [" + token + "].  The [" + getClass().getName() + "] implementation requires " +
+                "all configured realm(s) to acquire valid account data for a submitted token during the " +
+                "log-in process.";
             throw new UnknownAccountException(msg);
         }
         logger.debug("Account successfully authenticated using realm [{}]", realm);

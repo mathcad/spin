@@ -77,7 +77,7 @@ public abstract class HttpUtils {
             }
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到" + uri.toString() +
-                    "，发生错误:" + e.getMessage());
+                "，发生错误:" + e.getMessage());
         } finally {
             if (httpclient != null)
                 try {
@@ -93,7 +93,7 @@ public abstract class HttpUtils {
         if (!url.startsWith("http"))
             url = HTTP + url;
         List<NameValuePair> nvps = params.entrySet().stream().map(p -> new BasicNameValuePair(p.getKey(), p.getValue
-                ())).collect(Collectors.toList());
+            ())).collect(Collectors.toList());
         String result;
         CloseableHttpClient httpclient = null;
         try {
@@ -111,7 +111,7 @@ public abstract class HttpUtils {
             }
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e
-                    .getMessage());
+                .getMessage());
         } finally {
             if (httpclient != null)
                 try {

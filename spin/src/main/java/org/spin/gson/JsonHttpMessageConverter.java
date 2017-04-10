@@ -108,7 +108,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
     @Override
     protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
-            throws IOException, HttpMessageNotReadableException {
+        throws IOException, HttpMessageNotReadableException {
 
         TypeToken<?> token = getTypeToken(clazz);
         return readTypeToken(token, inputMessage);
@@ -116,7 +116,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
     @Override
     public Object read(Type type, Class<?> contextClass, HttpInputMessage inputMessage)
-            throws IOException, HttpMessageNotReadableException {
+        throws IOException, HttpMessageNotReadableException {
 
         TypeToken<?> token = getTypeToken(type);
         return readTypeToken(token, inputMessage);
@@ -163,7 +163,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
     @Override
     protected void writeInternal(Object o, Type type, HttpOutputMessage outputMessage)
-            throws IOException, HttpMessageNotWritableException {
+        throws IOException, HttpMessageNotWritableException {
 
         Charset charset = getCharset(outputMessage.getHeaders());
         OutputStreamWriter writer = new OutputStreamWriter(outputMessage.getBody(), charset);

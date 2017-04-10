@@ -602,15 +602,15 @@ public abstract class ClassUtils {
             }
             if (Character.TYPE.equals(cls)) {
                 return Integer.TYPE.equals(toClass) || Long.TYPE.equals(toClass) || Float.TYPE.equals(toClass)
-                        || Double.TYPE.equals(toClass);
+                    || Double.TYPE.equals(toClass);
             }
             if (Short.TYPE.equals(cls)) {
                 return Integer.TYPE.equals(toClass) || Long.TYPE.equals(toClass) || Float.TYPE.equals(toClass)
-                        || Double.TYPE.equals(toClass);
+                    || Double.TYPE.equals(toClass);
             }
             if (Byte.TYPE.equals(cls)) {
                 return Short.TYPE.equals(toClass) || Integer.TYPE.equals(toClass) || Long.TYPE.equals(toClass)
-                        || Float.TYPE.equals(toClass) || Double.TYPE.equals(toClass);
+                    || Float.TYPE.equals(toClass) || Double.TYPE.equals(toClass);
             }
             // should never get here
             return false;
@@ -766,7 +766,7 @@ public abstract class ClassUtils {
      * @throws ClassNotFoundException if the class is not found
      */
     public static Class<?> getClass(ClassLoader classLoader, String className, boolean initialize)
-            throws ClassNotFoundException {
+        throws ClassNotFoundException {
         Class<?> clazz;
         if (abbreviationMap.containsKey(className)) {
             String clsName = "[" + abbreviationMap.get(className);
@@ -1008,7 +1008,7 @@ public abstract class ClassUtils {
             } else {
                 if (className.startsWith("L")) {
                     className = className.substring(1,
-                            className.endsWith(";") ? className.length() - 1 : className.length());
+                        className.endsWith(";") ? className.length() - 1 : className.length());
                 } else {
                     if (className.length() > 0) {
                         className = reverseAbbreviationMap.get(className.substring(0, 1));

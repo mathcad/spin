@@ -9,7 +9,8 @@ import org.springframework.util.ClassUtils;
 import java.util.Map;
 
 /**
- * Created by Arvin on 2017/2/7.
+ * Created by xuweinan on 2017/2/7.
+ * @author xuweinan
  */
 public class OnBeanDefinationCondition implements Condition {
     @Override

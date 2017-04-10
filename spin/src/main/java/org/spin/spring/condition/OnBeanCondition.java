@@ -36,7 +36,7 @@ import java.util.Set;
  * @author Stephane Nicoll
  * @author Andy Wilkinson
  */
-@Order(Ordered.LOWEST_PRECEDENCE)
+@Order
 class OnBeanCondition extends SpringBootCondition implements ConfigurationCondition {
 
     private static final String[] NO_BEANS = {};
@@ -58,46 +58,46 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
         ConditionMessage matchMessage = ConditionMessage.empty();
         if (metadata.isAnnotated(ConditionalOnBean.class.getName())) {
             BeanSearchSpec spec = new BeanSearchSpec(context, metadata,
-                    ConditionalOnBean.class);
+                ConditionalOnBean.class);
             List<String> matching = getMatchingBeans(context, spec);
             if (matching.isEmpty()) {
                 return ConditionOutcome.noMatch(
-                        ConditionMessage.forCondition(ConditionalOnBean.class, spec)
-                                .didNotFind("any beans").atAll());
+                    ConditionMessage.forCondition(ConditionalOnBean.class, spec)
+                        .didNotFind("any beans").atAll());
             }
             matchMessage = matchMessage.andCondition(ConditionalOnBean.class, spec)
-                    .found("bean", "beans").items(ConditionMessage.Style.QUOTE, matching);
+                .found("bean", "beans").items(ConditionMessage.Style.QUOTE, matching);
         }
         if (metadata.isAnnotated(ConditionalOnSingleCandidate.class.getName())) {
             BeanSearchSpec spec = new SingleCandidateBeanSearchSpec(context, metadata,
-                    ConditionalOnSingleCandidate.class);
+                ConditionalOnSingleCandidate.class);
             List<String> matching = getMatchingBeans(context, spec);
             if (matching.isEmpty()) {
                 return ConditionOutcome.noMatch(ConditionMessage
-                        .forCondition(ConditionalOnSingleCandidate.class, spec)
-                        .didNotFind("any beans").atAll());
+                    .forCondition(ConditionalOnSingleCandidate.class, spec)
+                    .didNotFind("any beans").atAll());
             } else if (!hasSingleAutowireCandidate(context.getBeanFactory(), matching,
-                    spec.getStrategy() == SearchStrategy.ALL)) {
+                spec.getStrategy() == SearchStrategy.ALL)) {
                 return ConditionOutcome.noMatch(ConditionMessage
-                        .forCondition(ConditionalOnSingleCandidate.class, spec)
-                        .didNotFind("a primary bean from beans")
-                        .items(ConditionMessage.Style.QUOTE, matching));
+                    .forCondition(ConditionalOnSingleCandidate.class, spec)
+                    .didNotFind("a primary bean from beans")
+                    .items(ConditionMessage.Style.QUOTE, matching));
             }
             matchMessage = matchMessage
-                    .andCondition(ConditionalOnSingleCandidate.class, spec)
-                    .found("a primary bean from beans").items(ConditionMessage.Style.QUOTE, matching);
+                .andCondition(ConditionalOnSingleCandidate.class, spec)
+                .found("a primary bean from beans").items(ConditionMessage.Style.QUOTE, matching);
         }
         if (metadata.isAnnotated(ConditionalOnMissingBean.class.getName())) {
             BeanSearchSpec spec = new BeanSearchSpec(context, metadata,
-                    ConditionalOnMissingBean.class);
+                ConditionalOnMissingBean.class);
             List<String> matching = getMatchingBeans(context, spec);
             if (!matching.isEmpty()) {
                 return ConditionOutcome.noMatch(ConditionMessage
-                        .forCondition(ConditionalOnMissingBean.class, spec)
-                        .found("bean", "beans").items(ConditionMessage.Style.QUOTE, matching));
+                    .forCondition(ConditionalOnMissingBean.class, spec)
+                    .found("bean", "beans").items(ConditionMessage.Style.QUOTE, matching));
             }
             matchMessage = matchMessage.andCondition(ConditionalOnMissingBean.class, spec)
-                    .didNotFind("any beans").atAll();
+                .didNotFind("any beans").atAll();
         }
         return ConditionOutcome.match(matchMessage);
     }
@@ -107,10 +107,10 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
                                           BeanSearchSpec beans) {
         ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
         if (beans.getStrategy() == SearchStrategy.PARENTS
-                || beans.getStrategy() == SearchStrategy.ANCESTORS) {
+            || beans.getStrategy() == SearchStrategy.ANCESTORS) {
             BeanFactory parent = beanFactory.getParentBeanFactory();
             Assert.isInstanceOf(ConfigurableListableBeanFactory.class, parent,
-                    "Unable to use SearchStrategy.PARENTS");
+                "Unable to use SearchStrategy.PARENTS");
             beanFactory = (ConfigurableListableBeanFactory) parent;
         }
         if (beanFactory == null) {
@@ -120,15 +120,15 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
         boolean considerHierarchy = beans.getStrategy() != SearchStrategy.CURRENT;
         for (String type : beans.getTypes()) {
             beanNames.addAll(getBeanNamesForType(beanFactory, type,
-                    context.getClassLoader(), considerHierarchy));
+                context.getClassLoader(), considerHierarchy));
         }
         for (String ignoredType : beans.getIgnoredTypes()) {
             beanNames.removeAll(getBeanNamesForType(beanFactory, ignoredType,
-                    context.getClassLoader(), considerHierarchy));
+                context.getClassLoader(), considerHierarchy));
         }
         for (String annotation : beans.getAnnotations()) {
             beanNames.addAll(Arrays.asList(getBeanNamesForAnnotation(beanFactory,
-                    annotation, context.getClassLoader(), considerHierarchy)));
+                annotation, context.getClassLoader(), considerHierarchy)));
         }
         for (String beanName : beans.getNames()) {
             if (containsBean(beanFactory, beanName, considerHierarchy)) {
@@ -148,11 +148,11 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
 
     private Collection<String> getBeanNamesForType(ListableBeanFactory beanFactory,
                                                    String type, ClassLoader classLoader, boolean considerHierarchy)
-            throws LinkageError {
+        throws LinkageError {
         try {
             Set<String> result = new LinkedHashSet<>();
             collectBeanNamesForType(result, beanFactory,
-                    ClassUtils.forName(type, classLoader), considerHierarchy);
+                ClassUtils.forName(type, classLoader), considerHierarchy);
             return result;
         } catch (ClassNotFoundException | NoClassDefFoundError ex) {
             return Collections.emptySet();
@@ -164,35 +164,35 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
         result.addAll(BeanTypeRegistry.get(beanFactory).getNamesForType(type));
         if (considerHierarchy && beanFactory instanceof HierarchicalBeanFactory) {
             BeanFactory parent = ((HierarchicalBeanFactory) beanFactory)
-                    .getParentBeanFactory();
+                .getParentBeanFactory();
             if (parent instanceof ListableBeanFactory) {
                 collectBeanNamesForType(result, (ListableBeanFactory) parent, type,
-                        true);
+                    true);
             }
         }
     }
 
     private String[] getBeanNamesForAnnotation(
-            ConfigurableListableBeanFactory beanFactory, String type,
-            ClassLoader classLoader, boolean considerHierarchy) throws LinkageError {
+        ConfigurableListableBeanFactory beanFactory, String type,
+        ClassLoader classLoader, boolean considerHierarchy) throws LinkageError {
         String[] result;
         try {
             @SuppressWarnings("unchecked")
             Class<? extends Annotation> typeClass = (Class<? extends Annotation>) ClassUtils
-                    .forName(type, classLoader);
+                .forName(type, classLoader);
             result = beanFactory.getBeanNamesForAnnotation(typeClass);
             if (considerHierarchy) {
                 if (beanFactory
-                        .getParentBeanFactory() instanceof ConfigurableListableBeanFactory) {
+                    .getParentBeanFactory() instanceof ConfigurableListableBeanFactory) {
                     String[] parentResult = getBeanNamesForAnnotation(
-                            (ConfigurableListableBeanFactory) beanFactory
-                                    .getParentBeanFactory(),
-                            type, classLoader, true);
+                        (ConfigurableListableBeanFactory) beanFactory
+                            .getParentBeanFactory(),
+                        type, classLoader, true);
                     List<String> resultList = new ArrayList<>();
                     resultList.addAll(Arrays.asList(result));
                     for (String beanName : parentResult) {
                         if (!resultList.contains(beanName)
-                                && !beanFactory.containsLocalBean(beanName)) {
+                            && !beanFactory.containsLocalBean(beanName)) {
                             resultList.add(beanName);
                         }
                     }
@@ -206,11 +206,11 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
     }
 
     private boolean hasSingleAutowireCandidate(
-            ConfigurableListableBeanFactory beanFactory, List<String> beanNames,
-            boolean considerHierarchy) {
+        ConfigurableListableBeanFactory beanFactory, List<String> beanNames,
+        boolean considerHierarchy) {
         return (beanNames.size() == 1
-                || getPrimaryBeans(beanFactory, beanNames, considerHierarchy)
-                .size() == 1);
+            || getPrimaryBeans(beanFactory, beanNames, considerHierarchy)
+            .size() == 1);
     }
 
     private List<String> getPrimaryBeans(ConfigurableListableBeanFactory beanFactory,
@@ -218,7 +218,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
         List<String> primaryBeans = new ArrayList<>();
         for (String beanName : beanNames) {
             BeanDefinition beanDefinition = findBeanDefinition(beanFactory, beanName,
-                    considerHierarchy);
+                considerHierarchy);
             if (beanDefinition != null && beanDefinition.isPrimary()) {
                 primaryBeans.add(beanName);
             }
@@ -232,9 +232,9 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
             return beanFactory.getBeanDefinition(beanName);
         }
         if (considerHierarchy && beanFactory
-                .getParentBeanFactory() instanceof ConfigurableListableBeanFactory) {
+            .getParentBeanFactory() instanceof ConfigurableListableBeanFactory) {
             return findBeanDefinition(((ConfigurableListableBeanFactory) beanFactory
-                    .getParentBeanFactory()), beanName, true);
+                .getParentBeanFactory()), beanName, true);
         }
         return null;
 
@@ -258,7 +258,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
                        Class<?> annotationType) {
             this.annotationType = annotationType;
             MultiValueMap<String, Object> attributes = metadata
-                    .getAllAnnotationAttributes(annotationType.getName(), true);
+                .getAllAnnotationAttributes(annotationType.getName(), true);
             collect(attributes, "name", this.names);
             collect(attributes, "value", this.types);
             collect(attributes, "type", this.types);
@@ -266,7 +266,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
             collect(attributes, "ignored", this.ignoredTypes);
             collect(attributes, "ignoredType", this.ignoredTypes);
             this.strategy = (SearchStrategy) metadata
-                    .getAnnotationAttributes(annotationType.getName()).get("search");
+                .getAnnotationAttributes(annotationType.getName()).get("search");
             BeanTypeDeductionException deductionException = null;
             try {
                 if (this.types.isEmpty() && this.names.isEmpty()) {
@@ -281,12 +281,12 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
         protected void validate(BeanTypeDeductionException ex) {
             if (!hasAtLeastOne(this.types, this.names, this.annotations)) {
                 String message = annotationName()
-                        + " did not specify a bean using type, name or annotation";
+                    + " did not specify a bean using type, name or annotation";
                 if (ex == null) {
                     throw new IllegalStateException(message);
                 }
                 throw new IllegalStateException(message + " and the attempt to deduce"
-                        + " the bean's type failed", ex);
+                    + " the bean's type failed", ex);
             }
         }
 
@@ -320,9 +320,9 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
         private void addDeducedBeanType(ConditionContext context,
                                         AnnotatedTypeMetadata metadata, final List<String> beanTypes) {
             if (metadata instanceof MethodMetadata
-                    && metadata.isAnnotated(Bean.class.getName())) {
+                && metadata.isAnnotated(Bean.class.getName())) {
                 addDeducedBeanTypeForBeanMethod(context, (MethodMetadata) metadata,
-                        beanTypes);
+                    beanTypes);
             }
         }
 
@@ -332,11 +332,11 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
                 // We should be safe to load at this point since we are in the
                 // REGISTER_BEAN phase
                 Class<?> returnType = ClassUtils.forName(metadata.getReturnTypeName(),
-                        context.getClassLoader());
+                    context.getClassLoader());
                 beanTypes.add(returnType.getName());
             } catch (Throwable ex) {
                 throw new BeanTypeDeductionException(metadata.getDeclaringClassName(),
-                        metadata.getMethodName(), ex);
+                    metadata.getMethodName(), ex);
             }
         }
 
@@ -388,7 +388,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
         private BeanTypeDeductionException(String className, String beanMethodName,
                                            Throwable cause) {
             super("Failed to deduce bean type for " + className + "." + beanMethodName,
-                    cause);
+                cause);
         }
     }
 
@@ -409,7 +409,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
         @Override
         protected void validate(BeanTypeDeductionException ex) {
             Assert.isTrue(getTypes().size() == 1, annotationName() + " annotations must "
-                    + "specify only one type (got " + getTypes() + ")");
+                + "specify only one type (got " + getTypes() + ")");
         }
 
     }

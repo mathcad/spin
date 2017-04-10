@@ -40,11 +40,11 @@ public class TokenKeyManager {
             return;
         }
         TOKEN_INFO_CACHE.entrySet().stream()
-                .filter(i -> (System.currentTimeMillis() - i.getValue().getGenerateTime()) > EnvCache.TokenExpireTime)
-                .forEach(i -> {
-                    USERID_TOKEN_CACHE.remove(i.getValue().getIdentifier());
-                    TOKEN_INFO_CACHE.remove(i.getKey());
-                });
+            .filter(i -> (System.currentTimeMillis() - i.getValue().getGenerateTime()) > EnvCache.TokenExpireTime)
+            .forEach(i -> {
+                USERID_TOKEN_CACHE.remove(i.getValue().getIdentifier());
+                TOKEN_INFO_CACHE.remove(i.getKey());
+            });
     }
 
     /**

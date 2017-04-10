@@ -76,7 +76,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
                 resolveEnumValueMapper(rs.getMetaData().getColumnType(rs.findColumn(name)));
             } catch (Exception e) {
                 logger.debug("JDBC driver threw exception calling java.sql.ResultSetMetaData.getColumnType; "
-                        + "using fallback determination [%s] : %s", enumClass.getName(), e.getMessage());
+                    + "using fallback determination [%s] : %s", enumClass.getName(), e.getMessage());
                 try {
                     Object value = rs.getObject(name);
                     if (Number.class.isInstance(value)) {
@@ -114,9 +114,9 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
                 resolveEnumValueMapper(st.getParameterMetaData().getParameterType(index));
             } catch (Exception e) {
                 logger.debug(
-                        "JDBC driver threw exception calling java.sql.ParameterMetaData#getParameterType; "
-                                + "falling back to ordinal-based enum mapping [%s] : %s",
-                        enumClass.getName(), e.getMessage());
+                    "JDBC driver threw exception calling java.sql.ParameterMetaData#getParameterType; "
+                        + "falling back to ordinal-based enum mapping [%s] : %s",
+                    enumClass.getName(), e.getMessage());
                 treatAsOrdinal();
             }
         }
@@ -308,11 +308,11 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
             final Enum[] enumsByOrdinal = enumsByOrdinal();
             if (ordinal < 0 || ordinal >= enumsByOrdinal.length) {
                 throw new IllegalArgumentException(
-                        String.format(
-                                "Unknown ordinal value [%s] for enum class [%s]",
-                                ordinal,
-                                enumClass.getName()
-                        )
+                    String.format(
+                        "Unknown ordinal value [%s] for enum class [%s]",
+                        ordinal,
+                        enumClass.getName()
+                    )
                 );
             }
             return enumsByOrdinal[ordinal];

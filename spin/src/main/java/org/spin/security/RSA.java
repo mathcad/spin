@@ -85,7 +85,7 @@ public class RSA {
     }
 
     public static PrivateKey generateRSAPrivateKey(byte[] modulus, byte[] privateExponent) throws
-            InvalidKeySpecException {
+        InvalidKeySpecException {
         KeyFactory keyFactory = getRSAKeyFactory();
         Assert.notNull(keyFactory);
         RSAPrivateKeySpec priKeySpec = new RSAPrivateKeySpec(new BigInteger(modulus), new BigInteger(privateExponent));
@@ -93,7 +93,7 @@ public class RSA {
     }
 
     public static byte[] encrypt(PublicKey pk, byte[] data) throws NoSuchPaddingException, InvalidKeyException,
-            BadPaddingException, ShortBufferException, IllegalBlockSizeException {
+        BadPaddingException, ShortBufferException, IllegalBlockSizeException {
         Cipher cipher;
         try {
 //            cipher = Cipher.getInstance(RSA_ALGORITHMS, new BouncyCastleProvider());
@@ -106,19 +106,19 @@ public class RSA {
     }
 
     public static String encrypt(String publicKey, String content) throws InvalidKeySpecException,
-            IllegalBlockSizeException, InvalidKeyException, BadPaddingException, ShortBufferException,
-            NoSuchPaddingException {
+        IllegalBlockSizeException, InvalidKeyException, BadPaddingException, ShortBufferException,
+        NoSuchPaddingException {
         PublicKey key = getRSAPublicKey(publicKey);
         return Base64.encode(encrypt(key, getBytes(content)));
     }
 
     public static String encrypt(PublicKey publicKey, String content) throws IllegalBlockSizeException,
-            InvalidKeyException, BadPaddingException, ShortBufferException, NoSuchPaddingException {
+        InvalidKeyException, BadPaddingException, ShortBufferException, NoSuchPaddingException {
         return Base64.encode(encrypt(publicKey, getBytes(content)));
     }
 
     public static byte[] decrypt(PrivateKey pk, byte[] raw) throws NoSuchPaddingException, InvalidKeyException,
-            BadPaddingException, IllegalBlockSizeException {
+        BadPaddingException, IllegalBlockSizeException {
         Cipher cipher;
         try {
 //            cipher = Cipher.getInstance(RSA_ALGORITHMS, new BouncyCastleProvider());
@@ -131,7 +131,7 @@ public class RSA {
     }
 
     public static String decrypt(String privateKey, String content) throws InvalidKeySpecException,
-            IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchPaddingException {
+        IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchPaddingException {
         PrivateKey key = getRSAPrivateKey(privateKey);
         try {
             return new String(decrypt(key, Base64.decode(content)), "UTF-8");
@@ -141,7 +141,7 @@ public class RSA {
     }
 
     public static String decrypt(PrivateKey privateKey, String content) throws IllegalBlockSizeException,
-            InvalidKeyException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException {
+        InvalidKeyException, BadPaddingException, NoSuchPaddingException, UnsupportedEncodingException {
         return new String(decrypt(privateKey, Base64.decode(content)), "UTF-8");
     }
 
@@ -153,7 +153,7 @@ public class RSA {
      * @return 签名值
      */
     public static String sign(String content, String privateKey) throws InvalidKeySpecException, InvalidKeyException,
-            SignatureException {
+        SignatureException {
         PrivateKey priKey = getRSAPrivateKey(privateKey);
         Signature signature;
         try {
@@ -176,7 +176,7 @@ public class RSA {
      * @return 是否匹配
      */
     public static boolean verify(String content, String sign, String publicKey) throws InvalidKeySpecException,
-            InvalidKeyException, SignatureException {
+        InvalidKeyException, SignatureException {
         PublicKey pubKey = getRSAPublicKey(publicKey);
         Signature signature;
         try {

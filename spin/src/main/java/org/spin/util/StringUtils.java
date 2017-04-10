@@ -2850,7 +2850,7 @@ public abstract class StringUtils {
             char ch = localePart.charAt(i);
             if (ch != '_' && ch != ' ' && !isLetterOrDigit(ch)) {
                 throw new IllegalArgumentException(
-                        "Locale part \"" + localePart + "\" contains invalid characters");
+                    "Locale part \"" + localePart + "\" contains invalid characters");
             }
         }
     }
@@ -3103,7 +3103,7 @@ public abstract class StringUtils {
      * or {@code null} if the array to process was {@code null} or empty
      */
     public static Properties splitArrayElementsIntoProperties(
-            String[] array, String delimiter, String charsToDelete) {
+        String[] array, String delimiter, String charsToDelete) {
 
         if (ObjectUtils.isEmpty(array)) {
             return null;
@@ -3165,7 +3165,7 @@ public abstract class StringUtils {
      * @see #delimitedListToStringArray
      */
     public static String[] tokenizeToStringArray(
-            String str, String delimiters, boolean trimTokens, boolean ignoreEmptyTokens) {
+        String str, String delimiters, boolean trimTokens, boolean ignoreEmptyTokens) {
 
         if (str == null) {
             return null;

@@ -92,7 +92,7 @@ public final class ConditionEvaluationReport {
     public Map<String, ConditionAndOutcomes> getConditionAndOutcomesBySource() {
         if (!this.addedAncestorOutcomes) {
             for (Entry<String, ConditionAndOutcomes> entry : this.outcomes
-                    .entrySet()) {
+                .entrySet()) {
                 if (!entry.getValue().isFullMatch()) {
                     addNoMatchOutcomeToAncestors(entry.getKey());
                 }
@@ -107,7 +107,7 @@ public final class ConditionEvaluationReport {
         for (Entry<String, ConditionAndOutcomes> entry : this.outcomes.entrySet()) {
             if (entry.getKey().startsWith(prefix)) {
                 ConditionOutcome outcome = ConditionOutcome.noMatch(ConditionMessage
-                        .forCondition("Ancestor " + source).because("did not match"));
+                    .forCondition("Ancestor " + source).because("did not match"));
                 entry.getValue().add(ANCESTOR_CONDITION, outcome);
             }
         }
@@ -147,7 +147,7 @@ public final class ConditionEvaluationReport {
      * @return an existing or new {@link ConditionEvaluationReport}
      */
     public synchronized static ConditionEvaluationReport get(
-            ConfigurableListableBeanFactory beanFactory) {
+        ConfigurableListableBeanFactory beanFactory) {
         ConditionEvaluationReport report;
         if (beanFactory.containsSingleton(BEAN_NAME)) {
             report = beanFactory.getBean(BEAN_NAME, ConditionEvaluationReport.class);
@@ -162,9 +162,9 @@ public final class ConditionEvaluationReport {
     private static void locateParent(BeanFactory beanFactory,
                                      ConditionEvaluationReport report) {
         if (beanFactory != null && report.parent == null
-                && beanFactory.containsBean(BEAN_NAME)) {
+            && beanFactory.containsBean(BEAN_NAME)) {
             report.parent = beanFactory.getBean(BEAN_NAME,
-                    ConditionEvaluationReport.class);
+                ConditionEvaluationReport.class);
         }
     }
 
@@ -232,8 +232,8 @@ public final class ConditionEvaluationReport {
             }
             ConditionAndOutcome other = (ConditionAndOutcome) obj;
             return (ObjectUtils.nullSafeEquals(this.condition.getClass(),
-                    other.condition.getClass())
-                    && ObjectUtils.nullSafeEquals(this.outcome, other.outcome));
+                other.condition.getClass())
+                && ObjectUtils.nullSafeEquals(this.outcome, other.outcome));
         }
 
         @Override

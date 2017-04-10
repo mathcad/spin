@@ -55,13 +55,13 @@ public abstract class HexUtils {
      * Used to build output as HexUtils
      */
     private static final char[] DIGITS_LOWER =
-            {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+        {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     /**
      * Used to build output as HexUtils
      */
     private static final char[] DIGITS_UPPER =
-            {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+        {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     /**
      * 将字符数组表示的16进制数值转换为等值字节数组。返回的字节数组长度应该是参数数组长度的一半(两个16进制字符转换出一个字节)
@@ -253,7 +253,7 @@ public abstract class HexUtils {
     public static Object encode(final Object object, String charset) throws EncoderException {
         try {
             final byte[] byteArray = object instanceof String ?
-                    ((String) object).getBytes(charset) : (byte[]) object;
+                ((String) object).getBytes(charset) : (byte[]) object;
             return encodeHex(byteArray);
         } catch (final ClassCastException e) {
             throw new EncoderException(e.getMessage(), e);

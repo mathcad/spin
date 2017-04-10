@@ -101,7 +101,7 @@ public abstract class EnumUtils {
     private static <E extends Enum<E>> Class<E> checkBitVectorable(final Class<E> enumClass) {
         final E[] constants = asEnum(enumClass).getEnumConstants();
         Validate.isTrue(constants.length <= Long.SIZE, CANNOT_STORE_S_S_VALUES_IN_S_BITS,
-                constants.length, enumClass.getSimpleName(), Long.SIZE);
+            constants.length, enumClass.getSimpleName(), Long.SIZE);
 
         return enumClass;
     }

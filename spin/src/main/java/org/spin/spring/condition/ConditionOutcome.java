@@ -119,7 +119,7 @@ public class ConditionOutcome {
     @Override
     public int hashCode() {
         return ObjectUtils.hashCode(this.match) * 31
-                + ObjectUtils.nullSafeHashCode(this.message);
+            + ObjectUtils.nullSafeHashCode(this.message);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class ConditionOutcome {
         if (getClass() == obj.getClass()) {
             ConditionOutcome other = (ConditionOutcome) obj;
             return (this.match == other.match
-                    && ObjectUtils.nullSafeEquals(this.message, other.message));
+                && ObjectUtils.nullSafeEquals(this.message, other.message));
         }
         return super.equals(obj);
     }

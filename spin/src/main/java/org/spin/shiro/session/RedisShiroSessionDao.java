@@ -134,6 +134,7 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
      */
     public interface SessionListener {
         void beforeUpdateSession(Session session);
+
         void beforeDeleteSession(Session session);
     }
 }

@@ -206,8 +206,8 @@ public abstract class ObjectUtils {
             throw new NullPointerException("Cannot get the toString of a null identity");
         }
         appendable.append(object.getClass().getName())
-                .append('@')
-                .append(Integer.toHexString(System.identityHashCode(object)));
+            .append('@')
+            .append(Integer.toHexString(System.identityHashCode(object)));
     }
 
     /**
@@ -230,8 +230,8 @@ public abstract class ObjectUtils {
             throw new NullPointerException("Cannot get the toString of a null identity");
         }
         buffer.append(object.getClass().getName())
-                .append('@')
-                .append(Integer.toHexString(System.identityHashCode(object)));
+            .append('@')
+            .append(Integer.toHexString(System.identityHashCode(object)));
     }
 
     /**
@@ -254,8 +254,8 @@ public abstract class ObjectUtils {
             throw new NullPointerException("Cannot get the toString of a null identity");
         }
         builder.append(object.getClass().getName())
-                .append('@')
-                .append(Integer.toHexString(System.identityHashCode(object)));
+            .append('@')
+            .append(Integer.toHexString(System.identityHashCode(object)));
     }
 
     /**
@@ -357,8 +357,8 @@ public abstract class ObjectUtils {
     public static boolean containsConstant(Enum<?>[] enumValues, String constant, boolean caseSensitive) {
         for (Enum<?> candidate : enumValues) {
             if (caseSensitive ?
-                    candidate.toString().equals(constant) :
-                    candidate.toString().equalsIgnoreCase(constant)) {
+                candidate.toString().equals(constant) :
+                candidate.toString().equalsIgnoreCase(constant)) {
                 return true;
             }
         }
@@ -381,8 +381,8 @@ public abstract class ObjectUtils {
             }
         }
         throw new IllegalArgumentException(
-                String.format("constant [%s] does not exist in enum type %s",
-                        constant, enumValues.getClass().getComponentType().getName()));
+            String.format("constant [%s] does not exist in enum type %s",
+                constant, enumValues.getClass().getComponentType().getName()));
     }
 
     /**

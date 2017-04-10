@@ -49,6 +49,7 @@ public abstract class EntityUtils {
         final Class<?> tcls = Hibernate.getClass(entity);
         final T target;
         try {
+            //noinspection unchecked
             target = (T) tcls.newInstance();
         } catch (Exception e) {
             logger.error("Can not create new Entity instance:[" + tcls.getName() + "]", e);
@@ -168,8 +169,8 @@ public abstract class EntityUtils {
         if (!EnvCache.ENTITY_SOMETOONE_JOIN_FIELDS.containsKey(clsName)) {
             Map<String, Field> referJoinFields = new HashMap<>();
             ReflectionUtils.doWithFields(cls,
-                    f -> referJoinFields.put(f.getName(), f),
-                    f -> f.getAnnotation(ManyToOne.class) != null || f.getAnnotation(OneToOne.class) != null);
+                f -> referJoinFields.put(f.getName(), f),
+                f -> f.getAnnotation(ManyToOne.class) != null || f.getAnnotation(OneToOne.class) != null);
             EnvCache.ENTITY_SOMETOONE_JOIN_FIELDS.put(cls.getName(), referJoinFields);
         }
         return EnvCache.ENTITY_SOMETOONE_JOIN_FIELDS.get(clsName);
@@ -182,12 +183,12 @@ public abstract class EntityUtils {
         Annotation[] annotations = field.getAnnotations();
         for (Annotation annotation : annotations) {
             if (annotation instanceof Column
-                    || annotation instanceof Id
-                    || annotation instanceof OneToOne
-                    || annotation instanceof ManyToOne
-                    || annotation instanceof Temporal
-                    || annotation instanceof Type
-                    || annotation instanceof Version)
+                || annotation instanceof Id
+                || annotation instanceof OneToOne
+                || annotation instanceof ManyToOne
+                || annotation instanceof Temporal
+                || annotation instanceof Type
+                || annotation instanceof Version)
                 return true;
         }
         return false;

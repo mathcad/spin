@@ -44,7 +44,7 @@ public class ImprovedNamingStrategy implements PhysicalNamingStrategy {
         StringBuilder builder = new StringBuilder(name.getText().replace('.', '_'));
         for (int i = 1; i < builder.length() - 1; i++) {
             if (isUnderscoreRequired(builder.charAt(i - 1), builder.charAt(i),
-                    builder.charAt(i + 1))) {
+                builder.charAt(i + 1))) {
                 builder.insert(i++, '_');
             }
         }

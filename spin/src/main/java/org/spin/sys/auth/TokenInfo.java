@@ -55,9 +55,9 @@ public class TokenInfo implements Serializable {
     @Override
     public String toString() {
         return "TokenInfo{" +
-                "generateTime=" + generateTime +
-                ", identifier='" + identifier + '\'' +
-                ", token='" + token + '\'' +
-                '}';
+            "generateTime=" + generateTime +
+            ", identifier='" + identifier + '\'' +
+            ", token='" + token + '\'' +
+            '}';
     }
 }

@@ -131,8 +131,8 @@ public abstract class PackageUtils {
     private static List<String> getClassNameByJars(URL[] urls, String packagePath, boolean childPackage) {
         List<String> myClassName = new ArrayList<>();
         Optional.ofNullable(urls).ifPresent(u -> Arrays.stream(u).map(URL::getPath).filter(p -> !p.endsWith("classes/"))
-                .map(urlPath -> urlPath + "!/" + packagePath)
-                .forEach(jarPath -> myClassName.addAll(getClassNameByJar(jarPath, childPackage))));
+            .map(urlPath -> urlPath + "!/" + packagePath)
+            .forEach(jarPath -> myClassName.addAll(getClassNameByJar(jarPath, childPackage))));
 //        if (urls != null) {
 //            for (URL url : urls) {
 //                String urlPath = url.getPath();

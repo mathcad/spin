@@ -14,25 +14,25 @@ import freemarker.template.TemplateModel;
  * 用法：
  * <@uiDefine name="head">
  * 参数：name 区域的名称
- * @author zx
  *
+ * @author zx
  */
 public class UiDefine implements TemplateDirectiveModel {
-	public final static String DIRECTIVE_NAME = "ui_define";
-	
-	public void execute(Environment env,
-            @SuppressWarnings("rawtypes") Map params, TemplateModel[] loopVars,
-            TemplateDirectiveBody body) throws TemplateException, IOException {
-		
-		String name = DirectiveUtils.getRequiredParam(params, "name");
-		
-		TemplateDirectiveBodyOverrideWraper current = new TemplateDirectiveBodyOverrideWraper(body,env);
-		TemplateDirectiveBodyOverrideWraper override = DirectiveUtils.getOverrideBody(env, name);
-		
-		if (override != null) {
-			override.render(env.getOut());
-		} else if(body != null) {
-			current.render(env.getOut());
-		}
-	}
+    public final static String DIRECTIVE_NAME = "ui_define";
+
+    public void execute(Environment env,
+                        @SuppressWarnings("rawtypes") Map params, TemplateModel[] loopVars,
+                        TemplateDirectiveBody body) throws TemplateException, IOException {
+
+        String name = DirectiveUtils.getRequiredParam(params, "name");
+
+        TemplateDirectiveBodyOverrideWraper current = new TemplateDirectiveBodyOverrideWraper(body, env);
+        TemplateDirectiveBodyOverrideWraper override = DirectiveUtils.getOverrideBody(env, name);
+
+        if (override != null) {
+            override.render(env.getOut());
+        } else if (body != null) {
+            current.render(env.getOut());
+        }
+    }
 }

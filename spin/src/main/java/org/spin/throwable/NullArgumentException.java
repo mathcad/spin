@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,14 +21,14 @@ package org.spin.throwable;
  * not have been.
  * This exception supplements the standard <code>IllegalArgumentException</code>
  * by providing a more semantically rich description of the problem.</p>
- * 
+ * <p>
  * <p><code>NullArgumentException</code> represents the case where a method takes
  * in a parameter that must not be <code>null</code>.
  * Some coding standards would use <code>NullPointerException</code> for this case,
  * others will use <code>IllegalArgumentException</code>.
  * Thus this exception would be used in place of
  * <code>IllegalArgumentException</code>, yet it still extends it.</p>
- * 
+ * <p>
  * <pre>
  * public void foo(String str) {
  *   if (str == null) {
@@ -37,17 +37,17 @@ package org.spin.throwable;
  *   // do something with the string
  * }
  * </pre>
- * 
+ *
  * @author Apache Software Foundation
  * @author Matthew Hawthorne
- * @since 2.0
  * @version $Id: NullArgumentException.java 905636 2010-02-02 14:03:32Z niallp $
+ * @since 2.0
  */
 public class NullArgumentException extends IllegalArgumentException {
 
     /**
      * Required for serialization support.
-     * 
+     *
      * @see java.io.Serializable
      */
     private static final long serialVersionUID = 1174360235354917591L;
@@ -55,7 +55,7 @@ public class NullArgumentException extends IllegalArgumentException {
     /**
      * <p>Instantiates with the given argument name.</p>
      *
-     * @param argName  the name of the argument that was <code>null</code>.
+     * @param argName the name of the argument that was <code>null</code>.
      */
     public NullArgumentException(String argName) {
         super((argName == null ? "Argument" : argName) + " must not be null.");

@@ -163,7 +163,7 @@ public abstract class Assert {
      */
     public static void hasLength(String text) {
         hasLength(text,
-                "[Assertion failed] - this String argument must have length; it must not be null or empty");
+            "[Assertion failed] - this String argument must have length; it must not be null or empty");
     }
 
     /**
@@ -191,7 +191,7 @@ public abstract class Assert {
      */
     public static void hasText(String text) {
         hasText(text,
-                "[Assertion failed] - this String argument must have text; it must not be null, empty, or blank");
+            "[Assertion failed] - this String argument must have text; it must not be null, empty, or blank");
     }
 
     /**
@@ -205,7 +205,7 @@ public abstract class Assert {
      */
     public static void doesNotContain(String textToSearch, String substring, String message) {
         if (StringUtils.isNotEmpty(textToSearch) && StringUtils.isNotEmpty(substring) &&
-                textToSearch.contains(substring)) {
+            textToSearch.contains(substring)) {
             throw new IllegalArgumentException(message);
         }
     }
@@ -220,7 +220,7 @@ public abstract class Assert {
      */
     public static void doesNotContain(String textToSearch, String substring) {
         doesNotContain(textToSearch, substring,
-                "[Assertion failed] - this String argument must not contain the substring [" + substring + "]");
+            "[Assertion failed] - this String argument must not contain the substring [" + substring + "]");
     }
 
     /**
@@ -306,7 +306,7 @@ public abstract class Assert {
      */
     public static void notEmpty(Collection<?> collection) {
         notEmpty(collection,
-                "[Assertion failed] - this collection must not be empty: it must contain at least 1 element");
+            "[Assertion failed] - this collection must not be empty: it must contain at least 1 element");
     }
 
     /**
@@ -366,9 +366,9 @@ public abstract class Assert {
         notNull(type, "Type to check against must not be null");
         if (!type.isInstance(obj)) {
             throw new IllegalArgumentException(
-                    (StringUtils.isNotEmpty(message) ? message + " " : "") +
-                            "Object of class [" + (obj != null ? obj.getClass().getName() : "null") +
-                            "] must be an instance of " + type);
+                (StringUtils.isNotEmpty(message) ? message + " " : "") +
+                    "Object of class [" + (obj != null ? obj.getClass().getName() : "null") +
+                    "] must be an instance of " + type);
         }
     }
 
@@ -400,7 +400,7 @@ public abstract class Assert {
         notNull(superType, "Type to check against must not be null");
         if (subType == null || !superType.isAssignableFrom(subType)) {
             throw new IllegalArgumentException((StringUtils.isNotEmpty(message) ? message + " " : "") +
-                    subType + " is not assignable to " + superType);
+                subType + " is not assignable to " + superType);
         }
     }
 

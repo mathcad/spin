@@ -104,7 +104,7 @@ public class ConcurrentStrTemplateLoader implements TemplateLoader {
         final Class tlClass = templateLoader.getClass();
         final Package tlPackage = tlClass.getPackage();
         return tlPackage == Configuration.class.getPackage() || tlPackage == TemplateLoader.class.getPackage()
-                ? getSimpleName(tlClass) : tlClass.getName();
+            ? getSimpleName(tlClass) : tlClass.getName();
     }
 
     // [Java 5] Replace with Class.getSimpleName()

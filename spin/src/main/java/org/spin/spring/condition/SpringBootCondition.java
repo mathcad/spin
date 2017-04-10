@@ -32,16 +32,16 @@ public abstract class SpringBootCondition implements Condition {
             return outcome.isMatch();
         } catch (NoClassDefFoundError ex) {
             throw new IllegalStateException(
-                    "Could not evaluate condition on " + classOrMethodName + " due to "
-                            + ex.getMessage() + " not "
-                            + "found. Make sure your own configuration does not rely on "
-                            + "that class. This can also happen if you are "
-                            + "@ComponentScanning a springframework package (e.g. if you "
-                            + "put a @ComponentScan in the default package by mistake)",
-                    ex);
+                "Could not evaluate condition on " + classOrMethodName + " due to "
+                    + ex.getMessage() + " not "
+                    + "found. Make sure your own configuration does not rely on "
+                    + "that class. This can also happen if you are "
+                    + "@ComponentScanning a springframework package (e.g. if you "
+                    + "put a @ComponentScan in the default package by mistake)",
+                ex);
         } catch (RuntimeException ex) {
             throw new IllegalStateException(
-                    "Error processing condition on " + getName(metadata), ex);
+                "Error processing condition on " + getName(metadata), ex);
         }
     }
 
@@ -52,7 +52,7 @@ public abstract class SpringBootCondition implements Condition {
         if (metadata instanceof MethodMetadata) {
             MethodMetadata methodMetadata = (MethodMetadata) metadata;
             return methodMetadata.getDeclaringClassName() + "."
-                    + methodMetadata.getMethodName();
+                + methodMetadata.getMethodName();
         }
         return metadata.toString();
     }
@@ -64,7 +64,7 @@ public abstract class SpringBootCondition implements Condition {
         }
         MethodMetadata methodMetadata = (MethodMetadata) metadata;
         return methodMetadata.getDeclaringClassName() + "#"
-                + methodMetadata.getMethodName();
+            + methodMetadata.getMethodName();
     }
 
     protected final void logOutcome(String classOrMethodName, ConditionOutcome outcome) {
@@ -128,7 +128,7 @@ public abstract class SpringBootCondition implements Condition {
                                     AnnotatedTypeMetadata metadata, Condition condition) {
         if (condition instanceof SpringBootCondition) {
             return ((SpringBootCondition) condition).getMatchOutcome(context, metadata)
-                    .isMatch();
+                .isMatch();
         }
         return condition.matches(context, metadata);
     }

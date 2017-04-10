@@ -298,7 +298,7 @@ public final class ConditionMessage {
                 return new ConditionMessage(ConditionMessage.this, this.condition);
             }
             return new ConditionMessage(ConditionMessage.this,
-                    this.condition + " " + reason);
+                this.condition + " " + reason);
         }
 
     }
@@ -386,7 +386,7 @@ public final class ConditionMessage {
             StringBuilder message = new StringBuilder(this.reason);
             items = style.applyTo(items);
             if ((this.condition == null || items.size() <= 1)
-                    && StringUtils.hasLength(this.singular)) {
+                && StringUtils.hasLength(this.singular)) {
                 message.append(" ").append(this.singular);
             } else if (StringUtils.hasLength(this.plural)) {
                 message.append(" ").append(this.plural);

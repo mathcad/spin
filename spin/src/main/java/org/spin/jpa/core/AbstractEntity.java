@@ -72,15 +72,15 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         AbstractEntity that = (AbstractEntity) o;
 
         return new EqualsBuilder()
-                .append(getId(), that.getId())
-                .isEquals();
+            .append(getId(), that.getId())
+            .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(getId())
-                .toHashCode();
+            .append(getId())
+            .toHashCode();
     }
 
     @Override

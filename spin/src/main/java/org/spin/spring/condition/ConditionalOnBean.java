@@ -22,46 +22,51 @@ import java.lang.annotation.Target;
  *
  * @author Phillip Webb
  */
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Conditional(OnBeanCondition.class)
 public @interface ConditionalOnBean {
 
-	/**
-	 * The class type of bean that should be checked. The condition matches when any of
-	 * the classes specified is contained in the {@link ApplicationContext}.
-	 * @return the class types of beans to check
-	 */
-	Class<?>[] value() default {};
+    /**
+     * The class type of bean that should be checked. The condition matches when any of
+     * the classes specified is contained in the {@link ApplicationContext}.
+     *
+     * @return the class types of beans to check
+     */
+    Class<?>[] value() default {};
 
-	/**
-	 * The class type names of bean that should be checked. The condition matches when any
-	 * of the classes specified is contained in the {@link ApplicationContext}.
-	 * @return the class type names of beans to check
-	 */
-	String[] type() default {};
+    /**
+     * The class type names of bean that should be checked. The condition matches when any
+     * of the classes specified is contained in the {@link ApplicationContext}.
+     *
+     * @return the class type names of beans to check
+     */
+    String[] type() default {};
 
-	/**
-	 * The annotation type decorating a bean that should be checked. The condition matches
-	 * when any of the annotations specified is defined on a bean in the
-	 * {@link ApplicationContext}.
-	 * @return the class-level annotation types to check
-	 */
-	Class<? extends Annotation>[] annotation() default {};
+    /**
+     * The annotation type decorating a bean that should be checked. The condition matches
+     * when any of the annotations specified is defined on a bean in the
+     * {@link ApplicationContext}.
+     *
+     * @return the class-level annotation types to check
+     */
+    Class<? extends Annotation>[] annotation() default {};
 
-	/**
-	 * The names of beans to check. The condition matches when any of the bean names
-	 * specified is contained in the {@link ApplicationContext}.
-	 * @return the name of beans to check
-	 */
-	String[] name() default {};
+    /**
+     * The names of beans to check. The condition matches when any of the bean names
+     * specified is contained in the {@link ApplicationContext}.
+     *
+     * @return the name of beans to check
+     */
+    String[] name() default {};
 
-	/**
-	 * Strategy to decide if the application context hierarchy (parent contexts) should be
-	 * considered.
-	 * @return the search strategy
-	 */
-	SearchStrategy search() default SearchStrategy.ALL;
+    /**
+     * Strategy to decide if the application context hierarchy (parent contexts) should be
+     * considered.
+     *
+     * @return the search strategy
+     */
+    SearchStrategy search() default SearchStrategy.ALL;
 
 }
