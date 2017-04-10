@@ -61,7 +61,7 @@ public abstract class HttpUtils {
     }
 
     public static String httpGetRequest(URI uri) {
-        String result = null;
+        String result;
         CloseableHttpClient httpclient = null;
         try {
             httpclient = HttpClients.createDefault();
@@ -94,7 +94,7 @@ public abstract class HttpUtils {
             url = HTTP + url;
         List<NameValuePair> nvps = params.entrySet().stream().map(p -> new BasicNameValuePair(p.getKey(), p.getValue
                 ())).collect(Collectors.toList());
-        String result = null;
+        String result;
         CloseableHttpClient httpclient = null;
         try {
             httpclient = HttpClients.createDefault();

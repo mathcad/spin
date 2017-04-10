@@ -24,7 +24,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Created by Arvin on 2016/10/4.
+ * 服务器端文件操作工具类
+ * Created by xuweinan on 2016/10/4.
  *
  * @author xuweinan
  */
@@ -91,6 +92,9 @@ public class FileOperator {
         return result;
     }
 
+    /**
+     * 将指定URL的图片保存至服务器端
+     */
     public static UploadResult saveFileFromUrl(String url) {
         UploadResult rs = new UploadResult();
         String storeName = generateFileName();

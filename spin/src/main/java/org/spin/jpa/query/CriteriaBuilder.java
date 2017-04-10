@@ -193,7 +193,7 @@ public class CriteriaBuilder {
     }
 
     /**
-     * 附件in查询
+     * 附加in查询
      */
     public CriteriaBuilder in(String prop, Collection<?> value) {
         this.addCriterion(Restrictions.in(prop, value));

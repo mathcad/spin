@@ -4,7 +4,8 @@ import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 
 /**
- * Created by xuweinan on 2017/2/19.
+ * Restful请求的相应结果
+ * <p>Created by xuweinan on 2017/2/19.
  *
  * @author xuweinan
  */
@@ -14,7 +15,7 @@ public class RestfulResponse {
     private Object data;
 
     private RestfulResponse(ErrorCode errorCode) {
-        ErrorCode code = errorCode.getCode() > 400  || errorCode.getCode() == 200 ? errorCode : ErrorCode.INTERNAL_ERROR;
+        ErrorCode code = errorCode.getCode() > 400 || errorCode.getCode() == 200 ? errorCode : ErrorCode.INTERNAL_ERROR;
         this.code = code.getCode();
         this.message = code.getDesc();
     }
