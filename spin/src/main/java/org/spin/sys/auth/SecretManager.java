@@ -6,11 +6,11 @@ import org.spin.security.RSA;
 import org.spin.sys.EnvCache;
 import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
-import org.spin.util.RandomStringUtils;
 import org.spin.util.StringUtils;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.UUID;
 
 /**
  * Created by xuweinan on 2017/3/27.
@@ -85,7 +85,7 @@ public class SecretManager {
         TokenInfo tokenInfo = secretDao.getTokenByIdentifier(id);
         // 如果需要强制更新token，token不存在或者已过期，重新生成token并存储
         if (forceNew || null == tokenInfo || isTimeOut(tokenInfo.getGenerateTime(), EnvCache.TokenExpireTime)) {
-            String token = RandomStringUtils.randomAlphanumeric(32);
+            String token = UUID.randomUUID().toString();
             tokenInfo = secretDao.saveToken(id, token);
         }
         return tokenInfo;

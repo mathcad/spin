@@ -29,7 +29,7 @@ public class AbstractUser extends AbstractEntity implements SessionUser {
     private String salt;
 
     @Column
-    private boolean active;
+    private boolean active = true;
 
     @Transient
     private LocalDateTime loginTime = LocalDateTime.now();

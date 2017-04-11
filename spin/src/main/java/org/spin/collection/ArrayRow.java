@@ -13,7 +13,7 @@ import java.util.RandomAccess;
 import java.util.function.Consumer;
 
 /**
- * Matrix中的一行
+ * Matrix中的一行,线程不安全
  *
  * @author xuweinan
  */

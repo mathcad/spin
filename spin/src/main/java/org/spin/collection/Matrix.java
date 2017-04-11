@@ -125,23 +125,21 @@ public class Matrix<T> implements RowUpdateListener {
             row.setRownum(rows.size() - 1);
         }
         // 构建索引
-        for (Map.Entry<Integer, MultiValueMap<T, Integer>> indexEntry : this.index.entrySet()) {
-            MultiValueMap<T, Integer> indexMap = indexEntry.getValue();
-            int indexCol = indexEntry.getKey();
-            indexMap.add(values[indexCol], row.rownum());
-        }
+        buildIndex(row);
         return this;
     }
 
     @SafeVarargs
     public final Matrix<T> update(int column, T key, T... values) {
         Assert.isTrue(null != values && values.length == columnNumber, "更新数据的列数与定义不符 需要" + columnNumber + "列");
-        // TODO 更新操作
+        // 更新操作
         List<Row<T>> row = findRows(column, key);
-        row.forEach(r -> {
-            for (int i = 0; i != columnNumber; ++i)
-                r.set(i, values[i]);
-        });
+        synchronized (this.rows) {
+            row.forEach(r -> {
+                for (int i = 0; i != columnNumber; ++i)
+                    r.set(i, values[i]);
+            });
+        }
         return this;
     }
 
@@ -199,7 +197,8 @@ public class Matrix<T> implements RowUpdateListener {
     }
 
     public final Matrix<T> createIndex(int column) {
-        // TODO 在column列上创建索引
+        // 在column列上创建索引
+        buildIndex(column);
         return this;
     }
 
@@ -211,18 +210,39 @@ public class Matrix<T> implements RowUpdateListener {
 
     @Override
     public void beforeUpdate(RowBeforeUpdateEvent event) {
-        // TODO 数据更新前，删除对应索引
+        // 数据更新前，删除对应索引
+        event.getUpdateCols().forEach(c -> {
+            MultiValueMap<T, Integer> indexMap = index.get(c);
+            //noinspection unchecked
+            Row<T> row = (Row<T>) event.getSource();
+            indexMap.remove(row.get(c), c);
+        });
     }
 
     @Override
     public void afterUpdate(RowAfterUpdateEvent event) {
-        // TODO 数据被更新后，建立索引
+        // 数据被更新后，建立索引
         //noinspection unchecked
         buildIndex((Row<T>) event.getSource(), event.getUpdatedCols());
     }
 
     private void rangeCheck(int column) {
         Assert.isTrue(column < columnNumber && column >= 0, "列索引超出范围");
+    }
+
+    /**
+     * 构建索引
+     */
+    private void buildIndex(int... cols) {
+        for (int indexCol : cols) {
+            MultiValueMap<T, Integer> indexMap = index.get(indexCol);
+            if (null != indexMap) {
+                indexMap.clear();
+                for (Row<T> row : rows) {
+                    indexMap.add(row.get(indexCol), row.rownum());
+                }
+            }
+        }
     }
 
     /**
