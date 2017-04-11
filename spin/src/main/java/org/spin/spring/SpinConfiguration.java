@@ -111,11 +111,11 @@ public class SpinConfiguration {
         return new HibernateTransactionManager(sessionFactory);
     }
 
-    @Bean
-    @ConditionalOnMissingBean(SecurityManager.class)
-    public SecurityManager securityManager() {
-        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
-        ((ModularRealmAuthenticator) securityManager.getAuthenticator()).setAuthenticationStrategy(new AnyoneSuccessfulStrategy());
-        return securityManager;
-    }
+//    @Bean
+//    @ConditionalOnMissingBean(SecurityManager.class)
+//    public SecurityManager securityManager() {
+//        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+//        ((ModularRealmAuthenticator) securityManager.getAuthenticator()).setAuthenticationStrategy(new AnyoneSuccessfulStrategy());
+//        return securityManager;
+//    }
 }

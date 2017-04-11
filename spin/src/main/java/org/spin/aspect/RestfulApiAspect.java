@@ -41,7 +41,7 @@ public class RestfulApiAspect {
     private static final Logger logger = LoggerFactory.getLogger(RestfulApiAspect.class);
 
     @Autowired(required = false)
-    Authenticator authenticator = null;
+    private Authenticator authenticator;
 
     @Pointcut("execution(org.spin.web.RestfulResponse *.*(..)) && @annotation(org.spin.annotations.RestfulApi)")
     private void restfulMethod() {

@@ -33,7 +33,9 @@ public final class EnvCache {
 
     private static final ThreadLocal<Map<String, Object>> THREAD_LOCAL_PARAMETERS = new ThreadLocal<>();
 
-    public static boolean devMode;
+    public static boolean devMode = false;
+
+    public static boolean shiroEnabled = false;
 
     /**
      * token过期时间
