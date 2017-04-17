@@ -44,12 +44,13 @@ public class TokenInfo implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TokenInfo tokenInfo = (TokenInfo) o;
-        return Objects.equals(token, tokenInfo.token);
+        return Objects.equals(identifier, tokenInfo.identifier) &&
+            Objects.equals(token, tokenInfo.token);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(token);
+        return Objects.hash(identifier, token);
     }
 
     @Override

@@ -2,18 +2,16 @@ package org.spin.spring;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
-import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.hibernate.SessionFactory;
 import org.spin.cache.RedisCache;
 import org.spin.jpa.core.SQLLoader;
 import org.spin.jpa.extend.DataBaseConfiguration;
 import org.spin.jpa.sql.loader.ClasspathMdLoader;
 import org.spin.jpa.sql.resolver.FreemarkerResolver;
-import org.spin.shiro.AnyoneSuccessfulStrategy;
 import org.spin.spring.condition.ConditionalOnBean;
 import org.spin.spring.condition.ConditionalOnMissingBean;
+import org.spin.sys.auth.InMemerySecretDao;
+import org.spin.sys.auth.SecretDao;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -118,4 +116,10 @@ public class SpinConfiguration {
 //        ((ModularRealmAuthenticator) securityManager.getAuthenticator()).setAuthenticationStrategy(new AnyoneSuccessfulStrategy());
 //        return securityManager;
 //    }
+
+    @Bean(name = "secretDao")
+    @ConditionalOnMissingBean(SecretDao.class)
+    public SecretDao getSecretDao() {
+        return new InMemerySecretDao();
+    }
 }

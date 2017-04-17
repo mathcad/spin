@@ -14,7 +14,7 @@ import org.spin.sys.EnvCache;
 import org.spin.sys.ErrorCode;
 import org.spin.sys.SessionUser;
 import org.spin.sys.auth.Authenticator;
-import org.spin.sys.auth.TokenKeyManager;
+import org.spin.sys.auth.SecretManager;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.JSONUtils;
 import org.spin.util.SessionUtils;
@@ -42,6 +42,9 @@ public class RestfulApiAspect {
 
     @Autowired(required = false)
     private Authenticator authenticator;
+
+    @Autowired
+    private SecretManager secretManager;
 
     @Pointcut("execution(org.spin.web.RestfulResponse *.*(..)) && @annotation(org.spin.annotations.RestfulApi)")
     private void restfulMethod() {
@@ -125,7 +128,7 @@ public class RestfulApiAspect {
 
     private Object checkAccess(String token, String authRouter) {
         // token是否有效
-        Object userId = TokenKeyManager.validateToken(token);
+        Object userId = secretManager.validateToken(token);
         // token对应用户是否拥有权限
         if (authenticator.checkAuthorities(userId, authRouter)) {
             return userId;

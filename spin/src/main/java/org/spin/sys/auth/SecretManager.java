@@ -7,30 +7,36 @@ import org.spin.sys.EnvCache;
 import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.UUID;
 
 /**
+ * 认证信息管理类
  * Created by xuweinan on 2017/3/27.
  *
  * @author xuweinan
  */
+@Component
 public class SecretManager {
     private static final Logger logger = LoggerFactory.getLogger(SecretManager.class);
-
-    private SecretDao secretDao;
-
-    /**
-     * 分隔符
-     */
+    /** 分隔符 */
     private static final String SEPARATOR = "~~~";
-
     private static PublicKey RSA_PUBKEY;
     private static PrivateKey RSA_PRIKEY;
 
+    @Autowired
+    private SecretDao secretDao;
+
+    /**
+     * 清除过期认证信息
+     */
     public void clearTokenKeyCache() {
+        secretDao.clearExpiredKey(EnvCache.KeyExpireTime);
+        secretDao.clearExpiredToken(EnvCache.TokenExpireTime);
     }
 
     /**
@@ -75,22 +81,20 @@ public class SecretManager {
      *
      * @return 返回token, 如果key无效，抛出异常
      */
-    public TokenInfo generateToken(String key, boolean forceNew) {
+    public TokenInfo generateToken(String key) {
         String id = secretDao.getIdentifierByKey(key);
         // 检查key是否合法
         if (StringUtils.isEmpty(id)) {
             throw new SimplifiedException(ErrorCode.SECRET_INVALID);
         }
-
-        TokenInfo tokenInfo = secretDao.getTokenByIdentifier(id);
-        // 如果需要强制更新token，token不存在或者已过期，重新生成token并存储
-        if (forceNew || null == tokenInfo || isTimeOut(tokenInfo.getGenerateTime(), EnvCache.TokenExpireTime)) {
-            String token = UUID.randomUUID().toString();
-            tokenInfo = secretDao.saveToken(id, token);
-        }
-        return tokenInfo;
+        // 生成新token
+        String token = UUID.randomUUID().toString();
+        return secretDao.saveToken(id, token);
     }
 
+    /**
+     * 生成密钥
+     */
     public KeyInfo generateKey(String userId, String pwd, boolean forceNew) {
         KeyInfo keyInfo = secretDao.getKeyByIdentifier(userId);
 
@@ -109,6 +113,26 @@ public class SecretManager {
             keyInfo = secretDao.saveKey(userId, key, pwd, generateTime);
         }
         return keyInfo;
+    }
+
+    public void invalidToken(String identifier) {
+        secretDao.removeToken(identifier);
+    }
+
+    public void invalidTokenByTokenStr(String tokenStr) {
+        secretDao.removeTokenByTokenStr(tokenStr);
+    }
+
+    public void invalidKey(String identifier) {
+        secretDao.removeKey(identifier);
+    }
+
+    public void invalidKeyByKeyStr(String keyStr) {
+        secretDao.removeKeyByKey(keyStr);
+    }
+
+    public void setSecretDao(SecretDao secretDao) {
+        this.secretDao = secretDao;
     }
 
     private boolean isTimeOut(Long generateTime, Long expiredIn) {
