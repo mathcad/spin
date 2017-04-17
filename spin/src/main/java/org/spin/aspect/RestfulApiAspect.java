@@ -21,6 +21,7 @@ import org.spin.util.SessionUtils;
 import org.spin.util.StringUtils;
 import org.spin.web.RestfulResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
@@ -37,7 +38,7 @@ import java.util.List;
  */
 @Aspect
 @Component
-public class RestfulApiAspect {
+public class RestfulApiAspect implements Ordered {
     private static final Logger logger = LoggerFactory.getLogger(RestfulApiAspect.class);
 
     @Autowired(required = false)
@@ -134,5 +135,10 @@ public class RestfulApiAspect {
             return userId;
         }
         return null;
+    }
+
+    @Override
+    public int getOrder() {
+        return 0;
     }
 }
