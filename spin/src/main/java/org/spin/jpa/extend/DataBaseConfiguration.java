@@ -27,6 +27,7 @@ public class DataBaseConfiguration {
     private String[] packagesToScan;
     private String showSql = "false";
     private String dialect;
+    private String hbm2ddl;
 
     public String getUrl() {
         return url;
@@ -162,5 +163,13 @@ public class DataBaseConfiguration {
 
     public void setDialect(String dialect) {
         this.dialect = dialect;
+    }
+
+    public String getHbm2ddl() {
+        return hbm2ddl;
+    }
+
+    public void setHbm2ddl(String hbm2ddl) {
+        this.hbm2ddl = hbm2ddl;
     }
 }

@@ -17,7 +17,7 @@
 
 package org.arvin.test;
 
-import org.arvin.test.domain.User;
+import org.arvin.test.domain.sys.User;
 import org.beetl.sql.core.ClasspathLoader;
 import org.beetl.sql.core.ConnectionSource;
 import org.beetl.sql.core.ConnectionSourceHelper;
@@ -50,7 +50,7 @@ public class BeetlSqlDemo {
 //使用内置的生成的sql 新增用户，如果需要获取主键，可以传入KeyHolder
         User user = new User();
 //        user.setAge(19);
-        user.setName("xiandafu");
+        user.setUserName("xiandafu");
         sqlManager.insert(user);
 
 //使用内置sql查询用户
@@ -65,13 +65,13 @@ public class BeetlSqlDemo {
 
 //模板查询
         User query = new User();
-        query.setName("xiandafu");
+        query.setUserName("xiandafu");
         List<User> list = sqlManager.template(query);
 
 
 //使用user.md 文件里的select语句，参考下一节。
         User query2 = new User();
-        query.setName("xiandafu");
+        query.setUserName("xiandafu");
         List<User> list2 = sqlManager.select("user.select", User.class, query2);
     }
 }

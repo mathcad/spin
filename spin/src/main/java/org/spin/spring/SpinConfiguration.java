@@ -98,6 +98,7 @@ public class SpinConfiguration {
         if (StringUtils.isEmpty(configuration.getDialect()))
             throw new BeanCreationException("数据库连接必需配置Dialect");
         proper.setProperty("hibernate.dialect", configuration.getDialect());
+        proper.setProperty("hibernate.hbm2ddl.auto", configuration.getHbm2ddl());
         sessionFactory.setHibernateProperties(proper);
         return sessionFactory;
     }

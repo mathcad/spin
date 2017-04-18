@@ -65,6 +65,7 @@ public abstract class GenericSqlLoader implements SQLLoader {
         return new SQLSource(id, sql);
     }
 
+    @Override
     public SQLSource getPagedSQL(String id, Map<String, ?> model, QueryParam queryParam) {
         return dbType.getPagedSQL(getSQL(id, model), queryParam);
     }

@@ -2,49 +2,59 @@ package org.spin.jpa.core;
 
 
 import org.spin.sys.SessionUser;
+import org.spin.util.DigestUtils;
+import org.spin.util.RandomStringUtils;
+import org.spin.util.StringUtils;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import java.time.LocalDateTime;
 
 /**
+ * 用户的父类，定义了用户的通用属性
  * Created by xuweinan on 2016/10/5.
  *
  * @author xuweinan
  */
-@Entity
-@Table(name = "sys_user")
-public class AbstractUser extends AbstractEntity implements SessionUser {
-    private static final long serialVersionUID = -5165281965534714968L;
+@MappedSuperclass
+public abstract class AbstractUser extends AbstractEntity implements SessionUser {
 
+    /**
+     * 用户名
+     */
     @Column(length = 32)
     private String userName;
 
-    @Column(length = 32)
+    /**
+     * 密码
+     */
+    @Column(length = 64)
     private String password;
 
+    /**
+     * 盐
+     */
     @Column(length = 16)
     private String salt;
 
+    /**
+     * 是否有效
+     */
     @Column
     private boolean active = true;
 
+    /**
+     * 登录时间
+     */
     @Transient
     private LocalDateTime loginTime = LocalDateTime.now();
 
+    /**
+     * 如果与session关联，session的id
+     */
     @Transient
     private String sessionId;
-
-    /**
-     * 引用一个User
-     */
-    public static AbstractUser ref(Long id) {
-        AbstractUser u = new AbstractUser();
-        u.setId(id);
-        return u;
-    }
 
     public String getUserName() {
         return userName;
@@ -59,7 +69,11 @@ public class AbstractUser extends AbstractEntity implements SessionUser {
     }
 
     public void setPassword(String password) {
-        this.password = password;
+        if (StringUtils.isEmpty(salt)) {
+            this.salt = RandomStringUtils.randomAlphanumeric(16);
+        }
+        this.password = DigestUtils.sha256Hex(password + salt);
+
     }
 
     public String getSalt() {

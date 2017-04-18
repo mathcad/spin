@@ -1,8 +1,5 @@
 package org.spin.jpa.core;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -12,6 +9,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * 基本实体类型
@@ -34,7 +32,7 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * 记录创建者名称
      */
     @ManyToOne
-    private AbstractUser createBy;
+    private BaseUser createBy;
 
     /**
      * 创建时间，禁止更改
@@ -46,7 +44,7 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * 记录更新者
      */
     @ManyToOne
-    private AbstractUser updateBy;
+    private BaseUser updateBy;
 
     /**
      * 最后更新时间
@@ -60,27 +58,24 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     @Version
     private int version;
 
+    /**
+     * 标记逻辑删除
+     */
     @Column
     private boolean valid = true;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-
         if (o == null || getClass() != o.getClass()) return false;
-
         AbstractEntity that = (AbstractEntity) o;
-
-        return new EqualsBuilder()
-            .append(getId(), that.getId())
-            .isEquals();
+        return version == that.version &&
+            Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37)
-            .append(getId())
-            .toHashCode();
+        return Objects.hash(id, version, this.getClass());
     }
 
     @Override
@@ -93,11 +88,11 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.id = id;
     }
 
-    public AbstractUser getCreateBy() {
+    public BaseUser getCreateBy() {
         return createBy;
     }
 
-    public void setCreateBy(AbstractUser createBy) {
+    public void setCreateBy(BaseUser createBy) {
         this.createBy = createBy;
     }
 
@@ -109,11 +104,11 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.createTime = createTime;
     }
 
-    public AbstractUser getUpdateBy() {
+    public BaseUser getUpdateBy() {
         return updateBy;
     }
 
-    public void setUpdateBy(AbstractUser updateBy) {
+    public void setUpdateBy(BaseUser updateBy) {
         this.updateBy = updateBy;
     }
 

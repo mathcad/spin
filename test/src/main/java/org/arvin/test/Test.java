@@ -1,6 +1,6 @@
 package org.arvin.test;
 
-import org.arvin.test.domain.User;
+import org.arvin.test.domain.sys.User;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
@@ -41,7 +41,7 @@ public class Test {
               u = org.spin.util.BeanUtils.wrapperMapToBean(User.class, a);
             Long end = System.currentTimeMillis();
 
-            System.out.println(u.getRoles());
+//            System.out.println(u.getRoles());
             System.out.println(end - start);
         } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();

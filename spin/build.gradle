@@ -53,3 +53,16 @@ install {
         pom.groupId = "$project.group"
     }
 }
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "http://localhost:8081/repository/saturn") {
+                authentication(userName: "admin", password: "super")
+            }
+            pom.version = "$project.version"
+            pom.artifactId = "$artifactId"
+            pom.groupId = "$project.group"
+        }
+    }
+}

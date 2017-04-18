@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.annotations.Needed;
 import org.spin.annotations.RestfulApi;
-import org.spin.jpa.core.AbstractUser;
+import org.spin.jpa.core.BaseUser;
 import org.spin.sys.EnvCache;
 import org.spin.sys.ErrorCode;
 import org.spin.sys.SessionUser;
@@ -63,7 +63,7 @@ public class RestfulApiAspect implements Ordered {
             if (StringUtils.isNotBlank(token)) {
                 Object userId = checkAccess(token, authRouter);
                 if (userId != null) {
-                    SessionUtils.setCurrentUser(AbstractUser.ref((Long) userId));
+                    SessionUtils.setCurrentUser(BaseUser.ref((Long) userId));
 //                    EnvCache.THREAD_LOCAL_PARAMETERS.get().put(SessionUtils.USER_SESSION_KEY, userId);
                     isAllowed = true;
                 }

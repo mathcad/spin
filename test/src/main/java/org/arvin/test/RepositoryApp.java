@@ -37,9 +37,9 @@ public class RepositoryApp {
     @Bean
     public DataBaseConfiguration dbConfiguration() {
         DataBaseConfiguration dbConfiguration = new DataBaseConfiguration();
-        dbConfiguration.setUrl("jdbc:mysql://192.168.20.205:3306/gsh56tms?useUnicode=true&autoReconnect=true&failOverReadOnly=false");
-        dbConfiguration.setUsername("tms");
-        dbConfiguration.setPassword("tms56");
+        dbConfiguration.setUrl("jdbc:mysql://localhost:3306/test?useUnicode=true&autoReconnect=true&failOverReadOnly=false&characterEncoding=utf-8&&serverTimezone=UTC");
+        dbConfiguration.setUsername("root");
+        dbConfiguration.setPassword("admin");
         dbConfiguration.setMaxActive(5);
         dbConfiguration.setMinIdle(1);
         dbConfiguration.setInitialSize(1);
@@ -51,6 +51,7 @@ public class RepositoryApp {
         dbConfiguration.setNamingStrategy(new ImprovedNamingStrategy());
 //        proper.setProperty("hibernate.current_session_context_class", "org.springframework.orm.hibernate5.SpringSessionContext");
         dbConfiguration.setShowSql("true");
+        dbConfiguration.setHbm2ddl("none");
         dbConfiguration.setDialect("org.hibernate.dialect.MySQLDialect");
         return dbConfiguration;
     }
