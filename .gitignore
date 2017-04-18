@@ -1,8 +1,18 @@
-*.iml
+# build files
 *.bin
 *.lock
 out/
+bin/
 /*/build/
 target/
 .gradle/
+
+# IDEA project metadata
 .idea/
+*.iml
+
+# Eclipse workspace metadata
+.settings/
+.metadata/
+.project
+.classpath
