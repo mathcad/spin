@@ -25,8 +25,7 @@ import java.util.Map;
 
 /**
  * 拥有缓存机制的SQL装载器
- * <p>
- * Created by xuweinan on 2016/8/13.
+ * <p>Created by xuweinan on 2016/8/13.</p>
  *
  * @author xuweinan
  * @version 1.1

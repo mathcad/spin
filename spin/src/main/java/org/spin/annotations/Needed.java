@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * 标记RestfulApi方法的参数，用来表示该参数是否必须
- * Created by xuweinan on 2016/10/18.
+ * <p>Created by xuweinan on 2016/10/18.</p>
  *
  * @author xuweinan
  */

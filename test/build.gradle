@@ -39,7 +39,7 @@ targetCompatibility = 1.8
 
 repositories {
     mavenLocal()
-    maven { url 'http://localhost:8081/repository/saturn/' }
+//    maven { url 'http://localhost:8081/repository/saturn/' }
     maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
     mavenCentral()
 }
@@ -79,8 +79,9 @@ dependencies {
     compile group: 'com.alibaba', name: 'druid', version: '1.0.26'
     compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
     compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
-    compile group: 'org.mathcat', name: 'spin', version: '1.8.4'
+//    compile group: 'org.mathcat', name: 'spin', version: '1.8.4'
     compile(project(":zibra"))
+    compile(project(":spin"))
 
 
     runtime group: 'mysql', name: 'mysql-connector-java', version: '6.0.5'

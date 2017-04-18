@@ -5,8 +5,7 @@ import java.util.function.Consumer;
 
 /**
  * Matrix中的一行
- * <p>
- * Created by xuweinan on 2017/3/7.
+ * <p>Created by xuweinan on 2017/3/7.</p>
  *
  * @author xuweinan
  */

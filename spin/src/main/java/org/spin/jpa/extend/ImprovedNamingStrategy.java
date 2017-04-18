@@ -8,7 +8,9 @@ import java.util.Locale;
 
 /**
  * hibernate命名策略
- * Created by xuweinan on 2016/9/14.
+ * <p>Created by xuweinan on 2016/9/14.</p>
+ *
+ * @author xuweinan
  */
 public class ImprovedNamingStrategy implements PhysicalNamingStrategy {
 

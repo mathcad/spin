@@ -16,6 +16,12 @@ import org.springframework.stereotype.Component;
 import java.io.Serializable;
 import java.util.Optional;
 
+/**
+ * 存储对象上下文
+ * <p>Created by xuweinan on 2016/9/24.</p>
+ *
+ * @author xuweinan
+ */
 @Component
 public class RepositoryContext implements ApplicationContextAware {
     private static final Logger logger = LoggerFactory.getLogger(RepositoryContext.class);

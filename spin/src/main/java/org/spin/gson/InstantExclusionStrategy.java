@@ -11,8 +11,7 @@ import java.util.Map;
 
 /**
  * gson字段排除策略
- * <p>
- * Created by xuweinan on 2016/9/29.
+ * <p>Created by xuweinan on 2016/9/29.</p>
  *
  * @author xuweinan
  */

@@ -25,7 +25,9 @@ import java.util.regex.Pattern;
 
 /**
  * FTP工具类
+ * <p>Created by xuweinan on 2016/8/22.</p>
  *
+ * @author xuweinan
  * @version V1.0
  */
 public class FtpOperator {
@@ -39,6 +41,9 @@ public class FtpOperator {
     private int port = 21;
     private FTPClient client;
 
+    /**
+     * FTP协议
+     */
     public enum Protocal {
         FTP("ftp"), FTPS("ftps");
         private String value;
@@ -83,14 +88,41 @@ public class FtpOperator {
         return connect(protocal, userName, password, host, StringUtils.isEmpty(port) ? 21 : Integer.parseInt(port.substring(1)));
     }
 
+    /**
+     * 连接FTP服务器
+     *
+     * @param protocal 协议
+     * @param userName 用户名
+     * @param password 密码
+     * @param host     主机
+     * @return FTP操作类
+     */
     public static FtpOperator connect(Protocal protocal, String userName, String password, String host) {
         return connect(protocal, userName, password, host, 21);
     }
 
+    /**
+     * 连接FTP服务器
+     *
+     * @param userName 用户名
+     * @param password 密码
+     * @param host     主机
+     * @return FTP操作类
+     */
     public static FtpOperator connect(String userName, String password, String host) {
         return connect(Protocal.FTP, userName, password, host, 21);
     }
 
+    /**
+     * 连接FTP服务器
+     *
+     * @param protocal 协议
+     * @param userName 用户名
+     * @param password 密码
+     * @param host     主机
+     * @param port     端口
+     * @return FTP操作类
+     */
     public static FtpOperator connect(Protocal protocal, String userName, String password, String host, int port) {
         Protocal p = protocal;
         if (null == protocal)
@@ -115,6 +147,12 @@ public class FtpOperator {
         return ftp;
     }
 
+    /**
+     * 执行FTP指令
+     *
+     * @param command 指令文本
+     * @return 状态码
+     */
     public int sendCommands(String command) {
         try {
             return client.sendCommand(command);
@@ -124,6 +162,11 @@ public class FtpOperator {
         return -1;
     }
 
+    /**
+     * 列出指定路径下所有远程文件
+     *
+     * @param path 远程路径
+     */
     public void listRemoteAllFiles(String path) {
         try {
             FTPListParseEngine f = client.initiateListParsing(path);
@@ -148,6 +191,14 @@ public class FtpOperator {
         }
     }
 
+    /**
+     * 下载文件
+     *
+     * @param remotePath 远程路径
+     * @param fileName   文件名
+     * @param localPath  本地存储路径
+     * @return 是否成功
+     */
     public boolean downFile(String remotePath, String fileName, String localPath) {
         boolean flag = false;
         try {
@@ -163,6 +214,13 @@ public class FtpOperator {
         return flag;
     }
 
+    /**
+     * 下载文件
+     *
+     * @param fullPath  远程文件全名
+     * @param localPath 本地存储路径
+     * @return 是否成功
+     */
     public boolean downFile(String fullPath, String localPath) {
         int lastIdx = fullPath.lastIndexOf("/") + 1;
         if (lastIdx <= 0)
@@ -172,6 +230,13 @@ public class FtpOperator {
         return downFile(dir, fileName, localPath);
     }
 
+    /**
+     * 下载文件到输出流
+     *
+     * @param fullPath 远程文件全名
+     * @param os       输出流
+     * @return 是否成功
+     */
     public boolean downFile(String fullPath, OutputStream os) {
         boolean flag = false;
         FTPFile[] fs;
@@ -196,6 +261,14 @@ public class FtpOperator {
         return flag;
     }
 
+    /**
+     * 上传文件
+     *
+     * @param path          远程路径
+     * @param filename      文件名
+     * @param localFilePath 本地路径
+     * @return 是否成功
+     */
     public boolean upFile(String path, String filename, String localFilePath) {
         boolean flag = false;
         try {
@@ -210,6 +283,14 @@ public class FtpOperator {
         return flag;
     }
 
+    /**
+     * 从输入流中读取并上传文件
+     *
+     * @param path     远程路径
+     * @param filename 文件名
+     * @param local    本地输入流
+     * @return 是否成功
+     */
     public boolean upFile(String path, String filename, InputStream local) {
         boolean flag = false;
         try {
@@ -223,6 +304,12 @@ public class FtpOperator {
         return flag;
     }
 
+    /**
+     * 创建文件夹
+     *
+     * @param path 远程路径
+     * @return 是否成功
+     */
     public boolean mkdir(String path) {
         try {
             return client.makeDirectory(path);

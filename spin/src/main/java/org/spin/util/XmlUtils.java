@@ -17,16 +17,13 @@ import java.util.Map;
 
 /**
  * Copyright(c) Kengine 2009-2015. 玉柴联合动力股份有限公司
- * <p>
- * XML文件解析通用类，提供简单的以xpath方式访问xml的方法
- * <p>
- * JDK version: 1.7 or later
- * <p>
- * Created by xuweinan on 2015/4/14.
+ * <p>XML文件解析通用类，提供简单的以xpath方式访问xml的方法</p>
+ * <p>JDK version: 1.7 or later</p>
+ * <p>Created by xuweinan on 2015/4/14.</p>
  * <p>
  * Modified By: xuweinan<br>
  * Modified Time: Apr 24, 2015 16:00:13
- * <p>
+ * </p>
  * Modified History:<br>
  * 2015-04-24 实现文档递归遍历算法 xuweinan
  *

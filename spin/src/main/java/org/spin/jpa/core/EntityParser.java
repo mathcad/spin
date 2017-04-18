@@ -2,7 +2,7 @@ package org.spin.jpa.core;
 
 /**
  * 实体解析器接口
- * Created by xuweinan on 2016/9/24.
+ * <p>Created by xuweinan on 2016/9/24.</p>
  *
  * @author xuweinan
  */

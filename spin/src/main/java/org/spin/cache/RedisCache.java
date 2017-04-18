@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 /**
  * redis缓存实现
+ * <p>Created by xuweinan on 2016/8/22.</p>
  *
  * @author xuweinan
  * @version V1.0

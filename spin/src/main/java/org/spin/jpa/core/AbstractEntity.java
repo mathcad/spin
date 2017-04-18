@@ -14,6 +14,7 @@ import java.util.Objects;
 /**
  * 基本实体类型
  * <p>定义了实体的部分通用字段，所有用户实体如无特殊需求，应从此类继承</p>
+ * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @author xuweinan
  * @version 1.0

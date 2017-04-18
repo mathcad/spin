@@ -2,7 +2,7 @@ package org.spin.jpa.sql;
 
 /**
  * 定义SQL语句
- * Created by xuweinan on 2016/9/24.
+ * <p>Created by xuweinan on 2016/9/24.</p>
  *
  * @author xuweinan
  */

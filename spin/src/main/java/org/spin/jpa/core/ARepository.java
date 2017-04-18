@@ -57,6 +57,7 @@ import java.util.stream.Collectors;
  * 1、基于Jpa规范的Repository
  * 2、基于JdbcTemplate和NamedJdbcTemplate的动态SQL查询
  * </pre>
+ * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @author xuweinan
  * @version V1.3

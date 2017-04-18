@@ -6,12 +6,13 @@ import java.util.EventObject;
 import java.util.List;
 
 /**
- * Row中的数据更新事件
- * Created by xuweinan on 2017/3/20.
+ * Row中的数据更新后的事件
+ * <p>Created by xuweinan on 2017/3/20.</p>
  *
  * @author xuweinan
  */
 public class RowAfterUpdateEvent extends EventObject {
+    private static final long serialVersionUID = -858892121207277827L;
 
     private List<Integer> updatedCols = new ArrayList<>();
 

@@ -4,7 +4,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 
 /**
  * 数据库配置
- * Created by xuweinan on 2017/3/6.
+ * <p>Created by xuweinan on 2017/3/6.</p>
  *
  * @author xuweinan
  */

@@ -18,6 +18,7 @@ import java.util.Set;
 
 /**
  * 通用查询参数
+ * <p>Created by xuweinan on 2016/12/14.</p>
  *
  * @author xuweinan
  */
@@ -44,6 +45,9 @@ public class QueryParam implements Serializable {
 
     /**
      * 解析order部分
+     *
+     * @param tableAlias 子查询别名
+     * @return {@link String} 查询语句
      */
     public String parseOrder(String tableAlias) {
         return StringUtils.isNotEmpty(predicate.getSort()) ? "ORDER BY" + predicate.getSort().replaceAll("__", " ").replaceAll(",\\s*", ", " + tableAlias + ".") : "";
@@ -63,13 +67,18 @@ public class QueryParam implements Serializable {
 
     /**
      * 创建新的查询参数
+     *
+     * @return {@link QueryParam}
      */
     public static QueryParam create() {
         return new QueryParam();
     }
 
     /**
-     * 查询的实体类
+     * 设置查询的实体类
+     *
+     * @param entityClass 实体类全名
+     * @return {@link QueryParam}
      */
     public QueryParam from(String entityClass) {
         this.cls = entityClass;
@@ -78,6 +87,9 @@ public class QueryParam implements Serializable {
 
     /**
      * 增加查询字段
+     *
+     * @param field 字段名
+     * @return {@link QueryParam}
      */
     public QueryParam addField(String field) {
         this.fields.add(field);
@@ -86,6 +98,9 @@ public class QueryParam implements Serializable {
 
     /**
      * 增加查询字段
+     *
+     * @param fields 字段名列表
+     * @return {@link QueryParam}
      */
     public QueryParam addFields(String... fields) {
         Collections.addAll(this.fields, fields);
@@ -93,7 +108,11 @@ public class QueryParam implements Serializable {
     }
 
     /**
-     * 增加查询字段别名
+     * 设置查询字段别名
+     *
+     * @param field 字段名
+     * @param alias 字段别名
+     * @return {@link QueryParam}
      */
     public QueryParam createAlias(String field, String alias) {
         this.aliasMap.put(field, alias);
@@ -101,7 +120,10 @@ public class QueryParam implements Serializable {
     }
 
     /**
-     * 增加查询字段别名
+     * 设置查询字段别名
+     *
+     * @param params 字段与别名的映射：field1, alias1, field2, alias2...
+     * @return {@link QueryParam}
      */
     public QueryParam createAliases(String... params) {
         if (params.length % 2 != 0) {
@@ -116,6 +138,10 @@ public class QueryParam implements Serializable {
 
     /**
      * 增加查询条件
+     *
+     * @param condition 条件
+     * @param value     值
+     * @return {@link QueryParam}
      */
     public QueryParam where(String condition, String value) {
         predicate.getConditions().put(condition, value);
@@ -124,6 +150,9 @@ public class QueryParam implements Serializable {
 
     /**
      * 增加排序(升序)
+     *
+     * @param orderField 排序字段
+     * @return {@link QueryParam}
      */
     public QueryParam asc(String orderField) {
         predicate.setSort((StringUtils.isEmpty(predicate.getSort()) ? "" : predicate.getSort()) + "," + orderField + "__asc");
@@ -132,6 +161,9 @@ public class QueryParam implements Serializable {
 
     /**
      * 增加排序(降序)
+     *
+     * @param orderField 排序字段
+     * @return {@link QueryParam}
      */
     public QueryParam desc(String orderField) {
         predicate.setSort((StringUtils.isEmpty(predicate.getSort()) ? "" : predicate.getSort()) + "," + orderField + "__desc");
@@ -140,6 +172,10 @@ public class QueryParam implements Serializable {
 
     /**
      * 分页
+     *
+     * @param pageIdx  页码，从1开始
+     * @param pageSize 页大小
+     * @return {@link QueryParam}
      */
     public QueryParam page(int pageIdx, int pageSize) {
         predicate.setPageIdx(pageIdx);

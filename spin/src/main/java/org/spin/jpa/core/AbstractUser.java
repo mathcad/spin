@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 /**
  * 用户的父类，定义了用户的通用属性
- * Created by xuweinan on 2016/10/5.
+ * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @author xuweinan
  */

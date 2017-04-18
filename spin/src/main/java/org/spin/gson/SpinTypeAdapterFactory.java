@@ -20,7 +20,7 @@ import java.time.LocalTime;
 
 /**
  * Gson TypeAdapter
- * Created by xuweinan on 2017/1/25.
+ * <p>Created by xuweinan on 2017/1/25.</p>
  *
  * @author xuweinan
  */

@@ -27,7 +27,9 @@ import java.util.Properties;
 
 /**
  * 枚举映射
+ * <p>Created by xuweinan on 2016/9/24.</p>
  *
+ * @author xuweinan
  * @version V1.0
  */
 public class UserEnumType implements EnhancedUserType, DynamicParameterizedType, LoggableUserType, Serializable {
@@ -279,6 +281,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     }
 
     private class OrdinalEnumValueMapper extends EnumValueMapperSupport implements EnumValueMapper, Serializable {
+        private static final long serialVersionUID = 3425742296198497687L;
         private transient Enum[] enumsByOrdinal;
 
         @Override
@@ -410,6 +413,8 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     }
 
     public abstract class EnumValueMapperSupport implements EnumValueMapper {
+        private static final long serialVersionUID = 1929721731025741707L;
+
         protected abstract Object extractJdbcValue(Enum value);
 
         @Override

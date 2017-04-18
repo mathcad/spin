@@ -7,7 +7,7 @@ import org.spin.sys.Assert;
 import org.spin.util.StringUtils;
 
 /**
- * Created by xuweinan on 2016/9/12.
+ * <p>Created by xuweinan on 2016/9/12.</p>
  *
  * @author xuweinan
  */

@@ -1,6 +1,6 @@
 package org.spin.sys.auth;
 
-import org.spin.jpa.core.AbstractUser;
+import org.spin.jpa.core.BaseUser;
 
 import java.util.Date;
 
@@ -18,13 +18,13 @@ public interface Authenticator {
      *
      * @param identity 用户标识符，具体由实现类定义
      */
-    AbstractUser getSubject(Object identity);
+    BaseUser getSubject(Object identity);
 
     /**
      * 验证用户密码前的自定义校验，如验证用户类型等。
      * <p>验证不通过直接抛出异常即可</p>
      */
-    void preCheck(AbstractUser user);
+    void preCheck(BaseUser user);
 
     /**
      * 获取角色与权限信息

@@ -6,8 +6,10 @@ import java.util.List;
 
 /**
  * 分页数据（列表使用)
+ * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @param <T>
+ * @author xuweinan
  */
 public class Page<T> implements Serializable {
     private static final long serialVersionUID = -1433098389717460681L;

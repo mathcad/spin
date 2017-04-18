@@ -3,7 +3,8 @@ package org.spin.collection;
 import java.util.EventListener;
 
 /**
- * Created by xuweinan on 2017/3/20.
+ * Row数据变更监听器
+ * <p>Created by xuweinan on 2017/3/20.</p>
  *
  * @author xuweinan
  */

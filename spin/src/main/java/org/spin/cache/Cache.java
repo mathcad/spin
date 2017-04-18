@@ -4,6 +4,7 @@ import java.util.Set;
 
 /**
  * 缓存接口
+ * <p>Created by xuweinan on 2016/8/22.</p>
  *
  * @author xuweinan
  * @version 1.0

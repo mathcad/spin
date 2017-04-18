@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 
 /**
  * Matrix中的一行,线程不安全
+ * <p>Created by xuweinan on 2017/3/2.</p>
  *
  * @author xuweinan
  */

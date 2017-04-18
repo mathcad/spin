@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * 标记枚举类型，系统扫描后自动生成数据字典
+ * <p>Created by xuweinan on 2016/8/22.</p>
  *
  * @author xuweinan
  */

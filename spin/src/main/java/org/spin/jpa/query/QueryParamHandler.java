@@ -2,6 +2,7 @@ package org.spin.jpa.query;
 
 /**
  * 自定义查询条件处理
+ * <p>Created by xuweinan on 2016/12/14.</p>
  *
  * @author xuweinan
  */
@@ -20,6 +21,9 @@ public abstract class QueryParamHandler {
      */
     public abstract void processCriteria(CriteriaBuilder dc, String val);
 
+    /**
+     * 获取条件字段
+     */
     public String getField() {
         return field;
     }

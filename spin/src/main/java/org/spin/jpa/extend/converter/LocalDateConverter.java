@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 /**
  * 数据库Date与Java8的LocalDate之间的转换器
- * Created by xuweinan on 2017/1/25.
+ * <p>Created by xuweinan on 2017/1/25.</p>
  *
  * @author xuweinan
  */

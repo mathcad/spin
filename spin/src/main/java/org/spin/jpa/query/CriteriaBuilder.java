@@ -24,7 +24,7 @@ import java.util.Set;
 
 /**
  * 离线查询条件构造器
- * Created by xuweinan on 2016/12/14.
+ * <p>Created by xuweinan on 2016/12/14.</p>
  *
  * @author xuweinan
  */
@@ -44,6 +44,12 @@ public class CriteriaBuilder {
     private CriteriaBuilder() {
     }
 
+    /**
+     * 创建离线查询条件
+     *
+     * @param enCls 查询的实体类
+     * @return {@link DetachedCriteria}
+     */
     public static CriteriaBuilder forClass(Class<?> enCls) {
         CriteriaBuilder instance = new CriteriaBuilder();
         instance.enCls = enCls;
@@ -56,19 +62,30 @@ public class CriteriaBuilder {
      *
      * @param page 页码(从1开始)
      * @param size 页参数
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder page(int page, int size) {
         pageRequest = new PageRequest(page - 1, size);
         return this;
     }
 
+    /**
+     * 增加查询字段
+     *
+     * @param fields 字段列表
+     * @return {@link DetachedCriteria}
+     */
     public CriteriaBuilder addFields(String... fields) {
         Arrays.stream(fields).filter(StringUtils::isNotEmpty).forEach(this.fields::add);
         return this;
     }
 
     /**
-     * 增加查询字段别名
+     * 设置查询字段别名
+     *
+     * @param field 字段名
+     * @param alias 别名
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder createAlias(String field, String alias) {
         aliasMap.put(field, alias);
@@ -76,7 +93,10 @@ public class CriteriaBuilder {
     }
 
     /**
-     * 增加查询字段别名
+     * 设置查询字段别名
+     *
+     * @param params 字段与别名的映射：field1, alias1, field2, alias2...
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder createAliases(String... params) {
         if (null != params) {
@@ -91,6 +111,12 @@ public class CriteriaBuilder {
         return this;
     }
 
+    /**
+     * 追加多个查询条件
+     *
+     * @param criterions 条件
+     * @return {@link DetachedCriteria}
+     */
     public CriteriaBuilder addCriterion(Criterion... criterions) {
         if (null != criterions) {
             for (Criterion ct : criterions) {
@@ -101,6 +127,12 @@ public class CriteriaBuilder {
         return this;
     }
 
+    /**
+     * 追加多个查询条件
+     *
+     * @param criterions 条件
+     * @return {@link DetachedCriteria}
+     */
     public CriteriaBuilder addCriterion(Iterable<Criterion> criterions) {
         if (null != criterions) {
             for (Criterion ct : criterions) {
@@ -111,6 +143,12 @@ public class CriteriaBuilder {
         return this;
     }
 
+    /**
+     * 追加排序
+     *
+     * @param ords 排序
+     * @return {@link DetachedCriteria}
+     */
     public CriteriaBuilder orderBy(Order... ords) {
         if (null != ords)
             for (Order ord : ords) {
@@ -122,6 +160,10 @@ public class CriteriaBuilder {
 
     /**
      * 快速eq条件
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder eq(String prop, Object value) {
         this.addCriterion(Restrictions.eq(prop, value));
@@ -130,6 +172,10 @@ public class CriteriaBuilder {
 
     /**
      * 快速not eq条件
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder notEq(String prop, Object value) {
         this.addCriterion(Restrictions.not(Restrictions.eq(prop, value)));
@@ -138,6 +184,10 @@ public class CriteriaBuilder {
 
     /**
      * like '*%' 模糊
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder startWith(String prop, String value) {
         this.addCriterion(Restrictions.like(prop, value, MatchMode.START));
@@ -146,6 +196,10 @@ public class CriteriaBuilder {
 
     /**
      * like '%*' 模糊
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder endWith(String prop, String value) {
         this.addCriterion(Restrictions.like(prop, value, MatchMode.END));
@@ -154,6 +208,10 @@ public class CriteriaBuilder {
 
     /**
      * like '%%' 全模糊
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder like(String prop, String value) {
         this.addCriterion(Restrictions.like(prop, value, MatchMode.ANYWHERE));
@@ -162,6 +220,10 @@ public class CriteriaBuilder {
 
     /**
      * 快速gt条件 &gt;
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder gt(String prop, Object value) {
         this.addCriterion(Restrictions.gt(prop, value));
@@ -170,6 +232,10 @@ public class CriteriaBuilder {
 
     /**
      * 快速ge条件 &gt;=
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder ge(String prop, Object value) {
         this.addCriterion(Restrictions.ge(prop, value));
@@ -178,6 +244,10 @@ public class CriteriaBuilder {
 
     /**
      * 快速lt条件 &lt;
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder lt(String prop, Object value) {
         this.addCriterion(Restrictions.lt(prop, value));
@@ -186,6 +256,10 @@ public class CriteriaBuilder {
 
     /**
      * 快速le条件 &lt;=
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder le(String prop, Object value) {
         this.addCriterion(Restrictions.le(prop, value));
@@ -194,6 +268,10 @@ public class CriteriaBuilder {
 
     /**
      * 附加in查询
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder in(String prop, Collection<?> value) {
         this.addCriterion(Restrictions.in(prop, value));
@@ -202,26 +280,30 @@ public class CriteriaBuilder {
 
     /**
      * 附加in条件
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link DetachedCriteria}
      */
     public CriteriaBuilder in(String prop, Object... value) {
         this.addCriterion(Restrictions.in(prop, value));
         return this;
     }
 
-
-    public Class<?> getEnCls() {
-        return enCls;
-    }
-
     /**
-     * 获取离线查询条件
+     * 构造Hibernate离线查询条件
      *
-     * @param processProjection 是否处理投影字段
+     * @param processProjection 是否解析投影字段
+     * @return {@link DetachedCriteria}
      */
     public DetachedCriteria buildDeCriteria(boolean processProjection) {
         if (processProjection)
             this.processProjection();
         return deCriteria;
+    }
+
+    public Class<?> getEnCls() {
+        return enCls;
     }
 
     public Set<String> getFields() {
