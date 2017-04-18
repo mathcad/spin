@@ -25,27 +25,21 @@ import java.util.Map;
 
 /**
  * Assertion utility class that assists in validating arguments.
- * <p>
  * <p>Useful for identifying programmer errors early and clearly at runtime.
- * <p>
  * <p>For example, if the contract of a public method states it does not
  * allow {@code null} arguments, {@code Assert} can be used to validate that
  * contract. Doing this clearly indicates a contract violation when it
  * occurs and protects the class's invariants.
- * <p>
  * <p>Typically used to validate method arguments rather than configuration
  * properties, to check for cases that are usually programmer errors rather
  * than configuration errors. In contrast to configuration initialization
  * code, there is usually no point in falling back to defaults in such methods.
- * <p>
  * <p>This class is similar to JUnit's assertion library. If an argument value is
  * deemed invalid, an {@link IllegalArgumentException} is thrown (typically).
  * For example:
- * <p>
  * <pre class="code">
  * Assert.notNull(clazz, "The class must not be null");
- * Assert.isTrue(i > 0, "The value must be greater than zero");</pre>
- * <p>
+ * Assert.isTrue(i &gt; 0, "The value must be greater than zero");</pre>
  * <p>Mainly for internal use within the framework; consider
  * <a href="http://commons.apache.org/proper/commons-lang/">Apache's Commons Lang</a>
  * for a more comprehensive suite of {@code String} utilities.

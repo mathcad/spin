@@ -12,10 +12,7 @@ import freemarker.template.TemplateModel;
 
 /**
  * ui布局指令:UiComposition；定义一个页面组件，uiOverride会覆盖布局中定义一个区域；
- * UiComposition中的内容不会渲染，除了ui布局指令外 用法：
- * <@uiComposition src="layout.ftl">
- * <@uiOverride name="body"> Override body Content </@uiOverride>
- * </@uiComposition> 参数：src：布局文件
+ * UiComposition中的内容不会渲染，除了ui布局指令外
  */
 public class UiComposition implements TemplateDirectiveModel {
 

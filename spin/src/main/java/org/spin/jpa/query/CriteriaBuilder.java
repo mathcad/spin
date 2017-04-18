@@ -161,7 +161,7 @@ public class CriteriaBuilder {
     }
 
     /**
-     * 快速gt条件 >
+     * 快速gt条件 &gt;
      */
     public CriteriaBuilder gt(String prop, Object value) {
         this.addCriterion(Restrictions.gt(prop, value));
@@ -169,7 +169,7 @@ public class CriteriaBuilder {
     }
 
     /**
-     * 快速ge条件 >=
+     * 快速ge条件 &gt;=
      */
     public CriteriaBuilder ge(String prop, Object value) {
         this.addCriterion(Restrictions.ge(prop, value));
@@ -177,7 +177,7 @@ public class CriteriaBuilder {
     }
 
     /**
-     * 快速lt条件 <
+     * 快速lt条件 &lt;
      */
     public CriteriaBuilder lt(String prop, Object value) {
         this.addCriterion(Restrictions.lt(prop, value));
@@ -185,7 +185,7 @@ public class CriteriaBuilder {
     }
 
     /**
-     * 快速le条件 <=
+     * 快速le条件 &lt;=
      */
     public CriteriaBuilder le(String prop, Object value) {
         this.addCriterion(Restrictions.le(prop, value));

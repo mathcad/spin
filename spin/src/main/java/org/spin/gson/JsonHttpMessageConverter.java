@@ -128,9 +128,9 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
      * this can be overridden in subclasses to allow for custom generic
      * collection handling. For instance:
      * <pre class="code">
-     * protected TypeToken<?> getTypeToken(Type type) {
-     * if (type instanceof Class && List.class.isAssignableFrom((Class<?>) type)) {
-     * return new TypeToken<ArrayList<MyBean>>() {};
+     * protected TypeToken&lt;?&gt; getTypeToken(Type type) {
+     * if (type instanceof Class &amp;&amp; List.class.isAssignableFrom((Class&lt;?&gt;) type)) {
+     * return new TypeToken&lt;ArrayList&lt;MyBean&gt;&gt;() {};
      * }
      * else {
      * return super.getTypeToken(type);

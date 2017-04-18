@@ -14,11 +14,8 @@ import java.util.Iterator;
 /**
  * 包含操作 {@code JSON} 数据的常用方法的工具类。
  * <p>
- * 该工具类使用的 {@code JSON} 转换引擎是 <a href="http://code.google.com/p/google-gson/"
- * mce_href="http://code.google.com/p/google-gson/" target="_blank">{@code
- * Google Gson}</a>  和  org.apache.struts2.json.JSONUtils。下面是工具类的使用案例：
+ * 该工具类使用的 {@code JSON} 转换引擎是{@code Google Gson}。下面是工具类的使用案例：
  * </p>
- * <p>
  * <pre>
  * public class User {
  *     {@literal @SerializedName("pwd")}
@@ -41,18 +38,18 @@ import java.util.Iterator;
  *     public String getUsername()
  *     ... ... ...
  * }
- * List<User> userList = new LinkedList<User>();
+ * List&lt;User&gt; userList = new LinkedList&lt;User&gt;();
  * User jack = new User("Jack", "123456", "Male");
  * User marry = new User("Marry", "888888", "Female");
  * userList.add(jack);
  * userList.add(marry);
- * Type targetType = new TypeIdentifier<List<User>>(){}.getType();
+ * Type targetType = new TypeIdentifier&lt;List&lt;User&gt;&gt;(){}.getType();
  * String sUserList1 = JSONUtils.toJson(userList, targetType);
- * sUserList1 ----> [{"uname":"jack","gender":"Male","sex":"Male"},{"uname":"marry","gender":"Female","sex":"Female"}]
+ * sUserList1 ----&gt; [{"uname":"jack","gender":"Male","sex":"Male"},{"uname":"marry","gender":"Female","sex":"Female"}]
  * String sUserList2 = JSONUtils.toJson(userList, targetType, false);
- * sUserList2 ----> [{"uname":"jack","pwd":"123456","gender":"Male","sex":"Male"},{"uname":"marry","pwd":"888888","gender":"Female","sex":"Female"}]
+ * sUserList2 ----&gt; [{"uname":"jack","pwd":"123456","gender":"Male","sex":"Male"},{"uname":"marry","pwd":"888888","gender":"Female","sex":"Female"}]
  * String sUserList3 = JSONUtils.toJson(userList, targetType, 1.0d, true);
- * sUserList3 ----> [{"uname":"jack","sex":"Male"},{"uname":"marry","sex":"Female"}]
+ * sUserList3 ----&gt; [{"uname":"jack","sex":"Male"},{"uname":"marry","sex":"Female"}]
  * </pre>
  */
 public abstract class JSONUtils {
@@ -86,8 +83,7 @@ public abstract class JSONUtils {
     }
 
     /**
-     * 将给定的目标对象根据指定的条件参数转换成 {@code JSON} 格式的字符串。
-     * <p/>
+     * 将给定的目标对象根据指定的条件参数转换成 {@code JSON} 格式的字符串。<br>
      * <strong>该方法转换发生错误时，不会抛出任何异常。若发生错误时，曾通对象返回 <code>"{}"</code>； 集合或数组对象返回
      * <code>"[]"</code></strong>
      *

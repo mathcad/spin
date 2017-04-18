@@ -18,7 +18,7 @@
 package org.spin.throwable;
 
 /**
- * Thrown when there is a failure condition during the decoding process. This exception is thrown when a {@link Decoder}
+ * Thrown when there is a failure condition during the decoding process. This exception is thrown when a Decoder
  * encounters a decoding specific exception such as invalid data, or characters outside of the expected range.
  *
  * @version $Id: DecoderException.java 1619948 2014-08-22 22:53:55Z ggregory $

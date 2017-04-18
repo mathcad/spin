@@ -161,7 +161,7 @@ public abstract class StringUtils {
      * starting from where it's different from the first.)</p>
      * <p>
      * <p>For example,
-     * <code>difference("i am a machine", "i am a robot") -> "robot"</code>.</p>
+     * <code>difference("i am a machine", "i am a robot") -&gt; "robot"</code>.</p>
      * <p>
      * <pre>
      * StringUtils.difference(null, null) = null
@@ -199,7 +199,7 @@ public abstract class StringUtils {
      * Strings begin to differ.</p>
      * <p>
      * <p>For example,
-     * <code>indexOfDifference("i am a machine", "i am a robot") -> 7</code></p>
+     * <code>indexOfDifference("i am a machine", "i am a robot") -&gt; 7</code></p>
      * <p>
      * <pre>
      * StringUtils.indexOfDifference(null, null) = -1
@@ -241,7 +241,7 @@ public abstract class StringUtils {
      * Strings begin to differ.</p>
      * <p>
      * <p>For example,
-     * <code>indexOfDifference(new String[] {"i am a machine", "i am a robot"}) -> 7</code></p>
+     * <code>indexOfDifference(new String[] {"i am a machine", "i am a robot"}) -&gt; 7</code></p>
      * <p>
      * <pre>
      * StringUtils.indexOfDifference(null) = -1
@@ -2675,7 +2675,7 @@ public abstract class StringUtils {
 
     /**
      * Extract the filename extension from the given Java resource path,
-     * e.g. "mypath/myfile.txt" -> "txt".
+     * e.g. "mypath/myfile.txt" -&gt; "txt".
      *
      * @param path the file path (may be {@code null})
      * @return the extracted filename extension, or {@code null} if none
@@ -2697,7 +2697,7 @@ public abstract class StringUtils {
 
     /**
      * Strip the filename extension from the given Java resource path,
-     * e.g. "mypath/myfile.txt" -> "mypath/myfile".
+     * e.g. "mypath/myfile.txt" -&gt; "mypath/myfile".
      *
      * @param path the file path (may be {@code null})
      * @return the path with stripped filename extension,

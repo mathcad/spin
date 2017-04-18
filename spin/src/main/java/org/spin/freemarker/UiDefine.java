@@ -12,10 +12,7 @@ import freemarker.template.TemplateModel;
 /**
  * ui布局指令:UiDefine；在布局中定义一个区域
  * 用法：
- * <@uiDefine name="head">
  * 参数：name 区域的名称
- *
- * @author zx
  */
 public class UiDefine implements TemplateDirectiveModel {
     public final static String DIRECTIVE_NAME = "ui_define";

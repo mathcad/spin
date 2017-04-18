@@ -12,10 +12,7 @@ import freemarker.template.TemplateModel;
 /**
  * ui布局指令:UiOverride；覆盖布局中定义一个区域
  * 用法：
- * <@uiOverride name="body">
  * 参数：name 区域的名称
- *
- * @author zx
  */
 public class UiOverride implements TemplateDirectiveModel {
 
