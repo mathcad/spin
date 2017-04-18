@@ -1,6 +1,11 @@
 package org.spin.web.filter;
 
+import org.spin.jpa.core.BaseUser;
 import org.spin.sys.EnvCache;
+import org.spin.sys.SessionUser;
+import org.spin.sys.auth.SecretManager;
+import org.spin.util.SessionUtils;
+import org.spin.util.StringUtils;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -19,13 +24,26 @@ import java.util.Map;
  * @author xuweinan
  */
 public class TokenResolveFilter implements Filter {
+
+    private SecretManager secretManager;
+
+    public TokenResolveFilter(SecretManager secretManager) {
+        this.secretManager = secretManager;
+    }
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        EnvCache.putLocalParam("token", request.getParameter("token"));
+        String token = request.getParameter("token");
+        try {
+            String userId = secretManager.validateToken(token);
+            EnvCache.putLocalParam("token", token);
+            SessionUtils.setCurrentUser(BaseUser.ref(Long.parseLong(userId)));
+        } catch (Exception ignore) {
+        }
         chain.doFilter(request, response);
     }
 

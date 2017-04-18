@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.annotations.Needed;
 import org.spin.annotations.RestfulApi;
-import org.spin.jpa.core.BaseUser;
 import org.spin.sys.EnvCache;
 import org.spin.sys.ErrorCode;
 import org.spin.sys.SessionUser;
@@ -18,7 +17,6 @@ import org.spin.sys.auth.SecretManager;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.JSONUtils;
 import org.spin.util.SessionUtils;
-import org.spin.util.StringUtils;
 import org.spin.web.RestfulResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
@@ -59,19 +57,9 @@ public class RestfulApiAspect implements Ordered {
         boolean needAuth = anno.auth();
         if (needAuth) {
             String authRouter = anno.authRouter();
-            String token = (String) EnvCache.getLocalParam("token");
-            if (StringUtils.isNotBlank(token)) {
-                Object userId = checkAccess(token, authRouter);
-                if (userId != null) {
-                    SessionUtils.setCurrentUser(BaseUser.ref((Long) userId));
-//                    EnvCache.THREAD_LOCAL_PARAMETERS.get().put(SessionUtils.USER_SESSION_KEY, userId);
-                    isAllowed = true;
-                }
-            } else {
-                SessionUser user = SessionUtils.getCurrentUser();
-                if (user != null && authenticator.checkAuthorities(user.getId(), authRouter)) {
-                    isAllowed = true;
-                }
+            SessionUser user = SessionUtils.getCurrentUser();
+            if (user != null && authenticator.checkAuthorities(user.getId(), authRouter)) {
+                isAllowed = true;
             }
         }
         if (isAllowed || !needAuth) {

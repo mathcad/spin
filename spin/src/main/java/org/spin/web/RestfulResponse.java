@@ -5,7 +5,7 @@ import org.spin.throwable.SimplifiedException;
 
 /**
  * Restful请求的相应结果
- * <p>Created by xuweinan on 2017/2/19.
+ * <p>Created by xuweinan on 2017/2/19.</p>
  *
  * @author xuweinan
  */
