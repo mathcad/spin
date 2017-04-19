@@ -74,10 +74,10 @@ dependencies {
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion
-    compile group: 'org.hibernate', name: 'hibernate-core', version: '5.2.2.Final'
+    compile group: 'org.hibernate', name: 'hibernate-core', version: '5.2.10.Final'
 //    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '1.4.0.RELEASE'
-    compile group: 'com.alibaba', name: 'druid', version: '1.0.26'
-    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
+    compile group: 'com.alibaba', name: 'druid', version: '1.0.29'
+//    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
     compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
 //    compile group: 'org.mathcat', name: 'spin', version: '1.8.4'
     compile(project(":zibra"))

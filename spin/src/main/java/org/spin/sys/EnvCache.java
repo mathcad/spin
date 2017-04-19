@@ -45,9 +45,6 @@ public final class EnvCache {
     /** 文件上传路径 */
     public static String FileUploadDir;
 
-    /** 模板路径 */
-    public static String TemplateDir;
-
     private EnvCache() {
     }
 
