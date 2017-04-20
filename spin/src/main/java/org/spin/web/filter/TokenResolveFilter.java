@@ -38,11 +38,13 @@ public class TokenResolveFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         String token = request.getParameter("token");
-        try {
-            String userId = secretManager.validateToken(token);
-            EnvCache.putLocalParam("token", token);
-            SessionUtils.setCurrentUser(BaseUser.ref(Long.parseLong(userId)));
-        } catch (Exception ignore) {
+        if (StringUtils.isNotBlank(token)) {
+            try {
+                String userId = secretManager.validateToken(token);
+                EnvCache.putLocalParam("token", token);
+                SessionUtils.setCurrentUser(BaseUser.ref(Long.parseLong(userId)));
+            } catch (Exception ignore) {
+            }
         }
         chain.doFilter(request, response);
     }
