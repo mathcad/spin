@@ -135,15 +135,15 @@ public class SecretManager {
         this.secretDao = secretDao;
     }
 
-    private boolean isTimeOut(Long generateTime, Long expiredIn) {
-        return (System.currentTimeMillis() - generateTime) > expiredIn;
-    }
-
     public static void setRsaPubkey(PublicKey rsaPubkey) {
         RSA_PUBKEY = rsaPubkey;
     }
 
     public static void setRsaPrikey(PrivateKey rsaPrikey) {
         RSA_PRIKEY = rsaPrikey;
+    }
+
+    private boolean isTimeOut(Long generateTime, Long expiredIn) {
+        return (System.currentTimeMillis() - generateTime) > expiredIn;
     }
 }
