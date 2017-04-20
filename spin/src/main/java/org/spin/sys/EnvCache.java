@@ -3,6 +3,8 @@ package org.spin.sys;
 import org.spin.util.BeanUtils;
 
 import java.lang.reflect.Field;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 框架缓存
- * <p>集中管理缓存，可以集中清空，以应对热加载后的不一致问题</p>
+ * <p>集中管理缓存与常量，可以集中清空，以应对热加载后的不一致问题</p>
  * Created by xuweinan on 2016/9/5.
  *
  * @author xuweinan
@@ -19,6 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class EnvCache {
     public static final Map<String, Map<String, BeanUtils.PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
     public static final Map<String, Map<String, Field>> BEAN_FIELDS = new ConcurrentHashMap<>();
+
+    /** Needed注解检查的方法参数缓存 */
     public static final Map<String, List<Integer>> CHECKED_METHOD_PARAM = new ConcurrentHashMap<>();
 
     /** 实体中*ToOne字段列表缓存 */
@@ -45,6 +49,12 @@ public final class EnvCache {
     /** 文件上传路径 */
     public static String FileUploadDir;
 
+    /** RSA公钥 */
+    public static PublicKey RSA_PUBKEY;
+
+    /** RSA私钥 */
+    public static PrivateKey RSA_PRIKEY;
+
     private EnvCache() {
     }
 
@@ -66,5 +76,6 @@ public final class EnvCache {
         ENTITY_SOMETOONE_JOIN_FIELDS.clear();
         CLASS_PROPERTY_CACHE.clear();
         BEAN_FIELDS.clear();
+        CHECKED_METHOD_PARAM.clear();
     }
 }

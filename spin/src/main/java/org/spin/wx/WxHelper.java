@@ -6,7 +6,7 @@ import org.spin.util.HexUtils;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.DigestUtils;
 import org.spin.util.HttpUtils;
-import org.spin.util.JSONUtils;
+import org.spin.util.JsonUtils;
 import org.spin.util.RandomStringUtils;
 import org.spin.wx.wx.base.WxUserInfo;
 
@@ -81,7 +81,7 @@ public class WxHelper {
             throw new SimplifiedException("获取用户信息失败");
         }
         logger.debug("获取用户信息: {}", tmp);
-        WxUserInfo userInfo = JSONUtils.fromJson(tmp, WxUserInfo.class);
+        WxUserInfo userInfo = JsonUtils.fromJson(tmp, WxUserInfo.class);
         if (null == userInfo.getOpenid()) {
             throw new SimplifiedException("Can not fetch userInfo use this code" + tmp);
         } else

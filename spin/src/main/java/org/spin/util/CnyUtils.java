@@ -1,8 +1,8 @@
-package org.spin.sys;
+package org.spin.util;
 
 import java.math.BigDecimal;
 
-public class CNYUtil {
+public class CnyUtils {
 
     /**
      * 中文简体数字

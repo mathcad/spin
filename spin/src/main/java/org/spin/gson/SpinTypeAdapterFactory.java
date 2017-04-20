@@ -25,7 +25,7 @@ import java.time.LocalTime;
  * @author xuweinan
  */
 public class SpinTypeAdapterFactory implements TypeAdapterFactory {
-    private String datePattern = "yyyy-MM-dd HH:mm:ss";
+    private String datePattern;
 
     public SpinTypeAdapterFactory(String datePattern) {
         this.datePattern = datePattern;

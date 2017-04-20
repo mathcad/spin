@@ -15,7 +15,7 @@ import org.spin.sys.SessionUser;
 import org.spin.sys.auth.Authenticator;
 import org.spin.sys.auth.SecretManager;
 import org.spin.throwable.SimplifiedException;
-import org.spin.util.JSONUtils;
+import org.spin.util.JsonUtils;
 import org.spin.util.SessionUtils;
 import org.spin.web.RestfulResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +88,7 @@ public class RestfulApiAspect implements Ordered {
                 Parameter[] parameters = apiMethod.getParameters();
                 logger.trace("Invoke method: {0}", apiMethod.getName());
                 for (int idx = 0; idx != parameters.length; ++idx) {
-                    logger.trace("Parameter info: index[{0}] name[{1}], value[{2}]", idx, parameters[idx].getName(), JSONUtils.toJson(args[idx]));
+                    logger.trace("Parameter info: index[{0}] name[{1}], value[{2}]", idx, parameters[idx].getName(), JsonUtils.toJson(args[idx]));
                 }
             }
 

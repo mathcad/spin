@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.sys.TypeIdentifier;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.HttpUtils;
-import org.spin.util.JSONUtils;
+import org.spin.util.JsonUtils;
 import org.spin.util.StringUtils;
 
 import java.net.URISyntaxException;
@@ -143,7 +143,7 @@ public class AccessToken {
 
     private static AccessToken parseToken(String json) {
         AccessToken tmp = new AccessToken();
-        Map<String, String> resMap = JSONUtils.fromJson(json, type);
+        Map<String, String> resMap = JsonUtils.fromJson(json, type);
         if (null != resMap && resMap.containsKey("access_token")) {
             tmp.setExpiresIn(Integer.parseInt(resMap.get("expires_in")));
             tmp.setToken(resMap.get("access_token"));

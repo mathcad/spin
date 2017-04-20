@@ -2,8 +2,8 @@ package org.spin.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.gson.SpinTypeAdapterFactory;
 import org.spin.sys.TypeIdentifier;
 
@@ -14,59 +14,22 @@ import java.util.Iterator;
 /**
  * 包含操作 {@code JSON} 数据的常用方法的工具类。
  * <p>
- * 该工具类使用的 {@code JSON} 转换引擎是{@code Google Gson}。下面是工具类的使用案例：
+ * 该工具类使用的 {@code JSON} 转换引擎是{@code Google Gson}。
  * </p>
- * <pre>
- * public class User {
- *     {@literal @SerializedName("pwd")}
- *     private String password;
- *     {@literal @Expose}
- *     {@literal @SerializedName("uname")}
- *     private String username;
- *     {@literal @Expose}
- *     {@literal @Since(1.1)}
- *     private String gender;
- *     {@literal @Expose}
- *     {@literal @Since(1.0)}
- *     private String sex;
- *
- *     public User() {}
- *     public User(String username, String password, String gender) {
- *         // user constructor code... ... ...
- *     }
- *
- *     public String getUsername()
- *     ... ... ...
- * }
- * List&lt;User&gt; userList = new LinkedList&lt;User&gt;();
- * User jack = new User("Jack", "123456", "Male");
- * User marry = new User("Marry", "888888", "Female");
- * userList.add(jack);
- * userList.add(marry);
- * Type targetType = new TypeIdentifier&lt;List&lt;User&gt;&gt;(){}.getType();
- * String sUserList1 = JSONUtils.toJson(userList, targetType);
- * sUserList1 ----&gt; [{"uname":"jack","gender":"Male","sex":"Male"},{"uname":"marry","gender":"Female","sex":"Female"}]
- * String sUserList2 = JSONUtils.toJson(userList, targetType, false);
- * sUserList2 ----&gt; [{"uname":"jack","pwd":"123456","gender":"Male","sex":"Male"},{"uname":"marry","pwd":"888888","gender":"Female","sex":"Female"}]
- * String sUserList3 = JSONUtils.toJson(userList, targetType, 1.0d, true);
- * sUserList3 ----&gt; [{"uname":"jack","sex":"Male"},{"uname":"marry","sex":"Female"}]
- * </pre>
  */
-public abstract class JSONUtils {
-    private static final Log log = LogFactory.getLog(JSONUtils.class);
+public abstract class JsonUtils {
+    private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 
+    /** 空{@code JSON}字符串 - <code>""</code> */
     private static final String EMPTY = "";
-    /**
-     * 空的 {@code JSON} 数据 - <code>"{}"</code>。
-     */
+
+    /** 空{@code JSON}对象 - <code>"{}"</code> */
     private static final String EMPTY_JSON = "{}";
-    /**
-     * 空的 {@code JSON} 数组(集合)数据 - {@code "[]"}。
-     */
+
+    /** 空{@code JSON} 数组(集合) - {@code "[]"} */
     private static final String EMPTY_JSON_ARRAY = "[]";
-    /**
-     * 默认的 {@code JSON} 日期/时间字段的格式化模式。
-     */
+
+    /** 默认的{@code JSON}日期/时间字段的格式化模式 */
     private static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     private static final Gson defaultGson;
@@ -115,7 +78,7 @@ public abstract class JSONUtils {
                 result = gson.toJson(target);
             }
         } catch (Exception ex) {
-            log.warn("目标对象 " + target.getClass().getName() + " 转换 JSON 字符串时，发生异常！", ex);
+            logger.warn("目标对象 " + target.getClass().getName() + " 转换 JSON 字符串时，发生异常！", ex);
             if (target instanceof Iterable || target instanceof Iterator || target instanceof Enumeration || target.getClass().isArray()) {
                 result = EMPTY_JSON_ARRAY;
             } else
@@ -293,7 +256,7 @@ public abstract class JSONUtils {
         try {
             return baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern).create().fromJson(json, token.getType());
         } catch (Exception ex) {
-            log.error(json + " 无法转换为 " + token.getRawType().getName() + " 对象!", ex);
+            logger.error(json + " 无法转换为 " + token.getRawType().getName() + " 对象!", ex);
             return null;
         }
     }
@@ -310,7 +273,7 @@ public abstract class JSONUtils {
         try {
             return defaultGson.fromJson(json, token.getType());
         } catch (Exception ex) {
-            log.error(json + " 无法转换为 " + token.getRawType().getName() + " 对象!", ex);
+            logger.error(json + " 无法转换为 " + token.getRawType().getName() + " 对象!", ex);
             return null;
         }
     }
@@ -332,7 +295,7 @@ public abstract class JSONUtils {
         try {
             return baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern).create().fromJson(json, clazz);
         } catch (Exception ex) {
-            log.error(json + " 无法转换为 " + clazz.getName() + " 对象!", ex);
+            logger.error(json + " 无法转换为 " + clazz.getName() + " 对象!", ex);
             return null;
         }
     }

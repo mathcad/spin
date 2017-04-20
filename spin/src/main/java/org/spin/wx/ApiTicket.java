@@ -3,7 +3,7 @@ package org.spin.wx;
 import org.spin.sys.TypeIdentifier;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.HttpUtils;
-import org.spin.util.JSONUtils;
+import org.spin.util.JsonUtils;
 import org.spin.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +72,7 @@ public class ApiTicket {
 
     private static ApiTicket parseTicket(String json) {
         ApiTicket tmp = new ApiTicket();
-        Map<String, String> resMap = JSONUtils.fromJson(json, type);
+        Map<String, String> resMap = JsonUtils.fromJson(json, type);
         if (null != resMap && resMap.containsKey("ticket")) {
             tmp.setExpiresIn(Integer.parseInt(resMap.get("expires_in")));
             tmp.jsapiTicket = resMap.get("ticket");

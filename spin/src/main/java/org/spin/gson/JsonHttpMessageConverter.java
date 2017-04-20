@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
-import org.spin.util.JSONUtils;
+import org.spin.util.JsonUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
@@ -35,7 +35,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
     public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
-    private Gson gson = JSONUtils.getDefaultGson();
+    private Gson gson = JsonUtils.getDefaultGson();
 
     private String jsonPrefix;
 
