@@ -88,7 +88,6 @@ public class SpinConfiguration {
     public LocalSessionFactoryBean getSessionFactory(DataSource dataSource, DataBaseConfiguration configuration) {
         LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
         sessionFactory.setDataSource(dataSource);
-        sessionFactory.setPhysicalNamingStrategy(configuration.getNamingStrategy());
         sessionFactory.setPackagesToScan(configuration.getPackagesToScan());
         if (null != configuration.getNamingStrategy())
             sessionFactory.setPhysicalNamingStrategy(configuration.getNamingStrategy());
@@ -96,8 +95,9 @@ public class SpinConfiguration {
         // proper.setProperty("hibernate.current_session_context_class", "org.springframework.orm.hibernate5.SpringSessionContext");
         proper.setProperty("hibernate.show_sql", configuration.getShowSql());
         proper.setProperty("hibernate.format_sql", configuration.getFormatSql());
-        if (StringUtils.isEmpty(configuration.getDialect()))
+        if (StringUtils.isEmpty(configuration.getDialect())) {
             throw new BeanCreationException("数据库连接必需配置Dialect");
+        }
         proper.setProperty("hibernate.dialect", configuration.getDialect());
         proper.setProperty("hibernate.hbm2ddl.auto", configuration.getHbm2ddl());
         sessionFactory.setHibernateProperties(proper);

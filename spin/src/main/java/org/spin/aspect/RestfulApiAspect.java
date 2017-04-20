@@ -50,7 +50,7 @@ public class RestfulApiAspect implements Ordered {
     }
 
     @Around("restfulMethod()")
-    public Object checkAuthority(ProceedingJoinPoint joinPoint) {
+    public Object restfulAround(ProceedingJoinPoint joinPoint) {
         boolean isAllowed = false;
         Method apiMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
         RestfulApi anno = apiMethod.getAnnotation(RestfulApi.class);

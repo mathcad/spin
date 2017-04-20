@@ -1,6 +1,5 @@
 package org.spin.spring;
 
-import org.apache.shiro.mgt.SecurityManager;
 import org.spin.sys.EnvCache;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -14,7 +13,7 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        if (bean instanceof SecurityManager) {
+        if (bean instanceof org.apache.shiro.mgt.SecurityManager) {
             EnvCache.shiroEnabled = true;
         }
         return bean;
