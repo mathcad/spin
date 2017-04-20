@@ -95,6 +95,7 @@ public class SpinConfiguration {
         Properties proper = new Properties();
         // proper.setProperty("hibernate.current_session_context_class", "org.springframework.orm.hibernate5.SpringSessionContext");
         proper.setProperty("hibernate.show_sql", configuration.getShowSql());
+        proper.setProperty("hibernate.format_sql", configuration.getFormatSql());
         if (StringUtils.isEmpty(configuration.getDialect()))
             throw new BeanCreationException("数据库连接必需配置Dialect");
         proper.setProperty("hibernate.dialect", configuration.getDialect());

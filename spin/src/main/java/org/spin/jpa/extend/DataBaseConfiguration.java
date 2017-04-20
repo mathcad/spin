@@ -26,6 +26,7 @@ public class DataBaseConfiguration {
     private PhysicalNamingStrategy namingStrategy;
     private String[] packagesToScan;
     private String showSql = "false";
+    private String formatSql = "false";
     private String dialect;
     private String hbm2ddl;
 
@@ -155,6 +156,14 @@ public class DataBaseConfiguration {
 
     public void setShowSql(String showSql) {
         this.showSql = showSql;
+    }
+
+    public String getFormatSql() {
+        return formatSql;
+    }
+
+    public void setFormatSql(String formatSql) {
+        this.formatSql = formatSql;
     }
 
     public String getDialect() {

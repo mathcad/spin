@@ -60,6 +60,12 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     private int version;
 
     /**
+     * 排序号
+     */
+    @Column
+    private float orderNo = 0;
+
+    /**
      * 标记逻辑删除
      */
     @Column
