@@ -115,16 +115,6 @@ public class RestfulApiAspect implements Ordered {
             return RestfulResponse.error(ErrorCode.ACCESS_DENINED);
     }
 
-    private Object checkAccess(String token, String authRouter) {
-        // token是否有效
-        Object userId = secretManager.validateToken(token);
-        // token对应用户是否拥有权限
-        if (authenticator.checkAuthorities(userId, authRouter)) {
-            return userId;
-        }
-        return null;
-    }
-
     @Override
     public int getOrder() {
         return 0;
