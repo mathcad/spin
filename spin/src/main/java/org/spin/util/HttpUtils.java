@@ -44,7 +44,7 @@ public abstract class HttpUtils {
     /**
      * 使用get方式请求数据
      */
-    public static String httpGetRequest(String url, Map<String, String> params) throws URISyntaxException {
+    public static String httpGetRequest(String url, Map<String, String> headers, Map<String, String> params) throws URISyntaxException {
         if (!url.startsWith("http"))
             url = HTTP + url;
         URIBuilder uriBuilder = new URIBuilder(url);
@@ -53,14 +53,24 @@ public abstract class HttpUtils {
                 uriBuilder.setParameter(key, params.get(key));
             }
         }
-        return httpGetRequest(uriBuilder.build());
+        return httpGetRequest(uriBuilder.build(), headers);
+    }
+
+    public static String httpGetRequest(String url, Map<String, String> headers, String... params) throws URISyntaxException {
+        return httpGetRequest(getUriFromString(url, params), headers);
     }
 
     public static String httpGetRequest(String url, String... params) throws URISyntaxException {
-        return httpGetRequest(getUriFromString(url, params));
+        return httpGetRequest(getUriFromString(url, params), null);
     }
 
-    public static String httpGetRequest(URI uri) {
+    public static String httpGetRequest(String url, String headerKey, String headerVal) throws URISyntaxException {
+        Map<String, String> header = new HashMap<>();
+        header.put(headerKey, headerVal);
+        return httpGetRequest(getUriFromString(url), header);
+    }
+
+    public static String httpGetRequest(URI uri, Map<String, String> headers) {
         String result;
         CloseableHttpClient httpclient = null;
         try {
@@ -68,6 +78,9 @@ public abstract class HttpUtils {
             RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(1000).setConnectTimeout(1000).build();
             HttpGet request = new HttpGet(uri);
             request.setConfig(requestConfig);
+            if (null != headers) {
+                headers.forEach(request::setHeader);
+            }
             CloseableHttpResponse response = httpclient.execute(request);
             int code = response.getStatusLine().getStatusCode();
             HttpEntity entity = response.getEntity();
@@ -90,6 +103,10 @@ public abstract class HttpUtils {
     }
 
     public static String httpPostRequest(String url, Map<String, String> params) throws URISyntaxException {
+        return httpPostRequest(url, null, params);
+    }
+
+    public static String httpPostRequest(String url, Map<String, String> headers, Map<String, String> params) throws URISyntaxException {
         if (!url.startsWith("http"))
             url = HTTP + url;
         List<NameValuePair> nvps = params.entrySet().stream().map(p -> new BasicNameValuePair(p.getKey(), p.getValue
@@ -100,6 +117,9 @@ public abstract class HttpUtils {
             httpclient = HttpClients.createDefault();
             RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(1000).setConnectTimeout(1000).build();
             HttpPost request = new HttpPost(url);
+            if (null != headers) {
+                headers.forEach(request::setHeader);
+            }
             request.setConfig(requestConfig);
             request.setEntity(new UrlEncodedFormEntity(nvps));
             CloseableHttpResponse response = httpclient.execute(request);
