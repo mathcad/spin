@@ -22,11 +22,6 @@ public class KeyInfo implements Serializable {
         this.generateTime = generateTime;
     }
 
-    public void updateKey(String key, Long generateTime) {
-        this.key = key;
-        this.generateTime = generateTime;
-    }
-
     public String getIdentifier() {
         return identifier;
     }

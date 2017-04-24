@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  */
 public class InMemerySecretDao implements SecretDao {
     private final Map<String, Set<TokenInfo>> tokenCache = new ConcurrentHashMap<>();
-    private final Map<String, KeyInfo> keyCache = new ConcurrentHashMap<>();
+    private final Map<String, Set<KeyInfo>> keyCache = new ConcurrentHashMap<>();
 
     @Override
     public String getIdentifierByToken(String tokenStr) {
@@ -33,8 +33,7 @@ public class InMemerySecretDao implements SecretDao {
     @Override
     public String getIdentifierByKey(String keyStr) {
         return keyCache.values().stream()
-            .filter(k -> k.getKey().equals(keyStr))
-            .map(KeyInfo::getIdentifier)
+            .flatMap(ks -> ks.stream().filter(k -> k.getKey().equals(keyStr)).map(KeyInfo::getIdentifier))
             .findFirst()
             .orElse(null);
     }
@@ -58,34 +57,25 @@ public class InMemerySecretDao implements SecretDao {
         if (StringUtils.isEmpty(identifier)) {
             throw new SimplifiedException(ErrorCode.SECRET_INVALID);
         }
-        return tokenCache.get(identifier);
+        return tokenCache.get(identifier).stream().filter(t -> t.getSourceKey().equals(keyStr)).collect(Collectors.toSet());
     }
 
     @Override
-    public KeyInfo getKeyByIdentifier(String identifier) {
-        return keyCache.get(identifier);
-    }
-
-    @Override
-    public KeyInfo getKeyByToken(String tokenStr) {
-        String identifier = getIdentifierByToken(tokenStr);
-        if (StringUtils.isEmpty(identifier)) {
-            throw new SimplifiedException(ErrorCode.TOKEN_INVALID);
-        }
+    public Set<KeyInfo> getKeyByIdentifier(String identifier) {
         return keyCache.get(identifier);
     }
 
     @Override
     public KeyInfo getKeyInfoByKey(String keyStr) {
         return keyCache.values().stream()
-            .filter(k -> k.getKey().equals(keyStr))
+            .flatMap(ks -> ks.stream().filter(k -> k.getKey().equals(keyStr)))
             .findFirst()
             .orElse(null);
     }
 
     @Override
-    public TokenInfo saveToken(String identifier, String token) {
-        TokenInfo tokenInfo = new TokenInfo(identifier, token);
+    public TokenInfo saveToken(String identifier, String tokenStr, String sourceKey) {
+        TokenInfo tokenInfo = new TokenInfo(identifier, tokenStr, sourceKey);
         if (tokenCache.containsKey(identifier)) {
             tokenCache.get(identifier).add(tokenInfo);
         } else {
@@ -97,7 +87,7 @@ public class InMemerySecretDao implements SecretDao {
     }
 
     @Override
-    public void saveToken(TokenInfo tokenInfo) {
+    public TokenInfo saveToken(TokenInfo tokenInfo) {
         String identifier = tokenInfo.getIdentifier();
         if (tokenCache.containsKey(identifier)) {
             synchronized (tokenCache.get(identifier)) {
@@ -108,22 +98,33 @@ public class InMemerySecretDao implements SecretDao {
             ts.add(tokenInfo);
             tokenCache.put(identifier, ts);
         }
+        return tokenInfo;
     }
 
     @Override
     public KeyInfo saveKey(String identifier, String key, String secret, Long generateTime) {
         KeyInfo keyInfo = new KeyInfo(identifier, key, secret, generateTime);
-        synchronized (this.keyCache) {
-            this.keyCache.put(identifier, keyInfo);
+        if (keyCache.containsKey(identifier)) {
+            keyCache.get(identifier).add(keyInfo);
+        } else {
+            Set<KeyInfo> ks = new HashSet<>();
+            ks.add(keyInfo);
+            keyCache.put(identifier, ks);
         }
         return keyInfo;
     }
 
     @Override
-    public void saveKey(KeyInfo keyInfo) {
-        synchronized (this.keyCache) {
-            this.keyCache.put(keyInfo.getIdentifier(), keyInfo);
+    public KeyInfo saveKey(KeyInfo keyInfo) {
+        String identifier = keyInfo.getIdentifier();
+        if (keyCache.containsKey(identifier)) {
+            keyCache.get(identifier).add(keyInfo);
+        } else {
+            Set<KeyInfo> ks = new HashSet<>();
+            ks.add(keyInfo);
+            keyCache.put(identifier, ks);
         }
+        return keyInfo;
     }
 
     @Override
@@ -144,17 +145,36 @@ public class InMemerySecretDao implements SecretDao {
     }
 
     @Override
-    public KeyInfo removeKey(String identifier) {
+    public TokenInfo removeToken(TokenInfo tokenInfo) {
+        synchronized (tokenCache.get(tokenInfo.getIdentifier())) {
+            tokenCache.get(tokenInfo.getIdentifier()).remove(tokenInfo);
+        }
+        return tokenInfo;
+    }
+
+    @Override
+    public Set<KeyInfo> removeKey(String identifier) {
         return keyCache.remove(identifier);
     }
 
     @Override
     public KeyInfo removeKeyByKey(String keyStr) {
-        String identifier = getIdentifierByKey(keyStr);
-        if (StringUtils.isEmpty(identifier)) {
+        KeyInfo keyInfo = getKeyInfoByKey(keyStr);
+        if (null == keyInfo) {
             throw new SimplifiedException(ErrorCode.SECRET_INVALID);
         }
-        return keyCache.remove(identifier);
+        synchronized (keyCache.get(keyInfo.getIdentifier())) {
+            keyCache.get(keyInfo.getIdentifier()).remove(keyInfo);
+        }
+        return keyInfo;
+    }
+
+    @Override
+    public KeyInfo removeKey(KeyInfo keyInfo) {
+        synchronized (keyCache.get(keyInfo.getIdentifier())) {
+            keyCache.get(keyInfo.getIdentifier()).remove(keyInfo);
+        }
+        return keyInfo;
     }
 
     @Override
@@ -172,13 +192,15 @@ public class InMemerySecretDao implements SecretDao {
 
     @Override
     public List<KeyInfo> collectExpiredKey(Long expiredIn) {
-        return keyCache.values().stream().filter(k -> isTimeOut(k.getGenerateTime(), expiredIn)).collect(Collectors.toList());
+        return keyCache.values().stream().flatMap(ks -> ks.stream().filter(t -> isTimeOut(t.getGenerateTime(), expiredIn))).collect(Collectors.toList());
     }
 
     @Override
     public void clearExpiredKey(Long expriedIn) {
         List<KeyInfo> expired = collectExpiredKey(expriedIn);
-        expired.forEach(k -> keyCache.remove(k.getIdentifier()));
+        synchronized (keyCache) {
+            expired.forEach(k -> keyCache.get(k.getIdentifier()).remove(k));
+        }
     }
 
     private boolean isTimeOut(Long generateTime, Long expiredIn) {

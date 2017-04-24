@@ -39,12 +39,7 @@ public interface SecretDao {
     /**
      * 通过用户id查询密钥
      */
-    KeyInfo getKeyByIdentifier(String identifier);
-
-    /**
-     * 通过token查询密钥
-     */
-    KeyInfo getKeyByToken(String tokenStr);
+    Set<KeyInfo> getKeyByIdentifier(String identifier);
 
     /**
      * 通过key字符串查询密钥信息
@@ -56,13 +51,14 @@ public interface SecretDao {
      *
      * @param identifier 用户id
      * @param tokenStr   token字符串
+     * @param sourceKey  生成token的key
      */
-    TokenInfo saveToken(String identifier, String tokenStr);
+    TokenInfo saveToken(String identifier, String tokenStr, String sourceKey);
 
     /**
      * 保存token
      */
-    void saveToken(TokenInfo tokenInfo);
+    TokenInfo saveToken(TokenInfo tokenInfo);
 
     /**
      * 保存密钥
@@ -77,7 +73,7 @@ public interface SecretDao {
     /**
      * 保存密钥
      */
-    void saveKey(KeyInfo keyInfo);
+    KeyInfo saveKey(KeyInfo keyInfo);
 
     /**
      * 根据用户id删除token
@@ -90,14 +86,24 @@ public interface SecretDao {
     TokenInfo removeTokenByTokenStr(String tokenStr);
 
     /**
+     * 删除token
+     */
+    TokenInfo removeToken(TokenInfo tokenInfo);
+
+    /**
      * 根据用户id删除密钥
      */
-    KeyInfo removeKey(String identifier);
+    Set<KeyInfo> removeKey(String identifier);
 
     /**
      * 根据key字符串删除key
      */
     KeyInfo removeKeyByKey(String keyStr);
+
+    /**
+     * 删除key
+     */
+    KeyInfo removeKey(KeyInfo keyInfo);
 
     /**
      * 收集过期token

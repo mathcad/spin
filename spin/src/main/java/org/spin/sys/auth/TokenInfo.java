@@ -14,12 +14,15 @@ import java.util.Objects;
 public class TokenInfo implements Serializable {
     private String identifier;
     private String token;
+    private String sourceKey;
     private Long generateTime = 0L;
 
 
-    public TokenInfo(String identifier, String token) {
+    public TokenInfo(String identifier, String token, String sourceKey) {
         this.identifier = identifier;
-        this.setToken(token);
+        this.token = token;
+        this.generateTime = System.currentTimeMillis();
+        this.sourceKey = sourceKey;
     }
 
     public String getIdentifier() {
@@ -30,9 +33,8 @@ public class TokenInfo implements Serializable {
         return token;
     }
 
-    public void setToken(String token) {
-        this.token = token;
-        this.generateTime = System.currentTimeMillis();
+    public String getSourceKey() {
+        return sourceKey;
     }
 
     public Long getGenerateTime() {
@@ -51,14 +53,5 @@ public class TokenInfo implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(identifier, token);
-    }
-
-    @Override
-    public String toString() {
-        return "TokenInfo{" +
-            "generateTime=" + generateTime +
-            ", identifier='" + identifier + '\'' +
-            ", token='" + token + '\'' +
-            '}';
     }
 }

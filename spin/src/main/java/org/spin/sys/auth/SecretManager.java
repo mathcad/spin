@@ -23,7 +23,9 @@ import java.util.UUID;
 @Component
 public class SecretManager {
     private static final Logger logger = LoggerFactory.getLogger(SecretManager.class);
-    /** 分隔符 */
+    /**
+     * 分隔符
+     */
     private static final String SEPARATOR = "~~~";
     private static PublicKey RSA_PUBKEY;
     private static PrivateKey RSA_PRIKEY;
@@ -48,12 +50,23 @@ public class SecretManager {
             try {
                 String[] info = RSA.decrypt(RSA_PRIKEY, key).split(SEPARATOR);
                 keyInfo = new KeyInfo(info[0], key, info[1], Long.parseLong(info[2]));
+                if (isTimeOut(keyInfo.getGenerateTime(), EnvCache.KeyExpireTime)) {
+                    throw new SimplifiedException(ErrorCode.SECRET_EXPIRED);
+                } else {
+                    return secretDao.saveKey(keyInfo);
+                }
             } catch (Exception e) {
                 logger.debug("Extract info from key Error: {}", e);
                 throw new SimplifiedException(ErrorCode.SECRET_INVALID);
             }
+        } else {
+            if (isTimeOut(keyInfo.getGenerateTime(), EnvCache.KeyExpireTime)) {
+                secretDao.removeKey(keyInfo);
+                throw new SimplifiedException(ErrorCode.SECRET_EXPIRED);
+            } else {
+                return keyInfo;
+            }
         }
-        return keyInfo;
     }
 
     /**
@@ -79,6 +92,7 @@ public class SecretManager {
     /**
      * 通过密钥换取token
      *
+     * @param key 密钥
      * @return 返回token, 如果key无效，抛出异常
      */
     public TokenInfo generateToken(String key) {
@@ -89,30 +103,27 @@ public class SecretManager {
         }
         // 生成新token
         String token = UUID.randomUUID().toString();
-        return secretDao.saveToken(id, token);
+        return secretDao.saveToken(id, token, key);
     }
 
     /**
      * 生成密钥
+     *
+     * @param userId 用户id
+     * @param pwd    密码摘要
+     * @return KeyInfo
      */
-    public KeyInfo generateKey(String userId, String pwd, boolean forceNew) {
-        KeyInfo keyInfo = secretDao.getKeyByIdentifier(userId);
-
-        // 如果需要强制更新key，key不存在或者已过期，重新生成key并存储
-        if (forceNew || null == keyInfo || isTimeOut(keyInfo.getGenerateTime(), EnvCache.KeyExpireTime)) {
-            Long generateTime = System.currentTimeMillis();
-            String ecodeStr = userId + SEPARATOR + pwd + SEPARATOR + generateTime;
-            // 生成密钥
-            String key;
-            try {
-                key = RSA.encrypt(RSA_PUBKEY, ecodeStr);
-            } catch (Exception ignore) {
-                throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL);
-            }
-
-            keyInfo = secretDao.saveKey(userId, key, pwd, generateTime);
+    public KeyInfo generateKey(String userId, String pwd) {
+        Long generateTime = System.currentTimeMillis();
+        String ecodeStr = userId + SEPARATOR + pwd + SEPARATOR + generateTime;
+        // 生成密钥
+        String key;
+        try {
+            key = RSA.encrypt(RSA_PUBKEY, ecodeStr);
+        } catch (Exception ignore) {
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL);
         }
-        return keyInfo;
+        return secretDao.saveKey(userId, key, pwd, generateTime);
     }
 
     public void invalidToken(String identifier) {
