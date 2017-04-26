@@ -5,6 +5,7 @@ import org.spin.throwable.SimplifiedException;
 import org.spin.util.StringUtils;
 
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class InMemerySecretDao implements SecretDao {
     private final Map<String, Set<TokenInfo>> tokenCache = new ConcurrentHashMap<>();
     private final Map<String, Set<KeyInfo>> keyCache = new ConcurrentHashMap<>();
+    private final Map<String, String> invalidKeyCache = new Hashtable<>();
 
     @Override
     public String getIdentifierByToken(String tokenStr) {
@@ -32,6 +34,7 @@ public class InMemerySecretDao implements SecretDao {
 
     @Override
     public String getIdentifierByKey(String keyStr) {
+        checkKeyStr(keyStr);
         return keyCache.values().stream()
             .flatMap(ks -> ks.stream().filter(k -> k.getKey().equals(keyStr)).map(KeyInfo::getIdentifier))
             .findFirst()
@@ -67,6 +70,7 @@ public class InMemerySecretDao implements SecretDao {
 
     @Override
     public KeyInfo getKeyInfoByKey(String keyStr) {
+        checkKeyStr(keyStr);
         return keyCache.values().stream()
             .flatMap(ks -> ks.stream().filter(k -> k.getKey().equals(keyStr)))
             .findFirst()
@@ -154,7 +158,12 @@ public class InMemerySecretDao implements SecretDao {
 
     @Override
     public Set<KeyInfo> removeKey(String identifier) {
-        return keyCache.remove(identifier);
+        removeToken(identifier);
+        Set<KeyInfo> invalidKeys = keyCache.remove(identifier);
+        for (KeyInfo k : invalidKeys) {
+            invalidKeyCache.put(k.getKey(), k.getKey());
+        }
+        return invalidKeys;
     }
 
     @Override
@@ -163,17 +172,25 @@ public class InMemerySecretDao implements SecretDao {
         if (null == keyInfo) {
             throw new SimplifiedException(ErrorCode.SECRET_INVALID);
         }
-        synchronized (keyCache.get(keyInfo.getIdentifier())) {
-            keyCache.get(keyInfo.getIdentifier()).remove(keyInfo);
-        }
-        return keyInfo;
+        return removeKey(keyInfo);
     }
 
     @Override
     public KeyInfo removeKey(KeyInfo keyInfo) {
+        invalidKeyCache.put(keyInfo.getKey(), keyInfo.getKey());
         synchronized (keyCache.get(keyInfo.getIdentifier())) {
             keyCache.get(keyInfo.getIdentifier()).remove(keyInfo);
         }
+
+        // 收集并移除由失效的key生成的token
+        Set<TokenInfo> invalidTokens = tokenCache.values().stream()
+            .flatMap(t -> t.stream().filter(it -> it.getSourceKey().equals(keyInfo.getKey())))
+            .collect(Collectors.toSet());
+        invalidTokens.forEach(t -> {
+            synchronized (tokenCache.get(t.getIdentifier())) {
+                tokenCache.get(t.getIdentifier()).remove(t);
+            }
+        });
         return keyInfo;
     }
 
@@ -200,6 +217,12 @@ public class InMemerySecretDao implements SecretDao {
         List<KeyInfo> expired = collectExpiredKey(expriedIn);
         synchronized (keyCache) {
             expired.forEach(k -> keyCache.get(k.getIdentifier()).remove(k));
+        }
+    }
+
+    private void checkKeyStr(String keyStr) {
+        if (invalidKeyCache.containsKey(keyStr)) {
+            throw new SimplifiedException(ErrorCode.SECRET_INVALID);
         }
     }
 

@@ -12,6 +12,8 @@ import java.util.Objects;
  * @author xuweinan
  */
 public class TokenInfo implements Serializable {
+    private static final long serialVersionUID = -167149892869305494L;
+
     private String identifier;
     private String token;
     private String sourceKey;

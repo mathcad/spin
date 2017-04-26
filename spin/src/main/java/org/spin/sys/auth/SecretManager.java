@@ -26,7 +26,7 @@ public class SecretManager {
     /**
      * 分隔符
      */
-    private static final String SEPARATOR = "~~~";
+    private static final String SEPARATOR = "\n";
     private static PublicKey RSA_PUBKEY;
     private static PrivateKey RSA_PRIKEY;
 

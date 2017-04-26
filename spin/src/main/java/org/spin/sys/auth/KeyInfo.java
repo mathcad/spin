@@ -10,6 +10,8 @@ import java.util.Objects;
  * @author xuweinan
  */
 public class KeyInfo implements Serializable {
+    private static final long serialVersionUID = 6398212613135892288L;
+
     private String identifier;
     private String key;
     private String secret;
