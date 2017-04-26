@@ -5,7 +5,6 @@ import org.spin.throwable.SimplifiedException;
 import org.spin.util.StringUtils;
 
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,7 +21,7 @@ import java.util.stream.Collectors;
 public class InMemerySecretDao implements SecretDao {
     private final Map<String, Set<TokenInfo>> tokenCache = new ConcurrentHashMap<>();
     private final Map<String, Set<KeyInfo>> keyCache = new ConcurrentHashMap<>();
-    private final Map<String, String> invalidKeyCache = new Hashtable<>();
+    private final Map<String, String> invalidKeyCache = new ConcurrentHashMap<>();
 
     @Override
     public String getIdentifierByToken(String tokenStr) {
