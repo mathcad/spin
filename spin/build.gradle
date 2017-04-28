@@ -75,7 +75,7 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://localhost:8081/repository/saturn") {
+            repository(url: "http://121.196.213.233:8081/repository/saturn") {
                 authentication(userName: "admin", password: "super")
             }
             pom.version = "$project.version"
