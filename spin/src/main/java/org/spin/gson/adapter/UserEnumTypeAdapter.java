@@ -20,11 +20,19 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends TypeAdapter<E> {
 
     @Override
     public void write(JsonWriter out, E value) throws IOException {
-        out.value(EnumUtils.getEnumValue(value.getDeclaringClass(), value));
+        if (null == value) {
+            out.nullValue();
+        } else {
+            out.value(EnumUtils.getEnumValue(value.getDeclaringClass(), value));
+        }
     }
 
     @Override
     public E read(JsonReader in) throws IOException {
-        return EnumUtils.getEnum(clazz, in.nextInt());
+        try {
+            return EnumUtils.getEnum(clazz, in.nextInt());
+        } catch (IllegalStateException | NumberFormatException e) {
+            return null;
+        }
     }
 }

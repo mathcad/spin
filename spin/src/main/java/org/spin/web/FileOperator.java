@@ -64,6 +64,7 @@ public class FileOperator {
         } else
             file.transferTo(storedFile);
         UploadResult rs = new UploadResult();
+        rs.setOriginName(file.getOriginalFilename());
         rs.setFullName(fullName);
         rs.setStoreName(storeName + extention);
         rs.setSize(storedFile.length());
@@ -108,6 +109,7 @@ public class FileOperator {
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "下载文件错误", e);
         }
+        rs.setOriginName("");
         rs.setFullName(EnvCache.FileUploadDir + storeName + downloadRs.get("extention"));
         rs.setStoreName(storeName + downloadRs.get("extention"));
         rs.setSize(Long.parseLong(downloadRs.get("bytes")));
@@ -122,13 +124,25 @@ public class FileOperator {
         return dateFormat.format(LocalDateTime.now()) + RandomStringUtils.randomAlphanumeric(8);
     }
 
+    /**
+     * 上传结果
+     */
     public static class UploadResult {
+        private String originName;
         private String fullName;
         private String storeName;
         private Long size;
         private String extention;
         private String contentType;
         private LocalDateTime uploadTime;
+
+        public String getOriginName() {
+            return originName;
+        }
+
+        public void setOriginName(String originName) {
+            this.originName = originName;
+        }
 
         public String getFullName() {
             return fullName;

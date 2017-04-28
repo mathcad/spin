@@ -30,12 +30,13 @@ public @interface RestfulApi {
     boolean auth() default true;
 
     /**
-     * 权限路径
+     * 权限路径(RequestMapping的名称)
      */
+    @AliasFor(annotation = RequestMapping.class, attribute = "name")
     String authRouter() default "";
 
     /**
-     * RequestMapping的名称
+     * 权限路径(RequestMapping的名称)
      */
     @AliasFor(annotation = RequestMapping.class, attribute = "name")
     String name() default "";

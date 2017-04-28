@@ -6,7 +6,6 @@ import org.spin.security.RSA;
 import org.spin.sys.EnvCache;
 import org.spin.sys.ErrorCode;
 import org.spin.throwable.SimplifiedException;
-import org.spin.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -96,14 +95,11 @@ public class SecretManager {
      * @return 返回token, 如果key无效，抛出异常
      */
     public TokenInfo generateToken(String key) {
-        String id = secretDao.getIdentifierByKey(key);
         // 检查key是否合法
-        if (StringUtils.isEmpty(id)) {
-            throw new SimplifiedException(ErrorCode.SECRET_INVALID);
-        }
+        KeyInfo keyInfo = getKeyInfo(key);
         // 生成新token
         String token = UUID.randomUUID().toString();
-        return secretDao.saveToken(id, token, key);
+        return secretDao.saveToken(keyInfo.getIdentifier(), token, key);
     }
 
     /**

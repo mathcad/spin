@@ -3,6 +3,7 @@ package org.spin.gson.adapter;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import org.spin.util.StringUtils;
 
 import java.io.IOException;
 import java.time.LocalTime;
@@ -23,11 +24,20 @@ public class LocalTimeTypeAdapter extends TypeAdapter<LocalTime> {
 
     @Override
     public void write(JsonWriter out, LocalTime value) throws IOException {
-        out.value(formater.format(value));
+        if (null == value) {
+            out.nullValue();
+        } else {
+            out.value(formater.format(value));
+        }
     }
 
     @Override
     public LocalTime read(JsonReader in) throws IOException {
-        return LocalTime.parse(in.nextString(), formater);
+        String tmp = in.nextString();
+        if (StringUtils.isEmpty(tmp)) {
+            return null;
+        } else {
+            return LocalTime.parse(in.nextString(), formater);
+        }
     }
 }
