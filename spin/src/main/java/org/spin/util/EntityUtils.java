@@ -153,8 +153,10 @@ public abstract class EntityUtils {
         Field[] fields = entityClazz.getDeclaredFields();
         Set<String> columns = Arrays.stream(fields).filter(EntityUtils::isColumn).map(Field::getName).collect(Collectors.toSet());
         Class<?> superClass = entityClazz.getSuperclass();
-        if (null != superClass)
+        while (null != superClass) {
             columns.addAll(parseEntityColumns(superClass));
+            superClass = superClass.getSuperclass();
+        }
         EnvCache.ENTITY_COLUMNS.put(entityClazz.getName(), columns);
         return columns;
     }

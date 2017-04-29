@@ -9,6 +9,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
+import org.spin.jpa.core.IEntity;
 import org.spin.util.CollectionUtils;
 import org.spin.util.EntityUtils;
 import org.spin.util.StringUtils;
@@ -35,7 +36,7 @@ public class CriteriaBuilder {
      */
     public static final String ALL_COLUMNS = "ALL_COLUMNS";
 
-    private Class<?> enCls;
+    private Class<? extends IEntity> enCls;
     private DetachedCriteria deCriteria;
     private Set<String> fields = new HashSet<>();
     private Map<String, String> aliasMap = new HashMap<>();
@@ -48,9 +49,9 @@ public class CriteriaBuilder {
      * 创建离线查询条件
      *
      * @param enCls 查询的实体类
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
-    public static CriteriaBuilder forClass(Class<?> enCls) {
+    public static CriteriaBuilder forClass(Class<? extends IEntity> enCls) {
         CriteriaBuilder instance = new CriteriaBuilder();
         instance.enCls = enCls;
         instance.deCriteria = DetachedCriteria.forClass(enCls);
@@ -62,7 +63,7 @@ public class CriteriaBuilder {
      *
      * @param page 页码(从1开始)
      * @param size 页参数
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder page(int page, int size) {
         pageRequest = new PageRequest(page - 1, size);
@@ -73,7 +74,7 @@ public class CriteriaBuilder {
      * 增加查询字段
      *
      * @param fields 字段列表
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder addFields(String... fields) {
         Arrays.stream(fields).filter(StringUtils::isNotEmpty).forEach(this.fields::add);
@@ -85,7 +86,7 @@ public class CriteriaBuilder {
      *
      * @param field 字段名
      * @param alias 别名
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder createAlias(String field, String alias) {
         aliasMap.put(field, alias);
@@ -96,7 +97,7 @@ public class CriteriaBuilder {
      * 设置查询字段别名
      *
      * @param params 字段与别名的映射：field1, alias1, field2, alias2...
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder createAliases(String... params) {
         if (null != params) {
@@ -115,7 +116,7 @@ public class CriteriaBuilder {
      * 追加多个查询条件
      *
      * @param criterions 条件
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder addCriterion(Criterion... criterions) {
         if (null != criterions) {
@@ -131,7 +132,7 @@ public class CriteriaBuilder {
      * 追加多个查询条件
      *
      * @param criterions 条件
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder addCriterion(Iterable<Criterion> criterions) {
         if (null != criterions) {
@@ -147,7 +148,7 @@ public class CriteriaBuilder {
      * 追加排序
      *
      * @param ords 排序
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder orderBy(Order... ords) {
         if (null != ords)
@@ -163,7 +164,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder eq(String prop, Object value) {
         this.addCriterion(Restrictions.eq(prop, value));
@@ -175,7 +176,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder notEq(String prop, Object value) {
         this.addCriterion(Restrictions.not(Restrictions.eq(prop, value)));
@@ -187,7 +188,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder startWith(String prop, String value) {
         this.addCriterion(Restrictions.like(prop, value, MatchMode.START));
@@ -199,7 +200,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder endWith(String prop, String value) {
         this.addCriterion(Restrictions.like(prop, value, MatchMode.END));
@@ -211,7 +212,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder like(String prop, String value) {
         this.addCriterion(Restrictions.like(prop, value, MatchMode.ANYWHERE));
@@ -223,7 +224,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder gt(String prop, Object value) {
         this.addCriterion(Restrictions.gt(prop, value));
@@ -235,7 +236,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder ge(String prop, Object value) {
         this.addCriterion(Restrictions.ge(prop, value));
@@ -247,7 +248,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder lt(String prop, Object value) {
         this.addCriterion(Restrictions.lt(prop, value));
@@ -259,7 +260,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder le(String prop, Object value) {
         this.addCriterion(Restrictions.le(prop, value));
@@ -271,7 +272,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder in(String prop, Collection<?> value) {
         this.addCriterion(Restrictions.in(prop, value));
@@ -283,7 +284,7 @@ public class CriteriaBuilder {
      *
      * @param prop  属性名
      * @param value 属性值
-     * @return {@link DetachedCriteria}
+     * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder in(String prop, Object... value) {
         this.addCriterion(Restrictions.in(prop, value));
@@ -326,44 +327,72 @@ public class CriteriaBuilder {
         return pageRequest;
     }
 
+    /**
+     * 处理字段投影，设置2层甚至更多层关联的关联关系
+     */
     private void processProjection() {
-        Set<String> fieldsList = fields;
-        if (CollectionUtils.isEmpty(fieldsList) || fieldsList.contains(ALL_COLUMNS))
-            fieldsList.addAll(EntityUtils.parseEntityColumns(enCls));
-        fieldsList.remove(ALL_COLUMNS);
+        if (CollectionUtils.isEmpty(fields) || fields.contains(ALL_COLUMNS)) {
+            fields.addAll(EntityUtils.parseEntityColumns(enCls));
+        }
+        fields.remove(ALL_COLUMNS);
+
+        // 该实体的所有n->1关联属性
         Map<String, Field> entityJoinFields = EntityUtils.getJoinFields(enCls);
-        Map<String, Set<String>> referFields = new HashMap<>();
-        Set<String> queryjoinFields = new HashSet<>();
+
+        // 关联属性需要引用的子属性
+        Set<String> referFields = new HashSet<>();
+
+        // 查询构造中需要用到的所有关联
+        Set<String> queryjoins = new HashSet<>();
+
+        // 投影列表
         ProjectionList projectionList = Projections.projectionList();
 
-        for (String pf : fieldsList) {
+        for (String pf : fields) {
             // 如果是对象投影，不在查询中体现，后期通过对象Id来初始化
             if (entityJoinFields.containsKey(pf)) {
-                referFields.put(pf, new HashSet<>());
+                referFields.add(pf);
                 continue;
             }
 
-            projectionList.add(Property.forName(pf), aliasMap.getOrDefault(pf, pf));
-
-            int pjFieldPtIdx = pf.indexOf('.');
-            if (pjFieldPtIdx > -1) {
-                String objField = pf.split("\\.")[0];
-                queryjoinFields.add(objField);
-                if (pf.lastIndexOf('.') == pjFieldPtIdx && referFields.containsKey(objField))
-                    referFields.get(objField).add(pf);
+            String tmp = pf;
+            int ldotIdx = tmp.lastIndexOf('.'), di = tmp.indexOf('.');
+            while (di != ldotIdx) {
+                tmp = tmp.replaceFirst("\\.", "_");
+                di = tmp.indexOf('.');
             }
+            projectionList.add(Property.forName(tmp), aliasMap.getOrDefault(pf, pf));
+
+            String objFileds[] = pf.split("\\.");
+            if (objFileds.length > 1) {
+                for (int idx = 0; idx != objFileds.length - 1; ++idx) {
+                    StringBuilder join = new StringBuilder();
+                    for (int i = 0; i <= idx; ++i) {
+                        join.append(objFileds[i]).append(".");
+                    }
+                    queryjoins.add(join.substring(0, join.length() - 1));
+                }
+            }
+
+//            int pjFieldPtIdx = pf.indexOf('.');
+//            if (pjFieldPtIdx > -1) {
+//                String objField = pf.split("\\.")[0];
+//                queryjoins.add(objField);
+//                if (pf.lastIndexOf('.') == pjFieldPtIdx && referFields.containsKey(objField))
+//                    referFields.get(objField).add(pf);
+//            }
         }
 
         // 查询结果中需外连接的表
-        queryjoinFields.addAll(referFields.keySet());
-        queryjoinFields.stream().filter(jf -> !aliasMap.containsKey(jf)).forEach(jf -> deCriteria.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
+        queryjoins.addAll(referFields);
+//        queryjoins.stream().filter(jf -> !aliasMap.containsKey(jf)).forEach(jf -> deCriteria.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
+        queryjoins.forEach(jf -> deCriteria.createAlias(jf, jf.replaceAll("\\.", "_"), JoinType.LEFT_OUTER_JOIN));
 
         // 关联对象，只抓取Id值
-        for (String referField : referFields.keySet()) {
+        for (String referField : referFields) {
             Field mapField = entityJoinFields.get(referField);
             String pkf = EntityUtils.getPKField(mapField.getType()).getName();
             String fetchF = referField + "." + pkf;
-            referFields.get(referField).add(fetchF);
             projectionList.add(Property.forName(fetchF), fetchF);
         }
         deCriteria.setProjection(projectionList);

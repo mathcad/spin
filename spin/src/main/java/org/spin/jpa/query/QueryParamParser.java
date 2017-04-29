@@ -6,6 +6,7 @@ import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.spin.jpa.core.IEntity;
+import org.spin.sys.Assert;
 import org.spin.throwable.SQLException;
 import org.spin.throwable.SimplifiedException;
 import org.spin.util.DateUtils;
@@ -55,8 +56,8 @@ public class QueryParamParser {
         Class<?> enCls = Class.forName(p.getCls());
         if (!IEntity.class.isAssignableFrom(enCls) || null == enCls.getAnnotation(Entity.class))
             throw new SimplifiedException(p.getCls() + " is not an Entity Class");
-
-        CriteriaBuilder result = CriteriaBuilder.forClass(enCls);
+        @SuppressWarnings("unchecked")
+        CriteriaBuilder result = CriteriaBuilder.forClass((Class<? extends IEntity>) enCls);
         result.setFields(p.getFields());
         // 设置字段别名
         result.setAliasMap(p.getAliasMap());
@@ -188,7 +189,9 @@ public class QueryParamParser {
             } else if (fieldType.equals(java.sql.Date.class) || fieldType.equals(Date.class)) {
                 v = DateUtils.toDate(val);
             } else if (fieldType.equals(Timestamp.class)) {
-                v = new Timestamp(DateUtils.toDate(val).getTime());
+                Date tmp = DateUtils.toDate(val);
+                Assert.notNull(tmp, "时间格式不正确");
+                v = new Timestamp(tmp.getTime());
             } else if (fieldType.isEnum()) {
                 //noinspection unchecked
                 v = EnumUtils.getEnum((Class<Enum>) fieldType, Integer.valueOf(val));

@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  *
  * @author xuweinan
  */
-public class InMemerySecretDao implements SecretDao {
+public class InMemorySecretDao implements SecretDao {
     private final Map<String, Set<TokenInfo>> tokenCache = new ConcurrentHashMap<>();
     private final Map<String, Set<KeyInfo>> keyCache = new ConcurrentHashMap<>();
     private final Map<String, String> invalidKeyCache = new ConcurrentHashMap<>();

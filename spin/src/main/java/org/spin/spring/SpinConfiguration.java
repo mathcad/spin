@@ -10,7 +10,7 @@ import org.spin.jpa.sql.loader.ClasspathMdLoader;
 import org.spin.jpa.sql.resolver.FreemarkerResolver;
 import org.spin.spring.condition.ConditionalOnBean;
 import org.spin.spring.condition.ConditionalOnMissingBean;
-import org.spin.sys.auth.InMemerySecretDao;
+import org.spin.sys.auth.InMemorySecretDao;
 import org.spin.sys.auth.SecretDao;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,6 +122,6 @@ public class SpinConfiguration {
     @Bean(name = "secretDao")
     @ConditionalOnMissingBean(SecretDao.class)
     public SecretDao getSecretDao() {
-        return new InMemerySecretDao();
+        return new InMemorySecretDao();
     }
 }

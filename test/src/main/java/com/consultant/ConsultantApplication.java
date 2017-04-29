@@ -4,6 +4,7 @@ import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.spin.gson.JsonHttpMessageConverter;
 import org.spin.jpa.core.SQLLoader;
 import org.spin.jpa.extend.DataBaseConfiguration;
 import org.spin.jpa.sql.loader.ArchiveMdLoader;
@@ -15,6 +16,7 @@ import org.spin.shiro.AnyoneSuccessfulStrategy;
 import org.spin.spring.SpinConfiguration;
 import org.spin.sys.EnvCache;
 import org.spin.sys.auth.SecretManager;
+import org.spin.util.JsonUtils;
 import org.spin.web.filter.AccessAllowFilter;
 import org.spin.web.filter.TokenResolveFilter;
 import org.spin.wx.WxConfig;
@@ -24,11 +26,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.env.Environment;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.orm.hibernate5.support.OpenSessionInViewFilter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -37,6 +41,8 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.servlet.MultipartConfigElement;
 import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -172,14 +178,14 @@ public class ConsultantApplication {
         return shiroFilterFactoryBean;
     }
 
-//    @Bean
-//    public HttpMessageConverters customConverters() {
-//        Collection<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
-//        JsonHttpMessageConverter jsonHttpMessageConverter = new JsonHttpMessageConverter();
-//        jsonHttpMessageConverter.setGson(JSONUtils.getDefaultGson());
-//        messageConverters.add(jsonHttpMessageConverter);
-//        return new HttpMessageConverters(true, messageConverters);
-//    }
+    @Bean
+    public HttpMessageConverters customConverters() {
+        Collection<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
+        JsonHttpMessageConverter jsonHttpMessageConverter = new JsonHttpMessageConverter();
+        jsonHttpMessageConverter.setGson(JsonUtils.getDefaultGson());
+        messageConverters.add(jsonHttpMessageConverter);
+        return new HttpMessageConverters(true, messageConverters);
+    }
 
     @Bean
     public InitializingBean readConfig() {

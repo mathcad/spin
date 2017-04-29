@@ -2,6 +2,7 @@ package com.consultant.controller;
 
 import com.consultant.domain.enums.UserTypeE;
 import com.consultant.domain.sys.User;
+import com.consultant.service.UserConsService;
 import com.consultant.service.UserService;
 import org.spin.annotations.RestfulApi;
 import org.spin.web.RestfulResponse;
@@ -21,6 +22,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserConsService userConsService;
+
     @RestfulApi(auth = false, path = "add")
     public RestfulResponse addUser() {
         User user = new User();
@@ -36,5 +40,11 @@ public class UserController {
     public RestfulResponse show() {
         User user = userService.getUser(1L);
         return RestfulResponse.ok(user);
+    }
+
+    @RestfulApi(auth = false, path = "test")
+    public RestfulResponse test() {
+        Object obj = userConsService.test();
+        return RestfulResponse.ok(obj);
     }
 }

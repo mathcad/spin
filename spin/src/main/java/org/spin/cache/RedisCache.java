@@ -10,7 +10,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -197,7 +196,7 @@ public class RedisCache<V> implements Cache<V> {
             }
             List<byte[]> hmaps = connection.hMGet(StringUtils.getBytesUtf8(key), byteFields);
             if (hmaps == null || hmaps.size() == 0) {
-                return Collections.EMPTY_LIST;
+                return new ArrayList<>();
             }
             result.addAll(hmaps.stream().map(bs -> redisSerializer.deserialize(bs)).collect(Collectors.toList()));
             return result;
