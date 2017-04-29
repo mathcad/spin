@@ -1,6 +1,6 @@
 description '基础框架'
 group 'org.mathcat'
-version '1.8.13'
+version '1.8.14'
 def artifactId = 'spin'
 
 apply plugin: 'java'
