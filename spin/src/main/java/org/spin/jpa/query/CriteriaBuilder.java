@@ -373,19 +373,10 @@ public class CriteriaBuilder {
                     queryjoins.add(join.substring(0, join.length() - 1));
                 }
             }
-
-//            int pjFieldPtIdx = pf.indexOf('.');
-//            if (pjFieldPtIdx > -1) {
-//                String objField = pf.split("\\.")[0];
-//                queryjoins.add(objField);
-//                if (pf.lastIndexOf('.') == pjFieldPtIdx && referFields.containsKey(objField))
-//                    referFields.get(objField).add(pf);
-//            }
         }
 
         // 查询结果中需外连接的表
         queryjoins.addAll(referFields);
-//        queryjoins.stream().filter(jf -> !aliasMap.containsKey(jf)).forEach(jf -> deCriteria.createAlias(jf, jf, JoinType.LEFT_OUTER_JOIN));
         queryjoins.forEach(jf -> deCriteria.createAlias(jf, jf.replaceAll("\\.", "_"), JoinType.LEFT_OUTER_JOIN));
 
         // 关联对象，只抓取Id值
