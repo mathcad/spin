@@ -10,7 +10,6 @@ import org.spin.util.StringUtils;
 
 import java.net.URISyntaxException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AccessToken {
     private static final Logger logger = LoggerFactory.getLogger(AccessToken.class);
-    private static final TypeIdentifier<HashMap<String, String>> type = new TypeIdentifier<HashMap<String, String>>() {
+    private static final TypeIdentifier<Map<String, String>> type = new TypeIdentifier<Map<String, String>>() {
     };
     private static Map<String, AccessToken> instances;
     private String token;
@@ -75,16 +74,16 @@ public class AccessToken {
         if (null == instances) {
             instances = new ConcurrentHashMap<>();
         }
+        // 获取网页授权access_token
         if (StringUtils.isNotEmpty(code)) {
             try {
                 String result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/access_token?appid={}&secret={}&code={}&grant_type=authorization_code", appId, appSecret, code);
-                AccessToken token = parseToken(result);
-                instances.put(name, token);
-                return token;
+                return parseToken(result);
             } catch (URISyntaxException e) {
                 throw new SimplifiedException("获取access_token失败", e);
             }
         }
+        // 获取普通access_token
         AccessToken token = instances.get(name);
         if (null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
             synchronized (AccessToken.class) {

@@ -41,22 +41,6 @@ public class FtpOperator {
     private int port = 21;
     private FTPClient client;
 
-    /**
-     * FTP协议
-     */
-    public enum Protocal {
-        FTP("ftp"), FTPS("ftps");
-        private String value;
-
-        Protocal(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-
     private static final Map<String, FtpOperator> ftpClients = new ConcurrentHashMap<>();
     private static final Pattern protocalPattern = Pattern.compile("^(ftp[s]?)://(.+:.+@)?([^:]+)(:\\d{2,5})?$", Pattern.CASE_INSENSITIVE);
 

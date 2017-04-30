@@ -50,7 +50,6 @@ public class WxHelper {
 
         StringBuilder sbuilder = new StringBuilder();
         list.stream().sorted().forEach(s -> sbuilder.append("&").append(s));
-//        Arrays.stream(param).sorted().forEach(sbuilder::append);
         sbuilder.append("&key=").append(key);
         return DigestUtils.md5Hex(sbuilder.substring(1, sbuilder.length()));
     }
@@ -64,6 +63,8 @@ public class WxHelper {
 
     /**
      * 根据code获取微信用户信息
+     *
+     * @param code 用户同意授权后，带的code参数
      */
     public static WxUserInfo getUserInfo(String code) {
         AccessToken access_token = AccessToken.getDefaultInstanceWithCode(code);
@@ -72,6 +73,9 @@ public class WxHelper {
 
     /**
      * 获取微信用户信息
+     *
+     * @param accessToken 网页授权接口调用凭证,注意：此access_token与基础支持的access_token不同
+     * @param openId      用户的唯一标识
      */
     public static WxUserInfo getUserInfo(String accessToken, String openId) {
         String tmp;
@@ -90,6 +94,8 @@ public class WxHelper {
 
     /**
      * 根据jsapi_ticket对url生成签名
+     *
+     * @param 需要调用jsapi的url
      */
     public static Map<String, String> signature(String url) {
         Map<String, String> ret = new HashMap<>();

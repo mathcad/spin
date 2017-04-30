@@ -11,7 +11,7 @@ public class FtpOperatorTest {
 
     @Test
     public void testFtp() {
-        FtpOperator ftpOperator = FtpOperator.connect(FtpOperator.Protocal.FTP, "arvin", "123", "localhost");
+        FtpOperator ftpOperator = FtpOperator.connect(Protocal.FTP, "arvin", "123", "localhost");
         ftpOperator.downFile(".", "oracle.txt", "D:\\");
         assertTrue(true);
     }
