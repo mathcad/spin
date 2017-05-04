@@ -1,6 +1,5 @@
 rootProject.name = 'fundamental'
 include 'test'
-include 'zibra'
 include 'spin'
 include 'spin-starter-restful'
 
