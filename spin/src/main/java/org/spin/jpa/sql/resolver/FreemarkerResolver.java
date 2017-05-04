@@ -17,9 +17,9 @@
 
 package org.spin.jpa.sql.resolver;
 
-import org.spin.freemarker.ConcurrentStrTemplateLoader;
-import org.spin.freemarker.EnumValueFunc;
-import org.spin.freemarker.ValidValueFunc;
+import org.spin.enhance.freemarker.ConcurrentStrTemplateLoader;
+import org.spin.enhance.freemarker.EnumValueFunc;
+import org.spin.enhance.freemarker.ValidValueFunc;
 import org.spin.core.throwable.SimplifiedException;
 import freemarker.template.Configuration;
 import freemarker.template.Template;

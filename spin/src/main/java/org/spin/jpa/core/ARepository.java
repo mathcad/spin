@@ -19,6 +19,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.ErrorCode;
 import org.spin.jpa.query.CriteriaBuilder;
 import org.spin.jpa.query.QueryParam;
 import org.spin.jpa.query.QueryParamParser;
@@ -32,8 +33,6 @@ import org.spin.core.util.EntityUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.SessionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
@@ -229,7 +228,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      *
      * @param entity          the persistent object to replicate
      * @param replicationMode the Hibernate ReplicationMode
-     * @throws DataAccessException in case of Hibernate errors
      * @see Session#replicate(Object, ReplicationMode)
      */
     public void replicate(final T entity, final ReplicationMode replicationMode) {
@@ -940,7 +938,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             }
         }
         if (isCheckWriteOperations() && ((FlushMode) ReflectionUtils.invokeMethod(getFlushMode, session)).lessThan(FlushMode.COMMIT)) {
-            throw new InvalidDataAccessApiUsageException(
+            throw new SQLException(ErrorCode.OTHER.getCode(),
                 "Write operations are not allowed in read-only mode (FlushMode.MANUAL): " +
                     "Turn your Session into FlushMode.COMMIT/AUTO or remove 'readOnly' marker from transaction definition.");
         }

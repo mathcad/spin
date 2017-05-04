@@ -16,7 +16,7 @@
 
 package org.spin.core.util;
 
-import org.spin.collection.ConcurrentReferenceHashMap;
+import org.spin.core.collection.ConcurrentReferenceHashMap;
 import org.spin.core.Assert;
 
 import java.lang.reflect.Constructor;

@@ -3,7 +3,7 @@ package org.spin.spring;
 import com.alibaba.druid.pool.DruidDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.SessionFactory;
-import org.spin.cache.RedisCache;
+import org.spin.core.cache.RedisCache;
 import org.spin.jpa.core.SQLLoader;
 import org.spin.jpa.extend.DataBaseConfiguration;
 import org.spin.jpa.sql.loader.ClasspathMdLoader;

@@ -2,9 +2,9 @@ package org.spin.core.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapterFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.gson.SpinTypeAdapterFactory;
 import org.spin.core.TypeIdentifier;
 
 import java.lang.reflect.Type;
@@ -20,16 +20,24 @@ import java.util.Iterator;
 public abstract class JsonUtils {
     private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 
-    /** 空{@code JSON}字符串 - <code>""</code> */
+    /**
+     * 空{@code JSON}字符串 - <code>""</code>
+     */
     private static final String EMPTY = "";
 
-    /** 空{@code JSON}对象 - <code>"{}"</code> */
+    /**
+     * 空{@code JSON}对象 - <code>"{}"</code>
+     */
     private static final String EMPTY_JSON = "{}";
 
-    /** 空{@code JSON} 数组(集合) - {@code "[]"} */
+    /**
+     * 空{@code JSON} 数组(集合) - {@code "[]"}
+     */
     private static final String EMPTY_JSON_ARRAY = "[]";
 
-    /** 默认的{@code JSON}日期/时间字段的格式化模式 */
+    /**
+     * 默认的{@code JSON}日期/时间字段的格式化模式
+     */
     private static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     private static final Gson defaultGson;
@@ -315,8 +323,15 @@ public abstract class JsonUtils {
 
     private static GsonBuilder baseBuilder(String datePattern) {
         GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapterFactory(new SpinTypeAdapterFactory(datePattern));
-        builder.setDateFormat(datePattern);
+        try {
+            @SuppressWarnings("unchecked")
+            Class<TypeAdapterFactory> factoryClass = (Class<TypeAdapterFactory>) ClassUtils.getClass("org.spin.enhance.gson.SpinTypeAdapterFactory");
+            TypeAdapterFactory factory = ConstructorUtil.invokeConstructor(factoryClass, datePattern);
+            builder.registerTypeAdapterFactory(factory);
+            builder.setDateFormat(datePattern);
+        } catch (Exception ignore) {
+            logger.info("Spin Enhance package not imported");
+        }
         return builder;
     }
 }

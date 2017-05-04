@@ -3,7 +3,7 @@ package org.spin.boot;
 import com.alibaba.druid.pool.DruidDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.SessionFactory;
-import org.spin.cache.RedisCache;
+import org.spin.core.cache.RedisCache;
 import org.spin.core.auth.InMemorySecretDao;
 import org.spin.core.auth.SecretDao;
 import org.spin.jpa.core.SQLLoader;

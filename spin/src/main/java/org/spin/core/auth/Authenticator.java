@@ -1,30 +1,29 @@
 package org.spin.core.auth;
 
-import org.spin.jpa.core.AbstractUser;
-
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 自定义身份验证接口
  * <p>
  * Created by xuweinan on 2016/10/4.
  *
+ * @param <U> 用户类型
  * @author xuweinan
  */
-public interface Authenticator {
+public interface Authenticator<U> {
 
     /**
      * 获取用户
      *
      * @param identity 用户标识符，具体由实现类定义
      */
-    AbstractUser getSubject(Object identity);
+    U getSubject(Object identity);
 
     /**
      * 验证用户密码前的自定义校验，如验证用户类型等。
      * <p>验证不通过直接抛出异常即可</p>
      */
-    void preCheck(AbstractUser user);
+    void preCheck(U user);
 
     /**
      * 获取角色与权限信息
@@ -56,5 +55,5 @@ public interface Authenticator {
      * @param accessTime 访问时间
      * @param msg        日志
      */
-    void logAccess(Object subject, Date accessTime, String msg);
+    void logAccess(Object subject, LocalDateTime accessTime, String msg);
 }
