@@ -1,6 +1,6 @@
 package org.spin.collection;
 
-import org.spin.throwable.SimplifiedException;
+import org.spin.core.throwable.SimplifiedException;
 
 import java.io.Serializable;
 import java.util.Arrays;

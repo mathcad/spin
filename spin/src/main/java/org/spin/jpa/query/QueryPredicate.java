@@ -1,6 +1,6 @@
 package org.spin.jpa.query;
 
-import org.spin.util.DigestUtils;
+import org.spin.core.util.DigestUtils;
 
 import java.io.Serializable;
 import java.util.HashMap;

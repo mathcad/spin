@@ -13,14 +13,15 @@ import java.util.List;
  */
 public class Page<T> implements Serializable {
     private static final long serialVersionUID = -1433098389717460681L;
+
     private List<T> rows = new ArrayList<>();
-    private Long total = 0L;
-    private int pageSize;
+    private long total = 0L;
+    private int pageSize = 0;
 
     public Page() {
     }
 
-    public Page(List<T> rows, Long total, int pageSize) {
+    public Page(List<T> rows, long total, int pageSize) {
         this.rows = rows;
         this.total = total;
         this.pageSize = pageSize;
@@ -34,11 +35,11 @@ public class Page<T> implements Serializable {
         this.rows = rows;
     }
 
-    public Long getTotal() {
+    public long getTotal() {
         return total;
     }
 
-    public void setTotal(Long total) {
+    public void setTotal(long total) {
         this.total = total;
     }
 

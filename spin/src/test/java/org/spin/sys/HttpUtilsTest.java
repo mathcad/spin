@@ -1,6 +1,6 @@
 package org.spin.sys;
 
-import org.spin.util.HttpUtils;
+import org.spin.core.util.HttpUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

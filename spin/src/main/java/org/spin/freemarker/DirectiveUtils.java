@@ -3,7 +3,7 @@ package org.spin.freemarker;
 import freemarker.core.Environment;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateModelException;
-import org.spin.util.StringUtils;
+import org.spin.core.util.StringUtils;
 
 import java.util.Map;
 

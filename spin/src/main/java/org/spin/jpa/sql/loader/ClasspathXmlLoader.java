@@ -17,9 +17,9 @@
 
 package org.spin.jpa.sql.loader;
 
-import org.spin.throwable.SQLException;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.StringUtils;
+import org.spin.core.throwable.SQLException;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.StringUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;

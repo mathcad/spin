@@ -15,8 +15,8 @@ package org.spin.wx.aes;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.security.Base64;
-import org.spin.util.RandomStringUtils;
+import org.spin.core.security.Base64;
+import org.spin.core.util.RandomStringUtils;
 import org.spin.wx.WxConfig;
 import org.spin.wx.WxHelper;
 

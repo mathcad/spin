@@ -1,6 +1,6 @@
 package org.spin.collection;
 
-import org.spin.sys.Assert;
+import org.spin.core.Assert;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,6 +1,6 @@
 package org.spin.wx;
 
-import org.spin.throwable.SimplifiedException;
+import org.spin.core.throwable.SimplifiedException;
 
 import java.util.Base64;
 import java.util.HashMap;

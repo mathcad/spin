@@ -1,11 +1,11 @@
 package org.spin.jpa.query;
 
-import org.spin.sys.EnvCache;
-import org.spin.sys.ErrorCode;
-import org.spin.sys.TypeIdentifier;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.JsonUtils;
-import org.spin.util.StringUtils;
+import org.spin.core.SpinContext;
+import org.spin.core.ErrorCode;
+import org.spin.core.TypeIdentifier;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.JsonUtils;
+import org.spin.core.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ public class QueryParam implements Serializable {
 
     public static QueryParam parseFromJson(String jsonString) {
         QueryParam qp = JsonUtils.fromJson(jsonString, thisType);
-        if (!EnvCache.devMode && null != qp && !qp.validation())
+        if (!SpinContext.devMode && null != qp && !qp.validation())
             throw new SimplifiedException(ErrorCode.SIGNATURE_FAIL, "请求参数被客户端篡改");
         return qp;
     }

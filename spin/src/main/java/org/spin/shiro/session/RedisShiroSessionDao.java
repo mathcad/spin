@@ -4,8 +4,8 @@ import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
 import org.spin.cache.Cache;
-import org.spin.sys.SessionUser;
-import org.spin.util.SessionUtils;
+import org.spin.core.SessionUser;
+import org.spin.core.util.SessionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -2,12 +2,12 @@ package org.spin.wx;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.util.HexUtils;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.DigestUtils;
-import org.spin.util.HttpUtils;
-import org.spin.util.JsonUtils;
-import org.spin.util.RandomStringUtils;
+import org.spin.core.util.HexUtils;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.DigestUtils;
+import org.spin.core.util.HttpUtils;
+import org.spin.core.util.JsonUtils;
+import org.spin.core.util.RandomStringUtils;
 import org.spin.wx.wx.base.WxUserInfo;
 
 import java.util.ArrayList;

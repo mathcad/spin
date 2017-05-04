@@ -1,6 +1,6 @@
 package com.consultant.domain.enums;
 
-import org.spin.annotations.UserEnum;
+import org.spin.core.annotation.UserEnum;
 
 /**
  * 区域类型

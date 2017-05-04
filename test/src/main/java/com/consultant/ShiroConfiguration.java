@@ -10,7 +10,7 @@ import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.spin.shiro.AnyoneSuccessfulStrategy;
 import org.spin.shiro.EnhancedAuthenticationFilter;
 import org.spin.shiro.UsernamePasswordRealm;
-import org.spin.util.DigestUtils;
+import org.spin.core.util.DigestUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

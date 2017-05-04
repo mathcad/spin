@@ -12,7 +12,7 @@ import org.spin.wx.WxHelper;
 import org.spin.wx.wx.base.WxUserInfo;
 
 /**
- * OAuth2认证域
+ * 微信认证域
  *
  * @author xuweinan
  */

@@ -3,7 +3,7 @@ package org.spin.gson.adapter;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import org.spin.util.StringUtils;
+import org.spin.core.util.StringUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

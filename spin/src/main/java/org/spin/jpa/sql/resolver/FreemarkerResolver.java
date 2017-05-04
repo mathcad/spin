@@ -20,7 +20,7 @@ package org.spin.jpa.sql.resolver;
 import org.spin.freemarker.ConcurrentStrTemplateLoader;
 import org.spin.freemarker.EnumValueFunc;
 import org.spin.freemarker.ValidValueFunc;
-import org.spin.throwable.SimplifiedException;
+import org.spin.core.throwable.SimplifiedException;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;

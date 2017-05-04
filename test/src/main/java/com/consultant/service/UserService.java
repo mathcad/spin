@@ -2,9 +2,9 @@ package com.consultant.service;
 
 import com.consultant.domain.sys.User;
 import com.consultant.repository.UserRepository;
-import org.spin.jpa.core.BaseUser;
-import org.spin.sys.auth.Authenticator;
-import org.spin.sys.auth.RolePermission;
+import org.spin.core.auth.Authenticator;
+import org.spin.core.auth.RolePermission;
+import org.spin.jpa.core.AbstractUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +22,12 @@ public class UserService implements Authenticator {
     private UserRepository userDao;
 
     @Override
-    public BaseUser getSubject(Object o) {
+    public AbstractUser getSubject(Object o) {
         return null;
     }
 
     @Override
-    public void preCheck(BaseUser baseUser) {
+    public void preCheck(AbstractUser baseUser) {
 
     }
 

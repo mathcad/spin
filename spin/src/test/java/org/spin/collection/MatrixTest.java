@@ -1,9 +1,8 @@
 package org.spin.collection;
 
 import org.junit.Test;
-import org.spin.sys.auth.KeyInfo;
+import org.spin.core.auth.KeyInfo;
 
-import java.security.Key;
 import java.util.HashSet;
 import java.util.Set;
 

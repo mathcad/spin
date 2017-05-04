@@ -9,14 +9,13 @@ import org.spin.jpa.core.SQLLoader;
 import org.spin.jpa.extend.DataBaseConfiguration;
 import org.spin.jpa.sql.loader.ArchiveMdLoader;
 import org.spin.jpa.sql.resolver.FreemarkerResolver;
-import org.spin.jpa.sql.resolver.TemplateResolver;
-import org.spin.security.AES;
-import org.spin.security.RSA;
+import org.spin.core.security.AES;
+import org.spin.core.security.RSA;
 import org.spin.shiro.AnyoneSuccessfulStrategy;
 import org.spin.spring.SpinConfiguration;
-import org.spin.sys.EnvCache;
-import org.spin.sys.auth.SecretManager;
-import org.spin.util.JsonUtils;
+import org.spin.core.SpinContext;
+import org.spin.core.auth.SecretManager;
+import org.spin.core.util.JsonUtils;
 import org.spin.web.filter.AccessAllowFilter;
 import org.spin.web.filter.TokenResolveFilter;
 import org.spin.wx.WxConfig;
@@ -190,15 +189,15 @@ public class ConsultantApplication {
     @Bean
     public InitializingBean readConfig() {
         return () -> {
-            EnvCache.FileUploadDir = env.getProperty("web.fileUploadDir");
+            SpinContext.FileUploadDir = env.getProperty("web.fileUploadDir");
             SecretManager.setRsaPubkey(RSA.getRSAPublicKey(env.getProperty("encrypt.rsa.publicKey")));
             SecretManager.setRsaPrikey(RSA.getRSAPrivateKey(env.getProperty("encrypt.rsa.privatekey")));
-            EnvCache.devMode = "dev".equals(env.getProperty("spring.profiles.active"));
+            SpinContext.devMode = "dev".equals(env.getProperty("spring.profiles.active"));
             if (env.containsProperty("secretManager.tokenExpireTime")) {
-                EnvCache.TokenExpireTime = resolveTime(env.getProperty("secretManager.tokenExpireTime"));
+                SpinContext.TokenExpireTime = resolveTime(env.getProperty("secretManager.tokenExpireTime"));
             }
             if (env.containsProperty("secretManager.keyExpireTime")) {
-                EnvCache.KeyExpireTime = resolveTime(env.getProperty("secretManager.keyExpireTime"));
+                SpinContext.KeyExpireTime = resolveTime(env.getProperty("secretManager.keyExpireTime"));
             }
 
             if (env.getProperty("wxConfig.encodingAesKey").length() != 43) {

@@ -7,10 +7,10 @@ import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.sys.ErrorCode;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.EnumUtils;
-import org.spin.util.StringUtils;
+import org.spin.core.ErrorCode;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.EnumUtils;
+import org.spin.core.util.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -3,8 +3,8 @@ package org.spin.jpa.sql.dbtype;
 import org.spin.jpa.core.DatabaseType;
 import org.spin.jpa.query.QueryParam;
 import org.spin.jpa.sql.SQLSource;
-import org.spin.sys.Assert;
-import org.spin.util.StringUtils;
+import org.spin.core.Assert;
+import org.spin.core.util.StringUtils;
 
 /**
  * <p>Created by xuweinan on 2016/9/12.</p>

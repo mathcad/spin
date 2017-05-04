@@ -10,9 +10,9 @@ import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.spin.jpa.core.IEntity;
-import org.spin.util.CollectionUtils;
-import org.spin.util.EntityUtils;
-import org.spin.util.StringUtils;
+import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.EntityUtils;
+import org.spin.core.util.StringUtils;
 import org.springframework.data.domain.PageRequest;
 
 import java.lang.reflect.Field;

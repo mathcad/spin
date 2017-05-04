@@ -1,10 +1,10 @@
 package org.spin.jpa.core;
 
 
-import org.spin.sys.SessionUser;
-import org.spin.util.DigestUtils;
-import org.spin.util.RandomStringUtils;
-import org.spin.util.StringUtils;
+import org.spin.core.SessionUser;
+import org.spin.core.util.DigestUtils;
+import org.spin.core.util.RandomStringUtils;
+import org.spin.core.util.StringUtils;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
  */
 @MappedSuperclass
 public abstract class AbstractUser extends AbstractEntity implements SessionUser {
+    private static final long serialVersionUID = 4486949049542319147L;
 
     /**
      * 用户名
@@ -55,6 +56,15 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
      */
     @Transient
     private String sessionId;
+
+    /**
+     * 引用一个User
+     */
+    public static AbstractUser ref(Long id) {
+        AbstractUser u = new VirtualUser();
+        u.setId(id);
+        return u;
+    }
 
     public String getUserName() {
         return userName;
@@ -106,5 +116,9 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
     @Override
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
+    }
+
+    private static final class VirtualUser extends AbstractUser {
+        private static final long serialVersionUID = -7833194402212083265L;
     }
 }

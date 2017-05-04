@@ -2,8 +2,8 @@ package org.spin.freemarker;
 
 import freemarker.template.TemplateMethodModelEx;
 import freemarker.template.TemplateModelException;
-import org.spin.annotations.UserEnum;
-import org.spin.throwable.SimplifiedException;
+import org.spin.core.annotation.UserEnum;
+import org.spin.core.throwable.SimplifiedException;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;

@@ -4,9 +4,9 @@ import freemarker.template.SimpleScalar;
 import freemarker.template.TemplateBooleanModel;
 import freemarker.template.TemplateMethodModelEx;
 import freemarker.template.TemplateModelException;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.ObjectUtils;
-import org.spin.util.StringUtils;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.ObjectUtils;
+import org.spin.core.util.StringUtils;
 
 import java.util.List;
 

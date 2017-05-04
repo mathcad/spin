@@ -18,22 +18,22 @@
 package org.spin.jpa.core;
 
 
-import org.spin.annotations.UserEnum;
+import org.spin.core.annotation.UserEnum;
 
 /**
  * 车辆报价设置
- * 
+ *
  * @author gaoqingsong
  * @contact 电话: 15375536619, QQ: 240306310
  * @create 2015年8月17日11:09:43
- * @version V1.0   
+ * @version V1.0
  */
 @UserEnum("车辆报价设置")
 public enum VhcQuoteTypeE {
 	司机报价(0), 调度报价(2), 司机调度都报价(4);
-	
+
 	public int value;
-	VhcQuoteTypeE(int value) {   
+	VhcQuoteTypeE(int value) {
         this.value = value;
     }
 }

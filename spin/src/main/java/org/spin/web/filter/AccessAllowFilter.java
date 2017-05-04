@@ -1,6 +1,6 @@
 package org.spin.web.filter;
 
-import org.spin.util.StringUtils;
+import org.spin.core.util.StringUtils;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;

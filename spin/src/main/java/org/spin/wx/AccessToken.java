@@ -2,11 +2,11 @@ package org.spin.wx;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.sys.TypeIdentifier;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.HttpUtils;
-import org.spin.util.JsonUtils;
-import org.spin.util.StringUtils;
+import org.spin.core.TypeIdentifier;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.HttpUtils;
+import org.spin.core.util.JsonUtils;
+import org.spin.core.util.StringUtils;
 
 import java.net.URISyntaxException;
 import java.util.Date;

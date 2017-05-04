@@ -4,7 +4,7 @@ import com.consultant.domain.enums.UserTypeE;
 import com.consultant.domain.sys.User;
 import com.consultant.service.UserConsService;
 import com.consultant.service.UserService;
-import org.spin.annotations.RestfulApi;
+import org.spin.web.annotation.RestfulApi;
 import org.spin.web.RestfulResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

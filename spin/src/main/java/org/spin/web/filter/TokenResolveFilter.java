@@ -1,11 +1,10 @@
 package org.spin.web.filter;
 
-import org.spin.jpa.core.BaseUser;
-import org.spin.sys.EnvCache;
-import org.spin.sys.SessionUser;
-import org.spin.sys.auth.SecretManager;
-import org.spin.util.SessionUtils;
-import org.spin.util.StringUtils;
+import org.spin.core.SpinContext;
+import org.spin.core.auth.SecretManager;
+import org.spin.core.util.SessionUtils;
+import org.spin.core.util.StringUtils;
+import org.spin.jpa.core.AbstractUser;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -14,8 +13,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * rest请求的token处理
@@ -41,8 +38,8 @@ public class TokenResolveFilter implements Filter {
         if (StringUtils.isNotBlank(token)) {
             try {
                 String userId = secretManager.validateToken(token);
-                EnvCache.putLocalParam("token", token);
-                SessionUtils.setCurrentUser(BaseUser.ref(Long.parseLong(userId)));
+                SpinContext.putLocalParam("token", token);
+                SessionUtils.setCurrentUser(AbstractUser.ref(Long.parseLong(userId)));
             } catch (Exception ignore) {
             }
         }

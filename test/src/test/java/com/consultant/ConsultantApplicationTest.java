@@ -1,7 +1,7 @@
 package com.consultant;
 
 import org.junit.Test;
-import org.spin.security.AES;
+import org.spin.core.security.AES;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;

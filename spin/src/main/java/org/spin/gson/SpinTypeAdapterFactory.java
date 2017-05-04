@@ -6,7 +6,7 @@ import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import org.hibernate.collection.internal.PersistentBag;
 import org.hibernate.proxy.HibernateProxy;
-import org.spin.annotations.UserEnum;
+import org.spin.core.annotation.UserEnum;
 import org.spin.gson.adapter.HibernatePersistentBagTypeAdapter;
 import org.spin.gson.adapter.HibernateProxyTypeAdapter;
 import org.spin.gson.adapter.LocalDateTimeTypeAdapter;

@@ -2,7 +2,7 @@ package org.spin.gson;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
-import org.spin.sys.EnvCache;
+import org.spin.core.SpinContext;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -20,12 +20,12 @@ public class InstantExclusionStrategy implements ExclusionStrategy {
 
     @Override
     public boolean shouldSkipField(FieldAttributes f) {
-        if (!EnvCache.BEAN_FIELDS.containsKey(testCazz.getName())) {
+        if (!SpinContext.BEAN_FIELDS.containsKey(testCazz.getName())) {
             Map<String, Field> tmp = new HashMap<>();
             Arrays.stream(testCazz.getDeclaredFields()).forEach(fd -> tmp.put(fd.getName(), fd));
-            EnvCache.BEAN_FIELDS.put(testCazz.getName(), tmp);
+            SpinContext.BEAN_FIELDS.put(testCazz.getName(), tmp);
         }
-        return EnvCache.BEAN_FIELDS.get(testCazz.getName()).containsKey(f.getName());
+        return SpinContext.BEAN_FIELDS.get(testCazz.getName()).containsKey(f.getName());
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.consultant;
 
 
-import org.spin.sys.EnvCache;
+import org.spin.core.SpinContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
@@ -18,7 +18,7 @@ public class StaticResourceHandler extends WebMvcConfigurerAdapter {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
-        registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + EnvCache.FileUploadDir);
+        registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + SpinContext.FileUploadDir);
         super.addResourceHandlers(registry);
     }
 }

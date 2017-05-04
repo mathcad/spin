@@ -17,8 +17,8 @@
 
 package org.spin.collection;
 
-import org.spin.sys.Assert;
-import org.spin.util.ObjectUtils;
+import org.spin.core.Assert;
+import org.spin.core.util.ObjectUtils;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;

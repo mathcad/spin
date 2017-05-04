@@ -3,7 +3,7 @@ package org.spin.gson.adapter;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import org.spin.util.EnumUtils;
+import org.spin.core.util.EnumUtils;
 
 import java.io.IOException;
 

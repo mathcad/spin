@@ -17,7 +17,7 @@
 
 package org.spin.jpa.sql.resolver;
 
-import org.spin.util.StringUtils;
+import org.spin.core.util.StringUtils;
 
 import java.util.Map;
 

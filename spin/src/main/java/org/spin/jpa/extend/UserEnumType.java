@@ -9,9 +9,9 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.ClassUtils;
-import org.spin.util.EnumUtils;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.ClassUtils;
+import org.spin.core.util.EnumUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

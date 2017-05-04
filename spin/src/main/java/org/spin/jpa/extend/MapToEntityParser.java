@@ -1,9 +1,9 @@
 package org.spin.jpa.extend;
 
 import org.spin.jpa.core.EntityParser;
-import org.spin.sys.ErrorCode;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.BeanUtils;
+import org.spin.core.ErrorCode;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.BeanUtils;
 
 import java.util.Map;
 

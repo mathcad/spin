@@ -1,7 +1,7 @@
 package org.spin.cache;
 
-import org.spin.util.SerializeUtils;
-import org.spin.util.StringUtils;
+import org.spin.core.util.SerializeUtils;
+import org.spin.core.util.StringUtils;
 import org.springframework.data.redis.connection.DefaultTuple;
 import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.data.redis.connection.RedisZSetCommands.Tuple;

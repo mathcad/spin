@@ -2,12 +2,12 @@ package org.spin.web;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.sys.EnvCache;
-import org.spin.sys.ErrorCode;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.HttpUtils;
-import org.spin.util.RandomStringUtils;
-import org.spin.util.StringUtils;
+import org.spin.core.SpinContext;
+import org.spin.core.ErrorCode;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.HttpUtils;
+import org.spin.core.util.RandomStringUtils;
+import org.spin.core.util.StringUtils;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,7 +43,7 @@ public class FileOperator {
      * 上传文件,默认上传到Env.FileUploadDir目录
      */
     public static UploadResult upload(MultipartFile file, boolean compress, String... baseDir) throws IOException {
-        String bDir = EnvCache.FileUploadDir;
+        String bDir = SpinContext.FileUploadDir;
         if (null != baseDir && baseDir.length > 0 && StringUtils.isNotBlank(baseDir[0]))
             bDir = baseDir[0];
         String fileName = file.getOriginalFilename();
@@ -100,17 +100,17 @@ public class FileOperator {
         UploadResult rs = new UploadResult();
         String storeName = generateFileName();
         String path = storeName.substring(0, storeName.indexOf("/") + 1);
-        File uploadDir = new File(EnvCache.FileUploadDir + path);
+        File uploadDir = new File(SpinContext.FileUploadDir + path);
         Map<String, String> downloadRs;
         if (!uploadDir.exists() && !uploadDir.mkdirs())
             throw new SimplifiedException(ErrorCode.IO_FAIL, "创建文件夹失败");
         try {
-            downloadRs = HttpUtils.download(url, EnvCache.FileUploadDir + storeName);
+            downloadRs = HttpUtils.download(url, SpinContext.FileUploadDir + storeName);
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "下载文件错误", e);
         }
         rs.setOriginName("");
-        rs.setFullName(EnvCache.FileUploadDir + storeName + downloadRs.get("extention"));
+        rs.setFullName(SpinContext.FileUploadDir + storeName + downloadRs.get("extention"));
         rs.setStoreName(storeName + downloadRs.get("extention"));
         rs.setSize(Long.parseLong(downloadRs.get("bytes")));
         rs.setUploadTime(LocalDateTime.now());

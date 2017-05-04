@@ -23,14 +23,14 @@ import org.spin.jpa.query.CriteriaBuilder;
 import org.spin.jpa.query.QueryParam;
 import org.spin.jpa.query.QueryParamParser;
 import org.spin.jpa.sql.SQLManager;
-import org.spin.sys.Assert;
-import org.spin.sys.SessionUser;
-import org.spin.throwable.SQLException;
-import org.spin.throwable.SimplifiedException;
-import org.spin.util.BeanUtils;
-import org.spin.util.EntityUtils;
-import org.spin.util.ReflectionUtils;
-import org.spin.util.SessionUtils;
+import org.spin.core.Assert;
+import org.spin.core.SessionUser;
+import org.spin.core.throwable.SQLException;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.BeanUtils;
+import org.spin.core.util.EntityUtils;
+import org.spin.core.util.ReflectionUtils;
+import org.spin.core.util.SessionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -184,9 +184,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             AbstractEntity aEn = (AbstractEntity) entity;
             SessionUser user = SessionUtils.getCurrentUser();
             aEn.setUpdateTime(LocalDateTime.now());
-            aEn.setUpdateBy(user == null ? null : BaseUser.ref(user.getId()));
+            aEn.setUpdateUserId(user == null ? null : user.getId());
             if (null == aEn.getId() || saveWithPk) {
-                aEn.setCreateBy(user == null ? null : BaseUser.ref(user.getId()));
+                aEn.setCreateUserId(user == null ? null : user.getId());
                 aEn.setCreateTime(LocalDateTime.now());
             }
         }

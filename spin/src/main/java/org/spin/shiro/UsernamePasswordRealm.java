@@ -13,9 +13,9 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
-import org.spin.jpa.core.BaseUser;
-import org.spin.sys.auth.Authenticator;
-import org.spin.sys.auth.RolePermission;
+import org.spin.core.auth.Authenticator;
+import org.spin.core.auth.RolePermission;
+import org.spin.jpa.core.AbstractUser;
 
 /**
  * 基于用户标识符与密码的Realm
@@ -35,7 +35,7 @@ public class UsernamePasswordRealm extends AuthorizingRealm {
         String username = (String) authenticationToken.getPrincipal();
         if (null == authenticator)
             throw new AccountException("未配置认证功能");
-        BaseUser user = authenticator.getSubject(username);
+        AbstractUser user = authenticator.getSubject(username);
         if (user == null) {
             throw new UnknownAccountException("用户不存在");
         }

@@ -18,7 +18,7 @@
 package org.spin.jpa.sql;
 
 
-import org.spin.annotations.UserEnum;
+import org.spin.core.annotation.UserEnum;
 
 /**
  * 车辆报价设置

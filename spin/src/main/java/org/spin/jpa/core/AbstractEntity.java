@@ -4,7 +4,6 @@ import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
 import java.io.Serializable;
@@ -21,6 +20,7 @@ import java.util.Objects;
  */
 @MappedSuperclass
 public abstract class AbstractEntity implements IEntity<Long>, Serializable {
+    private static final long serialVersionUID = -6820468799272316789L;
 
     /**
      * 主键
@@ -30,10 +30,10 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     private Long id;
 
     /**
-     * 记录创建者名称
+     * 记录创建者id
      */
-    @ManyToOne
-    private BaseUser createBy;
+    @Column
+    private Long createUserId;
 
     /**
      * 创建时间，禁止更改
@@ -42,10 +42,10 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     private LocalDateTime createTime;
 
     /**
-     * 记录更新者
+     * 记录更新者id
      */
-    @ManyToOne
-    private BaseUser updateBy;
+    @Column
+    private Long updateUserId;
 
     /**
      * 最后更新时间
@@ -95,12 +95,12 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.id = id;
     }
 
-    public BaseUser getCreateBy() {
-        return createBy;
+    public Long getCreateUserId() {
+        return createUserId;
     }
 
-    public void setCreateBy(BaseUser createBy) {
-        this.createBy = createBy;
+    public void setCreateUserId(Long createUserId) {
+        this.createUserId = createUserId;
     }
 
     public LocalDateTime getCreateTime() {
@@ -111,12 +111,12 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.createTime = createTime;
     }
 
-    public BaseUser getUpdateBy() {
-        return updateBy;
+    public Long getUpdateUserId() {
+        return updateUserId;
     }
 
-    public void setUpdateBy(BaseUser updateBy) {
-        this.updateBy = updateBy;
+    public void setUpdateUserId(Long updateUserId) {
+        this.updateUserId = updateUserId;
     }
 
     public LocalDateTime getUpdateTime() {

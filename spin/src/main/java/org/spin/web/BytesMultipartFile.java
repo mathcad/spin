@@ -1,7 +1,7 @@
 package org.spin.web;
 
-import org.spin.sys.ErrorCode;
-import org.spin.throwable.SimplifiedException;
+import org.spin.core.ErrorCode;
+import org.spin.core.throwable.SimplifiedException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
