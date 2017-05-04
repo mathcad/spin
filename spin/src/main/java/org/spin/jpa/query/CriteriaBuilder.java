@@ -13,7 +13,7 @@ import org.spin.jpa.core.IEntity;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.EntityUtils;
 import org.spin.core.util.StringUtils;
-import org.springframework.data.domain.PageRequest;
+import org.spin.jpa.core.PageRequest;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

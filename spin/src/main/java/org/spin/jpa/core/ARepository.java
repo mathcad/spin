@@ -33,7 +33,6 @@ import org.spin.core.util.EntityUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.SessionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 

@@ -4,11 +4,10 @@ import com.consultant.domain.sys.User;
 import com.consultant.repository.UserRepository;
 import org.spin.core.auth.Authenticator;
 import org.spin.core.auth.RolePermission;
-import org.spin.jpa.core.AbstractUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * <p>Created by xuweinan on 2017/4/20.</p>
@@ -16,18 +15,18 @@ import java.util.Date;
  * @author xuweinan
  */
 @Service
-public class UserService implements Authenticator {
+public class UserService implements Authenticator<User> {
 
     @Autowired
     private UserRepository userDao;
 
     @Override
-    public AbstractUser getSubject(Object o) {
+    public User getSubject(Object o) {
         return null;
     }
 
     @Override
-    public void preCheck(AbstractUser baseUser) {
+    public void preCheck(User baseUser) {
 
     }
 
@@ -47,7 +46,7 @@ public class UserService implements Authenticator {
     }
 
     @Override
-    public void logAccess(Object o, Date date, String s) {
+    public void logAccess(Object o, LocalDateTime date, String s) {
 
     }
 

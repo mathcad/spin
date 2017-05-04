@@ -80,7 +80,6 @@ dependencies {
 //    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
     compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
 //    compile group: 'org.mathcat', name: 'spin', version: '1.8.4'
-    compile(project(":zibra"))
     compile(project(":spin"))
 
 

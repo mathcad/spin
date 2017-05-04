@@ -32,7 +32,6 @@ public class RepositoryContext implements ApplicationContextAware {
     private static ApplicationContext applicationContext;
 
     @Override
-    @Autowired
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         RepositoryContext.applicationContext = applicationContext;
     }

@@ -9,6 +9,7 @@ import org.spin.core.util.SessionUtils;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -22,9 +23,9 @@ public class EnhancedAuthenticationFilter extends FormAuthenticationFilter {
 
     @Override
     protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
-        SessionUser user = authenticator.getSubject(token.getPrincipal());
+        SessionUser user = (SessionUser) authenticator.getSubject(token.getPrincipal());
         SessionUtils.setSessionUser(subject.getSession(), user);
-        authenticator.logAccess(user, new Date(), "登录成功");
+        authenticator.logAccess(user, LocalDateTime.now(), "登录成功");
         return super.onLoginSuccess(token, subject, request, response);
     }
 

@@ -13,9 +13,11 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
+import org.spin.core.SessionUser;
 import org.spin.core.auth.Authenticator;
 import org.spin.core.auth.RolePermission;
-import org.spin.jpa.core.AbstractUser;
+import org.spin.core.util.MethodUtils;
+import org.spin.core.util.StringUtils;
 
 /**
  * 基于用户标识符与密码的Realm
@@ -23,7 +25,7 @@ import org.spin.jpa.core.AbstractUser;
  * @author xuweinan
  */
 public class UsernamePasswordRealm extends AuthorizingRealm {
-    private Authenticator authenticator;
+    private Authenticator<SessionUser> authenticator;
 
     @Override
     public boolean supports(AuthenticationToken token) {
@@ -35,7 +37,7 @@ public class UsernamePasswordRealm extends AuthorizingRealm {
         String username = (String) authenticationToken.getPrincipal();
         if (null == authenticator)
             throw new AccountException("未配置认证功能");
-        AbstractUser user = authenticator.getSubject(username);
+        SessionUser user = authenticator.getSubject(username);
         if (user == null) {
             throw new UnknownAccountException("用户不存在");
         }
@@ -48,7 +50,15 @@ public class UsernamePasswordRealm extends AuthorizingRealm {
             throw new AccountException(e.getMessage());
         }
 
-        return new SimpleAuthenticationInfo(user.getUserName(), user.getPassword(), ByteSource.Util.bytes(user.getSalt()), getName());
+        String password = null;
+        String salt = null;
+        try {
+            password = MethodUtils.invokeMethod(user, "getPassword", null).toString();
+            salt = MethodUtils.invokeMethod(user, "getSalt", null).toString();
+        } catch (Exception e) {
+
+        }
+        return new SimpleAuthenticationInfo(user.getUserName(), password, StringUtils.isEmpty(salt) ? null : ByteSource.Util.bytes(salt), getName());
     }
 
     @Override
