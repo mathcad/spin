@@ -29,4 +29,14 @@ public class IdGeneratorTest {
         assertTrue(true);
     }
 
+
+    @Test
+    public void bitTest() {
+        long offset = 10;
+        System.out.println(-1 ^ -1 << offset);
+        System.out.println(-1 ^ (-1 << offset));
+        System.out.println(~(-1 << offset));
+        System.out.println(~-1 << offset);
+        assertTrue(true);
+    }
 }

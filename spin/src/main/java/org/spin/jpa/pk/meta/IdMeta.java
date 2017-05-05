@@ -32,7 +32,7 @@ public class IdMeta {
     }
 
     public long getMachineBitsMask() {
-        return -1L ^ -1L << machineBits;
+        return ~(1L << machineBits);
     }
 
     public byte getSeqBits() {
@@ -48,7 +48,7 @@ public class IdMeta {
     }
 
     public long getSeqBitsMask() {
-        return -1L ^ -1L << seqBits;
+        return ~(-1L << seqBits);
     }
 
     public byte getTimeBits() {
@@ -64,7 +64,7 @@ public class IdMeta {
     }
 
     public long getTimeBitsMask() {
-        return -1L ^ -1L << timeBits;
+        return ~(-1L << timeBits);
     }
 
     public byte getGenMethodBits() {
@@ -80,7 +80,7 @@ public class IdMeta {
     }
 
     public long getGenMethodBitsMask() {
-        return -1L ^ -1L << genMethodBits;
+        return ~(-1L << genMethodBits);
     }
 
     public byte getTypeBits() {
@@ -96,7 +96,7 @@ public class IdMeta {
     }
 
     public long getTypeBitsMask() {
-        return -1L ^ -1L << typeBits;
+        return ~(-1L << typeBits);
     }
 
     public byte getVersionBits() {
@@ -112,6 +112,6 @@ public class IdMeta {
     }
 
     public long getVersionBitsMask() {
-        return -1L ^ -1L << versionBits;
+        return ~(-1L << versionBits);
     }
 }
