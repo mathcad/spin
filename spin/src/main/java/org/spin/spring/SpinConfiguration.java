@@ -5,18 +5,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.SessionFactory;
 import org.spin.core.auth.InMemorySecretDao;
 import org.spin.core.auth.SecretDao;
-import org.spin.core.cache.RedisCache;
-import org.spin.core.util.EnumUtils;
-import org.spin.jpa.core.SQLLoader;
-import org.spin.jpa.extend.DataBaseConfiguration;
-import org.spin.jpa.pk.PkProperties;
-import org.spin.jpa.pk.generator.DistributedIdGenerator;
-import org.spin.jpa.pk.generator.IdGenerator;
-import org.spin.jpa.pk.generator.provider.IpConfigurableMachineIdProvider;
-import org.spin.jpa.pk.generator.provider.PropertyMachineIdProvider;
-import org.spin.jpa.pk.meta.IdTypeE;
-import org.spin.jpa.sql.loader.ArchiveMdLoader;
-import org.spin.jpa.sql.resolver.FreemarkerResolver;
+import org.spin.core.auth.SecretManager;
+import org.spin.data.cache.RedisCache;
+import org.spin.data.core.SQLLoader;
+import org.spin.data.extend.DataBaseConfiguration;
+import org.spin.data.pk.PkProperties;
+import org.spin.data.pk.generator.DistributedIdGenerator;
+import org.spin.data.pk.generator.IdGenerator;
+import org.spin.data.sql.loader.ArchiveMdLoader;
+import org.spin.data.sql.resolver.FreemarkerResolver;
 import org.spin.spring.condition.ConditionalOnBean;
 import org.spin.spring.condition.ConditionalOnMissingBean;
 import org.springframework.beans.factory.BeanCreationException;
@@ -133,9 +130,16 @@ public class SpinConfiguration {
     }
 
     @Autowired
+    @Bean(name = "secretManager")
+    @ConditionalOnBean(SecretDao.class)
+    public SecretManager getSecretManager(SecretDao secretDao) {
+        return new SecretManager(secretDao);
+    }
+
+    @Autowired
     @Bean(name = "idGenerator")
     @ConditionalOnBean(PkProperties.class)
     public IdGenerator getIdGenerator(PkProperties pkProperties) {
-       return new  DistributedIdGenerator(pkProperties);
+        return new DistributedIdGenerator(pkProperties);
     }
 }

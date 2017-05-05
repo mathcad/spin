@@ -4,7 +4,7 @@ package com.consultant.domain.sys;
  * Created by wuqiang on 2017/4/21.
  */
 
-import org.spin.jpa.core.AbstractEntity;
+import org.spin.data.core.AbstractEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

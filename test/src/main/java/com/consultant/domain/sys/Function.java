@@ -2,7 +2,7 @@ package com.consultant.domain.sys;
 
 import com.consultant.domain.enums.FunctionTypeE;
 import org.hibernate.annotations.Type;
-import org.spin.jpa.core.AbstractEntity;
+import org.spin.data.core.AbstractEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -29,7 +29,7 @@ public class Function extends AbstractEntity {
     /**
      * 类型
      */
-    @Type(type = "org.spin.jpa.extend.UserEnumType")
+    @Type(type = "org.spin.data.extend.UserEnumType")
     private FunctionTypeE type;
 
     /**

@@ -1,6 +1,6 @@
 package com.consultant.domain.sys;
 
-import org.spin.jpa.core.AbstractEntity;
+import org.spin.data.core.AbstractEntity;
 
 import javax.persistence.*;
 import java.util.ArrayList;

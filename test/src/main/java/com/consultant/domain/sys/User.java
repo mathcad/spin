@@ -19,7 +19,7 @@ package com.consultant.domain.sys;
 
 import com.consultant.domain.enums.UserTypeE;
 import org.hibernate.annotations.Type;
-import org.spin.jpa.core.AbstractUser;
+import org.spin.data.core.AbstractUser;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -51,7 +51,7 @@ public class User extends AbstractUser {
     @Column(length = 14)
     private String mobile;
 
-    @Type(type = "org.spin.jpa.extend.UserEnumType")
+    @Type(type = "org.spin.data.extend.UserEnumType")
     private UserTypeE userType;
 
     @ManyToMany(fetch = FetchType.LAZY)

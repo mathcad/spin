@@ -16,7 +16,7 @@ import org.spin.core.auth.Authenticator;
 import org.spin.core.auth.SecretManager;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.JsonUtils;
-import org.spin.core.util.SessionUtils;
+import org.spin.enhance.util.SessionUtils;
 import org.spin.web.RestfulResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;

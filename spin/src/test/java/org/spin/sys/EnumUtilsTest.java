@@ -2,7 +2,7 @@ package org.spin.sys;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.spin.jpa.query.QueryParam;
+import org.spin.data.query.QueryParam;
 import org.junit.Test;
 
 import java.lang.reflect.ParameterizedType;

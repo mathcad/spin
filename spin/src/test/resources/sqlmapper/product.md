@@ -13,7 +13,7 @@ SELECT
         v.id as vid,
         v.plate,
         v.quote_type,
-        ${E('org.spin.jpa.core.VhcQuoteTypeE','v.quote_type','type_name')},
+        ${E('org.spin.data.core.VhcQuoteTypeE','v.quote_type','type_name')},
         FROM
         bs_motorcade_organ_user mu,
         bs_motorcade_vhc_user vu,
@@ -55,7 +55,7 @@ test2
            v.id as vid,
            v.plate,
            v.quote_type,
-           ${E('org.spin.jpa.core.VhcQuoteTypeE','v.quote_type','type_name')},
+           ${E('org.spin.data.core.VhcQuoteTypeE','v.quote_type','type_name')},
            FROM
            bs_motorcade_organ_user mu,
            bs_motorcade_vhc_user vu,

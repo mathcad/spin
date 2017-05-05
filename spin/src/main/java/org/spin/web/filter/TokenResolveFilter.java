@@ -2,9 +2,9 @@ package org.spin.web.filter;
 
 import org.spin.core.SpinContext;
 import org.spin.core.auth.SecretManager;
-import org.spin.core.util.SessionUtils;
+import org.spin.enhance.util.SessionUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.jpa.core.AbstractUser;
+import org.spin.data.core.AbstractUser;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;

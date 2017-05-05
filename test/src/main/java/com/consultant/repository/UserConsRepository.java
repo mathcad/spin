@@ -1,7 +1,7 @@
 package com.consultant.repository;
 
 import com.consultant.domain.sys.UserCons;
-import org.spin.jpa.core.ARepository;
+import org.spin.data.core.ARepository;
 import org.springframework.stereotype.Repository;
 
 /**

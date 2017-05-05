@@ -2,7 +2,7 @@ package com.consultant.service;
 
 import com.consultant.domain.sys.UserCons;
 import com.consultant.repository.UserConsRepository;
-import org.spin.jpa.query.CriteriaBuilder;
+import org.spin.data.query.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

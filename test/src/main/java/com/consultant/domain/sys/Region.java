@@ -2,7 +2,7 @@ package com.consultant.domain.sys;
 
 import com.consultant.domain.enums.RegionTypeE;
 import org.hibernate.annotations.Type;
-import org.spin.jpa.core.AbstractEntity;
+import org.spin.data.core.AbstractEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,7 +27,7 @@ public class Region extends AbstractEntity {
     @Column(length = 128)
     private String fullName;
 
-    @Type(type = "org.spin.jpa.extend.UserEnumType")
+    @Type(type = "org.spin.data.extend.UserEnumType")
     private RegionTypeE level;
 
     @Column(length = 6)

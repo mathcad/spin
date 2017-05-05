@@ -76,14 +76,14 @@ public abstract class MethodUtils {
      * whenever it needs the memory. Whether this is a good approach to
      * this problem is doubtful; something like the commons-collections
      * LRUMap may be more appropriate (though of course selecting an
-     * appropriate size is an issue).
+     * appropriate size is an issue).</p>
      * <p>
      * This static variable is safe even when this code is deployed via a
      * shared classloader because it is keyed via a MethodDescriptor object
      * which has a Class as one of its members and that member is used in
      * the MethodDescriptor.equals method. So two components that load the same
      * class via different classloaders will generate non-equal MethodDescriptor
-     * objects and hence end up with different entries in the map.
+     * objects and hence end up with different entries in the map.</p>
      */
     private static final Map<MethodDescriptor, Reference<Method>> cache = Collections
         .synchronizedMap(new WeakHashMap<MethodDescriptor, Reference<Method>>());
@@ -130,7 +130,6 @@ public abstract class MethodUtils {
      * would match a <code>boolean</code> primitive.</p>
      * <p>
      * <p> This is a convenient wrapper for
-     * {@link #invokeMethod(Object object, String methodName, Object [] args)}.
      * </p>
      *
      * @param object     invoke method on this object
@@ -171,7 +170,6 @@ public abstract class MethodUtils {
      * would match a <code>boolean</code> primitive.</p>
      * <p>
      * <p> This is a convenient wrapper for
-     * {@link #invokeMethod(Object object, String methodName, Object [] args, Class[] parameterTypes)}.
      * </p>
      *
      * @param object     invoke method on this object
@@ -210,8 +208,6 @@ public abstract class MethodUtils {
      * <p>Invoke a named method whose parameter type matches the object type.</p>
      * <p>
      * <p>The behaviour of this method is less deterministic
-     * than {@link
-     * #invokeExactMethod(Object object, String methodName, Object [] args, Class[] parameterTypes)}.
      * It loops through all methods with names that match
      * and then executes the first it finds with compatible parameters.</p>
      * <p>
@@ -265,7 +261,6 @@ public abstract class MethodUtils {
      * type.</p>
      * <p>
      * <p> This is a convenient wrapper for
-     * {@link #invokeExactMethod(Object object, String methodName, Object [] args)}.
      * </p>
      *
      * @param object     invoke method on this object
@@ -442,7 +437,6 @@ public abstract class MethodUtils {
      * would match a <code>boolean</code> primitive.</p>
      * <p>
      * <p> This is a convenient wrapper for
-     * {@link #invokeStaticMethod(Class objectClass, String methodName, Object [] args)}.
      * </p>
      *
      * @param objectClass invoke static method on this class
@@ -484,7 +478,6 @@ public abstract class MethodUtils {
      * would match a <code>boolean</code> primitive.</p>
      * <p>
      * <p> This is a convenient wrapper for
-     * {@link #invokeStaticMethod(Class objectClass, String methodName, Object [] args, Class[] parameterTypes)}.
      * </p>
      *
      * @param objectClass invoke static method on this class
@@ -524,8 +517,6 @@ public abstract class MethodUtils {
      * <p>Invoke a named static method whose parameter type matches the object type.</p>
      * <p>
      * <p>The behaviour of this method is less deterministic
-     * than {@link
-     * #invokeExactStaticMethod(Class objectClass, String methodName, Object [] args, Class[] parameterTypes)}.
      * It loops through all methods with names that match
      * and then executes the first it finds with compatible parameters.</p>
      * <p>
@@ -580,7 +571,6 @@ public abstract class MethodUtils {
      * type.</p>
      * <p>
      * <p> This is a convenient wrapper for
-     * {@link #invokeExactStaticMethod(Class objectClass, String methodName, Object [] args)}.
      * </p>
      *
      * @param objectClass invoke static method on this class
@@ -892,8 +882,6 @@ public abstract class MethodUtils {
      * through methods names and return the first matching method.</p>
      * <p>
      * <p>This method is used by
-     * {@link
-     * #invokeMethod(Object object, String methodName, Object [] args, Class[] parameterTypes)}.
      * <p>
      * <p>This method can match primitive parameter by passing in wrapper classes.
      * For example, a <code>Boolean</code> will match a primitive <code>boolean</code>
@@ -941,7 +929,7 @@ public abstract class MethodUtils {
         Method bestMatch = null;
         final Method[] methods = clazz.getMethods();
         float bestMatchCost = Float.MAX_VALUE;
-        float myCost = Float.MAX_VALUE;
+        float myCost;
         for (Method method2 : methods) {
             if (method2.getName().equals(methodName)) {
                 // log some trace information

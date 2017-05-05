@@ -1,12 +1,12 @@
-/*
- * Copyright (C) 2010 The MobileSecurePay Project
- * All right reserved.
- * author: shiqun.shi@alipay.com
- */
-
 package org.spin.core.security;
 
-public final class Base64 {
+/**
+ * BASE64工具类
+ *
+ * @author xuweinan
+ * @version 1.0
+ */
+public class Base64 {
 
     static private final int BASELENGTH = 128;
     static private final int LOOKUPLENGTH = 64;

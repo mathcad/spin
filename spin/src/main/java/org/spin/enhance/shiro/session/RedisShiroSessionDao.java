@@ -3,9 +3,9 @@ package org.spin.enhance.shiro.session;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
-import org.spin.core.cache.Cache;
+import org.spin.data.cache.Cache;
 import org.spin.core.SessionUser;
-import org.spin.core.util.SessionUtils;
+import org.spin.enhance.util.SessionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

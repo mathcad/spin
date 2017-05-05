@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.annotation.UserEnum;
 import org.spin.core.Validate;
 import org.spin.core.throwable.SimplifiedException;
-import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

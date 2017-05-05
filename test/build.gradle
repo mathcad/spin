@@ -75,7 +75,7 @@ dependencies {
     compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion
     compile group: 'org.hibernate', name: 'hibernate-core', version: '5.2.10.Final'
-//    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '1.4.0.RELEASE'
+//    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-data', version: '1.4.0.RELEASE'
     compile group: 'com.alibaba', name: 'druid', version: '1.0.29'
 //    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
     compile group: 'redis.clients', name: 'jedis', version: '2.9.0'

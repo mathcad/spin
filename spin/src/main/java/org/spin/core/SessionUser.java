@@ -1,5 +1,7 @@
 package org.spin.core;
 
+import org.spin.enhance.util.SessionUtils;
+
 import java.time.LocalDateTime;
 
 /**
@@ -7,7 +9,7 @@ import java.time.LocalDateTime;
  * <p>
  * 用户实体应实现此接口<br>
  * 登录成功后，应通过<br>
- * {@link org.spin.core.util.SessionUtils#setCurrentUser(SessionUser)}<br>
+ * {@link SessionUtils#setCurrentUser(SessionUser)}<br>
  * 将用户实体存入session
  * </p>
  *

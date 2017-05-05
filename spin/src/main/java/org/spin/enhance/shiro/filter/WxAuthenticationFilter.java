@@ -6,7 +6,7 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.apache.shiro.web.util.WebUtils;
-import org.spin.core.util.SessionUtils;
+import org.spin.enhance.util.SessionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.enhance.shiro.OAuth2Token;
 import org.spin.wx.wx.base.WxUserInfo;

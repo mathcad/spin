@@ -9,7 +9,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.core.Assert;
 import org.spin.core.FileType;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.EntityUtils;
+import org.spin.data.util.EntityUtils;
 import org.spin.core.util.StringUtils;
 import org.springframework.web.servlet.view.AbstractView;
 

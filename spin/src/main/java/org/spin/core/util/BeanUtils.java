@@ -19,7 +19,7 @@ package org.spin.core.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.jpa.core.IEntity;
+import org.spin.data.core.IEntity;
 import org.spin.core.SpinContext;
 import org.spin.core.throwable.SimplifiedException;
 

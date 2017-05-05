@@ -2,12 +2,10 @@ package org.spin.core.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.security.RSA;
-import org.spin.core.SpinContext;
 import org.spin.core.ErrorCode;
+import org.spin.core.SpinContext;
+import org.spin.core.security.RSA;
 import org.spin.core.throwable.SimplifiedException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -19,7 +17,6 @@ import java.util.UUID;
  *
  * @author xuweinan
  */
-@Component
 public class SecretManager {
     private static final Logger logger = LoggerFactory.getLogger(SecretManager.class);
     /**
@@ -29,8 +26,11 @@ public class SecretManager {
     private static PublicKey RSA_PUBKEY;
     private static PrivateKey RSA_PRIKEY;
 
-    @Autowired
     private SecretDao secretDao;
+
+    public SecretManager(SecretDao secretDao) {
+        this.secretDao = secretDao;
+    }
 
     /**
      * 清除过期认证信息
@@ -136,10 +136,6 @@ public class SecretManager {
 
     public void invalidKeyByKeyStr(String keyStr) {
         secretDao.removeKeyByKey(keyStr);
-    }
-
-    public void setSecretDao(SecretDao secretDao) {
-        this.secretDao = secretDao;
     }
 
     public static void setRsaPubkey(PublicKey rsaPubkey) {
