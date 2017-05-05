@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A registry of the bean types that are contained in a {@link ListableBeanFactory}.
+ * A registry of the meta types that are contained in a {@link ListableBeanFactory}.
  * Provides similar functionality to
  * {@link ListableBeanFactory#getBeanNamesForType(Class, boolean, boolean)} but is
  * optimized for use by {@link OnBeanCondition} based on the following assumptions:
@@ -53,8 +53,8 @@ abstract class BeanTypeRegistry {
 
     /**
      * Return the names of beans matching the given type (including subclasses), judging
-     * from either bean definitions or the value of {@code getObjectType} in the case of
-     * FactoryBeans. Will include singletons but not cause early bean initialization.
+     * from either meta definitions or the value of {@code getObjectType} in the case of
+     * FactoryBeans. Will include singletons but not cause early meta initialization.
      *
      * @param type the class or interface to match (must not be {@code null})
      * @return the names of beans (or objects created by FactoryBeans) matching the given
@@ -66,9 +66,9 @@ abstract class BeanTypeRegistry {
      * Attempt to guess the type that a {@link FactoryBean} will return based on the
      * generics in its method signature.
      *
-     * @param beanFactory the source bean factory
-     * @param definition  the bean definition
-     * @param name        the name of the bean
+     * @param beanFactory the source meta factory
+     * @param definition  the meta definition
+     * @param name        the name of the meta
      * @return the generic type of the {@link FactoryBean} or {@code null}
      */
     protected final Class<?> getFactoryBeanGeneric(
@@ -184,8 +184,8 @@ abstract class BeanTypeRegistry {
     /**
      * Factory method to get the {@link BeanTypeRegistry} for a given {@link BeanFactory}.
      *
-     * @param beanFactory the source bean factory
-     * @return the {@link BeanTypeRegistry} for the given bean factory
+     * @param beanFactory the source meta factory
+     * @return the {@link BeanTypeRegistry} for the given meta factory
      */
     public static BeanTypeRegistry get(ListableBeanFactory beanFactory) {
         if (beanFactory instanceof DefaultListableBeanFactory) {
@@ -312,10 +312,10 @@ abstract class BeanTypeRegistry {
                 }
             } catch (CannotLoadBeanClassException ex) {
                 // Probably contains a placeholder
-                logIgnoredError("bean class loading failure for bean", name, ex);
+                logIgnoredError("meta class loading failure for meta", name, ex);
             } catch (BeanDefinitionStoreException ex) {
                 // Probably contains a placeholder
-                logIgnoredError("unresolvable metadata in bean definition", name, ex);
+                logIgnoredError("unresolvable metadata in meta definition", name, ex);
             }
         }
 
@@ -333,7 +333,7 @@ abstract class BeanTypeRegistry {
         }
 
         /**
-         * Returns the {@link OptimizedBeanTypeRegistry} for the given bean factory.
+         * Returns the {@link OptimizedBeanTypeRegistry} for the given meta factory.
          *
          * @param factory the source {@link BeanFactory}
          * @return the {@link OptimizedBeanTypeRegistry}

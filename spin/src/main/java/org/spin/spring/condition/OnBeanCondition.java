@@ -43,7 +43,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
 
     /**
      * Bean definition attribute name for factory beans to signal their product type (if
-     * known and it can't be deduced from the factory bean class).
+     * known and it can't be deduced from the factory meta class).
      */
     public static final String FACTORY_BEAN_OBJECT_TYPE = BeanTypeRegistry.FACTORY_BEAN_OBJECT_TYPE;
 
@@ -66,7 +66,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
                         .didNotFind("any beans").atAll());
             }
             matchMessage = matchMessage.andCondition(ConditionalOnBean.class, spec)
-                .found("bean", "beans").items(ConditionMessage.Style.QUOTE, matching);
+                .found("meta", "beans").items(ConditionMessage.Style.QUOTE, matching);
         }
         if (metadata.isAnnotated(ConditionalOnSingleCandidate.class.getName())) {
             BeanSearchSpec spec = new SingleCandidateBeanSearchSpec(context, metadata,
@@ -80,12 +80,12 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
                 spec.getStrategy() == SearchStrategy.ALL)) {
                 return ConditionOutcome.noMatch(ConditionMessage
                     .forCondition(ConditionalOnSingleCandidate.class, spec)
-                    .didNotFind("a primary bean from beans")
+                    .didNotFind("a primary meta from beans")
                     .items(ConditionMessage.Style.QUOTE, matching));
             }
             matchMessage = matchMessage
                 .andCondition(ConditionalOnSingleCandidate.class, spec)
-                .found("a primary bean from beans").items(ConditionMessage.Style.QUOTE, matching);
+                .found("a primary meta from beans").items(ConditionMessage.Style.QUOTE, matching);
         }
         if (metadata.isAnnotated(ConditionalOnMissingBean.class.getName())) {
             BeanSearchSpec spec = new BeanSearchSpec(context, metadata,
@@ -94,7 +94,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
             if (!matching.isEmpty()) {
                 return ConditionOutcome.noMatch(ConditionMessage
                     .forCondition(ConditionalOnMissingBean.class, spec)
-                    .found("bean", "beans").items(ConditionMessage.Style.QUOTE, matching));
+                    .found("meta", "beans").items(ConditionMessage.Style.QUOTE, matching));
             }
             matchMessage = matchMessage.andCondition(ConditionalOnMissingBean.class, spec)
                 .didNotFind("any beans").atAll();
@@ -281,12 +281,12 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
         protected void validate(BeanTypeDeductionException ex) {
             if (!hasAtLeastOne(this.types, this.names, this.annotations)) {
                 String message = annotationName()
-                    + " did not specify a bean using type, name or annotation";
+                    + " did not specify a meta using type, name or annotation";
                 if (ex == null) {
                     throw new IllegalStateException(message);
                 }
                 throw new IllegalStateException(message + " and the attempt to deduce"
-                    + " the bean's type failed", ex);
+                    + " the meta's type failed", ex);
             }
         }
 
@@ -387,7 +387,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
 
         private BeanTypeDeductionException(String className, String beanMethodName,
                                            Throwable cause) {
-            super("Failed to deduce bean type for " + className + "." + beanMethodName,
+            super("Failed to deduce meta type for " + className + "." + beanMethodName,
                 cause);
         }
     }

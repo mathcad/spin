@@ -3,15 +3,22 @@ package org.spin.spring;
 import com.alibaba.druid.pool.DruidDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.SessionFactory;
+import org.spin.core.auth.InMemorySecretDao;
+import org.spin.core.auth.SecretDao;
 import org.spin.core.cache.RedisCache;
+import org.spin.core.util.EnumUtils;
 import org.spin.jpa.core.SQLLoader;
 import org.spin.jpa.extend.DataBaseConfiguration;
-import org.spin.jpa.sql.loader.ClasspathMdLoader;
+import org.spin.jpa.pk.PkProperties;
+import org.spin.jpa.pk.generator.DistributedIdGenerator;
+import org.spin.jpa.pk.generator.IdGenerator;
+import org.spin.jpa.pk.generator.provider.IpConfigurableMachineIdProvider;
+import org.spin.jpa.pk.generator.provider.PropertyMachineIdProvider;
+import org.spin.jpa.pk.meta.IdTypeE;
+import org.spin.jpa.sql.loader.ArchiveMdLoader;
 import org.spin.jpa.sql.resolver.FreemarkerResolver;
 import org.spin.spring.condition.ConditionalOnBean;
 import org.spin.spring.condition.ConditionalOnMissingBean;
-import org.spin.core.auth.InMemorySecretDao;
-import org.spin.core.auth.SecretDao;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -38,7 +45,7 @@ public class SpinConfiguration {
     @Bean
     @ConditionalOnMissingBean(SQLLoader.class)
     public SQLLoader sqlLoader() {
-        SQLLoader loader = new ClasspathMdLoader();
+        SQLLoader loader = new ArchiveMdLoader();
         loader.setTemplateResolver(new FreemarkerResolver());
         return loader;
     }
@@ -123,5 +130,12 @@ public class SpinConfiguration {
     @ConditionalOnMissingBean(SecretDao.class)
     public SecretDao getSecretDao() {
         return new InMemorySecretDao();
+    }
+
+    @Autowired
+    @Bean(name = "idGenerator")
+    @ConditionalOnBean(PkProperties.class)
+    public IdGenerator getIdGenerator(PkProperties pkProperties) {
+       return new  DistributedIdGenerator(pkProperties);
     }
 }

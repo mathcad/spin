@@ -19,12 +19,8 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.ErrorCode;
-import org.spin.jpa.query.CriteriaBuilder;
-import org.spin.jpa.query.QueryParam;
-import org.spin.jpa.query.QueryParamParser;
-import org.spin.jpa.sql.SQLManager;
 import org.spin.core.Assert;
+import org.spin.core.ErrorCode;
 import org.spin.core.SessionUser;
 import org.spin.core.throwable.SQLException;
 import org.spin.core.throwable.SimplifiedException;
@@ -32,6 +28,11 @@ import org.spin.core.util.BeanUtils;
 import org.spin.core.util.EntityUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.SessionUtils;
+import org.spin.jpa.pk.generator.IdGenerator;
+import org.spin.jpa.query.CriteriaBuilder;
+import org.spin.jpa.query.QueryParam;
+import org.spin.jpa.query.QueryParamParser;
+import org.spin.jpa.sql.SQLManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
@@ -78,6 +79,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     @Autowired
     protected SQLManager sqlManager;
+
+    @Autowired(required = false)
+    protected IdGenerator<PK, ?> idGenerator;
+
     protected Class<T> entityClazz;
 
     public ARepository() {
@@ -189,10 +194,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             }
         }
         try {
-            if (null == entity.getId() || saveWithPk)
+            if (null == entity.getId() || saveWithPk) {
+                if (null != idGenerator && null == entity.getId()) {
+                    entity.setId(idGenerator.genId());
+                }
                 getSession().save(entity);
-            else
+            } else {
                 getSession().update(entity);
+            }
         } catch (HibernateOptimisticLockingFailureException ope) {
             throw new SimplifiedException("The entity is expired", ope);
         }
@@ -244,7 +253,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      *
      * @param id the identifier of the persistent instance
      * @return the persistent instance, or {@code null} if not found
-     * @throws DataAccessException in case of Hibernate errors
      * @see Session#get(Class, Serializable)
      */
     public T get(final PK id) {
@@ -298,7 +306,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param id the identifier of the persistent instance
      * @return the persistent instance
      * @throws org.springframework.orm.ObjectRetrievalFailureException if not found
-     * @throws DataAccessException                                     in case of Hibernate errors
      * @see Session#load(Class, Serializable)
      */
     public T load(final PK id) {
@@ -318,7 +325,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param lockMode the lock mode to obtain
      * @return the persistent instance
      * @throws org.springframework.orm.ObjectRetrievalFailureException if not found
-     * @throws DataAccessException                                     in case of Hibernate errors
      * @see Session#load(Class, Serializable)
      */
     public T load(final PK id, final LockMode lockMode) {
@@ -340,7 +346,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * Re-read the state of the given persistent instance.
      *
      * @param entity the persistent instance to re-read
-     * @throws DataAccessException in case of Hibernate errors
      * @see Session#refresh(Object)
      */
     public void refresh(final T entity) {
@@ -353,7 +358,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      *
      * @param entity   the persistent instance to re-read
      * @param lockMode the lock mode to obtain
-     * @throws DataAccessException in case of Hibernate errors
      * @see Session#refresh(Object, LockMode)
      */
     public void refresh(final T entity, final LockMode lockMode) {
@@ -369,7 +373,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      *
      * @param entity the persistence instance to check
      * @return whether the given object is in the Session cache
-     * @throws DataAccessException if there is a Hibernate error
      * @see Session#contains
      */
     public boolean contains(final T entity) {

@@ -141,9 +141,9 @@ public final class ConditionEvaluationReport {
     }
 
     /**
-     * Obtain a {@link ConditionEvaluationReport} for the specified bean factory.
+     * Obtain a {@link ConditionEvaluationReport} for the specified meta factory.
      *
-     * @param beanFactory the bean factory
+     * @param beanFactory the meta factory
      * @return an existing or new {@link ConditionEvaluationReport}
      */
     public synchronized static ConditionEvaluationReport get(

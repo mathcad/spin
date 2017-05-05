@@ -31,7 +31,7 @@ import java.util.Random;
  * <p>
  * <p>#ThreadSafe#</p>
  *
- * @version $Id: RandomStringUtils.java 1532684 2013-10-16 08:28:42Z bayard $
+ * @version $DistributedId: RandomStringUtils.java 1532684 2013-10-16 08:28:42Z bayard $
  * @since 1.0
  */
 public abstract class RandomStringUtils {

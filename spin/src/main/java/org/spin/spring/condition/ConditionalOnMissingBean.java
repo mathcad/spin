@@ -12,12 +12,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@link Conditional} that only matches when the specified bean classes and/or names are
+ * {@link Conditional} that only matches when the specified meta classes and/or names are
  * not already contained in the {@link BeanFactory}.
  * <p>
- * The condition can only match the bean definitions that have been processed by the
+ * The condition can only match the meta definitions that have been processed by the
  * application context so far and, as such, it is strongly recommended to use this
- * condition on auto-configuration classes only. If a candidate bean may be created by
+ * condition on auto-configuration classes only. If a candidate meta may be created by
  * another auto-configuration, make sure that the one using this condition runs after.
  *
  * @author Phillip Webb
@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
 public @interface ConditionalOnMissingBean {
 
     /**
-     * The class type of bean that should be checked. The condition matches when each
+     * The class type of meta that should be checked. The condition matches when each
      * class specified is missing in the {@link ApplicationContext}.
      *
      * @return the class types of beans to check
@@ -38,7 +38,7 @@ public @interface ConditionalOnMissingBean {
     Class<?>[] value() default {};
 
     /**
-     * The class type names of bean that should be checked. The condition matches when
+     * The class type names of meta that should be checked. The condition matches when
      * each class specified is missing in the {@link ApplicationContext}.
      *
      * @return the class type names of beans to check
@@ -63,7 +63,7 @@ public @interface ConditionalOnMissingBean {
     String[] ignoredType() default {};
 
     /**
-     * The annotation type decorating a bean that should be checked. The condition matches
+     * The annotation type decorating a meta that should be checked. The condition matches
      * when each annotation specified is missing from all beans in the
      * {@link ApplicationContext}.
      *
@@ -72,7 +72,7 @@ public @interface ConditionalOnMissingBean {
     Class<? extends Annotation>[] annotation() default {};
 
     /**
-     * The names of beans to check. The condition matches when each bean name specified is
+     * The names of beans to check. The condition matches when each meta name specified is
      * missing in the {@link ApplicationContext}.
      *
      * @return the name of beans to check

@@ -40,7 +40,7 @@ package org.spin.core.throwable;
  *
  * @author Apache Software Foundation
  * @author Matthew Hawthorne
- * @version $Id: NullArgumentException.java 905636 2010-02-02 14:03:32Z niallp $
+ * @version $DistributedId: NullArgumentException.java 905636 2010-02-02 14:03:32Z niallp $
  * @since 2.0
  */
 public class NullArgumentException extends IllegalArgumentException {

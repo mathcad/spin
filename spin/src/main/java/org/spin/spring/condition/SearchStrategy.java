@@ -1,7 +1,7 @@
 package org.spin.spring.condition;
 
 /**
- * Some named search strategies for beans in the bean factory hierarchy.
+ * Some named search strategies for beans in the meta factory hierarchy.
  *
  * @author Dave Syer
  */

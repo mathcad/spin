@@ -31,7 +31,7 @@ import java.util.Map;
  * @author Norm Deane
  * @author Alban Peignier
  * @author Tomasz Blachowicz
- * @version $Id: ClassUtils.java 907121 2010-02-05 22:53:21Z mbenson $
+ * @version $DistributedId: ClassUtils.java 907121 2010-02-05 22:53:21Z mbenson $
  * @since 2.0
  */
 public abstract class ClassUtils {

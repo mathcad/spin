@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * <p>
  * <p>#ThreadSafe#</p>
  *
- * @version $Id: Validate.java 1606051 2014-06-27 12:22:17Z ggregory $
+ * @version $DistributedId: Validate.java 1606051 2014-06-27 12:22:17Z ggregory $
  * @see java.lang.String#format(String, Object...)
  * @since 2.0
  */

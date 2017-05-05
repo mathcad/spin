@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
 public @interface ConditionalOnBeanDefination {
 
     /**
-     * The class type of bean that should be checked. The condition matches when any of
+     * The class type of meta that should be checked. The condition matches when any of
      * the classes specified is contained in the {@link ApplicationContext}.
      *
      * @return the class types of beans to check
@@ -28,7 +28,7 @@ public @interface ConditionalOnBeanDefination {
     Class<?>[] value() default {};
 
     /**
-     * The class type names of bean that should be checked. The condition matches when any
+     * The class type names of meta that should be checked. The condition matches when any
      * of the classes specified is contained in the {@link ApplicationContext}.
      *
      * @return the class type names of beans to check
@@ -36,8 +36,8 @@ public @interface ConditionalOnBeanDefination {
     String[] type() default {};
 
     /**
-     * The annotation type decorating a bean that should be checked. The condition matches
-     * when any of the annotations specified is defined on a bean in the
+     * The annotation type decorating a meta that should be checked. The condition matches
+     * when any of the annotations specified is defined on a meta in the
      * {@link ApplicationContext}.
      *
      * @return the class-level annotation types to check
@@ -45,7 +45,7 @@ public @interface ConditionalOnBeanDefination {
     Class<? extends Annotation>[] annotation() default {};
 
     /**
-     * The names of beans to check. The condition matches when any of the bean names
+     * The names of beans to check. The condition matches when any of the meta names
      * specified is contained in the {@link ApplicationContext}.
      *
      * @return the name of beans to check

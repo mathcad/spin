@@ -12,12 +12,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@link Conditional} that only matches when the specified bean classes and/or names are
+ * {@link Conditional} that only matches when the specified meta classes and/or names are
  * already contained in the {@link BeanFactory}.
  * <p>
- * The condition can only match the bean definitions that have been processed by the
+ * The condition can only match the meta definitions that have been processed by the
  * application context so far and, as such, it is strongly recommended to use this
- * condition on auto-configuration classes only. If a candidate bean may be created by
+ * condition on auto-configuration classes only. If a candidate meta may be created by
  * another auto-configuration, make sure that the one using this condition runs after.
  *
  * @author Phillip Webb
@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
 public @interface ConditionalOnBean {
 
     /**
-     * The class type of bean that should be checked. The condition matches when any of
+     * The class type of meta that should be checked. The condition matches when any of
      * the classes specified is contained in the {@link ApplicationContext}.
      *
      * @return the class types of beans to check
@@ -37,7 +37,7 @@ public @interface ConditionalOnBean {
     Class<?>[] value() default {};
 
     /**
-     * The class type names of bean that should be checked. The condition matches when any
+     * The class type names of meta that should be checked. The condition matches when any
      * of the classes specified is contained in the {@link ApplicationContext}.
      *
      * @return the class type names of beans to check
@@ -45,8 +45,8 @@ public @interface ConditionalOnBean {
     String[] type() default {};
 
     /**
-     * The annotation type decorating a bean that should be checked. The condition matches
-     * when any of the annotations specified is defined on a bean in the
+     * The annotation type decorating a meta that should be checked. The condition matches
+     * when any of the annotations specified is defined on a meta in the
      * {@link ApplicationContext}.
      *
      * @return the class-level annotation types to check
@@ -54,7 +54,7 @@ public @interface ConditionalOnBean {
     Class<? extends Annotation>[] annotation() default {};
 
     /**
-     * The names of beans to check. The condition matches when any of the bean names
+     * The names of beans to check. The condition matches when any of the meta names
      * specified is contained in the {@link ApplicationContext}.
      *
      * @return the name of beans to check

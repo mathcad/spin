@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets;
  * This class is thread-safe.
  *
  * @author xuweinan
- * @version $Id: HexUtils.java 1619948 2014-08-22 22:53:55Z ggregory $
+ * @version $DistributedId: HexUtils.java 1619948 2014-08-22 22:53:55Z ggregory $
  * @since 1.1
  */
 public abstract class HexUtils {

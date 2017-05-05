@@ -26,7 +26,6 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * 主键
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /**

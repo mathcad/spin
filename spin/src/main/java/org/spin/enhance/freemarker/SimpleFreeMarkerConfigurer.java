@@ -63,7 +63,7 @@ public class SimpleFreeMarkerConfigurer extends FreeMarkerConfigurationFactory
 
 
     /**
-     * Return the Configuration object wrapped by this bean.
+     * Return the Configuration object wrapped by this meta.
      */
     public Configuration getConfiguration() {
         return this.configuration;
