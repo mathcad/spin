@@ -12,9 +12,7 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -25,19 +23,18 @@ import org.spin.core.SessionUser;
 import org.spin.core.throwable.SQLException;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
-import org.spin.data.util.EntityUtils;
 import org.spin.core.util.ReflectionUtils;
-import org.spin.enhance.util.SessionUtils;
 import org.spin.data.pk.generator.IdGenerator;
 import org.spin.data.query.CriteriaBuilder;
 import org.spin.data.query.QueryParam;
 import org.spin.data.query.QueryParamParser;
 import org.spin.data.sql.SQLManager;
+import org.spin.data.util.EntityUtils;
+import org.spin.enhance.util.SessionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.Transient;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
@@ -899,21 +896,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     public SessionFactory getSessFactory() {
         return sessFactory;
-    }
-
-    protected void addProjections(final ProjectionList plist, Class enCls) {
-        ReflectionUtils.doWithFields(enCls, f -> {
-            if (f.getAnnotation(Transient.class) == null) {
-                logger.info(f.getName());
-                plist.add(Property.forName(f.getName()), f.getName());
-            }
-        });
-    }
-
-    protected ProjectionList getPropertyProjection(String pkf) {
-        ProjectionList pj = Projections.projectionList();
-        pj.add(Property.forName(pkf), pkf);
-        return pj;
     }
 
     /**

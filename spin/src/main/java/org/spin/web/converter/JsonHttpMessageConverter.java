@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
+import org.spin.core.util.ClassUtils;
 import org.spin.core.util.JsonUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
@@ -171,7 +172,10 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
             if (this.jsonPrefix != null) {
                 writer.append(this.jsonPrefix);
             }
-            if (type != null) {
+            // 基本类型或String，不作处理直接写出
+            if (null != ClassUtils.wrapperToPrimitive(o.getClass()) || ClassUtils.isAssignable(o.getClass(), CharSequence.class)) {
+                writer.write(o.toString());
+            } else if (type != null) {
                 this.gson.toJson(o, type, writer);
             } else {
                 this.gson.toJson(o, writer);
