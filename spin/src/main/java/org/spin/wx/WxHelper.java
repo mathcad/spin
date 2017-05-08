@@ -95,7 +95,7 @@ public class WxHelper {
     /**
      * 根据jsapi_ticket对url生成签名
      *
-     * @param 需要调用jsapi的url
+     * @param url 需要调用jsapi的url
      */
     public static Map<String, String> signature(String url) {
         Map<String, String> ret = new HashMap<>();
