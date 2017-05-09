@@ -32,7 +32,7 @@ public final class SpinContext {
     public static final Map<String, Set<String>> ENTITY_COLUMNS = new ConcurrentHashMap<>();
 
     /** 线程绑定的全局公用属性 */
-    private static final ThreadLocal<Map<String, Object>> THREAD_LOCAL_PARAMETERS = new ThreadLocal<>();
+    private static final ThreadLocal<Map<String, Object>> THREAD_LOCAL_PARAMETERS = ThreadLocal.withInitial(HashMap::new);
 
     /** 系统是否启用了开发模式 */
     public static boolean devMode = false;
@@ -58,18 +58,34 @@ public final class SpinContext {
     private SpinContext() {
     }
 
+    /**
+     * 注册与当前前程绑定的参数，如果参数已存在，则覆盖
+     *
+     * @param key 参数名
+     * @param param 参数值
+     */
     public static void putLocalParam(String key, Object param) {
-        if (null == THREAD_LOCAL_PARAMETERS.get())
-            THREAD_LOCAL_PARAMETERS.set(new HashMap<>());
         THREAD_LOCAL_PARAMETERS.get().put(key, param);
     }
 
+    /**
+     * 获取与当前线程绑定的参数
+     *
+     * @param key 参数名
+     * @return 参数值，不存在则为null
+     */
     public static Object getLocalParam(String key) {
-        return THREAD_LOCAL_PARAMETERS.get() == null ? null : SpinContext.THREAD_LOCAL_PARAMETERS.get().get(key);
+        return SpinContext.THREAD_LOCAL_PARAMETERS.get().get(key);
     }
 
+    /**
+     * 移除与当前线程绑定的参数
+     *
+     * @param key 参数名
+     * @return 被移除的参数值(不存在则为null)
+     */
     public static Object removeLocalParam(String key) {
-        return THREAD_LOCAL_PARAMETERS.get() == null ? null : SpinContext.THREAD_LOCAL_PARAMETERS.get().remove(key);
+        return SpinContext.THREAD_LOCAL_PARAMETERS.get().remove(key);
     }
 
     public synchronized static void clearCache() {

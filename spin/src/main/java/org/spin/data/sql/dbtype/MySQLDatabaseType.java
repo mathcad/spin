@@ -1,10 +1,10 @@
 package org.spin.data.sql.dbtype;
 
+import org.spin.core.Assert;
+import org.spin.core.util.StringUtils;
 import org.spin.data.core.DatabaseType;
 import org.spin.data.query.QueryParam;
 import org.spin.data.sql.SQLSource;
-import org.spin.core.Assert;
-import org.spin.core.util.StringUtils;
 
 /**
  * <p>Created by xuweinan on 2016/9/12.</p>

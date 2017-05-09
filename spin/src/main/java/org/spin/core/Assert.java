@@ -1,133 +1,608 @@
-/*
- * Copyright 2002-2016 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.spin.core;
 
-
-import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.ObjectUtils;
+import org.spin.core.throwable.NullArgumentException;
 import org.spin.core.util.StringUtils;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
- * Assertion utility class that assists in validating arguments.
- * <p>Useful for identifying programmer errors early and clearly at runtime.
- * <p>For example, if the contract of a public method states it does not
- * allow {@code null} arguments, {@code Assert} can be used to validate that
- * contract. Doing this clearly indicates a contract violation when it
- * occurs and protects the class's invariants.
- * <p>Typically used to validate method arguments rather than configuration
- * properties, to check for cases that are usually programmer errors rather
- * than configuration errors. In contrast to configuration initialization
- * code, there is usually no point in falling back to defaults in such methods.
- * <p>This class is similar to JUnit's assertion library. If an argument value is
- * deemed invalid, an {@link IllegalArgumentException} is thrown (typically).
- * For example:
- * <pre class="code">
- * Assert.notNull(clazz, "The class must not be null");
- * Assert.isTrue(i &gt; 0, "The value must be greater than zero");</pre>
- * <p>Mainly for internal use within the framework; consider
- * <a href="http://commons.apache.org/proper/commons-lang/">Apache's Commons Lang</a>
- * for a more comprehensive suite of {@code String} utilities.
- *
- * @author Keith Donald
- * @author Juergen Hoeller
- * @author Colin Sampaleanu
- * @author Rob Harrop
- * @author Sam Brannen
- * @since 1.1.2
+ * 断言工具
+ * <p>异常抛出规则：</p>
+ * <ul>
+ * <li>空引用 {@code null} 将抛出 {@link NullArgumentException}.</li>
+ * <li>非空引用将抛出 {@link IllegalArgumentException}.</li>
+ * <li>array/collection/map/string的非法索引将抛出 {@link IndexOutOfBoundsException}.</li>
+ * </ul>
+ * <p>线程安全</p>
  */
-public abstract class Assert {
+public class Assert {
+
+    private static final String DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE = "[Assertion failed] - The value %s is not in the specified exclusive range of %s to %s";
+    private static final String DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE = "[Assertion failed] - The value %s is not in the specified inclusive range of %s to %s";
+    private static final String DEFAULT_MATCHES_PATTERN_EX = "[Assertion failed] - The string %s does not match the pattern %s";
+    private static final String DEFAULT_IS_NULL_EX_MESSAGE = "[Assertion failed] - this argument is required; it must not be null";
+    private static final String DEFAULT_IS_TRUE_EX_MESSAGE = "[Assertion failed] - this expression must be true";
+    private static final String DEFAULT_NO_NULL_ELEMENTS_ARRAY_EX_MESSAGE = "[Assertion failed] - The validated array contains null element at index: %d";
+    private static final String DEFAULT_NO_NULL_ELEMENTS_COLLECTION_EX_MESSAGE = "[Assertion failed] - The validated collection contains null element at index: %d";
+    private static final String DEFAULT_NOT_BLANK_EX_MESSAGE = "[Assertion failed] - The validated character sequence is blank";
+    private static final String DEFAULT_NOT_EMPTY_ARRAY_EX_MESSAGE = "[Assertion failed] - The validated array is empty";
+    private static final String DEFAULT_NOT_EMPTY_CHAR_SEQUENCE_EX_MESSAGE = "[Assertion failed] - The validated character sequence is empty";
+    private static final String DEFAULT_NOT_EMPTY_COLLECTION_EX_MESSAGE = "[Assertion failed] - The validated collection is empty";
+    private static final String DEFAULT_NOT_EMPTY_MAP_EX_MESSAGE = "[Assertion failed] - The validated map is empty";
+    private static final String DEFAULT_VALID_INDEX_ARRAY_EX_MESSAGE = "[Assertion failed] - The validated array index is invalid: %d";
+    private static final String DEFAULT_VALID_INDEX_CHAR_SEQUENCE_EX_MESSAGE = "[Assertion failed] - The validated character sequence index is invalid: %d";
+    private static final String DEFAULT_VALID_INDEX_COLLECTION_EX_MESSAGE = "[Assertion failed] - The validated collection index is invalid: %d";
+    private static final String DEFAULT_VALID_STATE_EX_MESSAGE = "[Assertion failed] - The validated state must be true";
+    private static final String DEFAULT_IS_ASSIGNABLE_EX_MESSAGE = "[Assertion failed] - Cannot assign a %s to a %s";
+    private static final String DEFAULT_IS_INSTANCE_OF_EX_MESSAGE = "[Assertion failed] - Expected type: %s, actual: %s";
 
     /**
-     * Assert a boolean expression, throwing {@code IllegalArgumentException}
-     * if the test result is {@code false}.
-     * <pre class="code">Assert.isTrue(i &gt; 0, "The value must be greater than zero");</pre>
-     *
-     * @param expression a boolean expression
-     * @param message    the exception message to use if the assertion fails
-     * @throws IllegalArgumentException if expression is {@code false}
+     * Constructor. This class should not normally be instantiated.
      */
-    public static void isTrue(boolean expression, String message) {
+    public Assert() {
+        super();
+    }
+
+    // isTrue
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Assert that the argument condition is {@code true}; otherwise
+     * throwing an exception with the specified message. This method is useful when
+     * validating according to an arbitrary boolean expression, such as validating a
+     * primitive number or using your own custom validation expression.</p>
+     * <p>
+     * <pre>Assert.isTrue(i &gt; 0.0, "The value must be greater than zero: &#37;d", i);</pre>
+     *
+     * <p>For performance reasons, the long value is passed as a separate parameter and
+     * appended to the exception message only in the case of an error.</p>
+     *
+     * @param expression the boolean expression to check
+     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param value      the value to append to the message when invalid
+     * @throws IllegalArgumentException if expression is {@code false}
+     * @see #isTrue(boolean)
+     * @see #isTrue(boolean, String, double)
+     * @see #isTrue(boolean, String, Object...)
+     */
+    public static void isTrue(final boolean expression, final String message, final long value) {
         if (!expression) {
-            throw new IllegalArgumentException(message);
+            throw new IllegalArgumentException(String.format(message, value));
         }
     }
 
     /**
-     * Assert a boolean expression, throwing {@code IllegalArgumentException}
-     * if the test result is {@code false}.
-     * <pre class="code">Assert.isTrue(i &gt; 0);</pre>
+     * <p>Assert that the argument condition is {@code true}; otherwise
+     * throwing an exception with the specified message. This method is useful when
+     * validating according to an arbitrary boolean expression, such as validating a
+     * primitive number or using your own custom validation expression.</p>
+     * <p>
+     * <pre>Assert.isTrue(d &gt; 0.0, "The value must be greater than zero: &#37;s", d);</pre>
      *
-     * @param expression a boolean expression
+     * <p>For performance reasons, the double value is passed as a separate parameter and
+     * appended to the exception message only in the case of an error.</p>
+     *
+     * @param expression the boolean expression to check
+     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param value      the value to append to the message when invalid
      * @throws IllegalArgumentException if expression is {@code false}
+     * @see #isTrue(boolean)
+     * @see #isTrue(boolean, String, long)
+     * @see #isTrue(boolean, String, Object...)
      */
-    public static void isTrue(boolean expression) {
-        isTrue(expression, "[Assertion failed] - this expression must be true");
-    }
-
-    /**
-     * Assert that an object is {@code null} .
-     * <pre class="code">Assert.isNull(value, "The value must be null");</pre>
-     *
-     * @param object  the object to check
-     * @param message the exception message to use if the assertion fails
-     * @throws IllegalArgumentException if the object is not {@code null}
-     */
-    public static void isNull(Object object, String message) {
-        if (object != null) {
-            throw new IllegalArgumentException(message);
+    public static void isTrue(final boolean expression, final String message, final double value) {
+        if (!expression) {
+            throw new IllegalArgumentException(String.format(message, value));
         }
     }
 
     /**
-     * Assert that an object is {@code null} .
-     * <pre class="code">Assert.isNull(value);</pre>
+     * <p>Assert that the argument condition is {@code true}; otherwise
+     * throwing an exception with the specified message. This method is useful when
+     * validating according to an arbitrary boolean expression, such as validating a
+     * primitive number or using your own custom validation expression.</p>
+     * <p>
+     * <pre>
+     * Assert.isTrue(i &gt;= min &amp;&amp; i &lt;= max, "The value must be between &#37;d and &#37;d", min, max);
+     * Assert.isTrue(myObject.isOk(), "The object is not okay");</pre>
      *
-     * @param object the object to check
-     * @throws IllegalArgumentException if the object is not {@code null}
+     * @param expression the boolean expression to check
+     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values     the optional values for the formatted exception message, null array not recommended
+     * @throws IllegalArgumentException if expression is {@code false}
+     * @see #isTrue(boolean)
+     * @see #isTrue(boolean, String, long)
+     * @see #isTrue(boolean, String, double)
      */
-    public static void isNull(Object object) {
-        isNull(object, "[Assertion failed] - the object argument must be null");
+    public static void isTrue(final boolean expression, final String message, final Object... values) {
+        if (!expression) {
+            throw new IllegalArgumentException(String.format(message, values));
+        }
     }
 
     /**
-     * Assert that an object is not {@code null} .
-     * <pre class="code">Assert.notNull(clazz, "The class must not be null");</pre>
+     * <p>Assert that the argument condition is {@code true}; otherwise
+     * throwing an exception. This method is useful when validating according
+     * to an arbitrary boolean expression, such as validating a
+     * primitive number or using your own custom validation expression.</p>
+     * <p>
+     * <pre>
+     * Assert.isTrue(i &gt; 0);
+     * Assert.isTrue(myObject.isOk());</pre>
+     * <p>
+     * <p>The message of the exception is &quot;The validated expression is
+     * false&quot;.</p>
      *
-     * @param object  the object to check
-     * @param message the exception message to use if the assertion fails
-     * @throws IllegalArgumentException if the object is {@code null}
+     * @param expression the boolean expression to check
+     * @throws IllegalArgumentException if expression is {@code false}
+     * @see #isTrue(boolean, String, long)
+     * @see #isTrue(boolean, String, double)
+     * @see #isTrue(boolean, String, Object...)
      */
-    public static void notNull(Object object, String message) {
+    public static void isTrue(final boolean expression) {
+        if (!expression) {
+            throw new IllegalArgumentException(DEFAULT_IS_TRUE_EX_MESSAGE);
+        }
+    }
+
+    // notNull
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Assert that the specified argument is not {@code null};
+     * otherwise throwing an exception.
+     * <p>
+     * <pre>Assert.notNull(myObject, "The object must not be null");</pre>
+     *
+     * <p>The message of the exception is &quot;The validated object is
+     * null&quot;.</p>
+     *
+     * @param <T>    the object type
+     * @param object the object to check
+     * @return the validated object (never {@code null} for method chaining)
+     * @throws NullArgumentException if the object is {@code null}
+     * @see #notNull(Object, String, Object...)
+     */
+    public static <T> T notNull(final T object) {
+        return notNull(object, DEFAULT_IS_NULL_EX_MESSAGE);
+    }
+
+    /**
+     * <p>Assert that the specified argument is not {@code null};
+     * otherwise throwing an exception with the specified message.
+     * <p>
+     * <pre>Assert.notNull(myObject, "The object must not be null");</pre>
+     *
+     * @param <T>     the object type
+     * @param object  the object to check
+     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values  the optional values for the formatted exception message
+     * @return the validated object (never {@code null} for method chaining)
+     * @throws NullArgumentException if the object is {@code null}
+     * @see #notNull(Object)
+     */
+    public static <T> T notNull(final T object, final String message, final Object... values) {
         if (object == null) {
-            throw new IllegalArgumentException(message);
+            throw new NullArgumentException(String.format(message, values));
+        }
+        return object;
+    }
+
+    // notEmpty array
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Assert that the specified argument array is neither {@code null}
+     * nor a length of zero (no elements); otherwise throwing an exception
+     * with the specified message.
+     * <p>
+     * <pre>Assert.notEmpty(myArray, "The array must not be empty");</pre>
+     *
+     * @param <T>     the array type
+     * @param array   the array to check, validated not null by this method
+     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values  the optional values for the formatted exception message, null array not recommended
+     * @return the validated array (never {@code null} method for chaining)
+     * @throws NullArgumentException    if the array is {@code null}
+     * @throws IllegalArgumentException if the array is empty
+     * @see #notEmpty(Object[])
+     */
+    public static <T> T[] notEmpty(final T[] array, final String message, final Object... values) {
+        if (array == null) {
+            throw new NullArgumentException(String.format(message, values));
+        }
+        if (array.length == 0) {
+            throw new IllegalArgumentException(String.format(message, values));
+        }
+        return array;
+    }
+
+    /**
+     * <p>Assert that the specified argument array is neither {@code null}
+     * nor a length of zero (no elements); otherwise throwing an exception.
+     * <p>
+     * <pre>Assert.notEmpty(myArray);</pre>
+     *
+     * <p>The message in the exception is &quot;The validated array is
+     * empty&quot;.
+     *
+     * @param <T>   the array type
+     * @param array the array to check, validated not null by this method
+     * @return the validated array (never {@code null} method for chaining)
+     * @throws NullArgumentException    if the array is {@code null}
+     * @throws IllegalArgumentException if the array is empty
+     * @see #notEmpty(Object[], String, Object...)
+     */
+    public static <T> T[] notEmpty(final T[] array) {
+        return notEmpty(array, DEFAULT_NOT_EMPTY_ARRAY_EX_MESSAGE);
+    }
+
+    // notEmpty collection
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Assert that the specified argument collection is neither {@code null}
+     * nor a size of zero (no elements); otherwise throwing an exception
+     * with the specified message.
+     * <p>
+     * <pre>Assert.notEmpty(myCollection, "The collection must not be empty");</pre>
+     *
+     * @param <T>        the collection type
+     * @param collection the collection to check, validated not null by this method
+     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values     the optional values for the formatted exception message, null array not recommended
+     * @return the validated collection (never {@code null} method for chaining)
+     * @throws NullArgumentException    if the collection is {@code null}
+     * @throws IllegalArgumentException if the collection is empty
+     * @see #notEmpty(Object[])
+     */
+    public static <T extends Collection<?>> T notEmpty(final T collection, final String message, final Object... values) {
+        if (collection == null) {
+            throw new NullArgumentException(String.format(message, values));
+        }
+        if (collection.isEmpty()) {
+            throw new IllegalArgumentException(String.format(message, values));
+        }
+        return collection;
+    }
+
+    /**
+     * <p>Assert that the specified argument collection is neither {@code null}
+     * nor a size of zero (no elements); otherwise throwing an exception.
+     * <p>
+     * <pre>Assert.notEmpty(myCollection);</pre>
+     *
+     * <p>The message in the exception is &quot;The validated collection is
+     * empty&quot;.</p>
+     *
+     * @param <T>        the collection type
+     * @param collection the collection to check, validated not null by this method
+     * @return the validated collection (never {@code null} method for chaining)
+     * @throws NullArgumentException    if the collection is {@code null}
+     * @throws IllegalArgumentException if the collection is empty
+     * @see #notEmpty(Collection, String, Object...)
+     */
+    public static <T extends Collection<?>> T notEmpty(final T collection) {
+        return notEmpty(collection, DEFAULT_NOT_EMPTY_COLLECTION_EX_MESSAGE);
+    }
+
+    // notEmpty map
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Assert that the specified argument map is neither {@code null}
+     * nor a size of zero (no elements); otherwise throwing an exception
+     * with the specified message.
+     * <p>
+     * <pre>Assert.notEmpty(myMap, "The map must not be empty");</pre>
+     *
+     * @param <T>     the map type
+     * @param map     the map to check, validated not null by this method
+     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values  the optional values for the formatted exception message, null array not recommended
+     * @return the validated map (never {@code null} method for chaining)
+     * @throws NullArgumentException    if the map is {@code null}
+     * @throws IllegalArgumentException if the map is empty
+     * @see #notEmpty(Object[])
+     */
+    public static <T extends Map<?, ?>> T notEmpty(final T map, final String message, final Object... values) {
+        if (map == null) {
+            throw new NullArgumentException(String.format(message, values));
+        }
+        if (map.isEmpty()) {
+            throw new IllegalArgumentException(String.format(message, values));
+        }
+        return map;
+    }
+
+    /**
+     * <p>Assert that the specified argument map is neither {@code null}
+     * nor a size of zero (no elements); otherwise throwing an exception.
+     * <p>
+     * <pre>Assert.notEmpty(myMap);</pre>
+     *
+     * <p>The message in the exception is &quot;The validated map is
+     * empty&quot;.</p>
+     *
+     * @param <T> the map type
+     * @param map the map to check, validated not null by this method
+     * @return the validated map (never {@code null} method for chaining)
+     * @throws NullArgumentException    if the map is {@code null}
+     * @throws IllegalArgumentException if the map is empty
+     * @see #notEmpty(Map, String, Object...)
+     */
+    public static <T extends Map<?, ?>> T notEmpty(final T map) {
+        return notEmpty(map, DEFAULT_NOT_EMPTY_MAP_EX_MESSAGE);
+    }
+
+    // notEmpty string
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Assert that the specified argument character sequence is
+     * neither {@code null} nor a length of zero (no characters);
+     * otherwise throwing an exception with the specified message.
+     * <p>
+     * <pre>Assert.notEmpty(myString, "The string must not be empty");</pre>
+     *
+     * @param <T>     the character sequence type
+     * @param chars   the character sequence to check, validated not null by this method
+     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values  the optional values for the formatted exception message, null array not recommended
+     * @return the validated character sequence (never {@code null} method for chaining)
+     * @throws NullArgumentException    if the character sequence is {@code null}
+     * @throws IllegalArgumentException if the character sequence is empty
+     * @see #notEmpty(CharSequence)
+     */
+    public static <T extends CharSequence> T notEmpty(final T chars, final String message, final Object... values) {
+        if (chars == null) {
+            throw new NullArgumentException(String.format(message, values));
+        }
+        if (chars.length() == 0) {
+            throw new IllegalArgumentException(String.format(message, values));
+        }
+        return chars;
+    }
+
+    /**
+     * <p>Assert that the specified argument character sequence is
+     * neither {@code null} nor a length of zero (no characters);
+     * otherwise throwing an exception with the specified message.
+     * <p>
+     * <pre>Assert.notEmpty(myString);</pre>
+     *
+     * <p>The message in the exception is &quot;The validated
+     * character sequence is empty&quot;.</p>
+     *
+     * @param <T>   the character sequence type
+     * @param chars the character sequence to check, validated not null by this method
+     * @return the validated character sequence (never {@code null} method for chaining)
+     * @throws NullArgumentException    if the character sequence is {@code null}
+     * @throws IllegalArgumentException if the character sequence is empty
+     * @see #notEmpty(CharSequence, String, Object...)
+     */
+    public static <T extends CharSequence> T notEmpty(final T chars) {
+        return notEmpty(chars, DEFAULT_NOT_EMPTY_CHAR_SEQUENCE_EX_MESSAGE);
+    }
+
+    // validIndex array
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Validates that the index is within the bounds of the argument
+     * array; otherwise throwing an exception with the specified message.</p>
+     * <p>
+     * <pre>Assert.validIndex(myArray, 2, "The array index is invalid: ");</pre>
+     *
+     * <p>If the array is {@code null}, then the message of the exception
+     * is &quot;The validated object is null&quot;.</p>
+     *
+     * @param <T>     the array type
+     * @param array   the array to check, validated not null by this method
+     * @param index   the index to check
+     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values  the optional values for the formatted exception message, null array not recommended
+     * @return the validated array (never {@code null} for method chaining)
+     * @throws NullArgumentException     if the array is {@code null}
+     * @throws IndexOutOfBoundsException if the index is invalid
+     * @see #validIndex(Object[], int)
+     * @since 3.0
+     */
+    public static <T> T[] validIndex(final T[] array, final int index, final String message, final Object... values) {
+        Assert.notNull(array);
+        if (index < 0 || index >= array.length) {
+            throw new IndexOutOfBoundsException(String.format(message, values));
+        }
+        return array;
+    }
+
+    /**
+     * <p>Validates that the index is within the bounds of the argument
+     * array; otherwise throwing an exception.</p>
+     * <p>
+     * <pre>Assert.validIndex(myArray, 2);</pre>
+     *
+     * <p>If the array is {@code null}, then the message of the exception
+     * is &quot;The validated object is null&quot;.</p>
+     *
+     * <p>If the index is invalid, then the message of the exception is
+     * &quot;The validated array index is invalid: &quot; followed by the
+     * index.</p>
+     *
+     * @param <T>   the array type
+     * @param array the array to check, validated not null by this method
+     * @param index the index to check
+     * @return the validated array (never {@code null} for method chaining)
+     * @throws NullArgumentException     if the array is {@code null}
+     * @throws IndexOutOfBoundsException if the index is invalid
+     * @see #validIndex(Object[], int, String, Object...)
+     * @since 3.0
+     */
+    public static <T> T[] validIndex(final T[] array, final int index) {
+        return validIndex(array, index, DEFAULT_VALID_INDEX_ARRAY_EX_MESSAGE, index);
+    }
+
+    // validIndex collection
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Validates that the index is within the bounds of the argument
+     * collection; otherwise throwing an exception with the specified message.</p>
+     * <p>
+     * <pre>Assert.validIndex(myCollection, 2, "The collection index is invalid: ");</pre>
+     *
+     * <p>If the collection is {@code null}, then the message of the
+     * exception is &quot;The validated object is null&quot;.</p>
+     *
+     * @param <T>        the collection type
+     * @param collection the collection to check, validated not null by this method
+     * @param index      the index to check
+     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values     the optional values for the formatted exception message, null array not recommended
+     * @return the validated collection (never {@code null} for chaining)
+     * @throws NullArgumentException     if the collection is {@code null}
+     * @throws IndexOutOfBoundsException if the index is invalid
+     * @see #validIndex(Collection, int)
+     * @since 3.0
+     */
+    public static <T extends Collection<?>> T validIndex(final T collection, final int index, final String message, final Object... values) {
+        Assert.notNull(collection);
+        if (index < 0 || index >= collection.size()) {
+            throw new IndexOutOfBoundsException(String.format(message, values));
+        }
+        return collection;
+    }
+
+    /**
+     * <p>Validates that the index is within the bounds of the argument
+     * collection; otherwise throwing an exception.</p>
+     * <p>
+     * <pre>Assert.validIndex(myCollection, 2);</pre>
+     *
+     * <p>If the index is invalid, then the message of the exception
+     * is &quot;The validated collection index is invalid: &quot;
+     * followed by the index.</p>
+     *
+     * @param <T>        the collection type
+     * @param collection the collection to check, validated not null by this method
+     * @param index      the index to check
+     * @return the validated collection (never {@code null} for method chaining)
+     * @throws NullArgumentException     if the collection is {@code null}
+     * @throws IndexOutOfBoundsException if the index is invalid
+     * @see #validIndex(Collection, int, String, Object...)
+     * @since 3.0
+     */
+    public static <T extends Collection<?>> T validIndex(final T collection, final int index) {
+        return validIndex(collection, index, DEFAULT_VALID_INDEX_COLLECTION_EX_MESSAGE, index);
+    }
+
+    // validIndex string
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Validates that the index is within the bounds of the argument
+     * character sequence; otherwise throwing an exception with the
+     * specified message.</p>
+     * <p>
+     * <pre>Assert.validIndex(myStr, 2, "The string index is invalid: ");</pre>
+     *
+     * <p>If the character sequence is {@code null}, then the message
+     * of the exception is &quot;The validated object is null&quot;.</p>
+     *
+     * @param <T>     the character sequence type
+     * @param chars   the character sequence to check, validated not null by this method
+     * @param index   the index to check
+     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values  the optional values for the formatted exception message, null array not recommended
+     * @return the validated character sequence (never {@code null} for method chaining)
+     * @throws NullArgumentException     if the character sequence is {@code null}
+     * @throws IndexOutOfBoundsException if the index is invalid
+     * @see #validIndex(CharSequence, int)
+     * @since 3.0
+     */
+    public static <T extends CharSequence> T validIndex(final T chars, final int index, final String message, final Object... values) {
+        Assert.notNull(chars);
+        if (index < 0 || index >= chars.length()) {
+            throw new IndexOutOfBoundsException(String.format(message, values));
+        }
+        return chars;
+    }
+
+    /**
+     * <p>Validates that the index is within the bounds of the argument
+     * character sequence; otherwise throwing an exception.</p>
+     * <p>
+     * <pre>Assert.validIndex(myStr, 2);</pre>
+     *
+     * <p>If the character sequence is {@code null}, then the message
+     * of the exception is &quot;The validated object is
+     * null&quot;.</p>
+     *
+     * <p>If the index is invalid, then the message of the exception
+     * is &quot;The validated character sequence index is invalid: &quot;
+     * followed by the index.</p>
+     *
+     * @param <T>   the character sequence type
+     * @param chars the character sequence to check, validated not null by this method
+     * @param index the index to check
+     * @return the validated character sequence (never {@code null} for method chaining)
+     * @throws NullArgumentException     if the character sequence is {@code null}
+     * @throws IndexOutOfBoundsException if the index is invalid
+     * @see #validIndex(CharSequence, int, String, Object...)
+     * @since 3.0
+     */
+    public static <T extends CharSequence> T validIndex(final T chars, final int index) {
+        return validIndex(chars, index, DEFAULT_VALID_INDEX_CHAR_SEQUENCE_EX_MESSAGE, index);
+    }
+
+    // validState
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Assert that the stateful condition is {@code true}; otherwise
+     * throwing an exception. This method is useful when validating according
+     * to an arbitrary boolean expression, such as validating a
+     * primitive number or using your own custom validation expression.</p>
+     * <p>
+     * <pre>
+     * Assert.validState(field &gt; 0);
+     * Assert.validState(this.isOk());</pre>
+     * <p>
+     * <p>The message of the exception is &quot;The validated state is
+     * false&quot;.</p>
+     *
+     * @param expression the boolean expression to check
+     * @throws IllegalStateException if expression is {@code false}
+     * @see #validState(boolean, String, Object...)
+     * @since 3.0
+     */
+    public static void validState(final boolean expression) {
+        if (!expression) {
+            throw new IllegalStateException(DEFAULT_VALID_STATE_EX_MESSAGE);
         }
     }
 
     /**
-     * Assert that an object is not {@code null} .
-     * <pre class="code">Assert.notNull(clazz);</pre>
+     * <p>Assert that the stateful condition is {@code true}; otherwise
+     * throwing an exception with the specified message. This method is useful when
+     * validating according to an arbitrary boolean expression, such as validating a
+     * primitive number or using your own custom validation expression.</p>
+     * <p>
+     * <pre>Assert.validState(this.isOk(), "The state is not OK: %s", myObject);</pre>
      *
-     * @param object the object to check
-     * @throws IllegalArgumentException if the object is {@code null}
+     * @param expression the boolean expression to check
+     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values     the optional values for the formatted exception message, null array not recommended
+     * @throws IllegalStateException if expression is {@code false}
+     * @see #validState(boolean)
+     * @since 3.0
      */
-    public static void notNull(Object object) {
-        notNull(object, "[Assertion failed] - this argument is required; it must not be null");
+    public static void validState(final boolean expression, final String message, final Object... values) {
+        if (!expression) {
+            throw new IllegalStateException(String.format(message, values));
+        }
     }
 
     /**
@@ -140,10 +615,11 @@ public abstract class Assert {
      * @throws IllegalArgumentException if the text is empty
      * @see StringUtils#isEmpty
      */
-    public static void hasLength(String text, String message) {
+    public static String hasLength(String text, String message) {
         if (StringUtils.isEmpty(text)) {
             throw new IllegalArgumentException(message);
         }
+        return text;
     }
 
     /**
@@ -155,9 +631,8 @@ public abstract class Assert {
      * @throws IllegalArgumentException if the text is empty
      * @see StringUtils#isEmpty
      */
-    public static void hasLength(String text) {
-        hasLength(text,
-            "[Assertion failed] - this String argument must have length; it must not be null or empty");
+    public static String hasLength(String text) {
+        return hasLength(text, "[Assertion failed] - this String argument must have length; it must not be null or empty");
     }
 
     /**
@@ -169,10 +644,11 @@ public abstract class Assert {
      * @param message the exception message to use if the assertion fails
      * @throws IllegalArgumentException if the text does not contain valid text content
      */
-    public static void hasText(String text, String message) {
+    public static String hasText(String text, String message) {
         if (StringUtils.isBlank(text)) {
             throw new IllegalArgumentException(message);
         }
+        return text;
     }
 
     /**
@@ -183,9 +659,9 @@ public abstract class Assert {
      * @param text the String to check
      * @throws IllegalArgumentException if the text does not contain valid text content
      */
-    public static void hasText(String text) {
-        hasText(text,
-            "[Assertion failed] - this String argument must have text; it must not be null, empty, or blank");
+    public static String hasText(String text) {
+        return hasText(text, "[Assertion failed] - this String argument must have text; it must not be null, empty, or blank");
+
     }
 
     /**
@@ -197,11 +673,12 @@ public abstract class Assert {
      * @param message      the exception message to use if the assertion fails
      * @throws IllegalArgumentException if the text contains the substring
      */
-    public static void doesNotContain(String textToSearch, String substring, String message) {
+    public static String doesNotContain(String textToSearch, String substring, String message) {
         if (StringUtils.isNotEmpty(textToSearch) && StringUtils.isNotEmpty(substring) &&
             textToSearch.contains(substring)) {
             throw new IllegalArgumentException(message);
         }
+        return textToSearch;
     }
 
     /**
@@ -212,220 +689,411 @@ public abstract class Assert {
      * @param substring    the substring to find within the text
      * @throws IllegalArgumentException if the text contains the substring
      */
-    public static void doesNotContain(String textToSearch, String substring) {
-        doesNotContain(textToSearch, substring,
+    public static String doesNotContain(String textToSearch, String substring) {
+        return doesNotContain(textToSearch, substring,
             "[Assertion failed] - this String argument must not contain the substring [" + substring + "]");
     }
 
+    // matchesPattern
+    //---------------------------------------------------------------------------------
+
     /**
-     * Assert that an array has elements; that is, it must not be
-     * {@code null} and must have at least one element.
-     * <pre class="code">Assert.notEmpty(array, "The array must have elements");</pre>
+     * <p>Assert that the specified argument character sequence matches the specified regular
+     * expression pattern; otherwise throwing an exception.</p>
+     * <p>
+     * <pre>Assert.matchesPattern("hi", "[a-z]*");</pre>
      *
-     * @param array   the array to check
-     * @param message the exception message to use if the assertion fails
-     * @throws IllegalArgumentException if the object array is {@code null} or has no elements
+     * <p>The syntax of the pattern is the one used in the {@link Pattern} class.</p>
+     *
+     * @param input   the character sequence to validate, not null
+     * @param pattern the regular expression pattern, not null
+     * @throws IllegalArgumentException if the character sequence does not match the pattern
+     * @see #matchesPattern(CharSequence, String, String, Object...)
+     * @since 3.0
      */
-    public static void notEmpty(Object[] array, String message) {
-        if (ObjectUtils.isEmpty(array)) {
+    public static <T extends CharSequence> T matchesPattern(final T input, final String pattern) {
+        if (!Pattern.matches(pattern, input)) {
+            throw new IllegalArgumentException(String.format(DEFAULT_MATCHES_PATTERN_EX, input, pattern));
+        }
+        return input;
+    }
+
+    /**
+     * <p>Assert that the specified argument character sequence matches the specified regular
+     * expression pattern; otherwise throwing an exception with the specified message.</p>
+     * <p>
+     * <pre>Assert.matchesPattern("hi", "[a-z]*", "%s does not match %s", "hi" "[a-z]*");</pre>
+     *
+     * <p>The syntax of the pattern is the one used in the {@link Pattern} class.</p>
+     *
+     * @param input   the character sequence to validate, not null
+     * @param pattern the regular expression pattern, not null
+     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values  the optional values for the formatted exception message, null array not recommended
+     * @throws IllegalArgumentException if the character sequence does not match the pattern
+     * @see #matchesPattern(CharSequence, String)
+     * @since 3.0
+     */
+    public static <T extends CharSequence> T matchesPattern(final T input, final String pattern, final String message, final Object... values) {
+        if (!Pattern.matches(pattern, input)) {
+            throw new IllegalArgumentException(String.format(message, values));
+        }
+        return input;
+    }
+
+    // inclusiveBetween
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Assert that the specified argument object fall between the two
+     * inclusive values specified; otherwise, throws an exception.</p>
+     * <p>
+     * <pre>Assert.inclusiveBetween(0, 2, 1);</pre>
+     *
+     * @param <T>   the type of the argument object
+     * @param start the inclusive start value, not null
+     * @param end   the inclusive end value, not null
+     * @param value the object to validate, not null
+     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @see #inclusiveBetween(Object, Object, Comparable, String, Object...)
+     * @since 3.0
+     */
+    public static <T extends Comparable<T>> T inclusiveBetween(final T start, final T end, final T value) {
+        if (value.compareTo(start) < 0 || value.compareTo(end) > 0) {
+            throw new IllegalArgumentException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+        }
+        return value;
+    }
+
+    /**
+     * <p>Assert that the specified argument object fall between the two
+     * inclusive values specified; otherwise, throws an exception with the
+     * specified message.</p>
+     * <p>
+     * <pre>Assert.inclusiveBetween(0, 2, 1, "Not in boundaries");</pre>
+     *
+     * @param <T>     the type of the argument object
+     * @param start   the inclusive start value, not null
+     * @param end     the inclusive end value, not null
+     * @param value   the object to validate, not null
+     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values  the optional values for the formatted exception message, null array not recommended
+     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @see #inclusiveBetween(Object, Object, Comparable)
+     * @since 3.0
+     */
+    public static <T extends Comparable<T>> T inclusiveBetween(final T start, final T end, final T value, final String message, final Object... values) {
+        if (value.compareTo(start) < 0 || value.compareTo(end) > 0) {
+            throw new IllegalArgumentException(String.format(message, values));
+        }
+        return value;
+    }
+
+    /**
+     * Assert that the specified primitive value falls between the two
+     * inclusive values specified; otherwise, throws an exception.
+     * <p>
+     * <pre>Assert.inclusiveBetween(0, 2, 1);</pre>
+     *
+     * @param start the inclusive start value
+     * @param end   the inclusive end value
+     * @param value the value to validate
+     * @throws IllegalArgumentException if the value falls outside the boundaries (inclusive)
+     * @since 3.3
+     */
+    public static long inclusiveBetween(final long start, final long end, final long value) {
+        if (value < start || value > end) {
+            throw new IllegalArgumentException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+        }
+        return value;
+    }
+
+    /**
+     * Assert that the specified primitive value falls between the two
+     * inclusive values specified; otherwise, throws an exception with the
+     * specified message.
+     * <p>
+     * <pre>Assert.inclusiveBetween(0, 2, 1, "Not in range");</pre>
+     *
+     * @param start   the inclusive start value
+     * @param end     the inclusive end value
+     * @param value   the value to validate
+     * @param message the exception message if invalid, not null
+     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @since 3.3
+     */
+    public static long inclusiveBetween(final long start, final long end, final long value, final String message) {
+        if (value < start || value > end) {
             throw new IllegalArgumentException(message);
         }
+        return value;
     }
 
     /**
-     * Assert that an array has elements; that is, it must not be
-     * {@code null} and must have at least one element.
-     * <pre class="code">Assert.notEmpty(array);</pre>
+     * Assert that the specified primitive value falls between the two
+     * inclusive values specified; otherwise, throws an exception.
+     * <p>
+     * <pre>Assert.inclusiveBetween(0.1, 2.1, 1.1);</pre>
      *
-     * @param array the array to check
-     * @throws IllegalArgumentException if the object array is {@code null} or has no elements
+     * @param start the inclusive start value
+     * @param end   the inclusive end value
+     * @param value the value to validate
+     * @throws IllegalArgumentException if the value falls outside the boundaries (inclusive)
+     * @since 3.3
      */
-    public static void notEmpty(Object[] array) {
-        notEmpty(array, "[Assertion failed] - this array must not be empty: it must contain at least 1 element");
-    }
-
-    /**
-     * Assert that an array has no null elements.
-     * Note: Does not complain if the array is empty!
-     * <pre class="code">Assert.noNullElements(array, "The array must have non-null elements");</pre>
-     *
-     * @param array   the array to check
-     * @param message the exception message to use if the assertion fails
-     * @throws IllegalArgumentException if the object array contains a {@code null} element
-     */
-    public static void noNullElements(Object[] array, String message) {
-        if (array != null) {
-            for (Object element : array) {
-                if (element == null) {
-                    throw new IllegalArgumentException(message);
-                }
-            }
+    public static double inclusiveBetween(final double start, final double end, final double value) {
+        if (value < start || value > end) {
+            throw new IllegalArgumentException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
         }
+        return value;
     }
 
     /**
-     * Assert that an array has no null elements.
-     * Note: Does not complain if the array is empty!
-     * <pre class="code">Assert.noNullElements(array);</pre>
+     * Assert that the specified primitive value falls between the two
+     * inclusive values specified; otherwise, throws an exception with the
+     * specified message.
+     * <p>
+     * <pre>Assert.inclusiveBetween(0.1, 2.1, 1.1, "Not in range");</pre>
      *
-     * @param array the array to check
-     * @throws IllegalArgumentException if the object array contains a {@code null} element
+     * @param start   the inclusive start value
+     * @param end     the inclusive end value
+     * @param value   the value to validate
+     * @param message the exception message if invalid, not null
+     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @since 3.3
      */
-    public static void noNullElements(Object[] array) {
-        noNullElements(array, "[Assertion failed] - this array must not contain any null elements");
-    }
-
-    /**
-     * Assert that a collection has elements; that is, it must not be
-     * {@code null} and must have at least one element.
-     * <pre class="code">Assert.notEmpty(collection, "Collection must have elements");</pre>
-     *
-     * @param collection the collection to check
-     * @param message    the exception message to use if the assertion fails
-     * @throws IllegalArgumentException if the collection is {@code null} or has no elements
-     */
-    public static void notEmpty(Collection<?> collection, String message) {
-        if (CollectionUtils.isEmpty(collection)) {
+    public static double inclusiveBetween(final double start, final double end, final double value, final String message) {
+        if (value < start || value > end) {
             throw new IllegalArgumentException(message);
         }
+        return value;
+    }
+
+    // exclusiveBetween
+    //---------------------------------------------------------------------------------
+
+    /**
+     * <p>Assert that the specified argument object fall between the two
+     * exclusive values specified; otherwise, throws an exception.</p>
+     * <p>
+     * <pre>Assert.exclusiveBetween(0, 2, 1);</pre>
+     *
+     * @param <T>   the type of the argument object
+     * @param start the exclusive start value, not null
+     * @param end   the exclusive end value, not null
+     * @param value the object to validate, not null
+     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @see #exclusiveBetween(Object, Object, Comparable, String, Object...)
+     * @since 3.0
+     */
+    public static <T extends Comparable<T>> T exclusiveBetween(final T start, final T end, final T value) {
+        if (value.compareTo(start) <= 0 || value.compareTo(end) >= 0) {
+            throw new IllegalArgumentException(String.format(DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+        }
+        return value;
     }
 
     /**
-     * Assert that a collection has elements; that is, it must not be
-     * {@code null} and must have at least one element.
-     * <pre class="code">Assert.notEmpty(collection, "Collection must have elements");</pre>
+     * <p>Assert that the specified argument object fall between the two
+     * exclusive values specified; otherwise, throws an exception with the
+     * specified message.</p>
+     * <p>
+     * <pre>Assert.exclusiveBetween(0, 2, 1, "Not in boundaries");</pre>
      *
-     * @param collection the collection to check
-     * @throws IllegalArgumentException if the collection is {@code null} or has no elements
+     * @param <T>     the type of the argument object
+     * @param start   the exclusive start value, not null
+     * @param end     the exclusive end value, not null
+     * @param value   the object to validate, not null
+     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values  the optional values for the formatted exception message, null array not recommended
+     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @see #exclusiveBetween(Object, Object, Comparable)
+     * @since 3.0
      */
-    public static void notEmpty(Collection<?> collection) {
-        notEmpty(collection,
-            "[Assertion failed] - this collection must not be empty: it must contain at least 1 element");
+    public static <T extends Comparable<T>> T exclusiveBetween(final T start, final T end, final T value, final String message, final Object... values) {
+        if (value.compareTo(start) <= 0 || value.compareTo(end) >= 0) {
+            throw new IllegalArgumentException(String.format(message, values));
+        }
+        return value;
     }
 
     /**
-     * Assert that a Map has entries; that is, it must not be {@code null}
-     * and must have at least one entry.
-     * <pre class="code">Assert.notEmpty(map, "Map must have entries");</pre>
+     * Assert that the specified primitive value falls between the two
+     * exclusive values specified; otherwise, throws an exception.
+     * <p>
+     * <pre>Assert.exclusiveBetween(0, 2, 1);</pre>
      *
-     * @param map     the map to check
-     * @param message the exception message to use if the assertion fails
-     * @throws IllegalArgumentException if the map is {@code null} or has no entries
+     * @param start the exclusive start value
+     * @param end   the exclusive end value
+     * @param value the value to validate
+     * @throws IllegalArgumentException if the value falls out of the boundaries
+     * @since 3.3
      */
-    public static void notEmpty(Map<?, ?> map, String message) {
-        if (CollectionUtils.isEmpty(map)) {
+    public static long exclusiveBetween(final long start, final long end, final long value) {
+        if (value <= start || value >= end) {
+            throw new IllegalArgumentException(String.format(DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+        }
+        return value;
+    }
+
+    /**
+     * Assert that the specified primitive value falls between the two
+     * exclusive values specified; otherwise, throws an exception with the
+     * specified message.
+     * <p>
+     * <pre>Assert.exclusiveBetween(0, 2, 1, "Not in range");</pre>
+     *
+     * @param start   the exclusive start value
+     * @param end     the exclusive end value
+     * @param value   the value to validate
+     * @param message the exception message if invalid, not null
+     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @since 3.3
+     */
+    public static long exclusiveBetween(final long start, final long end, final long value, final String message) {
+        if (value <= start || value >= end) {
             throw new IllegalArgumentException(message);
         }
+        return value;
     }
 
     /**
-     * Assert that a Map has entries; that is, it must not be {@code null}
-     * and must have at least one entry.
-     * <pre class="code">Assert.notEmpty(map);</pre>
+     * Assert that the specified primitive value falls between the two
+     * exclusive values specified; otherwise, throws an exception.
+     * <p>
+     * <pre>Assert.exclusiveBetween(0.1, 2.1, 1.1);</pre>
      *
-     * @param map the map to check
-     * @throws IllegalArgumentException if the map is {@code null} or has no entries
+     * @param start the exclusive start value
+     * @param end   the exclusive end value
+     * @param value the value to validate
+     * @throws IllegalArgumentException if the value falls out of the boundaries
+     * @since 3.3
      */
-    public static void notEmpty(Map<?, ?> map) {
-        notEmpty(map, "[Assertion failed] - this map must not be empty; it must contain at least one entry");
+    public static double exclusiveBetween(final double start, final double end, final double value) {
+        if (value <= start || value >= end) {
+            throw new IllegalArgumentException(String.format(DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+        }
+        return value;
     }
 
     /**
-     * Assert that the provided object is an instance of the provided class.
-     * <pre class="code">Assert.instanceOf(Foo.class, foo);</pre>
+     * Assert that the specified primitive value falls between the two
+     * exclusive values specified; otherwise, throws an exception with the
+     * specified message.
+     * <p>
+     * <pre>Assert.exclusiveBetween(0.1, 2.1, 1.1, "Not in range");</pre>
      *
-     * @param clazz the required class
-     * @param obj   the object to check
-     * @throws IllegalArgumentException if the object is not an instance of clazz
-     * @see Class#isInstance
+     * @param start   the exclusive start value
+     * @param end     the exclusive end value
+     * @param value   the value to validate
+     * @param message the exception message if invalid, not null
+     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @since 3.3
      */
-    public static void isInstanceOf(Class<?> clazz, Object obj) {
-        isInstanceOf(clazz, obj, "");
+    public static double exclusiveBetween(final double start, final double end, final double value, final String message) {
+        if (value <= start || value >= end) {
+            throw new IllegalArgumentException(message);
+        }
+        return value;
     }
 
+    // isInstanceOf
+    //---------------------------------------------------------------------------------
+
     /**
-     * Assert that the provided object is an instance of the provided class.
-     * <pre class="code">Assert.instanceOf(Foo.class, foo);</pre>
+     * Validates that the argument is an instance of the specified class, if not throws an exception.
+     * <p>
+     * <p>This method is useful when validating according to an arbitrary class</p>
+     * <p>
+     * <pre>Assert.isInstanceOf(OkClass.class, object);</pre>
      *
-     * @param type    the type to check against
-     * @param obj     the object to check
-     * @param message a message which will be prepended to the message produced by
-     *                the function itself, and which may be used to provide context. It should
-     *                normally end in ":" or "." so that the generated message looks OK when
-     *                appended to it.
-     * @throws IllegalArgumentException if the object is not an instance of clazz
-     * @see Class#isInstance
+     * <p>The message of the exception is &quot;Expected type: {type}, actual: {obj_type}&quot;</p>
+     *
+     * @param type the class the object must be validated against, not null
+     * @param obj  the object to check, null throws an exception
+     * @throws IllegalArgumentException if argument is not of specified class
+     * @see #isInstanceOf(Class, Object, String, Object...)
+     * @since 3.0
      */
-    public static void isInstanceOf(Class<?> type, Object obj, String message) {
-        notNull(type, "Type to check against must not be null");
+    public static <T> T isInstanceOf(final Class<T> type, final Object obj) {
         if (!type.isInstance(obj)) {
-            throw new IllegalArgumentException(
-                (StringUtils.isNotEmpty(message) ? message + " " : "") +
-                    "Object of class [" + (obj != null ? obj.getClass().getName() : "null") +
-                    "] must be an instance of " + type);
+            throw new IllegalArgumentException(String.format(DEFAULT_IS_INSTANCE_OF_EX_MESSAGE, type.getName(),
+                obj == null ? "null" : obj.getClass().getName()));
+        }
+        //noinspection unchecked
+        return (T) obj;
+    }
+
+    /**
+     * <p>Assert that the argument is an instance of the specified class; otherwise
+     * throwing an exception with the specified message. This method is useful when
+     * validating according to an arbitrary class</p>
+     * <p>
+     * <pre>Assert.isInstanceOf(OkClass.classs, object, "Wrong class, object is of class %s",
+     *   object.getClass().getName());</pre>
+     *
+     * @param type    the class the object must be validated against, not null
+     * @param obj     the object to check, null throws an exception
+     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values  the optional values for the formatted exception message, null array not recommended
+     * @throws IllegalArgumentException if argument is not of specified class
+     * @see #isInstanceOf(Class, Object)
+     * @since 3.0
+     */
+    public static <T> T isInstanceOf(final Class<?> type, final Object obj, final String message, final Object... values) {
+        if (!type.isInstance(obj)) {
+            throw new IllegalArgumentException(String.format(message, values));
+        }
+        //noinspection unchecked
+        return (T) obj;
+    }
+
+    // isAssignableFrom
+    //---------------------------------------------------------------------------------
+
+    /**
+     * Validates that the argument can be converted to the specified class, if not, throws an exception.
+     * <p>
+     * <p>This method is useful when validating that there will be no casting errors.</p>
+     * <p>
+     * <pre>Assert.isAssignableFrom(SuperClass.class, object.getClass());</pre>
+     *
+     * <p>The message format of the exception is &quot;Cannot assign {type} to {superType}&quot;</p>
+     *
+     * @param superType the class the class must be validated against, not null
+     * @param type      the class to check, not null
+     * @throws IllegalArgumentException if type argument is not assignable to the specified superType
+     * @see #isAssignableFrom(Class, Class, String, Object...)
+     * @since 3.0
+     */
+    public static void isAssignableFrom(final Class<?> superType, final Class<?> type) {
+        if (!superType.isAssignableFrom(type)) {
+            throw new IllegalArgumentException(String.format(DEFAULT_IS_ASSIGNABLE_EX_MESSAGE, type.getName(),
+                superType.getName()));
         }
     }
 
     /**
-     * Assert that {@code superType.isAssignableFrom(subType)} is {@code true}.
-     * <pre class="code">Assert.isAssignable(Number.class, myClass);</pre>
+     * Validates that the argument can be converted to the specified class, if not throws an exception.
+     * <p>
+     * <p>This method is useful when validating if there will be no casting errors.</p>
+     * <p>
+     * <pre>Assert.isAssignableFrom(SuperClass.class, object.getClass());</pre>
      *
-     * @param superType the super type to check
-     * @param subType   the sub type to check
-     * @throws IllegalArgumentException if the classes are not assignable
-     */
-    public static void isAssignable(Class<?> superType, Class<?> subType) {
-        isAssignable(superType, subType, "");
-    }
-
-    /**
-     * Assert that {@code superType.isAssignableFrom(subType)} is {@code true}.
-     * <pre class="code">Assert.isAssignable(Number.class, myClass);</pre>
+     * <p>The message of the exception is &quot;The validated object can not be converted to the&quot;
+     * followed by the name of the class and &quot;class&quot;</p>
      *
-     * @param superType the super type to check against
-     * @param subType   the sub type to check
-     * @param message   a message which will be prepended to the message produced by
-     *                  the function itself, and which may be used to provide context. It should
-     *                  normally end in ":" or "." so that the generated message looks OK when
-     *                  appended to it.
-     * @throws IllegalArgumentException if the classes are not assignable
+     * @param superType the class the class must be validated against, not null
+     * @param type      the class to check, not null
+     * @param message   the {@link String#format(String, Object...)} exception message if invalid, not null
+     * @param values    the optional values for the formatted exception message, null array not recommended
+     * @throws IllegalArgumentException if argument can not be converted to the specified class
+     * @see #isAssignableFrom(Class, Class)
      */
-    public static void isAssignable(Class<?> superType, Class<?> subType, String message) {
-        notNull(superType, "Type to check against must not be null");
-        if (subType == null || !superType.isAssignableFrom(subType)) {
-            throw new IllegalArgumentException((StringUtils.isNotEmpty(message) ? message + " " : "") +
-                subType + " is not assignable to " + superType);
+    public static void isAssignableFrom(final Class<?> superType, final Class<?> type, final String message, final Object... values) {
+        if (!superType.isAssignableFrom(type)) {
+            throw new IllegalArgumentException(String.format(message, values));
         }
     }
-
-    /**
-     * Assert a boolean expression, throwing {@code IllegalStateException}
-     * if the test result is {@code false}. Call isTrue if you wish to
-     * throw IllegalArgumentException on an assertion failure.
-     * <pre class="code">Assert.state(id == null, "The id property must not already be initialized");</pre>
-     *
-     * @param expression a boolean expression
-     * @param message    the exception message to use if the assertion fails
-     * @throws IllegalStateException if expression is {@code false}
-     */
-    public static void state(boolean expression, String message) {
-        if (!expression) {
-            throw new IllegalStateException(message);
-        }
-    }
-
-    /**
-     * Assert a boolean expression, throwing {@link IllegalStateException}
-     * if the test result is {@code false}.
-     * <p>Call {@link #isTrue(boolean)} if you wish to
-     * throw {@link IllegalArgumentException} on an assertion failure.
-     * <pre class="code">Assert.state(id == null);</pre>
-     *
-     * @param expression a boolean expression
-     * @throws IllegalStateException if the supplied expression is {@code false}
-     */
-    public static void state(boolean expression) {
-        state(expression, "[Assertion failed] - this state invariant must be true");
-    }
-
 }
+

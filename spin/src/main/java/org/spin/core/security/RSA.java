@@ -67,29 +67,25 @@ public class RSA {
 
     public static PrivateKey getRSAPrivateKey(String key) throws InvalidKeySpecException {
         KeyFactory keyFactory = getRSAKeyFactory();
-        Assert.notNull(keyFactory);
-        return keyFactory.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(key)));
+        return Assert.notNull(keyFactory).generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(key)));
     }
 
     public static PublicKey getRSAPublicKey(String key) throws InvalidKeySpecException {
         KeyFactory keyFactory = getRSAKeyFactory();
-        Assert.notNull(keyFactory);
-        return keyFactory.generatePublic(new X509EncodedKeySpec(Base64.decode(key)));
+        return Assert.notNull(keyFactory).generatePublic(new X509EncodedKeySpec(Base64.decode(key)));
     }
 
     public static PublicKey generateRSAPublicKey(byte[] modulus, byte[] publicExponent) throws InvalidKeySpecException {
         KeyFactory keyFactory = getRSAKeyFactory();
-        Assert.notNull(keyFactory);
         RSAPublicKeySpec pubKeySpec = new RSAPublicKeySpec(new BigInteger(modulus), new BigInteger(publicExponent));
-        return keyFactory.generatePublic(pubKeySpec);
+        return Assert.notNull(keyFactory).generatePublic(pubKeySpec);
     }
 
     public static PrivateKey generateRSAPrivateKey(byte[] modulus, byte[] privateExponent) throws
         InvalidKeySpecException {
         KeyFactory keyFactory = getRSAKeyFactory();
-        Assert.notNull(keyFactory);
         RSAPrivateKeySpec priKeySpec = new RSAPrivateKeySpec(new BigInteger(modulus), new BigInteger(privateExponent));
-        return keyFactory.generatePrivate(priKeySpec);
+        return Assert.notNull(keyFactory).generatePrivate(priKeySpec);
     }
 
     public static byte[] encrypt(PublicKey pk, byte[] data) throws NoSuchPaddingException, InvalidKeyException,

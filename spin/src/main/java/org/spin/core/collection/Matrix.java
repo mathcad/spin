@@ -153,16 +153,13 @@ public class Matrix<T> implements RowUpdateListener {
     @SafeVarargs
     public final Matrix<T> update(String columnHeader, T key, T... values) {
         Integer column = matrixHeader.get(columnHeader);
-        Assert.notNull(column, "指定的列名不存在");
-        return update(column, key, values);
+        return update(Assert.notNull(column, "指定的列名不存在"), key, values);
     }
 
     public final Matrix<T> update(String columnHeader, T key, String updateColumnHeader, T value) {
         Integer column = matrixHeader.get(columnHeader);
         Integer updateColumn = matrixHeader.get(updateColumnHeader);
-        Assert.notNull(column, "指定的列名不存在");
-        Assert.notNull(updateColumn, "指定的列名不存在");
-        return update(column, key, updateColumn, value);
+        return update(Assert.notNull(column, "指定的列名不存在"), key, Assert.notNull(updateColumn, "指定的列名不存在"), value);
     }
 
     /**
@@ -185,14 +182,12 @@ public class Matrix<T> implements RowUpdateListener {
      */
     public ArrayRow<T> delete(String columnHeader, T key) {
         Integer column = matrixHeader.get(columnHeader);
-        Assert.notNull(column, "指定的列名不存在");
-        return delete(column, key);
+        return delete(Assert.notNull(column, "指定的列名不存在"), key);
     }
 
     public final Matrix<T> setHeader(int column, String columnHeader) {
         rangeCheck(column);
-        Assert.hasText(columnHeader, "列名不能为空");
-        matrixHeader.put(columnHeader, column);
+        matrixHeader.put(Assert.hasText(columnHeader, "列名不能为空"), column);
         return this;
     }
 
@@ -204,8 +199,7 @@ public class Matrix<T> implements RowUpdateListener {
 
     public final Matrix<T> createIndex(String columnHeader) {
         Integer column = matrixHeader.get(columnHeader);
-        Assert.notNull(column, "指定的列名不存在");
-        return createIndex(column);
+        return createIndex(Assert.notNull(column, "指定的列名不存在"));
     }
 
     @Override

@@ -14,5 +14,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface UserEnum {
+
+    /**
+     * 枚举标注名称
+     */
     String value();
 }

@@ -5,7 +5,8 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.spin.data.core.IEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.throwable.SQLException;
 import org.spin.core.throwable.SimplifiedException;
@@ -13,8 +14,7 @@ import org.spin.core.util.DateUtils;
 import org.spin.core.util.EnumUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.spin.data.core.IEntity;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.Entity;
@@ -190,8 +190,7 @@ public class QueryParamParser {
                 v = DateUtils.toDate(val);
             } else if (fieldType.equals(Timestamp.class)) {
                 Date tmp = DateUtils.toDate(val);
-                Assert.notNull(tmp, "时间格式不正确");
-                v = new Timestamp(tmp.getTime());
+                v = new Timestamp(Assert.notNull(tmp, "时间格式不正确").getTime());
             } else if (fieldType.isEnum()) {
                 //noinspection unchecked
                 v = EnumUtils.getEnum((Class<Enum>) fieldType, Integer.valueOf(val));

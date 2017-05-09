@@ -16,8 +16,8 @@
 
 package org.spin.core.util;
 
-import org.spin.core.collection.MultiValueMap;
 import org.spin.core.Assert;
+import org.spin.core.collection.MultiValueMap;
 
 import java.io.Serializable;
 import java.util.*;

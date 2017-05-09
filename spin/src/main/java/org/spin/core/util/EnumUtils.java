@@ -3,7 +3,7 @@ package org.spin.core.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.annotation.UserEnum;
-import org.spin.core.Validate;
+import org.spin.core.Assert;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Field;
@@ -88,7 +88,7 @@ public abstract class EnumUtils {
     }
 
     /**
-     * Validate that {@code enumClass} is compatible with representation in a {@code long}.
+     * Assert that {@code enumClass} is compatible with representation in a {@code long}.
      *
      * @param <E>       the type of the enumeration
      * @param enumClass to check
@@ -99,14 +99,14 @@ public abstract class EnumUtils {
      */
     private static <E extends Enum<E>> Class<E> checkBitVectorable(final Class<E> enumClass) {
         final E[] constants = asEnum(enumClass).getEnumConstants();
-        Validate.isTrue(constants.length <= Long.SIZE, CANNOT_STORE_S_S_VALUES_IN_S_BITS,
+        Assert.isTrue(constants.length <= Long.SIZE, CANNOT_STORE_S_S_VALUES_IN_S_BITS,
             constants.length, enumClass.getSimpleName(), Long.SIZE);
 
         return enumClass;
     }
 
     /**
-     * Validate {@code enumClass}.
+     * Assert {@code enumClass}.
      *
      * @param <E>       the type of the enumeration
      * @param enumClass to check
@@ -116,8 +116,8 @@ public abstract class EnumUtils {
      * @since 3.2
      */
     private static <E extends Enum<E>> Class<E> asEnum(final Class<E> enumClass) {
-        Validate.notNull(enumClass, ENUM_CLASS_MUST_BE_DEFINED);
-        Validate.isTrue(enumClass.isEnum(), S_DOES_NOT_SEEM_TO_BE_AN_ENUM_TYPE, enumClass);
+        Assert.notNull(enumClass, ENUM_CLASS_MUST_BE_DEFINED);
+        Assert.isTrue(enumClass.isEnum(), S_DOES_NOT_SEEM_TO_BE_AN_ENUM_TYPE, enumClass);
         return enumClass;
     }
 

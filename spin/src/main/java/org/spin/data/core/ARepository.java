@@ -179,9 +179,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return the saved entity (has id)
      */
     public T save(final T entity, boolean saveWithPk) {
-        Assert.notNull(entity, "The entity to save must be a NON-NULL object");
         if (entity instanceof AbstractEntity) {
-            AbstractEntity aEn = (AbstractEntity) entity;
+            AbstractEntity aEn = (AbstractEntity) Assert.notNull(entity, "The entity to save MUST NOT be NULL");
             SessionUser user = SessionUtils.getCurrentUser();
             aEn.setUpdateTime(LocalDateTime.now());
             aEn.setUpdateUserId(user == null ? null : user.getId());
@@ -382,8 +381,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @throws IllegalArgumentException in case the given entity is {@literal null}.
      */
     public void delete(T entity) {
-        Assert.notNull(entity, "The entity to be deleted is null");
-        getSession().delete(entity);
+        getSession().delete(Assert.notNull(entity, "The entity to be deleted is null"));
     }
 
     /**
@@ -392,10 +390,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @throws IllegalArgumentException in case the given {@code id} is {@literal null}
      */
     public void delete(PK k) {
-        Assert.notNull(k, ID_MUST_NOT_BE_NULL);
-        T entity = get(k);
-        Assert.notNull(entity, "Entity not found, or was deleted: [" + this.entityClazz.getSimpleName() + "|" + k + "]");
-        getSession().delete(entity);
+        T entity = get(Assert.notNull(k, ID_MUST_NOT_BE_NULL));
+        getSession().delete(Assert.notNull(entity, "Entity not found, or was deleted: [" + this.entityClazz.getSimpleName() + "|" + k + "]"));
         getSession().flush();
     }
 

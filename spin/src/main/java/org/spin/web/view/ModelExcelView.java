@@ -9,8 +9,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.core.Assert;
 import org.spin.core.FileType;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.data.util.EntityUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.data.util.EntityUtils;
 import org.springframework.web.servlet.view.AbstractView;
 
 import javax.servlet.ServletOutputStream;
@@ -48,8 +48,7 @@ public class ModelExcelView extends AbstractView {
     private Map<String, String> dataTypeFormat = null;
 
     public ModelExcelView(FileType.Excel fileType, ExcelGrid grid, List<?> data) {
-        Assert.notNull(fileType, "Excel文件类型不能为空");
-        this.fileType = fileType;
+        this.fileType = Assert.notNull(fileType, "Excel文件类型不能为空");
         setContentType(this.fileType.getContentType());
         this.grid = grid;
         this.data = data;
