@@ -173,18 +173,18 @@ public class WXBizMsgCrypt {
      * @param replyMsg  公众平台待回复用户的消息，xml格式的字符串
      * @param timeStamp 时间戳，可以自己生成，也可以用URL参数的timestamp
      * @param nonce     随机串，可以自己生成，也可以用URL参数的nonce
-     * @param token     微信token
+     * @param configInfo   微信配置信息
      * @return 加密后的可以直接回复用户的密文，包括msg_signature, timestamp, nonce, encrypt的xml格式的字符串
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
      */
-    public static String encryptMsg(String replyMsg, String timeStamp, String nonce, String token, WxConfig.ConfigInfo configInfo) throws AesException {
+    public static String encryptMsg(String replyMsg, String timeStamp, String nonce, WxConfig.ConfigInfo configInfo) throws AesException {
         // 加密
         String encrypt = encrypt(RandomStringUtils.randomAlphabetic(16), replyMsg, configInfo.getAppId(), configInfo.getEncodingAesKey());
         // 生成安全签名
         if ("".equals(timeStamp)) {
             timeStamp = Long.toString(System.currentTimeMillis());
         }
-        String signature = WxHelper.sha1(token, timeStamp, nonce, encrypt);
+        String signature = WxHelper.sha1(configInfo.getToken(), timeStamp, nonce, encrypt);
 
         // System.out.println("发送给平台的签名是: " + signature[1].toString());
         // 生成发送的xml
@@ -203,13 +203,13 @@ public class WXBizMsgCrypt {
      * @param timeStamp    时间戳，对应URL参数的timestamp
      * @param nonce        随机串，对应URL参数的nonce
      * @param postData     密文，对应POST请求的数据
-     * @param token        微信token
+     * @param configInfo   微信配置信息
      * @return 解密后的原文
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
      */
-    public static String decryptMsg(String msgSignature, String timeStamp, String nonce, String postData, String token, WxConfig.ConfigInfo configInfo) throws AesException {
+    public static String decryptMsg(String msgSignature, String timeStamp, String nonce, String postData, WxConfig.ConfigInfo configInfo) throws AesException {
         Object[] encrypt = XMLParse.extract(postData);
-        if (!WxHelper.verifySign(msgSignature, token, timeStamp, nonce)) {
+        if (!WxHelper.verifySign(msgSignature, configInfo.getToken(), timeStamp, nonce)) {
             throw new AesException(AesException.ValidateSignatureError);
         }
         return decrypt(encrypt[1].toString(), configInfo.getAppId(), configInfo.getEncodingAesKey());

@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  * </ul>
  * <p>线程安全</p>
  */
-public class Assert {
+public abstract class Assert {
 
     private static final String DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE = "[Assertion failed] - The value %s is not in the specified exclusive range of %s to %s";
     private static final String DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE = "[Assertion failed] - The value %s is not in the specified inclusive range of %s to %s";
@@ -37,13 +37,6 @@ public class Assert {
     private static final String DEFAULT_VALID_STATE_EX_MESSAGE = "[Assertion failed] - The validated state must be true";
     private static final String DEFAULT_IS_ASSIGNABLE_EX_MESSAGE = "[Assertion failed] - Cannot assign a %s to a %s";
     private static final String DEFAULT_IS_INSTANCE_OF_EX_MESSAGE = "[Assertion failed] - Expected type: %s, actual: %s";
-
-    /**
-     * Constructor. This class should not normally be instantiated.
-     */
-    public Assert() {
-        super();
-    }
 
     // isTrue
     //---------------------------------------------------------------------------------

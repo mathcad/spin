@@ -42,6 +42,8 @@ public class CriteriaBuilder {
     private Map<String, String> aliasMap = new HashMap<>();
     private PageRequest pageRequest;
 
+    private volatile boolean projected = false;
+
     private CriteriaBuilder() {
     }
 
@@ -54,6 +56,7 @@ public class CriteriaBuilder {
     public static CriteriaBuilder forClass(Class<? extends IEntity> enCls) {
         CriteriaBuilder instance = new CriteriaBuilder();
         instance.enCls = enCls;
+        instance.projected = false;
         instance.deCriteria = DetachedCriteria.forClass(enCls);
         return instance;
     }
@@ -78,6 +81,7 @@ public class CriteriaBuilder {
      */
     public CriteriaBuilder addFields(String... fields) {
         Arrays.stream(fields).filter(StringUtils::isNotEmpty).forEach(this.fields::add);
+        projected = false;
         return this;
     }
 
@@ -90,6 +94,7 @@ public class CriteriaBuilder {
      */
     public CriteriaBuilder createAlias(String field, String alias) {
         aliasMap.put(field, alias);
+        projected = false;
         return this;
     }
 
@@ -109,6 +114,7 @@ public class CriteriaBuilder {
                 i += 2;
             }
         }
+        projected = false;
         return this;
     }
 
@@ -167,8 +173,17 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder eq(String prop, Object value) {
-        this.addCriterion(Restrictions.eq(prop, value));
-        return this;
+        return addCriterion(Restrictions.eq(prop, value));
+    }
+
+    /**
+     * 快速id equal条件
+     *
+     * @param value id
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder idEq(Object value) {
+        return addCriterion(Restrictions.idEq(value));
     }
 
     /**
@@ -179,8 +194,27 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder notEq(String prop, Object value) {
-        this.addCriterion(Restrictions.not(Restrictions.eq(prop, value)));
-        return this;
+        return addCriterion(Restrictions.not(Restrictions.eq(prop, value)));
+    }
+
+    /**
+     * 快速is null条件
+     *
+     * @param prop 属性名
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder isNull(String prop) {
+        return addCriterion(Restrictions.isNull(prop));
+    }
+
+    /**
+     * 快速not null条件
+     *
+     * @param prop 属性名
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder notNull(String prop) {
+        return addCriterion(Restrictions.isNotNull(prop));
     }
 
     /**
@@ -191,8 +225,7 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder startWith(String prop, String value) {
-        this.addCriterion(Restrictions.like(prop, value, MatchMode.START));
-        return this;
+        return addCriterion(Restrictions.like(prop, value, MatchMode.START));
     }
 
     /**
@@ -203,8 +236,7 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder endWith(String prop, String value) {
-        this.addCriterion(Restrictions.like(prop, value, MatchMode.END));
-        return this;
+        return addCriterion(Restrictions.like(prop, value, MatchMode.END));
     }
 
     /**
@@ -215,8 +247,7 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder like(String prop, String value) {
-        this.addCriterion(Restrictions.like(prop, value, MatchMode.ANYWHERE));
-        return this;
+        return addCriterion(Restrictions.like(prop, value, MatchMode.ANYWHERE));
     }
 
     /**
@@ -227,8 +258,7 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder gt(String prop, Object value) {
-        this.addCriterion(Restrictions.gt(prop, value));
-        return this;
+        return addCriterion(Restrictions.gt(prop, value));
     }
 
     /**
@@ -239,8 +269,7 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder ge(String prop, Object value) {
-        this.addCriterion(Restrictions.ge(prop, value));
-        return this;
+        return addCriterion(Restrictions.ge(prop, value));
     }
 
     /**
@@ -251,8 +280,7 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder lt(String prop, Object value) {
-        this.addCriterion(Restrictions.lt(prop, value));
-        return this;
+        return addCriterion(Restrictions.lt(prop, value));
     }
 
     /**
@@ -263,8 +291,7 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder le(String prop, Object value) {
-        this.addCriterion(Restrictions.le(prop, value));
-        return this;
+        return addCriterion(Restrictions.le(prop, value));
     }
 
     /**
@@ -275,8 +302,7 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder in(String prop, Collection<?> value) {
-        this.addCriterion(Restrictions.in(prop, value));
-        return this;
+        return addCriterion(Restrictions.in(prop, value));
     }
 
     /**
@@ -287,8 +313,17 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder in(String prop, Object... value) {
-        this.addCriterion(Restrictions.in(prop, value));
-        return this;
+        return addCriterion(Restrictions.in(prop, value));
+    }
+
+    /**
+     * 快速sql条件
+     *
+     * @param sql sql条件
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder sqlRestriction(String sql) {
+        return addCriterion(Restrictions.sqlRestriction(sql));
     }
 
     /**
@@ -298,8 +333,8 @@ public class CriteriaBuilder {
      * @return {@link DetachedCriteria}
      */
     public DetachedCriteria buildDeCriteria(boolean processProjection) {
-        if (processProjection)
-            this.processProjection();
+        if (processProjection && !projected)
+            processProjection();
         return deCriteria;
     }
 
@@ -312,6 +347,7 @@ public class CriteriaBuilder {
     }
 
     public void setFields(Set<String> fields) {
+        projected = false;
         this.fields = fields;
     }
 
@@ -320,6 +356,7 @@ public class CriteriaBuilder {
     }
 
     public void setAliasMap(Map<String, String> aliasMap) {
+        projected = false;
         this.aliasMap = aliasMap;
     }
 
@@ -387,5 +424,6 @@ public class CriteriaBuilder {
             projectionList.add(Property.forName(fetchF), fetchF);
         }
         deCriteria.setProjection(projectionList);
+        projected = true;
     }
 }
