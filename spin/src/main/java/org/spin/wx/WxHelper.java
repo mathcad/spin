@@ -67,7 +67,7 @@ public class WxHelper {
      * @param code 用户同意授权后，带的code参数
      */
     public static WxUserInfo getUserInfo(String code) {
-        AccessToken access_token = AccessToken.getDefaultInstanceWithCode(code);
+        AccessToken access_token = AccessToken.getDefaultOAuthInstance(code);
         return getUserInfo(access_token.getToken(), access_token.getOpenId());
     }
 

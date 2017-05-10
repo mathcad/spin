@@ -8,7 +8,6 @@ import org.spin.core.util.HttpUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
 
-import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,11 +25,15 @@ public class AccessToken {
     private static final TypeIdentifier<Map<String, String>> type = new TypeIdentifier<Map<String, String>>() {
     };
     private static Map<String, AccessToken> instances;
+    private static Map<String, AccessToken> instancesWithCode;
     private String token;
     private String refreshToken;
     private String openId;
     private int expiresIn;
     private long expiredSince;
+
+    private static final Object lock = new Object();
+    private static final Object lockWithCode = new Object();
 
     private AccessToken() {
     }
@@ -43,10 +46,12 @@ public class AccessToken {
     }
 
     /**
-     * 获取AccessToken对象，根据生命周期对token自管理
+     * 获取默认的网页授权AccessToken对象，根据生命周期对token自管理
+     *
+     * @param code 微信code
      */
-    public static AccessToken getDefaultInstanceWithCode(String code) {
-        return getInstanceWithCode("default", code);
+    public static AccessToken getDefaultOAuthInstance(String... code) {
+        return getOAuthInstance("default", code);
     }
 
     /**
@@ -54,50 +59,64 @@ public class AccessToken {
      */
     public static AccessToken getInstance(String name) {
         WxConfig.ConfigInfo info = WxConfig.getConfig(name);
-        return getInstance(name, info.getAppId(), info.getAppSecret(), null);
+        return getInstance(name, info.getAppId(), info.getAppSecret(), null, false);
     }
 
     /**
-     * 获取AccessToken对象，根据生命周期对token自管理
+     * 获取网页授权AccessToken对象，根据生命周期对token自管理
      */
-    public static AccessToken getInstanceWithCode(String name, String code) {
+    public static AccessToken getOAuthInstance(String name, String... code) {
         WxConfig.ConfigInfo info = WxConfig.getConfig(name);
-        return getInstance(name, info.getAppId(), info.getAppSecret(), code);
+        String c = (null == code || code.length == 0) ? "" : code[0];
+        return getInstance(name, info.getAppId(), info.getAppSecret(), c, true);
     }
 
     /**
      * 获取AccessToken的对象，根据生命周期对token自管理
      */
-    public static AccessToken getInstance(String name, String appId, String appSecret, String code) {
+    public static AccessToken getInstance(String name, String appId, String appSecret, String code, boolean isOAuth) {
         logger.info("getInstance({}, {}, {}, {})", name, appId, appSecret, code);
 
         if (null == instances) {
             instances = new ConcurrentHashMap<>();
         }
-        // 获取网页授权access_token
-        if (StringUtils.isNotEmpty(code)) {
-            try {
-                String result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/access_token?appid={}&secret={}&code={}&grant_type=authorization_code", appId, appSecret, code);
-                return parseToken(result);
-            } catch (URISyntaxException e) {
-                throw new SimplifiedException("获取access_token失败", e);
-            }
+        if (null == instancesWithCode) {
+            instancesWithCode = new ConcurrentHashMap<>();
         }
-        // 获取普通access_token
-        AccessToken token = instances.get(name);
-        if (null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
-            synchronized (AccessToken.class) {
-                String result;
-                try {
-                    if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L))
-                        result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/refresh_token?appid={}&grant_type=refresh_token&refresh_token={}", appId, token.getRefreshToken());
-                    else
-                        result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}", appId, appSecret);
-                } catch (Throwable e) {
-                    throw new SimplifiedException("获取access_token失败", e);
+
+        AccessToken token;
+        if (isOAuth) {
+            // 获取网页授权access_token
+            token = instancesWithCode.get(name);
+            if (null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
+                synchronized (lockWithCode) {
+                    String result;
+                    try {
+                        if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L))
+                            result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/refresh_token?appid={}&grant_type=refresh_token&refresh_token={}", appId, token.getRefreshToken());
+                        else
+                            result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/access_token?appid={}&secret={}&code={}&grant_type=authorization_code", appId, appSecret, code);
+                    } catch (Throwable e) {
+                        throw new SimplifiedException("获取网页授权access_token失败", e);
+                    }
+                    instancesWithCode.put(name, parseToken(result));
+                    token = instancesWithCode.get(name);
                 }
-                instances.put(name, parseToken(result));
-                return instances.get(name);
+            }
+        } else {
+            // 获取普通access_token
+            token = instances.get(name);
+            if (null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
+                synchronized (lock) {
+                    String result;
+                    try {
+                        result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}", appId, appSecret);
+                    } catch (Throwable e) {
+                        throw new SimplifiedException("获取access_token失败", e);
+                    }
+                    instances.put(name, parseToken(result));
+                    token = instances.get(name);
+                }
             }
         }
         return token;
