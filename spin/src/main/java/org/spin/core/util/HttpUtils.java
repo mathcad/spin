@@ -64,7 +64,7 @@ public abstract class HttpUtils {
         return httpGetRequest(getUriFromString(url, params), null);
     }
 
-    public static String httpGetRequest(String url, String headerKey, String headerVal) throws URISyntaxException {
+    public static String httpGetRequestWithHead(String url, String headerKey, String headerVal) throws URISyntaxException {
         Map<String, String> header = new HashMap<>();
         header.put(headerKey, headerVal);
         return httpGetRequest(getUriFromString(url), header);
