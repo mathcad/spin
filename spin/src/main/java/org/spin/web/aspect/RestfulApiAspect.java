@@ -7,17 +7,16 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.web.annotation.Needed;
-import org.spin.web.annotation.RestfulApi;
-import org.spin.core.SpinContext;
 import org.spin.core.ErrorCode;
 import org.spin.core.SessionUser;
+import org.spin.core.SpinContext;
 import org.spin.core.auth.Authenticator;
 import org.spin.core.auth.SecretManager;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.JsonUtils;
 import org.spin.enhance.util.SessionUtils;
 import org.spin.web.RestfulResponse;
+import org.spin.web.annotation.Needed;
+import org.spin.web.annotation.RestfulApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
@@ -86,9 +85,9 @@ public class RestfulApiAspect implements Ordered {
 
             if (SpinContext.devMode && logger.isTraceEnabled()) {
                 Parameter[] parameters = apiMethod.getParameters();
-                logger.trace("Invoke method: {0}", apiMethod.getName());
+                logger.trace("Invoke method: {}", apiMethod.getName());
                 for (int idx = 0; idx != parameters.length; ++idx) {
-                    logger.trace("Parameter info: index[{0}] name[{1}], value[{2}]", idx, parameters[idx].getName(), JsonUtils.toJson(args[idx]));
+                    logger.trace("Parameter info: index[{}] name[{}], value[{}]", idx, parameters[idx].getName(), args[idx]);
                 }
             }
 
