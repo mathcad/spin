@@ -1,6 +1,5 @@
 package org.spin.web.annotation;
 
-import org.spin.core.annotation.Cacheable;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -12,7 +11,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 定义resetful接口，组合了 {@link RequestMapping}，{@link ResponseBody}与{@link Cacheable}，拦截并验证身份
+ * 定义resetful接口，组合了 {@link RequestMapping}与{@link ResponseBody}，拦截并验证身份
  * <p>该注解修饰的方法，返回类型必须为RestfulResponse</p>
  * <p>Created by xuweinan on 2016/10/2.</p>
  *
@@ -20,7 +19,6 @@ import java.lang.annotation.Target;
  */
 @RequestMapping
 @ResponseBody
-@Cacheable
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RestfulApi {
@@ -80,24 +78,4 @@ public @interface RestfulApi {
 
     @AliasFor(annotation = RequestMapping.class, attribute = "produces")
     String[] produces() default {};
-
-    /**
-     * 是否启用缓存
-     */
-    @AliasFor(annotation = Cacheable.class, attribute = "cacheable")
-    boolean cacheable() default true;
-
-    /**
-     * 是否启用严格模式
-     * <p>参数的变化会视为不同的调用，使用不同的参数调用方法，会单独为其缓存结果</p>
-     * <p>对参数频繁变化的方法，启用严格模式缓存会占用大量缓存空间，如果是内存缓存，甚至会导致内存耗尽</p>
-     */
-    @AliasFor(annotation = Cacheable.class, attribute = "strict")
-    boolean strict() default false;
-
-    /**
-     * 缓存的Key
-     */
-    @AliasFor(annotation = Cacheable.class, attribute = "key")
-    String key() default "";
 }
