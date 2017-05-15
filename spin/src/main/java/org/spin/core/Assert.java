@@ -748,7 +748,6 @@ public abstract class Assert {
      * @param end   the inclusive end value, not null
      * @param value the object to validate, not null
      * @throws IllegalArgumentException if the value falls outside the boundaries
-     * @see #inclusiveBetween(Object, Object, Comparable, String, Object...)
      * @since 3.0
      */
     public static <T extends Comparable<T>> T inclusiveBetween(final T start, final T end, final T value) {
@@ -772,7 +771,6 @@ public abstract class Assert {
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
      * @throws IllegalArgumentException if the value falls outside the boundaries
-     * @see #inclusiveBetween(Object, Object, Comparable)
      * @since 3.0
      */
     public static <T extends Comparable<T>> T inclusiveBetween(final T start, final T end, final T value, final String message, final Object... values) {
@@ -876,7 +874,6 @@ public abstract class Assert {
      * @param end   the exclusive end value, not null
      * @param value the object to validate, not null
      * @throws IllegalArgumentException if the value falls outside the boundaries
-     * @see #exclusiveBetween(Object, Object, Comparable, String, Object...)
      * @since 3.0
      */
     public static <T extends Comparable<T>> T exclusiveBetween(final T start, final T end, final T value) {
@@ -900,7 +897,6 @@ public abstract class Assert {
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
      * @throws IllegalArgumentException if the value falls outside the boundaries
-     * @see #exclusiveBetween(Object, Object, Comparable)
      * @since 3.0
      */
     public static <T extends Comparable<T>> T exclusiveBetween(final T start, final T end, final T value, final String message, final Object... values) {
