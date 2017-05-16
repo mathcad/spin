@@ -4,6 +4,7 @@ import com.consultant.domain.sys.UserCons;
 import com.consultant.repository.UserConsRepository;
 import org.spin.data.query.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 /**
@@ -17,6 +18,7 @@ public class UserConsService {
     @Autowired
     private UserConsRepository userConsDao;
 
+    @Cacheable(value = "Medium", sync = true)
     public Object test() {
         CriteriaBuilder cb = CriteriaBuilder.forClass(UserCons.class);
         cb.addFields("cons.user.createBy.userName");

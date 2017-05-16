@@ -7,8 +7,11 @@ import org.hibernate.collection.internal.PersistentBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.SpinContext;
+import org.spin.core.throwable.CloneFailedException;
 import org.spin.core.util.ReflectionUtils;
+import org.spin.data.core.IEntity;
 
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -22,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +35,7 @@ import java.util.stream.Collectors;
 /**
  * 实体工具类
  *
- * @author zhou
+ * @author xuweinan
  */
 public abstract class EntityUtils {
     private static final Logger logger = LoggerFactory.getLogger(EntityUtils.class);
@@ -117,7 +121,7 @@ public abstract class EntityUtils {
      * copy属性到另一个字段
      */
     public static void copyTo(Object src, Object dest, String... fields) {
-        if (src == null || dest == null)
+        if (null == src || null == dest || null == fields)
             return;
         for (String field : fields) {
             Field f1 = ReflectionUtils.findField(src.getClass(), field);
@@ -130,6 +134,45 @@ public abstract class EntityUtils {
             ReflectionUtils.makeAccessible(f2);
             Object o1 = ReflectionUtils.getField(f1, src);
             ReflectionUtils.setField(f2, dest, o1);
+        }
+    }
+
+    /**
+     * copy属性到另一个字段
+     */
+    public static void copyTo(Object src, Object dest, Collection<String> fields) {
+        if (null == src || null == dest || null == fields)
+            return;
+        for (String field : fields) {
+            Field f1 = ReflectionUtils.findField(src.getClass(), field);
+            Field f2 = ReflectionUtils.findField(dest.getClass(), field);
+            if (f1 == null)
+                throw new RuntimeException(field + "不存在于" + src.getClass().getSimpleName());
+            if (f2 == null)
+                throw new RuntimeException(field + "不存在于" + dest.getClass().getSimpleName());
+            ReflectionUtils.makeAccessible(f1);
+            ReflectionUtils.makeAccessible(f2);
+            Object o1 = ReflectionUtils.getField(f1, src);
+            ReflectionUtils.setField(f2, dest, o1);
+        }
+    }
+
+    /**
+     * 复制实体
+     *
+     * @param src 源对象
+     * @param <T> 实体类型
+     */
+    public static <T extends IEntity> T copy(T src) {
+        try {
+            @SuppressWarnings("unchecked")
+            Class<T> clazz = (Class<T>) src.getClass();
+            T target = clazz.newInstance();
+            Set<String> fields = Arrays.stream(clazz.getFields()).map(Field::getName).collect(Collectors.toSet());
+            copyTo(src, target, fields);
+            return target;
+        } catch (Exception e) {
+            throw new CloneFailedException("对象复制失败", e);
         }
     }
 
@@ -191,7 +234,8 @@ public abstract class EntityUtils {
                 || annotation instanceof ManyToOne
                 || annotation instanceof Temporal
                 || annotation instanceof Type
-                || annotation instanceof Version)
+                || annotation instanceof Version
+                || annotation instanceof Basic)
                 return true;
         }
         return false;

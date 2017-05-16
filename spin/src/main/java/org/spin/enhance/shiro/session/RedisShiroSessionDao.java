@@ -3,15 +3,14 @@ package org.spin.enhance.shiro.session;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
-import org.spin.data.cache.Cache;
-import org.spin.core.SessionUser;
-import org.spin.enhance.util.SessionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.SessionUser;
+import org.spin.data.cache.Cache;
+import org.spin.enhance.util.SessionUtils;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Set;
 
 /**
@@ -22,8 +21,6 @@ public class RedisShiroSessionDao extends AbstractSessionDAO {
     private String sessionPrefix = "session";
     private Cache<Session> cache;
     private SessionListener sessListener;
-
-    Date lastSyncTime = null;
 
     @Override
     public void update(Session session) throws UnknownSessionException {

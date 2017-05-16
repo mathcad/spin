@@ -26,7 +26,6 @@ import java.util.Map;
  * @see ClassUtils
  * @see CollectionUtils
  * @see StringUtils
- * @since 19.03.2004
  */
 public abstract class ObjectUtils {
 
@@ -78,20 +77,20 @@ public abstract class ObjectUtils {
     }
 
     /**
-     * Determine whether the given object is an array:
-     * either an Object array or a primitive array.
+     * 判断一个对象是否是数组类型
+     * <p>不关心元素类型，无论其是基本类型还是对象类型</p>
      *
-     * @param obj the object to check
+     * @param obj 待判断的对象
      */
     public static boolean isArray(Object obj) {
         return (obj != null && obj.getClass().isArray());
     }
 
     /**
-     * Determine whether the given array is empty:
-     * i.e. {@code null} or of zero length.
+     * 判断一个数组是否为空
+     * i.e. {@code null} 或者长度为0
      *
-     * @param array the array to check
+     * @param array 待判断的数组
      * @see #isEmpty(Object)
      */
     public static boolean isEmpty(Object[] array) {
@@ -99,25 +98,22 @@ public abstract class ObjectUtils {
     }
 
     /**
-     * Determine whether the given object is empty.
-     * <p>This method supports the following object types.
+     * 判断一个对象是否为“空”
+     * <p>支持以下参数类型</p>
      * <ul>
-     * <li>{@code Array}: considered empty if its length is zero</li>
-     * <li>{@link CharSequence}: considered empty if its length is zero</li>
-     * <li>{@link Collection}: delegates to {@link Collection#isEmpty()}</li>
-     * <li>{@link Map}: delegates to {@link Map#isEmpty()}</li>
+     * <li>{@code Array}: 为null或者长度为0</li>
+     * <li>{@link CharSequence}: 为null或者长度为0</li>
+     * <li>{@link Collection}: 与{@link Collection#isEmpty()}相同</li>
+     * <li>{@link Map}: 与{@link Map#isEmpty()}相同</li>
      * </ul>
-     * <p>If the given object is non-null and not one of the aforementioned
-     * supported types, this method returns {@code false}.
+     * <p>如果给定的对象不为null且不是上述几种类型中的一种，将返回{@code false}.
      *
-     * @param obj the object to check
-     * @return {@code true} if the object is {@code null} or <em>empty</em>
+     * @param obj 待检查的对象
+     * @return {@code true} 如果对象不为 {@code null} 或 <em>empty</em>
      * @see ObjectUtils#isEmpty(Object[])
      * @see CollectionUtils#isEmpty(Collection)
      * @see CollectionUtils#isEmpty(Map)
-     * @since 4.2
      */
-    @SuppressWarnings("rawtypes")
     public static boolean isEmpty(Object obj) {
         if (obj == null) {
             return true;
