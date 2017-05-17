@@ -1,6 +1,9 @@
-package org.spin.boot.configuration;
+package org.spin.boot.properties;
 
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import javax.annotation.PostConstruct;
 
 /**
  * 数据库配置
@@ -8,6 +11,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
  *
  * @author xuweinan
  */
+@ConfigurationProperties(prefix = "spin.data")
 public class DbConfigProperties {
     private String url;
     private String username;
@@ -23,12 +27,24 @@ public class DbConfigProperties {
     private String validationQuery = null;
     private String clientEncoding = "UTF-8";
 
+    private PhysicalNamingStrategy namingStrategyObj;
     private String namingStrategy;
-    private String[] packagesToScan;
+    private String[] packagesToScanArr;
+    private String packagesToScan;
     private String showSql = "false";
     private String formatSql = "false";
     private String dialect;
     private String hbm2ddl;
+
+    @PostConstruct
+    public void init() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        if (null != namingStrategy) {
+            namingStrategyObj = (PhysicalNamingStrategy) Class.forName(namingStrategy).newInstance();
+        }
+        if (null != packagesToScan) {
+            packagesToScanArr = packagesToScan.split(",");
+        }
+    }
 
     public String getUrl() {
         return url;
@@ -134,6 +150,10 @@ public class DbConfigProperties {
         this.clientEncoding = clientEncoding;
     }
 
+    public PhysicalNamingStrategy getNamingStrategyObj() {
+        return namingStrategyObj;
+    }
+
     public String getNamingStrategy() {
         return namingStrategy;
     }
@@ -142,11 +162,15 @@ public class DbConfigProperties {
         this.namingStrategy = namingStrategy;
     }
 
-    public String[] getPackagesToScan() {
+    public String[] getPackagesToScanArr() {
+        return packagesToScanArr;
+    }
+
+    public String getPackagesToScan() {
         return packagesToScan;
     }
 
-    public void setPackagesToScan(String... packagesToScan) {
+    public void setPackagesToScan(String packagesToScan) {
         this.packagesToScan = packagesToScan;
     }
 

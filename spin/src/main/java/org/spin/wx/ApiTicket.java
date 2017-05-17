@@ -1,12 +1,13 @@
 package org.spin.wx;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.HttpUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.spin.wx.wx.base.WxUrl;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -38,7 +39,7 @@ public class ApiTicket {
                 String token = AccessToken.getDefaultInstance().getToken();
                 String result;
                 try {
-                    result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token={}&type=jsapi", token);
+                    result = HttpUtils.httpGetRequest(WxUrl.ApiTicketUrl.getUrl(token));
                 } catch (Throwable e) {
                     throw new SimplifiedException("获取access_token失败", e);
                 }

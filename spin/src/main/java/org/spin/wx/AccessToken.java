@@ -7,6 +7,7 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.HttpUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.wx.wx.base.WxUrl;
 
 import java.util.Date;
 import java.util.Map;
@@ -93,9 +94,9 @@ public class AccessToken {
                     String result;
                     try {
                         if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L))
-                            result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/refresh_token?appid={}&grant_type=refresh_token&refresh_token={}", appId, token.getRefreshToken());
+                            result = HttpUtils.httpGetRequest(WxUrl.RefreshTokenUrl.getUrl(appId, token.getRefreshToken()));
                         else
-                            result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/oauth2/access_token?appid={}&secret={}&code={}&grant_type=authorization_code", appId, appSecret, code);
+                            result = HttpUtils.httpGetRequest(WxUrl.OAuthTokenUrl.getUrl(appId, appSecret, code));
                     } catch (Throwable e) {
                         throw new SimplifiedException("获取网页授权access_token失败", e);
                     }
@@ -110,7 +111,7 @@ public class AccessToken {
                 synchronized (lock) {
                     String result;
                     try {
-                        result = HttpUtils.httpGetRequest("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}", appId, appSecret);
+                        result = HttpUtils.httpGetRequest(WxUrl.AccessTokenUrl.getUrl(appId, appSecret));
                     } catch (Throwable e) {
                         throw new SimplifiedException("获取access_token失败", e);
                     }

@@ -2899,6 +2899,23 @@ public abstract class StringUtils {
         return rslt.replaceAll("\\$\\{.+}", "");
     }
 
+    /**
+     * 格式化String
+     *
+     * @param tplt   模板字符串，参数用{}表示，按顺序填充
+     * @param params 格式化参数数值
+     * @return 格式化后的字符串
+     */
+    public static String plainFormat(String tplt, Object... params) {
+        final StringBuilder u = new StringBuilder(tplt);
+        Optional.ofNullable(params).ifPresent(p -> Arrays.stream(p).forEach(c -> {
+            int b = u.indexOf("{}");
+            if (b > 0)
+                u.replace(b, b + 2, c.toString());
+        }));
+        return u.toString();
+    }
+
     //---------------------------------------------------------------------
     // Convenience methods for working with String arrays
     //---------------------------------------------------------------------

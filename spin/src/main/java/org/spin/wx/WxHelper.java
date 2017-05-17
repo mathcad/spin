@@ -2,12 +2,13 @@ package org.spin.wx;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.util.HexUtils;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.DigestUtils;
+import org.spin.core.util.HexUtils;
 import org.spin.core.util.HttpUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.RandomStringUtils;
+import org.spin.wx.wx.base.WxUrl;
 import org.spin.wx.wx.base.WxUserInfo;
 
 import java.util.ArrayList;
@@ -80,7 +81,7 @@ public class WxHelper {
     public static WxUserInfo getUserInfo(String accessToken, String openId) {
         String tmp;
         try {
-            tmp = HttpUtils.httpGetRequest("https://api.weixin.qq.com/sns/userinfo?access_token={}&openid={}&lang=zh_CN", accessToken, openId);
+            tmp = HttpUtils.httpGetRequest(WxUrl.UserInfoUrl.getUrl(accessToken, openId));
         } catch (Exception e) {
             throw new SimplifiedException("获取用户信息失败");
         }
