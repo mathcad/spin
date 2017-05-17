@@ -69,6 +69,9 @@ public abstract class JsonUtils {
     public static String toJson(Object target, Type targetType, boolean isSerializeNulls, Double version, String datePattern, boolean excludesFieldsWithoutExpose) {
         if (target == null)
             return EMPTY;
+        Class<?> clazz = target.getClass();
+        if (ClassUtils.wrapperToPrimitive(clazz) != null && ClassUtils.wrapperToPrimitive(clazz).isPrimitive() || target instanceof CharSequence)
+            return target.toString();
         GsonBuilder builder = baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern);
         if (isSerializeNulls)
             builder.serializeNulls();
@@ -109,6 +112,9 @@ public abstract class JsonUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target) {
+        Class<?> clazz = target.getClass();
+        if (ClassUtils.wrapperToPrimitive(clazz) != null && ClassUtils.wrapperToPrimitive(clazz).isPrimitive() || target instanceof CharSequence)
+            return target.toString();
         return defaultGson.toJson(target);
     }
 

@@ -9,7 +9,9 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -19,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -72,49 +73,72 @@ public abstract class HttpUtils {
 
     public static String httpGetRequest(URI uri, Map<String, String> headers) {
         String result;
-        CloseableHttpClient httpclient = null;
+        RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(1000).setConnectTimeout(1000).build();
+        HttpGet request = new HttpGet(uri);
+        request.setConfig(requestConfig);
+        if (null != headers) {
+            headers.forEach(request::setHeader);
+        }
         try {
-            httpclient = HttpClients.createDefault();
-            RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(1000).setConnectTimeout(1000).build();
-            HttpGet request = new HttpGet(uri);
-            request.setConfig(requestConfig);
-            if (null != headers) {
-                headers.forEach(request::setHeader);
-            }
-            CloseableHttpResponse response = httpclient.execute(request);
-            int code = response.getStatusLine().getStatusCode();
-            HttpEntity entity = response.getEntity();
-            result = EntityUtils.toString(entity, getContentCharSet(entity));
-            if (code != 200) {
-                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "错误状态码:" + code + result);
-            }
+            result = excuteRequest(request, entity -> {
+                try {
+                    return EntityUtils.toString(entity, getContentCharSet(entity));
+                } catch (IOException e) {
+                    throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "转换请求结果发生错误", e);
+                }
+            });
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到" + uri.toString() +
                 "，发生错误:" + e.getMessage());
-        } finally {
-            if (httpclient != null)
-                try {
-                    httpclient.close();
-                } catch (IOException e) {
-                    logger.error("Can not close current HttpClient:[{}]", uri.toString(), e);
-                }
         }
         return result;
     }
 
-    public static String httpPostRequest(String url, Map<String, String> params) throws URISyntaxException {
+    public static String httpPostRequest(String url, Map<String, String> params) {
         return httpPostRequest(url, null, params);
     }
 
-    public static String httpPostRequest(String url, Map<String, String> headers, Map<String, String> params) throws URISyntaxException {
+    /**
+     * 使用post方式请求，传输json数据
+     *
+     * @param url     请求url
+     * @param jsonObj json参数
+     * @return
+     */
+    public static String httpPostJsonRequest(String url, Object jsonObj) {
+        if (!url.startsWith("http"))
+            url = HTTP + url;
+        String result;
+        try {
+            RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(1000).setConnectTimeout(1000).build();
+            HttpPost request = new HttpPost(url);
+            StringEntity stringEntity = new StringEntity(JsonUtils.toJson(jsonObj));
+            stringEntity.setContentEncoding("UTF-8");
+            stringEntity.setContentType("application/json");
+            request.setConfig(requestConfig);
+            request.setEntity(stringEntity);
+            result = excuteRequest(request, entity -> {
+                try {
+                    return EntityUtils.toString(entity, getContentCharSet(entity));
+                } catch (IOException e) {
+                    throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "转换请求结果发生错误", e);
+                }
+            });
+        } catch (Exception e) {
+            logger.error("远程连接到" + url + "，发生错误:", e);
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e
+                .getMessage());
+        }
+        return result;
+    }
+
+    public static String httpPostRequest(String url, Map<String, String> headers, Map<String, String> params) {
         if (!url.startsWith("http"))
             url = HTTP + url;
         List<NameValuePair> nvps = params.entrySet().stream().map(p -> new BasicNameValuePair(p.getKey(), p.getValue
             ())).collect(Collectors.toList());
         String result;
-        CloseableHttpClient httpclient = null;
         try {
-            httpclient = HttpClients.createDefault();
             RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(1000).setConnectTimeout(1000).build();
             HttpPost request = new HttpPost(url);
             if (null != headers) {
@@ -122,60 +146,81 @@ public abstract class HttpUtils {
             }
             request.setConfig(requestConfig);
             request.setEntity(new UrlEncodedFormEntity(nvps));
-            CloseableHttpResponse response = httpclient.execute(request);
-            int code = response.getStatusLine().getStatusCode();
-            HttpEntity entity = response.getEntity();
-            result = EntityUtils.toString(entity, getContentCharSet(entity));
-            if (code != 200) {
-                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "错误状态码:" + code + result);
-            }
+            result = excuteRequest(request, entity -> {
+                try {
+                    return EntityUtils.toString(entity, getContentCharSet(entity));
+                } catch (IOException e) {
+                    throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "转换请求结果发生错误", e);
+                }
+            });
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e
                 .getMessage());
-        } finally {
-            if (httpclient != null)
-                try {
-                    httpclient.close();
-                } catch (IOException e) {
-                    logger.error("Can not close current HttpClient:[{}]", url, e);
-                }
         }
         return result;
     }
 
     public static Map<String, String> download(String url, String savePath) throws IOException {
-        Map<String, String> rs = new HashMap<>();
+        final Map<String, String> rs = new HashMap<>();
         URI uri;
         try {
             uri = getUriFromString(url);
         } catch (URISyntaxException e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "无法打开指定的URL连接", e);
         }
-        CloseableHttpClient httpclient;
-        httpclient = HttpClients.createDefault();
         RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(1000).setConnectTimeout(1000).build();
         HttpGet request = new HttpGet(uri);
         request.setConfig(requestConfig);
-        CloseableHttpResponse response = httpclient.execute(request);
-        int code = response.getStatusLine().getStatusCode();
-        if (code != 200) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "错误状态码:" + code);
-        }
-        HttpEntity entity = response.getEntity();
-        String saveFile = savePath;
-        String contentType = entity.getContentType().getValue();
-        String extention = contentType.substring(contentType.indexOf('/') + 1, contentType.length());
-        if (StringUtils.isNotBlank(savePath))
-            saveFile = savePath + "." + extention;
-        byte[] bytes = EntityUtils.toByteArray(entity);
-        try (FileOutputStream fos = new FileOutputStream(saveFile)) {
-            fos.write(bytes);
-        } catch (FileNotFoundException e) {
-            throw new SimplifiedException("无法保存文件:[" + saveFile + "]", e);
-        }
-        rs.put("extention", StringUtils.isBlank(extention) ? "" : "." + extention);
-        rs.put("bytes", Integer.toString(bytes.length));
+
+        excuteRequest(request, httpEntity -> {
+            String saveFile = savePath;
+            String contentType = httpEntity.getContentType().getValue();
+            String extention = contentType.substring(contentType.indexOf('/') + 1, contentType.length());
+            if (StringUtils.isNotBlank(savePath))
+                saveFile = savePath + "." + extention;
+            try (FileOutputStream fos = new FileOutputStream(saveFile)) {
+                byte[] bytes = EntityUtils.toByteArray(httpEntity);
+                fos.write(bytes);
+                rs.put("extention", StringUtils.isBlank(extention) ? "" : "." + extention);
+                rs.put("bytes", Integer.toString(bytes.length));
+            } catch (IOException e) {
+                throw new SimplifiedException("无法保存文件:[" + saveFile + "]", e);
+            }
+            return rs;
+        });
         return rs;
+    }
+
+
+    private static <T> T excuteRequest(HttpUriRequest request, EntityProcessor<T> processor) {
+        CloseableHttpClient httpclient = null;
+        HttpEntity entity = null;
+        T res = null;
+        try {
+            httpclient = HttpClients.createDefault();
+            CloseableHttpResponse response = httpclient.execute(request);
+            int code = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
+            if (code != 200) {
+                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "错误状态码:" + code);
+            }
+            res = processor.process(entity);
+        } catch (Exception e) {
+            logger.error("远程连接到" + request.getURI() + "，发生错误:", e);
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
+                + request.getURI()
+                + "，发生错误: "
+                + e.getMessage());
+        } finally {
+            if (httpclient != null) {
+                try {
+                    httpclient.close();
+                } catch (IOException e) {
+                    logger.error("Can not close current HttpClient:[{}]", request.getURI(), e);
+                }
+            }
+        }
+        return res;
     }
 
     private static URI getUriFromString(String url, String... params) throws URISyntaxException {
@@ -209,5 +254,10 @@ public abstract class HttpUtils {
             charset = "UTF-8";
         }
         return charset;
+    }
+
+    @FunctionalInterface
+    public interface EntityProcessor<T> {
+        T process(HttpEntity entity);
     }
 }

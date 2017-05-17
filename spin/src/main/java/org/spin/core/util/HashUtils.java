@@ -58,8 +58,9 @@ public abstract class HashUtils {
      * @param params key1,value1,key2,value2,key3,value3 ...
      * @return map
      */
-    public static Map<String, Object> getMap(Object... params) {
-        Map<String, Object> map = new HashMap<>();
+    @SafeVarargs
+    public static <T> Map<String, T> getMap(T... params) {
+        Map<String, T> map = new HashMap<>();
         if (params.length % 2 != 0) {
             throw new IllegalArgumentException("键值对必须为偶数个");
         }

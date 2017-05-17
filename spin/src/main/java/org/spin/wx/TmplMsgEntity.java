@@ -3,6 +3,7 @@ package org.spin.wx;
 import java.util.Map;
 
 /**
+ * 微信模板消息实体
  * <p>Created by xuweinan on 2017/5/16.</p>
  *
  * @author xuweinan

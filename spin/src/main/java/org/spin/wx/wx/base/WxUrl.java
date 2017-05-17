@@ -3,6 +3,7 @@ package org.spin.wx.wx.base;
 import org.spin.core.util.StringUtils;
 
 /**
+ * 微信接口url
  * <p>Created by xuweinan on 2017/5/16.</p>
  *
  * @author xuweinan
@@ -32,6 +33,11 @@ public enum WxUrl {
      * 获取jssdk的api_ticket
      */
     ApiTicketUrl("https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token={}&type=jsapi"),
+
+    /**
+     * 获取模板ID
+     */
+    TmplIdUrl("https://api.weixin.qq.com/cgi-bin/template/api_add_template?access_token={}"),
 
     /**
      * 发送模板消息

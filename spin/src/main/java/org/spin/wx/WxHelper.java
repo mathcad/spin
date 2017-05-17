@@ -2,8 +2,11 @@ package org.spin.wx;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.ErrorCode;
+import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.DigestUtils;
+import org.spin.core.util.HashUtils;
 import org.spin.core.util.HexUtils;
 import org.spin.core.util.HttpUtils;
 import org.spin.core.util.JsonUtils;
@@ -27,6 +30,9 @@ import java.util.SortedMap;
  */
 public class WxHelper {
     private static final Logger logger = LoggerFactory.getLogger(WxHelper.class);
+
+    private static final TypeIdentifier<Map<String, String>> type = new TypeIdentifier<Map<String, String>>() {
+    };
 
     /**
      * 将字符串数组按字典序排序后拼接，计算SHA1值(小写16进制表示)
@@ -70,6 +76,45 @@ public class WxHelper {
     public static WxUserInfo getUserInfo(String code) {
         AccessToken access_token = AccessToken.getDefaultOAuthInstance(code);
         return getUserInfo(access_token.getToken(), access_token.getOpenId());
+    }
+
+    /**
+     * 获取模板消息的模板ID
+     *
+     * @param code 短code
+     */
+    public static String getTmplId(String code) {
+        AccessToken accessToken = AccessToken.getDefaultInstance();
+        try {
+            String res = HttpUtils.httpPostRequest(WxUrl.TmplIdUrl.getUrl(accessToken.getToken()), HashUtils.getMap("template_id_short", code));
+            Map<String, String> resMap = JsonUtils.fromJson(res, type);
+            if (null != resMap && "0".equals(resMap.get("errcode"))) {
+                return resMap.get("template_id");
+            } else {
+                logger.error("getTmplId Returned Message: ", res);
+                throw new SimplifiedException("获取模板ID失败");
+            }
+        } catch (Exception e) {
+            logger.error("获取模板id失败", e);
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "获取模板ID失败");
+        }
+    }
+
+    /**
+     * 发送模板消息
+     *
+     * @param msg 消息实体
+     */
+    public static String postTmplMsg(TmplMsgEntity msg) {
+        AccessToken accessToken = AccessToken.getDefaultInstance();
+        String res = HttpUtils.httpPostJsonRequest(WxUrl.PostTmplMsgUrl.getUrl(accessToken.getToken()), msg);
+        Map<String, String> resMap = JsonUtils.fromJson(res, type);
+        if (null != resMap && "0".equals(resMap.get("errcode"))) {
+            return resMap.get("msgid");
+        } else {
+            logger.error("发送模板消息失败: ", res);
+            throw new SimplifiedException("发送模板消息失败");
+        }
     }
 
     /**
