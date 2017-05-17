@@ -94,9 +94,9 @@ public class AccessToken {
                     String result;
                     try {
                         if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L))
-                            result = HttpUtils.httpGetRequest(WxUrl.RefreshTokenUrl.getUrl(appId, token.getRefreshToken()));
+                            result = HttpUtils.get(WxUrl.RefreshTokenUrl.getUrl(appId, token.getRefreshToken()));
                         else
-                            result = HttpUtils.httpGetRequest(WxUrl.OAuthTokenUrl.getUrl(appId, appSecret, code));
+                            result = HttpUtils.get(WxUrl.OAuthTokenUrl.getUrl(appId, appSecret, code));
                     } catch (Throwable e) {
                         throw new SimplifiedException("获取网页授权access_token失败", e);
                     }
@@ -111,7 +111,7 @@ public class AccessToken {
                 synchronized (lock) {
                     String result;
                     try {
-                        result = HttpUtils.httpGetRequest(WxUrl.AccessTokenUrl.getUrl(appId, appSecret));
+                        result = HttpUtils.get(WxUrl.AccessTokenUrl.getUrl(appId, appSecret));
                     } catch (Throwable e) {
                         throw new SimplifiedException("获取access_token失败", e);
                     }

@@ -39,7 +39,7 @@ public class ApiTicket {
                 String token = AccessToken.getDefaultInstance().getToken();
                 String result;
                 try {
-                    result = HttpUtils.httpGetRequest(WxUrl.ApiTicketUrl.getUrl(token));
+                    result = HttpUtils.get(WxUrl.ApiTicketUrl.getUrl(token));
                 } catch (Throwable e) {
                     throw new SimplifiedException("获取access_token失败", e);
                 }

@@ -86,7 +86,7 @@ public class WxHelper {
     public static String getTmplId(String code) {
         AccessToken accessToken = AccessToken.getDefaultInstance();
         try {
-            String res = HttpUtils.httpPostRequest(WxUrl.TmplIdUrl.getUrl(accessToken.getToken()), HashUtils.getMap("template_id_short", code));
+            String res = HttpUtils.post(WxUrl.TmplIdUrl.getUrl(accessToken.getToken()), HashUtils.getMap("template_id_short", code));
             Map<String, String> resMap = JsonUtils.fromJson(res, type);
             if (null != resMap && "0".equals(resMap.get("errcode"))) {
                 return resMap.get("template_id");
@@ -107,7 +107,7 @@ public class WxHelper {
      */
     public static String postTmplMsg(TmplMsgEntity msg) {
         AccessToken accessToken = AccessToken.getDefaultInstance();
-        String res = HttpUtils.httpPostJsonRequest(WxUrl.PostTmplMsgUrl.getUrl(accessToken.getToken()), msg);
+        String res = HttpUtils.postJson(WxUrl.PostTmplMsgUrl.getUrl(accessToken.getToken()), msg);
         Map<String, String> resMap = JsonUtils.fromJson(res, type);
         if (null != resMap && "0".equals(resMap.get("errcode"))) {
             return resMap.get("msgid");
@@ -126,7 +126,7 @@ public class WxHelper {
     public static WxUserInfo getUserInfo(String accessToken, String openId) {
         String tmp;
         try {
-            tmp = HttpUtils.httpGetRequest(WxUrl.UserInfoUrl.getUrl(accessToken, openId));
+            tmp = HttpUtils.get(WxUrl.UserInfoUrl.getUrl(accessToken, openId));
         } catch (Exception e) {
             throw new SimplifiedException("获取用户信息失败");
         }

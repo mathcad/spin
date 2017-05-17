@@ -101,14 +101,9 @@ public class FileOperator {
         String storeName = generateFileName();
         String path = storeName.substring(0, storeName.indexOf("/") + 1);
         File uploadDir = new File(SpinContext.FileUploadDir + path);
-        Map<String, String> downloadRs;
         if (!uploadDir.exists() && !uploadDir.mkdirs())
             throw new SimplifiedException(ErrorCode.IO_FAIL, "创建文件夹失败");
-        try {
-            downloadRs = HttpUtils.download(url, SpinContext.FileUploadDir + storeName);
-        } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "下载文件错误", e);
-        }
+        Map<String, String> downloadRs = HttpUtils.download(url, SpinContext.FileUploadDir + storeName);
         rs.setOriginName("");
         rs.setFullName(SpinContext.FileUploadDir + storeName + downloadRs.get("extention"));
         rs.setStoreName(storeName + downloadRs.get("extention"));
