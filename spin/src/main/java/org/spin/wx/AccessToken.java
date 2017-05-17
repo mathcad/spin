@@ -89,7 +89,7 @@ public class AccessToken {
         if (isOAuth) {
             // 获取网页授权access_token
             token = instancesWithCode.get(name);
-            if (null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
+            if (StringUtils.isNotEmpty(code) || null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
                 synchronized (lockWithCode) {
                     String result;
                     try {
