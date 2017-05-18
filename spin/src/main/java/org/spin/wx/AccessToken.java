@@ -93,10 +93,13 @@ public class AccessToken {
                 synchronized (lockWithCode) {
                     String result;
                     try {
-                        if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L))
-                            result = HttpUtils.get(WxUrl.RefreshTokenUrl.getUrl(appId, token.getRefreshToken()));
-                        else
+                        if (StringUtils.isNotEmpty(code)) {
                             result = HttpUtils.get(WxUrl.OAuthTokenUrl.getUrl(appId, appSecret, code));
+                        } else if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L)) {
+                            result = HttpUtils.get(WxUrl.RefreshTokenUrl.getUrl(appId, token.getRefreshToken()));
+                        } else {
+                            throw new SimplifiedException("获取网页授权access_token失败, 缺少code参数");
+                        }
                     } catch (Throwable e) {
                         throw new SimplifiedException("获取网页授权access_token失败", e);
                     }
