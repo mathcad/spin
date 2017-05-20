@@ -1,18 +1,17 @@
 package org.spin.data.sql;
 
 import org.hibernate.cfg.Environment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.BeanUtils;
+import org.spin.core.util.HashUtils;
 import org.spin.data.core.Page;
 import org.spin.data.core.SQLLoader;
 import org.spin.data.query.QueryParam;
 import org.spin.data.sql.dbtype.MySQLDatabaseType;
 import org.spin.data.sql.dbtype.OracleDatabaseType;
-import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.BeanUtils;
-import org.spin.core.util.HashUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -41,7 +40,6 @@ public class SQLManager {
     private static final Logger logger = LoggerFactory.getLogger(SQLManager.class);
     private SQLLoader loader;
     private NamedParameterJdbcTemplate nameJt;
-    private JdbcTemplate jt;
     private DataSource dataSource;
 
     @Autowired
@@ -62,7 +60,6 @@ public class SQLManager {
             logger.error("Can not fetch Database metadata", e);
         }
         this.nameJt = new NamedParameterJdbcTemplate(ds);
-        this.jt = new JdbcTemplate(ds);
     }
 
     /**
@@ -249,10 +246,6 @@ public class SQLManager {
         if (logger.isDebugEnabled())
             logger.debug(sqlId + ":\n" + sqlTxt);
         nameJt.batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
-    }
-
-    public JdbcTemplate getJt() {
-        return jt;
     }
 
     public NamedParameterJdbcTemplate getNameJt() {
