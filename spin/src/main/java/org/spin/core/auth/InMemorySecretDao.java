@@ -25,10 +25,14 @@ public class InMemorySecretDao implements SecretDao {
 
     @Override
     public String getIdentifierByToken(String tokenStr) {
-        return tokenCache.values().stream().filter(Objects::nonNull)
+        String identifier = tokenCache.values().stream().filter(Objects::nonNull)
             .flatMap(ts -> ts.stream().filter(t -> t.getToken().equals(tokenStr)).map(TokenInfo::getIdentifier))
             .findFirst()
             .orElse(null);
+        if (null == identifier) {
+            throw new SimplifiedException(ErrorCode.TOKEN_INVALID);
+        }
+        return identifier;
     }
 
     @Override
@@ -47,10 +51,14 @@ public class InMemorySecretDao implements SecretDao {
 
     @Override
     public TokenInfo getTokenInfoByToken(String tokenStr) {
-        return tokenCache.values().stream()
+        TokenInfo token = tokenCache.values().stream()
             .flatMap(ts -> ts.stream().filter(t -> t.getToken().equals(tokenStr)))
             .findFirst()
             .orElse(null);
+        if (null == token) {
+            throw new SimplifiedException(ErrorCode.TOKEN_INVALID);
+        }
+        return token;
     }
 
     @Override
@@ -105,8 +113,8 @@ public class InMemorySecretDao implements SecretDao {
     }
 
     @Override
-    public KeyInfo saveKey(String identifier, String key, String secret, Long generateTime) {
-        KeyInfo keyInfo = new KeyInfo(identifier, key, secret, generateTime);
+    public KeyInfo saveKey(String identifier, String key, String secret, String secretType, Long generateTime) {
+        KeyInfo keyInfo = new KeyInfo(identifier, key, secret, secretType, generateTime);
         if (keyCache.containsKey(identifier)) {
             keyCache.get(identifier).add(keyInfo);
         } else {
@@ -138,9 +146,6 @@ public class InMemorySecretDao implements SecretDao {
     @Override
     public TokenInfo removeTokenByTokenStr(String tokenStr) {
         TokenInfo tokenInfo = getTokenInfoByToken(tokenStr);
-        if (null == tokenInfo) {
-            throw new SimplifiedException(ErrorCode.TOKEN_INVALID);
-        }
         synchronized (tokenCache.get(tokenInfo.getIdentifier())) {
             tokenCache.get(tokenInfo.getIdentifier()).remove(tokenInfo);
         }

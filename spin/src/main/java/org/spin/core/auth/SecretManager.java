@@ -22,15 +22,21 @@ import java.util.UUID;
 public class SecretManager {
     private static final Logger logger = LoggerFactory.getLogger(SecretManager.class);
 
-    /** 分隔符 */
+    /**
+     * 分隔符
+     */
     private static final String SEPARATOR = "\n";
     private PublicKey rsaPubkey;
     private PrivateKey rsaPrikey;
 
-    /** token过期时间,单位毫秒 */
+    /**
+     * token过期时间,单位毫秒
+     */
     private Long tokenExpiredIn = 7200000L;
 
-    /** key过期时间,单位毫秒 */
+    /**
+     * key过期时间,单位毫秒
+     */
     private Long keyExpiredIn = 1296000000L;
 
     private SecretDao secretDao;
@@ -55,14 +61,14 @@ public class SecretManager {
         if (null == keyInfo) {
             try {
                 String[] info = RSA.decrypt(rsaPrikey, key).split(SEPARATOR);
-                keyInfo = new KeyInfo(info[0], key, info[1], Long.parseLong(info[2]));
+                keyInfo = new KeyInfo(info[0], key, info[1], info[2], Long.parseLong(info[3]));
                 if (DateUtils.isTimeOut(keyInfo.getGenerateTime(), SpinContext.KeyExpireTime)) {
                     throw new SimplifiedException(ErrorCode.SECRET_EXPIRED);
                 } else {
                     return secretDao.saveKey(keyInfo);
                 }
             } catch (Exception e) {
-                logger.debug("Extract info from key Error: {}", e);
+                logger.debug("Extract info from key Error: {}", key, e);
                 throw new SimplifiedException(ErrorCode.SECRET_INVALID);
             }
         } else {
@@ -112,13 +118,14 @@ public class SecretManager {
     /**
      * 生成密钥
      *
-     * @param userId 用户id
-     * @param pwd    密码摘要
+     * @param userId     用户id
+     * @param secret     密钥
+     * @param secretType 密钥类型
      * @return KeyInfo
      */
-    public KeyInfo generateKey(String userId, String pwd) {
+    public KeyInfo generateKey(String userId, String secret, String secretType) {
         Long generateTime = System.currentTimeMillis();
-        String ecodeStr = userId + SEPARATOR + pwd + SEPARATOR + generateTime;
+        String ecodeStr = userId + SEPARATOR + secret + SEPARATOR + secretType + SEPARATOR + generateTime;
         // 生成密钥
         String key;
         try {
@@ -126,7 +133,7 @@ public class SecretManager {
         } catch (Exception ignore) {
             throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL);
         }
-        return secretDao.saveKey(userId, key, pwd, generateTime);
+        return secretDao.saveKey(userId, key, secret, secretType, generateTime);
     }
 
     public void invalidToken(String identifier) {

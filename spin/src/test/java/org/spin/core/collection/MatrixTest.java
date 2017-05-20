@@ -20,9 +20,9 @@ public class MatrixTest {
 
     @Test
     public void tesetSet() {
-        KeyInfo keyInfo1 = new KeyInfo("1", "123", "aaa", 0L);
-        KeyInfo keyInfo2 = new KeyInfo("2", "456", "bbb", 0L);
-        KeyInfo keyInfo3 = new KeyInfo("2", "456", "bbb", 0L);
+        KeyInfo keyInfo1 = new KeyInfo("1", "123", "aaa", "defautl", 0L);
+        KeyInfo keyInfo2 = new KeyInfo("2", "456", "bbb", "defautl", 0L);
+        KeyInfo keyInfo3 = new KeyInfo("2", "456", "bbb", "defautl", 0L);
         Set<KeyInfo> keys = new HashSet<>();
         keys.add(keyInfo1);
 //        keys.add(keyInfo2);

@@ -15,12 +15,14 @@ public class KeyInfo implements Serializable {
     private String identifier;
     private String key;
     private String secret;
+    private String secretType;
     private Long generateTime = 0L;
 
-    public KeyInfo(String identifier, String key, String secret, Long generateTime) {
+    public KeyInfo(String identifier, String key, String secret, String secretType, Long generateTime) {
         this.identifier = identifier;
         this.key = key;
         this.secret = secret;
+        this.secretType = secretType;
         this.generateTime = generateTime;
     }
 
@@ -34,6 +36,10 @@ public class KeyInfo implements Serializable {
 
     public String getSecret() {
         return secret;
+    }
+
+    public String getSecretType() {
+        return secretType;
     }
 
     public Long getGenerateTime() {

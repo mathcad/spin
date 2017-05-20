@@ -65,10 +65,11 @@ public interface SecretDao {
      *
      * @param identifier   用户id
      * @param keyStr       密钥字符串
-     * @param secret       密码
+     * @param secret       用户密钥
+     * @param secretType   用户密钥类型
      * @param generateTime 生成时间
      */
-    KeyInfo saveKey(String identifier, String keyStr, String secret, Long generateTime);
+    KeyInfo saveKey(String identifier, String key, String secret, String secretType, Long generateTime);
 
     /**
      * 保存密钥
