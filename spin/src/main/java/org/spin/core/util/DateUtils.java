@@ -519,4 +519,71 @@ public abstract class DateUtils {
             return null == date ? null : secondDtf.format(date);
         return null == date ? null : DateTimeFormatter.ofPattern(pattern).format(date);
     }
+
+    /**
+     * 将时间段解析为毫秒最后一位区分单位
+     * <pre>
+     *     例：1d = 86,400,000
+     *     如果没有单位，相当于{@code Long.parseLong(period)}
+     *     w:周
+     *     d:天
+     *     h:时
+     *     m:分
+     *     s:秒
+     * </pre>
+     *
+     * @param period 时间, 格式必须符合：{@code \d+[wdhms]?}，如15d
+     * @return 对应的毫秒数
+     */
+    public static Long periodToMs(String period) {
+        try {
+
+            switch (period.charAt(period.length() - 1)) {
+                case 'w':
+                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000 * 60 * 60 * 24 * 7;
+                case 'd':
+                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000 * 60 * 60 * 24;
+                case 'h':
+                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000 * 60 * 60;
+                case 'm':
+                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000 * 60;
+                case 's':
+                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000;
+                default:
+                    return Long.parseLong(period);
+            }
+        } catch (Exception ignore) {
+            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "时间段字符串格式不正确");
+        }
+    }
+
+    /**
+     * 判断是否过期
+     *
+     * @param time      待判断时间
+     * @param expiredIn 有效期
+     */
+    public static boolean isTimeOut(Long time, Long expiredIn) {
+        return (System.currentTimeMillis() - time) > expiredIn;
+    }
+
+    /**
+     * 判断是否过期
+     *
+     * @param time      待判断时间
+     * @param expiredIn 有效期
+     */
+    public static boolean isTimeOut(Date time, Long expiredIn) {
+        return (System.currentTimeMillis() - time.getTime()) > expiredIn;
+    }
+
+    /**
+     * 判断是否过期
+     *
+     * @param time      待判断时间
+     * @param expiredIn 有效期
+     */
+    public static boolean isTimeOut(LocalDateTime time, Long expiredIn) {
+        return LocalDateTime.now().compareTo(time.plus(expiredIn, ChronoUnit.MILLIS)) > 0;
+    }
 }

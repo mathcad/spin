@@ -4,18 +4,17 @@ import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
-import org.spin.web.converter.JsonHttpMessageConverter;
+import org.spin.core.SpinContext;
+import org.spin.core.auth.SecretManager;
+import org.spin.core.security.AES;
+import org.spin.core.util.JsonUtils;
 import org.spin.data.core.SQLLoader;
 import org.spin.data.extend.DataBaseConfiguration;
 import org.spin.data.sql.loader.ArchiveMdLoader;
 import org.spin.data.sql.resolver.FreemarkerResolver;
-import org.spin.core.security.AES;
-import org.spin.core.security.RSA;
 import org.spin.enhance.shiro.AnyoneSuccessfulStrategy;
 import org.spin.spring.SpinConfiguration;
-import org.spin.core.SpinContext;
-import org.spin.core.auth.SecretManager;
-import org.spin.core.util.JsonUtils;
+import org.spin.web.converter.JsonHttpMessageConverter;
 import org.spin.web.filter.AccessAllowFilter;
 import org.spin.web.filter.TokenResolveFilter;
 import org.spin.wx.WxConfig;
@@ -187,17 +186,17 @@ public class ConsultantApplication {
     }
 
     @Bean
-    public InitializingBean readConfig() {
+    public InitializingBean readConfig(SecretManager secretManager) {
         return () -> {
             SpinContext.FileUploadDir = env.getProperty("web.fileUploadDir");
-            SecretManager.setRsaPubkey(RSA.getRSAPublicKey(env.getProperty("encrypt.rsa.publicKey")));
-            SecretManager.setRsaPrikey(RSA.getRSAPrivateKey(env.getProperty("encrypt.rsa.privatekey")));
             SpinContext.devMode = "dev".equals(env.getProperty("spring.profiles.active"));
+            secretManager.setRsaPubkey(env.getProperty("encrypt.rsa.publicKey"));
+            secretManager.setRsaPrikey(env.getProperty("encrypt.rsa.privatekey"));
             if (env.containsProperty("secretManager.tokenExpireTime")) {
-                SpinContext.TokenExpireTime = resolveTime(env.getProperty("secretManager.tokenExpireTime"));
+                secretManager.setTokenExpiredIn(env.getProperty("secretManager.tokenExpireTime"));
             }
             if (env.containsProperty("secretManager.keyExpireTime")) {
-                SpinContext.KeyExpireTime = resolveTime(env.getProperty("secretManager.keyExpireTime"));
+                secretManager.setKeyExpiredIn(env.getProperty("secretManager.keyExpireTime"));
             }
 
             if (env.getProperty("wxConfig.encodingAesKey").length() != 43) {
@@ -212,20 +211,5 @@ public class ConsultantApplication {
             configInfo.setMchKey(env.getProperty("wxConfig.mchKey"));
             WxConfig.putConfig("default", configInfo);
         };
-    }
-
-    private Long resolveTime(String duration) {
-        switch (duration.charAt(duration.length() - 1)) {
-            case 'd':
-                return Long.parseLong(duration.substring(0, duration.length() - 1)) * 1000 * 60 * 60 * 24;
-            case 'h':
-                return Long.parseLong(duration.substring(0, duration.length() - 1)) * 1000 * 60 * 60;
-            case 'm':
-                return Long.parseLong(duration.substring(0, duration.length() - 1)) * 1000 * 60;
-            case 's':
-                return Long.parseLong(duration.substring(0, duration.length() - 1)) * 1000;
-            default:
-                return Long.parseLong(duration);
-        }
     }
 }

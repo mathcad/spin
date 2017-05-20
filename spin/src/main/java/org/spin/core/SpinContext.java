@@ -1,7 +1,5 @@
 package org.spin.core;
 
-import org.spin.core.util.BeanUtils;
-
 import java.lang.reflect.Field;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -19,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author xuweinan
  */
 public final class SpinContext {
-    public static final Map<String, Map<String, BeanUtils.PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
     public static final Map<String, Map<String, Field>> BEAN_FIELDS = new ConcurrentHashMap<>();
 
     /** Needed注解检查的方法参数缓存 */
@@ -90,7 +87,6 @@ public final class SpinContext {
 
     public synchronized static void clearCache() {
         ENTITY_SOMETOONE_JOIN_FIELDS.clear();
-        CLASS_PROPERTY_CACHE.clear();
         BEAN_FIELDS.clear();
         CHECKED_METHOD_PARAM.clear();
     }

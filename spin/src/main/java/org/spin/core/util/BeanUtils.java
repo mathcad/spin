@@ -19,9 +19,8 @@ package org.spin.core.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.data.core.IEntity;
-import org.spin.core.SpinContext;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.data.core.IEntity;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -33,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +41,8 @@ import java.util.stream.Collectors;
  */
 public abstract class BeanUtils {
     private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
+    private static final Map<String, Map<String, BeanUtils.PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
+
 
     public static PropertyDescriptor[] propertyDescriptors(Class<?> c) throws IntrospectionException {
         BeanInfo beanInfo = Introspector.getBeanInfo(c);
@@ -79,7 +81,7 @@ public abstract class BeanUtils {
     @Deprecated
     public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values, String propPrefix) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
         T bean = type.newInstance();
-        Map<String, PropertyDescriptorWrapper> props = SpinContext.CLASS_PROPERTY_CACHE.get(type.getName());
+        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
         if (null == props) {
             PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
             if (null == propertyDescriptors || 0 == propertyDescriptors.length)
@@ -90,7 +92,7 @@ public abstract class BeanUtils {
                 if (writer != null)
                     props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
             }
-            SpinContext.CLASS_PROPERTY_CACHE.put(type.getName(), props);
+            CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
 
         for (Map.Entry<String, Object> entry : values.entrySet()) {
@@ -120,7 +122,7 @@ public abstract class BeanUtils {
     }
 
     public static Map<String, PropertyDescriptorWrapper> getBeanPropertyDes(Class<?> type) throws IntrospectionException {
-        Map<String, PropertyDescriptorWrapper> props = SpinContext.CLASS_PROPERTY_CACHE.get(type.getName());
+        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
         if (null == props) {
             PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
             props = new HashMap<>();
@@ -130,7 +132,7 @@ public abstract class BeanUtils {
                 if (writer != null)
                     props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
             }
-            SpinContext.CLASS_PROPERTY_CACHE.put(type.getName(), props);
+            CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
         return props;
     }
@@ -144,7 +146,7 @@ public abstract class BeanUtils {
      */
     public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
         T bean = type.newInstance();
-        Map<String, PropertyDescriptorWrapper> props = SpinContext.CLASS_PROPERTY_CACHE.get(type.getName());
+        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
         if (null == props) {
             PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
             props = new HashMap<>();
@@ -154,7 +156,8 @@ public abstract class BeanUtils {
                 if (writer != null)
                     props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
             }
-            SpinContext.CLASS_PROPERTY_CACHE.put(type.getName(), props);
+            CLASS_PROPERTY_CACHE.put(type.getName(), props);
+            CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
         if (props.size() == 0)
             return bean;
@@ -230,7 +233,7 @@ public abstract class BeanUtils {
      */
     @SuppressWarnings("unchecked")
     public static Map<String, Object> wrapperFlatMap(Map<String, Object> values) {
-        Map<String, Object> propValue = new HashMap<>();
+        Map<String, Object> treeSightMap = new HashMap<>();
         int off;
         int next;
         int depth;
@@ -249,10 +252,10 @@ public abstract class BeanUtils {
             }
             propName[depth++] = (p.substring(off));
             if (depth == 1) {
-                propValue.put(propName[0], entry.getValue());
+                treeSightMap.put(propName[0], entry.getValue());
                 continue;
             }
-            work = propValue;
+            work = treeSightMap;
             int i = 0;
             while (depth != i) {
                 if (i != depth - 1) {
@@ -272,7 +275,7 @@ public abstract class BeanUtils {
                 ++i;
             }
         }
-        return propValue;
+        return treeSightMap;
     }
 
     public static class PropertyDescriptorWrapper {
