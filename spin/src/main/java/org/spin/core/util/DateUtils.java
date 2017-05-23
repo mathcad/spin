@@ -131,7 +131,7 @@ public abstract class DateUtils {
                 sdf = new SimpleDateFormat(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2)
                     , matcher.group(4)) + "'" + matcher.group(6) + "'" + timeFormat[index % timeFormat.length]);
             else
-                sdf = new SimpleDateFormat(dateFormat[index % (datePatten.length * timePatten.length)]);
+                sdf = new SimpleDateFormat(StringUtils.format(dateFormat[index % (datePatten.length * timePatten.length)], matcher.group(2), matcher.group(4)));
         }
         try {
             return sdf.parse(matcher == null ? date : matcher.group(0));
@@ -187,7 +187,7 @@ public abstract class DateUtils {
                 formatter = DateTimeFormatter.ofPattern(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2)
                     , matcher.group(4)) + "'" + matcher.group(6) + "'" + timeFormat[index % timeFormat.length]);
             else
-                formatter = DateTimeFormatter.ofPattern(dateFormat[index % (datePatten.length * timePatten.length)]);
+                formatter = DateTimeFormatter.ofPattern(StringUtils.format(dateFormat[index % (datePatten.length * timePatten.length)], matcher.group(2), matcher.group(4)));
         }
         try {
             return LocalDateTime.parse(matcher == null ? date : matcher.group(0), formatter);

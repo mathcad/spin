@@ -51,4 +51,9 @@ public class DateUtilsTest {
         System.out.println(sdf.parse(date));
         System.out.println(DateUtils.toDate(date));
     }
+
+    @Test
+    public void toDate() {
+        System.out.println(DateUtils.toDate("2017-5-23"));
+    }
 }
