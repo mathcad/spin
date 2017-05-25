@@ -1,7 +1,7 @@
 package org.spin.wx;
 
 import org.spin.core.util.XmlUtils;
-import org.spin.wx.wx.base.PropertyType;
+import org.spin.wx.base.PropertyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

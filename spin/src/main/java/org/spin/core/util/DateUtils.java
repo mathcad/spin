@@ -127,11 +127,17 @@ public abstract class DateUtils {
         if (matcher == null)
             sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
         else {
-            if (index < datePatten.length * timePatten.length)
-                sdf = new SimpleDateFormat(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2)
-                    , matcher.group(4)) + "'" + matcher.group(6) + "'" + timeFormat[index % timeFormat.length]);
-            else
-                sdf = new SimpleDateFormat(StringUtils.format(dateFormat[index % (datePatten.length * timePatten.length)], matcher.group(2), matcher.group(4)));
+            if (index < datePatten.length * timePatten.length) {
+                sdf = new SimpleDateFormat(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2), matcher.group(4))
+                    + "'"
+                    + matcher.group(6)
+                    + "'"
+                    + timeFormat[index % timeFormat.length]);
+            } else {
+                sdf = new SimpleDateFormat(StringUtils.format(dateFormat[index % (datePatten.length * timePatten.length)]
+                    , matcher.group(2)
+                    , matcher.group(4)));
+            }
         }
         try {
             return sdf.parse(matcher == null ? date : matcher.group(0));
@@ -183,11 +189,17 @@ public abstract class DateUtils {
         if (matcher == null)
             formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         else {
-            if (index < datePatten.length * timePatten.length)
-                formatter = DateTimeFormatter.ofPattern(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2)
-                    , matcher.group(4)) + "'" + matcher.group(6) + "'" + timeFormat[index % timeFormat.length]);
-            else
-                formatter = DateTimeFormatter.ofPattern(StringUtils.format(dateFormat[index % (datePatten.length * timePatten.length)], matcher.group(2), matcher.group(4)));
+            if (index < datePatten.length * timePatten.length) {
+                formatter = DateTimeFormatter.ofPattern(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2), matcher.group(4))
+                    + "'"
+                    + matcher.group(6)
+                    + "'"
+                    + timeFormat[index % timeFormat.length]);
+            } else {
+                formatter = DateTimeFormatter.ofPattern(StringUtils.format(dateFormat[index % (datePatten.length * timePatten.length)]
+                    , matcher.group(2)
+                    , matcher.group(4)));
+            }
         }
         try {
             return LocalDateTime.parse(matcher == null ? date : matcher.group(0), formatter);
@@ -540,13 +552,13 @@ public abstract class DateUtils {
 
             switch (period.charAt(period.length() - 1)) {
                 case 'w':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000 * 60 * 60 * 24 * 7;
+                    return Long.parseLong(period.substring(0, period.length() - 1)) * 604800000;
                 case 'd':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000 * 60 * 60 * 24;
+                    return Long.parseLong(period.substring(0, period.length() - 1)) * 86400000;
                 case 'h':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000 * 60 * 60;
+                    return Long.parseLong(period.substring(0, period.length() - 1)) * 3600000;
                 case 'm':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000 * 60;
+                    return Long.parseLong(period.substring(0, period.length() - 1)) * 60000;
                 case 's':
                     return Long.parseLong(period.substring(0, period.length() - 1)) * 1000;
                 default:

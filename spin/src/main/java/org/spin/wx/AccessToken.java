@@ -7,7 +7,7 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.HttpUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.wx.wx.base.WxUrl;
+import org.spin.wx.base.WxUrl;
 
 import java.util.Date;
 import java.util.Map;

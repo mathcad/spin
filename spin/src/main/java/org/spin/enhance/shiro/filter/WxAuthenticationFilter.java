@@ -9,7 +9,7 @@ import org.apache.shiro.web.util.WebUtils;
 import org.spin.enhance.util.SessionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.enhance.shiro.OAuth2Token;
-import org.spin.wx.wx.base.WxUserInfo;
+import org.spin.wx.base.WxUserInfo;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;

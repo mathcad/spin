@@ -1,4 +1,4 @@
-package org.spin.wx.wx.base;
+package org.spin.wx.base;
 
 import java.util.List;
 

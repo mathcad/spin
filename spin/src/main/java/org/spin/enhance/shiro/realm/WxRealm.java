@@ -10,7 +10,7 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.spin.enhance.shiro.OAuth2Token;
 import org.spin.wx.WxHelper;
-import org.spin.wx.wx.base.WxUserInfo;
+import org.spin.wx.base.WxUserInfo;
 
 /**
  * 微信认证域

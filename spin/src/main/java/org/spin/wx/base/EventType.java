@@ -1,4 +1,4 @@
-package org.spin.wx.wx.base;
+package org.spin.wx.base;
 
 public interface EventType {
 

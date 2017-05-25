@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,10 +60,9 @@ public abstract class HttpUtils {
                 }
             }
             return get(uriBuilder.build(), headers);
-        } catch (Exception e) {
-            logger.error("远程连接到" + url + "，发生错误:", e);
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e
-                .getMessage());
+        } catch (URISyntaxException e) {
+            logger.error("url格式错误: " + url, e);
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "url格式错误: " + url + e.getMessage());
         }
     }
 
@@ -105,16 +105,7 @@ public abstract class HttpUtils {
             headers.forEach(request::setHeader);
         }
 
-        String result;
-        try {
-            result = excuteRequest(request, HttpUtils::resolveEntityToStr);
-        } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
-                + uri.toString()
-                + "，发生错误:"
-                + e.getMessage());
-        }
-        return result;
+        return excuteRequest(request, HttpUtils::resolveEntityToStr);
     }
 
     /**
@@ -155,14 +146,7 @@ public abstract class HttpUtils {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "生成请求报文体错误");
         }
 
-        String result;
-        try {
-            result = excuteRequest(request, HttpUtils::resolveEntityToStr);
-        } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e
-                .getMessage());
-        }
-        return result;
+        return excuteRequest(request, HttpUtils::resolveEntityToStr);
     }
 
     /**
@@ -191,15 +175,7 @@ public abstract class HttpUtils {
         request.setConfig(requestConfig);
         request.setEntity(stringEntity);
 
-        String result;
-        try {
-            result = excuteRequest(request, HttpUtils::resolveEntityToStr);
-        } catch (Exception e) {
-            logger.error("远程连接到" + url + "，发生错误:", e);
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到" + url + "，发生错误:" + e
-                .getMessage());
-        }
-        return result;
+        return excuteRequest(request, HttpUtils::resolveEntityToStr);
     }
 
     /**
@@ -244,12 +220,9 @@ public abstract class HttpUtils {
      * @param <T>       处理后的返回类型
      */
     public static <T> T excuteRequest(HttpUriRequest request, EntityProcessor<T> processor) {
-        CloseableHttpClient httpclient = null;
         HttpEntity entity = null;
         T res = null;
-
-        try {
-            httpclient = HttpClients.createDefault();
+        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
             CloseableHttpResponse response = httpclient.execute(request);
             int code = response.getStatusLine().getStatusCode();
             entity = response.getEntity();
@@ -263,14 +236,6 @@ public abstract class HttpUtils {
                 + request.getURI()
                 + "，发生错误: "
                 + e.getMessage());
-        } finally {
-            if (httpclient != null) {
-                try {
-                    httpclient.close();
-                } catch (IOException e) {
-                    logger.error("Can not close current HttpClient:[{}]", request.getURI(), e);
-                }
-            }
         }
         return res;
     }

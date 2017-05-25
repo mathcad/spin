@@ -2,7 +2,6 @@ package org.spin.data.util;
 
 import javassist.util.proxy.ProxyFactory;
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Type;
 import org.hibernate.collection.internal.PersistentBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,14 +10,11 @@ import org.spin.core.throwable.CloneFailedException;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.data.core.IEntity;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
-import javax.persistence.Temporal;
-import javax.persistence.Version;
+import javax.persistence.Transient;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -195,7 +191,7 @@ public abstract class EntityUtils {
             return SpinContext.ENTITY_COLUMNS.get(entityClazz.getName());
 
         Field[] fields = entityClazz.getDeclaredFields();
-        Set<String> columns = Arrays.stream(fields).filter(EntityUtils::isColumn).map(Field::getName).collect(Collectors.toSet());
+        Set<String> columns = Arrays.stream(fields).filter(EntityUtils::isDbColumn).map(Field::getName).collect(Collectors.toSet());
         Class<?> superClass = entityClazz.getSuperclass();
         while (null != superClass) {
             columns.addAll(parseEntityColumns(superClass));
@@ -225,19 +221,13 @@ public abstract class EntityUtils {
     /**
      * 判断字段是否是映射到数据库
      */
-    private static boolean isColumn(Field field) {
+    private static boolean isDbColumn(Field field) {
         Annotation[] annotations = field.getAnnotations();
         for (Annotation annotation : annotations) {
-            if (annotation instanceof Column
-                || annotation instanceof Id
-                || annotation instanceof OneToOne
-                || annotation instanceof ManyToOne
-                || annotation instanceof Temporal
-                || annotation instanceof Type
-                || annotation instanceof Version
-                || annotation instanceof Basic)
-                return true;
+            if (annotation instanceof Transient) {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 }

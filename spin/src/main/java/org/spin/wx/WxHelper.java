@@ -11,8 +11,8 @@ import org.spin.core.util.HexUtils;
 import org.spin.core.util.HttpUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.RandomStringUtils;
-import org.spin.wx.wx.base.WxUrl;
-import org.spin.wx.wx.base.WxUserInfo;
+import org.spin.wx.base.WxUrl;
+import org.spin.wx.base.WxUserInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
