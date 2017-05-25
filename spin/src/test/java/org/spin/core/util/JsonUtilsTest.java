@@ -2,6 +2,7 @@ package org.spin.core.util;
 
 import org.junit.Test;
 import org.spin.core.TypeIdentifier;
+import org.spin.data.core.AbstractEntity;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -31,4 +32,19 @@ public class JsonUtilsTest {
 
         System.out.println(r);
     }
+
+    @Test
+    public void testEntityId() {
+        AbstractEntity a = new E();
+        a.setId(81241321817279489L);
+        a.setCreateUserId(1L);
+        a.setUpdateUserId(2L);
+        System.out.println(JsonUtils.toJson(a));
+        String b = "{\"id\":81241321817279489,\"createUserId\":1,\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true}";
+        AbstractEntity c = JsonUtils.fromJson(b, E.class);
+        System.out.println(c);
+    }
+}
+
+class E extends AbstractEntity {
 }

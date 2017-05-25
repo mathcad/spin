@@ -1,5 +1,7 @@
 package org.spin.data.core;
 
+import org.spin.enhance.gson.annotation.PreventOverflow;
+
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
@@ -24,12 +26,14 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * 主键
      */
     @Id
+    @PreventOverflow
     private Long id;
 
     /**
      * 记录创建者id
      */
     @Column
+    @PreventOverflow
     private Long createUserId;
 
     /**
@@ -42,6 +46,7 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * 记录更新者id
      */
     @Column
+    @PreventOverflow
     private Long updateUserId;
 
     /**

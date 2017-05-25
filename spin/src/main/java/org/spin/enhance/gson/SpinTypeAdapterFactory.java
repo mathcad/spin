@@ -12,7 +12,9 @@ import org.spin.enhance.gson.adapter.HibernateProxyTypeAdapter;
 import org.spin.enhance.gson.adapter.LocalDateTimeTypeAdapter;
 import org.spin.enhance.gson.adapter.LocalDateTypeAdapter;
 import org.spin.enhance.gson.adapter.LocalTimeTypeAdapter;
+import org.spin.enhance.gson.adapter.LongTypeAdapter;
 import org.spin.enhance.gson.adapter.UserEnumTypeAdapter;
+import org.spin.enhance.gson.annotation.PreventOverflow;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -49,6 +51,9 @@ public class SpinTypeAdapterFactory implements TypeAdapterFactory {
             return (TypeAdapter<T>) new LocalTimeTypeAdapter(datePattern);
         else if (Enum.class.isAssignableFrom(type.getRawType()) && type.getRawType().getAnnotation(UserEnum.class) != null)
             return new UserEnumTypeAdapter(type.getRawType());
+        else if (Long.class.isAssignableFrom(type.getRawType()) && type.getRawType().getAnnotation(PreventOverflow.class) != null) {
+            return (TypeAdapter<T>) new LongTypeAdapter();
+        }
         else
             return null;
     }
