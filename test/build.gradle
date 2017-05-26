@@ -13,12 +13,13 @@ buildscript {
     repositories {
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
         maven { url 'https://repo.spring.io/libs-release' }
+        maven { url 'https://repo.spring.io/libs-milestone' }
         mavenLocal()
         mavenCentral()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-        classpath('org.springframework:springloaded:1.2.6.RELEASE')
+//        classpath('org.springframework:springloaded:1.2.6.RELEASE')
     }
 }
 
@@ -30,9 +31,9 @@ idea {
     }
 }
 
-bootRun {
-    addResources = true
-}
+//bootRun {
+//    addResources = true
+//}
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -54,31 +55,34 @@ tasks.withType(JavaCompile) {
 //    version = '0.1'
 //}
 
-dependencyManagement {
-    imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Brixton.SR5'
-    }
-}
+//dependencyManagement {
+//    imports {
+//        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Brixton.SR5'
+//    }
+//}
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
         exclude(module: 'commons-logging')
     }
-    compile group: 'com.ibeetl', name: 'beetlsql', version: '2.4.3'
+//    compile group: 'com.ibeetl', name: 'beetlsql', version: '2.4.3'
     compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-freemarker', version: springBootVersion
+//    compile group: 'org.springframework.boot', name: 'spring-boot-starter-freemarker', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-cache', version: springBootVersion
     compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion) {
         exclude(module: 'jackson-databind')
     }
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion
-    compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion
-    compile group: 'org.hibernate', name: 'hibernate-core', version: '5.2.10.Final'
+//    compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
+    compile (group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion) {
+        exclude(module: 'jackson-databind')
+    }
+    compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.10.Final') {
+        exclude(module: 'jboss-logging')
+    }
 //    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-data', version: '1.4.0.RELEASE'
     compile group: 'com.github.ben-manes.caffeine', name: 'caffeine', version: '2.5.0'
-    compile group: 'com.alibaba', name: 'druid', version: '1.0.29'
+//    compile group: 'com.alibaba', name: 'druid', version: '1.0.29'
 //    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
     compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
 //    compile group: 'org.mathcat', name: 'spin', version: '1.8.4'

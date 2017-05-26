@@ -7,7 +7,7 @@ import org.apache.poi.ss.util.DateFormatConverter;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.core.Assert;
-import org.spin.core.FileType;
+import org.spin.core.util.file.FileType;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.StringUtils;
 import org.spin.data.util.EntityUtils;
@@ -30,7 +30,7 @@ import java.util.Map;
  */
 public class ModelExcelView extends AbstractView {
 
-    private FileType.Excel fileType;
+    private FileType.Document fileType;
 
     /**
      * 一个像素转换为多少宽度
@@ -47,7 +47,7 @@ public class ModelExcelView extends AbstractView {
     private List<?> data = null;
     private Map<String, String> dataTypeFormat = null;
 
-    public ModelExcelView(FileType.Excel fileType, ExcelGrid grid, List<?> data) {
+    public ModelExcelView(FileType.Document fileType, ExcelGrid grid, List<?> data) {
         this.fileType = Assert.notNull(fileType, "Excel文件类型不能为空");
         setContentType(this.fileType.getContentType());
         this.grid = grid;
@@ -59,7 +59,7 @@ public class ModelExcelView extends AbstractView {
      * Sets the FileType to XLSX.
      */
     public ModelExcelView(ExcelGrid grid, List<?> data) {
-        this(FileType.Excel.XLSX, grid, data);
+        this(FileType.Document.XLSX, grid, data);
     }
 
 
@@ -69,7 +69,7 @@ public class ModelExcelView extends AbstractView {
     }
 
     /**
-     * Renders the Excel view, given the specified model.
+     * Renders the Document view, given the specified model.
      */
     @Override
     protected final void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -116,10 +116,10 @@ public class ModelExcelView extends AbstractView {
 
     /**
      * Application-provided subclasses must implement this method to populate
-     * the Excel workbook document, given the model.
+     * the Document workbook document, given the model.
      *
      * @param model    the model Map
-     * @param workbook the Excel workbook to populate
+     * @param workbook the Document workbook to populate
      * @param request  in case we need locale etc. Shouldn't look at attributes.
      * @param response in case we need to set cookies. Shouldn't write to it.
      */
@@ -161,9 +161,9 @@ public class ModelExcelView extends AbstractView {
 
                 Cell cell = row0.createCell(i);
                 cell.setCellStyle(columnHeadStyle);
-                if (FileType.Excel.XLSX.equals(fileType))
+                if (FileType.Document.XLSX.equals(fileType))
                     cell.setCellValue(new XSSFRichTextString(col.getHeader()));
-                else if (FileType.Excel.XLSX.equals(fileType))
+                else if (FileType.Document.XLSX.equals(fileType))
                     cell.setCellValue(new HSSFRichTextString(col.getHeader()));
 
                 columnStyleMap.put(col.getDataIndex(), getDataCellStyle(workbook, col.getDataType()));
@@ -285,7 +285,7 @@ public class ModelExcelView extends AbstractView {
         return dataTypeFormat;
     }
 
-    public FileType.Excel getFileType() {
+    public FileType.Document getFileType() {
         return fileType;
     }
 }

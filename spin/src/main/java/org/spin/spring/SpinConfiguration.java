@@ -1,11 +1,11 @@
 package org.spin.spring;
 
 import com.alibaba.druid.pool.DruidDataSource;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.SessionFactory;
 import org.spin.core.auth.InMemorySecretDao;
 import org.spin.core.auth.SecretDao;
 import org.spin.core.auth.SecretManager;
+import org.spin.core.util.StringUtils;
 import org.spin.data.cache.RedisCache;
 import org.spin.data.core.SQLLoader;
 import org.spin.data.extend.DataBaseConfiguration;
