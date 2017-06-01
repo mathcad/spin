@@ -131,8 +131,9 @@ public abstract class HttpUtils {
             .setConnectTimeout(connectTimeout)
             .build();
 
-        List<NameValuePair> nvps = params.entrySet().stream().map(p -> new BasicNameValuePair(p.getKey(), p.getValue
-            ())).collect(Collectors.toList());
+        List<NameValuePair> nvps = params.entrySet().stream()
+            .map(p -> new BasicNameValuePair(p.getKey(), p.getValue()))
+            .collect(Collectors.toList());
 
         HttpPost request = new HttpPost(fixUrl(url));
         if (null != headers) {

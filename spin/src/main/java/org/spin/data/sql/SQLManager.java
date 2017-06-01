@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
-import org.spin.core.util.HashUtils;
+import org.spin.core.util.MapUtils;
 import org.spin.data.core.Page;
 import org.spin.data.core.SQLLoader;
 import org.spin.data.query.QueryParam;
@@ -92,7 +92,7 @@ public class SQLManager {
      * 通过命令文件查询
      */
     public List<Map<String, Object>> listAsMap(String sqlId, Object... mapParams) {
-        return listAsMap(sqlId, HashUtils.getMap(mapParams));
+        return listAsMap(sqlId, MapUtils.getMap(mapParams));
     }
 
     /**
@@ -138,7 +138,7 @@ public class SQLManager {
      * 通过命令文件查询
      */
     public <T> List<T> list(String sqlId, Class<T> entityClazz, Object... mapParams) {
-        List<Map<String, Object>> maps = listAsMap(sqlId, HashUtils.getMap(mapParams));
+        List<Map<String, Object>> maps = listAsMap(sqlId, MapUtils.getMap(mapParams));
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : maps) {
             try {

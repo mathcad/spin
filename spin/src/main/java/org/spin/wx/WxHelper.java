@@ -6,7 +6,7 @@ import org.spin.core.ErrorCode;
 import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.DigestUtils;
-import org.spin.core.util.HashUtils;
+import org.spin.core.util.MapUtils;
 import org.spin.core.util.HexUtils;
 import org.spin.core.util.HttpUtils;
 import org.spin.core.util.JsonUtils;
@@ -86,7 +86,7 @@ public class WxHelper {
     public static String getTmplId(String code) {
         AccessToken accessToken = AccessToken.getDefaultInstance();
         try {
-            String res = HttpUtils.post(WxUrl.TmplIdUrl.getUrl(accessToken.getToken()), HashUtils.getMap("template_id_short", code));
+            String res = HttpUtils.post(WxUrl.TmplIdUrl.getUrl(accessToken.getToken()), MapUtils.getMap("template_id_short", code));
             Map<String, String> resMap = JsonUtils.fromJson(res, type);
             if (null != resMap && "0".equals(resMap.get("errcode"))) {
                 return resMap.get("template_id");

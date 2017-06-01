@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -21,6 +22,7 @@ import java.util.List;
  */
 public abstract class FileTypeUtils {
     private static final List<Trait> traits = new ArrayList<>();
+    private static final int traitLen = 16;
 
     private static final class Trait {
         public final String ext;
@@ -74,9 +76,9 @@ public abstract class FileTypeUtils {
      * @return 文件类型，如果不支持，则返回null
      */
     public static FileType detectFileTypeFromBin(File file) {
-        byte[] trait = new byte[16];
+        byte[] trait = new byte[traitLen];
         try (FileInputStream fis = new FileInputStream(file)) {
-            int total = fis.read(trait, 0, 16);
+            int total = fis.read(trait, 0, traitLen);
             if (total == -1)
                 throw new SimplifiedException(ErrorCode.IO_FAIL, "END OF FILE");
             else if (total == 0)
@@ -95,7 +97,10 @@ public abstract class FileTypeUtils {
      * @return 文件类型，如果不支持，则返回null
      */
     public static FileType detectFileType(byte[] trait) {
-        String traitStr = HexUtils.encodeHexStringU(trait);
+        byte[] t = trait;
+        if (trait.length > traitLen)
+            t = Arrays.copyOf(trait, traitLen);
+        String traitStr = HexUtils.encodeHexStringU(t);
         return lookUp(traitStr, false);
     }
 

@@ -1,126 +1,428 @@
 package org.spin.core.util;
 
-import java.math.BigDecimal;
-import java.util.*;
-
-
 /**
- * hashMap or Hashtable 的常用类
- *
- * @author xuweinan
- * @since 1.0
+ * Hash算法大全<br>
+ * 推荐使用FNV1算法
  */
 public abstract class HashUtils {
 
     /**
-     * 获取String值
-     */
-    public static String getStringValue(Map<?, ?> rec, Object key) {
-        return rec == null ? null : ObjectUtils.toString(rec.get(key));
-    }
-
-    /**
-     * 获取Long值
-     */
-    public static Long getLongValue(Map<?, ?> rec, Object key) {
-        String strVal = rec == null ? null : ObjectUtils.toString(rec.get(key));
-        return StringUtils.isBlank(strVal) ? null : Long.valueOf(strVal);
-    }
-
-    /**
-     * 获取Integer值
-     */
-    public static Integer getIntegerValue(Map<?, ?> rec, Object key) {
-        String strVal = rec == null ? null : ObjectUtils.toString(rec.get(key));
-        return StringUtils.isBlank(strVal) ? null : new BigDecimal(strVal).intValue();
-    }
-
-    /**
-     * 获取Double值
-     */
-    public static Double getDoubleValue(Map<?, ?> rec, Object key) {
-        String strVal = rec == null ? null : ObjectUtils.toString(rec.get(key));
-        return StringUtils.isBlank(strVal) ? null : new BigDecimal(strVal).doubleValue();
-    }
-
-    /**
-     * 两个Map，在某些字段是否相等
-     */
-    public static boolean equalsWith(Map<?, Object> ht1, Map<?, Object> ht2, String... keys) {
-        final List<Boolean> eq = new ArrayList<>();
-        Optional.ofNullable(keys).ifPresent(ks -> Arrays.stream(ks).forEach(k -> eq.add(ObjectUtils.equal(ht1.get(k), ht2.get(k)))));
-        return !eq.contains(false);
-    }
-
-    /**
-     * 通过数组快速创建参数Map (HashMap)
+     * 加法hash
      *
-     * @param params key1,value1,key2,value2,key3,value3 ...
-     * @return map
+     * @param key   字符串
+     * @param prime 一个质数
+     * @return hash结果
      */
-    @SafeVarargs
-    public static <T> Map<String, T> getMap(T... params) {
-        Map<String, T> map = new HashMap<>();
-        if (params.length % 2 != 0) {
-            throw new IllegalArgumentException("键值对必须为偶数个");
+    public static int additiveHash(String key, int prime) {
+        int hash, i;
+        for (hash = key.length(), i = 0; i < key.length(); i++) {
+            hash += key.charAt(i);
         }
-        for (int i = 0; i < params.length; ) {
-            map.put(params[i].toString(), params[i + 1]);
-            i += 2;
-        }
-        return map;
+        return hash % prime;
     }
 
     /**
-     * 得到时间值
+     * 旋转hash
+     *
+     * @param key   输入字符串
+     * @param prime 质数
+     * @return hash值
      */
-    public static Date getDateValue(Map<?, Object> map, String key) {
-        return map.get(key) == null ? null : (Date) map.get(key);
+    public static int rotatingHash(String key, int prime) {
+        int hash, i;
+        for (hash = key.length(), i = 0; i < key.length(); ++i) {
+            hash = (hash << 4) ^ (hash >> 28) ^ key.charAt(i);
+        }
+
+        // 使用：hash = (hash ^ (hash>>10) ^ (hash>>20)) & mask;
+        // 替代：hash %= prime;
+        // return (hash ^ (hash>>10) ^ (hash>>20));
+        return hash % prime;
     }
 
     /**
-     * 查看列表中，cell值
+     * 一次一个hash
+     *
+     * @param key 输入字符串
+     * @return 输出hash值
      */
-    public static Set<Object> distinctList(List<Map<?, Object>> list, String key, Comparator<Object> objCpt) {
-        Set<Object> objSet = new HashSet<>();
-        list.stream().map(map -> map.get(key)).filter(Objects::nonNull).forEach(o -> {
-//            objSet.stream().filter(obj -> objCpt.compare(obj, o)!=0).forEach();
-        });
-        for (Map<?, Object> map : list) {
-            if (map.get(key) != null) {
-                Object o = map.get(key);
-                for (Object obj : objSet) {
-                    if (objCpt.compare(obj, o) != 0) {
-                        objSet.add(o);
-                    }
+    public static int oneByOneHash(String key) {
+        int hash, i;
+        for (hash = 0, i = 0; i < key.length(); ++i) {
+            hash += key.charAt(i);
+            hash += (hash << 10);
+            hash ^= (hash >> 6);
+        }
+        hash += (hash << 3);
+        hash ^= (hash >> 11);
+        hash += (hash << 15);
+        // return (hash & M_MASK);
+        return hash;
+    }
+
+    /**
+     * Bernstein's hash
+     *
+     * @param key 输入字节数组
+     * @return 结果hash
+     */
+    public static int bernstein(String key) {
+        int hash = 0;
+        int i;
+        for (i = 0; i < key.length(); ++i) {
+            hash = 33 * hash + key.charAt(i);
+        }
+        return hash;
+    }
+
+    /**
+     * Universal Hashing
+     *
+     * @param key  字节数组
+     * @param mask 掩码
+     * @param tab  tab
+     * @return hash值
+     */
+    public static int universal(char[] key, int mask, int[] tab) {
+        int hash = key.length, i, len = key.length;
+        for (i = 0; i < (len << 3); i += 8) {
+            char k = key[i >> 3];
+            if ((k & 0x01) == 0) {
+                hash ^= tab[i];
+            }
+            if ((k & 0x02) == 0) {
+                hash ^= tab[i + 1];
+            }
+            if ((k & 0x04) == 0) {
+                hash ^= tab[i + 2];
+            }
+            if ((k & 0x08) == 0) {
+                hash ^= tab[i + 3];
+            }
+            if ((k & 0x10) == 0) {
+                hash ^= tab[i + 4];
+            }
+            if ((k & 0x20) == 0) {
+                hash ^= tab[i + 5];
+            }
+            if ((k & 0x40) == 0) {
+                hash ^= tab[i + 6];
+            }
+            if ((k & 0x80) == 0) {
+                hash ^= tab[i + 7];
+            }
+        }
+        return (hash & mask);
+    }
+
+    /**
+     * Zobrist Hashing
+     *
+     * @param key  字节数组
+     * @param mask 掩码
+     * @param tab  tab
+     * @return hash值
+     */
+    public static int zobrist(char[] key, int mask, int[][] tab) {
+        int hash, i;
+        for (hash = key.length, i = 0; i < key.length; ++i) {
+            hash ^= tab[i][key[i]];
+        }
+        return (hash & mask);
+    }
+
+    /**
+     * 改进的32位FNV算法1
+     *
+     * @param data 数组
+     * @return hash结果
+     */
+    public static int fnvHash(byte[] data) {
+        final int p = 16777619;
+        int hash = (int) 2166136261L;
+        for (byte b : data) {
+            hash = (hash ^ b) * p;
+        }
+        hash += hash << 13;
+        hash ^= hash >> 7;
+        hash += hash << 3;
+        hash ^= hash >> 17;
+        hash += hash << 5;
+        return hash;
+    }
+
+    /**
+     * 改进的32位FNV算法1
+     *
+     * @param data 字符串
+     * @return hash结果
+     */
+    public static int fnvHash(String data) {
+        final int p = 16777619;
+        int hash = (int) 2166136261L;
+        for (int i = 0; i < data.length(); i++) {
+            hash = (hash ^ data.charAt(i)) * p;
+        }
+        hash += hash << 13;
+        hash ^= hash >> 7;
+        hash += hash << 3;
+        hash ^= hash >> 17;
+        hash += hash << 5;
+        return hash;
+    }
+
+    /**
+     * Thomas Wang的算法，整数hash
+     *
+     * @param key 整数
+     * @return hash值
+     */
+    public static int intHash(int key) {
+        key += ~(key << 15);
+        key ^= (key >>> 10);
+        key += (key << 3);
+        key ^= (key >>> 6);
+        key += ~(key << 11);
+        key ^= (key >>> 16);
+        return key;
+    }
+
+    /**
+     * RS算法hash
+     *
+     * @param str 字符串
+     * @return hash值
+     */
+    public static int rsHash(String str) {
+        int b = 378551;
+        int a = 63689;
+        int hash = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            hash = hash * a + str.charAt(i);
+            a = a * b;
+        }
+
+        return hash & 0x7FFFFFFF;
+    }
+
+    /**
+     * JS算法
+     *
+     * @param str 字符串
+     * @return hash值
+     */
+    public static int jsHash(String str) {
+        int hash = 1315423911;
+
+        for (int i = 0; i < str.length(); i++) {
+            hash ^= ((hash << 5) + str.charAt(i) + (hash >> 2));
+        }
+
+        return hash & 0x7FFFFFFF;
+    }
+
+    /**
+     * PJW算法
+     *
+     * @param str 字符串
+     * @return hash值
+     */
+    public static int pjwHash(String str) {
+        int bitsInUnsignedInt = 32;
+        int threeQuarters = (bitsInUnsignedInt * 3) / 4;
+        int oneEighth = bitsInUnsignedInt / 8;
+        int highBits = 0xFFFFFFFF << (bitsInUnsignedInt - oneEighth);
+        int hash = 0;
+        int test = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            hash = (hash << oneEighth) + str.charAt(i);
+
+            if ((test = hash & highBits) != 0) {
+                hash = ((hash ^ (test >> threeQuarters)) & (~highBits));
+            }
+        }
+
+        return hash & 0x7FFFFFFF;
+    }
+
+    /**
+     * ELF算法
+     *
+     * @param str 字符串
+     * @return hash值
+     */
+    public static int elfHash(String str) {
+        int hash = 0;
+        int x = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            hash = (hash << 4) + str.charAt(i);
+            if ((x = (int) (hash & 0xF0000000L)) != 0) {
+                hash ^= (x >> 24);
+                hash &= ~x;
+            }
+        }
+
+        return hash & 0x7FFFFFFF;
+    }
+
+    /**
+     * BKDR算法
+     *
+     * @param str 字符串
+     * @return hash值
+     */
+    public static int bkdrHash(String str) {
+        int seed = 131; // 31 131 1313 13131 131313 etc..
+        int hash = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            hash = (hash * seed) + str.charAt(i);
+        }
+
+        return hash & 0x7FFFFFFF;
+    }
+
+    /**
+     * SDBM算法
+     *
+     * @param str 字符串
+     * @return hash值
+     */
+    public static int sdbmHash(String str) {
+        int hash = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            hash = str.charAt(i) + (hash << 6) + (hash << 16) - hash;
+        }
+
+        return hash & 0x7FFFFFFF;
+    }
+
+    /**
+     * DJB算法
+     *
+     * @param str 字符串
+     * @return hash值
+     */
+    public static int djbHash(String str) {
+        int hash = 5381;
+
+        for (int i = 0; i < str.length(); i++) {
+            hash = ((hash << 5) + hash) + str.charAt(i);
+        }
+
+        return hash & 0x7FFFFFFF;
+    }
+
+    /**
+     * DEK算法
+     *
+     * @param str 字符串
+     * @return hash值
+     */
+    public static int dekHash(String str) {
+        int hash = str.length();
+
+        for (int i = 0; i < str.length(); i++) {
+            hash = ((hash << 5) ^ (hash >> 27)) ^ str.charAt(i);
+        }
+
+        return hash & 0x7FFFFFFF;
+    }
+
+    /**
+     * AP算法
+     *
+     * @param str 字符串
+     * @return hash值
+     */
+    public static int apHash(String str) {
+        int hash = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            hash ^= ((i & 1) == 0) ? ((hash << 7) ^ str.charAt(i) ^ (hash >> 3)) : (~((hash << 11) ^ str.charAt(i) ^ (hash >> 5)));
+        }
+
+        // return (hash & 0x7FFFFFFF);
+        return hash;
+    }
+
+    /**
+     * TianL Hash算法
+     *
+     * @param str 字符串
+     * @return Hash值
+     */
+    public static long tianlHash(String str) {
+        long hash = 0;
+
+        int iLength = str.length();
+        if (iLength == 0) {
+            return 0;
+        }
+
+        if (iLength <= 256) {
+            hash = 16777216L * (iLength - 1);
+        } else {
+            hash = 4278190080L;
+        }
+
+        int i;
+
+        char ucChar;
+
+        if (iLength <= 96) {
+            for (i = 1; i <= iLength; i++) {
+                ucChar = str.charAt(i - 1);
+                if (ucChar <= 'Z' && ucChar >= 'A') {
+                    ucChar = (char) (ucChar + 32);
                 }
+                hash += (3 * i * ucChar * ucChar + 5 * i * ucChar + 7 * i + 11 * ucChar) % 16777216;
+            }
+        } else {
+            for (i = 1; i <= 96; i++) {
+                ucChar = str.charAt(i + iLength - 96 - 1);
+                if (ucChar <= 'Z' && ucChar >= 'A') {
+                    ucChar = (char) (ucChar + 32);
+                }
+                hash += (3 * i * ucChar * ucChar + 5 * i * ucChar + 7 * i + 11 * ucChar) % 16777216;
             }
         }
-
-        return objSet;
+        if (hash < 0) {
+            hash *= -1;
+        }
+        return hash;
     }
 
     /**
-     * 统计列
+     * JAVA自己带的算法
+     *
+     * @param str 字符串
+     * @return hash值
      */
-    public static BigDecimal sumList(List<Map<?, Object>> list, String key) {
-        BigDecimal total = BigDecimal.ZERO;
-        for (Map<?, Object> map : list) {
-            if (map.get(key) != null) {
-                BigDecimal dct = getBigDecimal(map, key);
-                total = total.add(dct);
-            }
+    public static int javaDefaultHash(String str) {
+        int h = 0;
+        int off = 0;
+        int len = str.length();
+        for (int i = 0; i < len; i++) {
+            h = 31 * h + str.charAt(off++);
         }
-        return total;
+        return h;
     }
 
     /**
-     * 获得最高项目
+     * 混合hash算法，输出64位的值
+     *
+     * @param str 字符串
+     * @return hash值
      */
-    public static BigDecimal getBigDecimal(Map<?, Object> map, String amtField) {
-        String bgc = HashUtils.getStringValue(map, amtField);
-        if (StringUtils.isNotEmpty(bgc))
-            return new BigDecimal(bgc);
-        return BigDecimal.ZERO;
+    public static long mixHash(String str) {
+        long hash = str.hashCode();
+        hash <<= 32;
+        hash |= fnvHash(str);
+        return hash;
     }
 }
