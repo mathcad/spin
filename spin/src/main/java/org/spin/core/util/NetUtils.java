@@ -110,8 +110,8 @@ public abstract class NetUtils {
         long aBegin = ipv4ToLong("10.0.0.0");
         long aEnd = ipv4ToLong("10.255.255.255");
 
-        long a2Begin = ipv4ToLong("10.0.0.0");
-        long a2End = ipv4ToLong("10.255.255.255");
+        long a2Begin = ipv4ToLong("100.64.0.0");
+        long a2End = ipv4ToLong("100.127.255.255");
 
         long bBegin = ipv4ToLong("172.16.0.0");
         long bEnd = ipv4ToLong("172.31.255.255");
