@@ -2,7 +2,7 @@ package org.spin.data.pk.generator.provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.util.IpUtils;
+import org.spin.core.util.NetUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
@@ -26,7 +26,7 @@ public class IpConfigurableMachineIdProvider implements MachineIdProvider {
     }
 
     public void init() {
-        String ip = IpUtils.getHostIp();
+        String ip = NetUtils.getLocalhost().getHostAddress();
 
         if (StringUtils.isEmpty(ip)) {
             String msg = "Fail to get host IP address. Stop to initialize the IpConfigurableMachineIdProvider provider.";
