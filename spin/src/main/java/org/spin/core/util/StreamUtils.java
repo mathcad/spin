@@ -17,6 +17,8 @@ public abstract class StreamUtils {
     public static <T> Stream<T> enumerationAsStream(Enumeration<T> e) {
         return StreamSupport.stream(
             new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED) {
+
+                @Override
                 public boolean tryAdvance(Consumer<? super T> action) {
                     if (e.hasMoreElements()) {
                         action.accept(e.nextElement());

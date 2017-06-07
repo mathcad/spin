@@ -55,6 +55,13 @@ tasks.withType(JavaCompile) {
 //    version = '0.1'
 //}
 
+task pt << {
+    println("bootRepackage")
+    tasks.asMap.forEach({_,v -> println(v.dependsOn)})
+    tasks.asMap.get("bootRepackage").actions.forEach({a -> println(a)})
+    project.properties.forEach({k,v -> println(k)})
+}
+
 //dependencyManagement {
 //    imports {
 //        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Brixton.SR5'

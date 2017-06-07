@@ -221,6 +221,20 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return result;
     }
 
+    /**
+     * Copy the state of the given object onto the persistent object with the same
+     * identifier. If there is no persistent instance currently associated with
+     * the session, it will be loaded. Return the persistent instance. If the
+     * given instance is unsaved, save a copy of and return it as a newly persistent
+     * instance. The given instance does not become associated with the session.
+     * This operation cascades to associated instances if the association is mapped
+     * with {@code cascade="merge"}
+     * <p/>
+     * The semantics of this method are defined by JSR-220.
+     *
+     * @param entity a detached instance with state to be copied
+     * @return an updated persistent instance
+     */
     public T merge(final T entity) {
         //noinspection unchecked
         return (T) getSession().merge(entity);
@@ -466,6 +480,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 分页条件查询
      */
     public List<T> find(CriteriaBuilder cb) {
+        if (!entityClazz.equals(cb.getEnCls())) {
+            cb.setEnCls(entityClazz);
+        }
         DetachedCriteria detachedCriteria = cb.buildDeCriteria(false);
         return find(detachedCriteria, cb.getPageRequest());
     }
@@ -477,6 +494,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         CriteriaBuilder cb;
         try {
             cb = queryParamParser.parseCriteria(qp);
+            if (!entityClazz.equals(cb.getEnCls())) {
+                cb.setEnCls(entityClazz);
+            }
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }
@@ -515,6 +535,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      */
     public T findOne(CriteriaBuilder cb) {
+        if (!entityClazz.equals(cb.getEnCls())) {
+            cb.setEnCls(entityClazz);
+        }
         DetachedCriteria dc = cb.buildDeCriteria(false);
         Session sess = getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
@@ -648,6 +671,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 判断是否有存在已有实体
      */
     public boolean exist(CriteriaBuilder cb, PK notId) {
+        if (!entityClazz.equals(cb.getEnCls())) {
+            cb.setEnCls(entityClazz);
+        }
         if (notId != null)
             cb.notEq("id", notId);
         Long c = count(cb);
@@ -656,6 +682,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     public Long count(CriteriaBuilder cb) {
         Session sess = getSession();
+        if (!entityClazz.equals(cb.getEnCls())) {
+            cb.setEnCls(entityClazz);
+        }
         Criteria ct = cb.buildDeCriteria(false).getExecutableCriteria(sess);
         ct.setCacheable(false);
         return (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
@@ -670,6 +699,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public Page<T> page(CriteriaBuilder cb) {
         Assert.notNull(cb, "CriteriaBuilder need a non-null value");
+        if (!entityClazz.equals(cb.getEnCls())) {
+            cb.setEnCls(entityClazz);
+        }
         Session sess = getSession();
         Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
         ct.setCacheable(false);
@@ -696,6 +728,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         CriteriaBuilder cb;
         try {
             cb = queryParamParser.parseCriteria(qp);
+            if (!entityClazz.equals(cb.getEnCls())) {
+                cb.setEnCls(entityClazz);
+            }
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }
@@ -736,6 +771,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         CriteriaBuilder cb;
         try {
             cb = queryParamParser.parseCriteria(qp);
+            if (!entityClazz.equals(cb.getEnCls())) {
+                cb.setEnCls(entityClazz);
+            }
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }
@@ -755,6 +793,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 根据条件查询DTO列表
      */
     public List<T> list(CriteriaBuilder cb) {
+        if (!entityClazz.equals(cb.getEnCls())) {
+            cb.setEnCls(entityClazz);
+        }
         List<Map<String, Object>> list = listMap(cb);
         return BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
     }
@@ -766,6 +807,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         CriteriaBuilder cb;
         try {
             cb = queryParamParser.parseCriteria(qp);
+            if (!entityClazz.equals(cb.getEnCls())) {
+                cb.setEnCls(entityClazz);
+            }
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }
@@ -777,6 +821,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public List<Map<String, Object>> listMap(CriteriaBuilder cb) {
         Assert.notNull(cb, "CriteriaBuilder need a non-null value");
+        if (!entityClazz.equals(cb.getEnCls())) {
+            cb.setEnCls(entityClazz);
+        }
         Session sess = getSession();
         Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
         ct.setCacheable(false);
@@ -797,6 +844,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         CriteriaBuilder cb;
         try {
             cb = queryParamParser.parseCriteria(qp);
+            if (!entityClazz.equals(cb.getEnCls())) {
+                cb.setEnCls(entityClazz);
+            }
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }

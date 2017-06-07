@@ -52,7 +52,7 @@ public class QueryParamParser {
     public CriteriaBuilder parseCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
         // 解析查询实体类型
         if (StringUtils.isEmpty(p.getCls()))
-            throw new SimplifiedException("未指定查询实体");
+            p.setCls(IEntity.class.getName());
         Class<?> enCls = Class.forName(p.getCls());
         if (!IEntity.class.isAssignableFrom(enCls) || null == enCls.getAnnotation(Entity.class))
             throw new SimplifiedException(p.getCls() + " is not an Entity Class");

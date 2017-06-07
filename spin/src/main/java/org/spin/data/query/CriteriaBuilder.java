@@ -1,5 +1,6 @@
 package org.spin.data.query;
 
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.MatchMode;
@@ -8,12 +9,15 @@ import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.sql.JoinType;
-import org.spin.data.core.IEntity;
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.CollectionUtils;
-import org.spin.data.util.EntityUtils;
+import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.data.core.IEntity;
 import org.spin.data.core.PageRequest;
+import org.spin.data.util.EntityUtils;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -59,6 +63,15 @@ public class CriteriaBuilder {
         instance.projected = false;
         instance.deCriteria = DetachedCriteria.forClass(enCls);
         return instance;
+    }
+
+    /**
+     * 创建离线查询条件(不指定查询实体，在Repository环境中动态关联实体)
+     *
+     * @return {@link CriteriaBuilder}
+     */
+    public static CriteriaBuilder newInstance() {
+        return forClass(IEntity.class);
     }
 
     /**
@@ -338,8 +351,22 @@ public class CriteriaBuilder {
         return deCriteria;
     }
 
-    public Class<?> getEnCls() {
+    public Class<? extends IEntity> getEnCls() {
         return enCls;
+    }
+
+    public final void setEnCls(Class<? extends IEntity> enCls) {
+        this.enCls = enCls;
+        Field criteriaField = ReflectionUtils.findField(DetachedCriteria.class, "criteria");
+        ReflectionUtils.makeAccessible(criteriaField);
+        try {
+            Criteria criteria = (Criteria) criteriaField.get(deCriteria);
+            Field classNameField = ReflectionUtils.findField(CriteriaImpl.class, "entityOrClassName");
+            ReflectionUtils.makeAccessible(classNameField);
+            classNameField.set(criteria, enCls.getName());
+        } catch (IllegalAccessException e) {
+            throw new SimplifiedException("Set query entity class error", e);
+        }
     }
 
     public Set<String> getFields() {
@@ -363,6 +390,7 @@ public class CriteriaBuilder {
     public PageRequest getPageRequest() {
         return pageRequest;
     }
+
 
     /**
      * 处理字段投影，设置2层甚至更多层关联的关联关系

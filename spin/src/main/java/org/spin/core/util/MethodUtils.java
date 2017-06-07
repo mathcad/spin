@@ -13,21 +13,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * <p> Utility reflection methods focused on methods in general rather than properties in particular. </p>
- * <p>
- * <h3>Known Limitations</h3>
- * <h4>Accessing Public Methods In A Default Access Superclass</h4>
- * <p>There is an issue when invoking public methods contained in a default access superclass.
- * Reflection locates these methods fine and correctly assigns them as public.
- * However, an <code>IllegalAccessException</code> is thrown if the method is invoked.</p>
- * <p>
- * <p><code>MethodUtils</code> contains a workaround for this situation.
- * It will attempt to call <code>setAccessible</code> on this method.
- * If this call succeeds, then the method can be invoked as normal.
- * This call will only succeed when the application has sufficient security privilages.
- * If this call fails then a warning will be logged and the method may fail.</p>
- *
- * @version $DistributedId: MethodUtils.java 1746219 2016-05-31 05:05:09Z ggregory $
+ * Method工具类
  */
 public abstract class MethodUtils {
     private static final Logger logger = LoggerFactory.getLogger(MethodUtils.class);

@@ -27,21 +27,12 @@ public abstract class EnumUtils {
     private static final String S_DOES_NOT_SEEM_TO_BE_AN_ENUM_TYPE = "%s does not seem to be an Enum type";
     private static final String ENUM_CLASS_MUST_BE_DEFINED = "EnumClass must be defined.";
 
-    /**
-     * This constructor is public to permit tools that require a JavaBean
-     * instance to operate.
-     */
-    public EnumUtils() {
-    }
 
     /**
-     * <p>Gets the {@code Map} of enums by name.</p>
-     * <p>
-     * <p>This method is useful when you need a map of enums by name.</p>
+     * 将枚举转换为Map
      *
-     * @param <E>       the type of the enumeration
-     * @param enumClass the class of the enum to query, not null
-     * @return the modifiable map of enum names to enums, never null
+     * @param <E>       枚举类
+     * @param enumClass 待转换的枚举
      */
     public static <E extends Enum<E>> Map<String, E> getEnumMap(final Class<E> enumClass) {
         final Map<String, E> map = new LinkedHashMap<>();
@@ -52,28 +43,21 @@ public abstract class EnumUtils {
     }
 
     /**
-     * <p>Gets the {@code List} of enums.</p>
-     * <p>
-     * <p>This method is useful when you need a list of enums rather than an array.</p>
+     * 获取枚举中的枚举值列表
      *
-     * @param <E>       the type of the enumeration
-     * @param enumClass the class of the enum to query, not null
-     * @return the modifiable list of enums, never null
+     * @param <E>       枚举类
+     * @param enumClass 待转换的枚举
      */
     public static <E extends Enum<E>> List<E> getEnumList(final Class<E> enumClass) {
         return new ArrayList<>(Arrays.asList(enumClass.getEnumConstants()));
     }
 
     /**
-     * <p>Checks if the specified name is a valid enum for the class.</p>
-     * <p>
-     * <p>This method differs from {@link Enum#valueOf} in that checks if the name is
-     * a valid enum without needing to catch the exception.</p>
+     * 判断给定的枚举常量名称是否存在于枚举
      *
-     * @param <E>       the type of the enumeration
-     * @param enumClass the class of the enum to query, not null
-     * @param enumName  the enum name, null returns false
-     * @return true if the enum name is valid, otherwise false
+     * @param <E>       枚举类
+     * @param enumClass 枚举
+     * @param enumName  枚举常量名称
      */
     public static <E extends Enum<E>> boolean isValidEnum(final Class<E> enumClass, final String enumName) {
         if (enumName == null) {
@@ -145,10 +129,22 @@ public abstract class EnumUtils {
      * @param field   字段名
      * @return 枚举常量
      */
-    public static <E extends Enum<E>> E getEnum(Class<E> enumCls, int value, String... field) {
+    public static <E extends Enum<E>> E getEnum(Class<E> enumCls, int value) {
+        return getEnum(enumCls, value, "value");
+    }
+
+    /**
+     * 通过字段值，获得枚举类型的常量。默认为value字段
+     *
+     * @param enumCls 枚举类型
+     * @param value   字段的值
+     * @param field   字段名
+     * @return 枚举常量
+     */
+    public static <E extends Enum<E>> E getEnum(Class<E> enumCls, int value, String field) {
         String fieldName;
-        if (null != field && field.length > 0 && StringUtils.isNotEmpty(field[0]))
-            fieldName = field[0];
+        if (null != field && StringUtils.isNotEmpty(field))
+            fieldName = field;
         else
             fieldName = "value";
         Field valueField;

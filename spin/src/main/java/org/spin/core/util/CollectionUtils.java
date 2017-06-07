@@ -1,19 +1,3 @@
-/*
- * Copyright 2002-2015 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.spin.core.util;
 
 import org.spin.core.Assert;
@@ -23,61 +7,43 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * Miscellaneous collection utility methods.
- * Mainly for internal use within the framework.
- *
- * @author Juergen Hoeller
- * @author Rob Harrop
- * @author Arjen Poutsma
- * @since 1.1.3
+ * 集合工具类
  */
 public abstract class CollectionUtils {
 
     /**
-     * Return {@code true} if the supplied Collection is {@code null} or empty.
-     * Otherwise, return {@code false}.
+     * 判断集合是否为空或{@code null}
      *
-     * @param collection the Collection to check
-     * @return whether the given Collection is empty
+     * @param collection 待检查集合
      */
     public static boolean isEmpty(Collection<?> collection) {
         return (collection == null || collection.isEmpty());
     }
 
     /**
-     * Return {@code true} if the supplied Map is {@code null} or empty.
-     * Otherwise, return {@code false}.
-     *
-     * @param map the Map to check
-     * @return whether the given Map is empty
+     * 判断Map是否为空
      */
     public static boolean isEmpty(Map<?, ?> map) {
         return (map == null || map.isEmpty());
     }
 
     /**
-     * Convert the supplied array into a List. A primitive array gets converted
-     * into a List of the appropriate wrapper type.
-     * <p><b>NOTE:</b> Generally prefer the standard {@link Arrays#asList} method.
-     * This {@code arrayToList} method is just meant to deal with an incoming Object
-     * value that might be an {@code Object[]} or a primitive array at runtime.
-     * <p>A {@code null} source value will be converted to an empty List.
+     * 将数组转换为List。若数组元素是基本类型，会被转换为包装类型
+     * <p>若参数为{@code null}，将被转换为List</p>
      *
      * @param source the (potentially primitive) array
-     * @return the converted List result
      * @see ObjectUtils#toObjectArray(Object)
      * @see Arrays#asList(Object[])
      */
-    @SuppressWarnings("rawtypes")
     public static List arrayToList(Object source) {
         return Arrays.asList(ObjectUtils.toObjectArray(source));
     }
 
     /**
-     * Merge the given array into the given Collection.
+     * 将数组中的元素合并到集合中
      *
-     * @param array      the array to merge (may be {@code null})
-     * @param collection the target Collection to merge the array into
+     * @param array      待合并的数组 (可以为 {@code null})
+     * @param collection 合并的目标集合
      */
     @SuppressWarnings("unchecked")
     public static <E> void mergeArrayIntoCollection(Object array, Collection<E> collection) {
@@ -91,13 +57,10 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * Merge the given Properties instance into the given Map,
-     * copying all properties (key-value pairs) over.
-     * <p>Uses {@code Properties.propertyNames()} to even catch
-     * default properties linked into the original Properties instance.
+     * 将Properties实例中的内容合并到Map中
      *
-     * @param props the Properties instance to merge (may be {@code null})
-     * @param map   the target Map to merge the properties into
+     * @param props 待合并的Properties实例(可以为 {@code null})
+     * @param map   合并的目标Map
      */
     @SuppressWarnings("unchecked")
     public static <K, V> void mergePropertiesIntoMap(Properties props, Map<K, V> map) {
@@ -119,16 +82,15 @@ public abstract class CollectionUtils {
 
 
     /**
-     * Check whether the given Iterator contains the given element.
+     * 检查迭代器中是否含有与指定元素相同的元素(equals)
      *
-     * @param iterator the Iterator to check
-     * @param element  the element to look for
-     * @return {@code true} if found, {@code false} else
+     * @param iterator 待检查的目标迭代器
+     * @param element  待检查的目标元素
      */
-    public static boolean contains(Iterator<?> iterator, Object element) {
+    public static <T> boolean contains(Iterator<T> iterator, T element) {
         if (iterator != null) {
             while (iterator.hasNext()) {
-                Object candidate = iterator.next();
+                T candidate = iterator.next();
                 if (ObjectUtils.nullSafeEquals(candidate, element)) {
                     return true;
                 }
@@ -138,11 +100,10 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * Check whether the given Enumeration contains the given element.
+     * 检查枚举中是否含有指定元素
      *
-     * @param enumeration the Enumeration to check
-     * @param element     the element to look for
-     * @return {@code true} if found, {@code false} else
+     * @param enumeration 待检查的枚举
+     * @param element     待检查的枚举常量
      */
     public static boolean contains(Enumeration<?> enumeration, Object element) {
         if (enumeration != null) {
@@ -157,17 +118,15 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * Check whether the given Collection contains the given element instance.
-     * <p>Enforces the given instance to be present, rather than returning
-     * {@code true} for an equal element as well.
+     * 检查集合中是否含有指定对象实例(同一实例)
      *
-     * @param collection the Collection to check
-     * @param element    the element to look for
-     * @return {@code true} if found, {@code false} else
+     * @param iterator 待检查的目标迭代器
+     * @param element  待检查的目标元素
      */
-    public static boolean containsInstance(Collection<?> collection, Object element) {
-        if (collection != null) {
-            for (Object candidate : collection) {
+    public static boolean containsInstance(Iterator<?> iterator, Object element) {
+        if (iterator != null) {
+            while (iterator.hasNext()) {
+                Object candidate = iterator.next();
                 if (candidate == element) {
                     return true;
                 }
@@ -177,12 +136,10 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * Return {@code true} if any element in '{@code candidates}' is
-     * contained in '{@code source}'; otherwise returns {@code false}.
+     * 判断两集合是否相交
      *
-     * @param source     the source Collection
-     * @param candidates the candidates to search for
-     * @return whether any of the candidates has been found
+     * @param source     源集合
+     * @param candidates 目标集合
      */
     public static boolean containsAny(Collection<?> source, Collection<?> candidates) {
         if (isEmpty(source) || isEmpty(candidates)) {
@@ -197,35 +154,29 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * Return the first element in '{@code candidates}' that is contained in
-     * '{@code source}'. If no element in '{@code candidates}' is present in
-     * '{@code source}' returns {@code null}. Iteration order is
-     * {@link Collection} implementation specific.
+     * 查找目标集合中第一个与源集合相同元素
+     * 如果两集合不相交，返回{@code null}
      *
-     * @param source     the source Collection
-     * @param candidates the candidates to search for
-     * @return the first present object, or {@code null} if not found
+     * @param source     源集合
+     * @param candidates 目标集合
      */
-    @SuppressWarnings("unchecked")
     public static <E> E findFirstMatch(Collection<?> source, Collection<E> candidates) {
         if (isEmpty(source) || isEmpty(candidates)) {
             return null;
         }
-        for (Object candidate : candidates) {
+        for (E candidate : candidates) {
             if (source.contains(candidate)) {
-                return (E) candidate;
+                return candidate;
             }
         }
         return null;
     }
 
     /**
-     * Find a single value of the given type in the given Collection.
+     * 查找目标集合中，指定类型的第一个元素
      *
-     * @param collection the Collection to search
-     * @param type       the type to look for
-     * @return a value of the given type found if there is a clear match,
-     * or {@code null} if none or more than one such value found
+     * @param collection 待查找的目标集合
+     * @param type       搜索的类型
      */
     @SuppressWarnings("unchecked")
     public static <T> T findValueOfType(Collection<?> collection, Class<T> type) {
@@ -246,14 +197,14 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * Find a single value of one of the given types in the given Collection:
-     * searching the Collection for a value of the first type, then
-     * searching for a value of the second type, etc.
+     * 查找目标集合中，指定类型的第一个元素：
+     * <pre>
+     *     查找第集合中第一个类型的元素，如果没有，查找第二个类型的元素，依次查找。
+     *     返回找到的第一个元素
+     * </pre>
      *
-     * @param collection the collection to search
-     * @param types      the types to look for, in prioritized order
-     * @return a value of one of the given types found if there is a clear match,
-     * or {@code null} if none or more than one such value found
+     * @param collection 待查找的目标集合
+     * @param types      搜索的类型
      */
     public static Object findValueOfType(Collection<?> collection, Class<?>[] types) {
         if (isEmpty(collection) || ObjectUtils.isEmpty(types)) {
@@ -269,11 +220,9 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * Determine whether the given Collection only contains a single unique object.
+     * 判断集合中是否仅含有一个唯一元素(去重后唯一)
      *
-     * @param collection the Collection to check
-     * @return {@code true} if the collection contains a single reference or
-     * multiple references to the same instance, {@code false} else
+     * @param collection 待检查的集合
      */
     public static boolean hasUniqueObject(Collection<?> collection) {
         if (isEmpty(collection)) {
@@ -293,11 +242,9 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * Find the common element type of the given Collection, if any.
+     * 检查集合中元素的类型，如果元素类型不同或集合为空，返回null
      *
-     * @param collection the Collection to check
-     * @return the common element type, or {@code null} if no clear
-     * common type has been found (or the collection was empty)
+     * @param collection 待检查集合
      */
     public static Class<?> findCommonElementType(Collection<?> collection) {
         if (isEmpty(collection)) {
@@ -317,9 +264,7 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * Marshal the elements from the given enumeration into an array of the given type.
-     * Enumeration elements must be assignable to the type of the given array. The array
-     * returned will be a different instance than the array given.
+     * 将枚举类型的所有枚举值包装成为一个数组
      */
     public static <A, E extends A> A[] toArray(Enumeration<E> enumeration, A[] array) {
         ArrayList<A> elements = new ArrayList<>();
@@ -330,32 +275,27 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * Adapt an enumeration to an iterator.
+     * 获取枚举类型的迭代器
      *
-     * @param enumeration the enumeration
-     * @return the iterator
+     * @param enumeration 枚举
      */
     public static <E> Iterator<E> toIterator(Enumeration<E> enumeration) {
         return new EnumerationIterator<>(enumeration);
     }
 
     /**
-     * Adapt a {@code Map<K, List<V>>} to an {@code MultiValueMap<K, V>}.
+     * 将Map转换为MultiValueMap
      *
-     * @param map the original map
-     * @return the multi-value map
-     * @since 3.1
+     * @param map 源Map
      */
     public static <K, V> MultiValueMap<K, V> toMultiValueMap(Map<K, List<V>> map) {
         return new MultiValueMapAdapter<>(map);
     }
 
     /**
-     * Return an unmodifiable view of the specified multi-value map.
+     * 返回MultiValueMap的一个只读视图
      *
-     * @param map the map for which an unmodifiable view is to be returned.
-     * @return an unmodifiable view of the specified multi-value map.
-     * @since 3.1
+     * @param map 目标Map
      */
     @SuppressWarnings("unchecked")
     public static <K, V> MultiValueMap<K, V> unmodifiableMultiValueMap(MultiValueMap<? extends K, ? extends V> map) {
@@ -371,7 +311,7 @@ public abstract class CollectionUtils {
 
 
     /**
-     * Iterator wrapping an Enumeration.
+     * 枚举迭代器
      */
     private static class EnumerationIterator<E> implements Iterator<E> {
 
@@ -399,7 +339,7 @@ public abstract class CollectionUtils {
 
 
     /**
-     * Adapts a Map to the MultiValueMap contract.
+     * Map到MultiValueMap的适配器
      */
     @SuppressWarnings("serial")
     private static class MultiValueMapAdapter<K, V> implements MultiValueMap<K, V>, Serializable {
@@ -413,11 +353,7 @@ public abstract class CollectionUtils {
 
         @Override
         public void add(K key, V value) {
-            List<V> values = this.map.get(key);
-            if (values == null) {
-                values = new LinkedList<>();
-                this.map.put(key, values);
-            }
+            List<V> values = this.map.computeIfAbsent(key, k -> new LinkedList<>());
             values.add(value);
         }
 

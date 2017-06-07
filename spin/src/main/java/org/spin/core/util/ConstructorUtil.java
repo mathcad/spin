@@ -1,18 +1,3 @@
-/*
- * Copyright (C) 2008 feilong
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.spin.core.util;
 
 import java.lang.reflect.Constructor;
@@ -20,21 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 
 /**
- * <p> Utility reflection methods focussed on constructors, modelled after {@link MethodUtils}. </p>
- * <p>
- * <h3>Known Limitations</h3>
- * <h4>Accessing Public Constructors In A Default Access Superclass</h4>
- * <p>There is an issue when invoking public constructors contained in a default access superclass.
- * Reflection locates these constructors fine and correctly assigns them as public.
- * However, an <code>IllegalAccessException</code> is thrown if the constructors is invoked.</p>
- * <p>
- * <p><code>ConstructorUtils</code> contains a workaround for this situation.
- * It will attempt to call <code>setAccessible</code> on this constructor.
- * If this call succeeds, then the method can be invoked as normal.
- * This call will only succeed when the application has sufficient security privilages.
- * If this call fails then a warning will be logged and the method may fail.</p>
- *
- * @version $DistributedId: ConstructorUtils.java 1746219 2016-05-31 05:05:09Z ggregory $
+ * 构造方法工具类
  */
 public abstract class ConstructorUtil {
 
