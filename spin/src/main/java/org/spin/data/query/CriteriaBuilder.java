@@ -82,7 +82,7 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder page(int page, int size) {
-        pageRequest = new PageRequest(page - 1, size);
+        pageRequest = new PageRequest(page, size);
         return this;
     }
 

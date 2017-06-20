@@ -267,14 +267,14 @@ public class QueryParam implements Serializable {
     /**
      * 分页页码，从1开始
      */
-    public int getPage() {
-        return pagger.getPage();
+    public Integer getPage() {
+        return null == pagger ? null : pagger.getPage();
     }
 
     /**
      * 分页大小
      */
     public Integer getPageSize() {
-        return pagger.getPageSize();
+        return null == pagger ? null : pagger.getPageSize();
     }
 }

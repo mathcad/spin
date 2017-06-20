@@ -37,7 +37,7 @@ import java.util.Map;
 @Component
 public class QueryParamParser {
     private static final Logger logger = LoggerFactory.getLogger(QueryParamParser.class);
-    private static final String SPLITOR = "__";
+    private static final String SPLITOR = " ";
     private Gson gson = new Gson();
 
     /**
@@ -108,14 +108,14 @@ public class QueryParamParser {
         this.parseOrders(p).forEach(result::orderBy);
 
         // 处理分页
-        if (null != p.getPageSize())
+        if (null != p.getPagger())
             result.page(p.getPage(), p.getPageSize());
         return result;
     }
 
     /**
      * 处理排序字段
-     * order__desc,id__desc
+     * order desc,id desc
      */
     public List<Order> parseOrders(QueryParam p) {
         List<Order> orders = new ArrayList<>();
