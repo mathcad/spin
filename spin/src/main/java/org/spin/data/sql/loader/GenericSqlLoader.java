@@ -1,8 +1,8 @@
 package org.spin.data.sql.loader;
 
 import org.spin.data.core.DatabaseType;
+import org.spin.data.core.PageRequest;
 import org.spin.data.core.SQLLoader;
-import org.spin.data.query.QueryParam;
 import org.spin.data.sql.SQLSource;
 import org.spin.data.sql.resolver.SimpleResolver;
 import org.spin.data.sql.resolver.TemplateResolver;
@@ -49,8 +49,8 @@ public abstract class GenericSqlLoader implements SQLLoader {
     }
 
     @Override
-    public SQLSource getPagedSQL(String id, Map<String, ?> model, QueryParam queryParam) {
-        return dbType.getPagedSQL(getSQL(id, model), queryParam);
+    public SQLSource getPagedSQL(String id, Map<String, ?> model, PageRequest pageRequest) {
+        return dbType.getPagedSQL(getSQL(id, model), pageRequest);
     }
 
     @Override

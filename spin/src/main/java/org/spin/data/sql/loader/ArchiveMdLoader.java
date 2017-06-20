@@ -76,9 +76,14 @@ public class ArchiveMdLoader extends ArchiveSQLLoader {
 
     protected InputStream getInputStream(String id) {
         String cmdFileName = id.substring(0, id.lastIndexOf('.'));
-        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".md";
+        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + this.getDbType().getProductName() + "/" + cmdFileName + ".md";
         try {
-            return this.getClass().getResourceAsStream(path);
+            InputStream is = this.getClass().getResourceAsStream(path);
+            if (null == is) {
+                path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".md";
+                is = this.getClass().getResourceAsStream(path);
+            }
+            return is;
         } catch (Exception e) {
             throw new SimplifiedException("加载sql模板文件异常:[" + path + "]", e);
         }

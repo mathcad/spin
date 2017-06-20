@@ -11,10 +11,11 @@ import org.spin.data.sql.SQLSource;
  *
  * @author xuweinan
  */
-public class OracleDatabaseType implements DatabaseType {
+public class SQLiteDatabaseType implements DatabaseType {
+
     @Override
     public String getProductName() {
-        return "Oracle";
+        return "SQLite";
     }
 
     @Override
@@ -22,14 +23,9 @@ public class OracleDatabaseType implements DatabaseType {
         Assert.notNull(pageRequest, "Page request must be a NON-NULL value");
         SQLSource ss = new SQLSource();
         ss.setId(sqlSource.getId());
-        String sql = sqlSource.getTemplate();
-        String order = pageRequest.parseOrder("D");
-        if (StringUtils.isNotEmpty(order))
-            sql = "SELECT * FROM (" + sqlSource.getTemplate() + ") D " + order;
-        String pagedSql = sql;
-        pagedSql = "SELECT * FROM (SELECT O.*, ROWNUM RN FROM (" + sql + ") O WHERE ROWNUM > "
-            + pageRequest.getOffset() + ") WHERE RN <= "
-            + (pageRequest.getOffset() + pageRequest.getPageSize());
+        String order = pageRequest.parseOrder("out_alias");
+        String pagedSql = "SELECT * FROM (" + sqlSource.getTemplate() + ") AS out_alias " + (StringUtils.isBlank(order) ? "" : order);
+        pagedSql += " LIMIT " + pageRequest.getPageSize() + " OFFSET " + pageRequest.getOffset();
         ss.setTemplate(pagedSql);
         return ss;
     }

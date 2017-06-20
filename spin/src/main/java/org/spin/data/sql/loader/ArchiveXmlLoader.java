@@ -53,9 +53,14 @@ public class ArchiveXmlLoader extends ArchiveSQLLoader {
 
     protected InputStream getInputStream(String id) {
         String cmdFileName = id.substring(0, id.lastIndexOf('.'));
-        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".xml";
+        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + this.getDbType().getProductName() + "/" + cmdFileName + ".xml";
         try {
-            return this.getClass().getResourceAsStream(path);
+            InputStream is = this.getClass().getResourceAsStream(path);
+            if (null == is) {
+                path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".xml";
+                is = this.getClass().getResourceAsStream(path);
+            }
+            return is;
         } catch (Exception e) {
             throw new SimplifiedException("加载sql模板文件异常:[" + path + "]", e);
         }

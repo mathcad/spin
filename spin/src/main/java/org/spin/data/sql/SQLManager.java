@@ -7,14 +7,12 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.data.core.Page;
+import org.spin.data.core.PageRequest;
 import org.spin.data.core.SQLLoader;
-import org.spin.data.query.QueryParam;
 import org.spin.data.sql.dbtype.MySQLDatabaseType;
 import org.spin.data.sql.dbtype.OracleDatabaseType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
 import org.springframework.stereotype.Component;
@@ -114,14 +112,14 @@ public class SQLManager {
     /**
      * 分页查询
      */
-    public Page<Map<String, Object>> listAsPageMap(String sqlId, QueryParam qp) {
-        SQLSource sql = loader.getSQL(sqlId, qp.getConditions());
-        SQLSource pageSql = loader.getPagedSQL(sqlId, qp.getConditions(), qp);
+    public Page<Map<String, Object>> listAsPageMap(String sqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
+        SQLSource sql = loader.getSQL(sqlId, paramMap);
+        SQLSource pageSql = loader.getPagedSQL(sqlId, paramMap, pageRequest);
         List<Map<String, Object>> list;
         if (logger.isDebugEnabled())
             logger.debug(sqlId + ":\n" + pageSql.getTemplate());
         try {
-            list = nameJt.queryForList(pageSql.getTemplate(), qp.getConditions());
+            list = nameJt.queryForList(pageSql.getTemplate(), paramMap);
         } catch (Exception ex) {
             logger.error("执行查询出错：" + sqlId);
             logger.error(pageSql.getTemplate());
@@ -129,9 +127,9 @@ public class SQLManager {
         }
         // 增加总数统计 去除排序语句
         String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ") out_alias";
-        SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
-        Long total = nameJt.queryForObject(totalSqlTxt, params, Long.class);
-        return new Page<>(list, total != null ? total : 0, qp.getPageSize());
+//        SqlParameterSource params = new MapSqlParameterSource(paramMap);
+        Long total = nameJt.queryForObject(totalSqlTxt, paramMap, Long.class);
+        return new Page<>(list, total != null ? total : 0, pageRequest.getPageSize());
     }
 
     /**
@@ -169,14 +167,14 @@ public class SQLManager {
     /**
      * 分页查询
      */
-    public <T> Page<T> listAsPage(String sqlId, Class<T> entityClazz, QueryParam qp) {
-        SQLSource sql = loader.getSQL(sqlId, qp.getConditions());
-        SQLSource pageSql = loader.getPagedSQL(sqlId, qp.getConditions(), qp);
+    public <T> Page<T> listAsPage(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap, PageRequest pageRequest) {
+        SQLSource sql = loader.getSQL(sqlId, paramMap);
+        SQLSource pageSql = loader.getPagedSQL(sqlId, paramMap, pageRequest);
         List<Map<String, Object>> list;
         if (logger.isDebugEnabled())
             logger.debug(sqlId + ":\n" + pageSql.getTemplate());
         try {
-            list = nameJt.queryForList(pageSql.getTemplate(), qp.getConditions());
+            list = nameJt.queryForList(pageSql.getTemplate(), paramMap);
         } catch (Exception ex) {
             logger.error("执行查询出错：" + sqlId);
             logger.error(pageSql.getTemplate());
@@ -192,9 +190,9 @@ public class SQLManager {
         }
         // 增加总数统计 去除排序语句
         String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ")";
-        SqlParameterSource params = new MapSqlParameterSource(qp.getConditions());
-        Long total = nameJt.queryForObject(totalSqlTxt, params, Long.class);
-        return new Page<>(res, total != null ? total : 0, qp.getPageSize());
+//        SqlParameterSource params = new MapSqlParameterSource(paramMap);
+        Long total = nameJt.queryForObject(totalSqlTxt, paramMap, Long.class);
+        return new Page<>(res, total != null ? total : 0, pageRequest.getPageSize());
     }
 
     /**

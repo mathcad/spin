@@ -870,12 +870,12 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return sqlManager.listAsMap(sqlId, paramMap);
     }
 
-    public Page<T> pageBySql(String sqlId, QueryParam qp) {
-        return sqlManager.listAsPage(sqlId, entityClazz, qp);
+    public Page<T> pageBySql(String sqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
+        return sqlManager.listAsPage(sqlId, entityClazz, paramMap, pageRequest);
     }
 
-    public Page<Map<String, Object>> pageMapBySql(String sqlId, QueryParam qp) {
-        return sqlManager.listAsPageMap(sqlId, qp);
+    public Page<Map<String, Object>> pageMapBySql(String sqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
+        return sqlManager.listAsPageMap(sqlId, paramMap, pageRequest);
     }
 
     public int executeCUD(String sqlId, Map<String, ?> paramMap) {

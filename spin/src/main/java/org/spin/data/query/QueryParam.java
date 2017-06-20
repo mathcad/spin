@@ -1,13 +1,14 @@
 package org.spin.data.query;
 
-import org.spin.core.SpinContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
+import org.spin.core.SpinContext;
 import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.spin.data.core.PageRequest;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -33,6 +34,7 @@ public class QueryParam implements Serializable {
     private Set<String> fields = new HashSet<>();
     private Map<String, String> aliasMap = new HashMap<>();
     private QueryPredicate predicate = new QueryPredicate();
+    private PageRequest pagger = new PageRequest();
     private String signature;
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,16 +43,6 @@ public class QueryParam implements Serializable {
         if (!SpinContext.devMode && null != qp && !qp.validation())
             throw new SimplifiedException(ErrorCode.SIGNATURE_FAIL, "请求参数被客户端篡改");
         return qp;
-    }
-
-    /**
-     * 解析order部分
-     *
-     * @param tableAlias 子查询别名
-     * @return {@link String} 查询语句
-     */
-    public String parseOrder(String tableAlias) {
-        return StringUtils.isNotEmpty(predicate.getSort()) ? "ORDER BY" + predicate.getSort().replaceAll("__", " ").replaceAll(",\\s*", ", " + tableAlias + ".") : "";
     }
 
     /**
@@ -178,8 +170,8 @@ public class QueryParam implements Serializable {
      * @return {@link QueryParam}
      */
     public QueryParam page(int pageIdx, int pageSize) {
-        predicate.setPageIdx(pageIdx);
-        predicate.setPageSize(pageSize);
+        pagger.setPage(pageIdx);
+        pagger.setPageSize(pageSize);
         return this;
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -234,6 +226,20 @@ public class QueryParam implements Serializable {
     }
 
     /**
+     * 分页参数
+     */
+    public PageRequest getPagger() {
+        return pagger;
+    }
+
+    /**
+     * 分页参数
+     */
+    public void setPagger(PageRequest pagger) {
+        this.pagger = pagger;
+    }
+
+    /**
      * 查询条件
      */
     public void setPredicate(QueryPredicate predicate) {
@@ -261,14 +267,14 @@ public class QueryParam implements Serializable {
     /**
      * 分页页码，从1开始
      */
-    public int getPageIdx() {
-        return predicate.getPageIdx();
+    public int getPage() {
+        return pagger.getPage();
     }
 
     /**
      * 分页大小
      */
     public Integer getPageSize() {
-        return predicate.getPageSize();
+        return pagger.getPageSize();
     }
 }

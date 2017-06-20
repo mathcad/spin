@@ -109,7 +109,7 @@ public class QueryParamParser {
 
         // 处理分页
         if (null != p.getPageSize())
-            result.page(p.getPageIdx(), p.getPageSize());
+            result.page(p.getPage(), p.getPageSize());
         return result;
     }
 

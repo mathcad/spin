@@ -18,8 +18,6 @@ public class QueryPredicate implements Serializable {
 
     private Map<String, String> conditions = new HashMap<>();
     private String sort = null;
-    private int pageIdx = 1;
-    private Integer pageSize = null;
 
     /**
      * 计算当前查询谓词的签名
@@ -47,7 +45,7 @@ public class QueryPredicate implements Serializable {
 
     /**
      * 多个排序字段用,隔开
-     * name__desc,id__desc
+     * name desc,id desc
      */
     public String getSort() {
         return sort;
@@ -55,37 +53,9 @@ public class QueryPredicate implements Serializable {
 
     /**
      * 多个排序字段用,隔开
-     * name__desc,id__desc
+     * name desc,id desc
      */
     public void setSort(String sort) {
         this.sort = sort;
-    }
-
-    /**
-     * 分页页码，从1开始
-     */
-    public int getPageIdx() {
-        return pageIdx;
-    }
-
-    /**
-     * 分页页码，从1开始
-     */
-    public void setPageIdx(int pageIdx) {
-        this.pageIdx = pageIdx;
-    }
-
-    /**
-     * 分页大小
-     */
-    public Integer getPageSize() {
-        return pageSize;
-    }
-
-    /**
-     * 分页大小
-     */
-    public void setPageSize(Integer pageSize) {
-        this.pageSize = pageSize;
     }
 }

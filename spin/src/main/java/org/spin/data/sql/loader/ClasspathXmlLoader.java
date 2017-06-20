@@ -9,6 +9,8 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -54,13 +56,20 @@ public class ClasspathXmlLoader extends FileSystemSQLLoader {
     @Override
     protected File getFile(String id) {
         String cmdFileName = id.substring(0, id.lastIndexOf('.'));
-        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".xml";
-        String uri;
+        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + this.getDbType().getProductName() + "/" + cmdFileName + ".xml";
+        URL url;
         try {
-            uri = this.getClass().getResource(path).getPath();
+            url = this.getClass().getResource(path);
+            if (null == url) {
+                path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".xml";
+                url = this.getClass().getResource(path);
+            }
+            if (null == url) {
+                throw new FileNotFoundException("sql模板文件不存在");
+            }
         } catch (Exception e) {
             throw new SimplifiedException("加载sql模板文件异常:[" + path + "]", e);
         }
-        return new File(uri);
+        return new File(url.getPath());
     }
 }

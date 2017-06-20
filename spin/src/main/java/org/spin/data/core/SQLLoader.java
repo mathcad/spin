@@ -1,6 +1,5 @@
 package org.spin.data.core;
 
-import org.spin.data.query.QueryParam;
 import org.spin.data.sql.SQLSource;
 import org.spin.data.sql.resolver.TemplateResolver;
 
@@ -33,10 +32,10 @@ public interface SQLLoader {
      *
      * @param id         sql的path
      * @param model      参数
-     * @param queryParam 分页参数
+     * @param pageRequest 分页参数
      * @return 参数化的sql
      */
-    SQLSource getPagedSQL(String id, Map<String, ?> model, QueryParam queryParam);
+    SQLSource getPagedSQL(String id, Map<String, ?> model, PageRequest pageRequest);
 
     /**
      * 加载SQL模板
