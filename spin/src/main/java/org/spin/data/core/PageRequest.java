@@ -13,34 +13,33 @@ import java.io.Serializable;
 public class PageRequest implements Serializable {
     private static final long serialVersionUID = 3820016886407002254L;
 
-    private int page;
-    private int pageSize;
+    private int page = 1;
+    private int pageSize = 10000000;
     private String sort;
 
     /**
      * 创建一个默认的{@link PageRequest}, 分页参数索引从1开始
      */
     public PageRequest() {
-        this(1, 10000000);
     }
 
     /**
      * 创建一个新的{@link PageRequest}, 分页参数索引从1开始
      *
-     * @param page zero-based page index.
-     * @param size the pageSize of the page to be returned.
+     * @param page     zero-based page index.
+     * @param pageSize the pageSize of the page to be returned.
      */
-    public PageRequest(int page, int size) {
+    public PageRequest(int page, int pageSize) {
         if (page < 1) {
             throw new IllegalArgumentException("Page index must not be less than one!");
         }
 
-        if (size < 0) {
+        if (pageSize < 0) {
             throw new IllegalArgumentException("Page pageSize must not be less than zero!");
         }
 
         this.page = page;
-        this.pageSize = size;
+        this.pageSize = pageSize;
     }
 
     /**
@@ -73,6 +72,9 @@ public class PageRequest implements Serializable {
      * 分页页码，从1开始
      */
     public void setPage(int page) {
+        if (page < 1) {
+            throw new IllegalArgumentException("Page index must not be less than one!");
+        }
         this.page = page;
     }
 
@@ -87,6 +89,9 @@ public class PageRequest implements Serializable {
      * 分页大小
      */
     public void setPageSize(int pageSize) {
+        if (pageSize < 0) {
+            throw new IllegalArgumentException("Page pageSize must not be less than zero!");
+        }
         this.pageSize = pageSize;
     }
 
