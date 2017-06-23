@@ -1,6 +1,7 @@
 package org.spin.core.util;
 
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * <p>Operations for random {@code String}s.</p>
@@ -21,23 +22,9 @@ import java.util.Random;
 public abstract class RandomStringUtils {
 
     /**
-     * <p>Random object used by random method. This has to be not local
-     * to the random method so as to not return the same value in the
-     * same millisecond.</p>
+     * <p>Random object used by random method.</p>
      */
-    private static final Random RANDOM = new Random();
-
-    /**
-     * <p>{@code RandomStringUtils} instances should NOT be constructed in
-     * standard programming. Instead, the class should be used as
-     * {@code RandomStringUtils.random(5);}.</p>
-     * <p>
-     * <p>This constructor is public to permit tools that require a JavaBean instance
-     * to operate.</p>
-     */
-    public RandomStringUtils() {
-        super();
-    }
+    private static final Random RANDOM = ThreadLocalRandom.current();
 
     // Random
     //-----------------------------------------------------------------------
