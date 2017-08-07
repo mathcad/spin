@@ -223,7 +223,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * <p>如果Session中没有该Id的持久化对象，该Id的实体将先被加载，最后返回该持久化对象。</p>
      * <p>如果指定的实体是新记录，将保存该实体的副本到数据库，并将该副本作为持久化对象返回。</p>
      * <p>指定的对象不会与当前Session关联。</p>
-     * <p>如果对象存在关联属性映射为{@code cascade="merge"}，该方法会级联处理该对象属性<p/>
+     * <p>如果对象存在关联属性映射为{@code cascade="merge"}，该方法会级联处理对象属性</p>
      * 该方法的语义由 JSR-220定义.
      *
      * @param entity 待合并的瞬态实例

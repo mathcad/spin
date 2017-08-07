@@ -126,7 +126,6 @@ public abstract class EnumUtils {
      *
      * @param enumCls 枚举类型
      * @param value   字段的值
-     * @param field   字段名
      * @return 枚举常量
      */
     public static <E extends Enum<E>> E getEnum(Class<E> enumCls, int value) {

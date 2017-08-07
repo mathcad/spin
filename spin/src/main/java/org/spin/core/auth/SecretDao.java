@@ -64,7 +64,7 @@ public interface SecretDao {
      * 保存密钥
      *
      * @param identifier   用户id
-     * @param keyStr       密钥字符串
+     * @param key          密钥字符串
      * @param secret       用户密钥
      * @param secretType   用户密钥类型
      * @param generateTime 生成时间
