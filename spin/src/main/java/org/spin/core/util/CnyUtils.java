@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CnyUtils {
+public abstract class CnyUtils {
     private static Pattern numPattern = Pattern.compile("^([-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]+)[^-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]{0,2}$");
     private static Pattern pureNum = Pattern.compile("^-?\\d+$|^\\d+\\.\\d+$");
     private static String[] scales = {"亿", "万", "千", "仟", "百", "佰", "十", "拾"};

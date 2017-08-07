@@ -92,7 +92,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 获得当前线程的session 如果线程Local变量中有绑定，返回该session
+     * 获得当前线程的session 如果Thread Local变量中有绑定，返回该session
      * 否则，调用sessFactory的getCurrentSession
      */
     public Session getSession() {
@@ -104,17 +104,16 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Open a new session, if thread has one more session, return the last session.
+     * 打开一个新Session，如果线程上有其他Session，则返回最后一个Session
      */
     public Session openSession() {
         return openSession(false);
     }
 
     /**
-     * Open a session manually associated with current thread,
-     * other thread-local transaction may invalid.
+     * 在当前线程上手动打开一个Session，其他的Thread local事务可能会失效
      *
-     * @param requiredNew force to open a new session
+     * @param requiredNew 强制打开新Session
      */
     public Session openSession(boolean requiredNew) {
         Session session = peekThreadSession();
@@ -126,7 +125,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Close all the session in current thread opened manually
+     * 关闭当前线程上手动开启的所有Session
      */
     public void closeSession() {
         Session session = popTreadSession();
@@ -148,9 +147,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Open a session associated with current thread, then open the transaction.
+     * 在当前线程上打开一个Session，并启动事务
      *
-     * @param requiredNew force to open the transaction
+     * @param requiredNew 强制开启事务
      */
     public Transaction openTransaction(boolean requiredNew) {
         Session session = openSession(requiredNew);
@@ -160,23 +159,21 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the
-     * entity instance completely.
+     * 保存指定实体
      *
-     * @param entity entity to save
-     * @return the saved entity (has id)
+     * @param entity 需要保存的实体
+     * @return 保存后的实体(has id)
      */
     public T save(final T entity) {
         return save(entity, false);
     }
 
     /**
-     * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the
-     * entity instance completely.
+     * 保存指定实体
      *
-     * @param entity     entity to save
-     * @param saveWithPk insert with a assigned primary key
-     * @return the saved entity (has id)
+     * @param entity     需要保存的实体
+     * @param saveWithPk 用指定的ID执行insert
+     * @return 保存后的实体(has id)
      */
     public T save(final T entity, boolean saveWithPk) {
         if (entity instanceof AbstractEntity) {
@@ -205,10 +202,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Saves all given entities.
+     * 保存指定的实体
      *
-     * @param entities entities to save
-     * @return the saved entities
+     * @param entities 需要保存的实体集合
+     * @return 保存后的实体
      */
     public List<T> save(Iterable<T> entities) {
         List<T> result = new ArrayList<>();
@@ -222,18 +219,15 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Copy the state of the given object onto the persistent object with the same
-     * identifier. If there is no persistent instance currently associated with
-     * the session, it will be loaded. Return the persistent instance. If the
-     * given instance is unsaved, save a copy of and return it as a newly persistent
-     * instance. The given instance does not become associated with the session.
-     * This operation cascades to associated instances if the association is mapped
-     * with {@code cascade="merge"}
-     * <p/>
-     * The semantics of this method are defined by JSR-220.
+     * 将指定实体的属性复制到相同Id的持久化对象中。
+     * <p>如果Session中没有该Id的持久化对象，该Id的实体将先被加载，最后返回该持久化对象。</p>
+     * <p>如果指定的实体是新记录，将保存该实体的副本到数据库，并将该副本作为持久化对象返回。</p>
+     * <p>指定的对象不会与当前Session关联。</p>
+     * <p>如果对象存在关联属性映射为{@code cascade="merge"}，该方法会级联处理该对象属性<p/>
+     * 该方法的语义由 JSR-220定义.
      *
-     * @param entity a detached instance with state to be copied
-     * @return an updated persistent instance
+     * @param entity 待合并的瞬态实例
+     * @return 更新后的持久化对象
      */
     public T merge(final T entity) {
         //noinspection unchecked
@@ -241,11 +235,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Persist the state of the given detached instance according to the
-     * given replication mode, reusing the current identifier value.
+     * 用指定的复制机制持久化指定瞬态实体
      *
-     * @param entity          the persistent object to replicate
-     * @param replicationMode the Hibernate ReplicationMode
+     * @param entity          待复制的实体
+     * @param replicationMode Hibernate ReplicationMode
      * @see Session#replicate(Object, ReplicationMode)
      */
     public void replicate(final T entity, final ReplicationMode replicationMode) {
@@ -254,15 +247,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Return the persistent instance of the actual entity class
-     * with the given identifier, or {@code null} if not found.
-     * <p>This method is a thin wrapper around
-     * {@link Session#get(Class, Serializable)} for convenience.
-     * For an explanation of the exact semantics of this method, please do refer to
-     * the Hibernate API documentation in the first instance.
+     * 返回指定Id的持久化对象，或者{@code null}(如果Id不存在)
+     * <p>该方法是{@link Session#get(Class, Serializable)}的浅封装</p>
      *
-     * @param id the identifier of the persistent instance
-     * @return the persistent instance, or {@code null} if not found
+     * @param id 主键值
+     * @return 持久化对象, 或 {@code null}
      * @see Session#get(Class, Serializable)
      */
     public T get(final PK id) {
@@ -275,16 +264,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Return the persistent instance of the given identifier, or {@code null} if not found.
-     * <p>Obtains the specified lock mode if the instance exists.
-     * <p>This method is a thin wrapper around
-     * {@link Session#get(Class, Serializable, LockMode)} for convenience.
-     * For an explanation of the exact semantics of this method, please do refer to
-     * the Hibernate API documentation in the first instance.
+     * 返回指定Id的持久化对象，或者{@code null}(如果Id不存在)
+     * <p>如果实体存在，将获取指定的锁</p>
+     * <p>该方法是{@link Session#get(Class, Serializable, LockMode)}的浅封装</p>
      *
-     * @param id       the identifier of the persistent instance
-     * @param lockMode the lock mode to obtain
-     * @return the persistent instance, or {@code null} if not found
+     * @param id       主键值
+     * @param lockMode 锁定模式
+     * @return 持久化对象, 或 {@code null}
      * @see Session#get(Class, Serializable, LockMode)
      */
     public T get(final PK id, final LockMode lockMode) {
@@ -306,16 +292,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Return the persistent instance of the given entity class
-     * with the given identifier, throwing an exception if not found.
-     * <p>This method is a thin wrapper around
-     * {@link Session#load(Class, Serializable)} for convenience.
-     * For an explanation of the exact semantics of this method, please do refer to
-     * the Hibernate API documentation in the first instance.
+     * 返回指定Id的持久化对象，如果Id不存在，抛出异常
      *
-     * @param id the identifier of the persistent instance
-     * @return the persistent instance
-     * @throws org.springframework.orm.ObjectRetrievalFailureException if not found
+     * @param id 主键值
+     * @return 持久化对象
+     * @throws org.springframework.orm.ObjectRetrievalFailureException 如果id不存在则抛出该异常
      * @see Session#load(Class, Serializable)
      */
     public T load(final PK id) {
@@ -323,18 +304,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Return the persistent instance of the given entity class
-     * with the given identifier, throwing an exception if not found.
-     * Obtains the specified lock mode if the instance exists.
-     * <p>This method is a thin wrapper around
-     * {@link Session#load(Class, Serializable, LockMode)} for convenience.
-     * For an explanation of the exact semantics of this method, please do refer to
-     * the Hibernate API documentation in the first instance.
+     * 返回指定Id的持久化对象，如果Id不存在，抛出异常
+     * <p>如果实体存在，将获取指定的锁</p>
      *
-     * @param id       the identifier of the persistent instance
-     * @param lockMode the lock mode to obtain
-     * @return the persistent instance
-     * @throws org.springframework.orm.ObjectRetrievalFailureException if not found
+     * @param id       主键值
+     * @param lockMode 锁定模式
+     * @return 持久化对象
+     * @throws org.springframework.orm.ObjectRetrievalFailureException 如果id不存在则抛出该异常
      * @see Session#load(Class, Serializable)
      */
     public T load(final PK id, final LockMode lockMode) {
@@ -353,9 +329,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Re-read the state of the given persistent instance.
+     * 刷新指定持久化对象的状态
      *
-     * @param entity the persistent instance to re-read
+     * @param entity 待刷新的持久化对象
      * @see Session#refresh(Object)
      */
     public void refresh(final T entity) {
@@ -363,11 +339,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Re-read the state of the given persistent instance.
-     * Obtains the specified lock mode for the instance.
+     * 刷新指定持久化对象的状态，并获取该实体上的锁
      *
-     * @param entity   the persistent instance to re-read
-     * @param lockMode the lock mode to obtain
+     * @param entity   待刷新的持久化对象
+     * @param lockMode 需要获取的锁
      * @see Session#refresh(Object, LockMode)
      */
     public void refresh(final T entity, final LockMode lockMode) {
@@ -379,10 +354,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Check whether the given object is in the Session cache.
+     * 检查Session缓存中是否存在指定的持久化对象
      *
-     * @param entity the persistence instance to check
-     * @return whether the given object is in the Session cache
+     * @param entity 待检查的持久化对象
      * @see Session#contains
      */
     public boolean contains(final T entity) {
@@ -390,18 +364,18 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Deletes a given entity.
+     * 删除指定实体
      *
-     * @throws IllegalArgumentException in case the given entity is {@literal null}.
+     * @throws IllegalArgumentException 当待删除的实体为{@literal null}时抛出该异常
      */
     public void delete(T entity) {
         getSession().delete(Assert.notNull(entity, "The entity to be deleted is null"));
     }
 
     /**
-     * Deletes the entity with the given id.
+     * 通过ID删除指定实体
      *
-     * @throws IllegalArgumentException in case the given {@code id} is {@literal null}
+     * @throws IllegalArgumentException 当待删除的{@code id}为{@literal null}时抛出该异常
      */
     public void delete(PK k) {
         T entity = get(Assert.notNull(k, ID_MUST_NOT_BE_NULL));
@@ -410,9 +384,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Deletes the given entities.
+     * 删除指定实体
      *
-     * @throws IllegalArgumentException in case the given {@link Iterable} is {@literal null}.
+     * @throws IllegalArgumentException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
      */
     public void delete(Iterable<? extends T> entities) {
         Assert.notNull(entities, "The given Iterable of entities not be null!");
@@ -888,7 +862,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /* ---END---***********************委托SQLManager执行SQL语句******************************* */
 
     /**
-     * Flush all pending saves, updates and deletes to the database.
+     * 将所有挂起的保存、更新和删除操作更新到数据库。
      * <p>Only invoke this for selective eager flushing, for example when
      * JDBC code needs to see certain changes within the same transaction.
      * Else, it is preferable to rely on auto-flushing at transaction
@@ -901,8 +875,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Remove all objects from the {@link Session} cache, and
-     * cancel all pending saves, updates and deletes.
+     * 从Session缓存中移除所有持久化对象，并取消所有已挂起的保存，更新和删除操作
      *
      * @see Session#clear
      */
@@ -945,11 +918,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * Check whether write operations are allowed on the given Session.
-     * <p>Default implementation throws an InvalidDataAccessApiUsageException in
-     * case of {@code FlushMode.MANUAL}. Can be overridden in subclasses.
+     * 检查当前Session是否允许write操作
+     * <p>当{@code FlushMode.MANUAL}时，SQLException，可以通过子类重写该行为。
      *
-     * @param session current Hibernate Session
+     * @param session hibernate Session
      * @see #setCheckWriteOperations
      * @see Session#getFlushMode()
      * @see FlushMode#MANUAL
