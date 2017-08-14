@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
  *
  * @author xuweinan
  */
-@Aspect
-@Component
+//@Aspect
+//@Component
 public class ArgumentCheckAspect implements Ordered {
 
     @Pointcut("execution(org.spin.web.RestfulResponse *.*(..)) && @annotation(org.spin.web.annotation.RestfulApi)")
