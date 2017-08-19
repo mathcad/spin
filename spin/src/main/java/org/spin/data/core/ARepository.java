@@ -222,6 +222,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
+     * <p>
      * Copy the state of the given object onto the persistent object with the same
      * identifier. If there is no persistent instance currently associated with
      * the session, it will be loaded. Return the persistent instance. If the
@@ -229,7 +230,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * instance. The given instance does not become associated with the session.
      * This operation cascades to associated instances if the association is mapped
      * with {@code cascade="merge"}
-     * <p/>
+     * </p>
      * The semantics of this method are defined by JSR-220.
      *
      * @param entity a detached instance with state to be copied
