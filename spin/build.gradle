@@ -96,7 +96,7 @@ uploadArchives {
 //            repository(url: "http://121.196.213.233:8081/repository/saturn") {
 //                authentication(userName: "admin", password: "super")
 //            }
-            repository(url: "http://120.26.76.35:8081/nexus/content/repositories/gsh_base/") {
+            repository(url: "http://120.26.76.35:8081/nexus/content/repositories/nbxs/") {
                 authentication(userName: "admin", password: "gsh56..")
             }
             pom.version = "$project.version"

@@ -57,9 +57,9 @@ tasks.withType(JavaCompile) {
 
 task pt << {
     println("bootRepackage")
-    tasks.asMap.forEach({_,v -> println(v.dependsOn)})
-    tasks.asMap.get("bootRepackage").actions.forEach({a -> println(a)})
-    project.properties.forEach({k,v -> println(k)})
+    tasks.asMap.forEach({ _, v -> println(v.dependsOn) })
+    tasks.asMap.get("bootRepackage").actions.forEach({ a -> println(a) })
+    project.properties.forEach({ k, v -> println(k) })
 }
 
 //dependencyManagement {
@@ -81,7 +81,7 @@ dependencies {
         exclude(module: 'jackson-databind')
     }
 //    compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
-    compile (group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion) {
+    compile(group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion) {
         exclude(module: 'jackson-databind')
     }
     compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.10.Final') {
