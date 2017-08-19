@@ -73,16 +73,14 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 }
 
 // 关闭java8 javadoc检查
-if (JavaVersion.current().isJava8Compatible()) {
-    tasks.withType(Javadoc) {
-        options.addStringOption('Xdoclint:none', '-quiet')
-    }
-}
-artifacts {
-    archives javadocJar
-}
-
-
+//if (JavaVersion.current().isJava8Compatible()) {
+//    tasks.withType(Javadoc) {
+//        options.addStringOption('Xdoclint:none', '-quiet')
+//    }
+//}
+//artifacts {
+//    archives javadocJar
+//}
 
 install {
     repositories.mavenInstaller {
