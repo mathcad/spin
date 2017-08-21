@@ -16,8 +16,8 @@ public abstract class CollectionUtils {
      *
      * @param collection 待检查集合
      */
-    public static boolean isEmpty(Collection<?> collection) {
-        return (collection == null || collection.isEmpty());
+    public static boolean isEmpty(Iterable<?> collection) {
+        return (collection == null || !collection.iterator().hasNext());
     }
 
     /**

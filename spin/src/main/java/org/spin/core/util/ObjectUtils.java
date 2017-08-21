@@ -113,7 +113,7 @@ public abstract class ObjectUtils {
      * @param obj 待检查的对象
      * @return {@code true} 如果对象不为 {@code null} 或 <em>empty</em>
      * @see ObjectUtils#isEmpty(Object[])
-     * @see CollectionUtils#isEmpty(Collection)
+     * @see CollectionUtils#isEmpty(Iterable)
      * @see CollectionUtils#isEmpty(Map)
      */
     public static boolean isEmpty(Object obj) {

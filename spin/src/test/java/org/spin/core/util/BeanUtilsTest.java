@@ -3,7 +3,11 @@ package org.spin.core.util;
 import org.spin.core.security.Base64;
 import org.spin.core.security.RSA;
 import org.junit.Test;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.security.KeyPair;
 import java.util.List;
 
@@ -35,5 +39,28 @@ public class BeanUtilsTest {
         String encry = RSA.encrypt(pubKey, test);
         System.out.println("加密后字符串：" + RSA.encrypt(pubKey, test));
         System.out.println("解密后字符串：" + RSA.decrypt(prvKey, encry));
+    }
+
+
+    public void testType(List<MultipartFile> files) {
+    }
+
+    @Test
+    public void test() throws NoSuchMethodException {
+        Method[] methods = BeanUtilsTest.class.getDeclaredMethods();
+        for (Method method : methods) {
+            if (method.getName().equals("testType")) {
+                Parameter[] params = method.getParameters();
+                for (Parameter param : params) {
+                    if (param.getParameterizedType() instanceof ParameterizedType) {
+                        ParameterizedType type = (ParameterizedType) param.getParameterizedType();
+                        Class<?> paramClass = type.getActualTypeArguments().length > 0 ? (Class<?>) type.getActualTypeArguments()[0] : Object.class;
+                        System.out.println(paramClass.toString());
+                    }
+                }
+                assertTrue(true);
+            }
+        }
+
     }
 }

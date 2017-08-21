@@ -207,7 +207,7 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder notEq(String prop, Object value) {
-        return addCriterion(Restrictions.not(Restrictions.eq(prop, value)));
+        return addCriterion(Restrictions.ne(prop, value));
     }
 
     /**
@@ -218,6 +218,17 @@ public class CriteriaBuilder {
      */
     public CriteriaBuilder isNull(String prop) {
         return addCriterion(Restrictions.isNull(prop));
+    }
+
+    /**
+     * 快速eq或is null条件
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder eqOrIsNull(String prop, Object value) {
+        return addCriterion(Restrictions.eqOrIsNull(prop, value));
     }
 
     /**
@@ -286,6 +297,18 @@ public class CriteriaBuilder {
     }
 
     /**
+     * 快速between条件
+     *
+     * @param prop 属性名
+     * @param low  下限
+     * @param high 上限
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder between(String prop, Object low, Object high) {
+        return addCriterion(Restrictions.between(prop, low, high));
+    }
+
+    /**
      * 快速lt条件 &lt;
      *
      * @param prop  属性名
@@ -327,6 +350,26 @@ public class CriteriaBuilder {
      */
     public CriteriaBuilder in(String prop, Object... value) {
         return addCriterion(Restrictions.in(prop, value));
+    }
+
+    /**
+     * 附加and条件
+     *
+     * @param predicates 需要and运算的条件
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder and(Criterion... predicates) {
+        return addCriterion(Restrictions.and(predicates));
+    }
+
+    /**
+     * 附加or条件
+     *
+     * @param predicates 需要or运算的条件
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder or(Criterion... predicates) {
+        return addCriterion(Restrictions.or(predicates));
     }
 
     /**
