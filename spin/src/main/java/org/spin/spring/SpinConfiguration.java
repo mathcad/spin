@@ -1,6 +1,5 @@
 package org.spin.spring;
 
-import com.alibaba.druid.pool.DruidDataSource;
 import org.hibernate.SessionFactory;
 import org.spin.core.auth.InMemorySecretDao;
 import org.spin.core.auth.SecretDao;
@@ -59,31 +58,6 @@ public class SpinConfiguration {
         redisCache.setRedisTemplate(template);
         redisCache.setRedisSerializer(new JdkSerializationRedisSerializer());
         return redisCache;
-    }
-
-    @Autowired
-    @Bean
-    @ConditionalOnBean(DataBaseConfiguration.class)
-    public DataSource getDataSource(DataBaseConfiguration configuration) {
-        DruidDataSource dataSource = new DruidDataSource();
-        if (StringUtils.isEmpty(configuration.getUrl())
-            || StringUtils.isEmpty(configuration.getUsername())
-            || StringUtils.isEmpty(configuration.getPassword())) {
-            throw new BeanCreationException("数据库连接必需配置url, username, password");
-        }
-        dataSource.setUrl(configuration.getUrl());
-        dataSource.setUsername(configuration.getUsername());
-        dataSource.setPassword(configuration.getPassword());
-        dataSource.setMaxActive(configuration.getMaxActive());
-        dataSource.setMinIdle(configuration.getMinIdle());
-        dataSource.setInitialSize(configuration.getInitialSize());
-        dataSource.setMaxWait(configuration.getMaxWait());
-        dataSource.setRemoveAbandoned(configuration.isRemoveAbandoned());
-        dataSource.setRemoveAbandonedTimeoutMillis(configuration.getRemoveAbandonedTimeoutMillis());
-        Properties proper = new Properties();
-        proper.setProperty("clientEncoding", configuration.getClientEncoding());
-        dataSource.setConnectProperties(proper);
-        return dataSource;
     }
 
     @Autowired

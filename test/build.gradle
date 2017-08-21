@@ -95,6 +95,8 @@ dependencies {
 //    compile group: 'org.mathcat', name: 'spin', version: '1.8.4'
     compile(project(":spin"))
 
+    compile group: 'com.alibaba', name: 'druid', version: '1.0.31'
+
 
     runtime group: 'mysql', name: 'mysql-connector-java', version: '6.0.5'
 }
