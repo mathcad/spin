@@ -3,7 +3,7 @@ apply plugin: 'maven'
 
 description = '基础框架'
 group = 'org.mathcat'
-version = '2.0.2'
+version = '2.0.3'
 def artifactId = 'spin'
 
 ext {

@@ -5,6 +5,7 @@ import org.spin.enhance.gson.annotation.PreventOverflow;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
 import javax.persistence.Version;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ import java.util.Objects;
  */
 @MappedSuperclass
 public abstract class AbstractEntity implements IEntity<Long>, Serializable {
+    @Transient
     private static final long serialVersionUID = -6820468799272316789L;
 
     /**
@@ -135,6 +137,14 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
 
     public void setVersion(int version) {
         this.version = version;
+    }
+
+    public float getOrderNo() {
+        return orderNo;
+    }
+
+    public void setOrderNo(float orderNo) {
+        this.orderNo = orderNo;
     }
 
     public boolean isValid() {
