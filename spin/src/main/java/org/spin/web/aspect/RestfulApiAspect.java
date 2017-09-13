@@ -13,6 +13,7 @@ import org.spin.core.SpinContext;
 import org.spin.core.auth.Authenticator;
 import org.spin.core.auth.SecretManager;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.StringUtils;
 import org.spin.enhance.util.SessionUtils;
 import org.spin.web.RestfulResponse;
 import org.spin.web.annotation.Needed;
@@ -55,7 +56,7 @@ public class RestfulApiAspect implements Ordered {
         RestfulApi anno = apiMethod.getAnnotation(RestfulApi.class);
         boolean needAuth = anno.auth();
         if (needAuth) {
-            String authRouter = anno.authRouter();
+            String authRouter = StringUtils.isEmpty(anno.authRouter()) ? anno.name() : anno.authRouter();
             SessionUser user = SessionUtils.getCurrentUser();
             if (user != null && authenticator.checkAuthorities(user.getId(), authRouter)) {
                 isAllowed = true;
