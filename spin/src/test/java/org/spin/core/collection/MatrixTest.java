@@ -1,12 +1,12 @@
 package org.spin.core.collection;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.spin.core.auth.KeyInfo;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Created by Arvin on 2017/3/7.

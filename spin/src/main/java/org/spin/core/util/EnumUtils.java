@@ -2,17 +2,19 @@ package org.spin.core.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.annotation.UserEnum;
 import org.spin.core.Assert;
+import org.spin.core.annotation.UserEnum;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 枚举工具类
@@ -66,7 +68,7 @@ public abstract class EnumUtils {
         try {
             Enum.valueOf(enumClass, enumName);
             return true;
-        } catch (final IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ex) {
             return false;
         }
     }
@@ -82,26 +84,10 @@ public abstract class EnumUtils {
      * @since 3.0.1
      */
     private static <E extends Enum<E>> Class<E> checkBitVectorable(final Class<E> enumClass) {
-        final E[] constants = asEnum(enumClass).getEnumConstants();
+        final E[] constants = enumClass.getEnumConstants();
         Assert.isTrue(constants.length <= Long.SIZE, CANNOT_STORE_S_S_VALUES_IN_S_BITS,
             constants.length, enumClass.getSimpleName(), Long.SIZE);
 
-        return enumClass;
-    }
-
-    /**
-     * Assert {@code enumClass}.
-     *
-     * @param <E>       the type of the enumeration
-     * @param enumClass to check
-     * @return {@code enumClass}
-     * @throws NullPointerException     if {@code enumClass} is {@code null}
-     * @throws IllegalArgumentException if {@code enumClass} is not an enum class
-     * @since 3.2
-     */
-    private static <E extends Enum<E>> Class<E> asEnum(final Class<E> enumClass) {
-        Assert.notNull(enumClass, ENUM_CLASS_MUST_BE_DEFINED);
-        Assert.isTrue(enumClass.isEnum(), S_DOES_NOT_SEEM_TO_BE_AN_ENUM_TYPE, enumClass);
         return enumClass;
     }
 
@@ -128,7 +114,7 @@ public abstract class EnumUtils {
      * @param value   字段的值
      * @return 枚举常量
      */
-    public static <E extends Enum<E>> E getEnum(Class<E> enumCls, int value) {
+    public static <E extends Enum<E>, T> E getEnum(Class<E> enumCls, T value) {
         return getEnum(enumCls, value, "value");
     }
 
@@ -140,22 +126,32 @@ public abstract class EnumUtils {
      * @param field   字段名
      * @return 枚举常量
      */
-    public static <E extends Enum<E>> E getEnum(Class<E> enumCls, int value, String field) {
+    public static <E extends Enum<E>, T> E getEnum(Class<E> enumCls, T value, String field) {
         String fieldName;
         if (null != field && StringUtils.isNotEmpty(field))
             fieldName = field;
         else
             fieldName = "value";
-        Field valueField;
+        Field valueField = null;
+        Method getMethod = null;
+
         try {
             valueField = enumCls.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException e) {
-            throw new SimplifiedException("Enum:" + enumCls.getName() + " has no such field:" + fieldName, e);
+            ReflectionUtils.makeAccessible(valueField);
+        } catch (NoSuchFieldException ignore) {
         }
-        ReflectionUtils.makeAccessible(valueField);
+
+        if (Objects.isNull(valueField)) {
+            try {
+                getMethod = enumCls.getMethod("get" + StringUtils.capitalize(fieldName));
+            } catch (NoSuchMethodException e) {
+                throw new SimplifiedException("Enum:" + enumCls.getName() + " has no such field:" + fieldName);
+            }
+        }
+
         for (E o : enumCls.getEnumConstants()) {
-            int fVal = (Integer) ReflectionUtils.getField(valueField, o);
-            if (value == fVal) {
+            Object fVal = Objects.nonNull(valueField) ? ReflectionUtils.getField(valueField, o) : ReflectionUtils.invokeMethod(getMethod, o);
+            if (value.equals(fVal)) {
                 return o;
             }
         }
@@ -178,30 +174,50 @@ public abstract class EnumUtils {
     }
 
     /**
-     * 获得Enum的Value值
+     * 获得Enum的Value属性值
      *
-     * @param enumClass enum类型
+     * @param enumCls   enum类型
      * @param enumValue 枚举常量
-     * @return 枚举常量的value字段值
+     * @return 枚举常量的指定字段值
      */
-    public static int getEnumValue(Class<?> enumClass, Enum enumValue) {
-        if (enumClass == null)
-            enumClass = enumValue.getClass();
+    public static <T> T getEnumValue(Class<?> enumCls, Enum enumValue) {
+        return getEnumValue(enumCls, enumValue, "value");
+    }
 
-        Field vField;
+    /**
+     * 获得Enum的属性值
+     *
+     * @param enumCls   enum类型
+     * @param enumValue 枚举常量
+     * @param fieldName 属性名称
+     * @return 枚举常量的指定字段值
+     */
+    public static <T> T getEnumValue(Class<?> enumCls, Enum enumValue, String fieldName) {
+        if (enumCls == null)
+            enumCls = enumValue.getClass();
+
+        Field valueField = null;
+        Method getMethod = null;
         try {
-            vField = enumClass.getDeclaredField("value");
-            ReflectionUtils.makeAccessible(vField);
-
-        } catch (Exception e) {
-            throw new SimplifiedException("Enum" + enumClass + "未声明value字段", e);
+            valueField = enumCls.getDeclaredField(fieldName);
+            ReflectionUtils.makeAccessible(valueField);
+        } catch (NoSuchFieldException ignore) {
         }
 
-        int value;
+        if (Objects.isNull(valueField)) {
+            try {
+                getMethod = enumCls.getMethod("get" + StringUtils.capitalize(fieldName));
+            } catch (NoSuchMethodException e) {
+                throw new SimplifiedException("Enum:" + enumCls.getName() + " has no such field:" + fieldName);
+            }
+        }
+
+        T value;
         try {
-            value = Integer.valueOf(vField.get(enumValue).toString());
+            //noinspection unchecked
+            value = (T) (Objects.isNull(valueField) ? ReflectionUtils.invokeMethod(getMethod, enumValue) : valueField.get(enumValue));
         } catch (Exception e) {
-            throw new SimplifiedException("Enum" + enumClass + "获取value失败", e);
+            throw new SimplifiedException("Enum" + enumCls + "获取value失败", e);
         }
 
         return value;

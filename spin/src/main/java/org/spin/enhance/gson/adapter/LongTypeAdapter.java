@@ -1,9 +1,11 @@
 package org.spin.enhance.gson.adapter;
 
-import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.spin.core.util.StringUtils;
+import org.spin.enhance.gson.MatchableTypeAdapter;
+import org.spin.enhance.gson.annotation.PreventOverflow;
 
 import java.io.IOException;
 
@@ -13,7 +15,7 @@ import java.io.IOException;
  *
  * @author xuweinan
  */
-public class LongTypeAdapter extends TypeAdapter<Long> {
+public class LongTypeAdapter extends MatchableTypeAdapter<Long> {
     @Override
     public void write(JsonWriter out, Long value) throws IOException {
         if (null == value) {
@@ -34,5 +36,10 @@ public class LongTypeAdapter extends TypeAdapter<Long> {
         } else {
             return Long.parseLong(in.nextString());
         }
+    }
+
+    @Override
+    public boolean isMatch(TypeToken<?> type) {
+        return Long.class.isAssignableFrom(type.getRawType()) && type.getRawType().getAnnotation(PreventOverflow.class) != null;
     }
 }

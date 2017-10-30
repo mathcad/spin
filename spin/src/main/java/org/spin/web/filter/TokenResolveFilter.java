@@ -1,10 +1,7 @@
 package org.spin.web.filter;
 
-import org.spin.core.SpinContext;
 import org.spin.core.auth.SecretManager;
-import org.spin.enhance.util.SessionUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.data.core.AbstractUser;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -37,9 +34,7 @@ public class TokenResolveFilter implements Filter {
         String token = request.getParameter("token");
         if (StringUtils.isNotBlank(token)) {
             try {
-                String userId = secretManager.validateToken(token);
-                SpinContext.putLocalParam("token", token);
-                SessionUtils.setCurrentUser(AbstractUser.ref(Long.parseLong(userId)));
+                secretManager.bindCurrentSession(token);
             } catch (Exception ignore) {
             }
         }

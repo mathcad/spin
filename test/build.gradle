@@ -1,102 +1,69 @@
-group 'org.mathcat'
 version '1.0-SNAPSHOT'
+def artifactId = 'shipping-mis'
 
-apply plugin: 'java'
-apply plugin: 'maven'
 apply plugin: 'org.springframework.boot'
-apply plugin: 'idea'
+apply plugin: 'org.junit.platform.gradle.plugin'
 
 buildscript {
     ext {
-        springBootVersion = '1.5.3.RELEASE'
+        springBootVersion = '1.5.8.RELEASE'
+        junitJupiterVersion = '5.0.1'
     }
     repositories {
+        mavenLocal()
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
         maven { url 'https://repo.spring.io/libs-release' }
-        maven { url 'https://repo.spring.io/libs-milestone' }
-        mavenLocal()
         mavenCentral()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-//        classpath('org.springframework:springloaded:1.2.6.RELEASE')
+        classpath('org.springframework:springloaded:1.2.7.RELEASE')
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
     }
 }
 
-idea {
-    module {
-        inheritOutputDirs = false
-        outputDir = file("$buildDir/classes/main/")
-        testOutputDir = file("$buildDir/classes/test/")
-    }
-}
-
-//bootRun {
-//    addResources = true
-//}
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-repositories {
-    mavenLocal()
-//    maven { url 'http://localhost:8081/repository/saturn/' }
-    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-    mavenCentral()
-}
-
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
-// 打包成jar包
-//jar {
-//    baseName = "spring_boot_test"
-//    version = '0.1'
-//}
-
-task pt << {
-    println("bootRepackage")
-    tasks.asMap.forEach({ _, v -> println(v.dependsOn) })
-    tasks.asMap.get("bootRepackage").actions.forEach({ a -> println(a) })
-    project.properties.forEach({ k, v -> println(k) })
-}
-
-//dependencyManagement {
-//    imports {
-//        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Brixton.SR5'
+junitPlatform {
+    // platformVersion '1.0.1'
+//    filters {
+//        engines {
+//            // include 'junit-jupiter', 'junit-vintage'
+//            // exclude 'custom-engine'
+//        }
+//        tags {
+//            // include 'fast'
+//            exclude 'slow'
+//        }
+//        // includeClassNamePattern '.*Test'
 //    }
-//}
+    // enableStandardTestTask true
+    // reportsDir file('build/test-results/junit-platform') // this is the default
+    logManager 'org.apache.logging.log4j.jul.LogManager'
+}
+
+bootRun {
+    addResources = true
+}
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
-        exclude(module: 'commons-logging')
-    }
-//    compile group: 'com.ibeetl', name: 'beetlsql', version: '2.4.3'
-    compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
-//    compile group: 'org.springframework.boot', name: 'spring-boot-starter-freemarker', version: springBootVersion
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-cache', version: springBootVersion
+    testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+//    testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
+//        exclude(module: 'commons-logging')
+//    }
+
+//    compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion) {
         exclude(module: 'jackson-databind')
     }
-//    compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
-    compile(group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion) {
-        exclude(module: 'jackson-databind')
-    }
-    compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.10.Final') {
+    compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
+    compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.12.Final') {
         exclude(module: 'jboss-logging')
     }
-//    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-data', version: '1.4.0.RELEASE'
-    compile group: 'com.github.ben-manes.caffeine', name: 'caffeine', version: '2.5.0'
-//    compile group: 'com.alibaba', name: 'druid', version: '1.0.29'
-//    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
-    compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
-//    compile group: 'org.mathcat', name: 'spin', version: '1.8.4'
-    compile(project(":spin"))
+//    compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
+//    compile group: 'org.mathcat', name: 'spin', version: '2.0.4'
+    compile group: 'com.alibaba', name: 'druid', version: '1.1.4'
 
-    compile group: 'com.alibaba', name: 'druid', version: '1.0.31'
+    compile(project(":spin-starter-restful"))
 
-
-    runtime group: 'mysql', name: 'mysql-connector-java', version: '6.0.5'
+    runtime group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
 }

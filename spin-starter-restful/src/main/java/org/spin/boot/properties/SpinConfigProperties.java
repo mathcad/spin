@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author xuweinan
  */
-@ConfigurationProperties(prefix = "spin")
+//@ConfigurationProperties(prefix = "spin")
 public class SpinConfigProperties {
 
     private WebProperties web;

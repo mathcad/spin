@@ -1,3 +1,80 @@
-group 'org.mathcat'
-version '1.0-SNAPSHOT'
+allprojects {
+    group 'org.mathcat'
+}
 
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'idea'
+
+    ext {
+        javaVersion = 1.8
+    }
+
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+
+    compileJava {
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+        options.encoding = 'UTF-8'
+    }
+
+    compileTestJava {
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+        options.encoding = 'UTF-8'
+    }
+
+    javadoc {
+        options.encoding = 'UTF-8'
+    }
+
+    repositories {
+        mavenLocal()
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        mavenCentral()
+        maven {
+            url 'http://120.26.76.35:8081/nexus/content/repositories/nbxs/'
+            credentials {
+                username 'gsh56dev'
+                password 'dev56ggg'
+            }
+        }
+    }
+
+    task createDirs {
+        sourceSets*.java.srcDirs*.each { it.mkdirs() }
+        sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+    }
+
+    task sourceJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allJava
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    artifacts {
+        archives javadocJar
+//    archives sourceJar
+    }
+
+    idea {
+        module {
+            inheritOutputDirs = false
+            downloadSources = true
+            downloadJavadoc = true
+            outputDir = file("$buildDir/classes/main/")
+            testOutputDir = file("$buildDir/classes/test/")
+        }
+    }
+}
+
+task cleanAll() {
+    allprojects.each { p -> println(file(p.name + '/out').deleteDir()) }
+    allprojects.each { p -> println(file(p.name + '/build').deleteDir()) }
+}

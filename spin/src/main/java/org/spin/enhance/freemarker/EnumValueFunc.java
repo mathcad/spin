@@ -4,7 +4,7 @@ import freemarker.template.TemplateMethodModelEx;
 import freemarker.template.TemplateModelException;
 import org.spin.core.annotation.UserEnum;
 import org.spin.core.throwable.SimplifiedException;
-import org.springframework.util.ReflectionUtils;
+import org.spin.core.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;

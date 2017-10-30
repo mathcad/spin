@@ -1,6 +1,6 @@
 package org.spin.core.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.spin.core.TypeIdentifier;
 import org.spin.data.core.AbstractEntity;
 
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Created by Arvin on 2017/1/25.

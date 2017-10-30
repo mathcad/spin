@@ -1,28 +1,46 @@
 package org.spin.boot;
 
 import org.hibernate.SessionFactory;
+import org.spin.boot.properties.DatabaseConfigProperties;
+import org.spin.core.SpinContext;
+import org.spin.core.auth.SecretManager;
+import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.cache.RedisCache;
-import org.spin.core.auth.InMemorySecretDao;
-import org.spin.core.auth.SecretDao;
 import org.spin.data.core.SQLLoader;
-import org.spin.data.extend.DataBaseConfiguration;
-import org.spin.data.sql.loader.ClasspathMdLoader;
-import org.spin.data.sql.resolver.FreemarkerResolver;
-import org.springframework.beans.factory.BeanCreationException;
+import org.spin.web.converter.JsonHttpMessageConverter;
+import org.spin.web.filter.TokenResolveFilter;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.orm.hibernate5.support.OpenSessionInViewFilter;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CharacterEncodingFilter;
+import org.springframework.web.filter.CorsFilter;
 
+import javax.servlet.MultipartConfigElement;
 import javax.sql.DataSource;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Properties;
 
 /**
@@ -32,15 +50,14 @@ import java.util.Properties;
  * @author xuweinan
  */
 @Configuration
+@EnableConfigurationProperties(DatabaseConfigProperties.class)
 public class SpinAutoConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean(SQLLoader.class)
-    public SQLLoader sqlLoader() {
-        SQLLoader loader = new ClasspathMdLoader();
-        loader.setTemplateResolver(new FreemarkerResolver());
-        return loader;
-    }
+    @Autowired
+    private Environment env;
+
+    @Autowired
+    private DatabaseConfigProperties dbProperties;
 
     @Autowired
     @Bean
@@ -56,71 +73,115 @@ public class SpinAutoConfiguration {
         return redisCache;
     }
 
-//    @Autowired
-//    @Bean
-//    @ConditionalOnBean(DataBaseConfiguration.class)
-//    public DataSource getDataSource(DataBaseConfiguration configuration) {
-//        DruidDataSource dataSource = new DruidDataSource();
-//        if (StringUtils.isEmpty(configuration.getUrl())
-//            || StringUtils.isEmpty(configuration.getUsername())
-//            || StringUtils.isEmpty(configuration.getPassword())) {
-//            throw new BeanCreationException("数据库连接必需配置url, username, password");
-//        }
-//        dataSource.setUrl(configuration.getUrl());
-//        dataSource.setUsername(configuration.getUsername());
-//        dataSource.setPassword(configuration.getPassword());
-//        dataSource.setMaxActive(configuration.getMaxActive());
-//        dataSource.setMinIdle(configuration.getMinIdle());
-//        dataSource.setInitialSize(configuration.getInitialSize());
-//        dataSource.setMaxWait(configuration.getMaxWait());
-//        dataSource.setRemoveAbandoned(configuration.isRemoveAbandoned());
-//        dataSource.setRemoveAbandonedTimeoutMillis(configuration.getRemoveAbandonedTimeoutMillis());
-//        Properties proper = new Properties();
-//        proper.setProperty("clientEncoding", configuration.getClientEncoding());
-//        dataSource.setConnectProperties(proper);
-//        return dataSource;
-//    }
+    @Bean
+    @ConditionalOnBean(DataSource.class)
+    @ConditionalOnMissingBean(SQLLoader.class)
+    public SQLLoader sqlLoader() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        SQLLoader loader = (SQLLoader) Class.forName(dbProperties.getSqlLoader()).getDeclaredConstructor().newInstance();
+        if (StringUtils.isEmpty(dbProperties.getSqlUri())) {
+            loader.setRootUri(dbProperties.getSqlUri());
+        }
+        loader.setTemplateResolver(dbProperties.getResolverObj());
+        return loader;
+    }
 
     @Autowired
     @Bean(name = "sessionFactory")
-    @ConditionalOnBean(DataBaseConfiguration.class)
-    public LocalSessionFactoryBean getSessionFactory(DataSource dataSource, DataBaseConfiguration configuration) {
+    @ConditionalOnBean(DataSource.class)
+    public LocalSessionFactoryBean sessionFactory(DataSource dataSource, Properties hibernateConfig) {
         LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
         sessionFactory.setDataSource(dataSource);
-        sessionFactory.setPackagesToScan(configuration.getPackagesToScan());
-        if (null != configuration.getNamingStrategy())
-            sessionFactory.setPhysicalNamingStrategy(configuration.getNamingStrategy());
-        Properties proper = new Properties();
-        // proper.setProperty("hibernate.current_session_context_class", "org.springframework.orm.hibernate5.SpringSessionContext");
-        proper.setProperty("hibernate.show_sql", configuration.getShowSql());
-        proper.setProperty("hibernate.format_sql", configuration.getFormatSql());
-        if (StringUtils.isEmpty(configuration.getDialect())) {
-            throw new BeanCreationException("数据库连接必需配置Dialect");
+        sessionFactory.setPackagesToScan(("org.spin.data," + StringUtils.trimToEmpty(hibernateConfig.getProperty("hibernate.packages"))).split(","));
+        if (null != dbProperties.getNamingStrategy()) {
+            sessionFactory.setPhysicalNamingStrategy(dbProperties.getNamingStrategyObj());
         }
-        proper.setProperty("hibernate.dialect", configuration.getDialect());
-        proper.setProperty("hibernate.hbm2ddl.auto", configuration.getHbm2ddl());
-        sessionFactory.setHibernateProperties(proper);
+
+        sessionFactory.setHibernateProperties(hibernateConfig);
         return sessionFactory;
+    }
+
+    @Bean
+    public PropertiesFactoryBean hibernateConfig() {
+        PropertiesFactoryBean bean = new PropertiesFactoryBean();
+        bean.setLocation(new ClassPathResource("hibernate.properties"));
+        return bean;
     }
 
     @Autowired
     @Bean(name = "transactionManager")
-    @ConditionalOnBean(DataBaseConfiguration.class)
+    @ConditionalOnBean(SessionFactory.class)
     public PlatformTransactionManager getTransactionManager(SessionFactory sessionFactory) {
         return new HibernateTransactionManager(sessionFactory);
     }
 
-//    @Bean
-//    @ConditionalOnMissingBean(SecurityManager.class)
-//    public SecurityManager securityManager() {
-//        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
-//        ((ModularRealmAuthenticator) securityManager.getAuthenticator()).setAuthenticationStrategy(new AnyoneSuccessfulStrategy());
-//        return securityManager;
-//    }
+    @Bean
+    public FilterRegistrationBean encodingFilterRegistration() {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setFilter(new CharacterEncodingFilter());
+        registration.addUrlPatterns("/*");
+        registration.addInitParameter("encoding", "UTF-8");
+        registration.setName("encodingFilter");
+        registration.setOrder(1);
+        return registration;
+    }
 
-    @Bean(name = "secretDao")
-    @ConditionalOnMissingBean(SecretDao.class)
-    public SecretDao getSecretDao() {
-        return new InMemorySecretDao();
+    @Bean
+    public FilterRegistrationBean openSessionInViewFilterRegistration() {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setFilter(new OpenSessionInViewFilter());
+        registration.addUrlPatterns("/*");
+        registration.addInitParameter("sessionFactoryBeanName", "sessionFactory");
+        registration.setName("openSessionInViewFilter");
+        registration.setOrder(2);
+        return registration;
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.addAllowedOrigin("*");
+        corsConfiguration.addAllowedHeader("*");
+        corsConfiguration.addAllowedMethod("*");
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return new CorsFilter(source);
+    }
+
+    @Bean
+    @Autowired
+    public FilterRegistrationBean apiFilter(SecretManager secretManager) {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setFilter(new TokenResolveFilter(secretManager));
+        registration.addUrlPatterns("/*");
+        registration.setName("tokenFilter");
+        registration.setOrder(4);
+        return registration;
+    }
+
+    @Bean
+    public HttpMessageConverters customConverters() {
+        Collection<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
+        JsonHttpMessageConverter jsonHttpMessageConverter = new JsonHttpMessageConverter();
+        jsonHttpMessageConverter.setGson(JsonUtils.getDefaultGson());
+        messageConverters.add(jsonHttpMessageConverter);
+        return new HttpMessageConverters(true, messageConverters);
+    }
+
+    @Bean
+    public MultipartConfigElement multipartConfigElement() {
+        MultipartConfigFactory factory = new MultipartConfigFactory();
+        factory.setMaxFileSize(Long.parseLong(env.getProperty("spin.web.maxUploadSize")) * 1024 * 1024);
+        return factory.createMultipartConfig();
+    }
+
+    @Bean
+    public InitializingBean platformInit() {
+        return () -> {
+            if (StringUtils.isNotEmpty(env.getProperty("spin.web.restful.prefix"))) {
+                SpinContext.RestfulApiPrefix = env.getProperty("spin.web.restful.prefix");
+            }
+            SpinContext.FileUploadDir = env.getProperty("spin.web.fileUploadDir");
+            SpinContext.devMode = "dev".equals(env.getProperty("spring.profiles.active"));
+        };
     }
 }

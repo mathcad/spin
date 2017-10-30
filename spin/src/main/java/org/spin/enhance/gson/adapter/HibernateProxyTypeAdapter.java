@@ -9,6 +9,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.enhance.gson.MatchableTypeAdapter;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.IOException;
@@ -20,7 +21,7 @@ import java.lang.reflect.Field;
  *
  * @author xuewinan
  */
-public class HibernateProxyTypeAdapter extends TypeAdapter<HibernateProxy> {
+public class HibernateProxyTypeAdapter extends MatchableTypeAdapter<HibernateProxy> {
     private static final Logger logger = LoggerFactory.getLogger(HibernateProxyTypeAdapter.class);
     private final Gson context;
 
@@ -57,5 +58,10 @@ public class HibernateProxyTypeAdapter extends TypeAdapter<HibernateProxy> {
             }
             delegate.write(out, o);
         }
+    }
+
+    @Override
+    public boolean isMatch(TypeToken<?> type) {
+        return HibernateProxy.class.isAssignableFrom(type.getRawType());
     }
 }

@@ -1,6 +1,7 @@
 package org.spin.boot.annotation;
 
-import org.spin.boot.configuration.SecretManagerSelector;
+import org.spin.boot.options.SecretStorage;
+import org.spin.boot.selectors.SecretManagerSelector;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;
@@ -18,5 +19,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Import(SecretManagerSelector.class)
 public @interface EnableSecretManager {
-    SecretManagerSelector.Store store() default SecretManagerSelector.Store.IN_MENORY;
+    SecretStorage value() default SecretStorage.IN_MENORY;
 }

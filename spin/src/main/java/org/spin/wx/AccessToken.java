@@ -2,6 +2,7 @@ package org.spin.wx;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.Assert;
 import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.HttpUtils;
@@ -26,7 +27,7 @@ public class AccessToken {
     private static final TypeIdentifier<Map<String, String>> type = new TypeIdentifier<Map<String, String>>() {
     };
     private static Map<String, AccessToken> instances;
-    private static Map<String, AccessToken> instancesWithCode;
+    private static Map<String, AccessToken> oauthInstances;
     private String token;
     private String refreshToken;
     private String openId;
@@ -35,6 +36,21 @@ public class AccessToken {
 
     private static final Object lock = new Object();
     private static final Object lockWithCode = new Object();
+
+    /**
+     * token类型
+     */
+    public enum TokenType {
+        /**
+         * 网页授权token
+         */
+        OAUTH,
+
+        /**
+         * 普通token
+         */
+        NORMAL
+    }
 
     private AccessToken() {
     }
@@ -60,7 +76,7 @@ public class AccessToken {
      */
     public static AccessToken getInstance(String name) {
         WxConfig.ConfigInfo info = WxConfig.getConfig(name);
-        return getInstance(name, info.getAppId(), info.getAppSecret(), null, false);
+        return getInstance(name, info.getAppId(), info.getAppSecret(), null, TokenType.NORMAL);
     }
 
     /**
@@ -69,60 +85,72 @@ public class AccessToken {
     public static AccessToken getOAuthInstance(String name, String... code) {
         WxConfig.ConfigInfo info = WxConfig.getConfig(name);
         String c = (null == code || code.length == 0) ? "" : code[0];
-        return getInstance(name, info.getAppId(), info.getAppSecret(), c, true);
+        return getInstance(name, info.getAppId(), info.getAppSecret(), c, TokenType.OAUTH);
     }
 
     /**
      * 获取AccessToken的对象，根据生命周期对token自管理
+     *
+     * @param name      access托管名称
+     * @param appId     微信appid
+     * @param appSecret 微信appsecret
+     * @param code      访问时微信带来的code
+     * @param type      需要的accessToken类型
      */
-    public static AccessToken getInstance(String name, String appId, String appSecret, String code, boolean isOAuth) {
+    public static AccessToken getInstance(String name, String appId, String appSecret, String code, TokenType type) {
         logger.info("getInstance({}, {}, {}, {})", name, appId, appSecret, code);
 
         if (null == instances) {
             instances = new ConcurrentHashMap<>();
         }
-        if (null == instancesWithCode) {
-            instancesWithCode = new ConcurrentHashMap<>();
+        if (null == oauthInstances) {
+            oauthInstances = new ConcurrentHashMap<>();
         }
 
-        AccessToken token;
-        if (isOAuth) {
-            // 获取网页授权access_token
-            token = instancesWithCode.get(name);
-            if (StringUtils.isNotEmpty(code) || null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
-                synchronized (lockWithCode) {
-                    String result;
-                    try {
-                        if (StringUtils.isNotEmpty(code)) {
-                            result = HttpUtils.get(WxUrl.OAuthTokenUrl.getUrl(appId, appSecret, code));
-                        } else if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L)) {
-                            result = HttpUtils.get(WxUrl.RefreshTokenUrl.getUrl(appId, token.getRefreshToken()));
-                        } else {
-                            throw new SimplifiedException("获取网页授权access_token失败, 缺少code参数");
+        AccessToken token = null;
+        switch (type) {
+            case NORMAL:
+                // 获取普通access_token
+                token = instances.get(name);
+                if (null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
+                    synchronized (lock) {
+                        String result;
+                        try {
+                            result = HttpUtils.get(WxUrl.AccessTokenUrl.getUrl(appId, appSecret));
+                        } catch (Throwable e) {
+                            throw new SimplifiedException("获取access_token失败", e);
                         }
-                    } catch (Throwable e) {
-                        throw new SimplifiedException("获取网页授权access_token失败", e);
+                        instances.put(name, parseToken(result));
+                        token = instances.get(name);
                     }
-                    instancesWithCode.put(name, parseToken(result));
-                    token = instancesWithCode.get(name);
                 }
-            }
-        } else {
-            // 获取普通access_token
-            token = instances.get(name);
-            if (null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
-                synchronized (lock) {
-                    String result;
-                    try {
-                        result = HttpUtils.get(WxUrl.AccessTokenUrl.getUrl(appId, appSecret));
-                    } catch (Throwable e) {
-                        throw new SimplifiedException("获取access_token失败", e);
+                break;
+            case OAUTH:
+                // 获取网页授权access_token
+                token = oauthInstances.get(name);
+                if (null == token || StringUtils.isEmpty(token.token) || System.currentTimeMillis() > token.getExpiredSince()) {
+                    synchronized (lockWithCode) {
+                        String result;
+                        try {
+                            if (StringUtils.isNotEmpty(code)) {
+                                result = HttpUtils.get(WxUrl.OAuthTokenUrl.getUrl(appId, appSecret, code));
+                            } else if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L)) {
+                                result = HttpUtils.get(WxUrl.RefreshTokenUrl.getUrl(appId, token.getRefreshToken()));
+                            } else {
+                                throw new SimplifiedException("获取网页授权access_token失败, 缺少code参数");
+                            }
+                        } catch (Throwable e) {
+                            throw new SimplifiedException("获取网页授权access_token失败", e);
+                        }
+                        oauthInstances.put(name, parseToken(result));
+                        token = oauthInstances.get(name);
                     }
-                    instances.put(name, parseToken(result));
-                    token = instances.get(name);
                 }
-            }
+                break;
+            default:
+                break;
         }
+        Assert.notNull(token, "获取accessToken失败");
         return token;
     }
 

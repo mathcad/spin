@@ -3,6 +3,7 @@ package org.spin.core.collection;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 /**
  * 固定大小的向量，放入元素超过容器大小后会循环覆盖
@@ -17,6 +18,12 @@ public class FixedVector<T> implements Collection<T> {
     private int size;
     private int base;
     private int cursor;
+
+    public static <T> FixedVector<T> of(T t1) {
+        FixedVector<T> v = new FixedVector<>(1);
+        v.put(t1);
+        return v;
+    }
 
     public FixedVector(int size) {
         this.size = ++size;
@@ -34,8 +41,12 @@ public class FixedVector<T> implements Collection<T> {
         }
     }
 
+    /**
+     * 获取第一个元素
+     */
     public T get() {
-        return get(base);
+        //noinspection unchecked
+        return base == cursor ? null : (T) elementData[base];
     }
 
     public T get(int index) {
@@ -43,13 +54,19 @@ public class FixedVector<T> implements Collection<T> {
             throw new IndexOutOfBoundsException();
         }
         //noinspection unchecked
-        return base == cursor ? null : (T) elementData[base];
+        return base == cursor ? null : (T) elementData[(base + index) % size];
     }
 
+    /**
+     * 获取最后一个元素
+     */
     public T peek() {
         return get(cursor - 1);
     }
 
+    /**
+     * 将最后一个元素出栈
+     */
     public T pop() {
         if (base == cursor) {
             throw new IllegalStateException("Vector is empty");
@@ -74,6 +91,7 @@ public class FixedVector<T> implements Collection<T> {
         return (cursor - base + size) % size;
     }
 
+    @Override
     public boolean isEmpty() {
         return base != cursor;
     }
@@ -85,7 +103,7 @@ public class FixedVector<T> implements Collection<T> {
 
     @Override
     public Iterator<T> iterator() {
-        throw new UnsupportedOperationException();
+        return new VectorItr();
     }
 
     @Override
@@ -139,5 +157,31 @@ public class FixedVector<T> implements Collection<T> {
     @Override
     public boolean retainAll(Collection<?> c) {
         throw new UnsupportedOperationException();
+    }
+
+    private class VectorItr implements Iterator<T> {
+        // TODO: 需要实现迭代器
+        int cursor;       // index of next element to return
+        int lastRet = -1; // index of last element returned; -1 if no such
+
+        @Override
+        public boolean hasNext() {
+            return false;
+        }
+
+        @Override
+        public T next() {
+            return null;
+        }
+
+        @Override
+        public void remove() {
+
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super T> action) {
+
+        }
     }
 }

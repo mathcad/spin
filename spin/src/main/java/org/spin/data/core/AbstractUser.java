@@ -1,7 +1,7 @@
 package org.spin.data.core;
 
 
-import org.spin.core.SessionUser;
+import org.spin.core.session.SessionUser;
 import org.spin.core.util.DigestUtils;
 import org.spin.core.util.RandomStringUtils;
 import org.spin.core.util.StringUtils;
@@ -9,6 +9,7 @@ import org.spin.core.util.StringUtils;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -55,7 +56,7 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
      * 如果与session关联，session的id
      */
     @Transient
-    private String sessionId;
+    private Serializable sessionId;
 
     /**
      * 引用一个User
@@ -66,18 +67,30 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
         return u;
     }
 
+    /**
+     * 用户名
+     */
     public String getUserName() {
         return userName;
     }
 
+    /**
+     * 用户名
+     */
     public void setUserName(String userName) {
         this.userName = userName;
     }
 
+    /**
+     * 密码
+     */
     public String getPassword() {
         return password;
     }
 
+    /**
+     * 密码
+     */
     public void setPassword(String password) {
         if (StringUtils.isEmpty(salt)) {
             this.salt = RandomStringUtils.randomAlphanumeric(16);
@@ -86,36 +99,69 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
 
     }
 
+    /**
+     * 盐
+     */
     public String getSalt() {
         return salt;
     }
 
+    /**
+     * 盐
+     */
     public void setSalt(String salt) {
         this.salt = salt;
     }
 
+    /**
+     * 是否有效
+     */
     @Override
     public boolean isActive() {
         return active;
     }
 
+    /**
+     * 是否有效
+     */
     public void setActive(boolean active) {
         this.active = active;
     }
 
+    /**
+     * 登录时间
+     */
     @Override
     public LocalDateTime getLoginTime() {
         return loginTime;
     }
 
+    /**
+     * 登录时间
+     */
     @Override
-    public String getSessionId() {
+    public Serializable getSessionId() {
         return sessionId;
     }
 
+    /**
+     * 如果与session关联，session的id
+     */
     @Override
-    public void setSessionId(String sessionId) {
+    public void setSessionId(Serializable sessionId) {
         this.sessionId = sessionId;
+    }
+
+    @Override
+    public String toString() {
+        return "AbstractUser{" +
+            "userName='" + userName + '\'' +
+            ", password='" + password + '\'' +
+            ", salt='" + salt + '\'' +
+            ", active=" + active +
+            ", loginTime=" + loginTime +
+            ", sessionId='" + sessionId + '\'' +
+            "} " + super.toString();
     }
 
     private static final class VirtualUser extends AbstractUser {

@@ -1,11 +1,15 @@
 package org.spin.core;
 
+import org.spin.core.inspection.MethodDescriptor;
+
 import java.lang.reflect.Field;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,26 +35,22 @@ public final class SpinContext {
     /** 线程绑定的全局公用属性 */
     private static final ThreadLocal<Map<String, Object>> THREAD_LOCAL_PARAMETERS = ThreadLocal.withInitial(HashMap::new);
 
+    /** 所有restful接口方法 */
+    private static final Map<String, Map<String, List<MethodDescriptor>>> RESTFUL_SERVICES = new HashMap<>();
+
+//    /** Restful调用异常处理器 */
+//    private static final Map<Class<? extends Throwable>, RestfulInvocationEntryPoint.ExceptionHandler> EXCEPTION_HANDLER_MAP = new HashMap<>();
+
     /** 系统是否启用了开发模式 */
     public static boolean devMode = false;
 
     /** 系统是否启用了Shiro支持 */
-    public static boolean shiroEnabled = false;
-
-    /** token过期时间 */
-    public static Long TokenExpireTime = 7200000L;
-
-    /** key过期时间 */
-    public static Long KeyExpireTime = 1296000000L;
+//    public static boolean shiroEnabled = false;
 
     /** 文件上传路径 */
     public static String FileUploadDir;
 
-    /** RSA公钥 */
-    public static PublicKey RSA_PUBKEY;
-
-    /** RSA私钥 */
-    public static PrivateKey RSA_PRIKEY;
+    public static String RestfulApiPrefix;
 
     private SpinContext() {
     }
@@ -83,6 +83,30 @@ public final class SpinContext {
      */
     public static Object removeLocalParam(String key) {
         return SpinContext.THREAD_LOCAL_PARAMETERS.get().remove(key);
+    }
+
+    public static void addRestMethod(String module, String service, MethodDescriptor method) {
+        Map<String, List<MethodDescriptor>> services = RESTFUL_SERVICES.get(module);
+        if (Objects.isNull(services)) {
+            services = new HashMap<>();
+            RESTFUL_SERVICES.put(module, services);
+        }
+
+        List<MethodDescriptor> methods = services.get(service);
+        if (Objects.isNull(methods)) {
+            methods = new ArrayList<>();
+            services.put(service, methods);
+        }
+
+        methods.add(method);
+    }
+
+    public static List<MethodDescriptor> getRestMethod(String module, String service) {
+        Map<String, List<MethodDescriptor>> services = RESTFUL_SERVICES.get(module);
+        if (Objects.nonNull(services)) {
+            return services.get(service);
+        }
+        return null;
     }
 
     public synchronized static void clearCache() {

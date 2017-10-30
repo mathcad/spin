@@ -21,9 +21,6 @@ public class DataBlock {
 
     /**
      * construct method
-     *
-     * @param region  region string
-     * @param dataPtr data ptr
      */
     public DataBlock(int city_id, String region, int dataPtr) {
         this.city_id = city_id;

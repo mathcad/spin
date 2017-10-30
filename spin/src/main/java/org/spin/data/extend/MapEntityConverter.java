@@ -5,6 +5,7 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
 import org.spin.data.core.EntityConverter;
 import org.spin.data.core.IEntity;
+import org.spin.data.util.EntityUtils;
 
 import java.util.Map;
 
@@ -19,7 +20,7 @@ public class MapEntityConverter<E extends IEntity> implements EntityConverter<Ma
     @Override
     public E parseToEntity(Class<E> entityClazz, Map<String, Object> value) {
         try {
-            return BeanUtils.wrapperMapToBean(entityClazz, value);
+            return EntityUtils.wrapperMapToBean(entityClazz, value);
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.BEAN_CREATE_FAIL, e);
         }

@@ -14,23 +14,26 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
-import org.spin.core.SessionUser;
+import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SQLException;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.ReflectionUtils;
+import org.spin.core.util.StringUtils;
 import org.spin.data.pk.generator.IdGenerator;
 import org.spin.data.query.CriteriaBuilder;
 import org.spin.data.query.QueryParam;
 import org.spin.data.query.QueryParamParser;
 import org.spin.data.sql.SQLManager;
 import org.spin.data.util.EntityUtils;
-import org.spin.enhance.util.SessionUtils;
+import org.spin.core.session.SessionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
@@ -43,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -56,14 +60,14 @@ import java.util.stream.Collectors;
  * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @author xuweinan
- * @version V1.3
+ * @version V1.4
  */
 @Component
 public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     private static final Logger logger = LoggerFactory.getLogger(ARepository.class);
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
     private static final int MAX_RECORDS = 100000000;
-    protected static final ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
+    private static final ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
     };
 
     private boolean checkWriteOperations = true;
@@ -127,7 +131,16 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 关闭当前线程上手动开启的所有Session
      */
-    public void closeSession() {
+    public static void closeAllManualSession() {
+        while (!THREADLOCAL_SESSIONS.get().isEmpty()) {
+            closeManualSession();
+        }
+    }
+
+    /**
+     * 关闭当前线程上手动打开的最后一个Session，如果Session上有事务，提交之
+     */
+    public static void closeManualSession() {
         Session session = popTreadSession();
         if (session != null && session.isOpen()) {
             Transaction tran = session.getTransaction();
@@ -178,7 +191,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public T save(final T entity, boolean saveWithPk) {
         if (entity instanceof AbstractEntity) {
             AbstractEntity aEn = (AbstractEntity) Assert.notNull(entity, "The entity to save MUST NOT be NULL");
-            SessionUser user = SessionUtils.getCurrentUser();
+            SessionUser user = SessionManager.getCurrentUser();
             aEn.setUpdateTime(LocalDateTime.now());
             aEn.setUpdateUserId(user == null ? null : user.getId());
             if (null == aEn.getId() || saveWithPk) {
@@ -325,7 +338,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 主键获取指定深度的属性的瞬态对象
      */
     public T getDto(final PK k, int depth) {
-        return EntityUtils.getDto(get(k), depth);
+        return EntityUtils.getDTO(get(k), depth);
     }
 
     /**
@@ -415,7 +428,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public void delete(String conditions) {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(this.entityClazz.getSimpleName()).append(" ");
-        if (conditions.length() > 0)
+        if (StringUtils.isEmpty(conditions))
             hql.append("where ").append(conditions);
         getSession().delete(hql);
     }
@@ -567,17 +580,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return t;
     }
 
-    public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
-        return sqlManager.findOneAsMap(sqlId, paramMap);
-    }
-
-    public T findOneBySql(String sqlId, Map<String, ?> paramMap) {
-        return sqlManager.findOne(sqlId, entityClazz, paramMap);
-    }
-
     /**
      * 判断是否有存在已有实体
-     * <p>
      *
      * @param id 指定ID
      * @return 是/否
@@ -592,9 +596,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 判断是否有存在已有实体 默认多个字段条件为，条件并列and
-     * <p>
-     * * @param params 查询参数
      *
+     * @param params 查询参数
      * @return 是/否
      */
     public boolean exist(Map<String, Object> params) {
@@ -603,10 +606,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 判断是否有存在已有实体 默认多个字段条件为，条件并列and
-     * <p>
-     * * @param params 查询参数
      *
-     * @param notId 忽略匹配的Id
+     * @param params 查询参数
      * @return 是/否
      */
     public boolean exist(Map<String, Object> params, PK notId) {
@@ -689,7 +690,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         ct.setFirstResult(0);
         ct.setMaxResults(MAX_RECORDS);
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
-        List<T> res = BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
+        List<T> res = EntityUtils.wrapperMapToBeanList(this.entityClazz, list);
         return new Page<>(res, total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
     }
 
@@ -771,7 +772,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             cb.setEnCls(entityClazz);
         }
         List<Map<String, Object>> list = listMap(cb);
-        return BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
+        return EntityUtils.wrapperMapToBeanList(this.entityClazz, list);
     }
 
     /**
@@ -828,6 +829,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */
+    public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
+        return sqlManager.findOneAsMap(sqlId, paramMap);
+    }
+
+    public T findOneBySql(String sqlId, Map<String, ?> paramMap) {
+        return sqlManager.findOne(sqlId, entityClazz, paramMap);
+    }
+
     public List<T> listBySql(String sqlId, Object... mapParams) {
         return sqlManager.list(sqlId, entityClazz, mapParams);
     }
@@ -875,12 +884,43 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
+     * 将当前实体从Session缓存中剔除。对实体的改动将会被丢弃，不会同步到数据库中。如果实体的关联属性映射为
+     * {@code cascade="evict"}，该操作将会级联剔除所有的关联实体
+     *
+     * @param entity 需要剔除的实体
+     */
+    public void evict(T entity) {
+        if (Objects.nonNull(entity)) {
+            getSession().evict(entity);
+        }
+    }
+
+    /**
      * 从Session缓存中移除所有持久化对象，并取消所有已挂起的保存，更新和删除操作
      *
      * @see Session#clear
      */
     public void clear() {
         getSession().clear();
+    }
+
+    /**
+     * 通过使用指定的jdbc连接执行用户自定义任务
+     *
+     * @param work 需要执行的任务
+     */
+    public void doWork(Work work) {
+        getSession().doWork(work);
+    }
+
+    /**
+     * 通过使用指定的jdbc连接执行用户自定义任务，可以获取执行厚度返回结果{@link ReturningWork#execute} call.
+     *
+     * @param work 需要执行的任务
+     * @return 执行结果 {@link ReturningWork#execute}.
+     */
+    T doReturningWork(ReturningWork<T> work) {
+        return getSession().doReturningWork(work);
     }
 
     public Class<T> getEntityClazz() {
@@ -963,7 +1003,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         sessQueue.push(session);
     }
 
-    private Session popTreadSession() {
+    private static Session popTreadSession() {
         Session session = null;
         Deque<Session> sessQueue = THREADLOCAL_SESSIONS.get();
         if (sessQueue != null && !sessQueue.isEmpty()) {

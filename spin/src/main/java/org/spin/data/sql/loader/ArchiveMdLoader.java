@@ -1,7 +1,6 @@
 package org.spin.data.sql.loader;
 
 import org.spin.core.throwable.SQLException;
-import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.StringUtils;
 
 import java.io.BufferedReader;
@@ -74,18 +73,8 @@ public class ArchiveMdLoader extends ArchiveSQLLoader {
         return this.sqlSourceMap.get(id);
     }
 
-    protected InputStream getInputStream(String id) {
-        String cmdFileName = id.substring(0, id.lastIndexOf('.'));
-        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + this.getDbType().getProductName() + "/" + cmdFileName + ".md";
-        try {
-            InputStream is = this.getClass().getResourceAsStream(path);
-            if (null == is) {
-                path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".md";
-                is = this.getClass().getResourceAsStream(path);
-            }
-            return is;
-        } catch (Exception e) {
-            throw new SimplifiedException("加载sql模板文件异常:[" + path + "]", e);
-        }
+    @Override
+    protected String getExtension() {
+        return ".md";
     }
 }

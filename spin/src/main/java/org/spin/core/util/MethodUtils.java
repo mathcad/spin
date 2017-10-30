@@ -8,13 +8,20 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.ErrorCode;
+import org.spin.core.throwable.SimplifiedException;
 
 import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -1223,6 +1230,35 @@ public abstract class MethodUtils {
     }
 
     /**
+     * 判断方法的参数列表中，是否存在含有泛型的参数
+     */
+    public static boolean containsGenericArg(Method method) {
+        return containsGenericArg(Arrays.stream(method.getParameters()).map(Parameter::getParameterizedType).toArray(java.lang.reflect.Type[]::new));
+    }
+
+    /**
+     * 判断类型中是否含有泛型参数
+     */
+    public static boolean containsGenericArg(java.lang.reflect.Type... argTypes) {
+        boolean contains = false;
+        for (java.lang.reflect.Type type : argTypes) {
+            if (type instanceof TypeVariable) {
+                // 泛型参数
+                return true;
+            } else if (type instanceof GenericArrayType) {
+                // 含泛型数组参数
+                contains = containsGenericArg(((GenericArrayType) type).getGenericComponentType());
+                if (contains) return true;
+            } else if (type instanceof ParameterizedType) {
+                // 含泛型参数的参数
+                contains = containsGenericArg(((ParameterizedType) type).getActualTypeArguments());
+                if (contains) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 获取方法的参数名
      */
     public static String[] getMethodParamNames(final Method m) {
@@ -1232,7 +1268,7 @@ public abstract class MethodUtils {
         try {
             cr = new ClassReader(n);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new SimplifiedException(ErrorCode.IO_FAIL, e);
         }
         cr.accept(new ClassVisitor(Opcodes.ASM5) {
             @Override
@@ -1243,7 +1279,7 @@ public abstract class MethodUtils {
                     return super.visitMethod(access, name, desc, signature, exceptions);
                 }
                 MethodVisitor v = super.visitMethod(access, name, desc, signature, exceptions);
-                return new MethodVisitor(Opcodes.ASM5, v) {
+                return new MethodVisitor(Opcodes.ASM6, v) {
                     @Override
                     public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
                         int i = index - 1;

@@ -8,11 +8,13 @@ package org.spin.core.util.file;
  */
 public abstract class FileType {
     protected String extension;
+    protected String format;
     protected String contentType;
     protected String trait;
 
     protected FileType(String extension, String contentType, String trait) {
         this.extension = extension.charAt(0) == '.' ? extension : "." + extension;
+        this.format = this.extension.substring(1).toUpperCase();
         this.contentType = contentType;
         this.trait = trait.length() > 16 ? trait.toUpperCase().substring(0, 16) : trait.toUpperCase();
     }
@@ -23,6 +25,14 @@ public abstract class FileType {
      */
     public String getExtension() {
         return extension;
+    }
+
+    /**
+     * 文件格式
+     * 如<code>"JPEG"</code>
+     */
+    public String getFormat() {
+        return format;
     }
 
     /**
@@ -64,6 +74,7 @@ public abstract class FileType {
         public static final Image PNG = new Image(".png", "image/png", "89504E47");
         public static final Image GIG = new Image(".gif", "image/gif", "47494638");
         public static final Image TIFF = new Image(".tiff", "image/tiff", "49492A00");
+        public static final Image PSD = new Image(".psd", "", "");
 
         public Image(String extension, String contentType, String trait) {
             super(extension, contentType, trait);
@@ -103,7 +114,7 @@ public abstract class FileType {
      * 音频文件类型
      */
     public static final class Audio extends FileType {
-        public static final Archive ZIP = new Archive(".zip", "", "");
+        public static final Audio WAV = new Audio(".wav", "", "");
 
         public Audio(String extension, String contentType, String trait) {
             super(extension, contentType, trait);
@@ -114,9 +125,20 @@ public abstract class FileType {
      * 视频文件类型
      */
     public static final class Video extends FileType {
-        public static final Archive ZIP = new Archive(".zip", "", "");
+        public static final Video MP4 = new Video(".mp4", "", "");
 
         public Video(String extension, String contentType, String trait) {
+            super(extension, contentType, trait);
+        }
+    }
+
+    /**
+     * 二进制文件类型
+     */
+    public static final class Bin extends FileType {
+        public static final Video EXE = new Video(".exe", "", "");
+
+        public Bin(String extension, String contentType, String trait) {
             super(extension, contentType, trait);
         }
     }

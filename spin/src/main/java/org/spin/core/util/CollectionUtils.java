@@ -309,6 +309,33 @@ public abstract class CollectionUtils {
         return toMultiValueMap(unmodifiableMap);
     }
 
+    @SafeVarargs
+    public static <E> List<E> ofArrayList(E... elements) {
+        List<E> lst = new ArrayList<>();
+        Collections.addAll(lst, elements);
+        return lst;
+    }
+
+    @SafeVarargs
+    public static <E> List<E> ofLinkedList(E... elements) {
+        List<E> lst = new LinkedList<>();
+        Collections.addAll(lst, elements);
+        return lst;
+    }
+
+    @SafeVarargs
+    public static <E> Set<E> ofHashSet(E... elements) {
+        Set<E> set = new HashSet<>();
+        Collections.addAll(set, elements);
+        return set;
+    }
+
+    @SafeVarargs
+    public static <E> Set<E> ofTreeSet(E... elements) {
+        Set<E> set = new TreeSet<>();
+        Collections.addAll(set, elements);
+        return set;
+    }
 
     /**
      * 枚举迭代器

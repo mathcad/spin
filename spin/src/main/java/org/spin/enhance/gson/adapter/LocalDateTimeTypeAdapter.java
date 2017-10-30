@@ -1,9 +1,10 @@
 package org.spin.enhance.gson.adapter;
 
-import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.spin.core.util.StringUtils;
+import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ import java.time.format.DateTimeFormatter;
  *
  * @author xuweinan
  */
-public class LocalDateTimeTypeAdapter extends TypeAdapter<LocalDateTime> {
+public class LocalDateTimeTypeAdapter extends MatchableTypeAdapter<LocalDateTime> {
     private DateTimeFormatter formater;
 
     public LocalDateTimeTypeAdapter(String datePattern) {
@@ -39,5 +40,10 @@ public class LocalDateTimeTypeAdapter extends TypeAdapter<LocalDateTime> {
         } else {
             return LocalDateTime.parse(tmp, formater);
         }
+    }
+
+    @Override
+    public boolean isMatch(TypeToken<?> type) {
+        return LocalDateTime.class.isAssignableFrom(type.getRawType());
     }
 }

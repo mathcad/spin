@@ -8,13 +8,12 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
-import org.spin.core.SessionUser;
+import org.spin.core.session.SessionUser;
 import org.spin.core.SpinContext;
 import org.spin.core.auth.Authenticator;
-import org.spin.core.auth.SecretManager;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.StringUtils;
-import org.spin.enhance.util.SessionUtils;
+import org.spin.core.session.SessionManager;
 import org.spin.web.RestfulResponse;
 import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.RestfulApi;
@@ -42,9 +41,6 @@ public class RestfulApiAspect implements Ordered {
     @Autowired(required = false)
     private Authenticator authenticator;
 
-    @Autowired
-    private SecretManager secretManager;
-
     @Pointcut("execution(org.spin.web.RestfulResponse *.*(..)) && @annotation(org.spin.web.annotation.RestfulApi)")
     private void restfulMethod() {
     }
@@ -57,7 +53,7 @@ public class RestfulApiAspect implements Ordered {
         boolean needAuth = anno.auth();
         if (needAuth) {
             String authRouter = StringUtils.isEmpty(anno.authRouter()) ? anno.name() : anno.authRouter();
-            SessionUser user = SessionUtils.getCurrentUser();
+            SessionUser user = SessionManager.getCurrentUser();
             if (user != null && authenticator.checkAuthorities(user.getId(), authRouter)) {
                 isAllowed = true;
             }

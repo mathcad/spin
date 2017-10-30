@@ -1,10 +1,10 @@
 package org.spin.data.pk.generator;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.spin.data.pk.DistributedId;
 import org.spin.data.pk.PkProperties;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * <p>Created by xuweinan on 2017/5/5.</p>

@@ -1,57 +1,45 @@
 description 'spin-web的starter'
-group 'org.mathcat'
-version '2.0.0'
+version '2.1.0'
 def artifactId = 'spin-sratrer-restful'
 
-apply plugin: 'java'
-apply plugin: 'maven'
-
-sourceCompatibility = 1.8
+apply plugin: 'org.junit.platform.gradle.plugin'
 
 buildscript {
     ext {
-        springBootVersion = '1.5.3.RELEASE'
+        springBootVersion = '1.5.8.RELEASE'
+        junitJupiterVersion = '5.0.1'
     }
     repositories {
+        mavenLocal()
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
         maven { url 'https://repo.spring.io/libs-release' }
-        mavenLocal()
         mavenCentral()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath('org.springframework:springloaded:1.2.7.RELEASE')
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
     }
 }
 
-repositories {
-    mavenLocal()
-    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-    mavenCentral()
-}
-
-[compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
-
 compileJava.dependsOn(processResources)
 
-task createDirs {
-    sourceSets*.java.srcDirs*.each { it.mkdirs() }
-    sourceSets*.resources.srcDirs*.each { it.mkdirs() }
-}
-
-task sourceJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allJava
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    //    archives sourcesJar
-    archives javadocJar
+junitPlatform {
+    // platformVersion '1.0.1'
+//    filters {
+//        engines {
+//            // include 'junit-jupiter', 'junit-vintage'
+//            // exclude 'custom-engine'
+//        }
+//        tags {
+//            // include 'fast'
+//            exclude 'slow'
+//        }
+//        // includeClassNamePattern '.*Test'
+//    }
+    // enableStandardTestTask true
+    // reportsDir file('build/test-results/junit-platform') // this is the default
+    logManager 'org.apache.logging.log4j.jul.LogManager'
 }
 
 install {
@@ -62,24 +50,29 @@ install {
     }
 }
 
-//uploadArchives {
-//    repositories {
-//        mavenDeployer {
-//            repository(url: "http://121.196.213.233:8081/repository/saturn") {
-//                authentication(userName: "admin", password: "super")
-//            }
-//            pom.version = "$project.version"
-//            pom.artifactId = "$artifactId"
-//            pom.groupId = "$project.group"
-//        }
-//    }
-//}
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "http://121.196.213.233:8081/repository/saturn") {
+                authentication(userName: "admin", password: "super")
+            }
+            pom.version = "$project.version"
+            pom.artifactId = "$artifactId"
+            pom.groupId = "$project.group"
+        }
+    }
+}
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+
     compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
 
-    compile(project(":spin"))
+//    compile group: 'org.mathcat', name: 'spin', version: '2.0.4'
+    compile(project(":spin")) {
+        transitive = true
+    }
 }

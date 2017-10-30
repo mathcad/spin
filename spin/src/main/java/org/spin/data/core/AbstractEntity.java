@@ -1,5 +1,6 @@
 package org.spin.data.core;
 
+import org.spin.data.util.EntityUtils;
 import org.spin.enhance.gson.annotation.PreventOverflow;
 
 import javax.persistence.Column;
@@ -12,12 +13,12 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
- * 基本实体类型
+ * 基础实体类型
  * <p>定义了实体的部分通用字段，所有用户实体如无特殊需求，应从此类继承</p>
  * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @author xuweinan
- * @version 1.0
+ * @version 1.2
  */
 @MappedSuperclass
 public abstract class AbstractEntity implements IEntity<Long>, Serializable {
@@ -75,6 +76,24 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     @Column
     private boolean valid = true;
 
+    /**
+     * 获取当前实体的DTO。DTO是当前实体的浅拷贝。
+     *
+     * @param depth 属性解析深度
+     * @return DTO
+     */
+    public final <E extends AbstractEntity> E getDTO(final int depth) {
+        //noinspection unchecked
+        return (E) EntityUtils.getDTO(this, depth);
+    }
+
+    /**
+     * 判断是否是同一实体。此方法只做同一性认定，不代表完全相同。
+     * <p>同一性：指<b>相同类型</b>的实体具有相同的id，version。即标识与版本相同</p>
+     *
+     * @param o 待判断实体
+     * @return 是否同一实体
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -90,6 +109,20 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     }
 
     @Override
+    public String toString() {
+        return "AbstractEntity{" +
+            "id=" + id +
+            ", createUserId=" + createUserId +
+            ", createTime=" + createTime +
+            ", updateUserId=" + updateUserId +
+            ", updateTime=" + updateTime +
+            ", version=" + version +
+            ", orderNo=" + orderNo +
+            ", valid=" + valid +
+            '}';
+    }
+
+    @Override
     public Long getId() {
         return id;
     }
@@ -99,58 +132,100 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.id = id;
     }
 
+    /**
+     * 记录创建者id
+     */
     public Long getCreateUserId() {
         return createUserId;
     }
 
+    /**
+     * 记录创建者id
+     */
     public void setCreateUserId(Long createUserId) {
         this.createUserId = createUserId;
     }
 
+    /**
+     * 创建时间，禁止更改
+     */
     public LocalDateTime getCreateTime() {
         return createTime;
     }
 
+    /**
+     * 创建时间，禁止更改
+     */
     public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
     }
 
+    /**
+     * 记录更新者id
+     */
     public Long getUpdateUserId() {
         return updateUserId;
     }
 
+    /**
+     * 记录更新者id
+     */
     public void setUpdateUserId(Long updateUserId) {
         this.updateUserId = updateUserId;
     }
 
+    /**
+     * 最后更新时间
+     */
     public LocalDateTime getUpdateTime() {
         return updateTime;
     }
 
+    /**
+     * 最后更新时间
+     */
     public void setUpdateTime(LocalDateTime updateTime) {
         this.updateTime = updateTime;
     }
 
+    /**
+     * 版本号
+     */
     public int getVersion() {
         return version;
     }
 
+    /**
+     * 版本号
+     */
     public void setVersion(int version) {
         this.version = version;
     }
 
+    /**
+     * 排序号
+     */
     public float getOrderNo() {
         return orderNo;
     }
 
+    /**
+     * 排序号
+     */
     public void setOrderNo(float orderNo) {
         this.orderNo = orderNo;
     }
 
+    /**
+     * 是否逻辑删除
+     */
     public boolean isValid() {
         return valid;
     }
 
+    /**
+     * 是否逻辑删除
+     */
     public void setValid(boolean valid) {
         this.valid = valid;
     }

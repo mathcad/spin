@@ -1,12 +1,10 @@
 package org.spin.data.sql.loader;
 
-import org.spin.core.throwable.SQLException;
-import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.StringUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.spin.core.throwable.SQLException;
 
 import java.io.InputStream;
 import java.util.List;
@@ -51,18 +49,8 @@ public class ArchiveXmlLoader extends ArchiveSQLLoader {
         return this.sqlSourceMap.get(id);
     }
 
-    protected InputStream getInputStream(String id) {
-        String cmdFileName = id.substring(0, id.lastIndexOf('.'));
-        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + this.getDbType().getProductName() + "/" + cmdFileName + ".xml";
-        try {
-            InputStream is = this.getClass().getResourceAsStream(path);
-            if (null == is) {
-                path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + ".xml";
-                is = this.getClass().getResourceAsStream(path);
-            }
-            return is;
-        } catch (Exception e) {
-            throw new SimplifiedException("加载sql模板文件异常:[" + path + "]", e);
-        }
+    @Override
+    protected String getExtension() {
+        return ".xml";
     }
 }

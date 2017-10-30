@@ -21,6 +21,9 @@ import javax.persistence.Entity;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -37,7 +40,7 @@ import java.util.Map;
 @Component
 public class QueryParamParser {
     private static final Logger logger = LoggerFactory.getLogger(QueryParamParser.class);
-    private static final String SPLITOR = " ";
+    private static final String SPLITOR = "__";
     private Gson gson = new Gson();
 
     /**
@@ -191,6 +194,15 @@ public class QueryParamParser {
             } else if (fieldType.equals(Timestamp.class)) {
                 Date tmp = DateUtils.toDate(val);
                 v = new Timestamp(Assert.notNull(tmp, "时间格式不正确").getTime());
+            } else if (fieldType.equals(LocalDateTime.class)) {
+                LocalDateTime tmp = DateUtils.toLocalDateTime(val);
+                v = Assert.notNull(tmp, "时间格式不正确");
+            } else if (fieldType.equals(LocalDate.class)) {
+                LocalDateTime tmp = DateUtils.toLocalDateTime(val);
+                v = Assert.notNull(tmp, "时间格式不正确").toLocalDate();
+            } else if (fieldType.equals(LocalTime.class)) {
+                LocalDateTime tmp = DateUtils.toLocalDateTime(val);
+                v = Assert.notNull(tmp, "时间格式不正确").toLocalTime();
             } else if (fieldType.isEnum()) {
                 //noinspection unchecked
                 v = EnumUtils.getEnum((Class<Enum>) fieldType, Integer.valueOf(val));
@@ -204,13 +216,13 @@ public class QueryParamParser {
     }
 
     private Criterion createCriterion(List<String> qPath, String op, Object value) {
-        String propName;
-        if (qPath.size() == 2) {
-            propName = qPath.get(0) + "." + qPath.get(1);
-        } else if (qPath.size() == 1)
-            propName = qPath.get(0);
-        else
-            throw new SimplifiedException("查询字段最多2层:" + qPath);
+        String propName = StringUtils.join(qPath, ".");
+//        if (qPath.size() == 2) {
+//            propName = qPath.get(0) + "." + qPath.get(1);
+//        } else if (qPath.size() == 1)
+//            propName = qPath.get(0);
+//        else
+//            throw new SimplifiedException("查询字段最多2层:" + qPath);
         Criterion ct = null;
         switch (op) {
             case "eq":

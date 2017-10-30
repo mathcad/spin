@@ -2,14 +2,15 @@ package org.spin.core.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.InstanceCreator;
 import com.google.gson.TypeAdapterFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.ErrorCode;
 import org.spin.core.TypeIdentifier;
+import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Type;
-import java.util.Enumeration;
-import java.util.Iterator;
 
 /**
  * 包含操作 {@code JSON} 数据的常用方法的工具类。
@@ -89,11 +90,11 @@ public abstract class JsonUtils {
                 result = gson.toJson(target);
             }
         } catch (Exception ex) {
-            logger.warn("目标对象 " + target.getClass().getName() + " 转换 JSON 字符串时，发生异常！", ex);
-            if (target instanceof Iterable || target instanceof Iterator || target instanceof Enumeration || target.getClass().isArray()) {
-                result = EMPTY_JSON_ARRAY;
-            } else
-                result = EMPTY_JSON;
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION,"目标对象 " + target.getClass().getName() + " 转换 JSON 字符串时，发生异常！", ex);
+//            if (target instanceof Iterable || target instanceof Iterator || target instanceof Enumeration || target.getClass().isArray()) {
+//                result = EMPTY_JSON_ARRAY;
+//            } else
+//                result = EMPTY_JSON;
         }
         return result;
     }
@@ -270,8 +271,7 @@ public abstract class JsonUtils {
         try {
             return baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern).create().fromJson(json, token.getType());
         } catch (Exception ex) {
-            logger.error(json + " 无法转换为 " + token.getRawType().getName() + " 对象!", ex);
-            return null;
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + token.toString() + " 对象!", ex);
         }
     }
 
@@ -287,8 +287,15 @@ public abstract class JsonUtils {
         try {
             return defaultGson.fromJson(json, token.getType());
         } catch (Exception ex) {
-            logger.error(json + " 无法转换为 " + token.getRawType().getName() + " 对象!", ex);
-            return null;
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + token.toString() + " 对象!", ex);
+        }
+    }
+
+    public static <T> T fromJson(String json, Type type) {
+        try {
+            return defaultGson.fromJson(json, type);
+        } catch (Exception ex) {
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + type.getTypeName() + " 对象!", ex);
         }
     }
 
@@ -309,8 +316,7 @@ public abstract class JsonUtils {
         try {
             return baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern).create().fromJson(json, clazz);
         } catch (Exception ex) {
-            logger.error(json + " 无法转换为 " + clazz.getName() + " 对象!", ex);
-            return null;
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + clazz.getName() + " 对象!", ex);
         }
     }
 
@@ -337,6 +343,15 @@ public abstract class JsonUtils {
             builder.setDateFormat(datePattern);
         } catch (Exception ignore) {
             logger.info("Spin Enhance package not imported");
+        }
+        try {
+            Class<?> queryParamCls = ClassUtils.getClass("org.spin.data.query.QueryParam");
+            @SuppressWarnings("unchecked")
+            Class<InstanceCreator> instanceCreatorCls = (Class<InstanceCreator>) ClassUtils.getClass("org.spin.enhance.gson.adapter.QueryParamInstanceCreater");
+            InstanceCreator instanceCreator = instanceCreatorCls.newInstance();
+            builder.registerTypeAdapter(queryParamCls, instanceCreator);
+        } catch (Exception ignore) {
+            logger.info("data module not imported");
         }
         return builder;
     }

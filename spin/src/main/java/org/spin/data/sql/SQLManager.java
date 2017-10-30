@@ -4,13 +4,13 @@ import org.hibernate.cfg.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.BeanUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.data.core.Page;
 import org.spin.data.core.PageRequest;
 import org.spin.data.core.SQLLoader;
 import org.spin.data.sql.dbtype.MySQLDatabaseType;
 import org.spin.data.sql.dbtype.OracleDatabaseType;
+import org.spin.data.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
@@ -78,7 +78,7 @@ public class SQLManager {
         List<Map<String, Object>> list = listAsMap(sqlId, paramMap);
         if (!list.isEmpty()) {
             try {
-                return BeanUtils.wrapperMapToBean(entityClazz, list.get(0));
+                return EntityUtils.wrapperMapToBean(entityClazz, list.get(0));
             } catch (Exception e) {
                 logger.error("Entity vrappe error", e);
             }
@@ -90,7 +90,7 @@ public class SQLManager {
      * 通过命令文件查询
      */
     public List<Map<String, Object>> listAsMap(String sqlId, Object... mapParams) {
-        return listAsMap(sqlId, MapUtils.getMap(mapParams));
+        return listAsMap(sqlId, MapUtils.ofMap(mapParams));
     }
 
     /**
@@ -136,11 +136,11 @@ public class SQLManager {
      * 通过命令文件查询
      */
     public <T> List<T> list(String sqlId, Class<T> entityClazz, Object... mapParams) {
-        List<Map<String, Object>> maps = listAsMap(sqlId, MapUtils.getMap(mapParams));
+        List<Map<String, Object>> maps = listAsMap(sqlId, MapUtils.ofMap(mapParams));
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : maps) {
             try {
-                res.add(BeanUtils.wrapperMapToBean(entityClazz, map));
+                res.add(EntityUtils.wrapperMapToBean(entityClazz, map));
             } catch (Exception e) {
                 logger.error("Entity vrappe error", e);
             }
@@ -156,7 +156,7 @@ public class SQLManager {
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : maps) {
             try {
-                res.add(BeanUtils.wrapperMapToBean(entityClazz, map));
+                res.add(EntityUtils.wrapperMapToBean(entityClazz, map));
             } catch (Exception e) {
                 logger.error("Entity vrappe error", e);
             }
@@ -183,7 +183,7 @@ public class SQLManager {
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : list) {
             try {
-                res.add(BeanUtils.wrapperMapToBean(entityClazz, map));
+                res.add(EntityUtils.wrapperMapToBean(entityClazz, map));
             } catch (Exception e) {
                 logger.error("Entity vrappe error", e);
             }

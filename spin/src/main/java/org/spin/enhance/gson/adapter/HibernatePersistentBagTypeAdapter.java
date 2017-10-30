@@ -1,16 +1,17 @@
 package org.spin.enhance.gson.adapter;
 
-import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.hibernate.collection.internal.PersistentBag;
+import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
 
 /**
  * lazy-load 解决方案
  */
-public class HibernatePersistentBagTypeAdapter extends TypeAdapter<PersistentBag> {
+public class HibernatePersistentBagTypeAdapter extends MatchableTypeAdapter<PersistentBag> {
 
     @Override
     public PersistentBag read(JsonReader in) throws IOException {
@@ -25,5 +26,10 @@ public class HibernatePersistentBagTypeAdapter extends TypeAdapter<PersistentBag
             // 写入空数组
             out.beginArray().endArray();
         }
+    }
+
+    @Override
+    public boolean isMatch(TypeToken<?> type) {
+        return PersistentBag.class.isAssignableFrom(type.getRawType());
     }
 }

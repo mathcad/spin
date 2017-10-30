@@ -18,6 +18,7 @@ public enum ErrorCode {
     BEAN_CREATE_FAIL(40, "创建bean实例错误"),
     IO_FAIL(70, "IO异常"),
     NETWORK_EXCEPTION(100, "网络连接异常"),
+    SERIALIZE_EXCEPTION(120, "JSON序列化错误"),
 
     /////////////////////////////////// 可通过Restful接口暴露给客户端的错误 //////////////////////////////////////
     // 4** 访问及权限错误
@@ -34,7 +35,8 @@ public enum ErrorCode {
     TOKEN_EXPIRED(601, "Token已过期"),
     TOKEN_INVALID(602, "无效的Token"),
     SECRET_EXPIRED(651, "密钥已过期"),
-    SECRET_INVALID(653, "无效的密钥");
+    SECRET_INVALID(653, "无效的密钥"),
+    SESSION_INVALID(700, "会话已失效");
 
     private int code;
     private String desc;

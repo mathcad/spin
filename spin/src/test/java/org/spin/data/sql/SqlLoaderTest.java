@@ -17,15 +17,16 @@
 
 package org.spin.data.sql;
 
+import org.junit.jupiter.api.Test;
 import org.spin.data.core.SQLLoader;
-import org.spin.data.sql.loader.ClasspathXmlLoader;
+import org.spin.data.sql.loader.FileSystemXmlLoader;
 import org.spin.data.sql.resolver.FreemarkerResolver;
-import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * Created by Arvin on 2016/6/25.
@@ -35,13 +36,13 @@ public class SqlLoaderTest {
     public void testGetSql() {
         Map<String, String> param = new HashMap<>();
         param.put("no", "pp");
-        SQLLoader loader = new ClasspathXmlLoader();
-//        SQLLoader loader = new ClasspathMdLoader();
+        SQLLoader loader = new FileSystemXmlLoader();
+//        SQLLoader loader = new FileSystemMdLoader();
         loader.setTemplateResolver(new FreemarkerResolver());
-        String template = loader.getSQL("product.findProductTarget", param).getTemplate();
-        template = loader.getSQL("product.findProductTarget", param).getTemplate();
-        template = loader.getSQL("product.test2", param).getTemplate();
-        System.out.println(template);
+//        String template = loader.getSQL("product.findProductTarget", param).getTemplate();
+//        template = loader.getSQL("product.findProductTarget", param).getTemplate();
+//        template = loader.getSQL("product.test2", param).getTemplate();
+//        System.out.println(template);
         assertTrue(true);
     }
 }

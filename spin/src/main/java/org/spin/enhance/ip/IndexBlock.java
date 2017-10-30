@@ -4,7 +4,7 @@ package org.spin.enhance.ip;
  * item index class
  */
 public class IndexBlock {
-    private static final int LENGTH = 12;
+    private static int LENGTH = 12;
 
     /**
      * start ip address

@@ -9,6 +9,10 @@ import org.spin.data.sql.SQLSource;
  * @author xuweinan
  */
 public interface DatabaseType {
+
+    /**
+     * 数据库产品名称
+     */
     String getProductName();
 
     /**

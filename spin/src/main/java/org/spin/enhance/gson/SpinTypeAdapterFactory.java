@@ -4,58 +4,54 @@ import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
-import org.hibernate.collection.internal.PersistentBag;
-import org.hibernate.proxy.HibernateProxy;
-import org.spin.core.annotation.UserEnum;
-import org.spin.enhance.gson.adapter.HibernatePersistentBagTypeAdapter;
-import org.spin.enhance.gson.adapter.HibernateProxyTypeAdapter;
+import org.spin.core.util.ClassUtils;
+import org.spin.core.util.ConstructorUtil;
 import org.spin.enhance.gson.adapter.LocalDateTimeTypeAdapter;
 import org.spin.enhance.gson.adapter.LocalDateTypeAdapter;
 import org.spin.enhance.gson.adapter.LocalTimeTypeAdapter;
 import org.spin.enhance.gson.adapter.LongTypeAdapter;
 import org.spin.enhance.gson.adapter.UserEnumTypeAdapter;
-import org.spin.enhance.gson.annotation.PreventOverflow;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Gson TypeAdapter
+ * Gson TypeAdapterFactory
  * <p>Created by xuweinan on 2017/1/25.</p>
  *
  * @author xuweinan
  */
 public class SpinTypeAdapterFactory implements TypeAdapterFactory {
     private String datePattern;
-
-    public SpinTypeAdapterFactory() {
-    }
+    private static List<MatchableTypeAdapter<?>> typeAdapters = new ArrayList<>();
 
     public SpinTypeAdapterFactory(String datePattern) {
         this.datePattern = datePattern;
     }
 
+    @SuppressWarnings("unchecked")
+    private <T>  void init(Gson gson, TypeToken<T> type) {
+        try {
+            Class<MatchableTypeAdapter> cls = (Class<MatchableTypeAdapter>) ClassUtils.getClass("org.spin.data.gson.HibernateProxyTypeAdapter");
+            typeAdapters.add(ConstructorUtil.invokeConstructor(cls, gson));
+            cls = (Class<MatchableTypeAdapter>) ClassUtils.getClass("org.spin.data.gson.HibernatePersistentBagTypeAdapter");
+            typeAdapters.add(cls.getConstructor().newInstance());
+        } catch (Exception ignore) {
+        }
+        typeAdapters.add(new LocalDateTimeTypeAdapter(datePattern));
+        typeAdapters.add(new LocalDateTypeAdapter(datePattern));
+        typeAdapters.add(new LocalTimeTypeAdapter(datePattern));
+        typeAdapters.add(new LongTypeAdapter());
+        typeAdapters.add(new UserEnumTypeAdapter(type.getRawType()));
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public final <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-        if (HibernateProxy.class.isAssignableFrom(type.getRawType()))
-            return (TypeAdapter<T>) new HibernateProxyTypeAdapter(gson);
-        else if (PersistentBag.class.isAssignableFrom(type.getRawType()))
-            return (TypeAdapter<T>) new HibernatePersistentBagTypeAdapter();
-        else if (LocalDateTime.class.isAssignableFrom(type.getRawType()))
-            return (TypeAdapter<T>) new LocalDateTimeTypeAdapter(datePattern);
-        else if (LocalDate.class.isAssignableFrom(type.getRawType()))
-            return (TypeAdapter<T>) new LocalDateTypeAdapter(datePattern);
-        else if (LocalTime.class.isAssignableFrom(type.getRawType()))
-            return (TypeAdapter<T>) new LocalTimeTypeAdapter(datePattern);
-        else if (Enum.class.isAssignableFrom(type.getRawType()) && type.getRawType().getAnnotation(UserEnum.class) != null)
-            return new UserEnumTypeAdapter(type.getRawType());
-        else if (Long.class.isAssignableFrom(type.getRawType()) && type.getRawType().getAnnotation(PreventOverflow.class) != null) {
-            return (TypeAdapter<T>) new LongTypeAdapter();
+        if (typeAdapters.isEmpty()) {
+            init(gson, type);
         }
-        else
-            return null;
+        return (TypeAdapter<T>) typeAdapters.stream().filter(t -> t.isMatch(type)).findFirst().orElse(null);
     }
 
     public String getDatePattern() {

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.SpinContext;
-import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
@@ -15,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -26,8 +26,6 @@ import java.util.Set;
 public class QueryParam implements Serializable {
     private static final long serialVersionUID = 4033669191222887528L;
     private static final Logger logger = LoggerFactory.getLogger(QueryParam.class);
-    private static final TypeIdentifier<QueryParam> thisType = new TypeIdentifier<QueryParam>() {
-    };
 
     ///页面查询需要携带的信息，其中cls必填////////////////////////////////////////////////////////////////
     private String cls;
@@ -38,9 +36,18 @@ public class QueryParam implements Serializable {
     private String signature;
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
+    private QueryParam() {
+    }
+
     public static QueryParam parseFromJson(String jsonString) {
-        QueryParam qp = JsonUtils.fromJson(jsonString, thisType);
-        if (!SpinContext.devMode && null != qp && !qp.validation())
+        QueryParam qp = JsonUtils.fromJson(jsonString, QueryParam.class);
+        if (Objects.isNull(qp)) {
+            throw new SimplifiedException("查询参数字符串不合法");
+        }
+        if (StringUtils.isEmpty(qp.cls)) {
+            throw new SimplifiedException("查询参数必须指定查询实体类");
+        }
+        if (!SpinContext.devMode && !qp.validation())
             throw new SimplifiedException(ErrorCode.SIGNATURE_FAIL, "请求参数被客户端篡改");
         return qp;
     }
@@ -58,23 +65,15 @@ public class QueryParam implements Serializable {
     ///QueryParam快速构造////////////////////////////////////////////////////////////////////////////
 
     /**
-     * 创建新的查询参数
-     *
-     * @return {@link QueryParam}
-     */
-    public static QueryParam create() {
-        return new QueryParam();
-    }
-
-    /**
-     * 设置查询的实体类
+     * 创建新的查询参数并设置查询的实体类
      *
      * @param entityClass 实体类全名
      * @return {@link QueryParam}
      */
-    public QueryParam from(String entityClass) {
-        this.cls = entityClass;
-        return this;
+    public static QueryParam from(String entityClass) {
+        QueryParam q = new QueryParam();
+        q.cls = entityClass;
+        return q;
     }
 
     /**
@@ -147,7 +146,7 @@ public class QueryParam implements Serializable {
      * @return {@link QueryParam}
      */
     public QueryParam asc(String orderField) {
-        predicate.setSort((StringUtils.isEmpty(predicate.getSort()) ? "" : predicate.getSort()) + "," + orderField + "__asc");
+        predicate.setSort((StringUtils.isEmpty(predicate.getSort()) ? "" : (predicate.getSort() + ",")) + orderField + "__asc");
         return this;
     }
 
@@ -158,7 +157,7 @@ public class QueryParam implements Serializable {
      * @return {@link QueryParam}
      */
     public QueryParam desc(String orderField) {
-        predicate.setSort((StringUtils.isEmpty(predicate.getSort()) ? "" : predicate.getSort()) + "," + orderField + "__desc");
+        predicate.setSort((StringUtils.isEmpty(predicate.getSort()) ? "" : (predicate.getSort() + ",")) + orderField + "__desc");
         return this;
     }
 
@@ -276,5 +275,15 @@ public class QueryParam implements Serializable {
      */
     public Integer getPageSize() {
         return null == pagger ? null : pagger.getPageSize();
+    }
+
+    /**
+     * 将查询参数转换为json字符串
+     *
+     * @return json字符串
+     */
+    @Override
+    public String toString() {
+        return JsonUtils.toJson(this);
     }
 }

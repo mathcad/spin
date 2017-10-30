@@ -2,8 +2,9 @@ package org.spin.sys;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.junit.jupiter.api.Test;
+import org.spin.core.util.JsonUtils;
 import org.spin.data.query.QueryParam;
-import org.junit.Test;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -49,14 +50,14 @@ public class EnumUtilsTest {
         System.out.println(Arrays.toString(((ParameterizedType) a.getClass().getGenericSuperclass()).getActualTypeArguments()));
         System.out.println(GTYPE_LIST_MAP);
 
-        QueryParam q = QueryParam.create().from("java.lang.String");
+        QueryParam q = QueryParam.from("java.lang.String");
         q.addField("field");
         q.where("a","a").where("b","c").where("b","c");
         q.desc("id");
         Gson gson = new Gson();
         String str = gson.toJson(q);
         System.out.println(str);
-        QueryParam t = gson.fromJson(str, QueryParam.class);
+        QueryParam t = JsonUtils.fromJson(str, QueryParam.class);
         System.out.println(t.getCls());
     }
 

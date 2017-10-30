@@ -1,8 +1,8 @@
 package org.spin.core.util;
 
+import org.junit.jupiter.api.Test;
 import org.spin.core.security.Base64;
 import org.spin.core.security.RSA;
-import org.junit.Test;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Method;
@@ -11,12 +11,13 @@ import java.lang.reflect.ParameterizedType;
 import java.security.KeyPair;
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * Created by Arvin on 2016/8/19.
  */
-public class BeanUtilsTest {
+public class BeanUtilsTest<E> {
     @Test
     public void wrapperMapToBean() throws Exception {
     }
@@ -62,5 +63,29 @@ public class BeanUtilsTest {
             }
         }
 
+    }
+
+    @Test
+    public void testVarargs() {
+        BeanUtilsTest<Double> aa = new BeanUtilsTest<>();
+        ReflectionUtils.doWithMethods(aa.getClass(), method -> {
+                if (method.getName().equals("aaa")) {
+                    boolean ext = MethodUtils.containsGenericArg(method);
+                    String[] names = MethodUtils.getMethodParamNames(method);
+                    System.out.println(1);
+                }
+            }
+        );
+    }
+
+    public <T extends CharSequence> void aaa(List<String> a,
+                                             String[] b,
+                                             Class<String> d,
+                                             List<List<String>> f,
+                                             T g,
+                                             List<T> h,
+                                             E i, T[] j,
+                                             List<T>[] k,
+                                             String... z) {
     }
 }

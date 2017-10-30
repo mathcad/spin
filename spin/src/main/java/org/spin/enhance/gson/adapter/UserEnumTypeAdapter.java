@@ -1,9 +1,11 @@
 package org.spin.enhance.gson.adapter;
 
-import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import org.spin.core.trait.IntEvaluated;
 import org.spin.core.util.EnumUtils;
+import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
 
@@ -11,7 +13,7 @@ import java.io.IOException;
  * GSON的枚举适配器
  * Created by xuweinan on 2017/1/25.
  */
-public class UserEnumTypeAdapter<E extends Enum<E>> extends TypeAdapter<E> {
+public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter<E> {
     private Class<E> clazz;
 
     public UserEnumTypeAdapter(Class<E> clazz) {
@@ -23,7 +25,7 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends TypeAdapter<E> {
         if (null == value) {
             out.nullValue();
         } else {
-            out.value(EnumUtils.getEnumValue(value.getDeclaringClass(), value));
+            out.value((Integer) EnumUtils.getEnumValue(value.getDeclaringClass(), value));
         }
     }
 
@@ -34,5 +36,18 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends TypeAdapter<E> {
         } catch (IllegalStateException | NumberFormatException e) {
             return null;
         }
+    }
+
+    @Override
+    public boolean isMatch(TypeToken<?> type) {
+        boolean matchIntf = false;
+        Class<?>[] intfs = type.getRawType().getInterfaces();
+        for (Class<?> intf : intfs) {
+            matchIntf = IntEvaluated.class.getName().equals(intf.getName());
+            if (matchIntf) {
+                break;
+            }
+        }
+        return Enum.class.isAssignableFrom(type.getRawType()) && matchIntf;
     }
 }

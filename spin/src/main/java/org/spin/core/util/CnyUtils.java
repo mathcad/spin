@@ -268,9 +268,7 @@ public abstract class CnyUtils {
                     sb.insert(0, CN_UPPER_NUMBER[numUnit]);
                 }
                 if (numIndex == 2) {
-                    if (number > 0) {
-                        sb.insert(0, CN_UPPER_MONETRAY_UNIT[numIndex]);
-                    }
+                    sb.insert(0, CN_UPPER_MONETRAY_UNIT[numIndex]);
                 } else if (((numIndex - 2) % 4 == 0) && (number % 1000 > 0)) {
                     sb.insert(0, CN_UPPER_MONETRAY_UNIT[numIndex]);
                 }

@@ -60,6 +60,10 @@ public class SimplifiedException extends RuntimeException {
         return StringUtils.isEmpty(super.getMessage()) ? this.exceptionType.toString() : this.exceptionType.toString() + ':' + super.getMessage();
     }
 
+    public String getSimpleMessage() {
+        return StringUtils.isEmpty(super.getMessage()) ? this.exceptionType.toString() : super.getMessage();
+    }
+
     @Override
     public String getLocalizedMessage() {
         return StringUtils.isEmpty(super.getLocalizedMessage()) ? this.exceptionType.toString() : this.exceptionType.toString() + ':' + super.getLocalizedMessage();

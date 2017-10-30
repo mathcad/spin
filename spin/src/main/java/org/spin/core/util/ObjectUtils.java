@@ -289,8 +289,8 @@ public abstract class ObjectUtils {
                     return (T) Boolean.valueOf(target.toString());
                 else if (typePrimitive.equals(char.class))
                     return (T) Character.valueOf((char) Integer.valueOf(target.toString()).intValue());
-                else if (typePrimitive.equals(String.class))
-                    return (T) toString(target);
+                else if (CharSequence.class.isAssignableFrom(typePrimitive))
+                    return (T) toString(target, null);
             }
         }
         throw new ClassCastException("Can not cast target:" + target + "[" + target.getClass().getName() + "] to type:" + type.getName());

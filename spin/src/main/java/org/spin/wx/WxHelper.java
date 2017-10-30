@@ -86,7 +86,7 @@ public class WxHelper {
     public static String getTmplId(String code) {
         AccessToken accessToken = AccessToken.getDefaultInstance();
         try {
-            String res = HttpUtils.post(WxUrl.TmplIdUrl.getUrl(accessToken.getToken()), MapUtils.getMap("template_id_short", code));
+            String res = HttpUtils.post(WxUrl.TmplIdUrl.getUrl(accessToken.getToken()), MapUtils.ofMap("template_id_short", code));
             Map<String, String> resMap = JsonUtils.fromJson(res, type);
             if (null != resMap && "0".equals(resMap.get("errcode"))) {
                 return resMap.get("template_id");
