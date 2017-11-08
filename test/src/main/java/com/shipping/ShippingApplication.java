@@ -68,7 +68,7 @@ public class ShippingApplication {
         dataSource.setMaxWait(druidDataSourceProperties.getMaxWait());
         dataSource.setConnectProperties(druidDataSourceProperties.getConnectionProperties());
         dataSource.setRemoveAbandoned(druidDataSourceProperties.getRemoveAbandoned());
-        dataSource.setRemoveAbandonedTimeout(druidDataSourceProperties.getSetRemoveAbandonedTimeout());
+        dataSource.setRemoveAbandonedTimeout(druidDataSourceProperties.getRemoveAbandonedTimeout());
         return dataSource;
     }
 

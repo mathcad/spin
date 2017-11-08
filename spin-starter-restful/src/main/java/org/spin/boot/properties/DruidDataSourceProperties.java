@@ -35,7 +35,7 @@ public class DruidDataSourceProperties {
     private Boolean poolPreparedStatements = true;
     private Integer maxPoolPreparedStatementPerConnectionSize = 20;
     private Boolean removeAbandoned = true;
-    private Integer setRemoveAbandonedTimeout = 120;
+    private Integer removeAbandonedTimeout = 120;
     private String servletPath = "/druid/*";
     private Properties connectionProperties = new Properties() {
         private static final long serialVersionUID = -8638010368833820798L;
@@ -238,12 +238,12 @@ public class DruidDataSourceProperties {
         this.removeAbandoned = removeAbandoned;
     }
 
-    public Integer getSetRemoveAbandonedTimeout() {
-        return setRemoveAbandonedTimeout;
+    public Integer getRemoveAbandonedTimeout() {
+        return removeAbandonedTimeout;
     }
 
-    public void setSetRemoveAbandonedTimeout(Integer setRemoveAbandonedTimeout) {
-        this.setRemoveAbandonedTimeout = setRemoveAbandonedTimeout;
+    public void setRemoveAbandonedTimeout(Integer removeAbandonedTimeout) {
+        this.removeAbandonedTimeout = removeAbandonedTimeout;
     }
 
     public Properties toProperties() {
