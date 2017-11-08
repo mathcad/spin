@@ -3,8 +3,6 @@ package org.spin.data.extend;
 import org.hibernate.SessionFactory;
 import org.spin.data.core.ARepository;
 import org.spin.data.core.IEntity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -24,77 +22,104 @@ import java.util.Optional;
  */
 @Component
 public class RepositoryContext implements ApplicationContextAware {
-    private static final Logger logger = LoggerFactory.getLogger(RepositoryContext.class);
 
     @Autowired
     private SessionFactory sessFactory;
 
-    private static ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        RepositoryContext.applicationContext = applicationContext;
+        this.applicationContext = applicationContext;
     }
 
     /**
-     * 获取指定实体的持久化对象
+     * 获取指定实体的持久化操作对象
+     *
+     * @param cls  实体类Class
+     * @param <T>  实体类型
+     * @param <PK> 主键类型
+     * @return 对应实体的持久化操作对象
      */
-    @SuppressWarnings("unchecked")
-    public <T extends IEntity<S>, S extends Serializable> ARepository<T, S> getRepo(Class<T> cls) throws BeansException {
-        Optional<ARepository> optional = applicationContext.getBeansOfType(ARepository.class).values().stream().filter(entry -> cls.getName().equals(entry.getEntityClazz().getName())).findAny();
-        if (optional.isPresent())
-            return optional.get();
-        // 为没有Repository的实体类创建持久化对象并向容器注册
-        DefaultListableBeanFactory acf = (DefaultListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();
-        BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(ARepository.class);
-        bdb.addPropertyValue("clazz", cls);
-        bdb.addPropertyValue("sessFactory", sessFactory);
-        String beanName = cls.getName() + "ARepository";
-        acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
-        return acf.getBean(beanName, ARepository.class);
-    }
-
-    /**
-     * 获取指定实体的持久化对象
-     */
-    public ARepository<IEntity<Long>, Long> getRepo(String cls) throws BeansException, ClassNotFoundException {
-        @SuppressWarnings("unchecked")
-        Class<IEntity<Long>> enCls = (Class<IEntity<Long>>) Class.forName(cls);
-        return this.getRepo(enCls);
+    public <T extends IEntity<PK>, PK extends Serializable> ARepository<T, PK> getRepo(Class<T> cls) throws BeansException {
+        Optional<ARepository> optional = applicationContext.getBeansOfType(ARepository.class).values().stream()
+            .filter(entry -> cls.getName().equals(entry.getEntityClazz().getName())).findAny();
+        //noinspection unchecked
+        return optional.orElseGet(() -> {
+            // 为没有Repository的实体类创建持久化对象并向容器注册
+            DefaultListableBeanFactory acf = (DefaultListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();
+            BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(ARepository.class);
+            bdb.addPropertyValue("clazz", cls);
+            bdb.addPropertyValue("sessFactory", sessFactory);
+            String beanName = cls.getName() + "ARepository";
+            acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
+            return acf.getBean(beanName, ARepository.class);
+        });
     }
 
     /**
      * 获得实体对象
      *
-     * @param cls Dao类Class
-     * @param key 主键
+     * @param cls  实体类Class
+     * @param key  主键
+     * @param <T>  实体类型
+     * @param <PK> 主键类型
      * @return 实体对象
      */
-    public <T extends IEntity<Long>> T getEntity(Class<T> cls, Long key) {
-        return this.getRepo(cls).get(key);
+    public <T extends IEntity<PK>, PK extends Serializable> T getEntity(Class<T> cls, PK key) {
+        return getRepo(cls).get(key);
     }
 
     /**
-     * 获得对象
+     * 获得DTO对象
      *
-     * @param cls Dao类Class
-     * @param key 主键
+     * @param cls  实体类Class
+     * @param key  主键
+     * @param <T>  实体类型
+     * @param <PK> 主键类型
      * @return 实体对象
      */
-    public <T extends IEntity<Long>> T getDto(Class<T> cls, Long key, int depth) {
-        return this.getRepo(cls).getDto(key, depth);
+    public <T extends IEntity<PK>, PK extends Serializable> T getDto(Class<T> cls, PK key, int depth) {
+        return getRepo(cls).getDto(key, depth);
     }
 
     /**
-     * 获得对象
+     * 保存实体
      *
-     * @param en 实体
+     * @param entity 实体
+     * @param <T>    实体类型
+     * @param <PK>   主键类型
      * @return 已持久化的实体
      */
-    public <T extends IEntity<Long>> T saveEntity(T en) {
+    public <T extends IEntity<PK>, PK extends Serializable> T saveEntity(T entity) {
         @SuppressWarnings("unchecked")
-        Class<T> cls = (Class<T>) en.getClass();
-        this.getRepo(cls).save(en);
-        return en;
+        Class<T> cls = (Class<T>) entity.getClass();
+        getRepo(cls).save(entity);
+        return entity;
+    }
+
+    /**
+     * 删除实体
+     *
+     * @param entity 实体
+     * @param <T>    实体类型
+     * @param <PK>   主键类型
+     */
+    public <T extends IEntity<PK>, PK extends Serializable> void deleteEntity(T entity) {
+        @SuppressWarnings("unchecked")
+        Class<T> cls = (Class<T>) entity.getClass();
+        getRepo(cls).delete(entity);
+    }
+
+    /**
+     * 删除实体
+     *
+     * @param cls  实体类Class
+     * @param key  主键
+     * @param <T>  实体类型
+     * @param <PK> 主键类型
+     */
+    public <T extends IEntity<PK>, PK extends Serializable> void deleteEntity(Class<T> cls, PK key) {
+        getRepo(cls).delete(key);
     }
 }

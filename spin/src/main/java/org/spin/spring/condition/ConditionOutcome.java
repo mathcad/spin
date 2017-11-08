@@ -1,7 +1,7 @@
 package org.spin.spring.condition;
 
-import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
+import org.spin.core.Assert;
+import org.spin.core.util.ObjectUtils;
 
 /**
  * Outcome for a condition match, including log message.

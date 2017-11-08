@@ -1,7 +1,7 @@
 package org.spin.boot;
 
 import org.hibernate.SessionFactory;
-import org.spin.boot.properties.DatabaseConfigProperties;
+import org.spin.boot.properties.SpinDataProperties;
 import org.spin.core.SpinContext;
 import org.spin.core.auth.SecretManager;
 import org.spin.core.util.JsonUtils;
@@ -20,6 +20,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
@@ -50,16 +51,16 @@ import java.util.Properties;
  * @author xuweinan
  */
 @Configuration
-@EnableConfigurationProperties(DatabaseConfigProperties.class)
+@EnableConfigurationProperties({SpinDataProperties.class})
+@ComponentScan("org.spin")
 public class SpinAutoConfiguration {
 
     @Autowired
     private Environment env;
 
     @Autowired
-    private DatabaseConfigProperties dbProperties;
+    private SpinDataProperties dataProperties;
 
-    @Autowired
     @Bean
     @ConditionalOnBean(RedisConnectionFactory.class)
     public RedisCache<?> redisCache(RedisConnectionFactory redisConnectionFactory) {
@@ -77,23 +78,22 @@ public class SpinAutoConfiguration {
     @ConditionalOnBean(DataSource.class)
     @ConditionalOnMissingBean(SQLLoader.class)
     public SQLLoader sqlLoader() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        SQLLoader loader = (SQLLoader) Class.forName(dbProperties.getSqlLoader()).getDeclaredConstructor().newInstance();
-        if (StringUtils.isEmpty(dbProperties.getSqlUri())) {
-            loader.setRootUri(dbProperties.getSqlUri());
+        SQLLoader loader = (SQLLoader) Class.forName(dataProperties.getSqlLoader()).getDeclaredConstructor().newInstance();
+        if (StringUtils.isEmpty(dataProperties.getSqlUri())) {
+            loader.setRootUri(dataProperties.getSqlUri());
         }
-        loader.setTemplateResolver(dbProperties.getResolverObj());
+        loader.setTemplateResolver(dataProperties.getResolverObj());
         return loader;
     }
 
-    @Autowired
     @Bean(name = "sessionFactory")
     @ConditionalOnBean(DataSource.class)
     public LocalSessionFactoryBean sessionFactory(DataSource dataSource, Properties hibernateConfig) {
         LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
         sessionFactory.setDataSource(dataSource);
         sessionFactory.setPackagesToScan(("org.spin.data," + StringUtils.trimToEmpty(hibernateConfig.getProperty("hibernate.packages"))).split(","));
-        if (null != dbProperties.getNamingStrategy()) {
-            sessionFactory.setPhysicalNamingStrategy(dbProperties.getNamingStrategyObj());
+        if (null != dataProperties.getNamingStrategy()) {
+            sessionFactory.setPhysicalNamingStrategy(dataProperties.getNamingStrategyObj());
         }
 
         sessionFactory.setHibernateProperties(hibernateConfig);
@@ -107,7 +107,6 @@ public class SpinAutoConfiguration {
         return bean;
     }
 
-    @Autowired
     @Bean(name = "transactionManager")
     @ConditionalOnBean(SessionFactory.class)
     public PlatformTransactionManager getTransactionManager(SessionFactory sessionFactory) {
@@ -148,7 +147,6 @@ public class SpinAutoConfiguration {
     }
 
     @Bean
-    @Autowired
     public FilterRegistrationBean apiFilter(SecretManager secretManager) {
         FilterRegistrationBean registration = new FilterRegistrationBean();
         registration.setFilter(new TokenResolveFilter(secretManager));

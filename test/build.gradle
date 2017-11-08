@@ -61,9 +61,10 @@ dependencies {
     }
 //    compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
 //    compile group: 'org.mathcat', name: 'spin', version: '2.0.4'
-    compile group: 'com.alibaba', name: 'druid', version: '1.1.4'
+    compile group: 'com.alibaba', name: 'druid', version: '1.1.5'
 
-    compile(project(":spin-starter-restful"))
+//    compile(project(":spin-starter-restful"))
+    compile group: 'org.mathcat', name: 'spin-sratrer-restful', version: '2.1.1'
 
     runtime group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
 }

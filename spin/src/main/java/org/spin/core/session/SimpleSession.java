@@ -116,8 +116,9 @@ public class SimpleSession implements Session, Serializable {
 
     /**
      * Returns the time the session was stopped, or <tt>null</tt> if the session is still active.
-     * <p/>
+     * <p>
      * A session may become stopped under a number of conditions:
+     * </p>
      * <ul>
      * <li>If the user logs out of the system, their current session is terminated (released).</li>
      * <li>If the session expires</li>
@@ -125,8 +126,9 @@ public class SimpleSession implements Session, Serializable {
      * <li>If there is an internal system error and the session state can no longer accurately
      * reflect the user's behavior, such in the case of a system crash</li>
      * </ul>
-     * <p/>
+     * <p>
      * Once stopped, a session may no longer be used.  It is locked from all further activity.
+     * </p>
      *
      * @return The time the session was stopped, or <tt>null</tt> if the session is still
      * active.
@@ -334,9 +336,10 @@ public class SimpleSession implements Session, Serializable {
      * {@link #getId() id}s are equal.  If the argument is a {@code SimpleSession} and either 'this' or the argument
      * does not yet have an ID assigned, the value of {@link #onEquals(SimpleSession) onEquals} is returned, which
      * does a necessary attribute-based comparison when IDs are not available.
-     * <p/>
+     * <p>
      * Do your best to ensure {@code SimpleSession} instances receive an ID very early in their lifecycle to
      * avoid the more expensive attributes-based comparison.
+     * </P>
      *
      * @param obj the object to compare with this one for equality.
      * @return {@code true} if this object is equivalent to the specified argument, {@code false} otherwise.
@@ -381,9 +384,10 @@ public class SimpleSession implements Session, Serializable {
     /**
      * Returns the hashCode.  If the {@link #getId() id} is not {@code null}, its hashcode is returned immediately.
      * If it is {@code null}, an attributes-based hashCode will be calculated and returned.
-     * <p/>
+     * <p>
      * Do your best to ensure {@code SimpleSession} instances receive an ID very early in their lifecycle to
      * avoid the more expensive attributes-based calculation.
+     * </p>
      *
      * @return this object's hashCode
      * @since 1.0

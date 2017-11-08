@@ -1,10 +1,12 @@
 package com.shipping;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.alibaba.druid.support.http.StatViewServlet;
+import com.alibaba.druid.support.http.WebStatFilter;
 import com.shipping.internal.InfoCache;
 import org.spin.boot.annotation.EnableIdGenerator;
 import org.spin.boot.annotation.EnableSecretManager;
-import org.spin.boot.properties.DatabaseConfigProperties;
+import org.spin.boot.properties.DruidDataSourceProperties;
 import org.spin.core.security.AES;
 import org.spin.core.security.RSA;
 import org.spin.core.util.StringUtils;
@@ -15,7 +17,11 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.env.Environment;
@@ -25,7 +31,6 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.sql.DataSource;
 import java.security.InvalidKeyException;
-import java.util.Properties;
 
 /**
  * 启动类
@@ -34,9 +39,10 @@ import java.util.Properties;
  * @author xuweinan
  */
 
-@SpringBootApplication(exclude = HibernateJpaAutoConfiguration.class, scanBasePackages = {"org.spin", "com.shipping"})
+@SpringBootApplication(exclude = HibernateJpaAutoConfiguration.class, scanBasePackages = "com.shipping")
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableTransactionManagement(proxyTargetClass = true)
+@EnableConfigurationProperties(DruidDataSourceProperties.class)
 @EnableSecretManager
 @EnableIdGenerator
 public class ShippingApplication {
@@ -44,34 +50,41 @@ public class ShippingApplication {
     @Autowired
     Environment env;
 
-    @Autowired
-    private DatabaseConfigProperties dbProperties;
-
     public static void main(String[] args) {
         SpringApplication.run(new Object[]{ShippingApplication.class}, args);
     }
 
     @Bean
-    public DataSource dataSource() throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
-        DruidDataSource dataSource = new DruidDataSource();
-        if (StringUtils.isEmpty(dbProperties.getUrl())
-            || StringUtils.isEmpty(dbProperties.getUsername())
-            || StringUtils.isEmpty(dbProperties.getPassword())) {
+    public DataSource dataSource(DataSourceProperties dataSourceProperties, DruidDataSourceProperties druidDataSourceProperties) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+        if (StringUtils.isEmpty(dataSourceProperties.getUrl())
+            || StringUtils.isEmpty(dataSourceProperties.getUsername())
+            || StringUtils.isEmpty(dataSourceProperties.getPassword())) {
             throw new BeanCreationException("数据库连接必需配置url, username, password");
         }
-        dataSource.setUrl(dbProperties.getUrl());
-        dataSource.setUsername(dbProperties.getUsername());
-        dataSource.setPassword(AES.decrypt("c4b2a7d36f9a2e61", dbProperties.getPassword()));
-        dataSource.setMaxActive(dbProperties.getMaxActive());
-        dataSource.setMinIdle(dbProperties.getMinIdle());
-        dataSource.setInitialSize(dbProperties.getInitialSize());
-        dataSource.setMaxWait(dbProperties.getMaxWait());
-        dataSource.setRemoveAbandoned(dbProperties.isRemoveAbandoned());
-        dataSource.setRemoveAbandonedTimeoutMillis(dbProperties.getRemoveAbandonedTimeoutMillis());
-        Properties proper = new Properties();
-        proper.setProperty("clientEncoding", dbProperties.getClientEncoding());
-        dataSource.setConnectProperties(proper);
+
+        dataSourceProperties.setPassword(AES.decrypt("c4b2a7d36f9a2e61", dataSourceProperties.getPassword()));
+        DruidDataSource dataSource = (DruidDataSource) dataSourceProperties.initializeDataSourceBuilder().type(DruidDataSource.class).build();
+        dataSource.configFromPropety(druidDataSourceProperties.toProperties());
+        dataSource.setMaxWait(druidDataSourceProperties.getMaxWait());
+        dataSource.setConnectProperties(druidDataSourceProperties.getConnectionProperties());
+        dataSource.setRemoveAbandoned(druidDataSourceProperties.getRemoveAbandoned());
+        dataSource.setRemoveAbandonedTimeout(druidDataSourceProperties.getSetRemoveAbandonedTimeout());
         return dataSource;
+    }
+
+    @Bean
+    public ServletRegistrationBean druidStatViewServlet(DruidDataSourceProperties druidDataSourceProperties) {
+        return new ServletRegistrationBean(new StatViewServlet(), druidDataSourceProperties.getServletPath());
+    }
+
+    @Bean
+    public FilterRegistrationBean druidWebStatFilter() {
+        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new WebStatFilter());
+        //添加过滤规则.
+        filterRegistrationBean.addUrlPatterns("/*");
+        //添加不需要忽略的格式信息.
+        filterRegistrationBean.addInitParameter("exclusions", "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid2/*");
+        return filterRegistrationBean;
     }
 
     //redis配置
@@ -87,13 +100,6 @@ public class ShippingApplication {
 //        connectionFactory.setPort(6379);
 //        connectionFactory.setPoolConfig(poolConfig);
 //        return connectionFactory;
-//    }
-
-//    @Bean
-//    public org.apache.shiro.mgt.SecurityManager securityManager() {
-//        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
-//        ((ModularRealmAuthenticator) securityManager.getAuthenticator()).setAuthenticationStrategy(new AnyoneSuccessfulStrategy());
-//        return securityManager;
 //    }
 
     @Bean
