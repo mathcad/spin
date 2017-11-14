@@ -80,7 +80,7 @@ public class RestfulApiAspect implements Ordered {
                 }
             }
 
-            if (SpinContext.devMode && logger.isTraceEnabled()) {
+            if (SpinContext.DEV_MODE && logger.isTraceEnabled()) {
                 Parameter[] parameters = apiMethod.getParameters();
                 logger.trace("Invoke method: {}", apiMethod.getName());
                 for (int idx = 0; idx != parameters.length; ++idx) {
@@ -102,7 +102,7 @@ public class RestfulApiAspect implements Ordered {
             } catch (Throwable throwable) {
                 logger.error("Invoke api fail: [" + apiMethod.toGenericString() + "]", throwable);
                 RestfulResponse response = RestfulResponse.error(ErrorCode.INTERNAL_ERROR);
-                if (SpinContext.devMode) {
+                if (SpinContext.DEV_MODE) {
                     response.setMessage(throwable.getMessage());
                 }
                 return response;

@@ -47,7 +47,7 @@ public class QueryParam implements Serializable {
         if (StringUtils.isEmpty(qp.cls)) {
             throw new SimplifiedException("查询参数必须指定查询实体类");
         }
-        if (!SpinContext.devMode && !qp.validation())
+        if (!SpinContext.DEV_MODE && !qp.validation())
             throw new SimplifiedException(ErrorCode.SIGNATURE_FAIL, "请求参数被客户端篡改");
         return qp;
     }

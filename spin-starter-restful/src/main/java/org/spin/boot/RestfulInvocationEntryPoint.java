@@ -3,6 +3,7 @@ package org.spin.boot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.boot.converter.RestfulExceptionHandler;
+import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.core.ErrorCode;
 import org.spin.core.session.SessionUser;
 import org.spin.core.SpinContext;
@@ -44,16 +45,19 @@ import java.util.Objects;
  */
 @RestController
 @RequestMapping("/")
-@ConditionalOnProperty("spin.web.restful.prefix")
+@ConditionalOnProperty("spin.web.restfulPrefix")
 public class RestfulInvocationEntryPoint {
     private static final Logger logger = LoggerFactory.getLogger(RestfulInvocationEntryPoint.class);
 
     @Autowired(required = false)
     private Authenticator authenticator;
 
-    @RequestMapping(value = "${spin.web.restful.prefix}/**")
+    @Autowired
+    private SpinWebPorperties webPorperties;
+
+    @RequestMapping(value = "${spin.web.restfulPrefix}/**")
     public RestfulResponse exec(HttpServletRequest request) throws UnsupportedEncodingException {
-        String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(SpinContext.RestfulApiPrefix) + SpinContext.RestfulApiPrefix.length() + 1).split("/");
+        String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
         if (resc.length != 2) {
             return RestfulResponse.error(new SimplifiedException("请求的路径不正确"));
         }
@@ -217,7 +221,7 @@ public class RestfulInvocationEntryPoint {
                 return RestfulResponse.error(ErrorCode.INVALID_PARAM);
             }
 
-            if (SpinContext.devMode && logger.isTraceEnabled()) {
+            if (SpinContext.DEV_MODE && logger.isTraceEnabled()) {
                 logger.trace("Invoke method: {}", descriptor.getMethodDescriptor().getMethodName());
                 for (int idx = 0; idx != descriptor.getArgs().length; ++idx) {
                     logger.trace("Parameter info: index[{}] name[{}], value[{}]", idx, descriptor.getMethodDescriptor().getParamNames()[idx], descriptor.getArgs()[idx]);

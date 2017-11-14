@@ -2,7 +2,7 @@ package org.spin.boot;
 
 import org.hibernate.SessionFactory;
 import org.spin.boot.properties.SpinDataProperties;
-import org.spin.core.SpinContext;
+import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.core.auth.SecretManager;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
@@ -10,7 +10,6 @@ import org.spin.data.cache.RedisCache;
 import org.spin.data.core.SQLLoader;
 import org.spin.web.converter.JsonHttpMessageConverter;
 import org.spin.web.filter.TokenResolveFilter;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -51,7 +50,7 @@ import java.util.Properties;
  * @author xuweinan
  */
 @Configuration
-@EnableConfigurationProperties({SpinDataProperties.class})
+@EnableConfigurationProperties({SpinDataProperties.class, SpinWebPorperties.class})
 @ComponentScan("org.spin")
 public class SpinAutoConfiguration {
 
@@ -166,20 +165,14 @@ public class SpinAutoConfiguration {
     }
 
     @Bean
-    public MultipartConfigElement multipartConfigElement() {
+    public MultipartConfigElement multipartConfigElement(SpinWebPorperties webPorperties) {
         MultipartConfigFactory factory = new MultipartConfigFactory();
-        factory.setMaxFileSize(Long.parseLong(env.getProperty("spin.web.maxUploadSize")) * 1024 * 1024);
+        factory.setMaxFileSize(webPorperties.getMaxUploadSize() * 1024 * 1024);
         return factory.createMultipartConfig();
     }
 
-    @Bean
-    public InitializingBean platformInit() {
-        return () -> {
-            if (StringUtils.isNotEmpty(env.getProperty("spin.web.restful.prefix"))) {
-                SpinContext.RestfulApiPrefix = env.getProperty("spin.web.restful.prefix");
-            }
-            SpinContext.FileUploadDir = env.getProperty("spin.web.fileUploadDir");
-            SpinContext.devMode = "dev".equals(env.getProperty("spring.profiles.active"));
-        };
-    }
+//    @Bean
+//    public InitializingBean platformInit() {
+//        return () -> SpinContext.DEV_MODE = "dev".equals(env.getProperty("spring.profiles.active"));
+//    }
 }

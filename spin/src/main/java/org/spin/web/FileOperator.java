@@ -37,23 +37,24 @@ public class FileOperator {
     private static final String SUFFIX = "suffix";
     private static final String CONTENTTYPE = "contentType";
     private static final String CREATETIME = "createTime";
-    private static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyyMM/ddHHmmss");
+    private static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("/yyyyMM/ddHHmmss");
 
     /**
      * 上传文件,默认上传到Env.FileUploadDir目录
      */
     public static UploadResult upload(MultipartFile file, boolean compress, String... baseDir) throws IOException {
-        String bDir = SpinContext.FileUploadDir;
+        String bDir = SpinContext.FILE_UPLOAD_DIR;
         if (null != baseDir && baseDir.length > 0 && StringUtils.isNotBlank(baseDir[0]))
             bDir = baseDir[0];
         String fileName = file.getOriginalFilename();
         String extention = compress ? ".zip" : (fileName.contains(".") ? fileName.substring(fileName.lastIndexOf('.')
         ).toLowerCase() : "");
         String storeName = generateFileName();
-        String path = storeName.substring(0, storeName.indexOf("/") + 1);
+        String path = storeName.substring(0, storeName.lastIndexOf("/") + 1);
         File uploadDir = new File(bDir + path);
-        if (!uploadDir.exists() && !uploadDir.mkdirs())
+        if (!uploadDir.exists() && !uploadDir.mkdirs() || uploadDir.exists() && !uploadDir.isDirectory()) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "创建文件夹失败");
+        }
         String fullName = bDir + storeName + extention;
         File storedFile = new File(fullName);
         if (compress) {
@@ -99,13 +100,14 @@ public class FileOperator {
     public static UploadResult saveFileFromUrl(String url) {
         UploadResult rs = new UploadResult();
         String storeName = generateFileName();
-        String path = storeName.substring(0, storeName.indexOf("/") + 1);
-        File uploadDir = new File(SpinContext.FileUploadDir + path);
-        if (!uploadDir.exists() && !uploadDir.mkdirs())
+        String path = storeName.substring(0, storeName.lastIndexOf("/") + 1);
+        File uploadDir = new File(SpinContext.FILE_UPLOAD_DIR + path);
+        if (!uploadDir.exists() && !uploadDir.mkdirs() || uploadDir.exists() && !uploadDir.isDirectory()) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "创建文件夹失败");
-        Map<String, String> downloadRs = HttpUtils.download(url, SpinContext.FileUploadDir + storeName);
+        }
+        Map<String, String> downloadRs = HttpUtils.download(url, SpinContext.FILE_UPLOAD_DIR + storeName);
         rs.setOriginName("");
-        rs.setFullName(SpinContext.FileUploadDir + storeName + downloadRs.get("extention"));
+        rs.setFullName(SpinContext.FILE_UPLOAD_DIR + storeName + downloadRs.get("extention"));
         rs.setStoreName(storeName + downloadRs.get("extention"));
         rs.setSize(Long.parseLong(downloadRs.get("bytes")));
         rs.setUploadTime(LocalDateTime.now());

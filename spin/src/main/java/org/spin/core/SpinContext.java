@@ -3,8 +3,6 @@ package org.spin.core;
 import org.spin.core.inspection.MethodDescriptor;
 
 import java.lang.reflect.Field;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,19 +36,11 @@ public final class SpinContext {
     /** 所有restful接口方法 */
     private static final Map<String, Map<String, List<MethodDescriptor>>> RESTFUL_SERVICES = new HashMap<>();
 
-//    /** Restful调用异常处理器 */
-//    private static final Map<Class<? extends Throwable>, RestfulInvocationEntryPoint.ExceptionHandler> EXCEPTION_HANDLER_MAP = new HashMap<>();
-
     /** 系统是否启用了开发模式 */
-    public static boolean devMode = false;
-
-    /** 系统是否启用了Shiro支持 */
-//    public static boolean shiroEnabled = false;
+    public static boolean DEV_MODE;
 
     /** 文件上传路径 */
-    public static String FileUploadDir;
-
-    public static String RestfulApiPrefix;
+    public static String FILE_UPLOAD_DIR;
 
     private SpinContext() {
     }
