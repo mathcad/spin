@@ -105,12 +105,12 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, version, this.getClass());
+        return Objects.hash(id, version, getClass());
     }
 
     @Override
     public String toString() {
-        return "AbstractEntity{" +
+        return "AbstractEntity(" + getClass().getSimpleName() + "){" +
             "id=" + id +
             ", createUserId=" + createUserId +
             ", createTime=" + createTime +

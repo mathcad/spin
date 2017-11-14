@@ -175,6 +175,15 @@ public abstract class SessionManager {
     public static void cleanSession() {
         ALL_SESSIONS.values().stream().filter(s -> !s.isValid()).forEach(s -> ALL_SESSIONS.remove(s.getId().toString()));
     }
+
+    /**
+     * 判断Session是否存在
+     *
+     * @param sessionId session id
+     */
+    public static boolean containsSession(String sessionId) {
+        return ALL_SESSIONS.containsKey(sessionId);
+    }
 }
 
 

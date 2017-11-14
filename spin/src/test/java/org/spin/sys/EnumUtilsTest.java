@@ -57,7 +57,7 @@ public class EnumUtilsTest {
         Gson gson = new Gson();
         String str = gson.toJson(q);
         System.out.println(str);
-        QueryParam t = JsonUtils.fromJson(str, QueryParam.class);
+        QueryParam t = QueryParam.parseFromJson(str);
         System.out.println(t.getCls());
     }
 
