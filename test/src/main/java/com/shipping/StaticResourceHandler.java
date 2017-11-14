@@ -18,7 +18,7 @@ public class StaticResourceHandler extends WebMvcConfigurerAdapter {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
-        registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + SpinContext.FileUploadDir);
+        registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + SpinContext.FILE_UPLOAD_DIR);
         super.addResourceHandlers(registry);
     }
 }
