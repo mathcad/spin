@@ -19,7 +19,11 @@ import java.util.stream.Collectors;
  * @author xuweinan
  */
 public class InMemorySecretDao implements SecretDao {
+
+    /** identifier, tokenSet */
     private final Map<String, Set<TokenInfo>> tokenCache = new ConcurrentHashMap<>();
+
+    /** identifier, keySet */
     private final Map<String, Set<KeyInfo>> keyCache = new ConcurrentHashMap<>();
     private final Map<String, String> invalidKeyCache = new ConcurrentHashMap<>();
 

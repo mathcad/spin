@@ -6,6 +6,7 @@ import org.spin.core.Assert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -36,10 +37,6 @@ public abstract class SessionManager {
      */
     private static final Map<String, Session> ALL_SESSIONS = new ConcurrentHashMap<>();
 
-    public static final long MILLIS_PER_SECOND = 1000;
-    public static final long MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND;
-    public static final long MILLIS_PER_HOUR = 60 * MILLIS_PER_MINUTE;
-    public static final long DEFAULT_GLOBAL_SESSION_TIMEOUT = 30 * MILLIS_PER_MINUTE;
     public static final String USER_SESSION_KEY = "user_session";
 
     private SessionManager() {
@@ -153,6 +150,10 @@ public abstract class SessionManager {
         session.setAttribute(USER_SESSION_KEY, sessionUser);
     }
 
+    public static String getCurrentSessionId() {
+        return sessionIdContainer.get();
+    }
+
     public static void setCurrentSessionId(String sessionId) {
         sessionIdContainer.set(sessionId);
     }
@@ -170,19 +171,30 @@ public abstract class SessionManager {
     }
 
     /**
-     * 清理无效session
-     */
-    public static void cleanSession() {
-        ALL_SESSIONS.values().stream().filter(s -> !s.isValid()).forEach(s -> ALL_SESSIONS.remove(s.getId().toString()));
-    }
-
-    /**
      * 判断Session是否存在
      *
      * @param sessionId session id
      */
     public static boolean containsSession(String sessionId) {
         return ALL_SESSIONS.containsKey(sessionId);
+    }
+
+    /**
+     * 移除session
+     *
+     * @param sessionId session id
+     */
+    public static void removeSession(String sessionId) {
+        ALL_SESSIONS.remove(sessionId);
+    }
+
+    /**
+     * 移除session
+     *
+     * @param sessionIds session id集合
+     */
+    public static void removeSessions(Collection<String> sessionIds) {
+        sessionIds.forEach(ALL_SESSIONS::remove);
     }
 }
 

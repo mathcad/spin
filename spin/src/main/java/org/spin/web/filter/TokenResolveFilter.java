@@ -1,9 +1,10 @@
 package org.spin.web.filter;
 
 import org.spin.core.auth.SecretManager;
-import org.spin.core.session.SessionManager;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.data.core.AbstractUser;
+import org.spin.web.RestfulResponse;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -11,8 +12,6 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
@@ -36,21 +35,14 @@ public class TokenResolveFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         String token = request.getParameter("token");
-        if (StringUtils.isBlank(token)) {
-            HttpSession session = ((HttpServletRequest) request).getSession();
-            if (SessionManager.containsSession(session.getId())) {
-                SessionManager.setCurrentSessionId(session.getId());
-                AbstractUser user = AbstractUser.ref(Long.parseLong(session.getAttribute("userId").toString()));
-                user.setSessionId(session.getId());
-                SessionManager.setCurrentUser(AbstractUser.ref(Long.parseLong(session.getAttribute("userId").toString())));
-            }
-        } else {
+        if (StringUtils.isNotBlank(token)) {
             try {
                 secretManager.bindCurrentSession(token);
-            } catch (Exception ignore) {
+                chain.doFilter(request, response);
+            } catch (SimplifiedException e) {
+                response.getWriter().write(JsonUtils.toJson(RestfulResponse.error(e)));
             }
         }
-        chain.doFilter(request, response);
     }
 
     @Override

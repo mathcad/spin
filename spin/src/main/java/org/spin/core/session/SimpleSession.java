@@ -20,20 +20,14 @@ package org.spin.core.session;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.DateUtils;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -82,13 +76,11 @@ public class SimpleSession implements Session, Serializable {
     private transient LocalDateTime startTimestamp;
     private transient LocalDateTime stopTimestamp;
     private transient LocalDateTime lastAccessTime;
-    private transient long timeout;
     private transient boolean expired;
     private transient String host;
     private transient Map<Object, Object> attributes;
 
     public SimpleSession() {
-        this.timeout = SessionManager.DEFAULT_GLOBAL_SESSION_TIMEOUT;
         this.startTimestamp = LocalDateTime.now();
         this.lastAccessTime = this.startTimestamp;
     }
@@ -145,30 +137,18 @@ public class SimpleSession implements Session, Serializable {
         return lastAccessTime;
     }
 
+    @Override
+    public long getTimeout() {
+        return 0L;
+    }
+
+    @Override
+    public void setTimeout(long maxIdleTimeInMillis) {
+        // do nothing
+    }
+
     public void setLastAccessTime(LocalDateTime lastAccessTime) {
         this.lastAccessTime = lastAccessTime;
-    }
-
-    /**
-     * Returns true if this session has expired, false otherwise.  If the session has
-     * expired, no further user interaction with the system may be done under this session.
-     *
-     * @return true if this session has expired, false otherwise.
-     */
-    public boolean isExpired() {
-        return expired;
-    }
-
-    public void setExpired(boolean expired) {
-        this.expired = expired;
-    }
-
-    public long getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(long timeout) {
-        this.timeout = timeout;
     }
 
     public String getHost() {
@@ -204,89 +184,6 @@ public class SimpleSession implements Session, Serializable {
     protected void expire() {
         stop();
         this.expired = true;
-    }
-
-    /**
-     * @since 0.9
-     */
-    public boolean isValid() {
-        return !isStopped() && !isExpired();
-    }
-
-    /**
-     * Determines if this session is expired.
-     *
-     * @return true if the specified session has expired, false otherwise.
-     */
-    protected boolean isTimedOut() {
-
-        if (isExpired()) {
-            return true;
-        }
-
-        long timeout = getTimeout();
-
-        if (timeout >= 0L) {
-
-            LocalDateTime lastAccessTime = getLastAccessTime();
-
-            if (lastAccessTime == null) {
-                String msg = "session.lastAccessTime for session with id [" +
-                    getId() + "] is null.  This value must be set at " +
-                    "least once, preferably at least upon instantiation.  Please check the " +
-                    getClass().getName() + " implementation and ensure " +
-                    "this value will be set (perhaps in the constructor?)";
-                throw new IllegalStateException(msg);
-            }
-
-            // Calculate at what time a session would have been last accessed
-            // for it to be expired at this point.  In other words, subtract
-            // from the current time the amount of time that a session can
-            // be inactive before expiring.  If the session was last accessed
-            // before this time, it is expired.
-            long expireTimeMillis = System.currentTimeMillis() - timeout;
-            LocalDateTime expireTime = Instant.ofEpochMilli(expireTimeMillis).atZone(ZoneId.systemDefault()).toLocalDateTime();
-            return lastAccessTime.isBefore(expireTime);
-        } else {
-            if (log.isTraceEnabled()) {
-                log.trace("No timeout for session with id [" + getId() +
-                    "].  Session is not considered expired.");
-            }
-        }
-
-        return false;
-    }
-
-    public void validate() {
-        //check for stopped:
-        if (isStopped()) {
-            //timestamp is set, so the session is considered stopped:
-            String msg = "Session with id [" + getId() + "] has been " +
-                "explicitly stopped.  No further interaction under this session is " +
-                "allowed.";
-            throw new SimplifiedException(ErrorCode.SESSION_INVALID, msg);
-        }
-
-        //check for expiration
-        if (isTimedOut()) {
-            expire();
-
-            //throw an exception explaining details of why it expired:
-            LocalDateTime lastAccessTime = getLastAccessTime();
-            long timeout = getTimeout();
-
-            Serializable sessionId = getId();
-
-            String msg = "Session with id [" + sessionId + "] has expired. " +
-                "Last access time: " + DateUtils.formatDateForSecond(lastAccessTime) +
-                ".  Current time: " + DateUtils.formatDateForSecond(new Date()) +
-                ".  Session timeout is set to " + timeout / MILLIS_PER_SECOND + " seconds (" +
-                timeout / MILLIS_PER_MINUTE + " minutes)";
-            if (log.isTraceEnabled()) {
-                log.trace(msg);
-            }
-            throw new SimplifiedException(ErrorCode.SESSION_INVALID, msg);
-        }
     }
 
     private Map<Object, Object> getAttributesLazy() {
@@ -329,6 +226,16 @@ public class SimpleSession implements Session, Serializable {
         } else {
             return attributes.remove(key);
         }
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
+    public void validate() {
+        // do nothing
     }
 
     /**
@@ -376,7 +283,6 @@ public class SimpleSession implements Session, Serializable {
             (getStopTimestamp() != null ? getStopTimestamp().equals(ss.getStopTimestamp()) : ss.getStopTimestamp() == null) &&
             (getLastAccessTime() != null ? getLastAccessTime().equals(ss.getLastAccessTime()) : ss.getLastAccessTime() == null) &&
             (getTimeout() == ss.getTimeout()) &&
-            (isExpired() == ss.isExpired()) &&
             (getHost() != null ? getHost().equals(ss.getHost()) : ss.getHost() == null) &&
             (getAttributes() != null ? getAttributes().equals(ss.getAttributes()) : ss.getAttributes() == null);
     }
@@ -402,7 +308,6 @@ public class SimpleSession implements Session, Serializable {
         hashCode = 31 * hashCode + (getStopTimestamp() != null ? getStopTimestamp().hashCode() : 0);
         hashCode = 31 * hashCode + (getLastAccessTime() != null ? getLastAccessTime().hashCode() : 0);
         hashCode = 31 * hashCode + Long.valueOf(Math.max(getTimeout(), 0)).hashCode();
-        hashCode = 31 * hashCode + Boolean.valueOf(isExpired()).hashCode();
         hashCode = 31 * hashCode + (getHost() != null ? getHost().hashCode() : 0);
         hashCode = 31 * hashCode + (getAttributes() != null ? getAttributes().hashCode() : 0);
         return hashCode;
@@ -444,9 +349,6 @@ public class SimpleSession implements Session, Serializable {
         if (lastAccessTime != null) {
             out.writeObject(lastAccessTime);
         }
-        if (timeout != 0L) {
-            out.writeLong(timeout);
-        }
         if (expired) {
             out.writeBoolean(true);
         }
@@ -472,7 +374,6 @@ public class SimpleSession implements Session, Serializable {
         bitMask = startTimestamp != null ? bitMask | START_TIMESTAMP_BIT_MASK : bitMask;
         bitMask = stopTimestamp != null ? bitMask | STOP_TIMESTAMP_BIT_MASK : bitMask;
         bitMask = lastAccessTime != null ? bitMask | LAST_ACCESS_TIME_BIT_MASK : bitMask;
-        bitMask = timeout != 0L ? bitMask | TIMEOUT_BIT_MASK : bitMask;
         bitMask = expired ? bitMask | EXPIRED_BIT_MASK : bitMask;
         bitMask = host != null ? bitMask | HOST_BIT_MASK : bitMask;
         bitMask = !CollectionUtils.isEmpty(attributes) ? bitMask | ATTRIBUTES_BIT_MASK : bitMask;

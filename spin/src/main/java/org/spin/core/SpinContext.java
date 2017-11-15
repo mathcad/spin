@@ -99,9 +99,14 @@ public final class SpinContext {
         return null;
     }
 
+    public static void removeRestfulService(String module) {
+        RESTFUL_SERVICES.remove(module);
+    }
+
     public synchronized static void clearCache() {
         ENTITY_SOMETOONE_JOIN_FIELDS.clear();
         BEAN_FIELDS.clear();
         CHECKED_METHOD_PARAM.clear();
+        ENTITY_COLUMNS.clear();
     }
 }

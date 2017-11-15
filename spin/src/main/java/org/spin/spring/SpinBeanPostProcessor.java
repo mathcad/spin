@@ -30,10 +30,12 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
         Arrays.stream(bean.getClass().getInterfaces()).filter(i -> Objects.nonNull(i.getAnnotation(RestfulInterface.class))).findFirst().ifPresent(i -> {
             RestfulInterface anno = i.getAnnotation(RestfulInterface.class);
             final String module = StringUtils.isEmpty(anno.value()) ? beanName : anno.value();
+            SpinContext.removeRestfulService(module);
             ReflectionUtils.doWithMethods(i.getClass(), method -> processRestMethod(bean, module, method));
         });
         Optional.ofNullable(bean.getClass().getAnnotation(RestfulService.class)).ifPresent(anno -> {
             final String module = StringUtils.isEmpty(anno.value()) ? beanName : anno.value();
+            SpinContext.removeRestfulService(module);
             ReflectionUtils.doWithMethods(bean.getClass(), method -> processRestMethod(bean, module, method));
         });
         return bean;

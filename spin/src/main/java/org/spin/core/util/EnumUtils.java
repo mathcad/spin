@@ -5,8 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.annotation.UserEnum;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.data.core.UserEnumColumn;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -230,33 +234,39 @@ public abstract class EnumUtils {
      * @param basePkg 包名
      * @return 包含所有枚举常量name-value的map
      */
-    public static Map<String, List<HashMap>> parseEnums(String basePkg) throws Exception {
+    public static Map<String, List<Map>> parseEnums(String basePkg) {
         List<String> clsList = PackageUtils.getClassName(basePkg);
-        HashMap<String, List<HashMap>> enumsMap = new HashMap<>();
+        HashMap<String, List<Map>> enumsMap = new HashMap<>();
+        Method getValueMehod = null;
+        try {
+            getValueMehod = UserEnumColumn.class.getMethod("getValue");
+        } catch (NoSuchMethodException ignore) {
+            return null;
+        }
         for (String clz : clsList) {
-            Class cls = Class.forName(clz);
-            if (cls.isEnum()) {
-                List<HashMap> valueList = new ArrayList<>();
-                //value字段
-                Field vField = null;
-                try {
-                    vField = cls.getDeclaredField("value");
-                    ReflectionUtils.makeAccessible(vField);
-                } catch (Exception e) {
-                    logger.error("Enum" + cls + "未声明value字段", e);
-                }
+            Class cls = null;
+            try {
+                cls = Class.forName(clz);
+            } catch (ClassNotFoundException e) {
+                continue;
+            }
+            if (cls.isEnum() && UserEnumColumn.class.isAssignableFrom(cls)) {
+                List<Map> valueList = new ArrayList<>();
                 //取value值
-                if (cls.getAnnotation(UserEnum.class) != null && vField != null) {
-                    for (Object o : cls.getEnumConstants()) {
-                        String name = o.toString();
-                        int value = Integer.parseInt(vField.get(o).toString());
-                        HashMap<String, String> m = new HashMap<>();
-                        m.put("name", name);
-                        m.put("value", ObjectUtils.toString(value));
-                        valueList.add(m);
+                for (Object o : cls.getEnumConstants()) {
+                    String name = o.toString();
+                    int value = 0;
+                    try {
+                        value = Integer.parseInt(getValueMehod.invoke(o).toString());
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        continue;
                     }
-                    enumsMap.put(cls.getSimpleName(), valueList);
+                    Map<String, String> m = new HashMap<>();
+                    m.put("name", name);
+                    m.put("value", ObjectUtils.toString(value));
+                    valueList.add(m);
                 }
+                enumsMap.put(cls.getSimpleName(), valueList);
             }
         }
         return enumsMap;
