@@ -1,12 +1,14 @@
 package org.spin.boot.converter;
 
+import org.spin.core.trait.Order;
+
 /**
  * 异常处理器接口
  * <p>Created by xuweinan on 2017/9/27.</p>
  *
  * @author xuweinan
  */
-public interface RestfulExceptionHandler {
+public interface RestfulExceptionHandler extends Order {
 
     /**
      * 支持的异常类型
@@ -22,11 +24,4 @@ public interface RestfulExceptionHandler {
      * @return 处理结果
      */
     String handler(Throwable throwable);
-
-    /**
-     * 排序号，低排序号具有更高的优先级
-     *
-     * @return 排序号
-     */
-    int getOrder();
 }
