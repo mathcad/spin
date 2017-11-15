@@ -5,22 +5,25 @@ import org.slf4j.LoggerFactory;
 import org.spin.boot.converter.RestfulExceptionHandler;
 import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.core.ErrorCode;
-import org.spin.core.session.SessionUser;
 import org.spin.core.SpinContext;
 import org.spin.core.auth.Authenticator;
 import org.spin.core.inspection.ArgumentsDescriptor;
 import org.spin.core.inspection.MethodDescriptor;
+import org.spin.core.session.SessionManager;
+import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.ObjectUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.query.QueryParam;
-import org.spin.core.session.SessionManager;
 import org.spin.web.RestfulResponse;
 import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.RestfulMethod;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,7 +49,7 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/")
 @ConditionalOnProperty("spin.web.restfulPrefix")
-public class RestfulInvocationEntryPoint {
+public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     private static final Logger logger = LoggerFactory.getLogger(RestfulInvocationEntryPoint.class);
 
     @Autowired(required = false)
@@ -54,6 +57,8 @@ public class RestfulInvocationEntryPoint {
 
     @Autowired
     private SpinWebPorperties webPorperties;
+
+    private ApplicationContext applicationContext;
 
     @RequestMapping(value = "${spin.web.restfulPrefix}/**")
     public RestfulResponse exec(HttpServletRequest request) throws UnsupportedEncodingException {
@@ -229,6 +234,12 @@ public class RestfulInvocationEntryPoint {
             }
 
             try {
+                Object bean = applicationContext.getBean(descriptor.getMethodDescriptor().getCls());
+                descriptor.getMethodDescriptor().setTarget(bean);
+            } catch (BeansException ignore) {
+            }
+
+            try {
                 return RestfulResponse.ok(descriptor.getMethodDescriptor().invoke(descriptor.getArgs()));
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause();
@@ -251,5 +262,10 @@ public class RestfulInvocationEntryPoint {
         } else {
             return RestfulResponse.error(ErrorCode.ACCESS_DENINED);
         }
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 }
