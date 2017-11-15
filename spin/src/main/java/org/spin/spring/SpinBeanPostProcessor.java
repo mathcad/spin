@@ -9,12 +9,14 @@ import org.spin.core.util.StringUtils;
 import org.spin.web.annotation.RestfulInterface;
 import org.spin.web.annotation.RestfulMethod;
 import org.spin.web.annotation.RestfulService;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,29 +29,39 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        Arrays.stream(bean.getClass().getInterfaces()).filter(i -> Objects.nonNull(i.getAnnotation(RestfulInterface.class))).findFirst().ifPresent(i -> {
+        Class<?> cls = bean.getClass();
+        if (AopUtils.isAopProxy(bean)) {
+            cls = bean.getClass().getSuperclass();
+        }
+        Arrays.stream(cls.getInterfaces()).filter(i -> Objects.nonNull(i.getAnnotation(RestfulInterface.class))).findFirst().ifPresent(i -> {
             RestfulInterface anno = i.getAnnotation(RestfulInterface.class);
             final String module = StringUtils.isEmpty(anno.value()) ? beanName : anno.value();
-            SpinContext.removeRestfulService(module);
             ReflectionUtils.doWithMethods(i.getClass(), method -> processRestMethod(bean, module, method));
         });
-        Optional.ofNullable(bean.getClass().getAnnotation(RestfulService.class)).ifPresent(anno -> {
+        Optional.ofNullable(cls.getAnnotation(RestfulService.class)).ifPresent(anno -> {
             final String module = StringUtils.isEmpty(anno.value()) ? beanName : anno.value();
-            SpinContext.removeRestfulService(module);
             ReflectionUtils.doWithMethods(bean.getClass(), method -> processRestMethod(bean, module, method));
         });
         return bean;
     }
 
     private void processRestMethod(final Object bean, final String module, final Method method) {
-        Optional.ofNullable(method.getAnnotation(RestfulMethod.class)).ifPresent(anno -> {
+        Optional.ofNullable(method.getAnnotation(RestfulMethod.class)).ifPresent((RestfulMethod anno) -> {
             final String service = StringUtils.isEmpty(anno.value()) ? method.getName() : anno.value();
             if (MethodUtils.containsGenericArg(method)) {
                 throw new SimplifiedException("RestfulMethod注解的方法不能有泛型参数: " + method.getName() + "@" + bean.getClass());
             }
-            MethodDescriptor descriptor = new MethodDescriptor(method);
-            descriptor.setTarget(bean);
-            SpinContext.addRestMethod(module, service, descriptor);
+            List<MethodDescriptor> restMethod = SpinContext.getRestMethod(module, service);
+            if (Objects.nonNull(restMethod)) {
+                MethodDescriptor descriptor = restMethod.stream().filter(d -> method.equals(d.getMethod())).findFirst().orElse(null);
+                if (Objects.nonNull(descriptor) && AopUtils.isAopProxy(bean)) {
+                    descriptor.setTarget(bean);
+                }
+            } else {
+                MethodDescriptor descriptor = new MethodDescriptor(method);
+                descriptor.setTarget(bean);
+                SpinContext.addRestMethod(module, service, descriptor);
+            }
         });
     }
 
