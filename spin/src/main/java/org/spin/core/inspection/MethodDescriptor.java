@@ -4,6 +4,7 @@ import org.spin.core.util.MethodUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 /**
  * 描述反射方法的关键信息
@@ -93,9 +94,15 @@ public class MethodDescriptor {
      * @param target 调用对象
      */
     public void setTarget(Object target) {
-        if (cls.isAssignableFrom(target.getClass()))
-            this.target = target;
-        else throw new IllegalArgumentException("target 类型不符" + target.getClass().getName());
+        if (Objects.nonNull(target)) {
+            if (cls.isAssignableFrom(target.getClass()))
+                this.target = target;
+            else throw new IllegalArgumentException("target 类型不符" + target.getClass().getName());
+        }
+    }
+
+    public boolean hasTarget() {
+        return Objects.nonNull(target);
     }
 
     /**

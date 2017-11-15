@@ -9,7 +9,6 @@ import org.spin.core.util.StringUtils;
 import org.spin.web.annotation.RestfulInterface;
 import org.spin.web.annotation.RestfulMethod;
 import org.spin.web.annotation.RestfulService;
-import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
@@ -30,9 +29,6 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
         Class<?> cls = bean.getClass();
-        if (AopUtils.isAopProxy(bean)) {
-            cls = bean.getClass().getSuperclass();
-        }
         Arrays.stream(cls.getInterfaces()).filter(i -> Objects.nonNull(i.getAnnotation(RestfulInterface.class))).findFirst().ifPresent(i -> {
             RestfulInterface anno = i.getAnnotation(RestfulInterface.class);
             final String module = StringUtils.isEmpty(anno.value()) ? beanName : anno.value();
@@ -52,14 +48,9 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
                 throw new SimplifiedException("RestfulMethod注解的方法不能有泛型参数: " + method.getName() + "@" + bean.getClass());
             }
             List<MethodDescriptor> restMethod = SpinContext.getRestMethod(module, service);
-            if (Objects.nonNull(restMethod)) {
-                MethodDescriptor descriptor = restMethod.stream().filter(d -> method.equals(d.getMethod())).findFirst().orElse(null);
-                if (Objects.nonNull(descriptor) && AopUtils.isAopProxy(bean)) {
-                    descriptor.setTarget(bean);
-                }
-            } else {
+            if (Objects.isNull(restMethod) || restMethod.stream().anyMatch(d -> method.equals(d.getMethod()))) {
                 MethodDescriptor descriptor = new MethodDescriptor(method);
-                descriptor.setTarget(bean);
+                descriptor.setTarget(null);
                 SpinContext.addRestMethod(module, service, descriptor);
             }
         });

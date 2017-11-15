@@ -233,10 +233,14 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                 }
             }
 
-            try {
-                Object bean = applicationContext.getBean(descriptor.getMethodDescriptor().getCls());
-                descriptor.getMethodDescriptor().setTarget(bean);
-            } catch (BeansException ignore) {
+            if (!descriptor.getMethodDescriptor().hasTarget()) {
+                try {
+                    Object bean = applicationContext.getBean(descriptor.getMethodDescriptor().getCls());
+                    descriptor.getMethodDescriptor().setTarget(bean);
+                } catch (BeansException ignore) {
+                    logger.error("获取Service Bean失败", ignore);
+                    throw new SimplifiedException(ErrorCode.INTERNAL_ERROR, "无法获取服务提供者");
+                }
             }
 
             try {
