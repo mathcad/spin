@@ -42,6 +42,8 @@ public class TokenResolveFilter implements Filter {
             } catch (SimplifiedException e) {
                 response.getWriter().write(JsonUtils.toJson(RestfulResponse.error(e)));
             }
+        } else {
+            chain.doFilter(request, response);
         }
     }
 
