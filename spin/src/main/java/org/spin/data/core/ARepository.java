@@ -131,7 +131,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 关闭当前线程上手动开启的所有Session
      */
-    public static void closeAllManualSession() {
+    public void closeAllManualSession() {
         while (!THREADLOCAL_SESSIONS.get().isEmpty()) {
             closeManualSession();
         }
@@ -140,7 +140,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 关闭当前线程上手动打开的最后一个Session，如果Session上有事务，提交之
      */
-    public static void closeManualSession() {
+    public void closeManualSession() {
         Session session = popTreadSession();
         if (session != null && session.isOpen()) {
             Transaction tran = session.getTransaction();
