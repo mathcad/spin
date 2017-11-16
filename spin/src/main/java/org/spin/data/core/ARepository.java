@@ -972,6 +972,22 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         this.sessFactory = sessFactory;
     }
 
+    public SQLManager getSqlManager() {
+        return sqlManager;
+    }
+
+    public void setSqlManager(SQLManager sqlManager) {
+        this.sqlManager = sqlManager;
+    }
+
+    public IdGenerator<PK, ?> getIdGenerator() {
+        return idGenerator;
+    }
+
+    public void setIdGenerator(IdGenerator<PK, ?> idGenerator) {
+        this.idGenerator = idGenerator;
+    }
+
     /**
      * 检查当前Session是否允许write操作
      * <p>当{@code FlushMode.MANUAL}时，SQLException，可以通过子类重写该行为。
