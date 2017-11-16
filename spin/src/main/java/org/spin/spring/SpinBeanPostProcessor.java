@@ -48,7 +48,7 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
                 throw new SimplifiedException("RestfulMethod注解的方法不能有泛型参数: " + method.getName() + "@" + bean.getClass());
             }
             List<MethodDescriptor> restMethod = SpinContext.getRestMethod(module, service);
-            if (Objects.isNull(restMethod) || restMethod.stream().anyMatch(d -> method.equals(d.getMethod()))) {
+            if (Objects.isNull(restMethod) || restMethod.stream().noneMatch(d -> method.equals(d.getMethod()))) {
                 MethodDescriptor descriptor = new MethodDescriptor(method);
                 descriptor.setTarget(null);
                 SpinContext.addRestMethod(module, service, descriptor);
