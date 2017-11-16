@@ -44,6 +44,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -394,6 +395,16 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         T entity = get(Assert.notNull(k, ID_MUST_NOT_BE_NULL));
         getSession().delete(Assert.notNull(entity, "Entity not found, or was deleted: [" + this.entityClazz.getSimpleName() + "|" + k + "]"));
         getSession().flush();
+    }
+
+    /**
+     * 通过ID集合删除指定实体
+     *
+     * @throws IllegalArgumentException 当待删除的{@code ids}为{@literal null}时抛出该异常
+     */
+    public void delete(Iterator<PK> ids) {
+        Assert.notNull(ids, ID_MUST_NOT_BE_NULL);
+        ids.forEachRemaining(this::delete);
     }
 
     /**
