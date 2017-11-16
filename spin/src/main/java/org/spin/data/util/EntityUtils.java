@@ -76,7 +76,7 @@ public abstract class EntityUtils {
                 if (depth <= 0) {
                     if (f.getType().equals(List.class)) {
                         setMethod.invoke(target, new ArrayList());
-                    } else if (f.getType().getAnnotation(Id.class) != null) {
+                    } else if (f.getAnnotation(Id.class) != null) {
                         setMethod.invoke(target, getMethod.invoke(entity));
                     }
                     return;
