@@ -3,6 +3,8 @@ package org.spin.data.extend;
 import org.hibernate.SessionFactory;
 import org.spin.data.core.ARepository;
 import org.spin.data.core.IEntity;
+import org.spin.data.pk.generator.IdGenerator;
+import org.spin.data.sql.SQLManager;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -12,6 +14,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -25,6 +28,12 @@ public class RepositoryContext implements ApplicationContextAware {
 
     @Autowired
     private SessionFactory sessFactory;
+
+    @Autowired
+    private SQLManager sqlManager;
+
+    @Autowired(required = false)
+    private IdGenerator<?, ?> idGenerator;
 
     private ApplicationContext applicationContext;
 
@@ -49,8 +58,12 @@ public class RepositoryContext implements ApplicationContextAware {
             // 为没有Repository的实体类创建持久化对象并向容器注册
             DefaultListableBeanFactory acf = (DefaultListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();
             BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(ARepository.class);
-            bdb.addPropertyValue("clazz", cls);
+            bdb.addPropertyValue("entityClazz", cls);
             bdb.addPropertyValue("sessFactory", sessFactory);
+            bdb.addPropertyValue("sqlManager", sqlManager);
+            if (Objects.nonNull(idGenerator)) {
+                bdb.addPropertyValue("idGenerator", idGenerator);
+            }
             String beanName = cls.getName() + "ARepository";
             acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
             return acf.getBean(beanName, ARepository.class);

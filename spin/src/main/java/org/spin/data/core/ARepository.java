@@ -968,6 +968,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return sessFactory;
     }
 
+    public void setSessFactory(SessionFactory sessFactory) {
+        this.sessFactory = sessFactory;
+    }
+
     /**
      * 检查当前Session是否允许write操作
      * <p>当{@code FlushMode.MANUAL}时，SQLException，可以通过子类重写该行为。

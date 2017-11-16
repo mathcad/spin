@@ -183,19 +183,30 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             return files.toArray(new MultipartFile[files.size()]);
         }
 
-        Object value = request.getAttribute(parameterName);
-        if (Objects.isNull(value)) {
-            value = request.getParameter(parameterName);
+        Object[] values = {request.getAttribute(parameterName)};
+        if (Objects.isNull(values)) {
+            values = request.getParameterValues(parameterName);
         }
 
 
-        if (Objects.isNull(value)) {
+        if (Objects.isNull(values)) {
             return null;
         }
 
+        if (!parameter.getType().isArray() && !Iterable.class.isAssignableFrom(parameter.getType()) && values.length > 1) {
+            throw new SimplifiedException(ErrorCode.INVALID_PARAM, parameterName + "参数不匹配");
+        }
+
         if (parameter.getType().equals(QueryParam.class)) {
+            Object value = values[0];
             return QueryParam.parseFromJson(value.toString());
         }
+
+        if (parameter.getType().isArray() || Iterable.class.isAssignableFrom(parameter.getType())) {
+            return JsonUtils.fromJson(JsonUtils.toJson(values), parameter.getType());
+        }
+
+        Object value = values[0];
         try {
             return ObjectUtils.convert(parameter.getType(), value);
         } catch (ClassCastException e) {
