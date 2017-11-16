@@ -37,10 +37,10 @@ public class JsonUtilsTest {
     public void testEntityId() {
         AbstractEntity a = new E();
         a.setId(81241321817279489L);
-        a.setCreateUserId(1L);
+        a.setCreateUserId(9007299254740992L);
         a.setUpdateUserId(2L);
         System.out.println(JsonUtils.toJson(a));
-        String b = "{\"id\":81241321817279489,\"createUserId\":1,\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true}";
+        String b = "{\"id\":81241321817279489,\"createUserId\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true}";
         AbstractEntity c = JsonUtils.fromJson(b, E.class);
         System.out.println(c);
     }

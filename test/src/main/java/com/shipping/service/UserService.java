@@ -166,7 +166,7 @@ public class UserService implements Authenticator<User> {
      * 注销
      */
     public void logout(String key) {
-        secretManager.invalidKeyByKeyStr(key, true);
+        secretManager.invalidKeyByKeyStr(key);
     }
 
     /**
@@ -176,7 +176,7 @@ public class UserService implements Authenticator<User> {
         KeyInfo info;
         try {
             info = secretManager.getKeyInfo(key);
-            secretManager.invalidKeyByKeyStr(key, false);
+            secretManager.invalidKeyByKeyStr(key);
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.SECRET_INVALID);
         }
