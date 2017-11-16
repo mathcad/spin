@@ -183,13 +183,16 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             return files.toArray(new MultipartFile[files.size()]);
         }
 
-        Object[] values = {request.getAttribute(parameterName)};
-        if (Objects.isNull(values)) {
+        Object[] values;
+        Object value = request.getAttribute(parameterName);
+        if (Objects.isNull(value)) {
             values = request.getParameterValues(parameterName);
+        } else {
+            values = new Object[]{value};
         }
 
 
-        if (Objects.isNull(values)) {
+        if (Objects.isNull(values) || values.length == 0) {
             return null;
         }
 
@@ -198,7 +201,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
 
         if (parameter.getType().equals(QueryParam.class)) {
-            Object value = values[0];
+            value = values[0];
             return QueryParam.parseFromJson(value.toString());
         }
 
@@ -206,7 +209,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             return JsonUtils.fromJson(JsonUtils.toJson(values), parameter.getType());
         }
 
-        Object value = values[0];
+        value = values[0];
         try {
             return ObjectUtils.convert(parameter.getType(), value);
         } catch (ClassCastException e) {
