@@ -232,6 +232,7 @@ public class SecretManager {
      */
     public void logout() {
         String tokenStr = SessionManager.getCurrentSessionId();
+        SessionManager.logout();
         if (StringUtils.isNotEmpty(tokenStr)) {
             TokenInfo tokenInfo = getTokenInfo(tokenStr);
             invalidKey(tokenInfo.getSourceKey());

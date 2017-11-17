@@ -118,6 +118,7 @@ public abstract class SessionManager {
     public static void setCurrentUser(SessionUser sessionUser) {
         Session sess = getCurrentSession();
         if (Objects.nonNull(sess)) {
+            sessionUser.setSessionId(getCurrentSessionId());
             sess.setAttribute(USER_SESSION_KEY, sessionUser);
         }
     }

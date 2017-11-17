@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
+import org.spin.core.session.SessionManager;
 import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SQLException;
 import org.spin.core.throwable.SimplifiedException;
@@ -33,13 +34,13 @@ import org.spin.data.query.QueryParam;
 import org.spin.data.query.QueryParamParser;
 import org.spin.data.sql.SQLManager;
 import org.spin.data.util.EntityUtils;
-import org.spin.core.session.SessionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.sql.PreparedStatement;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -190,8 +191,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return 保存后的实体(has id)
      */
     public T save(final T entity, boolean saveWithPk) {
+        Assert.notNull(entity, "The entity to save MUST NOT be NULL");
         if (entity instanceof AbstractEntity) {
-            AbstractEntity aEn = (AbstractEntity) Assert.notNull(entity, "The entity to save MUST NOT be NULL");
+            AbstractEntity aEn = (AbstractEntity) entity;
             SessionUser user = SessionManager.getCurrentUser();
             aEn.setUpdateTime(LocalDateTime.now());
             aEn.setUpdateUserId(user == null ? null : user.getId());
@@ -447,6 +449,70 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
+     * 逻辑删除指定实体
+     *
+     * @throws IllegalArgumentException 当待删除的实体为{@literal null}时抛出该异常
+     */
+    public void logicDelete(T entity) {
+        Assert.notNull(entity, "The entity to be deleted is null");
+        if (entity instanceof AbstractEntity) {
+            ((AbstractEntity) entity).setValid(false);
+            merge(entity);
+            evict(entity);
+        }
+    }
+
+    /**
+     * 通过ID逻辑删除指定实体
+     *
+     * @throws IllegalArgumentException 当待删除的{@code id}为{@literal null}时抛出该异常
+     */
+    public void logicDelete(PK k) {
+        T entity = get(Assert.notNull(k, ID_MUST_NOT_BE_NULL));
+        Assert.notNull(entity, "Entity not found, or was deleted: [" + this.entityClazz.getSimpleName() + "|" + k + "]");
+        if (entity instanceof AbstractEntity) {
+            ((AbstractEntity) entity).setValid(false);
+            merge(entity);
+            evict(entity);
+        }
+    }
+
+    /**
+     * 通过ID集合逻辑删除指定实体
+     *
+     * @throws IllegalArgumentException 当待删除的{@code ids}为{@literal null}时抛出该异常
+     */
+    public void logicDelete(Iterator<PK> ids) {
+        Assert.notNull(ids, ID_MUST_NOT_BE_NULL);
+        ids.forEachRemaining(this::logicDelete);
+    }
+
+    /**
+     * 逻辑删除指定实体
+     *
+     * @throws IllegalArgumentException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
+     */
+    public void logicDelete(Iterable<? extends T> entities) {
+        Assert.notNull(entities, "The given Iterable of entities not be null!");
+        for (T entity : entities) {
+            logicDelete(entity);
+        }
+    }
+
+    /**
+     * 批量逻辑删除实体
+     * <p>如果条件为空，删除所有</p>
+     */
+    public void logicDelete(Criterion... cs) {
+        DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
+        for (Criterion c : cs)
+            dc.add(c);
+
+        List<T> enList = find(dc);
+        enList.forEach(this::logicDelete);
+    }
+
+    /**
      * 分页条件查询
      *
      * @param dc 离线条件
@@ -656,7 +722,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 判断是否有存在已有实体
+     * 判断是否存在已有实体
      */
     public boolean exist(CriteriaBuilder cb, PK notId) {
         if (!entityClazz.equals(cb.getEnCls())) {
@@ -924,6 +990,21 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public void doWork(Work work) {
         getSession().doWork(work);
+    }
+
+    /**
+     * 通过使用指定的jdbc连接执行CUD操作
+     *
+     * @param sql 需要执行的CUD语句
+     * @return 受影响行数
+     */
+    public int doWork(String sql) {
+        int[] affects = {-1};
+        getSession().doWork(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            affects[0] = ps.executeUpdate();
+        });
+        return affects[0];
     }
 
     /**
