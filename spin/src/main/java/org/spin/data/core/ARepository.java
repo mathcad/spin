@@ -195,9 +195,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             SessionUser user = SessionManager.getCurrentUser();
             aEn.setUpdateTime(LocalDateTime.now());
             aEn.setUpdateUserId(user == null ? null : user.getId());
+            aEn.setUpdateUserName(user == null ? null : user.getUserName());
             if (null == aEn.getId() || saveWithPk) {
-                aEn.setCreateUserId(user == null ? null : user.getId());
                 aEn.setCreateTime(LocalDateTime.now());
+                aEn.setCreateUserId(user == null ? null : user.getId());
+                aEn.setCreateUserName(user == null ? null : user.getUserName());
             }
         }
         try {
@@ -612,7 +614,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return 是/否
      */
     public boolean exist(Map<String, Object> params) {
-        return exist(params, null, false);
+        return exist(params, null, true);
     }
 
     /**

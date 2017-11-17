@@ -23,11 +23,6 @@ public abstract class SessionManager {
     private static final Logger logger = LoggerFactory.getLogger(SessionManager.class);
 
     /**
-     * 线程绑定当前用户
-     */
-    private static final ThreadLocal<SessionUser> sessionUserContainer = new ThreadLocal<>();
-
-    /**
      * 当前线程SessionId
      */
     private static final ThreadLocal<String> sessionIdContainer = new ThreadLocal<>();
@@ -51,28 +46,19 @@ public abstract class SessionManager {
         if (Objects.isNull(session)) {
             SimpleSession s = new SimpleSession();
             s.setId(sessionIdContainer.get());
-            s.setAttribute(USER_SESSION_KEY, sessionUserContainer.get());
+//            s.setAttribute(USER_SESSION_KEY, sessionUserContainer.get());
             ALL_SESSIONS.put(sessId, s);
             session = s;
         }
         return session;
     }
 
-    public static void touch() {
-        String sessId = sessionIdContainer.get();
-        if (Objects.nonNull(sessId)) {
-            Session session = ALL_SESSIONS.get(sessId);
-            if (Objects.nonNull(session)) {
-                session.touch();
-            }
-        }
-    }
-
     /**
      * 得到Session中，当前登录用户
      */
     public static SessionUser getCurrentUser() {
-        return sessionUserContainer.get();
+        Session sess = getCurrentSession();
+        return sess == null ? null : (SessionUser) sess.getAttribute(USER_SESSION_KEY);
     }
 
     /**
@@ -130,8 +116,9 @@ public abstract class SessionManager {
      * @param sessionUser 账户
      */
     public static void setCurrentUser(SessionUser sessionUser) {
-        if (Objects.nonNull(sessionIdContainer.get())) {
-            sessionUserContainer.set(sessionUser);
+        Session sess = getCurrentSession();
+        if (Objects.nonNull(sess)) {
+            sess.setAttribute(USER_SESSION_KEY, sessionUser);
         }
     }
 
@@ -141,7 +128,6 @@ public abstract class SessionManager {
     public static void logout() {
         if (Objects.nonNull(sessionIdContainer.get())) {
             ALL_SESSIONS.remove(sessionIdContainer.get());
-            sessionUserContainer.set(null);
             sessionIdContainer.set(null);
         }
     }
@@ -164,9 +150,13 @@ public abstract class SessionManager {
     public static void extendSession(String oldSessionid, String newSessionId) {
         Session session = ALL_SESSIONS.get(oldSessionid);
         if (Objects.nonNull(session)) {
-            session.touch();
             ALL_SESSIONS.put(newSessionId, session);
             ALL_SESSIONS.remove(oldSessionid);
+        }
+        setCurrentSessionId(newSessionId);
+        SessionUser user = getCurrentUser();
+        if (Objects.nonNull(user)) {
+            user.setSessionId(newSessionId);
         }
     }
 

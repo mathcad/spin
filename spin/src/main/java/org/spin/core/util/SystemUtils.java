@@ -1618,5 +1618,12 @@ public class SystemUtils {
         super();
     }
 
+    public static String getRunningMethodInfo(){
+        StringBuilder sb = new StringBuilder();
+
+        StackTraceElement[] stacks = new Throwable().getStackTrace();
+        sb.append("class: " ).append(stacks[1].getClassName()).append("; method: ").append(stacks[1].getMethodName()).append("; number: ").append(stacks[1].getLineNumber());
+        return sb.toString();
+    }
 }
 

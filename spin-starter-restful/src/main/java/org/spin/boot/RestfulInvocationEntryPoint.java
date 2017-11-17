@@ -247,6 +247,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                 }
             }
 
+            // 为方法描述器设置执行对象
             if (!descriptor.getMethodDescriptor().hasTarget()) {
                 try {
                     Object bean = applicationContext.getBean(descriptor.getMethodDescriptor().getCls());

@@ -1,5 +1,6 @@
 package org.spin.data.core;
 
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.data.util.EntityUtils;
 import org.spin.enhance.gson.annotation.PreventOverflow;
 
@@ -40,6 +41,12 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     private Long createUserId;
 
     /**
+     * 记录创建者用户名
+     */
+    @Column(length = 32)
+    private String createUserName;
+
+    /**
      * 创建时间，禁止更改
      */
     @Column(nullable = false, updatable = false)
@@ -51,6 +58,12 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     @Column
     @PreventOverflow
     private Long updateUserId;
+
+    /**
+     * 记录更新者用户名
+     */
+    @Column(length = 32)
+    private String updateUserName;
 
     /**
      * 最后更新时间
@@ -87,6 +100,21 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         return (E) EntityUtils.getDTO(this, depth);
     }
 
+    public static <E extends AbstractEntity> E ref(Class<E> cls, Long id) {
+        try {
+            E dto = cls.newInstance();
+            dto.setId(id);
+            return dto;
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new SimplifiedException("实体没有默认构造方法");
+        }
+    }
+
+    public static <E extends AbstractEntity> E ref(E dto, Long id) {
+        dto.setId(id);
+        return dto;
+    }
+
     /**
      * 判断是否是同一实体。此方法只做同一性认定，不代表完全相同。
      * <p>同一性：指<b>相同类型</b>的实体具有相同的id，version。即标识与版本相同</p>
@@ -113,8 +141,10 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         return "AbstractEntity(" + getClass().getSimpleName() + "){" +
             "id=" + id +
             ", createUserId=" + createUserId +
+            ", createUserName=" + createUserName +
             ", createTime=" + createTime +
             ", updateUserId=" + updateUserId +
+            ", updateUserName=" + updateUserName +
             ", updateTime=" + updateTime +
             ", version=" + version +
             ", orderNo=" + orderNo +
@@ -147,6 +177,20 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     }
 
     /**
+     * 记录创建者用户名
+     */
+    public String getCreateUserName() {
+        return createUserName;
+    }
+
+    /**
+     * 记录创建者用户名
+     */
+    public void setCreateUserName(String createUserName) {
+        this.createUserName = createUserName;
+    }
+
+    /**
      * 创建时间，禁止更改
      */
     public LocalDateTime getCreateTime() {
@@ -165,6 +209,20 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      */
     public Long getUpdateUserId() {
         return updateUserId;
+    }
+
+    /**
+     * 记录更新者用户名
+     */
+    public String getUpdateUserName() {
+        return updateUserName;
+    }
+
+    /**
+     * 记录更新者用户名
+     */
+    public void setUpdateUserName(String updateUserName) {
+        this.updateUserName = updateUserName;
     }
 
     /**

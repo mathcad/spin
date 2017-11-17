@@ -93,7 +93,7 @@ public class SecretManager {
         SessionManager.setCurrentSessionId(tokenStr);
 
         // 设置CurrentUser
-        AbstractUser user = AbstractUser.ref(Long.parseLong(tokenInfo.getIdentifier()));
+        AbstractUser user = (AbstractUser) SessionManager.getCurrentSession().getAttribute(SessionManager.USER_SESSION_KEY);
         user.setSessionId(tokenStr);
         SessionManager.setCurrentUser(user);
     }
