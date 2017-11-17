@@ -223,8 +223,8 @@ public class SecretManager {
      * @param keyStr 密钥字符串
      */
     public void invalidKeyByKeyStr(String keyStr) {
-        secretDao.removeKeyByKey(keyStr);
         secretDao.getTokenByKey(keyStr).forEach(t -> SessionManager.removeSession(t.getToken()));
+        secretDao.removeKeyByKey(keyStr);
     }
 
     /**
