@@ -1,6 +1,5 @@
 package org.spin.data.core;
 
-import org.spin.core.throwable.SimplifiedException;
 import org.spin.data.util.EntityUtils;
 import org.spin.enhance.gson.annotation.PreventOverflow;
 
@@ -98,21 +97,6 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     public final <E extends AbstractEntity> E getDTO(final int depth) {
         //noinspection unchecked
         return (E) EntityUtils.getDTO(this, depth);
-    }
-
-    public static <E extends AbstractEntity> E ref(Class<E> cls, Long id) {
-        try {
-            E dto = cls.newInstance();
-            dto.setId(id);
-            return dto;
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new SimplifiedException("实体没有默认构造方法");
-        }
-    }
-
-    public static <E extends AbstractEntity> E ref(E dto, Long id) {
-        dto.setId(id);
-        return dto;
     }
 
     /**

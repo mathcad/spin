@@ -999,6 +999,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return 受影响行数
      */
     public int doWork(String sql) {
+        Assert.notEmpty(sql, "SQL语句不能为空");
+        Assert.isTrue(!StringUtils.trimToEmpty(sql).toLowerCase().startsWith("select"), "不能执行select语句，只能执行CUD语句");
         int[] affects = {-1};
         getSession().doWork(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql);

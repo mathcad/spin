@@ -59,15 +59,6 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
     private Serializable sessionId;
 
     /**
-     * 引用一个User
-     */
-    public static AbstractUser ref(Long id) {
-        AbstractUser u = new VirtualUser();
-        u.setId(id);
-        return u;
-    }
-
-    /**
      * 用户名
      */
     public String getUserName() {
@@ -154,7 +145,7 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
 
     @Override
     public String toString() {
-        return "AbstractUser{" +
+        return "AbstractUser(" + getClass().getSimpleName() + "){" +
             "userName='" + userName + '\'' +
             ", password='" + password + '\'' +
             ", salt='" + salt + '\'' +
@@ -162,9 +153,5 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
             ", loginTime=" + loginTime +
             ", sessionId='" + sessionId + '\'' +
             "} " + super.toString();
-    }
-
-    private static final class VirtualUser extends AbstractUser {
-        private static final long serialVersionUID = -7833194402212083265L;
     }
 }
