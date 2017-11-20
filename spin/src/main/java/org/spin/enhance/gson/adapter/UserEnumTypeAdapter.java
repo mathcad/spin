@@ -15,7 +15,7 @@ import java.io.IOException;
  * Created by xuweinan on 2017/1/25.
  */
 public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter<E> {
-    private ThreadLocal<Class<E>> clazz;
+    private ThreadLocal<Class<E>> clazz = new ThreadLocal<>();
 
     public UserEnumTypeAdapter() {
     }
