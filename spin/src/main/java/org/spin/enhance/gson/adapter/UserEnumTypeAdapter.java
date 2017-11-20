@@ -15,10 +15,9 @@ import java.io.IOException;
  * Created by xuweinan on 2017/1/25.
  */
 public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter<E> {
-    private Class<E> clazz;
+    private ThreadLocal<Class<E>> clazz;
 
-    public UserEnumTypeAdapter(Class<E> clazz) {
-        this.clazz = clazz;
+    public UserEnumTypeAdapter() {
     }
 
     @Override
@@ -33,7 +32,7 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
     @Override
     public E read(JsonReader in) throws IOException {
         try {
-            return EnumUtils.getEnum(clazz, in.nextInt());
+            return EnumUtils.getEnum(clazz.get(), in.nextInt());
         } catch (IllegalStateException | NumberFormatException e) {
             return null;
         }
@@ -49,6 +48,11 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
                 break;
             }
         }
-        return Enum.class.isAssignableFrom(type.getRawType()) && matchIntf;
+        boolean match = Enum.class.isAssignableFrom(type.getRawType()) && matchIntf;
+        if (match) {
+            //noinspection unchecked
+            clazz.set((Class<E>) type.getRawType());
+        }
+        return match;
     }
 }
