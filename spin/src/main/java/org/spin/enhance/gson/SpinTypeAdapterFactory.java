@@ -42,7 +42,7 @@ public class SpinTypeAdapterFactory implements TypeAdapterFactory {
         typeAdapters.add(new LocalDateTypeAdapter(datePattern));
         typeAdapters.add(new LocalTimeTypeAdapter(datePattern));
         typeAdapters.add(new LongTypeAdapter());
-        typeAdapters.add(new UserEnumTypeAdapter(type.getRawType()));
+        typeAdapters.add(new UserEnumTypeAdapter());
     }
 
     @Override
