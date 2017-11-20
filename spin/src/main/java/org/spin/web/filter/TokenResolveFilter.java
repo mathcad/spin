@@ -40,6 +40,7 @@ public class TokenResolveFilter implements Filter {
                 secretManager.bindCurrentSession(token);
                 chain.doFilter(request, response);
             } catch (SimplifiedException e) {
+                response.setCharacterEncoding("UTF-8");
                 response.getWriter().write(JsonUtils.toJson(RestfulResponse.error(e)));
             }
         } else {
