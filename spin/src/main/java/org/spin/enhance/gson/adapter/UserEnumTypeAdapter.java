@@ -5,6 +5,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.spin.core.trait.IntEvaluated;
 import org.spin.core.util.EnumUtils;
+import org.spin.data.core.UserEnumColumn;
 import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
         if (null == value) {
             out.nullValue();
         } else {
-            out.value((Integer) EnumUtils.getEnumValue(value.getDeclaringClass(), value));
+            out.value(((UserEnumColumn) value).getValue());
         }
     }
 
@@ -43,7 +44,7 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
         boolean matchIntf = false;
         Class<?>[] intfs = type.getRawType().getInterfaces();
         for (Class<?> intf : intfs) {
-            matchIntf = IntEvaluated.class.getName().equals(intf.getName());
+            matchIntf = UserEnumColumn.class.getName().equals(intf.getName());
             if (matchIntf) {
                 break;
             }

@@ -3,6 +3,7 @@ package org.spin.spring;
 import org.spin.core.SpinContext;
 import org.spin.core.inspection.MethodDescriptor;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.MethodUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
@@ -48,9 +49,8 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
                 throw new SimplifiedException("RestfulMethod注解的方法不能有泛型参数: " + method.getName() + "@" + bean.getClass());
             }
             List<MethodDescriptor> restMethod = SpinContext.getRestMethod(module, service);
-            if (Objects.isNull(restMethod) || restMethod.stream().noneMatch(d -> method.equals(d.getMethod()))) {
+            if (CollectionUtils.isEmpty(restMethod) || restMethod.stream().noneMatch(d -> method.equals(d.getMethod()))) {
                 MethodDescriptor descriptor = new MethodDescriptor(method);
-                descriptor.setTarget(null);
                 SpinContext.addRestMethod(module, service, descriptor);
             }
         });
