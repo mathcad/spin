@@ -149,7 +149,10 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                 return null;
             }
             List<MultipartFile> files = ((MultipartRequest) request).getFiles(parameterName);
-            return files.isEmpty() ? null : files.get(0);
+            if (files.isEmpty() || files.size() > 1) {
+                return null;
+            }
+            return files.get(0);
         }
 
         if (Collection.class.isAssignableFrom(parameter.getType())) {
@@ -197,7 +200,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
 
         if (!parameter.getType().isArray() && !Iterable.class.isAssignableFrom(parameter.getType()) && values.length > 1) {
-            throw new SimplifiedException(ErrorCode.INVALID_PARAM, parameterName + "参数不匹配");
+            return null;
         }
 
         if (parameter.getType().equals(QueryParam.class)) {
