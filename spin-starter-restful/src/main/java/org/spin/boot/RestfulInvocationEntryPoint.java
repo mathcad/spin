@@ -61,7 +61,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     private ApplicationContext applicationContext;
 
     @RequestMapping(value = "${spin.web.restfulPrefix}/**")
-    public RestfulResponse exec(HttpServletRequest request) throws UnsupportedEncodingException {
+    public RestfulResponse exec(HttpServletRequest request) {
         String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
         if (resc.length != 2) {
             return RestfulResponse.error(new SimplifiedException("请求的路径不正确"));
@@ -70,11 +70,39 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         String service = resc[1];
         logger.info("Invoke ModuleName: {}, ServiceName: {}", module, service);
 
+        return exec(module, service, request);
+    }
+
+    @RequestMapping(value = "${spin.web.restfulPrefix}/plain/**")
+    public String plainExec(HttpServletRequest request) {
+        String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
+        if (resc.length != 3) {
+            return "请求的路径不正确";
+        }
+        String module = resc[1];
+        String service = resc[2];
+        logger.info("Invoke ModuleName: {}, ServiceName: {}", module, service);
+
+        RestfulResponse restfulResponse = exec(request);
+
+        if (200 != restfulResponse.getCode()) {
+            return restfulResponse.getMessage();
+        } else {
+            return JsonUtils.toJson(restfulResponse.getData());
+        }
+
+    }
+
+    private RestfulResponse exec(String module, String service, HttpServletRequest request) {
         if (StringUtils.isBlank(module) || StringUtils.isBlank(service)) {
             return RestfulResponse.error(new SimplifiedException("请求的资源不存在"));
         }
 
-        request.setCharacterEncoding("UTF-8");
+        try {
+            request.setCharacterEncoding("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            logger.error("Do not support UTF-8 encoding");
+        }
 
         List<MethodDescriptor> services = SpinContext.getRestMethod(module, service);
         List<ArgumentsDescriptor> argumentsDescriptors = new ArrayList<>();
@@ -216,7 +244,11 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         try {
             return ObjectUtils.convert(parameter.getType(), value);
         } catch (ClassCastException e) {
-            return JsonUtils.fromJson(value.toString(), parameter.getParameterizedType());
+            try {
+                return JsonUtils.fromJson(value.toString(), parameter.getParameterizedType());
+            } catch (Throwable ignore) {
+                return JsonUtils.fromJson(value.toString(), parameter.getType());
+            }
         }
     }
 

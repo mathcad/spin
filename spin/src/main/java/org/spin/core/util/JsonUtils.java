@@ -11,6 +11,7 @@ import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Type;
+import java.util.Objects;
 
 /**
  * 包含操作 {@code JSON} 数据的常用方法的工具类。
@@ -113,6 +114,9 @@ public abstract class JsonUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target) {
+        if (Objects.isNull(target)) {
+            return EMPTY;
+        }
         Class<?> clazz = target.getClass();
         if (ClassUtils.wrapperToPrimitive(clazz) != null && ClassUtils.wrapperToPrimitive(clazz).isPrimitive() || target instanceof CharSequence)
             return target.toString();
