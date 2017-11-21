@@ -56,11 +56,8 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-//            repository(url: "http://121.196.213.233:8081/repository/saturn") {
-//                authentication(userName: "admin", password: "super")
-//            }
-            repository(url: "http://120.26.76.35:8081/nexus/content/repositories/nbxs/") {
-                authentication(userName: "admin", password: "gsh56..")
+            repository(url: "http://192.168.90.12:8081/repository/saturn") {
+                authentication(userName: "admin", password: "super")
             }
             pom.version = "$project.version"
             pom.artifactId = "$artifactId"
