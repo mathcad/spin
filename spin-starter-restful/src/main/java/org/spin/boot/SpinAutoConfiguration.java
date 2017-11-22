@@ -57,9 +57,6 @@ public class SpinAutoConfiguration {
     @Autowired
     private SpinDataProperties dataProperties;
 
-    @Autowired
-    private WxConfigProperties wxConfigProperties;
-
     @Bean
     @ConditionalOnBean(RedisConnectionFactory.class)
     public RedisCache<?> redisCache(RedisConnectionFactory redisConnectionFactory) {
