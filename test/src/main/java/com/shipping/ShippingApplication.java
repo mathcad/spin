@@ -10,7 +10,6 @@ import org.spin.boot.properties.DruidDataSourceProperties;
 import org.spin.core.security.AES;
 import org.spin.core.security.RSA;
 import org.spin.core.util.StringUtils;
-import org.spin.wx.WxConfig;
 import org.spin.wx.aes.AesException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.InitializingBean;
@@ -107,18 +106,6 @@ public class ShippingApplication {
         return () -> {
             InfoCache.RSA_PUBKEY = RSA.getRSAPublicKey(env.getProperty("encrypt.rsa.publicKey"));
             InfoCache.RSA_PRIKEY = RSA.getRSAPrivateKey(env.getProperty("encrypt.rsa.privatekey"));
-
-            if (env.getProperty("wxConfig.encodingAesKey").length() != 43) {
-                throw new AesException(AesException.IllegalAesKey);
-            }
-            WxConfig.ConfigInfo configInfo = new WxConfig.ConfigInfo();
-            configInfo.setAppId(env.getProperty("wxConfig.appId"));
-            configInfo.setAppSecret(env.getProperty("wxConfig.appSecret"));
-            configInfo.setToken(env.getProperty("wxConfig.token"));
-            configInfo.setEncodingAesKey(env.getProperty("wxConfig.encodingAesKey"));
-            configInfo.setPayMchId(env.getProperty("wxConfig.mchId"));
-            configInfo.setMchKey(env.getProperty("wxConfig.mchKey"));
-            WxConfig.putConfig("default", configInfo);
         };
     }
 }

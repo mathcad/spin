@@ -11,10 +11,10 @@ import org.spin.web.FileOperator;
 import org.spin.web.RestfulResponse;
 import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.RestfulApi;
-import org.spin.wx.AccessToken;
 import org.spin.wx.MessageEntity;
-import org.spin.wx.WxConfig;
+import org.spin.wx.WxConfigManager;
 import org.spin.wx.WxHelper;
+import org.spin.wx.WxTokenManager;
 import org.spin.wx.aes.AesException;
 import org.spin.wx.aes.WXBizMsgCrypt;
 import org.spin.wx.base.MessageType;
@@ -47,7 +47,7 @@ public class WxController {
      */
     @RequestMapping(method = RequestMethod.GET)
     public String verify(String signature, String timestamp, String nonce, String echostr) {
-        if (StringUtils.isNotEmpty(echostr) && WxHelper.verifySign(signature, WxConfig.getConfig("default").getToken(), timestamp, nonce)) {
+        if (StringUtils.isNotEmpty(echostr) && WxHelper.verifySign(signature, WxConfigManager.getConfig(WxConfigManager.DEFAULT).getToken(), timestamp, nonce)) {
             return echostr;
         }
         return ERROR;
@@ -74,7 +74,7 @@ public class WxController {
         String reqMsgBody = reqData;
         try {
             if (!isEncrypt)
-                reqMsgBody = WXBizMsgCrypt.decryptMsg(signature, timestamp, nonce, reqData, WxConfig.getConfig("default"));
+                reqMsgBody = WXBizMsgCrypt.decryptMsg(signature, timestamp, nonce, reqData, WxConfigManager.getConfig(WxConfigManager.DEFAULT));
         } catch (AesException e) {
             logger.error("Can not decrypt message from encrypted data");
             if (logger.isDebugEnabled())
@@ -98,7 +98,7 @@ public class WxController {
         resEntity.addProperty(PropertyType.CONTENT, "欢迎关注公众号");
         try {
             return WXBizMsgCrypt.encryptMsg(resEntity.getXmlProp(), Long.toString(System.currentTimeMillis()),
-                RandomStringUtils.randomNumeric(10), WxConfig.getConfig("default"));
+                RandomStringUtils.randomNumeric(10), WxConfigManager.getConfig(WxConfigManager.DEFAULT));
         } catch (AesException e) {
             return ERROR;
         }
@@ -118,7 +118,7 @@ public class WxController {
         if (StringUtils.isEmpty(mediaId))
             throw new SimplifiedException("mediaId不能为空");
         String url = "http://file.api.weixin.qq.com/cgi-bin/media/get?access_token="
-            + AccessToken.getDefaultInstance().getToken() + "&media_id=" + mediaId;
+            + WxTokenManager.getDefaultToken().getToken() + "&media_id=" + mediaId;
         FileOperator.UploadResult uploadResult = FileOperator.saveFileFromUrl(url);
         uploadResult.setFullName(null);
         File file = fileService.saveFile(uploadResult);
@@ -128,11 +128,4 @@ public class WxController {
         res.setFilePath(file.getFilePath());
         return RestfulResponse.ok(res);
     }
-
-    @RestfulApi("getAccessToken")
-    public  RestfulResponse xx(){
-        AccessToken accessToken = AccessToken.getDefaultInstance();
-        return RestfulResponse.ok(accessToken);
-    }
-
 }

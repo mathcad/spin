@@ -3,6 +3,7 @@ package org.spin.boot;
 import org.hibernate.SessionFactory;
 import org.spin.boot.properties.SpinDataProperties;
 import org.spin.boot.properties.SpinWebPorperties;
+import org.spin.boot.properties.WxConfigProperties;
 import org.spin.core.auth.SecretManager;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
@@ -49,12 +50,15 @@ import java.util.Properties;
  * @author xuweinan
  */
 @Configuration
-@EnableConfigurationProperties({SpinDataProperties.class, SpinWebPorperties.class})
+@EnableConfigurationProperties({SpinDataProperties.class, SpinWebPorperties.class, WxConfigProperties.class})
 @ComponentScan("org.spin")
 public class SpinAutoConfiguration {
 
     @Autowired
     private SpinDataProperties dataProperties;
+
+    @Autowired
+    private WxConfigProperties wxConfigProperties;
 
     @Bean
     @ConditionalOnBean(RedisConnectionFactory.class)

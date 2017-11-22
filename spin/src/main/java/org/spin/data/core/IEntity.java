@@ -25,9 +25,9 @@ public interface IEntity<PK extends Serializable> extends Serializable {
      */
     void setId(PK id);
 
+    @SuppressWarnings("unchecked")
     default <E extends IEntity<PK>> E ref(PK id) {
         this.setId(id);
-        //noinspection unchecked
         return (E) this;
     }
 

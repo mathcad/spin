@@ -28,6 +28,7 @@ import org.spin.core.session.SessionManager;
 import org.spin.web.FileOperator;
 import org.spin.wx.AccessToken;
 import org.spin.wx.WxHelper;
+import org.spin.wx.WxTokenManager;
 import org.spin.wx.base.WxUserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -134,7 +135,7 @@ public class UserService implements Authenticator<User> {
 
     @Transactional
     public User createUserFromWx(String openId) {
-        AccessToken accessToken = AccessToken.getDefaultOAuthInstance();
+        AccessToken accessToken = WxTokenManager.getDefaultOAuthToken();
         WxUserInfo wxUserInfo = WxHelper.getUserInfo(accessToken.getToken(), openId);
         User user = new User();
         user.setOpenId(openId);
@@ -202,7 +203,7 @@ public class UserService implements Authenticator<User> {
     public LoginInfo wxLogin(String code) {
         AccessToken accessToken;
         try {
-            accessToken = AccessToken.getDefaultOAuthInstance(code);
+            accessToken = WxTokenManager.getDefaultOAuthToken(code);
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.INVALID_PARAM, "非法的code");
         }

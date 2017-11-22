@@ -50,7 +50,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     }
 
     @Override
-    public Class returnedClass() {
+    public Class<?> returnedClass() {
         return enumClass;
     }
 
@@ -233,13 +233,13 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
     @Override
     public String objectToSQLString(Object value) {
-        return enumValueMapper.objectToSQLString((Enum) value);
+        return enumValueMapper.objectToSQLString((Enum<?>) value);
     }
 
     @Override
     @Deprecated
     public String toXMLString(Object value) {
-        return enumValueMapper.toXMLString((Enum) value);
+        return enumValueMapper.toXMLString((Enum<?>) value);
     }
 
     @Override
@@ -251,7 +251,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     @Override
     public String toLoggableString(Object value, SessionFactoryImplementor factory) {
         if (enumValueMapper != null) {
-            return enumValueMapper.toXMLString((Enum) value);
+            return enumValueMapper.toXMLString((Enum<?>) value);
         }
         return value.toString();
     }
@@ -283,24 +283,24 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     private interface EnumValueMapper extends Serializable {
         int getSqlType();
 
-        Enum getValue(ResultSet rs, String[] names) throws SQLException;
+        Enum<?> getValue(ResultSet rs, String[] names) throws SQLException;
 
-        void setValue(PreparedStatement st, Enum value, int index) throws SQLException;
+        void setValue(PreparedStatement st, Enum<?> value, int index) throws SQLException;
 
-        String objectToSQLString(Enum value);
+        String objectToSQLString(Enum<?> value);
 
-        String toXMLString(Enum value);
+        String toXMLString(Enum<?> value);
 
-        Enum fromXMLString(String xml);
+        Enum<?> fromXMLString(String xml);
     }
 
     public abstract class EnumValueMapperSupport implements EnumValueMapper {
         private static final long serialVersionUID = 1929721731025741707L;
 
-        protected abstract Object extractJdbcValue(Enum value);
+        protected abstract Object extractJdbcValue(Enum<?> value);
 
         @Override
-        public void setValue(PreparedStatement st, Enum value, int index) throws SQLException {
+        public void setValue(PreparedStatement st, Enum<?> value, int index) throws SQLException {
             final Object jdbcValue = value == null ? null : extractJdbcValue(value);
 
             final boolean traceEnabled = logger.isTraceEnabled();
@@ -328,7 +328,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
         }
 
         @Override
-        public Enum getValue(ResultSet rs, String[] names) throws SQLException {
+        public Enum<?> getValue(ResultSet rs, String[] names) throws SQLException {
             final int value = rs.getInt(names[0]);
             if (rs.wasNull()) {
                 if (logger.isDebugEnabled()) {
@@ -337,36 +337,36 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
                 return null;
             }
             @SuppressWarnings("unchecked")
-            Enum enumValue = EnumUtils.getEnum(enumClass, value);
+            Enum<?> enumValue = EnumUtils.getEnum(enumClass, value);
             logger.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
             return enumValue;
         }
 
         @Override
-        public String objectToSQLString(Enum value) {
+        public String objectToSQLString(Enum<?> value) {
             return toXMLString(value);
         }
 
         @Override
-        public String toXMLString(Enum value) {
+        public String toXMLString(Enum<?> value) {
             return ClassUtils.getFieldValue(value, "value").get("value").toString();
         }
 
         @Override
-        public Enum fromXMLString(String xml) {
+        public Enum<?> fromXMLString(String xml) {
             //noinspection unchecked
             return EnumUtils.getEnum(enumClass, Integer.parseInt(xml));
         }
 
         @Override
-        protected Object extractJdbcValue(Enum value) {
+        protected Object extractJdbcValue(Enum<?> value) {
             return ClassUtils.getFieldValue(value, "value").get("value");
         }
     }
 
     private class OrdinalEnumValueMapper extends EnumValueMapperSupport {
         private static final long serialVersionUID = 3425742296198497687L;
-        private transient Enum[] enumsByOrdinal;
+        private transient Enum<?>[] enumsByOrdinal;
 
         @Override
         public int getSqlType() {
@@ -374,7 +374,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
         }
 
         @Override
-        public Enum getValue(ResultSet rs, String[] names) throws SQLException {
+        public Enum<?> getValue(ResultSet rs, String[] names) throws SQLException {
             final int ordinal = rs.getInt(names[0]);
             final boolean traceEnabled = logger.isTraceEnabled();
             if (rs.wasNull()) {
@@ -384,15 +384,15 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
                 return null;
             }
 
-            final Enum enumValue = fromOrdinal(ordinal);
+            final Enum<?> enumValue = fromOrdinal(ordinal);
             if (traceEnabled) {
                 logger.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
             }
             return enumValue;
         }
 
-        private Enum fromOrdinal(int ordinal) {
-            final Enum[] enumsByOrdinal = enumsByOrdinal();
+        private Enum<?> fromOrdinal(int ordinal) {
+            final Enum<?>[] enumsByOrdinal = enumsByOrdinal();
             if (ordinal < 0 || ordinal >= enumsByOrdinal.length) {
                 throw new IllegalArgumentException(
                     String.format(
@@ -406,7 +406,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
         }
 
-        private Enum[] enumsByOrdinal() {
+        private Enum<?>[] enumsByOrdinal() {
             if (enumsByOrdinal == null) {
                 enumsByOrdinal = enumClass.getEnumConstants();
                 if (enumsByOrdinal == null) {
@@ -417,22 +417,22 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
         }
 
         @Override
-        public String objectToSQLString(Enum value) {
+        public String objectToSQLString(Enum<?> value) {
             return toXMLString(value);
         }
 
         @Override
-        public String toXMLString(Enum value) {
+        public String toXMLString(Enum<?> value) {
             return Integer.toString(value.ordinal());
         }
 
         @Override
-        public Enum fromXMLString(String xml) {
+        public Enum<?> fromXMLString(String xml) {
             return fromOrdinal(Integer.parseInt(xml));
         }
 
         @Override
-        protected Object extractJdbcValue(Enum value) {
+        protected Object extractJdbcValue(Enum<?> value) {
             return value.ordinal();
         }
     }

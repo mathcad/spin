@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.security.Base64;
 import org.spin.core.util.RandomStringUtils;
-import org.spin.wx.WxConfig;
+import org.spin.wx.WxConfigInfo;
 import org.spin.wx.WxHelper;
 
 import javax.crypto.Cipher;
@@ -170,14 +170,14 @@ public class WXBizMsgCrypt {
      * <li>将消息密文和安全签名打包成xml格式</li>
      * </ol>
      *
-     * @param replyMsg  公众平台待回复用户的消息，xml格式的字符串
-     * @param timeStamp 时间戳，可以自己生成，也可以用URL参数的timestamp
-     * @param nonce     随机串，可以自己生成，也可以用URL参数的nonce
-     * @param configInfo   微信配置信息
+     * @param replyMsg   公众平台待回复用户的消息，xml格式的字符串
+     * @param timeStamp  时间戳，可以自己生成，也可以用URL参数的timestamp
+     * @param nonce      随机串，可以自己生成，也可以用URL参数的nonce
+     * @param configInfo 微信配置信息
      * @return 加密后的可以直接回复用户的密文，包括msg_signature, timestamp, nonce, encrypt的xml格式的字符串
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
      */
-    public static String encryptMsg(String replyMsg, String timeStamp, String nonce, WxConfig.ConfigInfo configInfo) throws AesException {
+    public static String encryptMsg(String replyMsg, String timeStamp, String nonce, WxConfigInfo configInfo) throws AesException {
         // 加密
         String encrypt = encrypt(RandomStringUtils.randomAlphabetic(16), replyMsg, configInfo.getAppId(), configInfo.getEncodingAesKey());
         // 生成安全签名
@@ -207,7 +207,7 @@ public class WXBizMsgCrypt {
      * @return 解密后的原文
      * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
      */
-    public static String decryptMsg(String msgSignature, String timeStamp, String nonce, String postData, WxConfig.ConfigInfo configInfo) throws AesException {
+    public static String decryptMsg(String msgSignature, String timeStamp, String nonce, String postData, WxConfigInfo configInfo) throws AesException {
         Object[] encrypt = XMLParse.extract(postData);
         if (!WxHelper.verifySign(msgSignature, configInfo.getToken(), timeStamp, nonce)) {
             throw new AesException(AesException.ValidateSignatureError);

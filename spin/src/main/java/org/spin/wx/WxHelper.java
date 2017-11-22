@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SortedMap;
 
 /**
@@ -73,8 +74,8 @@ public class WxHelper {
      *
      * @param code 用户同意授权后，带的code参数
      */
-    public static WxUserInfo getUserInfo(String code) {
-        AccessToken access_token = AccessToken.getDefaultOAuthInstance(code);
+    public static WxUserInfo getUserInfo(String code, String... configName) {
+        AccessToken access_token = WxTokenManager.getOAuthToken(extractConfigName(configName), code);
         return getUserInfo(access_token.getToken(), access_token.getOpenId());
     }
 
@@ -83,8 +84,8 @@ public class WxHelper {
      *
      * @param code 短code
      */
-    public static String getTmplId(String code) {
-        AccessToken accessToken = AccessToken.getDefaultInstance();
+    public static String getTmplId(String code, String... configName) {
+        AccessToken accessToken = WxTokenManager.getToken(extractConfigName(configName));
         try {
             String res = HttpUtils.post(WxUrl.TmplIdUrl.getUrl(accessToken.getToken()), MapUtils.ofMap("template_id_short", code));
             Map<String, String> resMap = JsonUtils.fromJson(res, type);
@@ -105,8 +106,8 @@ public class WxHelper {
      *
      * @param msg 消息实体
      */
-    public static String postTmplMsg(TmplMsgEntity msg) {
-        AccessToken accessToken = AccessToken.getDefaultInstance();
+    public static String postTmplMsg(TmplMsgEntity msg, String... configName) {
+        AccessToken accessToken = WxTokenManager.getToken(extractConfigName(configName));
         String res = HttpUtils.postJson(WxUrl.PostTmplMsgUrl.getUrl(accessToken.getToken()), msg);
         Map<String, String> resMap = JsonUtils.fromJson(res, type);
         if (null != resMap && "0".equals(resMap.get("errcode"))) {
@@ -143,11 +144,11 @@ public class WxHelper {
      *
      * @param url 需要调用jsapi的url
      */
-    public static Map<String, String> signature(String url) {
+    public static Map<String, String> signature(String url, String... configName) {
         Map<String, String> ret = new HashMap<>();
         String nonce_str = RandomStringUtils.randomAlphanumeric(16);
         String timestamp = Long.toString(System.currentTimeMillis() / 1000);
-        String jsapi_ticket = ApiTicket.getInstance().getTicket();
+        String jsapi_ticket = WxTokenManager.getTicket(extractConfigName(configName)).getTicket();
         String string1 = "jsapi_ticket=" + jsapi_ticket + "&noncestr=" + nonce_str + "&timestamp=" + timestamp + "&url=" + url;
         String signature = HexUtils.encodeHexStringL(DigestUtils.sha1(string1));
         ret.put("url", url);
@@ -157,7 +158,7 @@ public class WxHelper {
         return ret;
     }
 
-    public static String sign4Parameters(SortedMap<String, Object> parameters, String configKey) {
+    public static String sign4Parameters(SortedMap<String, Object> parameters, String... configName) {
 
         StringBuilder stringA = new StringBuilder();
 
@@ -167,6 +168,16 @@ public class WxHelper {
 
         logger.info("微信签名参数：stringA:" + stringA);
 
-        return DigestUtils.md5Hex(stringA + "key=" + WxConfig.getConfig(configKey).getMchKey()).toUpperCase();
+        return DigestUtils.md5Hex(stringA + "key=" + WxConfigManager.getConfig(extractConfigName(configName)).getMchKey()).toUpperCase();
+    }
+
+    private static String extractConfigName(String[] args) {
+        if (Objects.isNull(args) || args.length == 0) {
+            return WxConfigManager.DEFAULT;
+        } else if (args.length == 1) {
+            return args[0];
+        } else {
+            throw new SimplifiedException(ErrorCode.INVALID_PARAM, "微信配置名称只能有一个");
+        }
     }
 }
