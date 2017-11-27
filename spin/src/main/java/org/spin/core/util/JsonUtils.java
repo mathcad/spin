@@ -342,7 +342,7 @@ public abstract class JsonUtils {
         try {
             @SuppressWarnings("unchecked")
             Class<TypeAdapterFactory> factoryClass = (Class<TypeAdapterFactory>) ClassUtils.getClass("org.spin.enhance.gson.SpinTypeAdapterFactory");
-            TypeAdapterFactory factory = ConstructorUtil.invokeConstructor(factoryClass, datePattern);
+            TypeAdapterFactory factory = ConstructorUtils.invokeConstructor(factoryClass, datePattern);
             builder.registerTypeAdapterFactory(factory);
             builder.setDateFormat(datePattern);
         } catch (Exception ignore) {

@@ -5,7 +5,7 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import org.spin.core.util.ClassUtils;
-import org.spin.core.util.ConstructorUtil;
+import org.spin.core.util.ConstructorUtils;
 import org.spin.enhance.gson.adapter.LocalDateTimeTypeAdapter;
 import org.spin.enhance.gson.adapter.LocalDateTypeAdapter;
 import org.spin.enhance.gson.adapter.LocalTimeTypeAdapter;
@@ -33,7 +33,7 @@ public class SpinTypeAdapterFactory implements TypeAdapterFactory {
     private <T>  void init(Gson gson, TypeToken<T> type) {
         try {
             Class<MatchableTypeAdapter> cls = (Class<MatchableTypeAdapter>) ClassUtils.getClass("org.spin.data.gson.HibernateProxyTypeAdapter");
-            typeAdapters.add(ConstructorUtil.invokeConstructor(cls, gson));
+            typeAdapters.add(ConstructorUtils.invokeConstructor(cls, gson));
             cls = (Class<MatchableTypeAdapter>) ClassUtils.getClass("org.spin.data.gson.HibernatePersistentBagTypeAdapter");
             typeAdapters.add(cls.getConstructor().newInstance());
         } catch (Exception ignore) {

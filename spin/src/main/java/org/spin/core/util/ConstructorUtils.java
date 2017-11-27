@@ -7,7 +7,7 @@ import java.lang.reflect.Modifier;
 /**
  * 构造方法工具类
  */
-public abstract class ConstructorUtil {
+public abstract class ConstructorUtils {
 
     // --------------------------------------------------------- Private Members
     /**
