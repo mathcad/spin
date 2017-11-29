@@ -23,8 +23,7 @@ import java.util.Optional;
  *
  * @author xuweinan
  */
-@Component
-public class RepositoryContext implements ApplicationContextAware {
+public class RepositoryContext {
 
     @Autowired
     private SessionFactory sessFactory;
@@ -37,8 +36,7 @@ public class RepositoryContext implements ApplicationContextAware {
 
     private ApplicationContext applicationContext;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 

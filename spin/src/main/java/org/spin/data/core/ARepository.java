@@ -64,7 +64,6 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version V1.4
  */
-@Component
 public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     private static final Logger logger = LoggerFactory.getLogger(ARepository.class);
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
@@ -77,7 +76,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     @Autowired
     private QueryParamParser queryParamParser;
 
-    @Autowired
+    @Autowired(required = false)
     protected SessionFactory sessFactory;
 
     @Autowired

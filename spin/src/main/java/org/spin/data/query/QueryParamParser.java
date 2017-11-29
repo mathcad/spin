@@ -37,7 +37,6 @@ import java.util.Map;
  *
  * @author xuweinan
  */
-@Component
 public class QueryParamParser {
     private static final Logger logger = LoggerFactory.getLogger(QueryParamParser.class);
     private static final String SPLITOR = "__";

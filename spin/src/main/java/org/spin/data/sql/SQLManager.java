@@ -11,11 +11,9 @@ import org.spin.data.core.SQLLoader;
 import org.spin.data.sql.dbtype.MySQLDatabaseType;
 import org.spin.data.sql.dbtype.OracleDatabaseType;
 import org.spin.data.util.EntityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
-import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -33,14 +31,12 @@ import java.util.regex.Pattern;
  * @author xuweinan
  * @version 1.2
  */
-@Component
 public class SQLManager {
     private static final Logger logger = LoggerFactory.getLogger(SQLManager.class);
     private SQLLoader loader;
     private NamedParameterJdbcTemplate nameJt;
     private DataSource dataSource;
 
-    @Autowired
     public SQLManager(LocalSessionFactoryBean sessFactory, SQLLoader loader) {
         this.loader = loader;
         LocalSessionFactoryBuilder cfg = (LocalSessionFactoryBuilder) sessFactory.getConfiguration();

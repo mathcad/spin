@@ -1,8 +1,12 @@
 package org.spin.boot.properties;
 
 
+import org.spin.core.security.AES;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import java.security.InvalidKeyException;
 import java.util.Properties;
 
 /**
@@ -10,8 +14,13 @@ import java.util.Properties;
  *
  * @author xuweinan
  */
-@ConfigurationProperties("spring.datasource.druid")
+@ConfigurationProperties(prefix = "spring.datasource.druid")
 public class DruidDataSourceProperties {
+    private String name;
+    private String url;
+    private String driverClassName;
+    private String username;
+    private String password;
     private Boolean testWhileIdle = true;
     private Boolean testOnBorrow;
     private String validationQuery = "SELECT 1";
@@ -45,6 +54,46 @@ public class DruidDataSourceProperties {
             put("druid.stat.slowSqlMillis", "5000");
         }
     };
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getDriverClassName() {
+        return driverClassName;
+    }
+
+    public void setDriverClassName(String driverClassName) {
+        this.driverClassName = driverClassName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+        this.password = AES.decrypt("c4b2a7d36f9a2e61", password);
+    }
 
     public Boolean getTestWhileIdle() {
         return testWhileIdle;
@@ -248,28 +297,33 @@ public class DruidDataSourceProperties {
 
     public Properties toProperties() {
         Properties properties = new Properties();
-        notNullAdd(properties, "testWhileIdle", this.testWhileIdle);
-        notNullAdd(properties, "testOnBorrow", this.testOnBorrow);
-        notNullAdd(properties, "validationQuery", this.validationQuery);
-        notNullAdd(properties, "useGlobalDataSourceStat", this.useGlobalDataSourceStat);
-        notNullAdd(properties, "filters", this.filters);
-        notNullAdd(properties, "timeBetweenLogStatsMillis", this.timeBetweenLogStatsMillis);
-        notNullAdd(properties, "stat.sql.MaxSize", this.maxSize);
-        notNullAdd(properties, "clearFiltersEnable", this.clearFiltersEnable);
-        notNullAdd(properties, "resetStatEnable", this.resetStatEnable);
-        notNullAdd(properties, "notFullTimeoutRetryCount", this.notFullTimeoutRetryCount);
-        notNullAdd(properties, "maxWaitThreadCount", this.maxWaitThreadCount);
-        notNullAdd(properties, "failFast", this.failFast);
-        notNullAdd(properties, "phyTimeoutMillis", this.phyTimeoutMillis);
-        notNullAdd(properties, "minEvictableIdleTimeMillis", this.minEvictableIdleTimeMillis);
-        notNullAdd(properties, "maxEvictableIdleTimeMillis", this.maxEvictableIdleTimeMillis);
-        notNullAdd(properties, "initialSize", this.initialSize);
-        notNullAdd(properties, "minIdle", this.minIdle);
-        notNullAdd(properties, "maxActive", this.maxActive);
-        notNullAdd(properties, "maxWait", this.maxWait);
-        notNullAdd(properties, "timeBetweenEvictionRunsMillis", this.timeBetweenEvictionRunsMillis);
-        notNullAdd(properties, "poolPreparedStatements", this.poolPreparedStatements);
-        notNullAdd(properties, "maxPoolPreparedStatementPerConnectionSize", this.maxPoolPreparedStatementPerConnectionSize);
+        notNullAdd(properties, "name", name);
+        notNullAdd(properties, "url", url);
+        notNullAdd(properties, "driverClassName", driverClassName);
+        notNullAdd(properties, "username", username);
+        notNullAdd(properties, "password", password);
+        notNullAdd(properties, "testWhileIdle", testWhileIdle);
+        notNullAdd(properties, "testOnBorrow", testOnBorrow);
+        notNullAdd(properties, "validationQuery", validationQuery);
+        notNullAdd(properties, "useGlobalDataSourceStat", useGlobalDataSourceStat);
+        notNullAdd(properties, "filters", filters);
+        notNullAdd(properties, "timeBetweenLogStatsMillis", timeBetweenLogStatsMillis);
+        notNullAdd(properties, "stat.sql.MaxSize", maxSize);
+        notNullAdd(properties, "clearFiltersEnable", clearFiltersEnable);
+        notNullAdd(properties, "resetStatEnable", resetStatEnable);
+        notNullAdd(properties, "notFullTimeoutRetryCount", notFullTimeoutRetryCount);
+        notNullAdd(properties, "maxWaitThreadCount", maxWaitThreadCount);
+        notNullAdd(properties, "failFast", failFast);
+        notNullAdd(properties, "phyTimeoutMillis", phyTimeoutMillis);
+        notNullAdd(properties, "minEvictableIdleTimeMillis", minEvictableIdleTimeMillis);
+        notNullAdd(properties, "maxEvictableIdleTimeMillis", maxEvictableIdleTimeMillis);
+        notNullAdd(properties, "initialSize", initialSize);
+        notNullAdd(properties, "minIdle", minIdle);
+        notNullAdd(properties, "maxActive", maxActive);
+        notNullAdd(properties, "maxWait", maxWait);
+        notNullAdd(properties, "timeBetweenEvictionRunsMillis", timeBetweenEvictionRunsMillis);
+        notNullAdd(properties, "poolPreparedStatements", poolPreparedStatements);
+        notNullAdd(properties, "maxPoolPreparedStatementPerConnectionSize", maxPoolPreparedStatementPerConnectionSize);
         return properties;
     }
 
