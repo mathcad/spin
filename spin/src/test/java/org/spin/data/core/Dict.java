@@ -14,10 +14,9 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "sys_dict")
-public class Dict implements IEntity<String> {
+public class Dict extends AbstractEntity {
     private static final long serialVersionUID = 8647552774673463154L;
 
-    private String id;
     @Column(length = 64)
     private String name;
 
@@ -71,15 +70,5 @@ public class Dict implements IEntity<String> {
 
     public void setRemark(String remark) {
         this.remark = remark;
-    }
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public void setId(String id) {
-        this.id = id;
     }
 }

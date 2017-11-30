@@ -3,8 +3,10 @@ package org.spin.core.util;
 import org.junit.jupiter.api.Test;
 import org.spin.core.security.Base64;
 import org.spin.core.security.RSA;
+import org.spin.data.core.Dict;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
@@ -76,6 +78,13 @@ public class BeanUtilsTest<E> {
                 }
             }
         );
+    }
+
+    @Test
+    public void testGetFields() {
+        Field field = ReflectionUtils.findField(Dict.class, "parent.parent.id");
+        assertTrue(field.getType().getName().equals(Long.class.getName()));
+
     }
 
     public <T extends CharSequence> void aaa(List<String> a,
