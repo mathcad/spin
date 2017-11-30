@@ -168,7 +168,7 @@ public abstract class ClassUtils {
             Field vField;
 
             try {
-                vField = clazz.getDeclaredField(field);
+                vField = ReflectionUtils.findField(clazz, field);
                 ReflectionUtils.makeAccessible(vField);
 
             } catch (Exception e) {
