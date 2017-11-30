@@ -12,6 +12,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.sql.JoinType;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.ClassUtils;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
@@ -47,6 +48,8 @@ public class CriteriaBuilder {
     private PageRequest pageRequest;
 
     private volatile boolean projected = false;
+
+    private Set<String> condJoins = new HashSet<>();
 
     private CriteriaBuilder() {
     }
@@ -140,8 +143,19 @@ public class CriteriaBuilder {
     public CriteriaBuilder addCriterion(Criterion... criterions) {
         if (null != criterions) {
             for (Criterion ct : criterions) {
-                if (null != ct)
+                if (null != ct) {
+                    Object o = ClassUtils.getFieldValue(ct, "propertyName").get("propertyName");
+                    if (null != o) {
+                        String cond = o.toString();
+                        int idx = cond.lastIndexOf('.');
+                        while (idx > 0) {
+                            cond = cond.substring(0, idx);
+                            condJoins.add(cond);
+                            idx = cond.lastIndexOf('.');
+                        }
+                    }
                     deCriteria.add(ct);
+                }
             }
         }
         return this;
@@ -484,6 +498,7 @@ public class CriteriaBuilder {
         }
 
         // 查询结果中需外连接的表
+        queryjoins.addAll(condJoins);
         queryjoins.addAll(referFields);
         queryjoins.forEach(jf -> deCriteria.createAlias(jf, jf.replaceAll("\\.", "_"), JoinType.LEFT_OUTER_JOIN));
 
