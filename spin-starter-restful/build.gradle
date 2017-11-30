@@ -76,6 +76,6 @@ dependencies {
 //    compile group: 'com.atomikos', name: 'transactions', version: '4.0.5'
 //    compile group: 'com.atomikos', name: 'transactions-jta', version: '4.0.5'
 
-//    compile group: 'org.mathcat', name: 'spin', version: '2.1.4'
+//    compile group: 'org.mathcat', name: 'spin', version: '2.1.6'
     compile(project(":spin"))
 }
