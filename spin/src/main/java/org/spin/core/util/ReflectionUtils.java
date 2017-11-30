@@ -86,16 +86,36 @@ public abstract class ReflectionUtils {
     public static Field findField(Class<?> clazz, String name, Class<?> type) {
         Assert.notNull(clazz, "Class must not be null");
         Assert.isTrue(name != null || type != null, "Either name or type of the field must be specified");
+        String[] ns = {null};
+        if (StringUtils.isNotEmpty(name)) {
+            ns = name.split("\\.");
+        }
         Class<?> searchType = clazz;
-        while (Object.class != searchType && searchType != null) {
-            Field[] fields = getDeclaredFields(searchType);
-            for (Field field : fields) {
-                if ((name == null || name.equals(field.getName())) &&
-                    (type == null || type.equals(field.getType()))) {
-                    return field;
+        boolean isFinded = false;
+
+        for (int i = 0; i < ns.length; i++) {
+            String n = ns[i];
+            isFinded = false;
+            while (Object.class != searchType && searchType != null && !isFinded) {
+                Field[] fields = getDeclaredFields(searchType);
+                for (Field field : fields) {
+                    if (i == ns.length - 1) {
+                        if ((n == null || n.equals(field.getName())) &&
+                            (type == null || type.equals(field.getType()))) {
+                            return field;
+                        }
+                    } else {
+                        if (field.getName().equals(n)) {
+                            searchType = field.getType();
+                            isFinded = true;
+                            break;
+                        }
+                    }
+                }
+                if(!isFinded) {
+                    searchType = searchType.getSuperclass();
                 }
             }
-            searchType = searchType.getSuperclass();
         }
         return null;
     }
