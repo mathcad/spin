@@ -2,6 +2,7 @@ package org.spin.boot.properties;
 
 
 import org.spin.core.security.AES;
+import org.spin.core.util.NumericUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import javax.crypto.BadPaddingException;
@@ -15,7 +16,7 @@ import java.util.Properties;
  * @author xuweinan
  */
 @ConfigurationProperties(prefix = "spring.datasource.druid")
-public class DruidDataSourceProperties {
+public class DruidDataSourceProperties implements DataSourceConfig {
     private String name;
     private String url;
     private String driverClassName;
@@ -55,6 +56,39 @@ public class DruidDataSourceProperties {
         }
     };
 
+    @Override
+    public Properties toProperties() {
+        Properties properties = new Properties();
+        notNullAdd(properties, null, "name", name);
+        notNullAdd(properties, null, "url", url);
+        notNullAdd(properties, null, "driverClassName", driverClassName);
+        notNullAdd(properties, null, "username", username);
+        notNullAdd(properties, null, "password", password);
+        notNullAdd(properties, null, "testWhileIdle", testWhileIdle);
+        notNullAdd(properties, null, "testOnBorrow", testOnBorrow);
+        notNullAdd(properties, null, "validationQuery", validationQuery);
+        notNullAdd(properties, null, "useGlobalDataSourceStat", useGlobalDataSourceStat);
+        notNullAdd(properties, null, "filters", filters);
+        notNullAdd(properties, null, "timeBetweenLogStatsMillis", timeBetweenLogStatsMillis);
+        notNullAdd(properties, null, "stat.sql.MaxSize", maxSize);
+        notNullAdd(properties, null, "clearFiltersEnable", clearFiltersEnable);
+        notNullAdd(properties, null, "resetStatEnable", resetStatEnable);
+        notNullAdd(properties, null, "notFullTimeoutRetryCount", notFullTimeoutRetryCount);
+        notNullAdd(properties, null, "maxWaitThreadCount", maxWaitThreadCount);
+        notNullAdd(properties, null, "failFast", failFast);
+        notNullAdd(properties, null, "phyTimeoutMillis", phyTimeoutMillis);
+        notNullAdd(properties, null, "minEvictableIdleTimeMillis", minEvictableIdleTimeMillis);
+        notNullAdd(properties, null, "maxEvictableIdleTimeMillis", maxEvictableIdleTimeMillis);
+        notNullAdd(properties, null, "initialSize", initialSize);
+        notNullAdd(properties, null, "minIdle", minIdle);
+        notNullAdd(properties, null, "maxActive", maxActive);
+        notNullAdd(properties, null, "maxWait", maxWait);
+        notNullAdd(properties, null, "timeBetweenEvictionRunsMillis", timeBetweenEvictionRunsMillis);
+        notNullAdd(properties, null, "poolPreparedStatements", poolPreparedStatements);
+        notNullAdd(properties, null, "maxPoolPreparedStatementPerConnectionSize", maxPoolPreparedStatementPerConnectionSize);
+        return properties;
+    }
+
     public String getName() {
         return name;
     }
@@ -93,6 +127,16 @@ public class DruidDataSourceProperties {
 
     public void setPassword(String password) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
         this.password = AES.decrypt("c4b2a7d36f9a2e61", password);
+    }
+
+    @Override
+    public int getMaxPoolSize() {
+        return NumericUtils.nullToZero(maxSize) == 0 ? (maxActive * 2) : maxSize;
+    }
+
+    @Override
+    public int getMinPoolSize() {
+        return minIdle;
     }
 
     public Boolean getTestWhileIdle() {
@@ -295,49 +339,21 @@ public class DruidDataSourceProperties {
         this.removeAbandonedTimeout = removeAbandonedTimeout;
     }
 
-    public Properties toProperties() {
-        Properties properties = new Properties();
-        notNullAdd(properties, "name", name);
-        notNullAdd(properties, "url", url);
-        notNullAdd(properties, "driverClassName", driverClassName);
-        notNullAdd(properties, "username", username);
-        notNullAdd(properties, "password", password);
-        notNullAdd(properties, "testWhileIdle", testWhileIdle);
-        notNullAdd(properties, "testOnBorrow", testOnBorrow);
-        notNullAdd(properties, "validationQuery", validationQuery);
-        notNullAdd(properties, "useGlobalDataSourceStat", useGlobalDataSourceStat);
-        notNullAdd(properties, "filters", filters);
-        notNullAdd(properties, "timeBetweenLogStatsMillis", timeBetweenLogStatsMillis);
-        notNullAdd(properties, "stat.sql.MaxSize", maxSize);
-        notNullAdd(properties, "clearFiltersEnable", clearFiltersEnable);
-        notNullAdd(properties, "resetStatEnable", resetStatEnable);
-        notNullAdd(properties, "notFullTimeoutRetryCount", notFullTimeoutRetryCount);
-        notNullAdd(properties, "maxWaitThreadCount", maxWaitThreadCount);
-        notNullAdd(properties, "failFast", failFast);
-        notNullAdd(properties, "phyTimeoutMillis", phyTimeoutMillis);
-        notNullAdd(properties, "minEvictableIdleTimeMillis", minEvictableIdleTimeMillis);
-        notNullAdd(properties, "maxEvictableIdleTimeMillis", maxEvictableIdleTimeMillis);
-        notNullAdd(properties, "initialSize", initialSize);
-        notNullAdd(properties, "minIdle", minIdle);
-        notNullAdd(properties, "maxActive", maxActive);
-        notNullAdd(properties, "maxWait", maxWait);
-        notNullAdd(properties, "timeBetweenEvictionRunsMillis", timeBetweenEvictionRunsMillis);
-        notNullAdd(properties, "poolPreparedStatements", poolPreparedStatements);
-        notNullAdd(properties, "maxPoolPreparedStatementPerConnectionSize", maxPoolPreparedStatementPerConnectionSize);
-        return properties;
-    }
-
-    private void notNullAdd(Properties properties, String key, Object value) {
-        if (value != null) {
-            properties.setProperty("druid." + key, value.toString());
-        }
-    }
-
     public String getServletPath() {
         return servletPath;
     }
 
     public void setServletPath(String servletPath) {
         this.servletPath = servletPath;
+    }
+
+    @Override
+    public String getXaDataSourceClassName() {
+        return "com.alibaba.druid.pool.xa.DruidXADataSource";
+    }
+
+    @Override
+    public String getDataSourceClassName() {
+        return "com.alibaba.druid.pool.DruidDataSource";
     }
 }

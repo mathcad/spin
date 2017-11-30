@@ -4,14 +4,13 @@ import com.atomikos.icatch.jta.UserTransactionImp;
 import com.atomikos.icatch.jta.UserTransactionManager;
 import com.atomikos.jdbc.AtomikosDataSourceBean;
 import org.spin.boot.bean.DbInit;
-import org.spin.boot.properties.DruidDataSourceProperties;
-import org.spin.boot.properties.MultiDruidDataSourceProperties;
+import org.spin.boot.properties.DataSourceConfig;
+import org.spin.boot.properties.MultiDataSourceConfig;
 import org.spin.boot.properties.SpinDataProperties;
 import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.boot.properties.WxConfigProperties;
 import org.spin.core.auth.SecretManager;
 import org.spin.core.util.JsonUtils;
-import org.spin.core.util.MethodUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.cache.RedisCache;
 import org.spin.data.core.SQLLoader;
@@ -50,7 +49,6 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.filter.CorsFilter;
 
 import javax.servlet.MultipartConfigElement;
-import javax.sql.XADataSource;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
@@ -58,7 +56,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -69,7 +66,7 @@ import java.util.Properties;
  * @author xuweinan
  */
 @Configuration
-@EnableConfigurationProperties({SpinDataProperties.class, SpinWebPorperties.class, WxConfigProperties.class, MultiDruidDataSourceProperties.class})
+@EnableConfigurationProperties({SpinDataProperties.class, SpinWebPorperties.class, WxConfigProperties.class})
 @ComponentScan("org.spin.spring")
 public class SpinAutoConfiguration {
 
@@ -93,29 +90,22 @@ public class SpinAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(XADataSource.class)
-    public DbInit dsInit(List<XADataSource> dataSources, MultiDruidDataSourceProperties dbConfigs) {
-        if (Objects.nonNull(dataSources)) {
-            DefaultListableBeanFactory acf = (DefaultListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();
-            Properties defaultProperties = readProperties(null);
-            for (int i = 0; i < dataSources.size(); i++) {
-                // AtomikosDataSourceBean
-                XADataSource ds = dataSources.get(i);
-                String name = "db" + i;
-                try {
-                    name = MethodUtils.invokeMethod(ds, "getName", new Object[0]).toString();
-                } catch (Exception e) {
-                }
-                BeanDefinitionBuilder bdb = dsDefinitionBuilder(name, ds, dbConfigs.getDataSourceConfig(name));
-                String beanName = name + "AtomikosDataSource";
-                acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
+    @ConditionalOnBean(MultiDataSourceConfig.class)
+    public DbInit dsInit(MultiDataSourceConfig<?> dbConfigs) {
+        DefaultListableBeanFactory acf = (DefaultListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();
+        Properties defaultProperties = readProperties(null);
 
-                // SessionFactory
-                bdb = sfDefinitionBuilder(name, acf.getBean(beanName), defaultProperties);
-                beanName = name + "SessionFactory";
-                acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
-            }
-        }
+        dbConfigs.getDataSources().forEach((name, config) -> {
+            // AtomikosDataSourceBean
+            BeanDefinitionBuilder bdb = dsDefinitionBuilder(name, config);
+            String beanName = name + "AtomikosDataSource";
+            acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
+
+            // SessionFactory
+            bdb = sfDefinitionBuilder(name, acf.getBean(beanName), defaultProperties);
+            beanName = name + "SessionFactory";
+            acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
+        });
         return new DbInit();
     }
 
@@ -239,14 +229,14 @@ public class SpinAutoConfiguration {
      * 准备Atomikos数据源的bean
      *
      * @param name 名称
-     * @param ds   XA数据源
      */
-    private BeanDefinitionBuilder dsDefinitionBuilder(String name, XADataSource ds, DruidDataSourceProperties dbConfig) {
+    private BeanDefinitionBuilder dsDefinitionBuilder(String name, DataSourceConfig dbConfig) {
         BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(AtomikosDataSourceBean.class);
-        bdb.addPropertyValue("xaDataSource", ds);
+        bdb.addPropertyValue("xaDataSourceClassName", dbConfig.getXaDataSourceClassName());
         bdb.addPropertyValue("uniqueResourceName", name);
-        bdb.addPropertyValue("maxPoolSize", dbConfig.getMaxActive() * 2);
-        bdb.addPropertyValue("minPoolSize", dbConfig.getMinIdle());
+        bdb.addPropertyValue("maxPoolSize", dbConfig.getMaxPoolSize());
+        bdb.addPropertyValue("minPoolSize", dbConfig.getMinPoolSize());
+        bdb.addPropertyValue("xaProperties", dbConfig.toProperties());
         bdb.setInitMethodName("doInit");
         bdb.setDestroyMethodName("doClose");
         return bdb;

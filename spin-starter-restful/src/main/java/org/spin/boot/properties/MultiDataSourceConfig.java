@@ -7,7 +7,7 @@ import java.util.Map;
  *
  * @author xuweinan
  */
-public interface MultiDataSourceConfig<T> {
+public interface MultiDataSourceConfig<T extends DataSourceConfig> {
     String getPrimaryDataSource();
 
     void setPrimaryDataSource(String primaryDataSource);

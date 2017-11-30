@@ -1,10 +1,8 @@
 package com.shipping;
 
-import com.alibaba.druid.pool.xa.DruidXADataSource;
 import com.shipping.internal.InfoCache;
 import org.spin.boot.annotation.EnableIdGenerator;
 import org.spin.boot.annotation.EnableSecretManager;
-import org.spin.boot.properties.DruidDataSourceProperties;
 import org.spin.boot.properties.MultiDruidDataSourceProperties;
 import org.spin.core.security.RSA;
 import org.springframework.beans.factory.InitializingBean;
@@ -12,16 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.EmbeddedDataSourceConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.XADataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.env.Environment;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.sql.XADataSource;
-import java.security.InvalidKeyException;
 
 /**
  * 启动类
@@ -30,9 +26,10 @@ import java.security.InvalidKeyException;
  * @author xuweinan
  */
 
-@SpringBootApplication(exclude = {HibernateJpaAutoConfiguration.class, DataSourceAutoConfiguration.class}, scanBasePackages = "com.shipping")
+@SpringBootApplication(exclude = {HibernateJpaAutoConfiguration.class, DataSourceAutoConfiguration.class, XADataSourceAutoConfiguration.class}, scanBasePackages = "com.shipping")
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableTransactionManagement(proxyTargetClass = true)
+@EnableConfigurationProperties(MultiDruidDataSourceProperties.class)
 @EnableSecretManager
 @EnableIdGenerator
 public class ShippingApplication {
@@ -42,18 +39,6 @@ public class ShippingApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(new Object[]{ShippingApplication.class}, args);
-    }
-
-    @Bean
-    public XADataSource xaDataSource(MultiDruidDataSourceProperties dbConfig) {
-        DruidDataSourceProperties druidDataSourceProperties = dbConfig.getPrimaryDataSourceConfig();
-        DruidXADataSource dataSource = new DruidXADataSource();
-        dataSource.configFromPropety(druidDataSourceProperties.toProperties());
-        dataSource.setMaxWait(druidDataSourceProperties.getMaxWait());
-        dataSource.setConnectProperties(druidDataSourceProperties.getConnectionProperties());
-        dataSource.setRemoveAbandoned(druidDataSourceProperties.getRemoveAbandoned());
-        dataSource.setRemoveAbandonedTimeout(druidDataSourceProperties.getRemoveAbandonedTimeout());
-        return dataSource;
     }
 
 //    @Bean
