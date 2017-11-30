@@ -11,6 +11,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.EmbeddedDataSourceConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.XADataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -26,7 +27,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @author xuweinan
  */
 
-@SpringBootApplication(exclude = {HibernateJpaAutoConfiguration.class, DataSourceAutoConfiguration.class, XADataSourceAutoConfiguration.class}, scanBasePackages = "com.shipping")
+@SpringBootApplication(scanBasePackages = "com.shipping")
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableTransactionManagement(proxyTargetClass = true)
 @EnableConfigurationProperties(MultiDruidDataSourceProperties.class)
