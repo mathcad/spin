@@ -1,6 +1,7 @@
 package org.spin.boot.properties;
 
 import org.spin.core.util.StringUtils;
+import org.spin.data.extend.MultiDataSourceConfig;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

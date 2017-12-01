@@ -36,7 +36,6 @@ import org.spin.data.sql.SQLManager;
 import org.spin.data.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
-import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -45,6 +44,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +68,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     private static final Logger logger = LoggerFactory.getLogger(ARepository.class);
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
     private static final int MAX_RECORDS = 100000000;
+    private static final Map<String, SessionFactory> SESSION_FACTORY_MAP = new HashMap<>();
     private static final ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
     };
 
@@ -75,9 +76,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     @Autowired
     private QueryParamParser queryParamParser;
-
-    @Autowired(required = false)
-    protected SessionFactory sessFactory;
 
     @Autowired
     protected SQLManager sqlManager;
@@ -96,6 +94,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         this.entityClazz = entityClass;
     }
 
+    public static void addSessionFactory(String name, SessionFactory sessionFactory) {
+        SESSION_FACTORY_MAP.put(name, sessionFactory);
+    }
+
+    public SessionFactory getCurrentSessionFactory() {
+        return SESSION_FACTORY_MAP.get(sqlManager.getCurrentDataSourceName());
+    }
+
     /**
      * 获得当前线程的session 如果Thread Local变量中有绑定，返回该session
      * 否则，调用sessFactory的getCurrentSession
@@ -103,7 +109,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public Session getSession() {
         Session sess = peekThreadSession();
         if (sess == null) {
-            sess = sessFactory.getCurrentSession();
+            sess = getCurrentSessionFactory().getCurrentSession();
         }
         return sess;
     }
@@ -123,7 +129,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public Session openSession(boolean requiredNew) {
         Session session = peekThreadSession();
         if (requiredNew || session == null) {
-            session = sessFactory.openSession();
+            session = getCurrentSessionFactory().openSession();
             pushTreadSession(session);
         }
         return session;
@@ -1048,12 +1054,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         this.checkWriteOperations = checkWriteOperations;
     }
 
-    public SessionFactory getSessFactory() {
-        return sessFactory;
-    }
-
-    public void setSessFactory(SessionFactory sessFactory) {
-        this.sessFactory = sessFactory;
+    /**
+     * 切换数据源
+     *
+     * @param name 数据源名称
+     */
+    public void switchDataSource(String name) {
+        sqlManager.switchDataSource(name);
     }
 
     public SQLManager getSqlManager() {

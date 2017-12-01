@@ -1,14 +1,13 @@
 package org.spin.boot;
 
 import com.atomikos.jdbc.AtomikosDataSourceBean;
+import org.hibernate.SessionFactory;
 import org.spin.boot.bean.DbInit;
-import org.spin.boot.properties.DataSourceConfig;
-import org.spin.boot.properties.MultiDataSourceConfig;
 import org.spin.boot.properties.SpinDataProperties;
-import org.spin.boot.properties.SpinWebPorperties;
-import org.spin.boot.properties.WxConfigProperties;
 import org.spin.core.util.StringUtils;
-import org.spin.data.core.SQLLoader;
+import org.spin.data.core.ARepository;
+import org.spin.data.extend.DataSourceConfig;
+import org.spin.data.extend.MultiDataSourceConfig;
 import org.spin.data.extend.RepositoryContext;
 import org.spin.data.query.QueryParamParser;
 import org.spin.data.sql.SQLManager;
@@ -18,13 +17,7 @@ import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.XADataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +26,6 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -44,8 +36,7 @@ import java.util.Properties;
  * @author xuweinan
  */
 @Configuration
-@EnableAutoConfiguration(exclude = {HibernateJpaAutoConfiguration.class, org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class, XADataSourceAutoConfiguration.class, JdbcTemplateAutoConfiguration.class})
-@ConditionalOnBean(MultiDataSourceConfig.class)
+@ConditionalOnBean({MultiDataSourceConfig.class, SpinDataProperties.class})
 @AutoConfigureAfter(MultiDataSourceConfig.class)
 public class DataSourceAutoConfiguration {
 
@@ -67,10 +58,14 @@ public class DataSourceAutoConfiguration {
             String beanName = name + "AtomikosDataSource";
             acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
 
+            AtomikosDataSourceBean ds = (AtomikosDataSourceBean) acf.getBean(beanName);
+            SQLManager.addDataSource(name, ds);
             // SessionFactory
             bdb = sfDefinitionBuilder(name, acf.getBean(beanName), defaultProperties);
             beanName = name + "SessionFactory";
             acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
+            SessionFactory sf = (SessionFactory) acf.getBean(beanName);
+            ARepository.addSessionFactory(name, sf);
         });
         return new DbInit();
     }
@@ -82,21 +77,9 @@ public class DataSourceAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(DbInit.class)
-    @ConditionalOnMissingBean(SQLLoader.class)
-    public SQLLoader sqlLoader(DbInit dbInit) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        SQLLoader loader = (SQLLoader) Class.forName(dataProperties.getSqlLoader()).getDeclaredConstructor().newInstance();
-        if (StringUtils.isEmpty(dataProperties.getSqlUri())) {
-            loader.setRootUri(dataProperties.getSqlUri());
-        }
-        loader.setTemplateResolver(dataProperties.getResolverObj());
-        return loader;
-    }
-
-    @Bean
-    @ConditionalOnBean({SQLLoader.class, JtaTransactionManager.class})
-    public SQLManager sqlManager(SQLLoader sqlLoader, LocalSessionFactoryBean sessionFactory, JtaTransactionManager transactionManager) {
-        return new SQLManager(sessionFactory, sqlLoader);
+    @ConditionalOnBean({JtaTransactionManager.class, DbInit.class})
+    public SQLManager sqlManager(DbInit dbInit, MultiDataSourceConfig<?> dbConfigs, JtaTransactionManager transactionManager) throws ClassNotFoundException {
+        return new SQLManager(dbConfigs, dataProperties.getSqlLoader(), dataProperties.getSqlUri(), dataProperties.getResolverObj());
     }
 
     @Bean

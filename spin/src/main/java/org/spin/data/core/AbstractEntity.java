@@ -89,6 +89,24 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     private boolean valid = true;
 
     /**
+     * 扩展字段1
+     */
+    @Transient
+    private Object extInfo1;
+
+    /**
+     * 扩展字段2
+     */
+    @Transient
+    private Object extInfo2;
+
+    /**
+     * 扩展字段3
+     */
+    @Transient
+    private Object extInfo3;
+
+    /**
      * 获取当前实体的DTO。DTO是当前实体的浅拷贝。
      *
      * @param depth 属性解析深度
@@ -270,5 +288,29 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      */
     public void setValid(boolean valid) {
         this.valid = valid;
+    }
+
+    public Object getExtInfo1() {
+        return extInfo1;
+    }
+
+    public void setExtInfo1(Object extInfo1) {
+        this.extInfo1 = extInfo1;
+    }
+
+    public Object getExtInfo2() {
+        return extInfo2;
+    }
+
+    public void setExtInfo2(Object extInfo2) {
+        this.extInfo2 = extInfo2;
+    }
+
+    public Object getExtInfo3() {
+        return extInfo3;
+    }
+
+    public void setExtInfo3(Object extInfo3) {
+        this.extInfo3 = extInfo3;
     }
 }

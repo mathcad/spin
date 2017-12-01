@@ -1,4 +1,4 @@
-package org.spin.boot.properties;
+package org.spin.data.extend;
 
 import java.util.Map;
 

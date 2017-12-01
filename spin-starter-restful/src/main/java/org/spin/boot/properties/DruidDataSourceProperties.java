@@ -3,6 +3,7 @@ package org.spin.boot.properties;
 
 import org.spin.core.security.AES;
 import org.spin.core.util.NumericUtils;
+import org.spin.data.extend.DataSourceConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import javax.crypto.BadPaddingException;

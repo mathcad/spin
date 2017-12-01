@@ -1,2 +1,4 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=org.spin.boot.SpinAutoConfiguration,org.spin.boot.DataSourceAutoConfiguration
-org.spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+# Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.spin.boot.SpinAutoConfiguration,\
+org.spin.boot.DataSourceAutoConfiguration

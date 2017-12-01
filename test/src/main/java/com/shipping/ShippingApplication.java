@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  *
  * @author xuweinan
  */
-
 @SpringBootApplication(scanBasePackages = "com.shipping")
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableTransactionManagement(proxyTargetClass = true)

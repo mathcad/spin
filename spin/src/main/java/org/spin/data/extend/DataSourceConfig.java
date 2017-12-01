@@ -1,4 +1,4 @@
-package org.spin.boot.properties;
+package org.spin.data.extend;
 
 import org.spin.core.util.StringUtils;
 
@@ -43,6 +43,11 @@ public interface DataSourceConfig {
     String getDataSourceClassName();
 
     Properties toProperties();
+
+    default String getVenderName() {
+        String vender = getUrl().split(":")[1].toUpperCase();
+        return StringUtils.isEmpty(vender) ? "UNKNOW-[" + getUrl() + "]" : vender;
+    }
 
     default void notNullAdd(Properties properties, String prefix, String key, Object value) {
         if (value != null) {
