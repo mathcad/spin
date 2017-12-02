@@ -4,6 +4,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.NotExpression;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
@@ -144,7 +145,11 @@ public class CriteriaBuilder {
         if (null != criterions) {
             for (Criterion ct : criterions) {
                 if (null != ct) {
-                    Object o = ClassUtils.getFieldValue(ct, "propertyName").get("propertyName");
+                    Criterion t = ct;
+                    if (ct instanceof NotExpression) {
+                        t = (Criterion) ClassUtils.getFieldValue(ct, "criterion").get("criterion");
+                    }
+                    Object o = ClassUtils.getFieldValue(t, "propertyName").get("propertyName");
                     if (null != o) {
                         String cond = o.toString();
                         int idx = cond.lastIndexOf('.');
