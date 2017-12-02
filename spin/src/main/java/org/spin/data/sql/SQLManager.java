@@ -293,6 +293,18 @@ public class SQLManager {
         currentNameJt.set(nameJtMap.get(name));
     }
 
+    /**
+     * 切换到默认数据源
+     */
+    public void usePrimaryDataSource() {
+        switchDataSource(primaryDataSourceName);
+    }
+
+    /**
+     * 获取当前数据源名称
+     *
+     * @return 数据源名称
+     */
     public String getCurrentDataSourceName() {
         if (Objects.isNull(currentDataSourceName.get())) {
             switchDataSource(primaryDataSourceName);

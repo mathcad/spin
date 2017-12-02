@@ -1063,6 +1063,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         sqlManager.switchDataSource(name);
     }
 
+    /**
+     * 切换到默认数据源
+     */
+    public void usePrimaryDataSource() {
+        sqlManager.usePrimaryDataSource();
+    }
+
     public SQLManager getSqlManager() {
         return sqlManager;
     }
@@ -1077,6 +1084,15 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     public void setIdGenerator(IdGenerator<PK, ?> idGenerator) {
         this.idGenerator = idGenerator;
+    }
+
+    /**
+     * 获取当前数据源名称
+     *
+     * @return 数据源名称
+     */
+    public String getCurrentDataSourceName() {
+        return sqlManager.getCurrentDataSourceName();
     }
 
     /**

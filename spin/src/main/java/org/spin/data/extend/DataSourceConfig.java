@@ -42,6 +42,10 @@ public interface DataSourceConfig {
 
     String getDataSourceClassName();
 
+    default boolean isOpenSessionInView() {
+        return false;
+    }
+
     Properties toProperties();
 
     default String getVenderName() {

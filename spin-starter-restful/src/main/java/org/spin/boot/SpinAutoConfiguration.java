@@ -8,7 +8,7 @@ import org.spin.core.util.JsonUtils;
 import org.spin.data.cache.RedisCache;
 import org.spin.web.converter.JsonHttpMessageConverter;
 import org.spin.web.filter.TokenResolveFilter;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,7 +21,6 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.orm.hibernate5.support.OpenSessionInViewFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -39,8 +38,8 @@ import java.util.Collection;
  */
 @Configuration
 @EnableConfigurationProperties({SpinDataProperties.class, SpinWebPorperties.class, WxConfigProperties.class})
-@ComponentScan("org.spin.spring")
-@AutoConfigureBefore(DataSourceAutoConfiguration.class)
+@ComponentScan("org.spin")
+@AutoConfigureAfter(DataSourceAutoConfiguration.class)
 public class SpinAutoConfiguration {
 
     @Bean
@@ -68,17 +67,6 @@ public class SpinAutoConfiguration {
     }
 
     @Bean
-    public FilterRegistrationBean openSessionInViewFilterRegistration() {
-        FilterRegistrationBean registration = new FilterRegistrationBean();
-        registration.setFilter(new OpenSessionInViewFilter());
-        registration.addUrlPatterns("/*");
-        registration.addInitParameter("sessionFactoryBeanName", "sessionFactory");
-        registration.setName("openSessionInViewFilter");
-        registration.setOrder(2);
-        return registration;
-    }
-
-    @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.addAllowedOrigin("*");
@@ -90,6 +78,7 @@ public class SpinAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(SecurityManager.class)
     public FilterRegistrationBean apiFilter(SecretManager secretManager) {
         FilterRegistrationBean registration = new FilterRegistrationBean();
         registration.setFilter(new TokenResolveFilter(secretManager));
