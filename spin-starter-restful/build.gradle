@@ -1,5 +1,5 @@
 description 'spin-web的starter'
-version '2.1.6'
+version '2.1.7'
 def artifactId = 'spin-sratrer-restful'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -71,7 +71,7 @@ dependencies {
     compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
 
-    compile group: 'org.mathcat', name: 'spin', version: '2.1.6'
+    compile group: 'org.mathcat', name: 'spin', version: '2.1.7'
 //    compile(project(":spin")) {
 //        transitive = true
 //    }
