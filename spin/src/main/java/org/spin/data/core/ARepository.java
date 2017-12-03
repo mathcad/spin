@@ -57,12 +57,13 @@ import java.util.stream.Collectors;
  * <p>所有的Dao均继承此类。支持：
  * <pre>
  * 1、基于Jpa规范的Repository
- * 2、基于JdbcTemplate和NamedJdbcTemplate的动态SQL查询
+ * 2、基于NamedJdbcTemplate的动态SQL查询
+ * 3、支持基于JTA的多数据源分布式事务
  * </pre>
  * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @author xuweinan
- * @version V1.4
+ * @version V1.5
  */
 public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     private static final Logger logger = LoggerFactory.getLogger(ARepository.class);
@@ -94,7 +95,13 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         this.entityClazz = entityClass;
     }
 
-    public static void addSessionFactory(String name, SessionFactory sessionFactory) {
+    /**
+     * 注册SessionFactory，应该在使用任何Repository持久化方法之前完成所有SessionFactory的注册
+     *
+     * @param name           名称
+     * @param sessionFactory 注册SessionFactory
+     */
+    public static void registSessionFactory(String name, SessionFactory sessionFactory) {
         SESSION_FACTORY_MAP.put(name, sessionFactory);
     }
 

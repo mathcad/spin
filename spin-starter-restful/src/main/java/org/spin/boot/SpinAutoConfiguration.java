@@ -1,6 +1,5 @@
 package org.spin.boot;
 
-import org.spin.boot.properties.SpinDataProperties;
 import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.boot.properties.WxConfigProperties;
 import org.spin.core.auth.SecretManager;
@@ -37,9 +36,9 @@ import java.util.Collection;
  * @author xuweinan
  */
 @Configuration
-@EnableConfigurationProperties({SpinDataProperties.class, SpinWebPorperties.class, WxConfigProperties.class})
+@EnableConfigurationProperties({SpinWebPorperties.class, WxConfigProperties.class})
 @ComponentScan("org.spin")
-@AutoConfigureAfter(DataSourceAutoConfiguration.class)
+@AutoConfigureAfter(MultiDataSourceAutoConfiguration.class)
 public class SpinAutoConfiguration {
 
     @Bean

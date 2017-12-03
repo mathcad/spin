@@ -15,7 +15,6 @@ import org.spin.core.util.EnumUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.core.IEntity;
-import org.springframework.stereotype.Component;
 
 import javax.persistence.Entity;
 import java.lang.reflect.Field;

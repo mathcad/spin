@@ -272,7 +272,7 @@ public abstract class ObjectUtils {
                 else
                     return null;
             }
-            if (null != typePrimitive && null != ClassUtils.wrapperToPrimitive(target.getClass())) {
+            if (null != typePrimitive) {
                 if (typePrimitive.equals(short.class))
                     return (T) Short.valueOf(target.toString());
                 else if (typePrimitive.equals(int.class))

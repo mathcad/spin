@@ -8,6 +8,7 @@ import org.spin.core.util.StringUtils;
 import org.spin.data.core.Page;
 import org.spin.data.core.PageRequest;
 import org.spin.data.core.SQLLoader;
+import org.spin.data.extend.DataSourceConfig;
 import org.spin.data.extend.MultiDataSourceConfig;
 import org.spin.data.sql.dbtype.MySQLDatabaseType;
 import org.spin.data.sql.dbtype.OracleDatabaseType;
@@ -29,11 +30,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * SQL管理类
+ * SQL管理类-支持多数据源
  * <p>Created by xuweinan on 2016/8/14.</p>
  *
  * @author xuweinan
- * @version 1.2
+ * @version 1.3
  */
 public class SQLManager {
     private static final Logger logger = LoggerFactory.getLogger(SQLManager.class);
@@ -46,13 +47,20 @@ public class SQLManager {
     private ThreadLocal<SQLLoader> currentLoader = new ThreadLocal<>();
     private ThreadLocal<NamedParameterJdbcTemplate> currentNameJt = new ThreadLocal<>();
 
-
-    public SQLManager(MultiDataSourceConfig<?> dsConfig, String loaderClassName, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
+    /**
+     * 多数据源时的构造方法
+     *
+     * @param dsConfigs       多数据源配置
+     * @param loaderClassName SQLLoader类名
+     * @param rootUri         sql文件根路径
+     * @param resolver        sql模板解析器
+     */
+    public SQLManager(MultiDataSourceConfig<?> dsConfigs, String loaderClassName, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
         @SuppressWarnings("unchecked")
         Class<SQLLoader> loaderClass = (Class<SQLLoader>) Class.forName(loaderClassName);
 
-        primaryDataSourceName = dsConfig.getPrimaryDataSource();
-        dsConfig.getDataSources().forEach((name, config) -> {
+        primaryDataSourceName = dsConfigs.getPrimaryDataSource();
+        dsConfigs.getDataSources().forEach((name, config) -> {
             try {
                 SQLLoader loader = loaderClass.getDeclaredConstructor().newInstance();
                 if (StringUtils.isEmpty(rootUri)) {
@@ -89,7 +97,66 @@ public class SQLManager {
         switchDataSource(primaryDataSourceName);
     }
 
-    public static void addDataSource(String name, DataSource dataSource) {
+    /**
+     * 单数据源时的构造方法
+     *
+     * @param dsConfig        单数据源配置
+     * @param loaderClassName SQLLoader类名
+     * @param rootUri         sql文件根路径
+     * @param resolver        sql模板解析器
+     */
+    public SQLManager(DataSourceConfig dsConfig, String loaderClassName, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
+        @SuppressWarnings("unchecked")
+        Class<SQLLoader> loaderClass = (Class<SQLLoader>) Class.forName(loaderClassName);
+
+        String name = dsConfig.getName();
+        if (StringUtils.isEmpty(name)) {
+            name = "main";
+            dsConfig.setName(name);
+        }
+        primaryDataSourceName = name;
+        try {
+            SQLLoader loader = loaderClass.getDeclaredConstructor().newInstance();
+            if (StringUtils.isEmpty(rootUri)) {
+                loader.setRootUri(rootUri);
+            }
+            loader.setTemplateResolver(resolver);
+            switch (dsConfig.getVenderName()) {
+                case "MYSQL":
+                    loader.setDbType(new MySQLDatabaseType());
+                    break;
+                case "ORACLE":
+                    loader.setDbType(new OracleDatabaseType());
+                    break;
+                case "MICROSOFT":
+                case "SQLSERVER":
+                    loader.setDbType(new SQLServerDatabaseType());
+                    break;
+                case "POSTGRESQL":
+                    loader.setDbType(new PostgreSQLDatabaseType());
+                    break;
+                case "SQLITE":
+                    loader.setDbType(new SQLiteDatabaseType());
+                    break;
+                default:
+                    throw new SimplifiedException("Unsupported Database vender:" + dsConfig.getVenderName());
+            }
+            loaderMap.put(name, loader);
+            NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DATA_SOURCE_MAP.get(name));
+            nameJtMap.put(name, jt);
+        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+            throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClassName);
+        }
+        switchDataSource(primaryDataSourceName);
+    }
+
+    /**
+     * 注册数据源，应该在调用SQLManager构造方法之前完成所有数据源的注册
+     *
+     * @param name       数据源名称
+     * @param dataSource 数据源
+     */
+    public static void registDataSource(String name, DataSource dataSource) {
         DATA_SOURCE_MAP.put(name, dataSource);
     }
 

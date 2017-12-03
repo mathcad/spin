@@ -49,4 +49,18 @@ public class TestService {
         userDao.switchDataSource("db1");
 //        throw new SimplifiedException("aa");
     }
+
+    @Transactional
+    @RestfulMethod(auth = false, value = "c")
+    public void testSTransaction() {
+        User user = new User();
+        user.setRealName("二傻子");
+        user.setUserName("admin");
+        user.setPassword("123");
+        user.setMobile("13111111111");
+        user.setEmail("none@qq.com");
+        System.out.println(userDao.getCurrentDataSourceName());
+        userDao.save(user);
+//        throw new SimplifiedException("aa");
+    }
 }

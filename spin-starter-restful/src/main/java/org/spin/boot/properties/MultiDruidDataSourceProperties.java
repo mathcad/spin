@@ -16,21 +16,21 @@ import java.util.Objects;
  *
  * @author xuweinan
  */
-@ConfigurationProperties(prefix = "spin.druid")
+@ConfigurationProperties(prefix = "spin.datasource")
 public class MultiDruidDataSourceProperties implements MultiDataSourceConfig<DruidDataSourceProperties> {
     private String primaryDataSource;
-    private Map<String, DruidDataSourceProperties> dataSources;
+    private Map<String, DruidDataSourceProperties> druid;
 
     @PostConstruct
     public void init() {
-        if (Objects.isNull(dataSources)) {
-            dataSources = new HashMap<>();
+        if (Objects.isNull(druid)) {
+            druid = new HashMap<>();
         }
-        if (dataSources.size() == 1) {
-            primaryDataSource = dataSources.keySet().iterator().next();
+        if (druid.size() == 1) {
+            primaryDataSource = druid.keySet().iterator().next();
         }
 
-        dataSources.forEach((key, value) -> {
+        druid.forEach((key, value) -> {
             if (StringUtils.isEmpty(value.getUrl())
                 || StringUtils.isEmpty(value.getUsername())
                 || StringUtils.isEmpty(value.getPassword())) {
@@ -52,21 +52,29 @@ public class MultiDruidDataSourceProperties implements MultiDataSourceConfig<Dru
 
     @Override
     public Map<String, DruidDataSourceProperties> getDataSources() {
-        return dataSources;
+        return druid;
     }
 
     @Override
     public void setDataSources(Map<String, DruidDataSourceProperties> dataSources) {
-        this.dataSources = dataSources;
+        this.druid = dataSources;
     }
 
     @Override
     public DruidDataSourceProperties getDataSourceConfig(String name) {
-        return dataSources.get(name);
+        return druid.get(name);
     }
 
     @Override
     public DruidDataSourceProperties getPrimaryDataSourceConfig() {
-        return dataSources.get(primaryDataSource);
+        return druid.get(primaryDataSource);
+    }
+
+    public Map<String, DruidDataSourceProperties> getDruid() {
+        return druid;
+    }
+
+    public void setDruid(Map<String, DruidDataSourceProperties> druid) {
+        this.druid = druid;
     }
 }

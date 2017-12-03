@@ -3,6 +3,7 @@ package com.shipping;
 import com.shipping.internal.InfoCache;
 import org.spin.boot.annotation.EnableIdGenerator;
 import org.spin.boot.annotation.EnableSecretManager;
+import org.spin.boot.properties.DruidDataSourceProperties;
 import org.spin.boot.properties.MultiDruidDataSourceProperties;
 import org.spin.core.security.RSA;
 import org.springframework.beans.factory.InitializingBean;
@@ -29,7 +30,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication(scanBasePackages = "com.shipping")
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableTransactionManagement(proxyTargetClass = true)
-@EnableConfigurationProperties(MultiDruidDataSourceProperties.class)
+@EnableConfigurationProperties(DruidDataSourceProperties.class)
 @EnableSecretManager
 @EnableIdGenerator
 public class ShippingApplication {

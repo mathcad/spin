@@ -16,7 +16,7 @@ import java.util.Properties;
  *
  * @author xuweinan
  */
-@ConfigurationProperties(prefix = "spring.datasource.druid")
+@ConfigurationProperties(prefix = "spin.datasource.druid")
 public class DruidDataSourceProperties implements DataSourceConfig {
     private String name;
     private String url;
