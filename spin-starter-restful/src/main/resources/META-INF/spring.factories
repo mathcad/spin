@@ -1,1 +1,5 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=org.spin.boot.SpinAutoConfiguration
+# Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.spin.boot.SpinAutoConfiguration,\
+org.spin.boot.DataSourceAutoConfiguration,\
+org.spin.boot.MultiDataSourceAutoConfiguration

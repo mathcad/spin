@@ -7,12 +7,14 @@ import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.MethodUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.data.extend.SpringJtaPlatformAdapter;
 import org.spin.web.annotation.RestfulInterface;
 import org.spin.web.annotation.RestfulMethod;
 import org.spin.web.annotation.RestfulService;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.jta.JtaTransactionManager;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -30,6 +32,9 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
         Class<?> cls = bean.getClass();
+        if (bean instanceof JtaTransactionManager) {
+            SpringJtaPlatformAdapter.setJtaTransactionManager((JtaTransactionManager) bean);
+        }
         Arrays.stream(cls.getInterfaces()).filter(i -> Objects.nonNull(i.getAnnotation(RestfulInterface.class))).findFirst().ifPresent(i -> {
             RestfulInterface anno = i.getAnnotation(RestfulInterface.class);
             final String module = StringUtils.isEmpty(anno.value()) ? beanName : anno.value();

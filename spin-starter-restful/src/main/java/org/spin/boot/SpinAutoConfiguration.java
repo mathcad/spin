@@ -1,20 +1,14 @@
 package org.spin.boot;
 
-import org.hibernate.SessionFactory;
-import org.spin.boot.properties.SpinDataProperties;
 import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.boot.properties.WxConfigProperties;
 import org.spin.core.auth.SecretManager;
 import org.spin.core.util.JsonUtils;
-import org.spin.core.util.StringUtils;
 import org.spin.data.cache.RedisCache;
-import org.spin.data.core.SQLLoader;
 import org.spin.web.converter.JsonHttpMessageConverter;
 import org.spin.web.filter.TokenResolveFilter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.PropertiesFactoryBean;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -22,26 +16,18 @@ import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.orm.hibernate5.HibernateTransactionManager;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
-import org.springframework.orm.hibernate5.support.OpenSessionInViewFilter;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.filter.CorsFilter;
 
 import javax.servlet.MultipartConfigElement;
-import javax.sql.DataSource;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Properties;
 
 /**
  * 框架自动配置
@@ -50,12 +36,10 @@ import java.util.Properties;
  * @author xuweinan
  */
 @Configuration
-@EnableConfigurationProperties({SpinDataProperties.class, SpinWebPorperties.class, WxConfigProperties.class})
+@EnableConfigurationProperties({SpinWebPorperties.class, WxConfigProperties.class})
 @ComponentScan("org.spin")
+@AutoConfigureAfter(MultiDataSourceAutoConfiguration.class)
 public class SpinAutoConfiguration {
-
-    @Autowired
-    private SpinDataProperties dataProperties;
 
     @Bean
     @ConditionalOnBean(RedisConnectionFactory.class)
@@ -71,45 +55,6 @@ public class SpinAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(DataSource.class)
-    @ConditionalOnMissingBean(SQLLoader.class)
-    public SQLLoader sqlLoader() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        SQLLoader loader = (SQLLoader) Class.forName(dataProperties.getSqlLoader()).getDeclaredConstructor().newInstance();
-        if (StringUtils.isEmpty(dataProperties.getSqlUri())) {
-            loader.setRootUri(dataProperties.getSqlUri());
-        }
-        loader.setTemplateResolver(dataProperties.getResolverObj());
-        return loader;
-    }
-
-    @Bean(name = "sessionFactory")
-    @ConditionalOnBean(DataSource.class)
-    public LocalSessionFactoryBean sessionFactory(DataSource dataSource, Properties hibernateConfig) {
-        LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
-        sessionFactory.setDataSource(dataSource);
-        sessionFactory.setPackagesToScan(("org.spin.data," + StringUtils.trimToEmpty(hibernateConfig.getProperty("hibernate.packages"))).split(","));
-        if (null != dataProperties.getNamingStrategy()) {
-            sessionFactory.setPhysicalNamingStrategy(dataProperties.getNamingStrategyObj());
-        }
-
-        sessionFactory.setHibernateProperties(hibernateConfig);
-        return sessionFactory;
-    }
-
-    @Bean
-    public PropertiesFactoryBean hibernateConfig() {
-        PropertiesFactoryBean bean = new PropertiesFactoryBean();
-        bean.setLocation(new ClassPathResource("hibernate.properties"));
-        return bean;
-    }
-
-    @Bean(name = "transactionManager")
-    @ConditionalOnBean(SessionFactory.class)
-    public PlatformTransactionManager getTransactionManager(SessionFactory sessionFactory) {
-        return new HibernateTransactionManager(sessionFactory);
-    }
-
-    @Bean
     public FilterRegistrationBean encodingFilterRegistration() {
         FilterRegistrationBean registration = new FilterRegistrationBean();
         registration.setFilter(new CharacterEncodingFilter());
@@ -117,17 +62,6 @@ public class SpinAutoConfiguration {
         registration.addInitParameter("encoding", "UTF-8");
         registration.setName("encodingFilter");
         registration.setOrder(1);
-        return registration;
-    }
-
-    @Bean
-    public FilterRegistrationBean openSessionInViewFilterRegistration() {
-        FilterRegistrationBean registration = new FilterRegistrationBean();
-        registration.setFilter(new OpenSessionInViewFilter());
-        registration.addUrlPatterns("/*");
-        registration.addInitParameter("sessionFactoryBeanName", "sessionFactory");
-        registration.setName("openSessionInViewFilter");
-        registration.setOrder(2);
         return registration;
     }
 
@@ -143,6 +77,7 @@ public class SpinAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(SecurityManager.class)
     public FilterRegistrationBean apiFilter(SecretManager secretManager) {
         FilterRegistrationBean registration = new FilterRegistrationBean();
         registration.setFilter(new TokenResolveFilter(secretManager));
@@ -167,9 +102,4 @@ public class SpinAutoConfiguration {
         factory.setMaxFileSize(webPorperties.getMaxUploadSize() * 1024 * 1024);
         return factory.createMultipartConfig();
     }
-
-//    @Bean
-//    public InitializingBean platformInit() {
-//        return () -> SpinContext.DEV_MODE = "dev".equals(env.getProperty("spring.profiles.active"));
-//    }
 }

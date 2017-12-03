@@ -6,6 +6,7 @@ import org.spin.wx.WxConfigManager;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import javax.annotation.PostConstruct;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -16,7 +17,7 @@ import java.util.Map;
  */
 @ConfigurationProperties(prefix = "spin.wx")
 public class WxConfigProperties {
-    private Map<String, WxConfigInfo> config;
+    private Map<String, WxConfigInfo> config = new HashMap<>();
     private String defaultConfig;
 
     public Map<String, WxConfigInfo> getConfig() {
@@ -37,6 +38,9 @@ public class WxConfigProperties {
 
     @PostConstruct
     public void init() {
+        if (config.size() == 1) {
+            defaultConfig = config.keySet().iterator().next();
+        }
         WxConfigManager.putConfig(config);
         if (StringUtils.isNotEmpty(defaultConfig)) {
             WxConfigManager.DEFAULT = defaultConfig;

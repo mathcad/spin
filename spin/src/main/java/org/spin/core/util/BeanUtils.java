@@ -2,10 +2,16 @@ package org.spin.core.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.Assert;
+import org.spin.core.throwable.SimplifiedException;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 
 /**
  * Bean工具类
@@ -21,6 +27,76 @@ public abstract class BeanUtils {
             logger.error(e.getMessage());
             return null;
         }
+    }
+
+    public static <T> T instantiateClass(String className) {
+        Assert.notEmpty(className, "Class Name must not be null");
+        Class<T> clazz = null;
+        try {
+            //noinspection unchecked
+            clazz = (Class<T>) ClassUtils.getClass(className);
+        } catch (ClassNotFoundException e) {
+            throw new SimplifiedException("未找到类:" + className);
+        } catch (Exception e) {
+            throw new SimplifiedException("类型不匹配" + className);
+        }
+       return instantiateClass(clazz);
+    }
+
+    public static <T> T instantiateClass(Class<T> clazz) {
+        Assert.notNull(clazz, "Class must not be null");
+        if (clazz.isInterface()) {
+            throw new SimplifiedException(clazz.getName() + " is an interface");
+        }
+        try {
+            return instantiateClass(clazz.getDeclaredConstructor());
+        } catch (NoSuchMethodException ex) {
+            throw new SimplifiedException("No default constructor found", ex);
+        }
+    }
+
+    public static <T> T instantiateClass(Constructor<T> ctor, Object... args) {
+        Assert.notNull(ctor, "Constructor must not be null");
+        try {
+            ReflectionUtils.makeAccessible(ctor);
+            return ctor.newInstance(args);
+        } catch (InstantiationException ex) {
+            throw new SimplifiedException("Is " + ctor.getName() + " an abstract class?", ex);
+        } catch (IllegalAccessException ex) {
+            throw new SimplifiedException("Is the constructor " + ctor.getName() + " accessible?", ex);
+        } catch (IllegalArgumentException ex) {
+            throw new SimplifiedException("Illegal arguments for constructor " + ctor.getName(), ex);
+        } catch (InvocationTargetException ex) {
+            throw new SimplifiedException("Constructor " + ctor.getName() + " threw exception", ex.getTargetException());
+        }
+    }
+
+    /**
+     * 将properties中的属性设置到bean中，bean中不存在的属性将被忽略
+     *
+     * @param bean       目标对象
+     * @param properties 属性properties
+     */
+    public static void applyProperties(Object bean, Properties properties) {
+        properties.forEach((key, value) -> {
+            String getterName = "get" + StringUtils.capitalize(key.toString());
+            String setterName = "set" + StringUtils.capitalize(key.toString());
+            try {
+                Object v = value;
+                Class<?>[] args = {};
+                Method getter = MethodUtils.getAccessibleMethod(bean.getClass(), getterName, args);
+                if (Objects.nonNull(getter)) {
+                    v = ObjectUtils.convert(getter.getReturnType(), value);
+                }
+                MethodUtils.invokeMethod(bean, setterName, v);
+            } catch (NoSuchMethodException e) {
+                logger.info("不存在属性[" + key + "]的set方法");
+            } catch (IllegalAccessException e) {
+                throw new SimplifiedException("属性[" + key + "]的set方法不允许访问");
+            } catch (InvocationTargetException e) {
+                throw new SimplifiedException("设置属性[" + key + "]失败", e);
+            }
+        });
     }
 
     /**

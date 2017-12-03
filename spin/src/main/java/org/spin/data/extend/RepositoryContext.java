@@ -1,6 +1,5 @@
 package org.spin.data.extend;
 
-import org.hibernate.SessionFactory;
 import org.spin.data.core.ARepository;
 import org.spin.data.core.IEntity;
 import org.spin.data.pk.generator.IdGenerator;
@@ -10,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -23,11 +20,7 @@ import java.util.Optional;
  *
  * @author xuweinan
  */
-@Component
-public class RepositoryContext implements ApplicationContextAware {
-
-    @Autowired
-    private SessionFactory sessFactory;
+public class RepositoryContext {
 
     @Autowired
     private SQLManager sqlManager;
@@ -37,8 +30,7 @@ public class RepositoryContext implements ApplicationContextAware {
 
     private ApplicationContext applicationContext;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 
@@ -59,7 +51,6 @@ public class RepositoryContext implements ApplicationContextAware {
             DefaultListableBeanFactory acf = (DefaultListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();
             BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(ARepository.class);
             bdb.addPropertyValue("entityClazz", cls);
-            bdb.addPropertyValue("sessFactory", sessFactory);
             bdb.addPropertyValue("sqlManager", sqlManager);
             if (Objects.nonNull(idGenerator)) {
                 bdb.addPropertyValue("idGenerator", idGenerator);
