@@ -1,13 +1,14 @@
 package org.spin.boot.configuration;
 
-import org.spin.boot.SpinAutoConfiguration;
 import org.spin.boot.properties.SecretManagerProperties;
 import org.spin.core.auth.InMemorySecretDao;
 import org.spin.core.auth.SecretDao;
 import org.spin.core.auth.SecretManager;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.spin.web.filter.TokenResolveFilter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -16,7 +17,6 @@ import org.springframework.context.annotation.Bean;
  * @author xuweinan
  */
 @EnableConfigurationProperties(SecretManagerProperties.class)
-@AutoConfigureBefore(SpinAutoConfiguration.class)
 public class InMemorySecretManagerConfiguration {
 
     @Bean(name = "secretDao")
@@ -34,5 +34,15 @@ public class InMemorySecretManagerConfiguration {
         manager.setKeyExpiredIn(properties.getKeyExpireTime());
         manager.setTokenExpiredIn(properties.getTokenExpireTime());
         return manager;
+    }
+
+    @Bean
+    public FilterRegistrationBean apiFilter(SecretManager secretManager) {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setFilter(new TokenResolveFilter(secretManager));
+        registration.addUrlPatterns("/*");
+        registration.setName("tokenFilter");
+        registration.setOrder(4);
+        return registration;
     }
 }

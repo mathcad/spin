@@ -2,11 +2,9 @@ package org.spin.boot;
 
 import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.boot.properties.WxConfigProperties;
-import org.spin.core.auth.SecretManager;
 import org.spin.core.util.JsonUtils;
 import org.spin.data.cache.RedisCache;
 import org.spin.web.converter.JsonHttpMessageConverter;
-import org.spin.web.filter.TokenResolveFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -72,17 +70,6 @@ public class SpinAutoConfiguration {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
         return new CorsFilter(source);
-    }
-
-    @Bean
-    @ConditionalOnBean(SecurityManager.class)
-    public FilterRegistrationBean apiFilter(SecretManager secretManager) {
-        FilterRegistrationBean registration = new FilterRegistrationBean();
-        registration.setFilter(new TokenResolveFilter(secretManager));
-        registration.addUrlPatterns("/*");
-        registration.setName("tokenFilter");
-        registration.setOrder(4);
-        return registration;
     }
 
     @Bean
