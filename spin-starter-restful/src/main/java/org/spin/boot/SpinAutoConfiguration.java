@@ -38,7 +38,6 @@ import java.util.Collection;
 @Configuration
 @EnableConfigurationProperties({SpinWebPorperties.class, WxConfigProperties.class})
 @ComponentScan("org.spin")
-@AutoConfigureAfter(MultiDataSourceAutoConfiguration.class)
 public class SpinAutoConfiguration {
 
     @Bean
