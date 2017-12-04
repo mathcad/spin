@@ -8,7 +8,6 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -89,7 +88,7 @@ public class RSA {
     }
 
     public static byte[] encrypt(PublicKey pk, byte[] data) throws NoSuchPaddingException, InvalidKeyException,
-        BadPaddingException, ShortBufferException, IllegalBlockSizeException {
+        BadPaddingException, IllegalBlockSizeException {
         Cipher cipher;
         try {
 //            cipher = Cipher.getInstance(RSA_ALGORITHMS, new BouncyCastleProvider());
@@ -102,14 +101,14 @@ public class RSA {
     }
 
     public static String encrypt(String publicKey, String content) throws InvalidKeySpecException,
-        IllegalBlockSizeException, InvalidKeyException, BadPaddingException, ShortBufferException,
+        IllegalBlockSizeException, InvalidKeyException, BadPaddingException,
         NoSuchPaddingException {
         PublicKey key = getRSAPublicKey(publicKey);
         return Base64.encode(encrypt(key, getBytes(content)));
     }
 
     public static String encrypt(PublicKey publicKey, String content) throws IllegalBlockSizeException,
-        InvalidKeyException, BadPaddingException, ShortBufferException, NoSuchPaddingException {
+        InvalidKeyException, BadPaddingException, NoSuchPaddingException {
         return Base64.encode(encrypt(publicKey, getBytes(content)));
     }
 
@@ -148,8 +147,8 @@ public class RSA {
      * @param privateKey 私钥
      * @return 签名值
      */
-    public static String sign(String content, String privateKey) throws InvalidKeySpecException, InvalidKeyException,
-        SignatureException {
+    public static String sign(String content, String privateKey) throws InvalidKeyException,
+        SignatureException, InvalidKeySpecException {
         PrivateKey priKey = getRSAPrivateKey(privateKey);
         Signature signature;
         try {

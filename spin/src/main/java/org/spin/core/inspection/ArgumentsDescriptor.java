@@ -60,6 +60,8 @@ public class ArgumentsDescriptor {
 
     /**
      * 获取实参数组
+     *
+     * @return 实参数组
      */
     public Object[] getArgs() {
         return args;
@@ -68,6 +70,8 @@ public class ArgumentsDescriptor {
     /**
      * 获取形参列表中的可空性数组
      * <p>下标i为true表示索引为i的形参不允许为空</p>
+     *
+     * @return 形参可空性数组
      */
     public boolean[] getNeeded() {
         return needed;
@@ -75,6 +79,8 @@ public class ArgumentsDescriptor {
 
     /**
      * 获取方法禁止为空的形参中，null实参的个数
+     *
+     * @return 违反非空约束的实参个数
      */
     public int getNeededNullsCnt() {
         return neededNullsCnt;
@@ -82,6 +88,8 @@ public class ArgumentsDescriptor {
 
     /**
      * 获取方法禁止为空的形参中，为null实参的位置索引列表
+     *
+     * @return 违反非空约束的实参索引列表
      */
     public List<Integer> getNeededNulls() {
         return neededNulls;
@@ -89,6 +97,8 @@ public class ArgumentsDescriptor {
 
     /**
      * 获取方法参数中为null实参的个数
+     *
+     * @return null实参个数
      */
     public int getNullCnt() {
         return nullCnt;
@@ -97,6 +107,8 @@ public class ArgumentsDescriptor {
     /**
      * 匹配度分值，越低匹配程度越高，为0表示完全匹配，超过100表示存在必需参数为空的情况
      * <p>必须参数为空会导致调用方法时的运行异常</p>
+     *
+     * @return 分值
      */
     public int getRank() {
         return rank;

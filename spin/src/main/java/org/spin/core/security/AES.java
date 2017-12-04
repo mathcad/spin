@@ -57,6 +57,9 @@ public class AES {
 
     /**
      * 生成密钥，默认使用最低强度
+     *
+     * @param keySeed 密钥种子
+     * @return 密钥
      */
     public static SecretKey generateKey(String keySeed) {
         return generateKey(keySeed, KeyLength.WEAK);
@@ -64,6 +67,10 @@ public class AES {
 
     /**
      * 生成指定强度的密钥
+     *
+     * @param keySeed 密钥种子
+     * @param keySize 密钥长度
+     * @return 密钥
      */
     public static SecretKey generateKey(String keySeed, KeyLength keySize) {
         KeyGenerator kg;
@@ -79,17 +86,34 @@ public class AES {
         return kg.generateKey();
     }
 
-    public static Key toKey(byte[] key) throws Exception {
+    /**
+     * 将字节数组转换为密钥
+     *
+     * @param key 密钥字节数据
+     * @return 密钥
+     */
+    public static Key toKey(byte[] key) {
         return new SecretKeySpec(key, KEY_ALGORITHM);
     }
 
     /**
      * 使用指定的Key生成最低强度的密钥进行加密
+     *
+     * @param key  密钥种子
+     * @param data 待加密数据
+     * @return 密文
      */
     public static String encrypt(String key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
         return encrypt(generateKey(key), data);
     }
 
+    /**
+     * 使用指定的密钥进行加密
+     *
+     * @param key  密钥
+     * @param data 待加密数据
+     * @return 密文
+     */
     public static String encrypt(SecretKey key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
         try {
             return encrypt(key, data.getBytes("UTF-8"));
@@ -98,6 +122,13 @@ public class AES {
         }
     }
 
+    /**
+     * 使用指定的Key生成最低强度的密钥进行加密
+     *
+     * @param key  密钥种子
+     * @param data 待加密数据
+     * @return 密文
+     */
     public static String encrypt(SecretKey key, byte[] data) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher;
         try {
@@ -111,15 +142,34 @@ public class AES {
 
     /**
      * 使用指定的Key生成最低强度的密钥进行解密
+     *
+     * @param key  密钥种子
+     * @param data 待解密数据
+     * @return 明文
      */
     public static String decrypt(String key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
         return decrypt(generateKey(key), data, "UTF-8");
     }
 
+    /**
+     * 使用指定的密钥进行解密
+     *
+     * @param key  密钥
+     * @param data 待解密数据
+     * @return 明文
+     */
     public static String decrypt(SecretKey key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
         return decrypt(key, data, "UTF-8");
     }
 
+    /**
+     * 使用指定的密钥与字符集进行解密
+     *
+     * @param key     密钥
+     * @param data    待解密数据
+     * @param charset 明文字符集
+     * @return 明文
+     */
     public static String decrypt(SecretKey key, String data, String charset) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher;
         try {

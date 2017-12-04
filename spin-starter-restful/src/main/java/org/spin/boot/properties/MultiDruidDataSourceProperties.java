@@ -38,6 +38,10 @@ public class MultiDruidDataSourceProperties implements MultiDataSourceConfig<Dru
             }
             value.setName(key);
         });
+
+        if (StringUtils.isEmpty(primaryDataSource)) {
+            throw new BeanCreationException("多数据源模式下必需配置主数据源[spin.datasource.primaryDataSource]");
+        }
     }
 
     @Override

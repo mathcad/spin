@@ -55,6 +55,8 @@ public class MethodDescriptor {
 
     /**
      * 获取方法所属类
+     *
+     * @return 方法所属Class对象
      */
     public Class<?> getCls() {
         return cls;
@@ -62,6 +64,8 @@ public class MethodDescriptor {
 
     /**
      * 获取方法
+     *
+     * @return 方法对象
      */
     public Method getMethod() {
         return method;
@@ -69,6 +73,8 @@ public class MethodDescriptor {
 
     /**
      * 获取方法名称
+     *
+     * @return 方法名称
      */
     public String getMethodName() {
         return methodName;
@@ -76,6 +82,8 @@ public class MethodDescriptor {
 
     /**
      * 获取方法形参类型列表
+     *
+     * @return 形参类型数组
      */
     public Class<?>[] getParamTypes() {
         return paramTypes;
@@ -83,6 +91,8 @@ public class MethodDescriptor {
 
     /**
      * 获取方法形参名称列表
+     *
+     * @return 形参名称数组
      */
     public String[] getParamNames() {
         return paramNames;
@@ -101,12 +111,19 @@ public class MethodDescriptor {
         }
     }
 
+    /**
+     * 方法描述器是否已经指定调用对象
+     *
+     * @return 是/否
+     */
     public boolean hasTarget() {
         return Objects.nonNull(target);
     }
 
     /**
      * 判断方法描述器是否相同(不判断调用对象是否相同，只判断方法本身的相等性)
+     *
+     * @return 是/否是相等
      */
     @Override
     public boolean equals(final Object obj) {

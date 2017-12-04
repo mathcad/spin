@@ -29,6 +29,13 @@ public abstract class BeanUtils {
         }
     }
 
+    /**
+     * 通过类的默认构造方法创建一个实例
+     *
+     * @param className 类名
+     * @param <T>       类类型
+     * @return T的实例
+     */
     public static <T> T instantiateClass(String className) {
         Assert.notEmpty(className, "Class Name must not be null");
         Class<T> clazz = null;
@@ -40,9 +47,16 @@ public abstract class BeanUtils {
         } catch (Exception e) {
             throw new SimplifiedException("类型不匹配" + className);
         }
-       return instantiateClass(clazz);
+        return instantiateClass(clazz);
     }
 
+    /**
+     * 通过类的默认构造方法创建一个实例
+     *
+     * @param clazz 类
+     * @param <T>   类类型
+     * @return T的实例
+     */
     public static <T> T instantiateClass(Class<T> clazz) {
         Assert.notNull(clazz, "Class must not be null");
         if (clazz.isInterface()) {
@@ -55,6 +69,14 @@ public abstract class BeanUtils {
         }
     }
 
+    /**
+     * 调用指定构造方法创建一个实例
+     *
+     * @param ctor 构造方法
+     * @param <T>  类类型
+     * @param args 参数
+     * @return T的实例
+     */
     public static <T> T instantiateClass(Constructor<T> ctor, Object... args) {
         Assert.notNull(ctor, "Constructor must not be null");
         try {
@@ -101,6 +123,9 @@ public abstract class BeanUtils {
 
     /**
      * 将平面的Map转换成树状组织的Map
+     *
+     * @param values 扁平的Map
+     * @return 树状Map
      */
     @SuppressWarnings("unchecked")
     public static Map<String, Object> wrapperFlatMap(Map<String, Object> values) {

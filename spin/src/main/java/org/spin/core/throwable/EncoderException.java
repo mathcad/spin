@@ -39,7 +39,6 @@ public class EncoderException extends Exception {
     /**
      * Constructs a new exception with the specified detail message and cause.
      * <p>
-     * <p>
      * Note that the detail message associated with <code>cause</code> is not automatically incorporated into this
      * exception's detail message.
      * </p>

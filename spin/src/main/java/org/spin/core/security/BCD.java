@@ -3,6 +3,9 @@ package org.spin.core.security;
 public class BCD {
     /**
      * ASCII码转BCD码
+     *
+     * @param content 内容
+     * @return BCD码字节数组
      */
     public static byte[] decode(String content) {
 
@@ -19,24 +22,11 @@ public class BCD {
         return bcd;
     }
 
-    private static byte asc_to_bcd(byte asc) {
-
-        byte bcd;
-
-        if ((asc >= '0') && (asc <= '9'))
-            bcd = (byte) (asc - '0');
-        else if ((asc >= 'A') && (asc <= 'F'))
-            bcd = (byte) (asc - 'A' + 10);
-        else if ((asc >= 'a') && (asc <= 'f'))
-            bcd = (byte) (asc - 'a' + 10);
-        else
-            bcd = (byte) (asc - 48);
-
-        return bcd;
-    }
-
     /**
      * BCD转字符串
+     *
+     * @param bytes BCD码字节数组
+     * @return 字符串
      */
     public static String encode(byte[] bytes) {
 
@@ -51,5 +41,21 @@ public class BCD {
         }
 
         return new String(temp);
+    }
+
+    private static byte asc_to_bcd(byte asc) {
+
+        byte bcd;
+
+        if ((asc >= '0') && (asc <= '9'))
+            bcd = (byte) (asc - '0');
+        else if ((asc >= 'A') && (asc <= 'F'))
+            bcd = (byte) (asc - 'A' + 10);
+        else if ((asc >= 'a') && (asc <= 'f'))
+            bcd = (byte) (asc - 'a' + 10);
+        else
+            bcd = (byte) (asc - 48);
+
+        return bcd;
     }
 }
