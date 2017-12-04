@@ -7,7 +7,6 @@ import org.spin.core.util.JsonUtils;
 import org.spin.data.cache.RedisCache;
 import org.spin.web.converter.JsonHttpMessageConverter;
 import org.spin.web.filter.TokenResolveFilter;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
