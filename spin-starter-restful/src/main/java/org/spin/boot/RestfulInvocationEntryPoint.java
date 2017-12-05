@@ -83,7 +83,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         String service = resc[2];
         logger.info("Invoke ModuleName: {}, ServiceName: {}", module, service);
 
-        RestfulResponse restfulResponse = exec(request);
+        RestfulResponse restfulResponse = exec(module, service, request);
 
         if (200 != restfulResponse.getCode()) {
             return restfulResponse.getMessage();

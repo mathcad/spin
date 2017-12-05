@@ -3,12 +3,9 @@ package org.spin.core.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
-import org.spin.core.annotation.UserEnum;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.data.core.UserEnumColumn;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

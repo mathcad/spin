@@ -335,7 +335,7 @@ public abstract class MapUtils {
     public static <K, V> List<V> distinctList(List<Map<K, V>> list, K key, Comparator<V> objCpt) {
         List<V> objSet = CollectionUtils.ofArrayList();
         list.stream().map(map -> map.get(key)).filter(Objects::nonNull).forEach(o -> {
-            if (objSet.stream().filter(obj -> objCpt.compare(obj, o) == 0).count() == 0) {
+            if (objSet.stream().noneMatch(obj -> objCpt.compare(obj, o) == 0)) {
                 objSet.add(o);
             }
         });

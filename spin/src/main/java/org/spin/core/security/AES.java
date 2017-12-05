@@ -123,9 +123,9 @@ public class AES {
     }
 
     /**
-     * 使用指定的Key生成最低强度的密钥进行加密
+     * 使用指定的密钥进行加密
      *
-     * @param key  密钥种子
+     * @param key  密钥
      * @param data 待加密数据
      * @return 密文
      */

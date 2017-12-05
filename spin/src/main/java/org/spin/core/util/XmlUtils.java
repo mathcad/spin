@@ -38,7 +38,7 @@ public final class XmlUtils {
     }
 
     private static SAXReader reader = new SAXReader();
-    private Document document = null;
+    private Document document;
 
     private XmlUtils(File xmlFile) throws DocumentException {
         this.document = XmlUtils.reader.read(xmlFile);

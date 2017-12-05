@@ -3,11 +3,14 @@ def artifactId = 'shipping-mis'
 
 apply plugin: 'org.springframework.boot'
 apply plugin: 'org.junit.platform.gradle.plugin'
+apply plugin: 'kotlin'
 
 buildscript {
+    ext.kotlin_version = '1.2.0'
+
     ext {
-        springBootVersion = '1.5.8.RELEASE'
-        junitJupiterVersion = '5.0.1'
+        springBootVersion = '1.5.9.RELEASE'
+        junitJupiterVersion = '5.0.2'
     }
     repositories {
         mavenLocal()
@@ -18,7 +21,8 @@ buildscript {
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath('org.springframework:springloaded:1.2.7.RELEASE')
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -44,13 +48,17 @@ bootRun {
     addResources = true
 }
 
+task createKotlinDirs {
+    sourceSets*.kotlin.srcDirs*.each { it.mkdirs() }
+}
+
 dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 //    testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
 //        exclude(module: 'commons-logging')
 //    }
-
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jre8', version: "$kotlin_version"
 //    compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion) {
         exclude(module: 'jackson-databind')
@@ -61,7 +69,7 @@ dependencies {
     }
 //    compile group: 'redis.clients', name: 'jedis', version: '2.9.0'
 //    compile group: 'org.mathcat', name: 'spin', version: '2.0.4'
-    compile group: 'com.alibaba', name: 'druid', version: '1.1.5'
+    compile group: 'com.alibaba', name: 'druid', version: '1.1.6'
 //    compile group: 'com.atomikos', name: 'transactions-hibernate4', version: '4.0.5'
     compile group: 'com.atomikos', name: 'transactions-jdbc', version: '4.0.5'
     compile group: 'com.atomikos', name: 'transactions', version: '4.0.5'
@@ -71,5 +79,5 @@ dependencies {
 //    compile(project(":spin-starter-restful"))
     compile group: 'org.mathcat', name: 'spin-sratrer-restful', version: '2.1.8'
 
-    compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.44'
+    compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
 }

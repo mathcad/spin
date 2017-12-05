@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.file.FileType;
+import org.spin.core.util.file.FileTypeUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Objects;
 
 public abstract class ExcelUtils {
     private static final Logger logger = LoggerFactory.getLogger(ExcelUtils.class);
@@ -27,8 +30,42 @@ public abstract class ExcelUtils {
         XLS, XLSX
     }
 
+
     /**
      * 读取xls文件内容
+     *
+     * @param is     输入流
+     * @param reader Excel行处理器
+     */
+    public static void readWorkBook(InputStream is, RowReader reader) {
+        byte[] trait = new byte[16];
+        FileType fileType = null;
+        try {
+            int read = is.read(trait, 0, 16);
+            if (read < 16) {
+                throw new SimplifiedException(ErrorCode.IO_FAIL, "输入流中不包含有效内容");
+            }
+            fileType = FileTypeUtils.detectFileType(trait);
+        } catch (IOException e) {
+            throw new SimplifiedException(ErrorCode.IO_FAIL, "输入流读取失败", e);
+        }
+        if (Objects.isNull(fileType)) {
+            throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
+        } else if (fileType.equals(FileType.Document.XLS)) {
+            readWorkBook(is, Type.XLS, reader);
+        } else if (fileType.equals(FileType.Document.XLSX)) {
+            readWorkBook(is, Type.XLSX, reader);
+        } else {
+            throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
+        }
+    }
+
+    /**
+     * 读取xls文件内容
+     *
+     * @param is     输入流
+     * @param type   类型，xls或xlsx
+     * @param reader Excel行处理器
      */
     public static void readWorkBook(InputStream is, Type type, RowReader reader) {
         Workbook workbook;
@@ -67,6 +104,12 @@ public abstract class ExcelUtils {
         }
     }
 
+    /**
+     * 读取xls文件内容
+     *
+     * @param workbookFile Excel文件
+     * @param reader       Excel行处理器
+     */
     public static void readFromFile(File workbookFile, RowReader reader) {
         Type type;
         if (workbookFile.getName().toLowerCase().endsWith("xls"))
@@ -84,6 +127,12 @@ public abstract class ExcelUtils {
         readWorkBook(is, type, reader);
     }
 
+    /**
+     * 读取xls文件内容
+     *
+     * @param workbookFilePath Excel文件路径
+     * @param reader           Excel行处理器
+     */
     public static void readFromFile(String workbookFilePath, RowReader reader) {
         File workbookFile = new File(workbookFilePath);
         readFromFile(workbookFile, reader);

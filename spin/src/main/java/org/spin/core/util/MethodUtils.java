@@ -1270,7 +1270,7 @@ public abstract class MethodUtils {
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, e);
         }
-        cr.accept(new ClassVisitor(Opcodes.ASM5) {
+        cr.accept(new ClassVisitor(Opcodes.ASM6) {
             @Override
             public MethodVisitor visitMethod(final int access, final String name, final String desc, final String signature, final String[] exceptions) {
                 final Type[] args = Type.getArgumentTypes(desc);
