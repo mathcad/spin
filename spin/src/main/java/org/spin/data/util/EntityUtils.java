@@ -68,7 +68,7 @@ public abstract class EntityUtils {
         }
         ReflectionUtils.doWithFields(tcls, f -> {
             String getM = f.getName().substring(0, 1).toUpperCase() + f.getName().substring(1);
-            Method getMethod = ReflectionUtils.findMethod(tcls, (f.getType().equals(boolean.class) || f.getType().equals(Boolean.class) ? "is" : "get") + getM);
+            Method getMethod = ReflectionUtils.findMethod(tcls, (f.getType().equals(boolean.class) ? "is" : "get") + getM);
             Method setMethod = ReflectionUtils.findMethod(tcls, "set" + getM, f.getType());
             if (setMethod == null || getMethod == null)
                 return;
