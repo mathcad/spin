@@ -569,16 +569,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 分页条件查询
      */
     public List<T> find(QueryParam qp) {
-        CriteriaBuilder cb;
-        try {
-            cb = queryParamParser.parseCriteria(qp);
-            if (!entityClazz.equals(cb.getEnCls())) {
-                cb.setEnCls(entityClazz);
-            }
-        } catch (ClassNotFoundException e) {
-            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
-        }
-        return find(cb);
+        return find(compileCondition(qp));
     }
 
     /**
@@ -791,59 +782,39 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param qp 通用查询参数
      */
     public Page<T> page(QueryParam qp) {
-        CriteriaBuilder cb;
-        try {
-            cb = queryParamParser.parseCriteria(qp);
-            if (!entityClazz.equals(cb.getEnCls())) {
-                cb.setEnCls(entityClazz);
-            }
-        } catch (ClassNotFoundException e) {
-            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
-        }
-        return page(cb);
+        return page(compileCondition(qp));
     }
 
     /**
-     * 根据条件查询DTO（HashMap）
+     * 根据条件查询DTO（扁平化的Map）
+     */
+    public Page<Map<String, Object>> pageFlatMap(CriteriaBuilder cb) {
+        return pageMap(cb, false);
+    }
+
+    /**
+     * 根据条件查询DTO（扁平化的Map）
+     *
+     * @param qp 通用查询参数
+     */
+    public Page<Map<String, Object>> pageFlatMap(QueryParam qp) {
+        return pageFlatMap(compileCondition(qp));
+    }
+
+    /**
+     * 根据条件查询DTO（层次化的Map）
      */
     public Page<Map<String, Object>> pageMap(CriteriaBuilder cb) {
-        // 总数查询
-        Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(getSession());
-        ct.setCacheable(false);
-
-        ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-        if (null != cb.getPageRequest()) {
-            ct.setFirstResult(cb.getPageRequest().getOffset());
-            ct.setMaxResults(cb.getPageRequest().getPageSize());
-        }
-
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> list = ct.list();
-
-        ct.setFirstResult(0);
-        ct.setMaxResults(MAX_RECORDS);
-        Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
-        // 关联对象，填充映射对象
-        list = list.stream().map(BeanUtils::wrapperFlatMap).collect(Collectors.toList());
-        return new Page<>(list, total, null == cb.getPageRequest() ? total.intValue() : cb.getPageRequest().getPageSize());
+        return pageMap(cb, true);
     }
 
     /**
-     * 根据条件查询DTO（HashMap）
+     * 根据条件查询DTO（层次化的Map）
      *
      * @param qp 通用查询参数
      */
     public Page<Map<String, Object>> pageMap(QueryParam qp) {
-        CriteriaBuilder cb;
-        try {
-            cb = queryParamParser.parseCriteria(qp);
-            if (!entityClazz.equals(cb.getEnCls())) {
-                cb.setEnCls(entityClazz);
-            }
-        } catch (ClassNotFoundException e) {
-            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
-        }
-        return pageMap(cb);
+        return pageMap(compileCondition(qp));
     }
 
     /**
@@ -862,7 +833,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
         }
-        List<Map<String, Object>> list = listMap(cb);
+        List<Map<String, Object>> list = listFlatMap(cb);
         return EntityUtils.wrapperMapToBeanList(this.entityClazz, list);
     }
 
@@ -870,53 +841,35 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 根据条件查询DTO列表
      */
     public List<T> list(QueryParam qp) {
-        CriteriaBuilder cb;
-        try {
-            cb = queryParamParser.parseCriteria(qp);
-            if (!entityClazz.equals(cb.getEnCls())) {
-                cb.setEnCls(entityClazz);
-            }
-        } catch (ClassNotFoundException e) {
-            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
-        }
-        return list(cb);
+        return list(compileCondition(qp));
     }
 
     /**
-     * 根据条件查询DTO（HashMap）
+     * 根据条件查询DTO（扁平化的Map）
+     */
+    public List<Map<String, Object>> listFlatMap(CriteriaBuilder cb) {
+        return listMap(cb, false);
+    }
+
+    /**
+     * 根据条件查询DTO（扁平化的Map）
+     */
+    public List<Map<String, Object>> listFlatMap(QueryParam qp) {
+        return listFlatMap(compileCondition(qp));
+    }
+
+    /**
+     * 根据条件查询DTO（层次化的Map）
      */
     public List<Map<String, Object>> listMap(CriteriaBuilder cb) {
-        Assert.notNull(cb, "CriteriaBuilder need a non-null value");
-        if (!entityClazz.equals(cb.getEnCls())) {
-            cb.setEnCls(entityClazz);
-        }
-        Session sess = getSession();
-        Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
-        ct.setCacheable(false);
-        ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
-        if (cb.getPageRequest() != null) {
-            ct.setFirstResult(cb.getPageRequest().getOffset());
-            ct.setMaxResults(cb.getPageRequest().getPageSize());
-        }
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> list = ct.list();
-        return list;
+        return listMap(cb, true);
     }
 
     /**
-     * 根据条件查询DTO（HashMap）
+     * 根据条件查询DTO（层次化的Map）
      */
     public List<Map<String, Object>> listMap(QueryParam qp) {
-        CriteriaBuilder cb;
-        try {
-            cb = queryParamParser.parseCriteria(qp);
-            if (!entityClazz.equals(cb.getEnCls())) {
-                cb.setEnCls(entityClazz);
-            }
-        } catch (ClassNotFoundException e) {
-            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
-        }
-        return listMap(cb);
+        return listMap(compileCondition(qp));
     }
 
     /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */
@@ -1129,6 +1082,77 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
                 "Write operations are not allowed in read-only mode (FlushMode.MANUAL): " +
                     "Turn your Session into FlushMode.COMMIT/AUTO or remove 'readOnly' marker from transaction definition.");
         }
+    }
+
+    private CriteriaBuilder compileCondition(QueryParam qp) {
+        Assert.notNull(qp, "查询条件参数不能为null");
+        CriteriaBuilder cb;
+        try {
+            cb = queryParamParser.parseCriteria(qp);
+            if (!entityClazz.equals(cb.getEnCls())) {
+                cb.setEnCls(entityClazz);
+            }
+        } catch (ClassNotFoundException e) {
+            throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
+        }
+        return cb;
+    }
+
+    /**
+     * 根据条件查询DTO（Map）
+     *
+     * @param cb   查询条件
+     * @param wrap 是否需要转换成层次Map
+     */
+    public List<Map<String, Object>> listMap(CriteriaBuilder cb, boolean wrap) {
+        Assert.notNull(cb, "CriteriaBuilder need a non-null value");
+        if (!entityClazz.equals(cb.getEnCls())) {
+            cb.setEnCls(entityClazz);
+        }
+        Session sess = getSession();
+        Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
+        ct.setCacheable(false);
+        ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
+        if (cb.getPageRequest() != null) {
+            ct.setFirstResult(cb.getPageRequest().getOffset());
+            ct.setMaxResults(cb.getPageRequest().getPageSize());
+        }
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> list = ct.list();
+        if (wrap) {
+            list = list.stream().map(BeanUtils::wrapperFlatMap).collect(Collectors.toList());
+        }
+        return list;
+    }
+
+    /**
+     * 根据条件查询DTO（Map）
+     *
+     * @param cb   查询条件
+     * @param wrap 是否需要转换成层次Map
+     */
+    private Page<Map<String, Object>> pageMap(CriteriaBuilder cb, boolean wrap) {
+        // 总数查询
+        Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(getSession());
+        ct.setCacheable(false);
+
+        ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
+        if (null != cb.getPageRequest()) {
+            ct.setFirstResult(cb.getPageRequest().getOffset());
+            ct.setMaxResults(cb.getPageRequest().getPageSize());
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> list = ct.list();
+
+        ct.setFirstResult(0);
+        ct.setMaxResults(MAX_RECORDS);
+        Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
+        // 关联对象，填充映射对象
+        if (wrap) {
+            list = list.stream().map(BeanUtils::wrapperFlatMap).collect(Collectors.toList());
+        }
+        return new Page<>(list, total, null == cb.getPageRequest() ? total.intValue() : cb.getPageRequest().getPageSize());
     }
 
     private Session peekThreadSession() {
