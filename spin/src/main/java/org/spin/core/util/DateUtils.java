@@ -173,39 +173,8 @@ public abstract class DateUtils {
      * 将日期字符串转换为日期(自动推断日期格式)
      */
     public static LocalDateTime toLocalDateTime(String date) {
-        if (StringUtils.isEmpty(date))
-            return null;
-        int index = 0;
-        Matcher matcher = null;
-        while (index != pattens.length) {
-            Matcher m = pattens[index].matcher(date);
-            if (m.matches()) {
-                matcher = m;
-                break;
-            }
-            ++index;
-        }
-        DateTimeFormatter formatter;
-        if (matcher == null)
-            formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        else {
-            if (index < datePatten.length * timePatten.length) {
-                formatter = DateTimeFormatter.ofPattern(StringUtils.format(dateFormat[index / timeFormat.length], matcher.group(2), matcher.group(4))
-                    + "'"
-                    + matcher.group(6)
-                    + "'"
-                    + timeFormat[index % timeFormat.length]);
-            } else {
-                formatter = DateTimeFormatter.ofPattern(StringUtils.format(dateFormat[index % (datePatten.length * timePatten.length)]
-                    , matcher.group(2)
-                    , matcher.group(4)));
-            }
-        }
-        try {
-            return LocalDateTime.parse(matcher == null ? date : matcher.group(0), formatter);
-        } catch (DateTimeParseException e) {
-            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
-        }
+       Date d = toDate(date);
+       return toLocalDateTime(d);
     }
 
     public static LocalDateTime toLocalDateTime(String date, String pattern) {

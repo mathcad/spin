@@ -55,5 +55,6 @@ public class DateUtilsTest {
     @Test
     public void toDate() {
         System.out.println(DateUtils.toDate("2017-5-23"));
+        System.out.println(DateUtils.toLocalDateTime("2017年05-23"));
     }
 }

@@ -311,7 +311,7 @@ public abstract class CollectionUtils {
 
     @SafeVarargs
     public static <E> List<E> ofArrayList(E... elements) {
-        List<E> lst = new ArrayList<>();
+        List<E> lst = new ArrayList<>(elements.length * 2);
         Collections.addAll(lst, elements);
         return lst;
     }

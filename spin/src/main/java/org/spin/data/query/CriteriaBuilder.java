@@ -1,15 +1,7 @@
 package org.spin.data.query;
 
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.MatchMode;
-import org.hibernate.criterion.NotExpression;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Property;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.*;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.sql.JoinType;
 import org.spin.core.throwable.SimplifiedException;
@@ -22,10 +14,13 @@ import org.spin.data.core.PageRequest;
 import org.spin.data.util.EntityUtils;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -144,23 +139,7 @@ public class CriteriaBuilder {
     public CriteriaBuilder addCriterion(Criterion... criterions) {
         if (null != criterions) {
             for (Criterion ct : criterions) {
-                if (null != ct) {
-                    Criterion t = ct;
-                    if (ct instanceof NotExpression) {
-                        t = (Criterion) ClassUtils.getFieldValue(ct, "criterion").get("criterion");
-                    }
-                    Object o = ClassUtils.getFieldValue(t, "propertyName").get("propertyName");
-                    if (null != o) {
-                        String cond = o.toString();
-                        int idx = cond.lastIndexOf('.');
-                        while (idx > 0) {
-                            cond = cond.substring(0, idx);
-                            condJoins.add(cond);
-                            idx = cond.lastIndexOf('.');
-                        }
-                    }
-                    deCriteria.add(ct);
-                }
+                deCriteria.add(ct);
             }
         }
         return this;
@@ -175,8 +154,7 @@ public class CriteriaBuilder {
     public CriteriaBuilder addCriterion(Iterable<Criterion> criterions) {
         if (null != criterions) {
             for (Criterion ct : criterions) {
-                if (null != ct)
-                    deCriteria.add(ct);
+                deCriteria.add(ct);
             }
         }
         return this;
@@ -453,11 +431,67 @@ public class CriteriaBuilder {
         return pageRequest;
     }
 
+    /**
+     * 处理条件中用到的关联关系(尾递归优化)
+     *
+     * @param cts 条件列表
+     */
+    @SuppressWarnings("unchecked")
+    private void processCondAlias(Collection<Criterion> cts) {
+        if (CollectionUtils.isEmpty(cts)) {
+            return;
+        }
+        List<Criterion> ts = new LinkedList<>();
+        for (Criterion ct : cts) {
+            if (ct instanceof NotExpression) {
+                Criterion t = (Criterion) ClassUtils.getFieldValue(ct, "criterion").get("criterion");
+                ts.add(t);
+            } else if (ct instanceof Junction) {
+                ts.addAll((List<Criterion>) ClassUtils.getFieldValue(ct, "conditions").get("conditions"));
+            } else if (ct instanceof LogicalExpression) {
+                Criterion lhs = (Criterion) ClassUtils.getFieldValue(ct, "lhs").get("lhs");
+                Criterion rhs = (Criterion) ClassUtils.getFieldValue(ct, "rhs").get("rhs");
+                ts.add(lhs);
+                ts.add(rhs);
+            } else if (ct instanceof SubqueryExpression) {
+                CriteriaImpl criteriaImpl = (CriteriaImpl) ClassUtils.getFieldValue(ct, "criteriaImpl").get("criteriaImpl");
+                List<CriteriaImpl.CriterionEntry> ces = (List<CriteriaImpl.CriterionEntry>) ClassUtils.getFieldValue(criteriaImpl, "criterionEntries").get("criterionEntries");
+                for (CriteriaImpl.CriterionEntry ce : ces) {
+                    ts.add(ce.getCriterion());
+                }
+            } else {
+                Object o = ClassUtils.getFieldValue(ct, "propertyName").get("propertyName");
+                if (null != o) {
+                    String cond = o.toString();
+                    int idx = cond.lastIndexOf('.');
+                    while (idx > 0) {
+                        cond = cond.substring(0, idx);
+                        condJoins.add(cond);
+                        idx = cond.lastIndexOf('.');
+                    }
+                }
+            }
+        }
+        processCondAlias(ts);
+    }
+
+    private void processCondJoin() {
+        @SuppressWarnings("unchecked")
+        CriteriaImpl impl = (CriteriaImpl) ClassUtils.getFieldValue(deCriteria, "impl").get("impl");
+        @SuppressWarnings("unchecked")
+        List<CriteriaImpl.CriterionEntry> ces = (List<CriteriaImpl.CriterionEntry>) ClassUtils.getFieldValue(impl, "criterionEntries").get("criterionEntries");
+        List<Criterion> cts = new ArrayList<>(ces.size());
+        for (CriteriaImpl.CriterionEntry ce : ces) {
+            cts.add(ce.getCriterion());
+        }
+        processCondAlias(cts);
+    }
 
     /**
      * 处理字段投影，设置2层甚至更多层关联的关联关系
      */
     private void processProjection() {
+        processCondJoin();
         if (CollectionUtils.isEmpty(fields) || fields.contains(ALL_COLUMNS)) {
             fields.addAll(EntityUtils.parseEntityColumns(enCls));
         }
