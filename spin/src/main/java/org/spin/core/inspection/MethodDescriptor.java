@@ -1,5 +1,6 @@
 package org.spin.core.inspection;
 
+import org.spin.core.Assert;
 import org.spin.core.util.MethodUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -50,7 +51,7 @@ public class MethodDescriptor {
      * @return 调用结果
      */
     public Object invoke(Object... args) throws InvocationTargetException, IllegalAccessException {
-        return method.invoke(target, args);
+        return method.invoke(Assert.notNull(target, "方法调用对象不能为空: " + methodName), args);
     }
 
     /**

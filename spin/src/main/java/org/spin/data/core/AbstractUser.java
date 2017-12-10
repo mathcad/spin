@@ -147,7 +147,6 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
     public String toString() {
         return "AbstractUser(" + getClass().getSimpleName() + "){" +
             "userName='" + userName + '\'' +
-            ", password='" + password + '\'' +
             ", salt='" + salt + '\'' +
             ", active=" + active +
             ", loginTime=" + loginTime +

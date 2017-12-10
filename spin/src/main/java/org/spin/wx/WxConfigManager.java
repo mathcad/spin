@@ -1,6 +1,7 @@
 package org.spin.wx;
 
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.wx.base.WxConfigInfo;
 
 import java.util.HashMap;
 import java.util.Map;

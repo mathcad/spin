@@ -1,10 +1,13 @@
 package org.spin.core.util;
 
+import org.spin.core.Assert;
 import org.spin.core.throwable.NullArgumentException;
+import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -152,35 +155,55 @@ public abstract class ClassUtils {
     /**
      * 获取对象指定字段的值
      *
+     * @param target    实例
+     * @param valuePath 取值的字段名称
+     */
+    public static <T> T getFieldValue(Object target, String valuePath) {
+        String[] valuePaths = Assert.notEmpty(valuePath, "valuePath必须指定字段名").split("\\.");
+        Object o = target;
+        for (String field : valuePaths) {
+            Field f;
+            try {
+                f = ReflectionUtils.findField(o.getClass(), field);
+                ReflectionUtils.makeAccessible(f);
+            } catch (Exception e) {
+                throw new SimplifiedException(o.getClass().toString() + "未声明" + field + "字段", e);
+            }
+            try {
+                o = ReflectionUtils.getField(f, o);
+            } catch (Exception e) {
+                throw new SimplifiedException(o.getClass().toString() + "获取字段" + field + "的值失败", e);
+            }
+        }
+        //noinspection unchecked
+        return (T) o;
+    }
+
+    /**
+     * 获取对象指定字段的值
+     *
      * @param target 实例
-     * @param fields 取值的字段名称, 默认为"_value"
+     * @param fields 取值的字段名称, 默认为"value"
      */
     public static Map<String, Object> getFieldValue(Object target, String... fields) {
-        Class<?> clazz = target.getClass();
+        return getFieldValue(target, Arrays.asList(fields));
+
+    }
+
+    /**
+     * 获取对象指定字段的值
+     *
+     * @param target 实例
+     * @param fields 取值的字段名称, 默认为"value"
+     */
+    public static Map<String, Object> getFieldValue(Object target, Collection<String> fields) {
         Map<String, Object> result = new HashMap<>();
-        List<String> fieldNames;
-        if (fields.length < 1) {
-            String[] tmp = {"_value"};
-            fieldNames = Arrays.asList(tmp);
-        } else
-            fieldNames = Arrays.asList(fields);
+        Collection<String> fieldNames = fields;
+        if (CollectionUtils.isEmpty(fields)) {
+            fieldNames = CollectionUtils.ofArrayList("value");
+        }
         for (String field : fieldNames) {
-            Field vField;
-
-            try {
-                vField = ReflectionUtils.findField(clazz, field);
-                ReflectionUtils.makeAccessible(vField);
-
-            } catch (Exception e) {
-                throw new RuntimeException(clazz.toString() + "未声明" + field + "字段", e);
-            }
-
-            Object value;
-            try {
-                value = vField.get(target);
-            } catch (Exception e) {
-                throw new RuntimeException(clazz.toString() + "获取字段" + field + "的值失败", e);
-            }
+            Object value = getFieldValue(target, field);
             result.put(field, value);
         }
         return result;

@@ -11,6 +11,7 @@ import org.spin.core.util.HexUtils;
 import org.spin.core.util.HttpUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.RandomStringUtils;
+import org.spin.wx.base.TmplMsgEntity;
 import org.spin.wx.base.WxUrl;
 import org.spin.wx.base.WxUserInfo;
 

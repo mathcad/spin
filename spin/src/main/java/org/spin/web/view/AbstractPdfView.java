@@ -50,7 +50,7 @@ public abstract class AbstractPdfView extends AbstractView {
         return PdfWriter.getInstance(document, os);
     }
 
-    protected void prepareWriter(Map<String, Object> model, PdfWriter writer, HttpServletRequest request) throws DocumentException {
+    protected void prepareWriter(Map<String, Object> model, PdfWriter writer, HttpServletRequest request) {
         writer.setViewerPreferences(getViewerPreferences());
     }
 

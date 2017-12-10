@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.security.Base64;
 import org.spin.core.util.RandomStringUtils;
-import org.spin.wx.WxConfigInfo;
+import org.spin.wx.base.WxConfigInfo;
 import org.spin.wx.WxHelper;
 
 import javax.crypto.Cipher;

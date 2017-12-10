@@ -1,7 +1,9 @@
 package org.spin.core.inspection;
 
 import org.spin.core.Assert;
+import org.spin.core.util.JsonUtils;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +33,7 @@ public class ArgumentsDescriptor {
      * @param checkNeeded 实参可空性判断器
      */
     public ArgumentsDescriptor(MethodDescriptor descriptor, Object[] args, Function<Parameter, Boolean> checkNeeded) {
-        Parameter[] parameters = descriptor.getMethod().getParameters();
+        Parameter[] parameters = Assert.notNull(descriptor, "方法描述器不能为空").getMethod().getParameters();
         Assert.isTrue(parameters.length == args.length, "实参个数与方法形参声明必须一致");
         this.methodDescriptor = descriptor;
         this.args = args;
@@ -56,6 +58,11 @@ public class ArgumentsDescriptor {
 
     public MethodDescriptor getMethodDescriptor() {
         return methodDescriptor;
+    }
+
+    public Object invoke() throws InvocationTargetException, IllegalAccessException {
+        Assert.isTrue(rank < 100, "索引为" + JsonUtils.toJson(neededNulls) + "的参数不能为空");
+        return methodDescriptor.invoke(args);
     }
 
     /**

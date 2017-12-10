@@ -191,17 +191,6 @@ public abstract class EntityUtils {
         }
     }
 
-    public static Object getFieldValue(Object src, String valuePath) {
-        String[] valuePaths = valuePath.split("\\.");
-        Object o = src;
-        for (String field : valuePaths) {
-            Field f = ReflectionUtils.findField(src.getClass(), field);
-            ReflectionUtils.makeAccessible(f);
-            o = ReflectionUtils.getField(f, o);
-        }
-        return o;
-    }
-
     /**
      * 解析实体中所有映射到数据库列的字段
      */

@@ -1,4 +1,4 @@
-package org.spin.boot;
+package org.spin.boot.rest;
 
 import org.spin.boot.converter.RestfulExceptionHandler;
 

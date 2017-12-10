@@ -1,8 +1,8 @@
 package org.spin.boot.properties;
 
 import org.spin.core.util.StringUtils;
-import org.spin.wx.WxConfigInfo;
 import org.spin.wx.WxConfigManager;
+import org.spin.wx.base.WxConfigInfo;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import javax.annotation.PostConstruct;

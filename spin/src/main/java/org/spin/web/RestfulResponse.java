@@ -15,7 +15,7 @@ public class RestfulResponse {
     private Object data;
 
     private RestfulResponse(ErrorCode errorCode) {
-        ErrorCode code = errorCode.getCode() > 400 || errorCode.getCode() == 200 ? errorCode : ErrorCode.INTERNAL_ERROR;
+        ErrorCode code = errorCode.getCode() >= 400 || errorCode.getCode() == 200 ? errorCode : ErrorCode.INTERNAL_ERROR;
         this.code = code.getCode();
         this.message = code.getDesc();
     }

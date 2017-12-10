@@ -7,10 +7,10 @@ import org.apache.poi.ss.util.DateFormatConverter;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.core.Assert;
-import org.spin.core.util.file.FileType;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.ClassUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.data.util.EntityUtils;
+import org.spin.core.util.file.FileType;
 import org.springframework.web.servlet.view.AbstractView;
 
 import javax.servlet.ServletOutputStream;
@@ -123,7 +123,7 @@ public class ModelExcelView extends AbstractView {
      * @param request  in case we need locale etc. Shouldn't look at attributes.
      * @param response in case we need to set cookies. Shouldn't write to it.
      */
-    private void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest request, HttpServletResponse response) {
         if (null == workbook)
             return;
         this.generateExcel(workbook, grid, data);
@@ -136,7 +136,7 @@ public class ModelExcelView extends AbstractView {
      * /**
      * 通过参数和数据生成Excel文件
      */
-    private Workbook generateExcel(Workbook workbook, ExcelGrid grid, List<?> data) throws Exception {
+    private Workbook generateExcel(Workbook workbook, ExcelGrid grid, List<?> data) {
         Sheet sheet = workbook.createSheet();
         sheet.createFreezePane(1, 1);
 
@@ -262,7 +262,7 @@ public class ModelExcelView extends AbstractView {
         if (rdata instanceof Map)
             o = ((Map) rdata).get(col.getDataIndex());
         else
-            o = EntityUtils.getFieldValue(rdata, col.getDataIndex());
+            o = ClassUtils.getFieldValue(rdata, col.getDataIndex());
         if (o == null)
             return;
 

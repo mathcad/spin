@@ -1,5 +1,10 @@
 package org.spin.wx.base;
 
+/**
+ * 微信的事件类型
+ *
+ * @author xuweinan
+ */
 public interface EventType {
 
     /**

@@ -1,4 +1,4 @@
-package org.spin.boot;
+package org.spin.boot.rest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * restful请求分发
@@ -51,6 +52,7 @@ import java.util.Objects;
 @ConditionalOnProperty("spin.web.restfulPrefix")
 public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     private static final Logger logger = LoggerFactory.getLogger(RestfulInvocationEntryPoint.class);
+    private static final Function<Parameter, Boolean> checkNeeded = p -> Objects.nonNull(p.getAnnotation(Needed.class));
 
     @Autowired(required = false)
     private Authenticator authenticator;
@@ -68,8 +70,6 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
         String module = resc[0];
         String service = resc[1];
-        logger.info("Invoke ModuleName: {}, ServiceName: {}", module, service);
-
         return exec(module, service, request);
     }
 
@@ -81,8 +81,6 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
         String module = resc[1];
         String service = resc[2];
-        logger.info("Invoke ModuleName: {}, ServiceName: {}", module, service);
-
         RestfulResponse restfulResponse = exec(module, service, request);
 
         if (200 != restfulResponse.getCode()) {
@@ -94,9 +92,21 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     }
 
     private RestfulResponse exec(String module, String service, HttpServletRequest request) {
-        if (StringUtils.isBlank(module) || StringUtils.isBlank(service)) {
-            return RestfulResponse.error(new SimplifiedException("请求的资源不存在"));
+        if (StringUtils.isEmpty(module) || StringUtils.isEmpty(service)) {
+            return RestfulResponse.error(new SimplifiedException("未完全指定请求的资源"));
         }
+
+        if (StringUtils.toLowerCase(service).endsWith(".action")) {
+            service = service.substring(0, service.length() - 7);
+        } else if (StringUtils.toLowerCase(service).endsWith(".do")) {
+            service = service.substring(0, service.length() - 3);
+        }
+
+        if (StringUtils.isEmpty(service)) {
+            return RestfulResponse.error(new SimplifiedException("未指定请求的服务"));
+        }
+
+        logger.info("Invoke ModuleName: {}, ServiceName: {}", module, service);
 
         try {
             request.setCharacterEncoding("UTF-8");
@@ -105,11 +115,11 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
 
         List<MethodDescriptor> services = SpinContext.getRestMethod(module, service);
-        List<ArgumentsDescriptor> argumentsDescriptors = new ArrayList<>();
 
         if (Objects.nonNull(services) && !services.isEmpty()) {
+            List<ArgumentsDescriptor> argumentsDescriptors = new ArrayList<>(services.size());
             for (MethodDescriptor descriptor : services) {
-                argumentsDescriptors.add(new ArgumentsDescriptor(descriptor, resolveArgs(descriptor, request), p -> Objects.nonNull(p.getAnnotation(Needed.class))));
+                argumentsDescriptors.add(new ArgumentsDescriptor(descriptor, resolveArgs(descriptor, request), checkNeeded));
             }
 
             int selected = selectMethod(argumentsDescriptors);
@@ -294,7 +304,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             }
 
             try {
-                return RestfulResponse.ok(descriptor.getMethodDescriptor().invoke(descriptor.getArgs()));
+                return RestfulResponse.ok(descriptor.invoke());
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause();
                 logger.error("服务执行异常", cause);

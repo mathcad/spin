@@ -349,7 +349,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
         @Override
         public String toXMLString(Enum<?> value) {
-            return ClassUtils.getFieldValue(value, "value").get("value").toString();
+            return ClassUtils.getFieldValue(value, "value").toString();
         }
 
         @Override
@@ -360,7 +360,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
         @Override
         protected Object extractJdbcValue(Enum<?> value) {
-            return ClassUtils.getFieldValue(value, "value").get("value");
+            return ClassUtils.getFieldValue(value, "value");
         }
     }
 

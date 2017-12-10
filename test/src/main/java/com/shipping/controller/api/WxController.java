@@ -11,12 +11,12 @@ import org.spin.web.FileOperator;
 import org.spin.web.RestfulResponse;
 import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.RestfulApi;
-import org.spin.wx.MessageEntity;
 import org.spin.wx.WxConfigManager;
 import org.spin.wx.WxHelper;
 import org.spin.wx.WxTokenManager;
 import org.spin.wx.aes.AesException;
 import org.spin.wx.aes.WXBizMsgCrypt;
+import org.spin.wx.base.MessageEntity;
 import org.spin.wx.base.MessageType;
 import org.spin.wx.base.PropertyType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,21 +83,21 @@ public class WxController {
         }
         if (logger.isDebugEnabled())
             logger.debug("Decrypted message from request: {}", reqMsgBody);
-        MessageEntity reqEntity = MessageEntity.configEntity(reqMsgBody);
+        MessageEntity reqEntity = MessageEntity.fromXml(reqMsgBody);
         if (logger.isTraceEnabled()) {
             logger.trace("Message degist post to Server begin");
-            logger.trace("From UserID: {}", reqEntity.getPropValue(PropertyType.FROM_USER_NAME));
-            logger.trace("MessageType: {}", reqEntity.getPropValue(PropertyType.MSG_TYPE));
-            logger.trace("App id: {}", reqEntity.getPropValue(PropertyType.AGENT_ID));
+            logger.trace("From UserID: {}", reqEntity.getProperty(PropertyType.FROM_USER_NAME));
+            logger.trace("MessageType: {}", reqEntity.getProperty(PropertyType.MSG_TYPE));
+            logger.trace("App id: {}", reqEntity.getProperty(PropertyType.AGENT_ID));
         }
         MessageEntity resEntity = new MessageEntity();
-        resEntity.addProperty(PropertyType.TO_USER_NAME, reqEntity.getPropValue(PropertyType.FROM_USER_NAME));
-        resEntity.addProperty(PropertyType.FROM_USER_NAME, reqEntity.getPropValue(PropertyType.TO_USER_NAME));
-        resEntity.addProperty(PropertyType.CREATE_TIME, Long.toString(System.currentTimeMillis()));
-        resEntity.addProperty(PropertyType.MSG_TYPE, MessageType.TEXT);
-        resEntity.addProperty(PropertyType.CONTENT, "欢迎关注公众号");
+        resEntity.setProperty(PropertyType.TO_USER_NAME, reqEntity.getProperty(PropertyType.FROM_USER_NAME));
+        resEntity.setProperty(PropertyType.FROM_USER_NAME, reqEntity.getProperty(PropertyType.TO_USER_NAME));
+        resEntity.setProperty(PropertyType.CREATE_TIME, Long.toString(System.currentTimeMillis()));
+        resEntity.setProperty(PropertyType.MSG_TYPE, MessageType.TEXT);
+        resEntity.setProperty(PropertyType.CONTENT, "欢迎关注公众号");
         try {
-            return WXBizMsgCrypt.encryptMsg(resEntity.getXmlProp(), Long.toString(System.currentTimeMillis()),
+            return WXBizMsgCrypt.encryptMsg(resEntity.toXml(), Long.toString(System.currentTimeMillis()),
                 RandomStringUtils.randomNumeric(10), WxConfigManager.getConfig(WxConfigManager.DEFAULT));
         } catch (AesException e) {
             return ERROR;

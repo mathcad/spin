@@ -1,4 +1,4 @@
-package org.spin.wx;
+package org.spin.wx.base;
 
 import org.spin.wx.aes.AesException;
 

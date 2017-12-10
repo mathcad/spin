@@ -32,13 +32,13 @@ import java.util.Map;
  */
 public final class XmlUtils {
     private static Logger logger = LoggerFactory.getLogger(XmlUtils.class);
+    private static SAXReader reader = new SAXReader();
+    private Document document;
 
     public enum SourceType {
         XmlFilePath, XmlContent
     }
 
-    private static SAXReader reader = new SAXReader();
-    private Document document;
 
     private XmlUtils(File xmlFile) throws DocumentException {
         this.document = XmlUtils.reader.read(xmlFile);
@@ -50,7 +50,7 @@ public final class XmlUtils {
         strReader.close();
     }
 
-    public static XmlUtils getXmlUtil(String xmlSource, SourceType type) {
+    public static XmlUtils getInstance(String xmlSource, SourceType type) {
         XmlUtils result = null;
         try {
             switch (type) {

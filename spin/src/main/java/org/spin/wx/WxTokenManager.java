@@ -6,6 +6,7 @@ import org.spin.core.Assert;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.HttpUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.wx.base.WxConfigInfo;
 import org.spin.wx.base.WxUrl;
 
 import java.util.Map;

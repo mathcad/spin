@@ -436,7 +436,6 @@ public class CriteriaBuilder {
      *
      * @param cts 条件列表
      */
-    @SuppressWarnings("unchecked")
     private void processCondAlias(Collection<Criterion> cts) {
         if (CollectionUtils.isEmpty(cts)) {
             return;
@@ -444,25 +443,23 @@ public class CriteriaBuilder {
         List<Criterion> ts = new LinkedList<>();
         for (Criterion ct : cts) {
             if (ct instanceof NotExpression) {
-                Criterion t = (Criterion) ClassUtils.getFieldValue(ct, "criterion").get("criterion");
+                Criterion t = ClassUtils.getFieldValue(ct, "criterion");
                 ts.add(t);
             } else if (ct instanceof Junction) {
-                ts.addAll((List<Criterion>) ClassUtils.getFieldValue(ct, "conditions").get("conditions"));
+                ts.addAll(ClassUtils.getFieldValue(ct, "conditions"));
             } else if (ct instanceof LogicalExpression) {
-                Criterion lhs = (Criterion) ClassUtils.getFieldValue(ct, "lhs").get("lhs");
-                Criterion rhs = (Criterion) ClassUtils.getFieldValue(ct, "rhs").get("rhs");
+                Criterion lhs = ClassUtils.getFieldValue(ct, "lhs");
+                Criterion rhs = ClassUtils.getFieldValue(ct, "rhs");
                 ts.add(lhs);
                 ts.add(rhs);
             } else if (ct instanceof SubqueryExpression) {
-                CriteriaImpl criteriaImpl = (CriteriaImpl) ClassUtils.getFieldValue(ct, "criteriaImpl").get("criteriaImpl");
-                List<CriteriaImpl.CriterionEntry> ces = (List<CriteriaImpl.CriterionEntry>) ClassUtils.getFieldValue(criteriaImpl, "criterionEntries").get("criterionEntries");
+                List<CriteriaImpl.CriterionEntry> ces = ClassUtils.getFieldValue(ct, "criteriaImpl.criterionEntries");
                 for (CriteriaImpl.CriterionEntry ce : ces) {
                     ts.add(ce.getCriterion());
                 }
             } else {
-                Object o = ClassUtils.getFieldValue(ct, "propertyName").get("propertyName");
-                if (null != o) {
-                    String cond = o.toString();
+                String cond = ClassUtils.getFieldValue(ct, "propertyName");
+                if (StringUtils.isNotEmpty(cond)) {
                     int idx = cond.lastIndexOf('.');
                     while (idx > 0) {
                         cond = cond.substring(0, idx);
@@ -476,10 +473,7 @@ public class CriteriaBuilder {
     }
 
     private void processCondJoin() {
-        @SuppressWarnings("unchecked")
-        CriteriaImpl impl = (CriteriaImpl) ClassUtils.getFieldValue(deCriteria, "impl").get("impl");
-        @SuppressWarnings("unchecked")
-        List<CriteriaImpl.CriterionEntry> ces = (List<CriteriaImpl.CriterionEntry>) ClassUtils.getFieldValue(impl, "criterionEntries").get("criterionEntries");
+        List<CriteriaImpl.CriterionEntry> ces = ClassUtils.getFieldValue(deCriteria, "impl.criterionEntries");
         List<Criterion> cts = new ArrayList<>(ces.size());
         for (CriteriaImpl.CriterionEntry ce : ces) {
             cts.add(ce.getCriterion());
