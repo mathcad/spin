@@ -3,7 +3,9 @@ package org.spin.web.view;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by xuweinan on 2017/2/7.
@@ -18,6 +20,8 @@ public class ExcelGrid implements Serializable {
     private String fileName;
 
     private List<GridColumn> columns = new ArrayList<>();
+
+    private Set<String> excludeColumns = new HashSet<>();
 
     public void addGridColumn(String header, Integer width, String dataIndex, String dataType) {
         GridColumn col = new GridColumn(header, width, dataIndex, dataType);
@@ -56,5 +60,13 @@ public class ExcelGrid implements Serializable {
 
     public void setColumns(List<GridColumn> columns) {
         this.columns = columns;
+    }
+
+    public Set<String> getExcludeColumns() {
+        return excludeColumns;
+    }
+
+    public void setExcludeColumns(Set<String> excludeColumns) {
+        this.excludeColumns = excludeColumns;
     }
 }

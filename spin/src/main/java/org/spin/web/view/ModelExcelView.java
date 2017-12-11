@@ -162,6 +162,9 @@ public class ModelExcelView extends AbstractView {
 
             for (int i = 0; i < grid.getColumns().size(); i++) {
                 GridColumn col = grid.getColumns().get(i);
+                if (grid.getExcludeColumns().contains(col.getHeader())) {
+                    continue;
+                }
                 if (col.getWidth() != null) {
                     sheet.setColumnWidth(i, (col.getWidth() * PIX_TO_WIDTH));
                 } else {
@@ -187,6 +190,9 @@ public class ModelExcelView extends AbstractView {
                 // 当行赋值
                 for (int c = 0; c < grid.getColumns().size(); c++) {
                     GridColumn col = grid.getColumns().get(c);
+                    if (grid.getExcludeColumns().contains(col.getHeader())) {
+                        continue;
+                    }
                     cell = row.createCell(c);
 
                     setDataCellValue(robj, cell, col);

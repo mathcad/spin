@@ -20,6 +20,7 @@ import org.spin.data.core.IEntity;
 import org.spin.data.core.Page;
 import org.spin.data.query.QueryParam;
 import org.spin.web.RestfulResponse;
+import org.spin.web.annotation.Body;
 import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.RestfulMethod;
 import org.spin.web.view.ExcelGrid;
@@ -31,6 +32,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,6 +62,7 @@ import java.util.function.Function;
 @ConditionalOnProperty("spin.web.restfulPrefix")
 public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     private static final Logger logger = LoggerFactory.getLogger(RestfulInvocationEntryPoint.class);
+    private static final String REQUEST_BODY_NAME = "request_body_param";
     private static final Function<Parameter, Boolean> checkNeeded = p -> Objects.nonNull(p.getAnnotation(Needed.class));
 
     @Autowired(required = false)
@@ -72,25 +75,31 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
 
     @ResponseBody
     @RequestMapping(value = "${spin.web.restfulPrefix}/**")
-    public RestfulResponse exec(HttpServletRequest request) {
+    public RestfulResponse exec(HttpServletRequest request, @RequestBody String requestBody) {
         String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
         if (resc.length != 2) {
             return RestfulResponse.error(new SimplifiedException("请求的路径不正确"));
         }
         String module = resc[0];
         String service = resc[1];
+        if (StringUtils.isNotEmpty(requestBody)) {
+            request.setAttribute(REQUEST_BODY_NAME, requestBody);
+        }
         return exec(module, service, request);
     }
 
     @ResponseBody
     @RequestMapping(value = "${spin.web.restfulPrefix}/plain/**")
-    public String plainExec(HttpServletRequest request) {
+    public String plainExec(HttpServletRequest request, @RequestBody String requestBody) {
         String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
         if (resc.length != 3) {
             return "请求的路径不正确";
         }
         String module = resc[1];
         String service = resc[2];
+        if (StringUtils.isNotEmpty(requestBody)) {
+            request.setAttribute(REQUEST_BODY_NAME, requestBody);
+        }
         RestfulResponse restfulResponse = exec(module, service, request);
 
         if (200 != restfulResponse.getCode()) {
@@ -136,10 +145,9 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         } else {
             Object data = restfulResponse.getData();
             Iterable<?> excelData;
-            if(data instanceof ExcelModel) {
-                ModelExcelView mev = new ModelExcelView(((ExcelModel) data).getGrid(), ((ExcelModel) data).getData());
-                mv.setView(mev);
-                return mv;
+            if (data instanceof ExcelModel) {
+                g = ((ExcelModel) data).getGrid();
+                excelData = ((ExcelModel) data).getData();
             } else if (data instanceof Iterable) {
                 excelData = (Iterable) data;
             } else if (data instanceof Page) {
@@ -291,7 +299,13 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
 
         Object[] values;
-        Object value = request.getAttribute(parameterName);
+        Object value = null;
+        if (Objects.nonNull(parameter.getAnnotation(Body.class))) {
+            value = request.getAttribute(REQUEST_BODY_NAME);
+        }
+        if (Objects.isNull(value)) {
+            value = request.getAttribute(parameterName);
+        }
         if (Objects.isNull(value)) {
             values = request.getParameterValues(parameterName);
         } else {
