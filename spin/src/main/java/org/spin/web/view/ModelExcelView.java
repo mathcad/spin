@@ -163,9 +163,9 @@ public class ModelExcelView extends AbstractView {
             for (int i = 0; i < grid.getColumns().size(); i++) {
                 GridColumn col = grid.getColumns().get(i);
                 if (col.getWidth() != null) {
-                    sheet.setColumnWidth(i, (col.getWidth() / col.getHeader().length() * 256));
+                    sheet.setColumnWidth(i, (col.getWidth() * PIX_TO_WIDTH));
                 } else {
-                    sheet.setColumnWidth(i, (col.getHeader().length() * 7 + 5) / 7 * 256);
+                    sheet.setColumnWidth(i, 100 * PIX_TO_WIDTH);
                 }
 
                 Cell cell = row0.createCell(i);
