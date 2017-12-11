@@ -14,7 +14,7 @@ import java.io.IOException;
 public class HibernatePersistentBagTypeAdapter extends MatchableTypeAdapter<PersistentBag> {
 
     @Override
-    public PersistentBag read(JsonReader in) throws IOException {
+    public PersistentBag read(JsonReader in) {
         throw new UnsupportedOperationException("Not supported");
     }
 

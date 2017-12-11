@@ -30,7 +30,7 @@ public class HibernateProxyTypeAdapter extends MatchableTypeAdapter<HibernatePro
     }
 
     @Override
-    public HibernateProxy read(JsonReader in) throws IOException {
+    public HibernateProxy read(JsonReader in) {
         throw new UnsupportedOperationException("Not supported");
     }
 
