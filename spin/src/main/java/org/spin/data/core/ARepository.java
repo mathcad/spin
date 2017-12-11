@@ -14,6 +14,7 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
@@ -26,6 +27,7 @@ import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SQLException;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
+import org.spin.core.util.ClassUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.pk.generator.IdGenerator;
@@ -720,6 +722,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         Session sess = getSession();
         // 总数查询
         Criteria ct = dc.getExecutableCriteria(sess);
+        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, "orderEntries");
+        orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         return total > 0;
     }
@@ -744,6 +748,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         }
         Criteria ct = cb.buildDeCriteria(false).getExecutableCriteria(sess);
         ct.setCacheable(false);
+        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, "orderEntries");
+        orderEntries.clear();
         return (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
     }
 
@@ -771,6 +777,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         List<Map<String, Object>> list = ct.list();
         ct.setFirstResult(0);
         ct.setMaxResults(MAX_RECORDS);
+        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, "orderEntries");
+        orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         List<T> res = EntityUtils.wrapperMapToBeanList(this.entityClazz, list);
         return new Page<>(res, total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
@@ -1147,6 +1155,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
         ct.setFirstResult(0);
         ct.setMaxResults(MAX_RECORDS);
+        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, "orderEntries");
+        orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         // 关联对象，填充映射对象
         if (wrap) {
