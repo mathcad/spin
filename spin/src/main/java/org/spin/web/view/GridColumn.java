@@ -30,6 +30,27 @@ public class GridColumn implements Serializable {
      */
     private String dataType;
 
+    public GridColumn() {
+    }
+
+    public GridColumn(String header, String dataIndex) {
+        this.header = header;
+        this.dataIndex = dataIndex;
+    }
+
+    public GridColumn(String header, Integer width, String dataIndex) {
+        this.header = header;
+        this.width = width;
+        this.dataIndex = dataIndex;
+    }
+
+    public GridColumn(String header, Integer width, String dataIndex, String dataType) {
+        this.header = header;
+        this.width = width;
+        this.dataIndex = dataIndex;
+        this.dataType = dataType;
+    }
+
     public String getHeader() {
         return header;
     }

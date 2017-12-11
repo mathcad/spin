@@ -12,22 +12,30 @@ import org.spin.core.inspection.MethodDescriptor;
 import org.spin.core.session.SessionManager;
 import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.ObjectUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.data.core.IEntity;
+import org.spin.data.core.Page;
 import org.spin.data.query.QueryParam;
 import org.spin.web.RestfulResponse;
 import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.RestfulMethod;
+import org.spin.web.view.ExcelGrid;
+import org.spin.web.view.ExcelModel;
+import org.spin.web.view.ModelExcelView;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -47,7 +55,7 @@ import java.util.function.Function;
  *
  * @author xuweinan
  */
-@RestController
+@Controller
 @RequestMapping("/")
 @ConditionalOnProperty("spin.web.restfulPrefix")
 public class RestfulInvocationEntryPoint implements ApplicationContextAware {
@@ -62,6 +70,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
 
     private ApplicationContext applicationContext;
 
+    @ResponseBody
     @RequestMapping(value = "${spin.web.restfulPrefix}/**")
     public RestfulResponse exec(HttpServletRequest request) {
         String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
@@ -73,6 +82,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         return exec(module, service, request);
     }
 
+    @ResponseBody
     @RequestMapping(value = "${spin.web.restfulPrefix}/plain/**")
     public String plainExec(HttpServletRequest request) {
         String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
@@ -89,6 +99,62 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             return JsonUtils.toJson(restfulResponse.getData());
         }
 
+    }
+
+    @RequestMapping(value = "${spin.web.restfulPrefix}/expExcel/**")
+    public ModelAndView exportExec(HttpServletRequest request, String grid) {
+        ModelAndView mv = new ModelAndView();
+        if (StringUtils.isEmpty(grid)) {
+            mv.addObject("code", -1);
+            mv.addObject("message", "未定义导出格式");
+            return mv;
+        }
+
+        ExcelGrid g;
+        try {
+            g = JsonUtils.fromJson(grid, ExcelGrid.class);
+        } catch (Exception e) {
+            logger.error("导出格式定义不正确", e);
+            mv.addObject("code", -1);
+            mv.addObject("message", "导出格式定义不正确");
+            return mv;
+        }
+        String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
+        if (resc.length != 3) {
+            mv.addObject("code", -1);
+            mv.addObject("message", "请求的路径不正确");
+            return mv;
+        }
+        String module = resc[1];
+        String service = resc[2];
+        RestfulResponse restfulResponse = exec(module, service, request);
+
+        if (200 != restfulResponse.getCode()) {
+            mv.addObject("code", restfulResponse.getCode());
+            mv.addObject("message", restfulResponse.getMessage());
+            return mv;
+        } else {
+            Object data = restfulResponse.getData();
+            Iterable<?> excelData;
+            if(data instanceof ExcelModel) {
+                ModelExcelView mev = new ModelExcelView(((ExcelModel) data).getGrid(), ((ExcelModel) data).getData());
+                mv.setView(mev);
+                return mv;
+            } else if (data instanceof Iterable) {
+                excelData = (Iterable) data;
+            } else if (data instanceof Page) {
+                excelData = ((Page) data).getRows();
+            } else if (data instanceof IEntity) {
+                excelData = CollectionUtils.ofArrayList(data);
+            } else {
+                mv.addObject("code", -1);
+                mv.addObject("message", "请求的服务未返回数据列表，不能导出");
+                return mv;
+            }
+            ModelExcelView mev = new ModelExcelView(g, excelData);
+            mv.setView(mev);
+            return mv;
+        }
     }
 
     private RestfulResponse exec(String module, String service, HttpServletRequest request) {

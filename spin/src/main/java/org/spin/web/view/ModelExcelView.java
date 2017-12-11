@@ -9,6 +9,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.core.Assert;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.ClassUtils;
+import org.spin.core.util.DateUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.core.util.file.FileType;
 import org.springframework.web.servlet.view.AbstractView;
@@ -17,9 +18,9 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -33,9 +34,16 @@ public class ModelExcelView extends AbstractView {
     private FileType.Document fileType;
 
     /**
-     * 一个像素转换为多少宽度
+     * 像素转换为多少宽度
+     * POI中的字符宽度算法是：
+     * double 宽度 = (字符个数 * (字符宽度 - 1) + 5) / (字符宽度 - 1) * 256
      */
     private static final int PIX_TO_WIDTH = 100 * 50 / 132;
+
+    /**
+     * 缇/磅
+     */
+    private static final int POUNDS_PER_TWIP = 20;
 
     private static final String DATE_COLUMN_TYPE = "date";
     private static final String NUMBER_COLUMN_TYPE = "number";
@@ -44,10 +52,10 @@ public class ModelExcelView extends AbstractView {
     private static final String defaultFileName = "export";
 
     private ExcelGrid grid = null;
-    private List<?> data = null;
+    private Iterable<?> data = null;
     private Map<String, String> dataTypeFormat = null;
 
-    public ModelExcelView(FileType.Document fileType, ExcelGrid grid, List<?> data) {
+    public ModelExcelView(FileType.Document fileType, ExcelGrid grid, Iterable<?> data) {
         this.fileType = Assert.notNull(fileType, "Excel文件类型不能为空");
         setContentType(this.fileType.getContentType());
         this.grid = grid;
@@ -58,7 +66,7 @@ public class ModelExcelView extends AbstractView {
      * Default Constructor.
      * Sets the FileType to XLSX.
      */
-    public ModelExcelView(ExcelGrid grid, List<?> data) {
+    public ModelExcelView(ExcelGrid grid, Iterable<?> data) {
         this(FileType.Document.XLSX, grid, data);
     }
 
@@ -136,7 +144,7 @@ public class ModelExcelView extends AbstractView {
      * /**
      * 通过参数和数据生成Excel文件
      */
-    private Workbook generateExcel(Workbook workbook, ExcelGrid grid, List<?> data) {
+    private Workbook generateExcel(Workbook workbook, ExcelGrid grid, Iterable<?> data) {
         Sheet sheet = workbook.createSheet();
         sheet.createFreezePane(1, 1);
 
@@ -147,7 +155,7 @@ public class ModelExcelView extends AbstractView {
             // 创建第一行
             Row row0 = sheet.createRow(0);
             // 设置行高
-            row0.setHeight((short) 500); // 50pix高度
+            row0.setHeight((short) 285); // 14.25磅
 
             // 初始化列头和数据列单元格样式
             Map<String, CellStyle> columnStyleMap = new HashMap<>();
@@ -155,9 +163,10 @@ public class ModelExcelView extends AbstractView {
             for (int i = 0; i < grid.getColumns().size(); i++) {
                 GridColumn col = grid.getColumns().get(i);
                 if (col.getWidth() != null) {
-                    sheet.setColumnWidth(i, col.getWidth() * PIX_TO_WIDTH);// 70pix宽度
-                } else
-                    sheet.setColumnWidth(i, 100 * PIX_TO_WIDTH);
+                    sheet.setColumnWidth(i, (col.getWidth() / col.getHeader().length() * 256));
+                } else {
+                    sheet.setColumnWidth(i, (col.getHeader().length() * 7 + 5) / 7 * 256);
+                }
 
                 Cell cell = row0.createCell(i);
                 cell.setCellStyle(columnHeadStyle);
@@ -170,9 +179,10 @@ public class ModelExcelView extends AbstractView {
             }
 
             // 填充数据内容
-            for (int i = 0; i < data.size(); i++) {
-                Object robj = data.get(i);
-                Row row = sheet.createRow(i + 1);// 除去头部
+            int i = 1;
+            for (Object robj : data) {
+                Row row = sheet.createRow(i);// 除去头部
+                row0.setHeight((short) 285); // 14.25磅
                 Cell cell;
                 // 当行赋值
                 for (int c = 0; c < grid.getColumns().size(); c++) {
@@ -183,6 +193,7 @@ public class ModelExcelView extends AbstractView {
 
                     cell.setCellStyle(columnStyleMap.get(col.getDataIndex()));
                 }
+                ++i;
             }
 
             return workbook;
@@ -266,13 +277,59 @@ public class ModelExcelView extends AbstractView {
         if (o == null)
             return;
 
-        switch (col.getDataType()) {
+        Object t = null;
+        if (o instanceof Enum) {
+            t = ((Enum) o).name();
+        } else if (o instanceof TemporalAccessor) {
+            try {
+                t = DateUtils.toDate((TemporalAccessor) o);
+            } catch (Exception e) {
+            }
+        }
+        if (null != t) {
+            o = t;
+        }
+
+        String dataType = StringUtils.trimToEmpty(col.getDataType());
+        switch (dataType) {
             case DATE_COLUMN_TYPE:
-                if (o instanceof Date)
+                if (o instanceof Date) {
                     cell.setCellValue((Date) o);
+                } else {
+                    try {
+                        cell.setCellValue(DateUtils.toDate(o.toString()));
+                    } catch (Exception e) {
+                        cell.setCellValue(o.toString());
+                    }
+                }
+                break;
+            case BOOLEAN_COLUMN_TYPE:
+                if (o instanceof Boolean) {
+                    if (Boolean.TRUE.equals(o)) {
+                        cell.setCellValue("是");
+                    } else {
+                        cell.setCellValue("否");
+                    }
+                } else {
+                    if (o.toString().toLowerCase().equals("false") || o.toString().toLowerCase().equals("0")) {
+                        cell.setCellValue("否");
+                    } else {
+                        cell.setCellValue("是");
+                    }
+                }
                 break;
             default:
-                cell.setCellValue(o.toString());
+                if (o instanceof Boolean) {
+                    if (Boolean.TRUE.equals(o)) {
+                        cell.setCellValue("是");
+                    } else {
+                        cell.setCellValue("否");
+                    }
+                } else if (o instanceof Date) {
+                    cell.setCellValue(DateUtils.formatDateForSecond((Date) o));
+                } else {
+                    cell.setCellValue(o.toString());
+                }
                 break;
         }
     }

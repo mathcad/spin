@@ -2,6 +2,7 @@ package org.spin.web.view;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,12 +20,18 @@ public class ExcelGrid implements Serializable {
     private List<GridColumn> columns = new ArrayList<>();
 
     public void addGridColumn(String header, Integer width, String dataIndex, String dataType) {
-        GridColumn col = new GridColumn();
-        col.setHeader(header);
-        col.setWidth(width);
-        col.setDataIndex(dataIndex);
-        col.setDataType(dataType);
+        GridColumn col = new GridColumn(header, width, dataIndex, dataType);
         this.columns.add(col);
+    }
+
+    public ExcelGrid addGridColumns(GridColumn... columns) {
+        Collections.addAll(this.columns, columns);
+        return this;
+    }
+
+    public ExcelGrid removGridColumn(String header) {
+        columns.removeIf(column -> header.equals(column.getHeader()));
+        return this;
     }
 
     public String getFileId() {
