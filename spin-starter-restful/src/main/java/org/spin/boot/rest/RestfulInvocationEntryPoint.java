@@ -20,8 +20,8 @@ import org.spin.data.core.IEntity;
 import org.spin.data.core.Page;
 import org.spin.data.query.QueryParam;
 import org.spin.web.RestfulResponse;
-import org.spin.web.annotation.Body;
 import org.spin.web.annotation.Needed;
+import org.spin.web.annotation.Payload;
 import org.spin.web.annotation.RestfulMethod;
 import org.spin.web.view.ExcelGrid;
 import org.spin.web.view.ExcelModel;
@@ -300,7 +300,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
 
         Object[] values;
         Object value = null;
-        if (Objects.nonNull(parameter.getAnnotation(Body.class))) {
+        if (Objects.nonNull(parameter.getAnnotation(Payload.class))) {
             value = request.getAttribute(REQUEST_BODY_NAME);
         }
         if (Objects.isNull(value)) {
