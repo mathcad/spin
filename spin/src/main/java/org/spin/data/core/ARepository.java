@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
  * <pre>
  * 1、基于Jpa规范的Repository
  * 2、基于NamedJdbcTemplate的动态SQL查询
- * 3、支持基于JTA的多数据源分布式事务
+ * 3、基于JTA的多数据源分布式事务
  * </pre>
  * <p>Created by xuweinan on 2016/10/5.</p>
  *

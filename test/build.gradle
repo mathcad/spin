@@ -59,6 +59,8 @@ dependencies {
 //        exclude(module: 'commons-logging')
 //    }
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jre8', version: "$kotlin_version"
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlin_version
+
 //    compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion) {
         exclude(module: 'jackson-databind')

@@ -62,8 +62,8 @@ public class SystemApiController {
         // 没有密钥，常规验证
         if (StringUtils.isEmpty(identity) || StringUtils.isEmpty(password))
             throw new SimplifiedException("请求参数不完整");
-        String i = RSA.decrypt(InfoCache.RSA_PRIKEY, identity);
-        String p = RSA.decrypt(InfoCache.RSA_PRIKEY, password);
+        String i = RSA.decrypt(InfoCache.INSTANCE.getRSA_PRIKEY(), identity);
+        String p = RSA.decrypt(InfoCache.INSTANCE.getRSA_PRIKEY(), password);
         return RestfulResponse.ok(userService.login(i, p));
 
     }
