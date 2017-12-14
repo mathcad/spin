@@ -1266,7 +1266,7 @@ public abstract class MethodUtils {
         final String[] paramNames = new String[m.getParameterTypes().length];
         final String n = m.getDeclaringClass().getName();
         ClassReader cr = null;
-        try (InputStream is = m.getClass().getClass().getResourceAsStream(n.replace('.', '/') + ".class")) {
+        try (InputStream is = m.getDeclaringClass().getResourceAsStream(n.replace('.', '/') + ".class")) {
             cr = new ClassReader(is);
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, e);
