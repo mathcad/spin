@@ -21,7 +21,7 @@ import java.util.UUID
 open class FileService {
 
     @Autowired
-    private val fileDao: FileRepository? = null
+    private lateinit var fileDao: FileRepository
 
     @Transactional
     open fun saveFile(uploadResult: FileOperator.UploadResult): File {
@@ -32,7 +32,7 @@ open class FileService {
         file.filePath = uploadResult.storeName
         file.extension = uploadResult.extention
         file.size = uploadResult.size
-        return fileDao!!.save(file)
+        return fileDao.save(file)
     }
 
     @Transactional
@@ -46,7 +46,7 @@ open class FileService {
             file.filePath = uploadResult.storeName
             file.extension = uploadResult.extention
             file.size = uploadResult.size
-            result.add(fileDao!!.save(file))
+            result.add(fileDao.save(file))
         }
         return result
     }

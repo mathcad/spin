@@ -27,7 +27,7 @@ class MenuDto {
 
     var parent: Long? = null
 
-    var idPath: String? = null
+    var idPath: String = ""
 
     var orderNo: Float = 0F
 

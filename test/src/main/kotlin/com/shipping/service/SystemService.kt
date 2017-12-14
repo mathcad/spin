@@ -25,12 +25,13 @@ import kotlin.collections.HashMap
 class SystemService {
 
     @Autowired
-    private val functionDao: FunctionRepository? = null
+    private lateinit var functionDao: FunctionRepository
 
     @Autowired
-    private val regionDao: RegionRepository? = null
+    private lateinit var regionDao: RegionRepository
 
-    private val userService: UserService? = null
+    @Autowired
+    private lateinit var userService: UserService
 
     /**
      * 组装菜单树
@@ -39,8 +40,8 @@ class SystemService {
         get() {
             val result = ArrayList<MenuDto>()
 
-            val group = userService!!.getUserFunctions(SessionManager.getCurrentUser().id)[FunctionTypeE.MEMU]!!.
-                map { MenuDto.toDto(it) }.groupBy { it.idPath!!.split(",").size }
+            val group = userService.getUserFunctions(SessionManager.getCurrentUser().id)[FunctionTypeE.MEMU]!!.
+                map { MenuDto.toDto(it) }.groupBy { it.idPath.split(",").size }
 //                .stream()
 //                .map<MenuDto>(Function({ MenuDto.toDto(it) })).collect<Map<Int, List<MenuDto>>, Any>(Collectors.groupingBy { f -> f.idPath!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray().size })
 
@@ -51,7 +52,7 @@ class SystemService {
             while (currDept <= maxDept) {
                 group[currDept++]!!.forEach { d ->
                     parent.put(result)
-                    d.idPath!!.split(",").map { it.toLong() }.forEach {
+                    d.idPath.split(",").map { it.toLong() }.forEach {
                         val p = parent.get().firstOrNull { m -> it == m.id }
                         if (null != p) {
                             parent.put(p.children)
@@ -66,7 +67,7 @@ class SystemService {
 
     val regions: List<RegionDto>
         get() {
-            val allRegion = regionDao!!.findAll().map { ::RegionDto.call() }.groupBy { it.level!! }
+            val allRegion = regionDao.findAll().map { ::RegionDto.call() }.groupBy { it.level!! }
 
             val cities = allRegion[2]!!.map { it.value!! to it }.toMap()
             var work = allRegion[3]!!.groupBy { it.parent }

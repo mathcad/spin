@@ -30,9 +30,7 @@ import org.spin.wx.WxTokenManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 import java.util.*
-import java.util.stream.Collectors
 
 /**
  * 用户服务
@@ -45,33 +43,35 @@ import java.util.stream.Collectors
 open class UserService : Authenticator<User> {
 
     @Autowired
-    private val userDao: UserRepository? = null
+    private lateinit var userDao: UserRepository
 
     @Autowired
-    private val fileDao: FileRepository? = null
+    private lateinit var fileDao: FileRepository
 
     @Autowired
-    private val functionDao: FunctionRepository? = null
+    private lateinit var functionDao: FunctionRepository
 
     @Autowired
-    private val secretManager: SecretManager? = null
+    private lateinit var secretManager: SecretManager
 
     @Autowired
-    private val repositoryContext: RepositoryContext? = null
+    private lateinit var repositoryContext: RepositoryContext
 
-    val currentUser: Map<String, Any?>
+    val currentUser: Map<String, Any?>?
         get() {
-            val user = userDao!!.get(SessionManager.getCurrentUser().id)
-            val userMap = HashMap<String, Any?>()
-            userMap.put("userId", user.id)
-            userMap.put("nickName", user.nickname)
-            userMap.put("headImg", if (null == user.headImg) null else user.headImg!!.filePath)
-            userMap.put("createTime", user.createTime)
-            return userMap
+            val user: User? = userDao.get(SessionManager.getCurrentUser().id)
+            return if (null == user) null else let {
+                val userMap = HashMap<String, Any?>()
+                userMap.put("userId", user.id)
+                userMap.put("nickName", user.nickname)
+                userMap.put("headImg", user.headImg?.filePath)
+                userMap.put("createTime", user.createTime)
+                return userMap
+            }
         }
 
     override fun getSubject(identity: Any): User {
-        return repositoryContext!!.getRepo(User::class.java).get(java.lang.Long.parseLong(identity.toString()))
+        return repositoryContext.getRepo(User::class.java).get(identity.toString().toLong())
     }
 
     override fun getRolePermissionList(identity: Any): RolePermission {
@@ -79,7 +79,7 @@ open class UserService : Authenticator<User> {
         val id = identity as Long
         return InfoCache.permissionCache[id] ?: let {
             val rp = RolePermission()
-            val user: User? = userDao!!.get(id)
+            val user: User? = userDao.get(id)
             rp.userIdentifier = id
             rp.permissions = user?.permissions?.map { it.code }
             rp.roles = user?.roles?.map { it.code }
@@ -92,9 +92,9 @@ open class UserService : Authenticator<User> {
         if (null == id || StringUtils.isEmpty(password))
             return false
         val user: User? = try {
-            userDao!!.get(java.lang.Long.parseLong(id.toString()))
+            userDao.get(java.lang.Long.parseLong(id.toString()))
         } catch (e: NumberFormatException) {
-            userDao!!.findOne(CriteriaBuilder.newInstance().eq("userName", id.toString()))
+            userDao.findOne(CriteriaBuilder.newInstance().eq("userName", id.toString()))
         }
 
         return user != null && !StringUtils.isEmpty(user.password) && DigestUtils.sha256Hex(password + user.salt) == user.password
@@ -110,15 +110,15 @@ open class UserService : Authenticator<User> {
 
     @Transactional
     open fun saveUser(user: User): User {
-        return userDao!!.save(user)
+        return userDao.save(user)
     }
 
-    fun getUser(id: Long?): User {
-        return userDao!!.get(id)
+    fun getUser(id: Long): User {
+        return userDao.get(id)
     }
 
     fun getWxUser(openid: String): User {
-        return userDao!!.findOne("openid", openid)
+        return userDao.findOne("openid", openid)
     }
 
     @Transactional
@@ -138,10 +138,10 @@ open class UserService : Authenticator<User> {
         file.filePath = rs.storeName
         file.extension = rs.extention
         file.size = rs.size
-        file = fileDao!!.save(file)
+        file = fileDao.save(file)
 
         user.headImg = file
-        return userDao!!.save(user)
+        return userDao.save(user)
     }
 
     /**
@@ -155,7 +155,7 @@ open class UserService : Authenticator<User> {
      * 注销
      */
     fun logout(key: String) {
-        secretManager!!.invalidKeyByKeyStr(key)
+        secretManager.invalidKeyByKeyStr(key)
     }
 
     /**
@@ -164,13 +164,13 @@ open class UserService : Authenticator<User> {
     fun keyLogin(key: String): LoginInfo {
         val info: KeyInfo
         try {
-            info = secretManager!!.getKeyInfo(key)
+            info = secretManager.getKeyInfo(key)
             secretManager.invalidKeyByKeyStr(key)
         } catch (e: Exception) {
             throw SimplifiedException(ErrorCode.SECRET_INVALID)
         }
 
-        val user = userDao!!.get(java.lang.Long.parseLong(info.identifier))
+        val user = userDao.get(java.lang.Long.parseLong(info.identifier))
         if (null != user) {
             val loginInfo: LoginInfo
             if (StringUtils.isNotEmpty(user.password)) {
@@ -205,7 +205,7 @@ open class UserService : Authenticator<User> {
         val dto = LoginInfo()
         dto.userId = user.id
         dto.setUserInfo(user)
-        val keyInfo = secretManager!!.generateKey(user.id!!.toString(), user.openId, "openId")
+        val keyInfo = secretManager.generateKey(user.id!!.toString(), user.openId, "openId")
         dto.setKeyInfo(keyInfo, secretManager.keyExpiredIn)
         dto.setTokenInfo(secretManager.generateToken(keyInfo.key), secretManager.tokenExpiredIn)
         return dto
@@ -214,9 +214,9 @@ open class UserService : Authenticator<User> {
     private fun checkUser(identity: String, secret: String, user: User?, isPassword: Boolean): LoginInfo {
         val usr = user ?: let {
             try {
-                userDao!!.get(identity.toLong())
+                userDao.get(identity.toLong())
             } catch (ignore: NumberFormatException) {
-                userDao!!.findOne(CriteriaBuilder.newInstance().eq("userName", identity))
+                userDao.findOne(CriteriaBuilder.newInstance().eq("userName", identity))
             }
         }
         val authenticated: Boolean
@@ -225,7 +225,7 @@ open class UserService : Authenticator<User> {
             val dto = LoginInfo()
             dto.userId = usr.id
             dto.setUserInfo(usr)
-            val keyInfo = secretManager!!.generateKey(usr.id.toString(), secret, "password")
+            val keyInfo = secretManager.generateKey(usr.id.toString(), secret, "password")
             dto.setKeyInfo(keyInfo, secretManager.keyExpiredIn)
             dto.setTokenInfo(secretManager.generateToken(keyInfo.key), secretManager.tokenExpiredIn)
             return dto
@@ -235,7 +235,7 @@ open class UserService : Authenticator<User> {
     }
 
     fun userList(): List<User> {
-        return userDao!!.list(CriteriaBuilder.newInstance().notEq("userType", UserTypeE.微信用户))
+        return userDao.list(CriteriaBuilder.newInstance().notEq("userType", UserTypeE.微信用户))
     }
 
     fun getUserFunctions(id: Long): Map<FunctionTypeE, List<Function>> {
@@ -248,7 +248,7 @@ open class UserService : Authenticator<User> {
                 cb.or(Restrictions.isNull("permission"),
                     Restrictions.`in`("permission.code", rolePermission.permissions))
             }
-            val functions = functionDao!!.list(cb)
+            val functions = functionDao.list(cb)
             val r = functions.groupBy { it.type!! }.map { (k, v) -> k to v.toMutableList() }.toMap().toMutableMap()
             if (r.isEmpty()) {
                 r.put(FunctionTypeE.API, ArrayList())

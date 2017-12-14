@@ -2,15 +2,11 @@ package com.shipping.service
 
 import com.shipping.domain.sys.User
 import com.shipping.repository.sys.UserRepository
-import org.spin.core.throwable.SimplifiedException
 import org.spin.web.annotation.RestfulMethod
 import org.spin.web.annotation.RestfulService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Required
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
-
-import java.beans.Transient
 
 /**
  *
@@ -22,7 +18,7 @@ import java.beans.Transient
 open class TestService {
 
     @Autowired
-    private val userDao: UserRepository? = null
+    private lateinit var userDao: UserRepository
 
     @RestfulMethod(auth = false, authRouter = "a")
     fun aaa(pp: Array<String>, a: List<*>, b: Array<MultipartFile>): Int {
@@ -39,7 +35,7 @@ open class TestService {
         user.password = "123"
         user.mobile = "13111111111"
         user.email = "none@qq.com"
-        println(userDao!!.currentDataSourceName)
+        println(userDao.currentDataSourceName)
         userDao.save(user)
         userDao.switchDataSource("db2")
         println(userDao.currentDataSourceName)
@@ -59,7 +55,7 @@ open class TestService {
         user.password = "123"
         user.mobile = "13111111111"
         user.email = "none@qq.com"
-        println(userDao!!.currentDataSourceName)
+        println(userDao.currentDataSourceName)
         userDao.save(user)
         //        throw new SimplifiedException("aa");
     }

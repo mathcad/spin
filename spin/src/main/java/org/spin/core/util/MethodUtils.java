@@ -12,6 +12,7 @@ import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.GenericArrayType;
@@ -1265,8 +1266,8 @@ public abstract class MethodUtils {
         final String[] paramNames = new String[m.getParameterTypes().length];
         final String n = m.getDeclaringClass().getName();
         ClassReader cr = null;
-        try {
-            cr = new ClassReader(n);
+        try (InputStream is = m.getClass().getClass().getResourceAsStream(n.replace('.', '/') + ".class")) {
+            cr = new ClassReader(is);
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, e);
         }
