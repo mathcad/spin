@@ -93,25 +93,28 @@ public abstract class PackageUtils {
      * @param childPackage 是否遍历子包
      * @return 类的完整名称
      */
-    private static List<String> getClassNameByJar(String jarPath, boolean childPackage) {
+    public static List<String> getClassNameByJar(String jarPath, boolean childPackage) {
         List<String> myClassName = new ArrayList<>();
         String[] jarInfo = jarPath.split("!");
         String jarFilePath = jarInfo[0].substring(jarInfo[0].indexOf("/"));
-        String packagePath = jarInfo[1].substring(1);
+        String clsPath = (jarInfo.length == 3 ? jarInfo[1] : "/").substring(1);
+        String packagePath = (jarInfo.length == 3 ? (clsPath + jarInfo[2]) : jarInfo[1].substring(1));
         try {
             JarFile jarFile = new JarFile(jarFilePath);
             Stream<String> stream = StreamUtils.enumerationAsStream(jarFile.entries()).map(JarEntry::getName).filter(entryName -> entryName.endsWith(".class"));
-            if (childPackage)
-                stream.filter(n -> n.startsWith(packagePath)).forEach(n -> myClassName.add(n.replace("/", ".").substring(0, n.lastIndexOf('.'))));
-            else
+            if (childPackage) {
+                stream.filter(n -> n.startsWith(packagePath))
+                    .forEach(n -> myClassName.add(n.replace("/", ".").substring(clsPath.length() + 1, n.length() - 6)));
+            } else {
                 stream.forEach(n -> {
                     int index = n.lastIndexOf('/');
                     String myPackagePath;
                     myPackagePath = (index != -1) ? n.substring(0, index) : n;
                     if (myPackagePath.equals(packagePath)) {
-                        myClassName.add(n.replace("/", ".").substring(0, n.lastIndexOf('.')));
+                        myClassName.add(n.replace("/", ".").substring(clsPath.length() + 1, n.length() - 6));
                     }
                 });
+            }
             jarFile.close();
         } catch (IOException e) {
             logger.error(e.getMessage());

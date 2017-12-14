@@ -243,7 +243,7 @@ public abstract class EnumUtils {
         for (String clz : clsList) {
             Class cls = null;
             try {
-                cls = Class.forName(clz, true, Thread.currentThread().getContextClassLoader());
+                cls = Class.forName(clz);
             } catch (ClassNotFoundException e) {
                 continue;
             }

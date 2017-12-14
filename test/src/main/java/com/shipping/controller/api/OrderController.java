@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
  * 运单
  *
  * @author X
- * @contact TEL:18900539326, QQ:396616781
- * @create 2017-09-04 下午11:04
  */
 @RestController
 @RequestMapping("/api/order")
