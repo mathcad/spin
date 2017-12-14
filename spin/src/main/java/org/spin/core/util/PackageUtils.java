@@ -93,7 +93,7 @@ public abstract class PackageUtils {
      * @param childPackage 是否遍历子包
      * @return 类的完整名称
      */
-    public static List<String> getClassNameByJar(String jarPath, boolean childPackage) {
+    private static List<String> getClassNameByJar(String jarPath, boolean childPackage) {
         List<String> myClassName = new ArrayList<>();
         String[] jarInfo = jarPath.split("!");
         String jarFilePath = jarInfo[0].substring(jarInfo[0].indexOf("/"));
