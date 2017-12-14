@@ -87,7 +87,7 @@ public abstract class PackageUtils {
     }
 
     /**
-     * 从jar获取某包下所有类
+     * 从jar获取某包下所有类（支持spring boot的fat jar）
      *
      * @param jarPath      jar文件路径
      * @param childPackage 是否遍历子包
@@ -104,14 +104,14 @@ public abstract class PackageUtils {
             Stream<String> stream = StreamUtils.enumerationAsStream(jarFile.entries()).map(JarEntry::getName).filter(entryName -> entryName.endsWith(".class"));
             if (childPackage) {
                 stream.filter(n -> n.startsWith(packagePath))
-                    .forEach(n -> myClassName.add(n.replace("/", ".").substring(clsPath.length() + 1, n.length() - 6)));
+                    .forEach(n -> myClassName.add(n.replace('/', '.').substring(clsPath.length() + 1, n.length() - 6)));
             } else {
                 stream.forEach(n -> {
                     int index = n.lastIndexOf('/');
                     String myPackagePath;
                     myPackagePath = (index != -1) ? n.substring(0, index) : n;
                     if (myPackagePath.equals(packagePath)) {
-                        myClassName.add(n.replace("/", ".").substring(clsPath.length() + 1, n.length() - 6));
+                        myClassName.add(n.replace('/', '.').substring(clsPath.length() + 1, n.length() - 6));
                     }
                 });
             }
