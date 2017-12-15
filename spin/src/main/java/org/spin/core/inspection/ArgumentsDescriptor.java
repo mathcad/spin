@@ -47,7 +47,7 @@ public class ArgumentsDescriptor {
             if (Objects.isNull(args[i])) {
                 ++nullCnt;
             }
-            needed[i] = check && checkNeeded.apply(parameter);
+            needed[i] = check && checkNeeded.apply(parameter) || parameter.getType().isPrimitive();
             if (needed[i] && Objects.isNull(args[i])) {
                 ++neededNullsCnt;
                 neededNulls.add(i);
