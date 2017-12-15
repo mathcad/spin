@@ -5,7 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.file.FileUtils;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -95,28 +98,50 @@ public abstract class PackageUtils {
         List<String> classNames = new ArrayList<>();
         String[] jarInfo = jarPath.split("!");
         String jarFilePath = jarInfo[0].substring(jarInfo[0].indexOf("/"));
-        String clsPath = (jarInfo.length == 3 ? jarInfo[1] : "/").substring(1);
-        String packagePath = (jarInfo.length == 3 ? (clsPath + jarInfo[2]) : jarInfo[1].substring(1));
+        String contextPath = (jarInfo.length == 3 ? jarInfo[1] : "/").substring(1);
+        boolean isJarInJar = contextPath.endsWith(".jar");
+        String packagePath = (isJarInJar || StringUtils.isEmpty(contextPath) ? jarInfo[jarInfo.length - 1].substring(1) : (contextPath + jarInfo[2]));
+        JarFile jarFile = null;
         try {
-            JarFile jarFile = new JarFile(jarFilePath);
-            Stream<String> stream = StreamUtils.enumerationAsStream(jarFile.entries()).map(JarEntry::getName).filter(entryName -> entryName.endsWith(".class"));
+            jarFile = new JarFile(jarFilePath);
+            if (contextPath.endsWith(".jar")) {
+                JarEntry jarEntry = StreamUtils.enumerationAsStream(jarFile.entries()).filter(entry -> entry.getName().endsWith(contextPath)).findFirst().orElse(null);
+                if (null != jarEntry && !jarEntry.isDirectory()) {
+                    String fileName = SystemUtils.getJavaIoTmpDir() + SystemUtils.FILE_SEPARATOR + RandomStringUtils.randomAlphanumeric(16) + ".jar";
+                    try (OutputStream os = new FileOutputStream(fileName); InputStream is = jarFile.getInputStream(jarEntry)) {
+                        byte[] tmp = new byte[2048];
+                        while (is.read(tmp) != -1) {
+                            os.write(tmp);
+                        }
+                        jarFile.close();
+                        jarFile = new JarFile(fileName);
+                    }
+                }
+            }
+            Stream<String> stream = StreamUtils.enumerationAsStream(jarFile.entries()).map(JarEntry::getName).filter(entryName -> entryName.endsWith(".class") && entryName.indexOf('$') == -1);
             if (childPackage) {
                 stream.filter(n -> n.startsWith(packagePath))
-                    .forEach(n -> classNames.add(n.replace('/', '.').substring(clsPath.length() + 1, n.length() - 6)));
+                    .forEach(n -> classNames.add(n.replace('/', '.').substring(isJarInJar ? 0 : contextPath.length() + 1, n.length() - 6)));
             } else {
                 stream.forEach(n -> {
                     int index = n.lastIndexOf('/');
                     String myPackagePath;
                     myPackagePath = (index != -1) ? n.substring(0, index) : n;
                     if (myPackagePath.equals(packagePath)) {
-                        classNames.add(n.replace('/', '.').substring(clsPath.length() + 1, n.length() - 6));
+                        classNames.add(n.replace('/', '.').substring(0, n.length() - 6));
                     }
                 });
             }
-            jarFile.close();
         } catch (IOException e) {
             logger.error(e.getMessage());
             throw new SimplifiedException("Read jar file" + jarFilePath + "error", e);
+        } finally {
+            if (null != jarFile) {
+                try {
+                    jarFile.close();
+                } catch (IOException e) {
+                }
+            }
         }
         return classNames;
     }
@@ -134,17 +159,6 @@ public abstract class PackageUtils {
         Optional.ofNullable(urls).ifPresent(u -> Arrays.stream(u).map(URL::getPath).filter(p -> !p.endsWith("classes/"))
             .map(urlPath -> urlPath + "!/" + packageName)
             .forEach(jarPath -> myClassName.addAll(getClassNameByJar(jarPath, packageName, childPackage))));
-//        if (urls != null) {
-//            for (URL url : urls) {
-//                String urlPath = url.getPath();
-//                // 不必搜索classes文件夹
-//                if (urlPath.endsWith("classes/")) {
-//                    continue;
-//                }
-//                String jarPath = urlPath + "!/" + packagePath;
-//                myClassName.addAll(getClassNameByJar(jarPath, childPackage));
-//            }
-//        }
         return myClassName;
     }
 }

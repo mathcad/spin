@@ -100,10 +100,12 @@ public class BeanUtilsTest<E> {
 
     @Test
     public void testPackage() {
-//        List<String> ls = PackageUtils.getClassNameByJar("file:/H:/Projects/ideaWorkspace/fundamental/test/build/libs/test-1.0-SNAPSHOT.jar!/BOOT-INF/classes!/com/shipping/domain/enums", true);
+//        List<String> ls = PackageUtils.getClassNameByJar("file:/H:/Projects/ideaWorkspace/fundamental/test/build/libs/test-1.0-SNAPSHOT.jar!/BOOT-INF/lib/spin-2.1.9-RC7.jar!/org/spin/core", "", false);
+//        ls = PackageUtils.getClassNameByJar("file:/H:/Projects/ideaWorkspace/fundamental/test/build/libs/test-1.0-SNAPSHOT.jar!/BOOT-INF/classes!/com/shipping/domain/enums", "", true);
 //        System.out.println(ls);
-//        ls = PackageUtils.getClassNameByJar("file:/D:/mysql/mysql-connector-java-6.0.6.jar!/com/mysql/cj/api/x/core", false);
+//        ls = PackageUtils.getClassNameByJar("file:/D:/mysql/mysql-connector-java-6.0.6.jar!/com/mysql/cj/api/x/core", "",false);
         List<String> className = PackageUtils.getClassName("org.spin");
+        System.out.println(className);
         assertTrue(true);
     }
 }

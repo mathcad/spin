@@ -1,5 +1,10 @@
 package org.spin.core.util.file;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.StreamUtils;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,6 +13,8 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * 文件工具类
@@ -16,6 +23,7 @@ import java.util.function.Predicate;
  * @author xuweinan
  */
 public abstract class FileUtils {
+    private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
 
     /**
      * 删除文件夹
@@ -237,4 +245,58 @@ public abstract class FileUtils {
         }
         return allFileNames;
     }
+
+    public static List<String> listFilesFromJarOrZip(String filePath, Predicate<String> filter) {
+        List<String> fileNames = new ArrayList<>();
+        ZipFile file = null;
+        try {
+            file = new ZipFile(filePath);
+            StreamUtils.enumerationAsStream(file.entries()).map(ZipEntry::getName).filter(filter).forEach(fileNames::add);
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            throw new SimplifiedException("Read jar file" + filePath + "error", e);
+        } finally {
+            if (null != file) {
+                try {
+                    file.close();
+                } catch (Throwable e) {
+                }
+            }
+        }
+        return fileNames;
+    }
+//
+//    public static List<File> extractFileFromZip(String filePath, String savePath, Predicate<ZipEntry> searchFilter) throws IOException {
+//        ArrayList<File> files = new ArrayList<>();
+//        String dest;
+//        if (savePath.charAt(savePath.length() - 1) == '\\' || savePath.charAt(savePath.length() - 1) == '/') {
+//            dest = savePath.substring(0, savePath.length() - 1);
+//        } else {
+//            dest = savePath;
+//        }
+//        File saveDest = new File(dest);
+//        if (saveDest.exists() && !saveDest.isDirectory()) {
+//            throw new IOException("savePath不是一个目录: " + dest);
+//        } else if (!saveDest.exists() && !saveDest.mkdirs()) {
+//            throw new IOException("创建保存目录失败: " + dest);
+//        }
+//        try (ZipFile file = new ZipFile(filePath)) {
+//            LinkedList<ZipEntry> directories = new LinkedList<>();
+//            StreamUtils.enumerationAsStream(file.entries()).filter(searchFilter).forEach(e -> {
+//                if (e.isDirectory()) {
+//                    directories.add(e);
+//                } else {
+//                    String fileName = dest + SystemUtils.FILE_SEPARATOR + e.getName();
+//                    try (OutputStream os = new FileOutputStream(fileName); InputStream is = file.getInputStream(e)) {
+//                        byte[] tmp = new byte[2048];
+//                        while (is.read(tmp) != -1) {
+//                            os.write(tmp);
+//                        }
+//                    } catch (IOException ex) {
+//                    }
+//                }
+//            });
+//        }
+//        return files;
+//    }
 }
