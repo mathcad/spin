@@ -103,6 +103,7 @@ public class BeanUtilsTest<E> {
 //        List<String> ls = PackageUtils.getClassNameByJar("file:/H:/Projects/ideaWorkspace/fundamental/test/build/libs/test-1.0-SNAPSHOT.jar!/BOOT-INF/classes!/com/shipping/domain/enums", true);
 //        System.out.println(ls);
 //        ls = PackageUtils.getClassNameByJar("file:/D:/mysql/mysql-connector-java-6.0.6.jar!/com/mysql/cj/api/x/core", false);
+        List<String> className = PackageUtils.getClassName("org.spin");
         assertTrue(true);
     }
 }

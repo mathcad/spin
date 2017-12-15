@@ -3,8 +3,8 @@ package org.spin.core.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.file.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -50,9 +50,9 @@ public abstract class PackageUtils {
         if (url != null) {
             String type = url.getProtocol();
             if ("file".equals(type)) {
-                fileNames = getClassNameByFile(url.getPath(), childPackage);
+                fileNames = getClassNameByPath(url.getPath(), packageName, childPackage);
             } else if ("jar".equals(type)) {
-                fileNames = getClassNameByJar(url.getPath(), childPackage);
+                fileNames = getClassNameByJar(url.getPath(), packageName, childPackage);
             }
         } else {
             fileNames = getClassNameByJars(((URLClassLoader) loader).getURLs(), packagePath, childPackage);
@@ -61,40 +61,38 @@ public abstract class PackageUtils {
     }
 
     /**
-     * 从项目文件获取某包下所有类
+     * 获取指定目录下，指定包中的所有类
      *
-     * @param filePath     文件路径
+     * @param filePath     搜索目录
+     * @param packageName  包名
      * @param childPackage 是否遍历子包
      * @return 类的完整名称
      */
-    private static List<String> getClassNameByFile(String filePath, boolean childPackage) {
-        List<String> myClassName = new ArrayList<>();
-        File file = new File(filePath);
-        File[] childFiles = file.listFiles();
-        if (childFiles != null && childFiles.length != 0) {
-            Arrays.stream(childFiles).forEach(childFile -> {
-                String childFilePath = childFile.getPath();
-                if (childFile.isDirectory() && childPackage) {
-                    myClassName.addAll(getClassNameByFile(childFilePath, true));
-                } else if (childFilePath.endsWith(".class")) {
-                    childFilePath = childFilePath.substring(childFilePath.indexOf("\\classes") + 9, childFilePath.lastIndexOf('.'));
-                    childFilePath = childFilePath.replace("\\", ".");
-                    myClassName.add(childFilePath);
-                }
-            });
+    public static List<String> getClassNameByPath(String filePath, String packageName, boolean childPackage) {
+        List<String> classFiles = FileUtils.listFiles(filePath, childPackage, file -> file.getName().endsWith(".class") && file.getName().indexOf('$') == -1);
+        String classFile;
+        if (classFiles.isEmpty()) {
+            return classFiles;
         }
-        return myClassName;
+        for (int i = 0,
+             idx = StringUtils.replace(classFiles.get(0), SystemUtils.FILE_SEPARATOR, ".").indexOf(packageName);
+             i < classFiles.size(); i++) {
+            classFile = classFiles.get(i);
+            classFiles.set(i, StringUtils.replace(classFile, SystemUtils.FILE_SEPARATOR, ".").substring(idx, classFile.length() - 6));
+        }
+        return classFiles;
     }
 
     /**
      * 从jar获取某包下所有类（支持spring boot的fat jar）
      *
      * @param jarPath      jar文件路径
+     * @param packageName  包名
      * @param childPackage 是否遍历子包
      * @return 类的完整名称
      */
-    private static List<String> getClassNameByJar(String jarPath, boolean childPackage) {
-        List<String> myClassName = new ArrayList<>();
+    public static List<String> getClassNameByJar(String jarPath, String packageName, boolean childPackage) {
+        List<String> classNames = new ArrayList<>();
         String[] jarInfo = jarPath.split("!");
         String jarFilePath = jarInfo[0].substring(jarInfo[0].indexOf("/"));
         String clsPath = (jarInfo.length == 3 ? jarInfo[1] : "/").substring(1);
@@ -104,14 +102,14 @@ public abstract class PackageUtils {
             Stream<String> stream = StreamUtils.enumerationAsStream(jarFile.entries()).map(JarEntry::getName).filter(entryName -> entryName.endsWith(".class"));
             if (childPackage) {
                 stream.filter(n -> n.startsWith(packagePath))
-                    .forEach(n -> myClassName.add(n.replace('/', '.').substring(clsPath.length() + 1, n.length() - 6)));
+                    .forEach(n -> classNames.add(n.replace('/', '.').substring(clsPath.length() + 1, n.length() - 6)));
             } else {
                 stream.forEach(n -> {
                     int index = n.lastIndexOf('/');
                     String myPackagePath;
                     myPackagePath = (index != -1) ? n.substring(0, index) : n;
                     if (myPackagePath.equals(packagePath)) {
-                        myClassName.add(n.replace('/', '.').substring(clsPath.length() + 1, n.length() - 6));
+                        classNames.add(n.replace('/', '.').substring(clsPath.length() + 1, n.length() - 6));
                     }
                 });
             }
@@ -120,22 +118,22 @@ public abstract class PackageUtils {
             logger.error(e.getMessage());
             throw new SimplifiedException("Read jar file" + jarFilePath + "error", e);
         }
-        return myClassName;
+        return classNames;
     }
 
     /**
      * 从所有jar中搜索该包，并获取该包下所有类
      *
      * @param urls         URL集合
-     * @param packagePath  包路径
+     * @param packageName  包路径
      * @param childPackage 是否遍历子包
      * @return 类的完整名称
      */
-    private static List<String> getClassNameByJars(URL[] urls, String packagePath, boolean childPackage) {
+    public static List<String> getClassNameByJars(URL[] urls, String packageName, boolean childPackage) {
         List<String> myClassName = new ArrayList<>();
         Optional.ofNullable(urls).ifPresent(u -> Arrays.stream(u).map(URL::getPath).filter(p -> !p.endsWith("classes/"))
-            .map(urlPath -> urlPath + "!/" + packagePath)
-            .forEach(jarPath -> myClassName.addAll(getClassNameByJar(jarPath, childPackage))));
+            .map(urlPath -> urlPath + "!/" + packageName)
+            .forEach(jarPath -> myClassName.addAll(getClassNameByJar(jarPath, packageName, childPackage))));
 //        if (urls != null) {
 //            for (URL url : urls) {
 //                String urlPath = url.getPath();
