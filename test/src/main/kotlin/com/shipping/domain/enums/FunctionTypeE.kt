@@ -9,10 +9,10 @@ import org.spin.data.core.UserEnumColumn
  * @author xuweinan
  */
 @UserEnum("系统功能类型")
-enum class FunctionTypeE(internal var value: Int) : UserEnumColumn {
+enum class FunctionTypeE(private val value: Int) : UserEnumColumn {
     MEMU(1), API(2);
 
-    override fun getValue(): Int? {
+    override fun getValue(): Int {
         return value
     }
 }

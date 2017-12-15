@@ -1,5 +1,6 @@
 package com.shipping.service
 
+import com.shipping.domain.enums.OrganizationTypeE
 import com.shipping.domain.sys.Function
 import com.shipping.repository.sys.FunctionRepository
 import org.slf4j.LoggerFactory
@@ -21,6 +22,7 @@ class FunctionService {
 
     fun add(func: Function) {
         if (Objects.nonNull(func.parent)) {
+            OrganizationTypeE.GROUP
             val parent = functionDao.get(func.parent!!.id)
             functionDao.save(func, true)
             functionDao.doWork { connection ->

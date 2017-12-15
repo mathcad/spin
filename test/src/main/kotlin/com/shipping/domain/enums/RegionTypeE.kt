@@ -9,10 +9,10 @@ import org.spin.data.core.UserEnumColumn
  * @author xuweinan
  */
 @UserEnum("区域类型")
-enum class RegionTypeE(internal var value: Int) : UserEnumColumn {
+enum class RegionTypeE(private val value: Int) : UserEnumColumn {
     PROVINCE(1), CITY(2), DISTRICT(3);
 
-    override fun getValue(): Int? {
+    override fun getValue(): Int {
         return value
     }
 }

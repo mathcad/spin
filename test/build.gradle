@@ -6,7 +6,7 @@ apply plugin: 'org.junit.platform.gradle.plugin'
 apply plugin: 'kotlin'
 
 buildscript {
-    ext.kotlin_version = '1.2.0'
+    ext.kotlin_version = '1.2.10'
 
     ext {
         springBootVersion = '1.5.9.RELEASE'
@@ -58,7 +58,7 @@ dependencies {
 //    testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
 //        exclude(module: 'commons-logging')
 //    }
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jre8', version: "$kotlin_version"
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: "$kotlin_version"
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlin_version
 
 //    compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion

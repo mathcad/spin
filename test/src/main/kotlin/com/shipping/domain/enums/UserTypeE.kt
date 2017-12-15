@@ -10,10 +10,10 @@ import org.spin.data.core.UserEnumColumn
  * @author xuweinan
  */
 @UserEnum("用户类型")
-enum class UserTypeE(internal var value: Int) : UserEnumColumn {
+enum class UserTypeE(private val value: Int) : UserEnumColumn {
     普通用户(2), 微信用户(3);
 
-    override fun getValue(): Int? {
+    override fun getValue(): Int {
         return value
     }
 }
