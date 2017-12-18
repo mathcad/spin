@@ -19,65 +19,64 @@ import javax.persistence.Table
  */
 @Entity
 @Table(name = "sys_organ")
-class Organization : AbstractEntity() {
-
+class Organization(
     /**
      * 名称
      */
     @Column(length = 64, unique = true)
-    var name: String? = null
+    var name: String = "",
 
     /**
      * 编码
      */
     @Column(length = 64, unique = true)
-    var code: String? = null
+    var code: String? = null,
 
     /**
      * 简称
      */
     @Column(length = 16)
-    private val alias: String? = null
+    var alias: String? = null,
 
     /**
      * 联系方式
      */
     @Column(length = 32)
-    private val tel: String? = null
+    var tel: String? = null,
 
     /**
      * 地址
      */
     @Column(length = 128)
-    private val address: String? = null
+    var address: String? = null,
 
     /**
      * 类型
      */
     @Type(type = "org.spin.data.extend.UserEnumType")
-    var type: OrganizationTypeE? = null
+    var type: OrganizationTypeE? = null,
 
     /**
      * 上级机构
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    var parent: Organization? = null
+    var parent: Organization? = null,
 
     /**
      * id线索
      */
     @Column
-    var idPath: String? = null
+    var idPath: String = "",
 
     /**
      * 是否叶子节点(用于加速查找)
      */
     @Column
-    var isLeaf = true
+    var isLeaf: Boolean = true,
 
     @Column
-    private val remark: String? = null
-
+    var remark: String? = null
+) : AbstractEntity() {
     companion object {
         private val serialVersionUID = 8610089447094514827L
     }

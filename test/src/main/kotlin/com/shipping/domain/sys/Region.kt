@@ -17,26 +17,25 @@ import javax.persistence.Table
  */
 @Entity
 @Table(name = "sys_region")
-class Region : AbstractEntity() {
-
+class Region(
     @Column(length = 6, unique = true)
-    var code: String? = null
+    var code: String = "",
 
     @Column(length = 64)
-    var name: String? = null
+    var name: String = "",
 
     @Column(length = 128)
-    var fullName: String? = null
+    var fullName: String = "",
 
     @Type(type = "org.spin.data.extend.UserEnumType")
-    var level: RegionTypeE? = null
+    var level: RegionTypeE = RegionTypeE.PROVINCE,
 
     @Column(length = 6)
-    var parentCode: String? = null
+    var parentCode: String? = null,
 
     @Column(length = 64)
-    private val path: String? = null
-
+    var path: String = ""
+) : AbstractEntity() {
     companion object {
         private val serialVersionUID = -4148357794686831875L
     }

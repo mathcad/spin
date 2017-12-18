@@ -14,17 +14,18 @@ import javax.persistence.Table
  */
 @Entity
 @Table(name = "sys_permission")
-class Permission : AbstractEntity() {
+class Permission(
 
     @Column(length = 64, unique = true)
-    var name: String? = null
+    var name: String = "",
 
     @Column(length = 64, unique = true)
-    var code: String? = null
+    var code: String = "",
 
     @Column
     var remark: String? = null
 
+) : AbstractEntity() {
     companion object {
         private val serialVersionUID = -724121483134748879L
     }

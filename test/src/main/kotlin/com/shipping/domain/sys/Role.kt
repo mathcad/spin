@@ -1,7 +1,7 @@
 package com.shipping.domain.sys
 
 import org.spin.data.core.AbstractEntity
-
+import java.util.*
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.FetchType
@@ -9,7 +9,6 @@ import javax.persistence.JoinColumn
 import javax.persistence.JoinTable
 import javax.persistence.ManyToMany
 import javax.persistence.Table
-import java.util.ArrayList
 
 /**
  * 角色
@@ -20,21 +19,20 @@ import java.util.ArrayList
  */
 @Entity
 @Table(name = "sys_role")
-class Role : AbstractEntity() {
+class Role(
+    @Column(length = 64, unique = true)
+    var name: String = "",
 
     @Column(length = 64, unique = true)
-    var name: String? = null
-
-    @Column(length = 64, unique = true)
-    var code: String? = null
+    var code: String = "",
 
     @Column
-    var remark: String? = null
+    var remark: String? = null,
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "sys_role_permission", joinColumns = [JoinColumn(name = "role_id")], inverseJoinColumns = [JoinColumn(name = "permission_id")])
-    var permissions: List<Permission> = ArrayList()
-
+    var permissions: MutableList<Permission> = ArrayList()
+) : AbstractEntity() {
     companion object {
         private val serialVersionUID = 8934787783435264166L
     }

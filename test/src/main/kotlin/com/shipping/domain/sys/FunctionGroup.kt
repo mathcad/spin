@@ -17,25 +17,24 @@ import javax.persistence.Table
  */
 @Entity
 @Table(name = "sys_function_group")
-class FunctionGroup : AbstractEntity() {
-
+class FunctionGroup(
     /**
      * 名称
      */
     @Column(length = 64, unique = true)
-    var name: String? = null
+    var name: String = "",
 
     /**
      * 类型
      */
     @Type(type = "org.spin.data.extend.UserEnumType")
-    var type: FunctionTypeE? = null
+    var type: FunctionTypeE? = null,
 
     /**
      * 编码
      */
     @Column(length = 64, unique = true)
-    var code: String? = null
+    var code: String? = null,
 
     /**
      * 图标
@@ -43,6 +42,7 @@ class FunctionGroup : AbstractEntity() {
     @Column(length = 64)
     var icon: String? = null
 
+) : AbstractEntity() {
     companion object {
         private val serialVersionUID = -5089878281368192910L
     }

@@ -15,56 +15,55 @@ import javax.persistence.Table
  */
 @Entity
 @Table(name = "sys_file")
-class File : AbstractEntity() {
-
+class File(
     /**
      * 全局唯一id
      */
     @Column(length = 128, unique = true)
-    var guid: String? = null
+    var guid: String = "",
 
     /**
      * 文件名
      */
     @Column
-    var fileName: String? = null
+    var fileName: String = "",
 
     /**
      * 原始文件名
      */
     @Column
-    var originName: String? = null
+    var originName: String? = null,
 
     /**
      * 文件存放路径
      */
     @Column(unique = true)
-    var filePath: String? = null
+    var filePath: String = "",
 
     /**
      * 扩展名
      */
     @Column(length = 16)
-    var extension: String? = null
+    var extension: String? = null,
 
     /**
      * 文件大小
      */
     @Column
-    var size: Long? = null
+    var size: Long = 0L,
 
     /**
      * 扩展属性
      */
     @Column
-    var extAttr: String? = null
+    var extAttr: String? = null,
 
     /**
      * 是否私有
      */
     @Column
-    var isPriv = false
-
+    var isPriv: Boolean = false
+) : AbstractEntity() {
     companion object {
         private val serialVersionUID = 5524987141178520509L
     }

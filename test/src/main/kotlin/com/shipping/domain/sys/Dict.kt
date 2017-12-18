@@ -17,20 +17,19 @@ import javax.persistence.Table
  */
 @Entity
 @Table(name = "sys_dict")
-class Dict : AbstractEntity() {
-
+class Dict(
     @Column(length = 64)
-    var name: String? = null
+    var name: String = "",
 
     @Column(length = 16, unique = true)
-    var code: String? = null
+    var code: String = "",
 
     @Column(length = 64)
-    var value: String? = null
+    var value: String? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    var parent: Dict? = null
+    var parent: Dict? = null,
 
     @Column(length = 128)
     var remark: String? = null
-}
+) : AbstractEntity()
