@@ -75,7 +75,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
 
     @ResponseBody
     @RequestMapping(value = "${spin.web.restfulPrefix}/**")
-    public RestfulResponse exec(HttpServletRequest request, @RequestBody String requestBody) {
+    public RestfulResponse exec(HttpServletRequest request, @RequestBody(required = false) String requestBody) {
         String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
         if (resc.length != 2) {
             return RestfulResponse.error(new SimplifiedException("请求的路径不正确"));
@@ -90,7 +90,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
 
     @ResponseBody
     @RequestMapping(value = "${spin.web.restfulPrefix}/plain/**")
-    public String plainExec(HttpServletRequest request, @RequestBody String requestBody) {
+    public String plainExec(HttpServletRequest request, @RequestBody(required = false) String requestBody) {
         String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
         if (resc.length != 3) {
             return "请求的路径不正确";
