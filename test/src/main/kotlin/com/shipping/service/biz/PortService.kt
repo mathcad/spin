@@ -4,6 +4,7 @@ import com.shipping.domain.biz.Port
 import com.shipping.repository.biz.PortRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * 港口服务
@@ -13,10 +14,10 @@ import org.springframework.stereotype.Service
  * @create 2017-09-05 下午11:07
  */
 @Service
-class PortService {
+open class PortService {
 
     @Autowired
-    private val portRepository: PortRepository? = null
+    private lateinit var portRepository: PortRepository
 
     /**
      * 根据港口名取港口信息
@@ -25,7 +26,7 @@ class PortService {
      */
     fun getByName(name: String): Port {
 
-        return portRepository!!.findOne("name", name)
+        return portRepository.findOne("name", name)
     }
 
     /**
@@ -33,8 +34,9 @@ class PortService {
      * @param port 港口
      * @return 港口
      */
-    fun save(port: Port): Port {
-        return portRepository!!.save(port)
+    @Transactional
+    open fun save(port: Port): Port {
+        return portRepository.save(port)
     }
 
 }

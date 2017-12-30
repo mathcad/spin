@@ -5,11 +5,16 @@ import org.spin.core.collection.MultiValueMap;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * 集合工具类
  */
 public abstract class CollectionUtils {
+
+    private static long PARALLEL_FACTORY = 10000L;
 
     /**
      * 判断集合是否为空或{@code null}
@@ -54,6 +59,96 @@ public abstract class CollectionUtils {
         for (Object elem : arr) {
             collection.add((E) elem);
         }
+    }
+
+    public static <T extends Collection<E>, E> T clone(T collection) {
+        if (null == collection) {
+            return null;
+        }
+        @SuppressWarnings("unchecked") T res = JsonUtils.fromJson("[]", (Class<T>) collection.getClass());
+        res.addAll(collection);
+        return res;
+    }
+
+    public static <T extends Collection<E>, E> T cloneWithoutValues(T collection) {
+        if (null == collection) {
+            return null;
+        }
+        @SuppressWarnings("unchecked") T res = JsonUtils.fromJson("[]", (Class<T>) collection.getClass());
+        return res;
+    }
+
+    public static <T extends Collection<E>, E> E detect(T collection, Predicate<E> predicate) {
+        if (null == collection || collection.isEmpty()) {
+            return null;
+        }
+        return parallelStream(collection, PARALLEL_FACTORY).filter(predicate).findFirst().orElse(null);
+    }
+
+    public static <T extends Collection<E>, E, P> E detectWith(T collection, BiPredicate<E, P> predicate, P value) {
+        if (null == collection || collection.isEmpty()) {
+            return null;
+        }
+        return parallelStream(collection, PARALLEL_FACTORY).filter(i -> predicate.test(i, value)).findFirst().orElse(null);
+    }
+
+    public static <T extends Collection<E>, E> Optional<E> detectOptional(T collection, Predicate<E> predicate) {
+        if (null == collection || collection.isEmpty()) {
+            return Optional.empty();
+        }
+        return parallelStream(collection, PARALLEL_FACTORY).filter(predicate).findFirst();
+    }
+
+    public static <T extends Collection<E>, E, P> Optional<E> detectOptionalWith(T collection, BiPredicate<E, P> predicate, P value) {
+        if (null == collection || collection.isEmpty()) {
+            return Optional.empty();
+        }
+        return parallelStream(collection, PARALLEL_FACTORY).filter(i -> predicate.test(i, value)).findFirst();
+    }
+
+    public static <T extends Collection<E>, E> T select(T collection, Predicate<E> predicate) {
+        T res = cloneWithoutValues(collection);
+        if (null == res) {
+            return null;
+        }
+        parallelStream(collection, PARALLEL_FACTORY).filter(predicate).forEach(res::add);
+        return res;
+    }
+
+    public static <T extends Collection<E>, E, P> T selectWith(T collection, BiPredicate<E, P> predicate, P value) {
+        T res = cloneWithoutValues(collection);
+        if (null == res) {
+            return null;
+        }
+        parallelStream(collection, PARALLEL_FACTORY).filter(i -> predicate.test(i, value)).forEach(res::add);
+        return res;
+    }
+
+    public static <T extends Collection<E>, E> T reject(T collection, Predicate<E> predicate) {
+        T res = cloneWithoutValues(collection);
+        if (null == res) {
+            return null;
+        }
+        parallelStream(collection, PARALLEL_FACTORY).filter(i -> !predicate.test(i)).forEach(res::add);
+        return res;
+    }
+
+    public static <T extends Collection<E>, E, P> T rejectWith(T collection, BiPredicate<E, P> predicate, P value) {
+        T res = cloneWithoutValues(collection);
+        if (null == res) {
+            return null;
+        }
+        parallelStream(collection, PARALLEL_FACTORY).filter(i -> !predicate.test(i, value)).forEach(res::add);
+        return res;
+    }
+
+    public static <T extends Collection<E>, E, P> T take(T collection, int size) {
+        T res = cloneWithoutValues(collection);
+        if (null == res) {
+            return null;
+        }
+        parallelStream(collection, PARALLEL_FACTORY).limit(size).forEach(res::add);
+        return res;
     }
 
     /**
@@ -335,6 +430,19 @@ public abstract class CollectionUtils {
         Set<E> set = new TreeSet<>();
         Collections.addAll(set, elements);
         return set;
+    }
+
+    /**
+     * 将集合转换为stream。当元素个数超过阈值时，将转为并行流
+     *
+     * @param collection     集合
+     * @param parallelFactor 并行阈值
+     * @param <E>            元素类型
+     * @return 流
+     */
+    public static <E> Stream<E> parallelStream(Collection<E> collection, long parallelFactor) {
+        Assert.notNull(collection, "collection must be non-null");
+        return (collection.size() > parallelFactor ? collection.parallelStream() : collection.stream());
     }
 
     /**

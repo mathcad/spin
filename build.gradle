@@ -43,7 +43,7 @@ subprojects {
         }
     }
 
-    task createDirs {
+    task createDirs(group: 'help') doLast {
         sourceSets*.java.srcDirs*.each { it.mkdirs() }
         sourceSets*.resources.srcDirs*.each { it.mkdirs() }
     }
@@ -74,7 +74,23 @@ subprojects {
     }
 }
 
-task cleanAll() {
-    allprojects.each { p -> println(file(p.name + '/out').deleteDir()) }
-    allprojects.each { p -> println(file(p.name + '/build').deleteDir()) }
+task cleanAll(group: 'build') doLast {
+    File f = file('build')
+    if (f.exists()) {
+        print("delete build")
+        println(f.deleteDir() ? " success" : "failure")
+    }
+    allprojects.each { p ->
+        f = file(p.name + "/out")
+        if (f.exists()) {
+            print("delete " + p.name + "/out")
+            println(f.deleteDir() ? " success" : "failure")
+        }
+        f = file(p.name + "/build")
+        if (f.exists()) {
+            print("delete " + p.name + "/build")
+            println(f.deleteDir() ? " success" : "failure")
+        }
+
+    }
 }

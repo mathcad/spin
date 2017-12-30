@@ -43,16 +43,8 @@ public abstract class StringUtils {
 
     private static final char EXTENSION_SEPARATOR = '.';
 
-    /**
-     * The empty String <code>""</code>.
-     */
     public static final String EMPTY = "";
 
-    /**
-     * Represents a failed index search.
-     *
-     * @since 2.1
-     */
     public static final int INDEX_NOT_FOUND = -1;
 
     //---------------------------------------------------------------------
@@ -60,7 +52,7 @@ public abstract class StringUtils {
     //---------------------------------------------------------------------
 
     /**
-     * <p>判断指定的字符串{@code String}是否为空</p>
+     * 判断指定的字符串{@code String}是否为空
      * <p>
      * 该方法接受一个{@code Object}作为参数，与{@code null}和空字符串比较。
      * 如果参数是一个非String的非空对象，则一律返回{@code false}
@@ -74,7 +66,7 @@ public abstract class StringUtils {
     }
 
     /**
-     * <p>检查字符串是否非空 ("")且非{@code null}</p>
+     * 检查字符串是否非空 ("")且非{@code null}
      * <pre>
      * StringUtils.isNotEmpty(null)      = false
      * StringUtils.isNotEmpty("")        = false
@@ -91,7 +83,7 @@ public abstract class StringUtils {
     }
 
     /**
-     * <p>检查字符串是否是空白字符构成, 空 ("") 或者 null</p>
+     * 检查字符串是否是空白字符构成, 空 ("") 或者 null
      * <pre>
      * StringUtils.isBlank(null)      = true
      * StringUtils.isBlank("")        = true
@@ -117,7 +109,7 @@ public abstract class StringUtils {
     }
 
     /**
-     * <p>检查字符串是否是含有非空白字符</p>
+     * 检查字符串是否是含有非空白字符
      * <pre>
      * StringUtils.isNotBlank(null)      = false
      * StringUtils.isNotBlank("")        = false
@@ -134,7 +126,7 @@ public abstract class StringUtils {
     }
 
     /**
-     * <p>检查字符串是否是含有空白字符</p>
+     * 检查字符串是否是含有空白字符
      *
      * @param str 待检查字符串，可以为null
      * @return 如果字符串含有非空白字符，返回{@code true}，除此以外，一律返回{@code false}
@@ -156,11 +148,8 @@ public abstract class StringUtils {
     //-----------------------------------------------------------------------
 
     /**
-     * <p>Compares two Strings, and returns the portion where they differ.
-     * (More precisely, return the remainder of the second String,
-     * starting from where it's different from the first.)</p>
-     * <p>
-     * <p>For example,
+     * 比较两个字符串，返回第2个字符串与第1个字符串不相同的部分
+     * <p>示例:<br/>
      * <code>difference("i am a machine", "i am a robot") -&gt; "robot"</code>.</p>
      * <p>
      * <pre>
@@ -174,11 +163,9 @@ public abstract class StringUtils {
      * StringUtils.difference("abcde", "xyz") = "xyz"
      * </pre>
      *
-     * @param str1 the first String, may be null
-     * @param str2 the second String, may be null
-     * @return the portion of str2 where it differs from str1; returns the
-     * empty String if they are equal
-     * @since 2.0
+     * @param str1 第一个字符串，可以为null
+     * @param str2 第二个字符串，可以为null
+     * @return 返回第2个字符串与第1个字符串不相同的部分，如果相同，返回空字符串
      */
     public static String difference(String str1, String str2) {
         if (str1 == null) {
@@ -195,10 +182,8 @@ public abstract class StringUtils {
     }
 
     /**
-     * <p>Compares two Strings, and returns the index at which the
-     * Strings begin to differ.</p>
-     * <p>
-     * <p>For example,
+     * 比较2个字符串，计算两个字符串在第几个字符时不同
+     * <p>示例:<br/>
      * <code>indexOfDifference("i am a machine", "i am a robot") -&gt; 7</code></p>
      * <p>
      * <pre>
@@ -212,10 +197,9 @@ public abstract class StringUtils {
      * StringUtils.indexOfDifference("abcde", "xyz") = 0
      * </pre>
      *
-     * @param str1 the first String, may be null
-     * @param str2 the second String, may be null
-     * @return the index where str2 and str1 begin to differ; -1 if they are equal
-     * @since 2.0
+     * @param str1 第一个字符串，可以为null
+     * @param str2 第二个字符串，可以为null
+     * @return 第2个字符串与第1个字符串开始出现差异时的索引，如果相同，返回-1
      */
     public static int indexOfDifference(CharSequence str1, CharSequence str2) {
         if (Objects.equals(str1, str2)) {
@@ -237,10 +221,8 @@ public abstract class StringUtils {
     }
 
     /**
-     * <p>Compares all Strings in an array and returns the index at which the
-     * Strings begin to differ.</p>
-     * <p>
-     * <p>For example,
+     * 比较多个字符串，计算他们在第几个字符时不同
+     * <p>示例:<br/>
      * <code>indexOfDifference(new String[] {"i am a machine", "i am a robot"}) -&gt; 7</code></p>
      * <p>
      * <pre>
@@ -263,7 +245,7 @@ public abstract class StringUtils {
      * StringUtils.indexOfDifference(new String[] {"i am a machine", "i am a robot"}) = 7
      * </pre>
      *
-     * @param strs array of strings, entries may be null
+     * @param strs 字符串数组，可以为null
      * @return the index where the strings begin to differ; -1 if they are all equal
      * @since 2.4
      */
@@ -326,10 +308,10 @@ public abstract class StringUtils {
     }
 
     /**
-     * Trim leading and trailing whitespace from the given {@code String}.
+     * 去除指定字符串的前导与后缀空白字符
      *
-     * @param str the {@code String} to check
-     * @return the trimmed {@code String}
+     * @param str 待处理字符串
+     * @return 去除空白后的字符串
      * @see Character#isWhitespace
      */
     public static String trimWhitespace(String str) {
@@ -347,11 +329,10 @@ public abstract class StringUtils {
     }
 
     /**
-     * Trim <i>all</i> whitespace from the given {@code String}:
-     * leading, trailing, and in between characters.
+     * 去除指定字符串中的所有空白字符
      *
-     * @param str the {@code String} to check
-     * @return the trimmed {@code String}
+     * @param str 待处理字符串
+     * @return 去除空白后的字符串
      * @see Character#isWhitespace
      */
     public static String trimAllWhitespace(CharSequence str) {
@@ -364,10 +345,10 @@ public abstract class StringUtils {
     }
 
     /**
-     * Trim leading whitespace from the given {@code String}.
+     * 去除指定字符串的前导空白字符
      *
-     * @param str the {@code String} to check
-     * @return the trimmed {@code String}
+     * @param str 待处理字符串
+     * @return 去除空白后的字符串
      * @see Character#isWhitespace
      */
     public static String trimLeadingWhitespace(CharSequence str) {
@@ -382,10 +363,10 @@ public abstract class StringUtils {
     }
 
     /**
-     * Trim trailing whitespace from the given {@code String}.
+     * 去除指定字符串的后缀空白字符
      *
-     * @param str the {@code String} to check
-     * @return the trimmed {@code String}
+     * @param str 待处理字符串
+     * @return 去除空白后的字符串
      * @see Character#isWhitespace
      */
     public static String trimTrailingWhitespace(CharSequence str) {
@@ -400,11 +381,11 @@ public abstract class StringUtils {
     }
 
     /**
-     * Trim all occurrences of the supplied leading character from the given {@code String}.
+     * 去除指定字符串的指定前导字符
      *
-     * @param str              the {@code String} to check
-     * @param leadingCharacter the leading character to be trimmed
-     * @return the trimmed {@code String}
+     * @param str              待处理字符串
+     * @param leadingCharacter 前导字符
+     * @return 删除前导后的字符串
      */
     public static String trimLeadingCharacter(CharSequence str, char leadingCharacter) {
         if (isEmpty(str)) {
@@ -418,11 +399,11 @@ public abstract class StringUtils {
     }
 
     /**
-     * Trim all occurrences of the supplied trailing character from the given {@code String}.
+     * 去除指定字符串的指定后缀字符
      *
-     * @param str               the {@code String} to check
-     * @param trailingCharacter the trailing character to be trimmed
-     * @return the trimmed {@code String}
+     * @param str               待处理字符串
+     * @param trailingCharacter 后缀字符
+     * @return 删除后缀的字符串
      */
     public static String trimTrailingCharacter(CharSequence str, char trailingCharacter) {
         if (isEmpty(str)) {
@@ -436,13 +417,9 @@ public abstract class StringUtils {
     }
 
     /**
-     * <p>Removes control characters (char &lt;= 32) from both
-     * ends of this String returning <code>null</code> if the String is
-     * empty ("") after the trim or if it is <code>null</code>.
-     * <p>
-     * <p>The String is trimmed using {@link String#trim()}.
-     * Trim removes start and end characters &lt;= 32.
-     * <p>
+     * 删除字符串开头与结尾处的不可见的控制字符(char &lt;= 32)
+     * <p>如果字符串为<code>null</code>，返回<code>null</code></p>
+     * <p>通过 {@link String#trim()}实现.</p>
      * <pre>
      * StringUtils.trimToNull(null)          = null
      * StringUtils.trimToNull("")            = null
@@ -451,34 +428,27 @@ public abstract class StringUtils {
      * StringUtils.trimToNull("    abc    ") = "abc"
      * </pre>
      *
-     * @param str the String to be trimmed, may be null
-     * @return the trimmed String,
-     * <code>null</code> if only chars &lt;= 32, empty or null String input
-     * @since 2.0
+     * @param str 待处理字符串
+     * @return trim后的字符串
      */
     public static String trimToNull(String str) {
         return str == null ? null : str.trim();
     }
 
     /**
-     * <p>Removes control characters (char &lt;= 32) from both
-     * ends of this String returning an empty String ("") if the String
-     * is empty ("") after the trim or if it is <code>null</code>.
-     * <p>
-     * <p>The String is trimmed using {@link String#trim()}.
-     * Trim removes start and end characters &lt;= 32.
-     * <p>
+     * 删除字符串开头与结尾处的不可见的控制字符(char &lt;= 32)
+     * <p>如果字符串为<code>null</code>，返回空字符串</p>
+     * <p>通过 {@link String#trim()}实现.</p>
      * <pre>
-     * StringUtils.trimToEmpty(null)          = ""
-     * StringUtils.trimToEmpty("")            = ""
-     * StringUtils.trimToEmpty("     ")       = ""
-     * StringUtils.trimToEmpty("abc")         = "abc"
-     * StringUtils.trimToEmpty("    abc    ") = "abc"
+     * StringUtils.trimToNull(null)          = null
+     * StringUtils.trimToNull("")            = null
+     * StringUtils.trimToNull("     ")       = null
+     * StringUtils.trimToNull("abc")         = "abc"
+     * StringUtils.trimToNull("    abc    ") = "abc"
      * </pre>
      *
-     * @param str the String to be trimmed, may be null
-     * @return the trimmed String, or an empty String if <code>null</code> input
-     * @since 2.0
+     * @param str 待处理字符串
+     * @return trim后的字符串
      */
     public static String trimToEmpty(String str) {
         return str == null ? EMPTY : str.trim();
@@ -2997,6 +2967,26 @@ public abstract class StringUtils {
         }
         Arrays.sort(array);
         return array;
+    }
+
+    /**
+     * null安全的toString方法
+     *
+     * @param param 对象
+     * @return toString后的字符串，如果是null，返回null
+     */
+    public static String toString(Object param) {
+        return null == param ? null : param.toString();
+    }
+
+    /**
+     * null安全的toString方法
+     *
+     * @param param 对象
+     * @return toString后的字符串，如果是null，返回空字符串
+     */
+    public static String toStringEmpty(Object param) {
+        return null == param ? EMPTY : param.toString();
     }
 
     /**

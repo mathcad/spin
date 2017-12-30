@@ -20,7 +20,7 @@ public class TmplMsgEntity {
     private String url;
 
     // 模板数据
-    private Map<String, Object> data;
+    private Map<String, ?> data;
 
     public String getTouser() {
         return touser;
@@ -46,11 +46,11 @@ public class TmplMsgEntity {
         this.url = url;
     }
 
-    public Map<String, Object> getData() {
+    public Map<String, ?> getData() {
         return data;
     }
 
-    public void setData(Map<String, Object> data) {
+    public void setData(Map<String, ?> data) {
         this.data = data;
     }
 }

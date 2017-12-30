@@ -409,6 +409,17 @@ public abstract class DigestUtils {
      *
      * @param data Data to digest
      * @return SHA-1 digest as a hex string
+     * @since 1.7
+     */
+    public static String sha1HexL(final byte[] data) {
+        return HexUtils.encodeHexStringL(sha1(data));
+    }
+
+    /**
+     * Calculates the SHA-1 digest and returns the value as a hex string.
+     *
+     * @param data Data to digest
+     * @return SHA-1 digest as a hex string
      * @throws IOException On error reading from the stream
      * @since 1.7
      */

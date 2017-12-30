@@ -1,7 +1,5 @@
 package org.spin.core.collection;
 
-import org.spin.core.throwable.SimplifiedException;
-
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
@@ -231,7 +229,7 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
 
         @Override
         public void remove() {
-            throw new SimplifiedException("Row集合不支持移除操作");
+            throw new UnsupportedOperationException("Row集合不支持移除操作");
         }
 
         @Override

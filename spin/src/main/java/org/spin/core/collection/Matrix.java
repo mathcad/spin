@@ -25,7 +25,7 @@ public class Matrix<T> implements RowUpdateListener {
     private final Map<Integer, MultiValueMap<T, Integer>> index = new ConcurrentHashMap<>();
     private final Map<String, Integer> matrixHeader = new HashMap<>();
 
-    private int columnNumber = 0;
+    private int columnNumber;
 
     /**
      * 构造IndexedTable实例

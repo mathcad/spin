@@ -4,6 +4,7 @@ import com.shipping.domain.biz.Order
 import com.shipping.repository.biz.OrderRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.transaction.Transactional
 
 /**
  * 运单
@@ -13,18 +14,19 @@ import org.springframework.stereotype.Service
  * @create 2017-09-04 下午11:05
  */
 @Service
-class OrderService {
+open class OrderService {
 
     @Autowired
-    private val orderRepository: OrderRepository? = null
+    private lateinit var orderRepository: OrderRepository
 
     /**
      * 新增运单
      * @param order 运单
      * @return 运单
      */
-    fun save(order: Order): Order {
-        return orderRepository!!.save(order)
+    @Transactional
+    open fun save(order: Order): Order {
+        return orderRepository.save(order)
     }
 
 }

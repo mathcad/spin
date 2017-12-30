@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  * @author xuweinan
  * @version V1.0
  */
-public class FtpOperator {
+public class FtpOperator implements AutoCloseable{
     static final Logger logger = LoggerFactory.getLogger(FtpOperator.class);
 
     private String key;
@@ -306,7 +306,8 @@ public class FtpOperator {
     /**
      * 关闭连接
      */
-    public void closeConnect() {
+    @Override
+    public void close() {
         try {
             if (client != null) {
                 client.logout();
