@@ -18,41 +18,39 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * FTP工具类
+ * <p>非线程安全</p>
  * <p>Created by xuweinan on 2016/8/22.</p>
  *
  * @author xuweinan
- * @version V1.0
+ * @version V1.1
  */
-public class FtpOperator implements AutoCloseable{
-    static final Logger logger = LoggerFactory.getLogger(FtpOperator.class);
+public class FtpOperator implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(FtpOperator.class);
+    private static final Pattern protocalPattern = Pattern.compile("^(ftp[s]?)://(.+:.+@)?([^:]+)(:\\d{2,5})?$", Pattern.CASE_INSENSITIVE);
 
-    private String key;
-    private String protocal;
+    private String name;
+    private Protocal protocal;
     private String userName;
     private String password;
     private String host;
     private int port = 21;
+
+    private String localCharset = System.getProperty("sun.jnu.encoding");
+    private String serverCharset = "ISO-8859-1";
+
     private FTPClient client;
 
-    private static final Map<String, FtpOperator> ftpClients = new ConcurrentHashMap<>();
-    private static final Pattern protocalPattern = Pattern.compile("^(ftp[s]?)://(.+:.+@)?([^:]+)(:\\d{2,5})?$", Pattern.CASE_INSENSITIVE);
-
-    private FtpOperator() {
-    }
-
     /**
-     * 创建连接
+     * 创建FTP客户端
      *
      * @param url 标准FTP连接地址，形如：ftp://用户名:密码@服务器ip地址
      */
-    public static FtpOperator connect(String url) {
+    public FtpOperator(String url) {
         Matcher matcher = protocalPattern.matcher(url);
         if (!matcher.matches())
             throw new SimplifiedException("FTP连接URL格式错误");
@@ -69,66 +67,69 @@ public class FtpOperator implements AutoCloseable{
         String host = matcher.group(3).toLowerCase();
         String port = matcher.group(4);
 
-        return connect(protocal, userName, password, host, StringUtils.isEmpty(port) ? 21 : Integer.parseInt(port.substring(1)));
+        Protocal p = null == protocal ? Protocal.FTP : protocal;
+        this.protocal = p;
+        this.host = host;
+        this.port = StringUtils.isEmpty(port) ? 21 : Integer.parseInt(port.substring(1));
+        this.userName = userName;
+        this.password = password;
+        switch (p) {
+            case FTP:
+                this.client = new FTPClient();
+                break;
+            case FTPS:
+                this.client = new FTPSClient("SSL");
+                break;
+        }
     }
 
     /**
-     * 连接FTP服务器
+     * 创建FTP客户端
      *
      * @param protocal 协议
      * @param userName 用户名
      * @param password 密码
      * @param host     主机
-     * @return FTP操作类
      */
-    public static FtpOperator connect(Protocal protocal, String userName, String password, String host) {
-        return connect(protocal, userName, password, host, 21);
+    public FtpOperator(Protocal protocal, String userName, String password, String host) {
+        this(protocal, userName, password, host, 21);
     }
 
     /**
-     * 连接FTP服务器
+     * 创建FTP客户端
      *
      * @param userName 用户名
      * @param password 密码
      * @param host     主机
-     * @return FTP操作类
      */
-    public static FtpOperator connect(String userName, String password, String host) {
-        return connect(Protocal.FTP, userName, password, host, 21);
+    public FtpOperator(String userName, String password, String host) {
+        this(Protocal.FTP, userName, password, host, 21);
     }
 
     /**
-     * 连接FTP服务器
+     * 创建FTP客户端
      *
      * @param protocal 协议
      * @param userName 用户名
      * @param password 密码
      * @param host     主机
      * @param port     端口
-     * @return FTP操作类
      */
-    public static FtpOperator connect(Protocal protocal, String userName, String password, String host, int port) {
-        Protocal p = protocal;
-        if (null == protocal)
-            p = Protocal.FTP;
-        String key = p.getValue() + userName + host + port;
-        FtpOperator ftp = ftpClients.get(key);
-        if (null == ftp) {
-            ftp = new FtpOperator();
-            ftp.key = key;
-            ftp.protocal = "ftp";
-            if (p.equals(Protocal.FTP))
-                ftp.client = new FTPClient();
-            else if (p.equals(Protocal.FTPS))
-                ftp.client = new FTPSClient("SSL");
-            ftp.host = host;
-            ftp.port = port;
-            ftp.userName = userName;
-            ftp.password = password;
-            ftp.conn();
-            ftpClients.put(key, ftp);
+    public FtpOperator(Protocal protocal, String userName, String password, String host, int port) {
+        Protocal p = null == protocal ? Protocal.FTP : protocal;
+        this.protocal = p;
+        this.host = host;
+        this.port = port;
+        this.userName = userName;
+        this.password = password;
+        switch (p) {
+            case FTP:
+                this.client = new FTPClient();
+                break;
+            case FTPS:
+                this.client = new FTPSClient("SSL");
+                break;
         }
-        return ftp;
     }
 
     /**
@@ -137,9 +138,10 @@ public class FtpOperator implements AutoCloseable{
      * @param command 指令文本
      * @return 状态码
      */
-    public int sendCommands(String command) {
+    public int sendCommands(String command, String args) {
+        this.connect();
         try {
-            return client.sendCommand(command);
+            return client.sendCommand(command, args);
         } catch (IOException e) {
             logger.error("执行命令失败: {}", client.getReplyString(), e);
         }
@@ -152,13 +154,19 @@ public class FtpOperator implements AutoCloseable{
      * @param path 远程路径
      */
     public void listRemoteAllFiles(String path) {
+        this.connect();
         try {
             FTPListParseEngine f = client.initiateListParsing(path);
 
             while (f.hasNext()) {
                 FTPFile[] files = f.getNext(5);
                 for (FTPFile file : files) {
-                    disFile(file, path);
+                    if (file.isDirectory() && !file.getName().equals(".") && !file.getName().equals("..")) {
+                        logger.info(File.separator + file.getName());
+                        listRemoteAllFiles(path + File.separator + file.getName());
+                    } else if (!file.getName().equals(".") && !file.getName().equals("..")) {
+                        logger.info(file.getName());
+                    }
                 }
             }
         } catch (IOException e) {
@@ -167,6 +175,7 @@ public class FtpOperator implements AutoCloseable{
     }
 
     public void disFile(FTPFile file, String path) {
+        this.connect();
         if (file.isDirectory() && !file.getName().equals(".") && !file.getName().equals("..")) {
             logger.info(File.separator + file.getName());
             listRemoteAllFiles(path + File.separator + file.getName());
@@ -183,7 +192,8 @@ public class FtpOperator implements AutoCloseable{
      * @param localPath  本地存储路径
      * @return 是否成功
      */
-    public boolean downFile(String remotePath, String fileName, String localPath) {
+    public boolean retrieveFile(String remotePath, String fileName, String localPath) {
+        this.connect();
         boolean flag = false;
         try {
             client.changeWorkingDirectory(remotePath);
@@ -205,13 +215,14 @@ public class FtpOperator implements AutoCloseable{
      * @param localPath 本地存储路径
      * @return 是否成功
      */
-    public boolean downFile(String fullPath, String localPath) {
+    public boolean retrieveFile(String fullPath, String localPath) {
+        this.connect();
         int lastIdx = fullPath.lastIndexOf("/") + 1;
         if (lastIdx <= 0)
             lastIdx = fullPath.lastIndexOf("\\") + 1;
         String dir = fullPath.substring(0, lastIdx);
         String fileName = fullPath.substring(lastIdx);
-        return downFile(dir, fileName, localPath);
+        return retrieveFile(dir, fileName, localPath);
     }
 
     /**
@@ -221,7 +232,8 @@ public class FtpOperator implements AutoCloseable{
      * @param os       输出流
      * @return 是否成功
      */
-    public boolean downFile(String fullPath, OutputStream os) {
+    public boolean retrieveFile(String fullPath, OutputStream os) {
+        this.connect();
         boolean flag = false;
         FTPFile[] fs;
         try {
@@ -253,7 +265,8 @@ public class FtpOperator implements AutoCloseable{
      * @param localFilePath 本地路径
      * @return 是否成功
      */
-    public boolean upFile(String path, String filename, String localFilePath) {
+    public boolean storeFile(String path, String filename, String localFilePath) {
+        this.connect();
         boolean flag = false;
         try {
             FileInputStream in = new FileInputStream(new File(localFilePath));
@@ -275,7 +288,8 @@ public class FtpOperator implements AutoCloseable{
      * @param local    本地输入流
      * @return 是否成功
      */
-    public boolean upFile(String path, String filename, InputStream local) {
+    public boolean storeFile(String path, String filename, InputStream local) {
+        this.connect();
         boolean flag = false;
         try {
             client.changeWorkingDirectory(path);
@@ -283,22 +297,54 @@ public class FtpOperator implements AutoCloseable{
             local.close();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("上传文件失败", e);
         }
         return flag;
     }
 
     /**
-     * 创建文件夹
+     * 创建目录
+     * <p>只创建当前指定目录，如果父文目录不存在，会创建失败</p>
      *
      * @param path 远程路径
      * @return 是否成功
      */
-    public boolean mkdir(String path) {
+    public boolean mkDir(String path) {
+        this.connect();
+        String p = StringUtils.replace(path, "\\", "/");
         try {
-            return client.makeDirectory(path);
+            return client.makeDirectory(p);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("创建文件夹失败", e);
+        }
+        return false;
+    }
+
+    /**
+     * 创建目录
+     * <p>创建当前指定目录，如果父文目录不存在，会一并创建</p>
+     *
+     * @param path 远程路径
+     * @return 是否成功
+     */
+    public boolean mkAllDir(String path) {
+        this.connect();
+        String p = StringUtils.replace(path, "\\", "/");
+        int i = p.indexOf('/');
+        String t;
+        while (i > 0) {
+            t = p.substring(0, i);
+            i = p.indexOf('/', i + 1);
+            try {
+                return client.makeDirectory(t);
+            } catch (Exception e) {
+                logger.error("创建文件夹失败", e);
+            }
+        }
+        try {
+            return client.makeDirectory(p);
+        } catch (Exception e) {
+            logger.error("创建文件夹失败", e);
         }
         return false;
     }
@@ -309,20 +355,30 @@ public class FtpOperator implements AutoCloseable{
     @Override
     public void close() {
         try {
-            if (client != null) {
+            if (client != null && client.isConnected()) {
                 client.logout();
-                client.disconnect();
-                ftpClients.remove(key);
-                logger.info("关闭ftp服务器");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("登出ftp服务器失败", e);
+        } finally {
+            logger.info("关闭ftp服务器连接");
+            try {
+                if (client != null) {
+                    client.disconnect();
+                }
+            } catch (Exception e) {
+                logger.info("关闭ftp服务器连接异常", e);
+            }
         }
     }
 
-    private void conn() {
-        if (null == client)
+    private void connect() {
+        if (null == client) {
             throw new SimplifiedException("FTP客户端未初始化");
+        }
+        if (client.isConnected()) {
+            return;
+        }
         client.setDefaultPort(port);
 
         try {
@@ -331,7 +387,6 @@ public class FtpOperator implements AutoCloseable{
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP连接失败");
         }
         if (StringUtils.isNotEmpty(userName)) {
-
             try {
                 if (!client.login(userName, password)) {
                     throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP登录失败");
@@ -353,7 +408,14 @@ public class FtpOperator implements AutoCloseable{
         }
 
         client.setDataTimeout(30000);
-        client.setControlEncoding("UTF-8");
+        // 开启服务器对UTF-8的支持，如果服务器支持就用UTF-8编码，否则就使用本地编码.
+        try {
+            if (FTPReply.isPositiveCompletion(client.sendCommand("OPTS UTF8", "ON"))) {
+                localCharset = "UTF-8";
+            }
+        } catch (IOException e) {
+        }
+        client.setControlEncoding(localCharset);
         client.enterLocalPassiveMode();
         try {
             if (!client.setFileType(FTPClient.BINARY_FILE_TYPE))

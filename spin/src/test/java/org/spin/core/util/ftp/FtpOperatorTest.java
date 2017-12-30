@@ -1,7 +1,5 @@
 package org.spin.core.util.ftp;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -9,10 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class FtpOperatorTest {
 
-    @Test
+//    @Test
     public void testFtp() {
-        FtpOperator ftpOperator = FtpOperator.connect(Protocal.FTP, "arvin", "123", "localhost");
-        ftpOperator.downFile(".", "oracle.txt", "D:\\");
-        assertTrue(true);
+        FtpOperator ftpOperator = new FtpOperator(Protocal.FTP, "arvin", "123", "localhost");
+        boolean r = ftpOperator.retrieveFile(".", "oracle.txt", "D:\\");
+        assertTrue(r);
     }
 }

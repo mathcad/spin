@@ -41,6 +41,7 @@ public class CollectionUtilsTest {
 
     @Test
     public void selectWith() {
+        System.out.println(System.getProperty("sun.jnu.encoding"));
         List<String> mary = CollectionUtils.selectWith(people, String::equals, "Mary");
         assertTrue(mary.size() == 3);
         mary = CollectionUtils.select(people, i -> i.equals("Mary"));
