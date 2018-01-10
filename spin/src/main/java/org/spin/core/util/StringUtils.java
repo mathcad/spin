@@ -1,5 +1,7 @@
 package org.spin.core.util;
 
+import org.spin.core.throwable.SimplifiedException;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -2977,6 +2979,59 @@ public abstract class StringUtils {
      */
     public static String toString(Object param) {
         return null == param ? null : param.toString();
+    }
+
+    /**
+     * 将字节数组解析为指定编码的字符串
+     *
+     * @param strContent 字符串数据
+     * @return 字符串
+     */
+    public static String toString(byte[] strContent, String charset) {
+        if (null == strContent) {
+            return null;
+        }
+        if (null == charset) {
+            throw new SimplifiedException("字符集编码不存在");
+        }
+        try {
+            return new String(strContent, charset);
+        } catch (UnsupportedEncodingException e) {
+            throw new SimplifiedException("不支持[" + charset + "]字符集编码", e);
+        }
+    }
+
+    /**
+     * 将字节数组解析为UTF-8字符串
+     *
+     * @param strContent 字符串数据
+     * @return UTF-8字符串
+     */
+    public static String toString(byte[] strContent, Charset charset) {
+        if (null == strContent) {
+            return null;
+        }
+        if (null == charset) {
+            throw new SimplifiedException("字符集编码不存在");
+        }
+        return new String(strContent, charset);
+    }
+
+    /**
+     * 将字节数组解析为UTF-8字符串
+     *
+     * @param strContent 字符串数据
+     * @return UTF-8字符串
+     */
+    public static String toUtf8String(byte[] strContent) {
+        if (null == strContent) {
+            return null;
+        }
+        try {
+            return new String(strContent, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new SimplifiedException("不支持[UTF-8]字符集编码", e);
+        }
     }
 
     /**

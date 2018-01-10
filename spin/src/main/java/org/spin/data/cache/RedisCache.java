@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version V1.0
  */
-public class RedisCache<V> implements Cache<V> {
+public class RedisCache<V extends Serializable> implements Cache<V> {
     private int expire = -1;
 
     private RedisTemplate<String, V> redisTemplate;
@@ -57,14 +58,14 @@ public class RedisCache<V> implements Cache<V> {
         });
     }
 
-    public void setString(final String key, final String value) throws Exception {
+    public void setString(final String key, final String value) {
         redisTemplate.execute((RedisCallback<Object>) connection -> {
             connection.set(StringUtils.getBytesUtf8(key), StringUtils.getBytesUtf8(value));
             return null;
         });
     }
 
-    public String getString(final String key) throws Exception {
+    public String getString(final String key) {
         return redisTemplate.execute((RedisCallback<String>) connection -> {
             byte[] bs = connection.get(StringUtils.getBytesUtf8(key));
             if (bs == null) {
@@ -185,8 +186,6 @@ public class RedisCache<V> implements Cache<V> {
 
     public List<V> hMGet(final String key, final Object... fields) {
         return redisTemplate.execute((RedisCallback<List<V>>) connection -> {
-            List<V> result = new ArrayList<>();
-
             if (fields == null || fields.length == 0) {
                 return null;
             }
@@ -198,8 +197,7 @@ public class RedisCache<V> implements Cache<V> {
             if (hmaps == null || hmaps.size() == 0) {
                 return new ArrayList<>();
             }
-            result.addAll(hmaps.stream().map(bs -> redisSerializer.deserialize(bs)).collect(Collectors.toList()));
-            return result;
+            return hmaps.stream().map(bs -> redisSerializer.deserialize(bs)).collect(Collectors.toList());
         });
     }
 
