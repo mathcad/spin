@@ -1,6 +1,6 @@
 package org.spin.data.core;
 
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.BeanUtils;
 
 import java.io.Serializable;
 
@@ -42,13 +42,7 @@ public interface IEntity<PK extends Serializable> extends Serializable {
      */
     static <PK extends Serializable, E extends IEntity<PK>> E ref(Class<E> entityCls, PK id) {
         E entity = null;
-        try {
-            entity = entityCls.newInstance();
-        } catch (InstantiationException e) {
-            throw new SimplifiedException(entityCls.getSimpleName() + "没有有效的构造方法");
-        } catch (IllegalAccessException e) {
-            return null;
-        }
+        entity = BeanUtils.instantiateClass(entityCls);
         entity.setId(id);
         return entity;
     }

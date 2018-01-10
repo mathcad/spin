@@ -12,7 +12,6 @@ import org.spin.data.core.AbstractUser;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.util.UUID;
 
 /**
@@ -272,20 +271,10 @@ public class SecretManager {
     }
 
     public void setRsaPubkey(String rsaPubkeyStr) {
-        try {
-            this.rsaPubkey = RSA.getRSAPublicKey(rsaPubkeyStr);
-        } catch (InvalidKeySpecException e) {
-            logger.error("RSA公钥不合法", e);
-            throw new SimplifiedException(ErrorCode.KEY_FAIL, "公钥不合法");
-        }
+        this.rsaPubkey = RSA.getRSAPublicKey(rsaPubkeyStr);
     }
 
     public void setRsaPrikey(String rsaPrikeyStr) {
-        try {
-            this.rsaPrikey = RSA.getRSAPrivateKey(rsaPrikeyStr);
-        } catch (InvalidKeySpecException e) {
-            logger.error("RSA私钥不合法", e);
-            throw new SimplifiedException(ErrorCode.KEY_FAIL, "RSA私钥不合法");
-        }
+        this.rsaPrikey = RSA.getRSAPrivateKey(rsaPrikeyStr);
     }
 }
