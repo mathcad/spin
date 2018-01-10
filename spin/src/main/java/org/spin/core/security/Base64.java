@@ -66,6 +66,10 @@ public class Base64 {
         return (octect < BASELENGTH && base64Alphabet[octect] != -1);
     }
 
+    private static boolean notData(char octect) {
+        return (octect >= BASELENGTH || base64Alphabet[octect] == -1);
+    }
+
     /**
      * Encodes hex octects into Base64
      *
@@ -86,9 +90,7 @@ public class Base64 {
         int fewerThan24bits = lengthDataBits % TWENTYFOURBITGROUP;
         int numberTriplets = lengthDataBits / TWENTYFOURBITGROUP;
         int numberQuartet = fewerThan24bits != 0 ? numberTriplets + 1 : numberTriplets;
-        char encodedData[];
-
-        encodedData = new char[numberQuartet * 4];
+        char encodedData[] = new char[numberQuartet * 4];
 
         byte k, l, b1, b2, b3;
 
@@ -138,7 +140,7 @@ public class Base64 {
             encodedData[encodedIndex++] = lookUpBase64Alphabet[val1];
             encodedData[encodedIndex++] = lookUpBase64Alphabet[k << 4];
             encodedData[encodedIndex++] = PAD;
-            encodedData[encodedIndex++] = PAD;
+            encodedData[encodedIndex] = PAD;
         } else if (fewerThan24bits == SIXTEENBIT) {
             b1 = binaryData[dataIndex];
             b2 = binaryData[dataIndex + 1];
@@ -151,7 +153,7 @@ public class Base64 {
             encodedData[encodedIndex++] = lookUpBase64Alphabet[val1];
             encodedData[encodedIndex++] = lookUpBase64Alphabet[val2 | (k << 4)];
             encodedData[encodedIndex++] = lookUpBase64Alphabet[l << 2];
-            encodedData[encodedIndex++] = PAD;
+            encodedData[encodedIndex] = PAD;
         }
 
         return new String(encodedData);
@@ -193,10 +195,9 @@ public class Base64 {
         decodedData = new byte[(numberQuadruple) * 3];
 
         for (; i < numberQuadruple - 1; i++) {
-
-            if (!isData((d1 = base64Data[dataIndex++])) || !isData((d2 = base64Data[dataIndex++]))
-                || !isData((d3 = base64Data[dataIndex++]))
-                || !isData((d4 = base64Data[dataIndex++]))) {
+            if (notData((d1 = base64Data[dataIndex++])) || notData((d2 = base64Data[dataIndex++]))
+                || notData((d3 = base64Data[dataIndex++]))
+                || notData((d4 = base64Data[dataIndex++]))) {
                 return null;
             }//if found "no data" just return null
 
@@ -210,7 +211,7 @@ public class Base64 {
             decodedData[encodedIndex++] = (byte) (b3 << 6 | b4);
         }
 
-        if (!isData((d1 = base64Data[dataIndex++])) || !isData((d2 = base64Data[dataIndex++]))) {
+        if (notData((d1 = base64Data[dataIndex++])) || notData((d2 = base64Data[dataIndex++]))) {
             return null;//if found "no data" just return null
         }
 
@@ -218,8 +219,8 @@ public class Base64 {
         b2 = base64Alphabet[d2];
 
         d3 = base64Data[dataIndex++];
-        d4 = base64Data[dataIndex++];
-        if (!isData((d3)) || !isData((d4))) {//Check if they are PAD characters
+        d4 = base64Data[dataIndex];
+        if (notData((d3)) || notData((d4))) {//Check if they are PAD characters
             if (isPad(d3) && isPad(d4)) {
                 if ((b2 & 0xf) != 0)//last 4 bits should be zero
                 {
@@ -248,7 +249,7 @@ public class Base64 {
             b4 = base64Alphabet[d4];
             decodedData[encodedIndex++] = (byte) (b1 << 2 | b2 >> 4);
             decodedData[encodedIndex++] = (byte) (((b2 & 0xf) << 4) | ((b3 >> 2) & 0xf));
-            decodedData[encodedIndex++] = (byte) (b3 << 6 | b4);
+            decodedData[encodedIndex] = (byte) (b3 << 6 | b4);
 
         }
 

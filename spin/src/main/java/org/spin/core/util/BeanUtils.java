@@ -58,8 +58,7 @@ public abstract class BeanUtils {
      * @return T的实例
      */
     public static <T> T instantiateClass(Class<T> clazz) {
-        Assert.notNull(clazz, "Class must not be null");
-        if (clazz.isInterface()) {
+        if (Assert.notNull(clazz, "Class must not be null").isInterface()) {
             throw new SimplifiedException(clazz.getName() + " is an interface");
         }
         try {
