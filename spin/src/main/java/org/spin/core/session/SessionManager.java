@@ -148,11 +148,11 @@ public abstract class SessionManager {
     /**
      * 新的sessionid继承原有session
      */
-    public static void extendSession(String oldSessionid, String newSessionId) {
-        Session session = ALL_SESSIONS.get(oldSessionid);
+    public static void extendSession(String oldSessionId, String newSessionId) {
+        Session session = ALL_SESSIONS.get(oldSessionId);
         if (Objects.nonNull(session)) {
             ALL_SESSIONS.put(newSessionId, session);
-            ALL_SESSIONS.remove(oldSessionid);
+            ALL_SESSIONS.remove(oldSessionId);
         }
         setCurrentSessionId(newSessionId);
         SessionUser user = getCurrentUser();

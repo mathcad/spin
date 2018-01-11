@@ -14,10 +14,25 @@ import java.util.Objects;
 public class TokenInfo implements Serializable {
     private static final long serialVersionUID = -167149892869305494L;
 
+    /**
+     * 用户标识符
+     */
     private String identifier;
+
+    /**
+     * 令牌
+     */
     private String token;
+
+    /**
+     * 产生令牌的密钥
+     */
     private String sourceKey;
-    private Long generateTime = 0L;
+
+    /**
+     * 令牌产生时间
+     */
+    private Long generateTime;
 
 
     public TokenInfo(String identifier, String token, String sourceKey) {

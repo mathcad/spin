@@ -170,8 +170,8 @@ public class SecretManager {
      * 生成密钥
      *
      * @param userId     用户id
-     * @param secret     密钥
-     * @param secretType 密钥类型
+     * @param secret     用户私钥
+     * @param secretType 私钥类型
      * @return KeyInfo
      */
     public KeyInfo generateKey(String userId, String secret, String secretType) {

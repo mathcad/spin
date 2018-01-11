@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
 public @interface UserEnum {
 
     /**
-     * 枚举标注名称
+     * 枚举名称
      */
     String value();
 }

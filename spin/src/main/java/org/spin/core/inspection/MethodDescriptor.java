@@ -1,6 +1,7 @@
 package org.spin.core.inspection;
 
 import org.spin.core.Assert;
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.MethodUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -38,10 +39,29 @@ public class MethodDescriptor {
         this.methodName = method.getName();
         this.paramTypes = method.getParameterTypes();
         this.paramNames = MethodUtils.getMethodParamNames(method);
-
         this.hashCode = methodName.length() + (paramTypes.length + 1) * 1000;
+    }
 
-
+    /**
+     * 构造方法
+     *
+     * @param cls        方法所在的类
+     * @param methodName 方法名称
+     * @param paramTypes 方法参数类型列表
+     */
+    public MethodDescriptor(Class<?> cls, String methodName, Class<?>[] paramTypes) {
+        Assert.notNull(cls, "方法所属的类不能为空");
+        Assert.notNull(methodName, "方法名称不能为空");
+        try {
+            this.cls = cls;
+            this.method = cls.getMethod(methodName, paramTypes);
+            this.methodName = methodName;
+            this.paramTypes = paramTypes;
+            this.paramNames = MethodUtils.getMethodParamNames(method);
+            this.hashCode = methodName.length() + (paramTypes.length + 1) * 1000;
+        } catch (NoSuchMethodException e) {
+            throw new SimplifiedException("方法不存在", e);
+        }
     }
 
     /**
