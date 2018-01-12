@@ -42,20 +42,13 @@ public abstract class Assert {
     //---------------------------------------------------------------------------------
 
     /**
-     * <p>Assert that the argument condition is {@code true}; otherwise
-     * throwing an exception with the specified message. This method is useful when
-     * validating according to an arbitrary boolean expression, such as validating a
-     * primitive number or using your own custom validation expression.</p>
-     * <p>
-     * <pre>Assert.isTrue(i &gt; 0.0, "The value must be greater than zero: &#37;d", i);</pre>
+     * 断言指定的bool表达式结果为 {@code true}; 否则使用指定的消息抛出异常
+     * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;d", i);</pre>
      *
-     * <p>For performance reasons, the long value is passed as a separate parameter and
-     * appended to the exception message only in the case of an error.</p>
-     *
-     * @param expression the boolean expression to check
-     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
-     * @param value      the value to append to the message when invalid
-     * @throws IllegalArgumentException if expression is {@code false}
+     * @param expression 需要判断的bool表达式
+     * @param message    {@link String#format(String, Object...)} 条件不成立时的异常信息, 不能为空
+     * @param value      条件不成立时，追加在异常信息中的long值
+     * @throws IllegalArgumentException 条件不成立时抛出异常 {@code false}
      * @see #isTrue(boolean)
      * @see #isTrue(boolean, String, double)
      * @see #isTrue(boolean, String, Object...)
@@ -67,20 +60,13 @@ public abstract class Assert {
     }
 
     /**
-     * <p>Assert that the argument condition is {@code true}; otherwise
-     * throwing an exception with the specified message. This method is useful when
-     * validating according to an arbitrary boolean expression, such as validating a
-     * primitive number or using your own custom validation expression.</p>
-     * <p>
-     * <pre>Assert.isTrue(d &gt; 0.0, "The value must be greater than zero: &#37;s", d);</pre>
+     * 断言指定的bool表达式结果为 {@code true}; 否则使用指定的消息抛出异常
+     * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;s", i);</pre>
      *
-     * <p>For performance reasons, the double value is passed as a separate parameter and
-     * appended to the exception message only in the case of an error.</p>
-     *
-     * @param expression the boolean expression to check
-     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
-     * @param value      the value to append to the message when invalid
-     * @throws IllegalArgumentException if expression is {@code false}
+     * @param expression 需要判断的bool表达式
+     * @param message    {@link String#format(String, Object...)} 条件不成立时的异常信息, 不能为空
+     * @param value      条件不成立时，追加在异常信息中的double值
+     * @throws IllegalArgumentException 条件不成立时抛出异常 {@code false}
      * @see #isTrue(boolean)
      * @see #isTrue(boolean, String, long)
      * @see #isTrue(boolean, String, Object...)
@@ -92,19 +78,13 @@ public abstract class Assert {
     }
 
     /**
-     * <p>Assert that the argument condition is {@code true}; otherwise
-     * throwing an exception with the specified message. This method is useful when
-     * validating according to an arbitrary boolean expression, such as validating a
-     * primitive number or using your own custom validation expression.</p>
-     * <p>
-     * <pre>
-     * Assert.isTrue(i &gt;= min &amp;&amp; i &lt;= max, "The value must be between &#37;d and &#37;d", min, max);
-     * Assert.isTrue(myObject.isOk(), "The object is not okay");</pre>
+     * 断言指定的bool表达式结果为 {@code true}; 否则使用指定的消息抛出异常
+     * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;d, &#37;s", i, 0.0);</pre>
      *
-     * @param expression the boolean expression to check
-     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
-     * @param values     the optional values for the formatted exception message, null array not recommended
-     * @throws IllegalArgumentException if expression is {@code false}
+     * @param expression 需要判断的bool表达式
+     * @param message    {@link String#format(String, Object...)} 条件不成立时的异常信息, 不能为空
+     * @param values     条件不成立时，追加在异常信息中的参数
+     * @throws IllegalArgumentException 条件不成立时抛出异常 {@code false}
      * @see #isTrue(boolean)
      * @see #isTrue(boolean, String, long)
      * @see #isTrue(boolean, String, double)
@@ -116,20 +96,11 @@ public abstract class Assert {
     }
 
     /**
-     * <p>Assert that the argument condition is {@code true}; otherwise
-     * throwing an exception. This method is useful when validating according
-     * to an arbitrary boolean expression, such as validating a
-     * primitive number or using your own custom validation expression.</p>
-     * <p>
-     * <pre>
-     * Assert.isTrue(i &gt; 0);
-     * Assert.isTrue(myObject.isOk());</pre>
-     * <p>
-     * <p>The message of the exception is &quot;The validated expression is
-     * false&quot;.</p>
+     * 断言指定的bool表达式结果为 {@code true}; 否则抛出异常
+     * <pre>Assert.notTrue(i &gt; 0, "必须大于0");</pre>
      *
-     * @param expression the boolean expression to check
-     * @throws IllegalArgumentException if expression is {@code false}
+     * @param expression 需要判断的bool表达式
+     * @throws IllegalArgumentException 条件不成立时抛出异常 {@code false}
      * @see #isTrue(boolean, String, long)
      * @see #isTrue(boolean, String, double)
      * @see #isTrue(boolean, String, Object...)
@@ -140,22 +111,92 @@ public abstract class Assert {
         }
     }
 
+    // notTrue
+    //---------------------------------------------------------------------------------
+
+    /**
+     * 断言指定的bool表达式结果为 {@code false}; 否则使用指定的消息抛出异常
+     * <pre>Assert.notTrue(i &gt; 0.0, "必须小于等于0: &#37;d", i);</pre>
+     *
+     * @param expression 需要判断的bool表达式
+     * @param message    {@link String#format(String, Object...)} 条件成立时的异常信息, 不能为空
+     * @param value      条件成立时，追加在异常信息中的long值
+     * @throws IllegalArgumentException 条件成立时抛出异常 {@code true}
+     * @see #notTrue(boolean)
+     * @see #notTrue(boolean, String, double)
+     * @see #notTrue(boolean, String, Object...)
+     */
+    public static void notTrue(final boolean expression, final String message, final long value) {
+        if (expression) {
+            throw new IllegalArgumentException(String.format(message, value));
+        }
+    }
+
+    /**
+     * 断言指定的bool表达式结果为 {@code false}; 否则使用指定的消息抛出异常
+     * <pre>Assert.notTrue(i &gt; 0.0, "必须小于等于0: &#37;s", i);</pre>
+     *
+     * @param expression 需要判断的bool表达式
+     * @param message    {@link String#format(String, Object...)} 条件成立时的异常信息, 不能为空
+     * @param value      条件成立时，追加在异常信息中的double值
+     * @throws IllegalArgumentException 条件成立时抛出异常 {@code true}
+     * @see #notTrue(boolean)
+     * @see #notTrue(boolean, String, long)
+     * @see #notTrue(boolean, String, Object...)
+     */
+    public static void notTrue(final boolean expression, final String message, final double value) {
+        if (expression) {
+            throw new IllegalArgumentException(String.format(message, value));
+        }
+    }
+
+    /**
+     * 断言指定的bool表达式结果为 {@code false}; 否则使用指定的消息抛出异常
+     * <pre>Assert.notTrue(i &gt; 0.0, "必须小于等于0: &#37;d, &#37;s", i, 0.0);</pre>
+     *
+     * @param expression 需要判断的bool表达式
+     * @param message    {@link String#format(String, Object...)} 条件成立时的异常信息, 不能为空
+     * @param values     条件成立时，追加在异常信息中的参数
+     * @throws IllegalArgumentException 条件成立时抛出异常 {@code true}
+     * @see #notTrue(boolean)
+     * @see #notTrue(boolean, String, long)
+     * @see #notTrue(boolean, String, double)
+     */
+    public static void notTrue(final boolean expression, final String message, final Object... values) {
+        if (expression) {
+            throw new IllegalArgumentException(String.format(message, values));
+        }
+    }
+
+    /**
+     * 断言指定的bool表达式结果为 {@code false}; 否则抛出异常
+     * <pre>Assert.notTrue(i &gt; 0.0, "必须小于等于0");</pre>
+     *
+     * @param expression 需要判断的bool表达式
+     * @throws IllegalArgumentException 条件成立时抛出异常 {@code true}
+     * @see #notTrue(boolean, String, long)
+     * @see #notTrue(boolean, String, double)
+     * @see #notTrue(boolean, String, Object...)
+     */
+    public static void notTrue(final boolean expression) {
+        if (expression) {
+            throw new IllegalArgumentException(DEFAULT_IS_TRUE_EX_MESSAGE);
+        }
+    }
+
     // notNull
     //---------------------------------------------------------------------------------
 
     /**
-     * <p>Assert that the specified argument is not {@code null};
-     * otherwise throwing an exception.
-     * <p>
-     * <pre>Assert.notNull(myObject, "The object must not be null");</pre>
+     * 断言指定对象不为 {@code null}，并返回该对象。否则抛出异常
+     * <pre>Assert.notNull(myObject);</pre>
      *
-     * <p>The message of the exception is &quot;The validated object is
-     * null&quot;.</p>
+     * <p>异常信息为:  &quot;[Assertion failed] - this argument is required; it must not be null&quot;.</p>
      *
-     * @param <T>    the object type
-     * @param object the object to check
-     * @return the validated object (never {@code null} for method chaining)
-     * @throws NullArgumentException if the object is {@code null}
+     * @param <T>    类型参数
+     * @param object 待检查对象
+     * @return 返回对象自身 (一定不为 {@code null})
+     * @throws NullArgumentException 当对象为空时抛出 {@code null}
      * @see #notNull(Object, String, Object...)
      */
     public static <T> T notNull(final T object) {
@@ -163,17 +204,15 @@ public abstract class Assert {
     }
 
     /**
-     * <p>Assert that the specified argument is not {@code null};
-     * otherwise throwing an exception with the specified message.
-     * <p>
-     * <pre>Assert.notNull(myObject, "The object must not be null");</pre>
+     * 断言指定对象不为 {@code null}，并返回该对象。否则抛出异常
+     * <pre>Assert.notNull(myObject, "对象不能为空");</pre>
      *
-     * @param <T>     the object type
-     * @param object  the object to check
-     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
-     * @param values  the optional values for the formatted exception message
-     * @return the validated object (never {@code null} for method chaining)
-     * @throws NullArgumentException if the object is {@code null}
+     * @param <T>     类型参数
+     * @param object  待检查对象
+     * @param message 对象为null时的异常信息 {@link String#format(String, Object...)}，不能为空
+     * @param values  异常信息的填充参数
+     * @return 返回对象自身 (一定不为 {@code null})
+     * @throws NullArgumentException 当对象为空时抛出 {@code null}
      * @see #notNull(Object)
      */
     public static <T> T notNull(final T object, final String message, final Object... values) {
