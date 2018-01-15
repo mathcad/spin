@@ -9,7 +9,6 @@ import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
-import org.spin.core.inspection.MethodDescriptor;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.io.IOException;
@@ -688,7 +687,7 @@ public abstract class MethodUtils {
         final Class<?>[] parameterTypes) {
 
         try {
-            final MethodDescriptor md = new MethodDescriptor(clazz, methodName, parameterTypes);
+            final MethodDescriptor md = new MethodDescriptor(clazz, methodName, parameterTypes, true);
             // Check the cache first
             Method method = getCachedMethod(md);
             if (method != null) {
@@ -902,7 +901,7 @@ public abstract class MethodUtils {
         if (logger.isTraceEnabled()) {
             logger.trace("Matching name=" + methodName + " on " + clazz);
         }
-        final MethodDescriptor md = new MethodDescriptor(clazz, methodName, parameterTypes);
+        final MethodDescriptor md = new MethodDescriptor(clazz, methodName, parameterTypes, false);
 
         // see if we can find the method directly
         // most of the time this works and it's much faster
@@ -1350,6 +1349,68 @@ public abstract class MethodUtils {
             if (method != null) {
                 cache.put(md, new WeakReference<>(method));
             }
+        }
+    }
+
+    /**
+     * 描述反射方法的关键信息
+     */
+    private static class MethodDescriptor {
+        private final Class<?> cls;
+        private final String methodName;
+        private final Class<?>[] paramTypes;
+        private final boolean exact;
+        private final int hashCode;
+
+        /**
+         * @param cls        反射的类，不能为空
+         * @param methodName 需要获取的方法
+         * @param paramTypes 需获取方法的参数
+         * @param exact      whether the match has to be exact.
+         */
+        public MethodDescriptor(final Class<?> cls, final String methodName, Class<?>[] paramTypes, final boolean exact) {
+            if (cls == null) {
+                throw new IllegalArgumentException("Class cannot be null");
+            }
+            if (methodName == null) {
+                throw new IllegalArgumentException("Method Name cannot be null");
+            }
+            if (paramTypes == null) {
+                paramTypes = EMPTY_CLASS_PARAMETERS;
+            }
+
+            this.cls = cls;
+            this.methodName = methodName;
+            this.paramTypes = paramTypes;
+            this.exact = exact;
+
+            this.hashCode = methodName.length();
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (!(obj instanceof MethodDescriptor)) {
+                return false;
+            }
+            final MethodDescriptor md = (MethodDescriptor) obj;
+
+            return (
+                exact == md.exact &&
+                    methodName.equals(md.methodName) &&
+                    cls.equals(md.cls) &&
+                    java.util.Arrays.equals(paramTypes, md.paramTypes)
+            );
+        }
+
+        /**
+         * 返回方法名称的字符串长度。如果名称长度不同，则肯定不是同一方法，如果长度相同，
+         * 进一步通过equals方法判断等价性
+         *
+         * @return 方法名称的字符串长度
+         */
+        @Override
+        public int hashCode() {
+            return hashCode;
         }
     }
 }
