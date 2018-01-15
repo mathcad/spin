@@ -151,8 +151,9 @@ public abstract class StringUtils {
 
     /**
      * 比较两个字符串，返回第2个字符串与第1个字符串不相同的部分
-     * <p>示例:<br/>
-     * <code>difference("i am a machine", "i am a robot") -&gt; "robot"</code>.</p>
+     * <p>示例:<br>
+     * <code>difference("i am a machine", "i am a robot") -&gt; "robot"</code>.
+     * </p>
      * <p>
      * <pre>
      * StringUtils.difference(null, null) = null
@@ -185,7 +186,7 @@ public abstract class StringUtils {
 
     /**
      * 比较2个字符串，计算两个字符串在第几个字符时不同
-     * <p>示例:<br/>
+     * <p>示例:<br>
      * <code>indexOfDifference("i am a machine", "i am a robot") -&gt; 7</code></p>
      * <p>
      * <pre>
@@ -224,7 +225,7 @@ public abstract class StringUtils {
 
     /**
      * 比较多个字符串，计算他们在第几个字符时不同
-     * <p>示例:<br/>
+     * <p>示例:<br>
      * <code>indexOfDifference(new String[] {"i am a machine", "i am a robot"}) -&gt; 7</code></p>
      * <p>
      * <pre>

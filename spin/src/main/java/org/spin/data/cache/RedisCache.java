@@ -9,7 +9,6 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,7 +25,7 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version V1.0
  */
-public class RedisCache<V extends Serializable> implements Cache<V> {
+public class RedisCache<V> implements Cache<V> {
     private int expire = -1;
 
     private RedisTemplate<String, V> redisTemplate;
