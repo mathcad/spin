@@ -233,8 +233,8 @@ public abstract class EntityUtils {
      * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
      * </p>
      */
-    public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
-        T bean = type.newInstance();
+    public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException, NoSuchMethodException {
+        T bean = type.getDeclaredConstructor().newInstance();
         Map<String, EntityUtils.PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
         if (null == props) {
             PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
@@ -288,7 +288,7 @@ public abstract class EntityUtils {
                 if (i != depth - 1 && IEntity.class.isAssignableFrom(propType)) {
                     Object ib = prop.reader == null ? null : prop.reader.invoke(worker);
                     if (null == ib) {
-                        ib = propType.newInstance();
+                        ib = propType.getDeclaredConstructor().newInstance();
                         args[0] = ObjectUtils.convert(propType, ib);
                         prop.writer.invoke(worker, args);
                     }

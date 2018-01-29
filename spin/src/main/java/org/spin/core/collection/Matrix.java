@@ -187,7 +187,7 @@ public class Matrix<T> implements RowUpdateListener {
 
     public final Matrix<T> setHeader(int column, String columnHeader) {
         rangeCheck(column);
-        matrixHeader.put(Assert.hasText(columnHeader, "列名不能为空"), column);
+        matrixHeader.put(Assert.notBlank(columnHeader, "列名不能为空"), column);
         return this;
     }
 

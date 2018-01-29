@@ -112,6 +112,13 @@ public class BooleanExt<T> {
 
     private interface OtherwiseMore<T> {
         T otherwise(Supplier<T> body);
+
+        /**
+         * 获取结果
+         *
+         * @return 结果
+         */
+        T get();
     }
 
     private interface Otherwise {
@@ -132,6 +139,11 @@ public class BooleanExt<T> {
             if (value) {
                 result = body.get();
             }
+            return result;
+        }
+
+        @Override
+        public E get() {
             return result;
         }
     }
@@ -165,6 +177,11 @@ public class BooleanExt<T> {
             if (!value) {
                 result = body.get();
             }
+            return result;
+        }
+
+        @Override
+        public E get() {
             return result;
         }
     }

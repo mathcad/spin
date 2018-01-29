@@ -95,17 +95,16 @@ public abstract class EnumUtils {
     /**
      * 通过枚举文本字段，获得枚举类型的常量
      *
-     * @param enumCls 枚举类型
-     * @param text    枚举文本
+     * @param enumCls  枚举类型
+     * @param enumName 枚举名称
      * @return 枚举常量
      */
-    public static <E extends Enum<E>> E getEnum(Class<E> enumCls, String text) {
-        for (E o : enumCls.getEnumConstants()) {
-            if (o.toString().equals(text)) {
-                return o;
-            }
+    public static <E extends Enum<E>> E getEnum(Class<E> enumCls, String enumName) {
+        try {
+            return Enum.valueOf(enumCls, enumName);
+        } catch (Exception e) {
+            return null;
         }
-        return null;
     }
 
     /**
@@ -129,10 +128,11 @@ public abstract class EnumUtils {
      */
     public static <E extends Enum<E>, T> E getEnum(Class<E> enumCls, T value, String field) {
         String fieldName;
-        if (null != field && StringUtils.isNotEmpty(field))
+        if (null != field && StringUtils.isNotEmpty(field)) {
             fieldName = field;
-        else
+        } else {
             fieldName = "value";
+        }
         Field valueField = null;
         Method getMethod = null;
 

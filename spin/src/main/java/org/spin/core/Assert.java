@@ -226,20 +226,16 @@ public abstract class Assert {
     //---------------------------------------------------------------------------------
 
     /**
-     * <p>Assert that the specified argument array is neither {@code null}
-     * nor a length of zero (no elements); otherwise throwing an exception
-     * with the specified message.
-     * <p>
+     * 断言指定的数组不为null，且长度&gt;0（一定有元素），否则抛出异常
      * <pre>Assert.notEmpty(myArray, "The array must not be empty");</pre>
      *
-     * @param <T>     the array type
-     * @param array   the array to check, validated not null by this method
-     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
-     * @param values  the optional values for the formatted exception message, null array not recommended
-     * @return the validated array (never {@code null} method for chaining)
-     * @throws NullArgumentException    if the array is {@code null}
-     * @throws IllegalArgumentException if the array is empty
-     * @see #notEmpty(Object[])
+     * @param <T>     数组元素类型
+     * @param array   待检查的数组
+     * @param message 异常信息 {@link String#format(String, Object...)}，不能为空
+     * @param values  异常信息的填充参数
+     * @return 检查通过时返回原数组
+     * @throws NullArgumentException    当数组为{@code null}时抛出
+     * @throws IllegalArgumentException 当数组为空时抛出
      */
     public static <T> T[] notEmpty(final T[] array, final String message, final Object... values) {
         if (array == null) {
@@ -252,20 +248,17 @@ public abstract class Assert {
     }
 
     /**
-     * <p>Assert that the specified argument array is neither {@code null}
-     * nor a length of zero (no elements); otherwise throwing an exception.
-     * <p>
+     * 断言指定的数组不为null，且长度&gt;0（一定有元素），否则抛出异常
      * <pre>Assert.notEmpty(myArray);</pre>
      *
-     * <p>The message in the exception is &quot;The validated array is
-     * empty&quot;.
+     * <p>异常信息为 &quot;The validated array is
+     * empty&quot;.</p>
      *
-     * @param <T>   the array type
-     * @param array the array to check, validated not null by this method
-     * @return the validated array (never {@code null} method for chaining)
-     * @throws NullArgumentException    if the array is {@code null}
-     * @throws IllegalArgumentException if the array is empty
-     * @see #notEmpty(Object[], String, Object...)
+     * @param <T>   数组元素类型
+     * @param array 待检查的数组
+     * @return 检查通过时返回原数组
+     * @throws NullArgumentException    当数组为{@code null}时抛出
+     * @throws IllegalArgumentException 当数组为空时抛出
      */
     public static <T> T[] notEmpty(final T[] array) {
         return notEmpty(array, DEFAULT_NOT_EMPTY_ARRAY_EX_MESSAGE);
@@ -275,20 +268,16 @@ public abstract class Assert {
     //---------------------------------------------------------------------------------
 
     /**
-     * <p>Assert that the specified argument collection is neither {@code null}
-     * nor a size of zero (no elements); otherwise throwing an exception
-     * with the specified message.
-     * <p>
+     * 断言指定的集合不为null，且size&gt;0（一定有元素），否则抛出异常
      * <pre>Assert.notEmpty(myCollection, "The collection must not be empty");</pre>
      *
-     * @param <T>        the collection type
-     * @param collection the collection to check, validated not null by this method
-     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
-     * @param values     the optional values for the formatted exception message, null array not recommended
-     * @return the validated collection (never {@code null} method for chaining)
-     * @throws NullArgumentException    if the collection is {@code null}
-     * @throws IllegalArgumentException if the collection is empty
-     * @see #notEmpty(Object[])
+     * @param <T>        集合参数类型
+     * @param collection 待检查的集合
+     * @param message    异常信息 {@link String#format(String, Object...)}，不能为空
+     * @param values     异常信息的填充参数
+     * @return 检查通过时返回原集合
+     * @throws NullArgumentException    当集合为{@code null}时抛出
+     * @throws IllegalArgumentException 当集合为空时抛出
      */
     public static <T extends Collection<?>> T notEmpty(final T collection, final String message, final Object... values) {
         if (collection == null) {
@@ -301,20 +290,17 @@ public abstract class Assert {
     }
 
     /**
-     * <p>Assert that the specified argument collection is neither {@code null}
-     * nor a size of zero (no elements); otherwise throwing an exception.
-     * <p>
+     * 断言指定的集合不为null，且size&gt;0（一定有元素），否则抛出异常
      * <pre>Assert.notEmpty(myCollection);</pre>
      *
-     * <p>The message in the exception is &quot;The validated collection is
+     * <p>异常信息为 &quot;[Assertion failed] - The validated collection is
      * empty&quot;.</p>
      *
-     * @param <T>        the collection type
-     * @param collection the collection to check, validated not null by this method
-     * @return the validated collection (never {@code null} method for chaining)
-     * @throws NullArgumentException    if the collection is {@code null}
-     * @throws IllegalArgumentException if the collection is empty
-     * @see #notEmpty(Collection, String, Object...)
+     * @param <T>        集合参数类型
+     * @param collection 待检查的集合
+     * @return 检查通过时返回原集合
+     * @throws NullArgumentException    当集合为{@code null}时抛出
+     * @throws IllegalArgumentException 当集合为空时抛出
      */
     public static <T extends Collection<?>> T notEmpty(final T collection) {
         return notEmpty(collection, DEFAULT_NOT_EMPTY_COLLECTION_EX_MESSAGE);
@@ -324,20 +310,16 @@ public abstract class Assert {
     //---------------------------------------------------------------------------------
 
     /**
-     * <p>Assert that the specified argument map is neither {@code null}
-     * nor a size of zero (no elements); otherwise throwing an exception
-     * with the specified message.
-     * <p>
+     * 断言指定的Map不为null，且size&gt;0（一定有元素），否则抛出异常
      * <pre>Assert.notEmpty(myMap, "The map must not be empty");</pre>
      *
-     * @param <T>     the map type
-     * @param map     the map to check, validated not null by this method
-     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
-     * @param values  the optional values for the formatted exception message, null array not recommended
-     * @return the validated map (never {@code null} method for chaining)
-     * @throws NullArgumentException    if the map is {@code null}
-     * @throws IllegalArgumentException if the map is empty
-     * @see #notEmpty(Object[])
+     * @param <T>     Map参数类型
+     * @param map     待检查的Map
+     * @param message 异常信息 {@link String#format(String, Object...)}，不能为空
+     * @param values  异常信息的填充参数
+     * @return 检查通过时返回原Map
+     * @throws NullArgumentException    当Map为{@code null}时抛出
+     * @throws IllegalArgumentException 当Map为空时抛出
      */
     public static <T extends Map<?, ?>> T notEmpty(final T map, final String message, final Object... values) {
         if (map == null) {
@@ -350,20 +332,17 @@ public abstract class Assert {
     }
 
     /**
-     * <p>Assert that the specified argument map is neither {@code null}
-     * nor a size of zero (no elements); otherwise throwing an exception.
-     * <p>
+     * 断言指定的Map不为null，且size&gt;0（一定有元素），否则抛出异常
      * <pre>Assert.notEmpty(myMap);</pre>
      *
-     * <p>The message in the exception is &quot;The validated map is
+     * <p>异常信息为 &quot;The validated map is
      * empty&quot;.</p>
      *
-     * @param <T> the map type
-     * @param map the map to check, validated not null by this method
-     * @return the validated map (never {@code null} method for chaining)
-     * @throws NullArgumentException    if the map is {@code null}
-     * @throws IllegalArgumentException if the map is empty
-     * @see #notEmpty(Map, String, Object...)
+     * @param <T> Map参数类型
+     * @param map 待检查的Map
+     * @return 检查通过时返回原Map
+     * @throws NullArgumentException    当Map为{@code null}时抛出
+     * @throws IllegalArgumentException 当Map为空时抛出
      */
     public static <T extends Map<?, ?>> T notEmpty(final T map) {
         return notEmpty(map, DEFAULT_NOT_EMPTY_MAP_EX_MESSAGE);
@@ -386,7 +365,6 @@ public abstract class Assert {
      * @return the validated character sequence (never {@code null} method for chaining)
      * @throws NullArgumentException    if the character sequence is {@code null}
      * @throws IllegalArgumentException if the character sequence is empty
-     * @see #notEmpty(CharSequence)
      */
     public static <T extends CharSequence> T notEmpty(final T chars, final String message, final Object... values) {
         if (chars == null) {
@@ -413,7 +391,6 @@ public abstract class Assert {
      * @return the validated character sequence (never {@code null} method for chaining)
      * @throws NullArgumentException    if the character sequence is {@code null}
      * @throws IllegalArgumentException if the character sequence is empty
-     * @see #notEmpty(CharSequence, String, Object...)
      */
     public static <T extends CharSequence> T notEmpty(final T chars) {
         return notEmpty(chars, DEFAULT_NOT_EMPTY_CHAR_SEQUENCE_EX_MESSAGE);
@@ -589,84 +566,6 @@ public abstract class Assert {
         return validIndex(chars, index, DEFAULT_VALID_INDEX_CHAR_SEQUENCE_EX_MESSAGE, index);
     }
 
-    // validState
-    //---------------------------------------------------------------------------------
-
-    /**
-     * <p>Assert that the stateful condition is {@code true}; otherwise
-     * throwing an exception. This method is useful when validating according
-     * to an arbitrary boolean expression, such as validating a
-     * primitive number or using your own custom validation expression.</p>
-     * <p>
-     * <pre>
-     * Assert.validState(field &gt; 0);
-     * Assert.validState(this.isOk());</pre>
-     * <p>
-     * <p>The message of the exception is &quot;The validated state is
-     * false&quot;.</p>
-     *
-     * @param expression the boolean expression to check
-     * @throws IllegalStateException if expression is {@code false}
-     * @see #validState(boolean, String, Object...)
-     * @since 3.0
-     */
-    public static void validState(final boolean expression) {
-        if (!expression) {
-            throw new IllegalStateException(DEFAULT_VALID_STATE_EX_MESSAGE);
-        }
-    }
-
-    /**
-     * <p>Assert that the stateful condition is {@code true}; otherwise
-     * throwing an exception with the specified message. This method is useful when
-     * validating according to an arbitrary boolean expression, such as validating a
-     * primitive number or using your own custom validation expression.</p>
-     * <p>
-     * <pre>Assert.validState(this.isOk(), "The state is not OK: %s", myObject);</pre>
-     *
-     * @param expression the boolean expression to check
-     * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
-     * @param values     the optional values for the formatted exception message, null array not recommended
-     * @throws IllegalStateException if expression is {@code false}
-     * @see #validState(boolean)
-     * @since 3.0
-     */
-    public static void validState(final boolean expression, final String message, final Object... values) {
-        if (!expression) {
-            throw new IllegalStateException(String.format(message, values));
-        }
-    }
-
-    /**
-     * Assert that the given String is not empty; that is,
-     * it must not be {@code null} and not the empty String.
-     * <pre class="code">Assert.hasLength(name, "Name must not be empty");</pre>
-     *
-     * @param text    the String to check
-     * @param message the exception message to use if the assertion fails
-     * @throws IllegalArgumentException if the text is empty
-     * @see StringUtils#isEmpty
-     */
-    public static String hasLength(String text, String message) {
-        if (StringUtils.isEmpty(text)) {
-            throw new IllegalArgumentException(message);
-        }
-        return text;
-    }
-
-    /**
-     * Assert that the given String is not empty; that is,
-     * it must not be {@code null} and not the empty String.
-     * <pre class="code">Assert.hasLength(name);</pre>
-     *
-     * @param text the String to check
-     * @throws IllegalArgumentException if the text is empty
-     * @see StringUtils#isEmpty
-     */
-    public static String hasLength(String text) {
-        return hasLength(text, "[Assertion failed] - this String argument must have length; it must not be null or empty");
-    }
-
     /**
      * Assert that the given String has valid text content; that is, it must not
      * be {@code null} and must contain at least one non-whitespace character.
@@ -676,7 +575,7 @@ public abstract class Assert {
      * @param message the exception message to use if the assertion fails
      * @throws IllegalArgumentException if the text does not contain valid text content
      */
-    public static String hasText(String text, String message) {
+    public static String notBlank(String text, String message) {
         if (StringUtils.isBlank(text)) {
             throw new IllegalArgumentException(message);
         }
@@ -691,8 +590,8 @@ public abstract class Assert {
      * @param text the String to check
      * @throws IllegalArgumentException if the text does not contain valid text content
      */
-    public static String hasText(String text) {
-        return hasText(text, "[Assertion failed] - this String argument must have text; it must not be null, empty, or blank");
+    public static String notBlank(String text) {
+        return notBlank(text, "[Assertion failed] - this String argument must have text; it must not be null, empty, or blank");
 
     }
 
@@ -1044,12 +943,7 @@ public abstract class Assert {
      * @since 3.0
      */
     public static <T> T isInstanceOf(final Class<T> type, final Object obj) {
-        if (!type.isInstance(obj)) {
-            throw new IllegalArgumentException(String.format(DEFAULT_IS_INSTANCE_OF_EX_MESSAGE, type.getName(),
-                obj == null ? "null" : obj.getClass().getName()));
-        }
-        //noinspection unchecked
-        return (T) obj;
+        return isInstanceOf(type, obj, DEFAULT_IS_INSTANCE_OF_EX_MESSAGE, type.getName());
     }
 
     /**
@@ -1069,7 +963,7 @@ public abstract class Assert {
      * @since 3.0
      */
     public static <T> T isInstanceOf(final Class<?> type, final Object obj, final String message, final Object... values) {
-        if (!type.isInstance(obj)) {
+        if (!notNull(type).isInstance(obj)) {
             throw new IllegalArgumentException(String.format(message, values));
         }
         //noinspection unchecked
@@ -1094,11 +988,9 @@ public abstract class Assert {
      * @see #isAssignableFrom(Class, Class, String, Object...)
      * @since 3.0
      */
-    public static void isAssignableFrom(final Class<?> superType, final Class<?> type) {
-        if (!superType.isAssignableFrom(type)) {
-            throw new IllegalArgumentException(String.format(DEFAULT_IS_ASSIGNABLE_EX_MESSAGE, type.getName(),
-                superType.getName()));
-        }
+    public static <T> Class<T> isAssignableFrom(final Class<?> superType, final Class<T> type) {
+        return isAssignableFrom(superType, type, DEFAULT_IS_ASSIGNABLE_EX_MESSAGE, type.getName(),
+            superType.getName());
     }
 
     /**
@@ -1118,10 +1010,11 @@ public abstract class Assert {
      * @throws IllegalArgumentException if argument can not be converted to the specified class
      * @see #isAssignableFrom(Class, Class)
      */
-    public static void isAssignableFrom(final Class<?> superType, final Class<?> type, final String message, final Object... values) {
+    public static <T> Class<T> isAssignableFrom(final Class<?> superType, final Class<T> type, final String message, final Object... values) {
         if (!superType.isAssignableFrom(type)) {
             throw new IllegalArgumentException(String.format(message, values));
         }
+        return type;
     }
 }
 

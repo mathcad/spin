@@ -51,8 +51,8 @@ public class ModelExcelView extends AbstractView {
 
     private static final String defaultFileName = "export";
 
-    private ExcelGrid grid = null;
-    private Iterable<?> data = null;
+    private ExcelGrid grid;
+    private Iterable<?> data;
     private Map<String, String> dataTypeFormat = null;
 
     public ModelExcelView(FileType.Document fileType, ExcelGrid grid, Iterable<?> data) {

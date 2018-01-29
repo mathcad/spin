@@ -907,7 +907,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 
 		@Override
 		public void remove() {
-            Assert.validState(this.last != null);
+            Assert.isTrue(this.last != null);
 			ConcurrentReferenceHashMap.this.remove(this.last.getKey());
 		}
 	}
