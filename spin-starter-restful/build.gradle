@@ -1,5 +1,5 @@
 description 'spin-web的starter'
-version '2.1.9-RC9'
+version '2.1.9-RC10'
 def artifactId = 'spin-starter-restful'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -52,14 +52,7 @@ install {
 
 uploadArchives {
     repositories {
-        mavenDeployer {
-            repository(url: "http://192.168.90.12:8081/repository/saturn") {
-                authentication(userName: "admin", password: "super")
-            }
-            pom.version = "$project.version"
-            pom.artifactId = "$artifactId"
-            pom.groupId = "$project.group"
-        }
+        mavenLocal()
     }
 }
 
@@ -70,7 +63,7 @@ dependencies {
     compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
-    compile group: 'org.mathcat', name: 'spin', version: '2.1.9-RC9'
+    compile group: 'org.mathcat', name: 'spin', version: '2.1.9-RC10'
 //    compile(project(":spin"))
 
     compileOnly group: 'com.atomikos', name: 'transactions-jdbc', version: '4.0.5'

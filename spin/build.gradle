@@ -1,5 +1,5 @@
 description = '基础框架'
-version = '2.1.9-RC9'
+version = '2.1.9-RC10'
 def artifactId = 'spin'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -55,14 +55,7 @@ install {
 
 uploadArchives {
     repositories {
-        mavenDeployer {
-            repository(url: "http://192.168.90.12:8081/repository/saturn") {
-                authentication(userName: "admin", password: "super")
-            }
-            pom.version = "$project.version"
-            pom.artifactId = "$artifactId"
-            pom.groupId = "$project.group"
-        }
+        mavenLocal()
     }
 }
 
