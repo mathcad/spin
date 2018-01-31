@@ -2,6 +2,7 @@ package org.spin.boot.rest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.boot.annotation.DateFormat;
 import org.spin.boot.converter.RestfulExceptionHandler;
 import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.core.ErrorCode;
@@ -13,6 +14,7 @@ import org.spin.core.session.SessionManager;
 import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.DateUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.ObjectUtils;
 import org.spin.core.util.StringUtils;
@@ -46,6 +48,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -331,6 +334,28 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
 
         value = values[0];
+        DateFormat df = parameter.getAnnotation(DateFormat.class);
+        if (null != df) {
+            String fmt = df.value();
+            switch (parameter.getType().getName()) {
+                case "java.util.Date":
+                case "java.sql.Date":
+                case "java.sql.Time":
+                case "java.sql.Timestamp":
+                    return DateUtils.toDate(value.toString(), fmt);
+                case "java.util.Calendar":
+                    Calendar c = Calendar.getInstance();
+                    c.setTime(DateUtils.toDate(value.toString(), fmt));
+                    return c;
+                case "java.time.temporal.Temporal":
+                case "java.time.LocalDateTime":
+                    return DateUtils.toLocalDateTime(value.toString(), fmt);
+                case "java.time.LocalTime":
+                    return DateUtils.toLocalDateTime(value.toString(), fmt).toLocalTime();
+                case "java.time.LocalDate":
+                    return DateUtils.toLocalDateTime(value.toString(), fmt).toLocalDate();
+            }
+        }
         try {
             return ObjectUtils.convert(parameter.getType(), value);
         } catch (ClassCastException e) {

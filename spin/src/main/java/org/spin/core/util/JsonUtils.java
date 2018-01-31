@@ -41,11 +41,13 @@ public abstract class JsonUtils {
      * 默认的{@code JSON}日期/时间字段的格式化模式
      */
     private static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private static final String DEFAULT_LOCAL_DATE_PATTERN = "yyyy-MM-dd";
+    private static final String DEFAULT_LOCAL_TIME_PATTERN = "HH:mm:ss";
 
     private static final Gson defaultGson;
 
     static {
-        defaultGson = baseBuilder(DEFAULT_DATE_PATTERN).create();
+        defaultGson = baseBuilder(CollectionUtils.ofArray(DEFAULT_DATE_PATTERN, DEFAULT_LOCAL_DATE_PATTERN, DEFAULT_LOCAL_TIME_PATTERN)).create();
     }
 
     /**
@@ -68,13 +70,13 @@ public abstract class JsonUtils {
      * @param excludesFieldsWithoutExpose 是否排除未标注 {@literal @Expose} 注解的字段。
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
-    public static String toJson(Object target, Type targetType, boolean isSerializeNulls, Double version, String datePattern, boolean excludesFieldsWithoutExpose) {
+    public static String toJson(Object target, Type targetType, boolean isSerializeNulls, Double version, boolean excludesFieldsWithoutExpose, String... datePattern) {
         if (target == null)
             return EMPTY;
         Class<?> clazz = target.getClass();
         if (ClassUtils.wrapperToPrimitive(clazz) != null && ClassUtils.wrapperToPrimitive(clazz).isPrimitive() || target instanceof CharSequence)
             return target.toString();
-        GsonBuilder builder = baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern);
+        GsonBuilder builder = baseBuilder(datePattern);
         if (isSerializeNulls)
             builder.serializeNulls();
         if (version != null)
@@ -91,7 +93,7 @@ public abstract class JsonUtils {
                 result = gson.toJson(target);
             }
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION,"目标对象 " + target.getClass().getName() + " 转换 JSON 字符串时，发生异常！", ex);
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, "目标对象 " + target.getClass().getName() + " 转换 JSON 字符串时，发生异常！", ex);
 //            if (target instanceof Iterable || target instanceof Iterator || target instanceof Enumeration || target.getClass().isArray()) {
 //                result = EMPTY_JSON_ARRAY;
 //            } else
@@ -136,8 +138,8 @@ public abstract class JsonUtils {
      * @param datePattern 日期字段的格式化模式。
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
-    public static String toJson(Object target, String datePattern) {
-        return toJson(target, null, false, null, datePattern, true);
+    public static String toJson(Object target, String... datePattern) {
+        return toJson(target, null, false, null, true, datePattern);
     }
 
     /**
@@ -154,7 +156,7 @@ public abstract class JsonUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target, Double version) {
-        return toJson(target, null, false, version, null, true);
+        return toJson(target, null, false, version, true);
     }
 
     /**
@@ -171,7 +173,7 @@ public abstract class JsonUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target, boolean excludesFieldsWithoutExpose) {
-        return toJson(target, null, false, null, null, excludesFieldsWithoutExpose);
+        return toJson(target, null, false, null, excludesFieldsWithoutExpose);
     }
 
     /**
@@ -188,7 +190,7 @@ public abstract class JsonUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target, Double version, boolean excludesFieldsWithoutExpose) {
-        return toJson(target, null, false, version, null, excludesFieldsWithoutExpose);
+        return toJson(target, null, false, version, excludesFieldsWithoutExpose);
     }
 
     /**
@@ -205,7 +207,7 @@ public abstract class JsonUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target, Type targetType) {
-        return toJson(target, targetType, false, null, null, true);
+        return toJson(target, targetType, false, null, true);
     }
 
     /**
@@ -222,7 +224,7 @@ public abstract class JsonUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target, Type targetType, Double version) {
-        return toJson(target, targetType, false, version, null, true);
+        return toJson(target, targetType, false, version, true);
     }
 
     /**
@@ -239,7 +241,7 @@ public abstract class JsonUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target, Type targetType, boolean excludesFieldsWithoutExpose) {
-        return toJson(target, targetType, false, null, null, excludesFieldsWithoutExpose);
+        return toJson(target, targetType, false, null, excludesFieldsWithoutExpose);
     }
 
     /**
@@ -256,7 +258,7 @@ public abstract class JsonUtils {
      * @return 目标对象的 {@code JSON} 格式的字符串。
      */
     public static String toJson(Object target, Type targetType, Double version, boolean excludesFieldsWithoutExpose) {
-        return toJson(target, targetType, false, version, null, excludesFieldsWithoutExpose);
+        return toJson(target, targetType, false, version, excludesFieldsWithoutExpose);
     }
 
     /**
@@ -268,12 +270,12 @@ public abstract class JsonUtils {
      * @param datePattern 日期格式模式。
      * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
      */
-    public static <T> T fromJson(String json, TypeIdentifier<T> token, String datePattern) {
+    public static <T> T fromJson(String json, TypeIdentifier<T> token, String... datePattern) {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
         try {
-            return baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern).create().fromJson(json, token.getType());
+            return baseBuilder(datePattern).create().fromJson(json, token.getType());
         } catch (Exception ex) {
             throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + token.toString() + " 对象!", ex);
         }
@@ -313,12 +315,12 @@ public abstract class JsonUtils {
      * @param datePattern 日期格式模式。
      * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
      */
-    public static <T> T fromJson(String json, Class<T> clazz, String datePattern) {
+    public static <T> T fromJson(String json, Class<T> clazz, String... datePattern) {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
         try {
-            return baseBuilder(StringUtils.isEmpty(datePattern) ? DEFAULT_DATE_PATTERN : datePattern).create().fromJson(json, clazz);
+            return baseBuilder(datePattern).create().fromJson(json, clazz);
         } catch (Exception ex) {
             throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + clazz.getName() + " 对象!", ex);
         }
@@ -337,14 +339,18 @@ public abstract class JsonUtils {
         return fromJson(json, clazz, null);
     }
 
-    private static GsonBuilder baseBuilder(String datePattern) {
+    private static GsonBuilder baseBuilder(String[] pattern) {
         GsonBuilder builder = new GsonBuilder();
+        String[] patterns = new String[3];
+        patterns[0] = null != pattern && pattern.length > 0 ? pattern[0] : DEFAULT_DATE_PATTERN;
+        patterns[1] = null != pattern && pattern.length > 1 ? pattern[1] : DEFAULT_LOCAL_DATE_PATTERN;
+        patterns[2] = null != pattern && pattern.length > 2 ? pattern[2] : DEFAULT_LOCAL_TIME_PATTERN;
         try {
             @SuppressWarnings("unchecked")
             Class<TypeAdapterFactory> factoryClass = (Class<TypeAdapterFactory>) ClassUtils.getClass("org.spin.enhance.gson.SpinTypeAdapterFactory");
-            TypeAdapterFactory factory = ConstructorUtils.invokeConstructor(factoryClass, datePattern);
+            TypeAdapterFactory factory = ConstructorUtils.invokeConstructor(factoryClass, patterns);
             builder.registerTypeAdapterFactory(factory);
-            builder.setDateFormat(datePattern);
+            builder.setDateFormat(patterns[0]);
         } catch (Exception ignore) {
             logger.info("Spin Enhance package not imported");
         }

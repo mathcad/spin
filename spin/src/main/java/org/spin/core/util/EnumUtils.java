@@ -168,7 +168,7 @@ public abstract class EnumUtils {
      * @return 枚举常量
      */
     public static <E extends Enum<E>> Enum getByValue(Class<E> enumCls, Map<?, Object> map, String key) {
-        Integer v = MapUtils.getIntegerValue(map, key);
+        Integer v = MapUtils.getIntValue(map, key);
         if (null == v)
             return null;
         return getEnum(enumCls, v);

@@ -404,6 +404,12 @@ public abstract class CollectionUtils {
         return toMultiValueMap(unmodifiableMap);
     }
 
+
+    @SafeVarargs
+    public static <E> E[] ofArray(E... elements) {
+        return elements;
+    }
+
     @SafeVarargs
     public static <E> List<E> ofArrayList(E... elements) {
         List<E> lst = new ArrayList<>(elements.length * 2);

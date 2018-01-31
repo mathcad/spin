@@ -2,9 +2,11 @@ package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
 
+import java.sql.Date;
 import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -56,5 +58,17 @@ public class DateUtilsTest {
     public void toDate() {
         System.out.println(DateUtils.toDate("2017-5-23"));
         System.out.println(DateUtils.toLocalDateTime("2017年05-23"));
+    }
+
+    @Test
+    public void testJson() {
+        String a = "{date: '2016-08-31'}";
+        String b = "2016-08-31";
+        System.out.println(JsonUtils.fromJson(a, A.class).date);
+        System.out.println(JsonUtils.fromJson(b, LocalDate.class));
+    }
+
+    public static class A {
+    LocalDate date;
     }
 }

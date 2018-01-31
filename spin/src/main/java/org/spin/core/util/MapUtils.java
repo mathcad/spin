@@ -186,7 +186,7 @@ public abstract class MapUtils {
     /**
      * 获取Integer值
      */
-    public static Integer getIntegerValue(Map<?, ?> map, Object key) {
+    public static Integer getIntValue(Map<?, ?> map, Object key) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
             return null;
