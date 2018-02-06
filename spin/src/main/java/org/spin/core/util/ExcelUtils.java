@@ -23,6 +23,12 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Objects;
 
+/**
+ * Excel工具类
+ * <p>Created by xuweinan on 2017/9/3.</p>
+ *
+ * @author xuweinan
+ */
 public abstract class ExcelUtils {
     private static final Logger logger = LoggerFactory.getLogger(ExcelUtils.class);
 

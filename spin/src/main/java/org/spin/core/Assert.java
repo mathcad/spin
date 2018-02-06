@@ -5,6 +5,7 @@ import org.spin.core.util.StringUtils;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -41,6 +42,19 @@ public abstract class Assert {
     // isTrue
     //---------------------------------------------------------------------------------
 
+    /**
+     * 断言指定的bool表达式结果为 {@code true}; 否则使用抛出指定的异常
+     * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;d", i);</pre>
+     *
+     * @param expression 需要判断的bool表达式
+     * @param exception  条件不成立时的异常, 不能为空
+     */
+    public static void isTrue(final boolean expression, Supplier<? extends RuntimeException> exception) {
+        if (!expression) {
+            throw exception.get();
+        }
+    }
+    
     /**
      * 断言指定的bool表达式结果为 {@code true}; 否则使用指定的消息抛出异常
      * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;d", i);</pre>
@@ -113,6 +127,22 @@ public abstract class Assert {
 
     // notTrue
     //---------------------------------------------------------------------------------
+
+    /**
+     * 断言指定的bool表达式结果为 {@code false}; 否则抛出指定的异常
+     * <pre>Assert.notTrue(i &gt; 0.0, "必须小于等于0: &#37;d", i);</pre>
+     *
+     * @param expression 需要判断的bool表达式
+     * @param exception  条件成立时的异常, 不能为空
+     * @see #notTrue(boolean)
+     * @see #notTrue(boolean, String, double)
+     * @see #notTrue(boolean, String, Object...)
+     */
+    public static void notTrue(final boolean expression, Supplier<? extends RuntimeException> exception) {
+        if (expression) {
+            throw exception.get();
+        }
+    }
 
     /**
      * 断言指定的bool表达式结果为 {@code false}; 否则使用指定的消息抛出异常

@@ -45,37 +45,22 @@ public class KeyInfo implements Serializable {
         this.generateTime = generateTime;
     }
 
-    /**
-     * 用户标识符
-     */
     public String getIdentifier() {
         return identifier;
     }
 
-    /**
-     * 密钥
-     */
     public String getKey() {
         return key;
     }
 
-    /**
-     * 用户私钥
-     */
     public String getSecret() {
         return secret;
     }
 
-    /**
-     * 私钥类型
-     */
     public String getSecretType() {
         return secretType;
     }
 
-    /**
-     * 产生时间
-     */
     public Long getGenerateTime() {
         return generateTime;
     }

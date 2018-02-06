@@ -326,19 +326,6 @@ public abstract class JsonUtils {
         }
     }
 
-    /**
-     * 将给定的 {@code JSON} 字符串转换成指定的类型对象。<strong>此方法通常用来转换普通的 {@code JavaBean}
-     * 对象。</strong>
-     *
-     * @param <T>   要转换的目标类型。
-     * @param json  给定的 {@code JSON} 字符串。
-     * @param clazz 要转换的目标类。
-     * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
-     */
-    public static <T> T fromJson(String json, Class<T> clazz) {
-        return fromJson(json, clazz, null);
-    }
-
     private static GsonBuilder baseBuilder(String[] pattern) {
         GsonBuilder builder = new GsonBuilder();
         String[] patterns = new String[3];

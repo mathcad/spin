@@ -1,5 +1,5 @@
 description = '基础框架'
-version = '2.1.9-RC10'
+version = '2.1.9-RC11'
 def artifactId = 'spin'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -16,8 +16,8 @@ buildscript {
 }
 
 ext {
-    springVersion = "4.3.13.RELEASE"
-    junitJupiterVersion = '5.0.2'
+    springVersion = "4.3.14.RELEASE"
+    junitJupiterVersion = '5.0.3'
 }
 
 junitPlatform {
@@ -67,7 +67,7 @@ dependencies {
 //    core
     compile group: 'org.dom4j', name: 'dom4j', version: '2.1.0'
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
-    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.4'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.5'
     compile group: 'commons-net', name: 'commons-net', version: '3.6'
     compile(group: 'org.apache.poi', name: 'poi-excelant', version: '3.17') {
         exclude(module: 'ant')
@@ -83,14 +83,14 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compile group: 'org.springframework', name: 'spring-orm', version: springVersion
     compile group: 'org.springframework', name: 'spring-oxm', version: springVersion
-    compile group: 'org.springframework.data', name: 'spring-data-redis', version: '1.8.9.RELEASE'
+    compile group: 'org.springframework.data', name: 'spring-data-redis', version: '1.8.10.RELEASE'
     compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.12.Final') {
         exclude(module: 'jboss-logging')
         transitive = true
     }
-//    compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.58'
+//    compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.59'
 
-    compile group: 'com.itextpdf', name: 'itextpdf', version: '5.5.12'
+    compile group: 'com.itextpdf', name: 'itextpdf', version: '5.5.13'
     compile group: 'javax.transaction', name: 'javax.transaction-api', version: '1.2'
     compile group: 'org.freemarker', name: 'freemarker', version: '2.3.27-incubating'
     compile group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'

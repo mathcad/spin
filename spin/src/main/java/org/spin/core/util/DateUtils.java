@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 
 /**
  * 日期工具类
+ * <p>Created by xuweinan on 2017/9/3.</p>
  *
  * @author xuweinan
  */
@@ -173,8 +174,8 @@ public abstract class DateUtils {
      * 将日期字符串转换为日期(自动推断日期格式)
      */
     public static LocalDateTime toLocalDateTime(String date) {
-       Date d = toDate(date);
-       return toLocalDateTime(d);
+        Date d = toDate(date);
+        return toLocalDateTime(d);
     }
 
     public static LocalDateTime toLocalDateTime(String date, String pattern) {

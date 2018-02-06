@@ -12,10 +12,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 枚举工具类
@@ -38,11 +38,7 @@ public abstract class EnumUtils {
      * @param enumClass 待转换的枚举
      */
     public static <E extends Enum<E>> Map<String, E> getEnumMap(final Class<E> enumClass) {
-        final Map<String, E> map = new LinkedHashMap<>();
-        for (final E e : enumClass.getEnumConstants()) {
-            map.put(e.name(), e);
-        }
-        return map;
+        return Arrays.stream(enumClass.getEnumConstants()).collect(Collectors.toMap(Enum::name, e -> e));
     }
 
     /**
@@ -99,7 +95,7 @@ public abstract class EnumUtils {
      * @param enumName 枚举名称
      * @return 枚举常量
      */
-    public static <E extends Enum<E>> E getEnum(Class<E> enumCls, String enumName) {
+    public static <E extends Enum<E>> E getEnumByName(Class<E> enumCls, String enumName) {
         try {
             return Enum.valueOf(enumCls, enumName);
         } catch (Exception e) {
@@ -172,57 +168,6 @@ public abstract class EnumUtils {
         if (null == v)
             return null;
         return getEnum(enumCls, v);
-    }
-
-    /**
-     * 获得Enum的Value属性值
-     *
-     * @param enumCls   enum类型
-     * @param enumValue 枚举常量
-     * @return 枚举常量的指定字段值
-     */
-    public static <T> T getEnumValue(Class<?> enumCls, Enum enumValue) {
-        return getEnumValue(enumCls, enumValue, "value");
-    }
-
-    /**
-     * 获得Enum的属性值
-     *
-     * @param enumCls   enum类型
-     * @param enumValue 枚举常量
-     * @param fieldName 属性名称
-     * @return 枚举常量的指定字段值
-     */
-    public static <T> T getEnumValue(Class<?> enumCls, Enum enumValue, String fieldName) {
-        if (enumCls == null)
-            enumCls = enumValue.getClass();
-
-        Field valueField = null;
-        Method getMethod = null;
-        try {
-            valueField = enumCls.getDeclaredField(fieldName);
-            ReflectionUtils.makeAccessible(valueField);
-        } catch (NoSuchFieldException ignore) {
-        }
-
-        if (Objects.isNull(valueField)) {
-            try {
-                getMethod = enumCls.getMethod("get" + StringUtils.capitalize(fieldName));
-            } catch (NoSuchMethodException e) {
-                throw new SimplifiedException("Enum:" + enumCls.getName() + " has no such field:" + fieldName);
-            }
-        }
-
-        T value;
-        try {
-            //noinspection unchecked
-            value = (T) (Objects.isNull(valueField) ? ReflectionUtils.invokeMethod(getMethod, enumValue) : valueField.get(enumValue));
-        } catch (Exception e) {
-            throw new SimplifiedException("Enum" + enumCls + "获取value失败", e);
-        }
-
-        return value;
-
     }
 
     /**

@@ -177,33 +177,45 @@ public class CriteriaBuilder {
 
     /**
      * 快速eq条件
+     * <p>当value为null时会被忽略</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder eq(String prop, Object value) {
+        if (null == value) {
+            return this;
+        }
         return addCriterion(Restrictions.eq(prop, value));
     }
 
     /**
      * 快速id equal条件
+     * <p>当value为null时会被忽略</p>
      *
      * @param value id
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder idEq(Object value) {
+        if (null == value) {
+            return this;
+        }
         return addCriterion(Restrictions.idEq(value));
     }
 
     /**
      * 快速not eq条件
+     * <p>当value为null时会被忽略</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder notEq(String prop, Object value) {
+        if (null == value) {
+            return this;
+        }
         return addCriterion(Restrictions.ne(prop, value));
     }
 
@@ -219,12 +231,16 @@ public class CriteriaBuilder {
 
     /**
      * 快速eq或is null条件
+     * <p>当value为null时，等同于isNull条件</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder eqOrIsNull(String prop, Object value) {
+        if (null == value) {
+            return addCriterion(Restrictions.isNull(prop));
+        }
         return addCriterion(Restrictions.eqOrIsNull(prop, value));
     }
 
@@ -240,61 +256,82 @@ public class CriteriaBuilder {
 
     /**
      * like '*%' 模糊
+     * <p>当value为空时会被忽略</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder startWith(String prop, String value) {
+        if (StringUtils.isEmpty(value)) {
+            return this;
+        }
         return addCriterion(Restrictions.like(prop, value, MatchMode.START));
     }
 
     /**
      * like '%*' 模糊
+     * <p>当value为空时会被忽略</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder endWith(String prop, String value) {
+        if (StringUtils.isEmpty(value)) {
+            return this;
+        }
         return addCriterion(Restrictions.like(prop, value, MatchMode.END));
     }
 
     /**
      * like '%%' 全模糊
+     * <p>当value为空时会被忽略</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder like(String prop, String value) {
+        if (StringUtils.isEmpty(value)) {
+            return this;
+        }
         return addCriterion(Restrictions.like(prop, value, MatchMode.ANYWHERE));
     }
 
     /**
      * 快速gt条件 &gt;
+     * <p>当value为null时会被忽略</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder gt(String prop, Object value) {
+        if (null == value) {
+            return this;
+        }
         return addCriterion(Restrictions.gt(prop, value));
     }
 
     /**
      * 快速ge条件 &gt;=
+     * <p>当value为null时会被忽略</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder ge(String prop, Object value) {
+        if (null == value) {
+            return this;
+        }
         return addCriterion(Restrictions.ge(prop, value));
     }
 
     /**
      * 快速between条件
+     * <p>当low, high均为null时会被忽略，当low为空时等同于lt(high), 当high为空时等同于ge(low)</p>
      *
      * @param prop 属性名
      * @param low  下限
@@ -302,39 +339,59 @@ public class CriteriaBuilder {
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder between(String prop, Object low, Object high) {
-        return addCriterion(Restrictions.between(prop, low, high));
+        if (null == low && null == high) {
+            return this;
+        } else if (null == low) {
+            return addCriterion(Restrictions.lt(prop, high));
+        } else if (null == high) {
+            return addCriterion(Restrictions.ge(prop, low));
+        } else {
+            return addCriterion(Restrictions.between(prop, low, high));
+        }
     }
 
     /**
      * 快速lt条件 &lt;
+     * <p>当value为null时会被忽略</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder lt(String prop, Object value) {
+        if (null == value) {
+            return this;
+        }
         return addCriterion(Restrictions.lt(prop, value));
     }
 
     /**
      * 快速le条件 &lt;=
+     * <p>当value为null时会被忽略</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder le(String prop, Object value) {
+        if (null == value) {
+            return this;
+        }
         return addCriterion(Restrictions.le(prop, value));
     }
 
     /**
      * 附加in查询
+     * <p>当value为null时会被忽略</p>
      *
      * @param prop  属性名
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
     public CriteriaBuilder in(String prop, Collection<?> value) {
+        if (null == value) {
+            return this;
+        }
         return addCriterion(Restrictions.in(prop, value));
     }
 
