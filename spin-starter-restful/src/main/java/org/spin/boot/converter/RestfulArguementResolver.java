@@ -11,7 +11,9 @@ import java.lang.reflect.Type;
 public interface RestfulArguementResolver {
 
     /**
-     * 支持的类型
+     * 获取支持的类型
+     *
+     * @return 支持的类型Type
      */
     Type getSupportedType();
 

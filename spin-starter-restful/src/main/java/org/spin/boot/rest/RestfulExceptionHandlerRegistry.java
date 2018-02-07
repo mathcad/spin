@@ -22,6 +22,7 @@ public class RestfulExceptionHandlerRegistry {
      * @param exceptionCls 异常类型
      * @param handler      处理逻辑
      * @param order        优先级
+     * @param <T>          异常类型参数
      */
     public static <T extends Throwable> void register(Class<T> exceptionCls, Function<Throwable, String> handler, int order) {
         RestfulExceptionHandler h = new RestfulExceptionHandler() {
@@ -56,6 +57,7 @@ public class RestfulExceptionHandlerRegistry {
      * 获取指定异常的处理器
      *
      * @param exceptionCls 异常类型
+     * @param <T>          异常类型参数
      * @return 处理器
      */
     public static <T extends Throwable> RestfulExceptionHandler getHandler(Class<T> exceptionCls) {
