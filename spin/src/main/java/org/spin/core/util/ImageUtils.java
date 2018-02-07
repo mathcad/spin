@@ -23,7 +23,9 @@ import java.io.IOException;
  *
  * @author xuweinan
  */
-public class ImageUtils {
+public abstract class ImageUtils {
+    private ImageUtils() {
+    }
 
     public static void scale(String srcImg, String destImg, int scale) {
         try {

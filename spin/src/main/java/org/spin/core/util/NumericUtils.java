@@ -158,8 +158,29 @@ public abstract class NumericUtils {
     }
 
     /**
+     * 判断value1与value2形成的闭区间是否与value3与value4形成的闭区间相交
+     * <p>区间的端点不需要保证有序，所有端点都不允许为空</p>
+     *
+     * @param value1 区间1的端点1
+     * @param value2 区间1的端点2
+     * @param value3 区间2的端点1
+     * @param value4 区间2的端点2
+     * @return 是否相交
+     */
+    public static boolean interact(Number value1, Number value2, Number value3, Number value4) {
+        double v1 = value1.doubleValue();
+        double v2 = value2.doubleValue();
+        double v3 = value3.doubleValue();
+        double v4 = value4.doubleValue();
+        return !(v1 < v3 && v1 < v4 && v2 < v3 && v2 < v4 || v3 < v1 && v3 < v2 && v4 < v1 && v4 < v2);
+    }
+
+    /**
      * 分析数字，将中文数字转换为阿拉伯数字
      * 兼容中文与数字混合，只要数字语义正确即可
+     *
+     * @param str 数字字符串
+     * @return 阿拉伯数字的字符串形式
      */
     public static String analysisNumber(String str) {
         Matcher matcher = numPattern.matcher(str.trim());

@@ -1,6 +1,7 @@
 package org.spin.core.util;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public abstract class CnyUtils {
 
@@ -46,7 +47,7 @@ public abstract class CnyUtils {
      * @return 对应的汉语大写
      */
     public static String convertCNY(String money) {
-        BigDecimal numberOfMoney = BigDecimal.valueOf(Double.valueOf(money));
+        BigDecimal numberOfMoney = new BigDecimal(money);
         StringBuilder sb = new StringBuilder();
         // -1, 0, or 1 as the value of this BigDecimal is negative, zero, or
         // positive.
@@ -56,7 +57,7 @@ public abstract class CnyUtils {
             return CN_ZEOR_FULL;
         }
         // 这里会进行金额的四舍五入
-        long number = numberOfMoney.movePointRight(MONEY_PRECISION).setScale(0, 4).abs().longValue();
+        long number = numberOfMoney.movePointRight(MONEY_PRECISION).setScale(0, RoundingMode.HALF_UP).abs().longValue();
         // 得到小数点后两位值
         long scale = number % 100;
         int numUnit;

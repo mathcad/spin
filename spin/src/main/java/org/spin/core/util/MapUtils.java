@@ -232,7 +232,7 @@ public abstract class MapUtils {
     }
 
     /**
-     * 获取Double值
+     * 获取Float值
      */
     public static Float getFloatValue(Map<?, ?> map, Object key) {
         Object val = Objects.isNull(map) ? null : map.get(key);
@@ -321,12 +321,23 @@ public abstract class MapUtils {
     }
 
     /**
-     * 比较两个Map，指定字段是否所有值都相等
+     * 比较两个Map，是否所有指定字段的值都相等
+     * <p>如果指定的字段为空，直接返回false</p>
+     *
+     * @param map1 第一个map
+     * @param map2 第二个map
+     * @param keys 指定的字段
+     * @return 判断结果
      */
-    public static boolean equalsWith(Map<?, ?> ht1, Map<?, ?> ht2, Object... keys) {
-        final List<Boolean> eq = new ArrayList<>();
-        Optional.ofNullable(keys).ifPresent(ks -> Arrays.stream(ks).forEach(k -> eq.add(ObjectUtils.equal(ht1.get(k), ht2.get(k)))));
-        return !eq.contains(false);
+    public static boolean equalsWith(Map<?, ?> map1, Map<?, ?> map2, Object... keys) {
+        if (null == keys || 0 == keys.length) {
+            return false;
+        }
+        boolean eq = true;
+        for (Object key : keys) {
+            eq = eq && ObjectUtils.equal(map1.get(key), map2.get(key));
+        }
+        return eq;
     }
 
     /**

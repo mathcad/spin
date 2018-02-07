@@ -7,7 +7,7 @@ import java.io.File;
  *
  * @author xuweinan
  */
-public class SystemUtils {
+public abstract class SystemUtils {
     /**
      * The prefix String for all Windows OS.
      */
@@ -1618,11 +1618,11 @@ public class SystemUtils {
         super();
     }
 
-    public static String getRunningMethodInfo(){
+    public static String getRunningMethodInfo() {
         StringBuilder sb = new StringBuilder();
 
         StackTraceElement[] stacks = new Throwable().getStackTrace();
-        sb.append("class: " ).append(stacks[1].getClassName()).append("; method: ").append(stacks[1].getMethodName()).append("; number: ").append(stacks[1].getLineNumber());
+        sb.append("class: ").append(stacks[1].getClassName()).append("; method: ").append(stacks[1].getMethodName()).append("; number: ").append(stacks[1].getLineNumber());
         return sb.toString();
     }
 }

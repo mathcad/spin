@@ -1140,6 +1140,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param wrap 是否需要转换成层次Map
      */
     private Page<Map<String, Object>> pageMap(CriteriaBuilder cb, boolean wrap) {
+        if (!entityClazz.equals(cb.getEnCls())) {
+            cb.setEnCls(entityClazz);
+        }
         // 总数查询
         Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(getSession());
         ct.setCacheable(false);

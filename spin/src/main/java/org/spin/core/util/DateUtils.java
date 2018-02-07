@@ -568,4 +568,18 @@ public abstract class DateUtils {
     public static boolean isTimeOut(LocalDateTime time, Long expiredIn) {
         return LocalDateTime.now().compareTo(time.plus(expiredIn, ChronoUnit.MILLIS)) > 0;
     }
+
+    /**
+     * 判断value1与value2形成的时间段是否与value3与value4形成的时间段相交
+     * <p>时间段的端点不需要保证有序，所有端点都不允许为空</p>
+     *
+     * @param value1 时间段1的端点1
+     * @param value2 时间段1的端点2
+     * @param value3 时间段2的端点1
+     * @param value4 时间段2的端点2
+     * @return 是否相交
+     */
+    public static boolean interact(Date value1, Date value2, Date value3, Date value4) {
+        return NumericUtils.interact(value1.getTime(), value2.getTime(), value3.getTime(), value4.getTime());
+    }
 }

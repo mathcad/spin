@@ -65,7 +65,7 @@ public abstract class CollectionUtils {
         if (null == collection) {
             return null;
         }
-        @SuppressWarnings("unchecked") T res = JsonUtils.fromJson("[]", (Class<T>) collection.getClass());
+        T res = JsonUtils.fromJson("[]", collection.getClass());
         res.addAll(collection);
         return res;
     }
@@ -74,8 +74,7 @@ public abstract class CollectionUtils {
         if (null == collection) {
             return null;
         }
-        @SuppressWarnings("unchecked") T res = JsonUtils.fromJson("[]", (Class<T>) collection.getClass());
-        return res;
+        return JsonUtils.fromJson("[]", collection.getClass());
     }
 
     public static <T extends Collection<E>, E> E detect(T collection, Predicate<E> predicate) {

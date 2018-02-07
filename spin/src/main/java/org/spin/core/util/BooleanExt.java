@@ -10,7 +10,7 @@ import java.util.function.Supplier;
  *
  * @author xuweinan
  */
-public class BooleanExt<T> {
+public abstract class BooleanExt<T> {
 
     private BooleanExt() {
     }
