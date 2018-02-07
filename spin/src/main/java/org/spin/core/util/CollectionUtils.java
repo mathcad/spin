@@ -65,7 +65,8 @@ public abstract class CollectionUtils {
         if (null == collection) {
             return null;
         }
-        T res = JsonUtils.fromJson("[]", collection.getClass());
+        @SuppressWarnings("unchecked")
+        T res = JsonUtils.fromJson("[]", (Class<T>) collection.getClass());
         res.addAll(collection);
         return res;
     }
@@ -74,7 +75,8 @@ public abstract class CollectionUtils {
         if (null == collection) {
             return null;
         }
-        return JsonUtils.fromJson("[]", collection.getClass());
+        //noinspection unchecked
+        return JsonUtils.fromJson("[]", (Class<T>) collection.getClass());
     }
 
     public static <T extends Collection<E>, E> E detect(T collection, Predicate<E> predicate) {

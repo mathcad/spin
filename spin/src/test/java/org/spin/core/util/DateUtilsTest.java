@@ -65,10 +65,10 @@ public class DateUtilsTest {
         String a = "{date: '2016-08-31'}";
         String b = "2016-08-31";
         System.out.println(JsonUtils.fromJson(a, A.class).date);
-        System.out.println(JsonUtils.fromJson(b, LocalDate.class));
+        System.out.println(JsonUtils.fromJson(b, LocalDate.class).toString());
     }
 
     public static class A {
-    LocalDate date;
+        LocalDate date;
     }
 }

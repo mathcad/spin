@@ -305,6 +305,14 @@ public abstract class JsonUtils {
         }
     }
 
+    public static <T> T fromJson(String json, Class<T> clazz) {
+        try {
+            return defaultGson.fromJson(json, clazz);
+        } catch (Exception ex) {
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + clazz.getTypeName() + " 对象!", ex);
+        }
+    }
+
     /**
      * 将给定的 {@code JSON} 字符串转换成指定的类型对象。<strong>此方法通常用来转换普通的 {@code JavaBean}
      * 对象。</strong>
