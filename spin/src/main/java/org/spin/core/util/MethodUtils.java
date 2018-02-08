@@ -1280,33 +1280,45 @@ public abstract class MethodUtils {
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, e);
         }
-        ClassVisitor classVisitor = new ClassVisitor(Opcodes.ASM6) {
+
+        class MV extends MethodVisitor {
+            public MV(int api) {
+                super(api);
+            }
+
             @Override
-            public MethodVisitor visitMethod(final int access, final String name, final String desc, final String signature, final String[] exceptions) {
+            public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+                int i = index - 1;
+                // 如果是静态方法，则第一就是参数
+                // 如果不是静态方法，则第一个是"this"，然后才是方法的参数
+                if (Modifier.isStatic(m.getModifiers())) {
+                    i = index;
+                }
+                if (i >= 0 && i < paramNames.length) {
+                    paramNames[i] = name;
+                }
+            }
+        }
+
+        class CV extends ClassVisitor {
+            public CV(int api) {
+                super(api);
+            }
+
+            @Override
+            public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
                 final Type[] args = Type.getArgumentTypes(desc);
                 // 方法名相同并且参数个数相同
                 if (!name.equals(m.getName()) || !sameType(args, m.getParameterTypes())) {
-                    return super.visitMethod(access, name, desc, signature, exceptions);
+                    return null;
                 }
-                MethodVisitor v = super.visitMethod(access, name, desc, signature, exceptions);
-                return new MethodVisitor(Opcodes.ASM6, v) {
-                    @Override
-                    public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-                        int i = index - 1;
-                        // 如果是静态方法，则第一就是参数
-                        // 如果不是静态方法，则第一个是"this"，然后才是方法的参数
-                        if (Modifier.isStatic(m.getModifiers())) {
-                            i = index;
-                        }
-                        if (i >= 0 && i < paramNames.length) {
-                            paramNames[i] = name;
-                        }
-                        super.visitLocalVariable(name, desc, signature, start, end, index);
-                    }
-
-                };
+//                MethodVisitor v = super.visitMethod(access, name, desc, signature, exceptions);
+                return new MV(Opcodes.ASM6);
             }
-        };
+        }
+
+
+        ClassVisitor classVisitor = new CV(Opcodes.ASM6);
         try {
             cr.accept(classVisitor, 0);
         } catch (Exception e) {
