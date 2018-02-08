@@ -54,7 +54,14 @@ install {
 
 uploadArchives {
     repositories {
-        mavenLocal()
+        mavenDeployer {
+            repository(url: "http://139.199.59.195:8081/repository/ne/") {
+                authentication(userName: "admin", password: "admin123")
+            }
+            pom.version = "$project.version"
+            pom.artifactId = "$artifactId"
+            pom.groupId = "$project.group"
+        }
     }
 }
 
