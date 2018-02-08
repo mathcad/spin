@@ -64,7 +64,7 @@ dependencies {
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlin_version
 
 //    compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
-    compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion)
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
     compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.13.Final') {
         exclude(module: 'jboss-logging')
