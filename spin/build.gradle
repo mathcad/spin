@@ -84,7 +84,7 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-orm', version: springVersion
     compile group: 'org.springframework', name: 'spring-oxm', version: springVersion
     compile group: 'org.springframework.data', name: 'spring-data-redis', version: '1.8.10.RELEASE'
-    compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.12.Final') {
+    compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.13.Final') {
         exclude(module: 'jboss-logging')
         transitive = true
     }

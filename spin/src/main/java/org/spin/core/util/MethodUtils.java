@@ -1232,6 +1232,9 @@ public abstract class MethodUtils {
 
     /**
      * 判断方法的参数列表中，是否存在含有泛型的参数
+     *
+     * @param method 待判断的方法
+     * @return 方法是否含有泛型参数
      */
     public static boolean containsGenericArg(Method method) {
         return containsGenericArg(Arrays.stream(method.getParameters()).map(Parameter::getParameterizedType).toArray(java.lang.reflect.Type[]::new));
@@ -1239,6 +1242,9 @@ public abstract class MethodUtils {
 
     /**
      * 判断类型中是否含有泛型参数
+     *
+     * @param argTypes 待判断的类型
+     * @return 类型中是否存在含有泛型参数的情况
      */
     public static boolean containsGenericArg(java.lang.reflect.Type... argTypes) {
         boolean contains = false;
@@ -1260,7 +1266,10 @@ public abstract class MethodUtils {
     }
 
     /**
-     * 获取方法的参数名
+     * 解析方法的参数名
+     *
+     * @param m 方法对象
+     * @return 参数名称数组
      */
     public static String[] getMethodParamNames(final Method m) {
         final String[] paramNames = new String[m.getParameterTypes().length];
@@ -1271,7 +1280,7 @@ public abstract class MethodUtils {
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, e);
         }
-        cr.accept(new ClassVisitor(Opcodes.ASM6) {
+        ClassVisitor classVisitor = new ClassVisitor(Opcodes.ASM6) {
             @Override
             public MethodVisitor visitMethod(final int access, final String name, final String desc, final String signature, final String[] exceptions) {
                 final Type[] args = Type.getArgumentTypes(desc);
@@ -1297,7 +1306,12 @@ public abstract class MethodUtils {
 
                 };
             }
-        }, 0);
+        };
+        try {
+            cr.accept(classVisitor, 0);
+        } catch (Exception e) {
+            throw new SimplifiedException("解析方法参数名称失败", e);
+        }
         return paramNames;
     }
 
