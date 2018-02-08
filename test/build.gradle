@@ -78,8 +78,8 @@ dependencies {
     compile group: 'com.atomikos', name: 'transactions-jta', version: '4.0.6'
 //    compile group: 'com.atomikos', name: 'transactions-api', version: '4.0.6'
 
-    compile(project(":spin-starter-restful"))
-//    compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.9-RC12'
+//    compile(project(":spin-starter-restful"))
+    compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.9-RC13'
 
     compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
 }
