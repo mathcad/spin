@@ -9,13 +9,15 @@ buildscript {
     ext.kotlin_version = '1.2.21'
 
     ext {
-        springBootVersion = '1.5.10.RELEASE'
+//        springBootVersion = '1.5.10.RELEASE'
+        springBootVersion = '2.0.0.RC1'
         junitJupiterVersion = '5.0.3'
     }
     repositories {
         mavenLocal()
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
         maven { url 'https://repo.spring.io/libs-release' }
+        maven { url 'https://repo.spring.io/libs-milestone' }
         mavenCentral()
     }
     dependencies {
@@ -45,7 +47,7 @@ junitPlatform {
 }
 
 bootRun {
-    addResources = true
+//    addResources = true
 }
 
 task createKotlinDirs {
@@ -55,16 +57,14 @@ task createKotlinDirs {
 dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
-//    testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
-//        exclude(module: 'commons-logging')
-//    }
+    testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
+        exclude(module: 'commons-logging')
+    }
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: "$kotlin_version"
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlin_version
 
 //    compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
-    compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion) {
-        exclude(module: 'jackson-databind')
-    }
+    compile(group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion)
     compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
     compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.13.Final') {
         exclude(module: 'jboss-logging')
@@ -78,8 +78,8 @@ dependencies {
     compile group: 'com.atomikos', name: 'transactions-jta', version: '4.0.6'
 //    compile group: 'com.atomikos', name: 'transactions-api', version: '4.0.6'
 
-//    compile(project(":spin-starter-restful"))
-    compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.9-RC12'
+    compile(project(":spin-starter-restful"))
+//    compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.9-RC12'
 
     compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
 }

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository
  * @create 2017-09-04 下午11:04
  */
 @Repository
-class OrderRepository : ARepository<Order, Long>()
+open class OrderRepository : ARepository<Order, Long>()
 
 /**
  * 港口
@@ -23,4 +23,4 @@ class OrderRepository : ARepository<Order, Long>()
  * @create 2017-09-05 下午11:06
  */
 @Repository
-class PortRepository : ARepository<Port, Long>()
+open class PortRepository : ARepository<Port, Long>()

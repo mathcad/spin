@@ -16,7 +16,7 @@ buildscript {
 }
 
 ext {
-    springVersion = "4.3.14.RELEASE"
+    springVersion = "5.0.3.RELEASE"
     junitJupiterVersion = '5.0.3'
 }
 
@@ -83,7 +83,7 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compile group: 'org.springframework', name: 'spring-orm', version: springVersion
     compile group: 'org.springframework', name: 'spring-oxm', version: springVersion
-    compile group: 'org.springframework.data', name: 'spring-data-redis', version: '1.8.10.RELEASE'
+    compile group: 'org.springframework.data', name: 'spring-data-redis', version: '2.0.3.RELEASE'
     compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.13.Final') {
         exclude(module: 'jboss-logging')
         transitive = true

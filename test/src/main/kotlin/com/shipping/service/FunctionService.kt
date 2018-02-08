@@ -4,9 +4,11 @@ import com.shipping.domain.enums.OrganizationTypeE
 import com.shipping.domain.sys.Function
 import com.shipping.repository.sys.FunctionRepository
 import org.slf4j.LoggerFactory
+import org.spin.web.annotation.RestfulMethod
+import org.spin.web.annotation.RestfulService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.*
+import javax.transaction.Transactional
 
 /**
  *
@@ -14,13 +16,15 @@ import java.util.*
  *
  * @author xuweinan
  */
-@Service
-class FunctionService {
+@RestfulService
+open class FunctionService {
 
     @Autowired
     private lateinit var functionDao: FunctionRepository
 
-    fun add(func: Function) {
+    @RestfulMethod
+    @Transactional
+    open fun add(func: Function) {
         if (Objects.nonNull(func.parent)) {
             OrganizationTypeE.GROUP
             val parent = functionDao.get(func.parent!!.id)

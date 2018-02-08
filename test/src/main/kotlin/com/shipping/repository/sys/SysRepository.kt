@@ -19,7 +19,7 @@ import org.springframework.stereotype.Repository
  * @author xuweinan
  */
 @Repository
-class DictRepository : ARepository<Dict, Long>()
+open class DictRepository : ARepository<Dict, Long>()
 
 /**
  *
@@ -28,7 +28,7 @@ class DictRepository : ARepository<Dict, Long>()
  * @author xuweinan
  */
 @Repository
-class FileRepository : ARepository<File, Long>()
+open class FileRepository : ARepository<File, Long>()
 
 /**
  *
@@ -37,7 +37,7 @@ class FileRepository : ARepository<File, Long>()
  * @author xuweinan
  */
 @Repository
-class FunctionGroupRepository : ARepository<FunctionGroup, Long>()
+open class FunctionGroupRepository : ARepository<FunctionGroup, Long>()
 
 /**
  *
@@ -46,7 +46,7 @@ class FunctionGroupRepository : ARepository<FunctionGroup, Long>()
  * @author xuweinan
  */
 @Repository
-class FunctionRepository : ARepository<Function, Long>()
+open class FunctionRepository : ARepository<Function, Long>()
 
 /**
  *
@@ -55,7 +55,7 @@ class FunctionRepository : ARepository<Function, Long>()
  * @author xuweinan
  */
 @Repository
-class OrganizatioinRepository : ARepository<Organization, Long>()
+open class OrganizatioinRepository : ARepository<Organization, Long>()
 
 /**
  *
@@ -64,7 +64,7 @@ class OrganizatioinRepository : ARepository<Organization, Long>()
  * @author xuweinan
  */
 @Repository
-class PermissionRepository : ARepository<Permission, Long>()
+open class PermissionRepository : ARepository<Permission, Long>()
 
 /**
  *
@@ -73,7 +73,7 @@ class PermissionRepository : ARepository<Permission, Long>()
  * @author xuweinan
  */
 @Repository
-class RegionRepository : ARepository<Region, Long>()
+open class RegionRepository : ARepository<Region, Long>()
 
 /**
  *
@@ -82,7 +82,7 @@ class RegionRepository : ARepository<Region, Long>()
  * @author xuweinan
  */
 @Repository
-class RoleRepository : ARepository<Role, Long>()
+open class RoleRepository : ARepository<Role, Long>()
 
 /**
  *
@@ -91,4 +91,4 @@ class RoleRepository : ARepository<Role, Long>()
  * @author xuweinan
  */
 @Repository
-class UserRepository : ARepository<User, Long>()
+open class UserRepository : ARepository<User, Long>()

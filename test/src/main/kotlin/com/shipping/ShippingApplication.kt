@@ -16,7 +16,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.core.env.Environment
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 /**
  * 启动类
@@ -31,26 +31,25 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @EnableConfigurationProperties(DruidDataSourceProperties::class)
 @EnableSecretManager
 @EnableIdGenerator
-open class ShippingApplication : WebMvcConfigurerAdapter() {
+open class ShippingApplication : WebMvcConfigurer {
 
     @Autowired
-    internal var env: Environment? = null
+    private lateinit var env: Environment
 
     override fun addResourceHandlers(registry: ResourceHandlerRegistry?) {
         registry!!.addResourceHandler("/static/**").addResourceLocations("classpath:/static/")
         registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + SpinContext.FILE_UPLOAD_DIR)
-        super.addResourceHandlers(registry)
     }
 
     @Bean
     open fun readConfig(): InitializingBean {
         return InitializingBean {
-            InfoCache.RSA_PUBKEY = RSA.getRSAPublicKey(env!!.getProperty("encrypt.rsa.publicKey"))
-            InfoCache.RSA_PRIKEY = RSA.getRSAPrivateKey(env!!.getProperty("encrypt.rsa.privatekey"))
+            InfoCache.RSA_PUBKEY = RSA.getRSAPublicKey(env.getProperty("encrypt.rsa.publicKey"))
+            InfoCache.RSA_PRIKEY = RSA.getRSAPrivateKey(env.getProperty("encrypt.rsa.privatekey"))
         }
     }
 }
 
 fun main(args: Array<String>) {
-    SpringApplication.run(arrayOf<Any>(ShippingApplication::class.java), args)
+    SpringApplication.run(ShippingApplication::class.java, *args)
 }

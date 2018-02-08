@@ -33,6 +33,7 @@ subprojects {
     repositories {
         mavenLocal()
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        maven { url 'https://repo.spring.io/libs-milestone' }
         mavenCentral()
         maven {
             url 'http://120.26.76.35:8081/nexus/content/repositories/nbxs/'
