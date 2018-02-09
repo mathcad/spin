@@ -49,6 +49,7 @@ public abstract class HttpUtils {
      * @param url     url
      * @param headers 请求头部
      * @param params  请求参数map
+     * @return 请求结果
      */
     public static String get(String url, Map<String, String> headers, Map<String, String> params) {
         URIBuilder uriBuilder = null;
@@ -72,6 +73,7 @@ public abstract class HttpUtils {
      * @param url     url
      * @param headers 请求头部
      * @param params  请求参数
+     * @return 请求结果
      */
     public static String get(String url, Map<String, String> headers, String... params) {
         return get(getUriFromString(url, params), headers);
@@ -82,6 +84,7 @@ public abstract class HttpUtils {
      *
      * @param url    url
      * @param params 请求参数
+     * @return 请求结果
      */
     public static String get(String url, String... params) {
         return get(getUriFromString(url, params), null);
@@ -92,6 +95,7 @@ public abstract class HttpUtils {
      *
      * @param uri     uri
      * @param headers 请求头部
+     * @return 请求结果
      */
     public static String get(URI uri, Map<String, String> headers) {
         RequestConfig requestConfig = RequestConfig.custom()
@@ -113,6 +117,7 @@ public abstract class HttpUtils {
      *
      * @param url    url
      * @param params 请求参数
+     * @return 请求结果
      */
     public static String post(String url, Map<String, String> params) {
         return post(url, null, params);
@@ -124,6 +129,7 @@ public abstract class HttpUtils {
      * @param url     url
      * @param headers 请求头部
      * @param params  请求参数
+     * @return 请求结果
      */
     public static String post(String url, Map<String, String> headers, Map<String, String> params) {
         RequestConfig requestConfig = RequestConfig.custom()
@@ -155,6 +161,7 @@ public abstract class HttpUtils {
      *
      * @param url     请求url
      * @param jsonObj json参数
+     * @return 请求结果
      */
     public static String postJson(String url, Object jsonObj) {
         RequestConfig requestConfig = RequestConfig.custom()
@@ -184,6 +191,7 @@ public abstract class HttpUtils {
      *
      * @param url      url
      * @param savePath 保存路径
+     * @return 下载结果
      */
     public static Map<String, String> download(String url, String savePath) {
         URI uri = getUriFromString(url);
@@ -219,6 +227,7 @@ public abstract class HttpUtils {
      * @param request   请求
      * @param processor 请求结果处理器
      * @param <T>       处理后的返回类型
+     * @return 处理后的请求结果
      */
     public static <T> T excuteRequest(HttpUriRequest request, EntityProcessor<T> processor) {
         HttpEntity entity = null;

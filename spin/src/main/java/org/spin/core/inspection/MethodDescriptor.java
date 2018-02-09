@@ -69,6 +69,8 @@ public class MethodDescriptor {
      *
      * @param args 实参列表
      * @return 调用结果
+     * @throws InvocationTargetException 调用对象发生异常
+     * @throws IllegalAccessException    访问级别不正确
      */
     public Object invoke(Object... args) throws InvocationTargetException, IllegalAccessException {
         return method.invoke(Assert.notNull(target, "方法调用对象不能为空: " + methodName), args);

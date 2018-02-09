@@ -18,11 +18,9 @@ import java.util.Map;
  * Operates on classes without using reflection.
  * </p>
  * <p>
- * <p>
  * This class handles invalid <code>null</code> inputs as best it can. Each
  * method documents its behaviour in more detail.
  * </p>
- * <p>
  * <p>
  * The notion of a <code>canonical name</code> includes the human readable
  * name for the type, for example <code>int[]</code>. The non-canonical
@@ -39,30 +37,22 @@ import java.util.Map;
  */
 public abstract class ClassUtils {
     /**
-     * <p>
      * char形式的包名分隔符: <code>'&#x2e;' == {@value}</code>.
-     * </p>
      */
     public static final char PACKAGE_SEPARATOR_CHAR = '.';
 
     /**
-     * <p>
      * String形式的包名分隔符: <code>"&#x2e;"</code>.
-     * </p>
      */
     public static final String PACKAGE_SEPARATOR = String.valueOf(PACKAGE_SEPARATOR_CHAR);
 
     /**
-     * <p>
      * char形式的内部类名分隔符: <code>'$' == {@value}</code>.
-     * </p>
      */
     public static final char INNER_CLASS_SEPARATOR_CHAR = '$';
 
     /**
-     * <p>
      * String形式的内部类名分隔符: <code>"$"</code>.
-     * </p>
      */
     public static final String INNER_CLASS_SEPARATOR = String.valueOf(INNER_CLASS_SEPARATOR_CHAR);
 
@@ -143,7 +133,6 @@ public abstract class ClassUtils {
      * <code>ClassUtils.getShortClassName(cls)</code>.
      * </p>
      * <p>
-     * <p>
      * This constructor is public to permit tools that require a JavaBean
      * instance to operate.
      * </p>
@@ -153,13 +142,16 @@ public abstract class ClassUtils {
     }
 
     /**
-     * 获取对象指定字段的值
+     * 获取对象指定属性的值
+     * <p>通过反射直接读取属性，不通过get方法</p>
      *
-     * @param target    实例
-     * @param valuePath 取值的字段名称
+     * @param target    对象实例
+     * @param valuePath 属性名称，支持嵌套
+     * @param <T>       属性类型参数
+     * @return 属性值
      */
     public static <T> T getFieldValue(Object target, String valuePath) {
-        String[] valuePaths = Assert.notEmpty(valuePath, "valuePath必须指定字段名").split("\\.");
+        String[] valuePaths = Assert.notEmpty(valuePath, "valuePath必须指定属性名称").split("\\.");
         Object o = target;
         for (String field : valuePaths) {
             Field f;
@@ -167,12 +159,12 @@ public abstract class ClassUtils {
                 f = ReflectionUtils.findField(o.getClass(), field);
                 ReflectionUtils.makeAccessible(f);
             } catch (Exception e) {
-                throw new SimplifiedException(o.getClass().toString() + "未声明" + field + "字段", e);
+                throw new SimplifiedException(o.getClass().toString() + "不存在" + field + "属性", e);
             }
             try {
                 o = ReflectionUtils.getField(f, o);
             } catch (Exception e) {
-                throw new SimplifiedException(o.getClass().toString() + "获取字段" + field + "的值失败", e);
+                throw new SimplifiedException(o.getClass().toString() + "获取属性" + field + "的值失败", e);
             }
         }
         //noinspection unchecked
@@ -180,10 +172,11 @@ public abstract class ClassUtils {
     }
 
     /**
-     * 获取对象指定字段的值
+     * 获取对象指定属性的值
      *
-     * @param target 实例
-     * @param fields 取值的字段名称, 默认为"value"
+     * @param target 对象实例
+     * @param fields 取值的属性名称
+     * @return 属性map
      */
     public static Map<String, Object> getFieldValue(Object target, String... fields) {
         return getFieldValue(target, Arrays.asList(fields));
@@ -191,18 +184,18 @@ public abstract class ClassUtils {
     }
 
     /**
-     * 获取对象指定字段的值
+     * 获取对象指定属性的值
      *
-     * @param target 实例
-     * @param fields 取值的字段名称, 默认为"value"
+     * @param target 对象实例
+     * @param fields 取值的属性名称
+     * @return 属性map
      */
     public static Map<String, Object> getFieldValue(Object target, Collection<String> fields) {
         Map<String, Object> result = new HashMap<>();
-        Collection<String> fieldNames = fields;
         if (CollectionUtils.isEmpty(fields)) {
-            fieldNames = CollectionUtils.ofArrayList("value");
+            return new HashMap<>(0);
         }
-        for (String field : fieldNames) {
+        for (String field : fields) {
             Object value = getFieldValue(target, field);
             result.put(field, value);
         }
@@ -248,7 +241,6 @@ public abstract class ClassUtils {
      * <p>
      * Gets the class name minus the package name from a String.
      * </p>
-     * <p>
      * <p>
      * The string passed in is assumed to be a class name - it is not checked.
      * </p>
@@ -332,7 +324,6 @@ public abstract class ClassUtils {
      * Gets the package name from a <code>String</code>.
      * </p>
      * <p>
-     * <p>
      * The string passed in is assumed to be a class name - it is not checked.
      * </p>
      * <p>
@@ -394,7 +385,6 @@ public abstract class ClassUtils {
      * Gets a <code>List</code> of all interfaces implemented by the given class
      * and its superclasses.
      * </p>
-     * <p>
      * <p>
      * The order is determined by looking through each interface in turn as
      * declared in the source file and following its hierarchy up. Then each
@@ -472,7 +462,6 @@ public abstract class ClassUtils {
      * converts them into class names.
      * </p>
      * <p>
-     * <p>
      * A new <code>List</code> is returned. <code>null</code> objects will be
      * copied into the returned list as <code>null</code>.
      * </p>
@@ -505,23 +494,19 @@ public abstract class ClassUtils {
      * <code>Class</code>.
      * </p>
      * <p>
-     * <p>
      * Unlike the {@link Class#isAssignableFrom(Class)} method, this
      * method takes into account widenings of primitive classes and
      * <code>null</code>s.
      * </p>
      * <p>
-     * <p>
      * Primitive widenings allow an int to be assigned to a long, float or
      * double. This method returns the correct result for these cases.
      * </p>
-     * <p>
      * <p>
      * <code>Null</code> may be assigned to any reference type. This method will
      * return <code>true</code> if <code>null</code> is passed in and the
      * toClass is non-primitive.
      * </p>
-     * <p>
      * <p>
      * Specifically, this method tests whether the type represented by the
      * specified <code>Class</code> parameter can be converted to the type
@@ -545,23 +530,19 @@ public abstract class ClassUtils {
      * <code>Class</code>.
      * </p>
      * <p>
-     * <p>
      * Unlike the {@link Class#isAssignableFrom(Class)} method, this
      * method takes into account widenings of primitive classes and
      * <code>null</code>s.
      * </p>
      * <p>
-     * <p>
      * Primitive widenings allow an int to be assigned to a long, float or
      * double. This method returns the correct result for these cases.
      * </p>
-     * <p>
      * <p>
      * <code>Null</code> may be assigned to any reference type. This method will
      * return <code>true</code> if <code>null</code> is passed in and the
      * toClass is non-primitive.
      * </p>
-     * <p>
      * <p>
      * Specifically, this method tests whether the type represented by the
      * specified <code>Class</code> parameter can be converted to the type
@@ -647,7 +628,6 @@ public abstract class ClassUtils {
      * wrapper Class object.
      * </p>
      * <p>
-     * <p>
      * NOTE: From v2.2, this method handles <code>Void.TYPE</code>, returning
      * <code>Void.TYPE</code>.
      * </p>
@@ -701,7 +681,6 @@ public abstract class ClassUtils {
      * class.
      * </p>
      * <p>
-     * <p>
      * This method is the counter part of <code>primitiveToWrapper()</code>. If
      * the passed in class is a wrapper class for a primitive type, this
      * primitive type will be returned (e.g. <code>Integer.TYPE</code> for
@@ -726,7 +705,6 @@ public abstract class ClassUtils {
      * Converts the specified array of wrapper Class objects to an array of its
      * corresponding primitive Class objects.
      * </p>
-     * <p>
      * <p>
      * This method invokes <code>wrapperToPrimitive()</code> for each element of
      * the passed in array.
@@ -921,7 +899,6 @@ public abstract class ClassUtils {
      * Gets the canonical name minus the package name from a String.
      * </p>
      * <p>
-     * <p>
      * The string passed in is assumed to be a canonical name - it is not
      * checked.
      * </p>
@@ -976,7 +953,6 @@ public abstract class ClassUtils {
      * <p>
      * Gets the package name from the canonical name.
      * </p>
-     * <p>
      * <p>
      * The string passed in is assumed to be a canonical name - it is not
      * checked.

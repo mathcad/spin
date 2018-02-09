@@ -25,7 +25,6 @@ public abstract class ConstructorUtils {
      * <p>Convenience method returning new instance of <code>klazz</code> using a single argument constructor.
      * The formal parameter type is inferred from the actual values of <code>arg</code>.
      * See {@link #invokeExactConstructor(Class, Object[], Class[])} for more details.</p>
-     * <p>
      * <p>The signatures should be assignment compatible.</p>
      *
      * @param <T>   the type of the object to be constructed
@@ -53,7 +52,6 @@ public abstract class ConstructorUtils {
      * <p>Returns new instance of <code>klazz</code> created using the actual arguments <code>args</code>.
      * The formal parameter types are inferred from the actual values of <code>args</code>.
      * See {@link #invokeExactConstructor(Class, Object[], Class[])} for more details.</p>
-     * <p>
      * <p>The signatures should be assignment compatible.</p>
      *
      * @param <T>   the type of the object to be constructed
@@ -87,7 +85,6 @@ public abstract class ConstructorUtils {
     /**
      * <p>Returns new instance of <code>klazz</code> created using constructor
      * with signature <code>parameterTypes</code> and actual arguments <code>args</code>.</p>
-     * <p>
      * <p>The signatures should be assignment compatible.</p>
      *
      * @param <T>            the type of the object to be constructed
@@ -132,7 +129,6 @@ public abstract class ConstructorUtils {
      * <p>Convenience method returning new instance of <code>klazz</code> using a single argument constructor.
      * The formal parameter type is inferred from the actual values of <code>arg</code>.
      * See {@link #invokeExactConstructor(Class, Object[], Class[])} for more details.</p>
-     * <p>
      * <p>The signatures should match exactly.</p>
      *
      * @param <T>   the type of the object to be constructed
@@ -160,7 +156,6 @@ public abstract class ConstructorUtils {
      * <p>Returns new instance of <code>klazz</code> created using the actual arguments <code>args</code>.
      * The formal parameter types are inferred from the actual values of <code>args</code>.
      * See {@link #invokeExactConstructor(Class, Object[], Class[])} for more details.</p>
-     * <p>
      * <p>The signatures should match exactly.</p>
      *
      * @param <T>   the type of the object to be constructed
@@ -195,7 +190,6 @@ public abstract class ConstructorUtils {
      * <p>Returns new instance of <code>klazz</code> created using constructor
      * with signature <code>parameterTypes</code> and actual arguments
      * <code>args</code>.</p>
-     * <p>
      * <p>The signatures should match exactly.</p>
      *
      * @param <T>            the type of the object to be constructed

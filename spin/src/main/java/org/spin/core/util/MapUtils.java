@@ -2,7 +2,12 @@ package org.spin.core.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.Assert;
+import org.spin.core.ErrorCode;
+import org.spin.core.collection.MultiValueMap;
+import org.spin.core.throwable.SimplifiedException;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAccessor;
@@ -153,14 +158,22 @@ public abstract class MapUtils {
     }
 
     /**
-     * 获取String值
+     * 从map中获取指定的字符串属性
+     *
+     * @param map map对象
+     * @param key 属性键
+     * @return 获取的结果
      */
-    public static String getStringValue(Map<?, ?> rec, Object key) {
-        return Objects.isNull(rec) ? null : ObjectUtils.toString(rec.get(key), null);
+    public static String getStringValue(Map<?, ?> map, Object key) {
+        return Objects.isNull(map) ? null : ObjectUtils.toString(map.get(key), null);
     }
 
     /**
-     * 获取Long值
+     * 从map中获取指定的Long属性
+     *
+     * @param map map对象
+     * @param key 属性键
+     * @return 获取的结果
      */
     public static Long getLongValue(Map<?, ?> map, Object key) {
         Object val = Objects.isNull(map) ? null : map.get(key);
@@ -184,7 +197,11 @@ public abstract class MapUtils {
     }
 
     /**
-     * 获取Integer值
+     * 从map中获取指定的Integer属性
+     *
+     * @param map map对象
+     * @param key 属性键
+     * @return 获取的结果
      */
     public static Integer getIntValue(Map<?, ?> map, Object key) {
         Object val = Objects.isNull(map) ? null : map.get(key);
@@ -208,7 +225,11 @@ public abstract class MapUtils {
     }
 
     /**
-     * 获取Double值
+     * 从map中获取指定的Double属性
+     *
+     * @param map map对象
+     * @param key 属性键
+     * @return 获取的结果
      */
     public static Double getDoubleValue(Map<?, ?> map, Object key) {
         Object val = Objects.isNull(map) ? null : map.get(key);
@@ -232,7 +253,11 @@ public abstract class MapUtils {
     }
 
     /**
-     * 获取Float值
+     * 从map中获取指定的Float属性
+     *
+     * @param map map对象
+     * @param key 属性键
+     * @return 获取的结果
      */
     public static Float getFloatValue(Map<?, ?> map, Object key) {
         Object val = Objects.isNull(map) ? null : map.get(key);
@@ -256,7 +281,11 @@ public abstract class MapUtils {
     }
 
     /**
-     * 获取BigDecimal值
+     * 从map中获取指定的BigDecimal属性
+     *
+     * @param map map对象
+     * @param key 属性键
+     * @return 获取的结果
      */
     public static BigDecimal getBigDecimalValue(Map<?, ?> map, Object key) {
         Object val = Objects.isNull(map) ? null : map.get(key);
@@ -271,7 +300,11 @@ public abstract class MapUtils {
     }
 
     /**
-     * 得到时间值
+     * 从map中获取指定的时间值属性
+     *
+     * @param map map对象
+     * @param key 属性键
+     * @return Date
      */
     public static Date getDateValue(Map<?, ?> map, Object key) {
         Object val = Objects.isNull(map) ? null : map.get(key);
@@ -295,7 +328,11 @@ public abstract class MapUtils {
     }
 
     /**
-     * 得到时间值
+     * 从map中获取指定的时间值属性
+     *
+     * @param map map对象
+     * @param key 属性键
+     * @return LocalDateTime
      */
     public static LocalDateTime getLocalDateTimeValue(Map<?, ?> map, Object key) {
         Object val = Objects.isNull(map) ? null : map.get(key);
@@ -321,6 +358,23 @@ public abstract class MapUtils {
     }
 
     /**
+     * 从map中获取指定类型的属性
+     *
+     * @param map map对象
+     * @param key 属性键
+     * @param <T> 类型参数
+     * @return 获取的结果
+     */
+    public static <T> T getObjectValue(Map<?, ?> map, Object key) {
+        try {
+            //noinspection unchecked
+            return (T) (Objects.isNull(map) ? null : map.get(key));
+        } catch (Exception e) {
+            throw new SimplifiedException("对象类型不匹配");
+        }
+    }
+
+    /**
      * 比较两个Map，是否所有指定字段的值都相等
      * <p>如果指定的字段为空，直接返回false</p>
      *
@@ -342,6 +396,11 @@ public abstract class MapUtils {
 
     /**
      * 获取Map列表中，某列去重后的结果
+     *
+     * @param list   列表
+     * @param key    统计字段
+     * @param objCpt 比较器
+     * @return 统计结果
      */
     public static <K, V> List<V> distinctList(List<Map<K, V>> list, K key, Comparator<V> objCpt) {
         List<V> objSet = CollectionUtils.ofArrayList();
@@ -356,6 +415,10 @@ public abstract class MapUtils {
 
     /**
      * 统计某数值列的汇总
+     *
+     * @param list 列表
+     * @param key  统计字段
+     * @return 统计结果
      */
     public static BigDecimal sumList(List<Map<?, ?>> list, Object key) {
         return list.stream().map(m -> getBigDecimalValue(m, key)).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -363,6 +426,10 @@ public abstract class MapUtils {
 
     /**
      * 统计某数值列最大值
+     *
+     * @param list 列表
+     * @param key  统计字段
+     * @return 统计结果
      */
     public static BigDecimal maxList(List<Map<?, ?>> list, Object key) {
         return list.stream().map(m -> getBigDecimalValue(m, key)).filter(Objects::nonNull).max(BigDecimal::compareTo).orElse(null);
@@ -370,6 +437,10 @@ public abstract class MapUtils {
 
     /**
      * 统计某数值列最小值
+     *
+     * @param list 列表
+     * @param key  统计字段
+     * @return 统计结果
      */
     public static BigDecimal minList(List<Map<?, ?>> list, Object key) {
         return list.stream().map(m -> getBigDecimalValue(m, key)).filter(Objects::nonNull).min(BigDecimal::compareTo).orElse(null);
@@ -377,9 +448,205 @@ public abstract class MapUtils {
 
     /**
      * 统计某数值列平均值
+     *
+     * @param list 列表
+     * @param key  统计字段
+     * @return 统计结果
      */
     public static BigDecimal avgList(List<Map<?, ?>> list, Object key) {
         BigDecimal total = sumList(list, key);
         return total.divide(new BigDecimal(list.size()), BigDecimal.ROUND_HALF_UP);
+    }
+
+    /**
+     * 将Map转换为MultiValueMap
+     *
+     * @param map 源Map
+     * @param <K> 键类型参数
+     * @param <V> 值类型参数
+     * @return MultiValueMap
+     */
+    public static <K, V> MultiValueMap<K, V> toMultiValueMap(Map<K, List<V>> map) {
+        return new MultiValueMapAdapter<>(map);
+    }
+
+    /**
+     * 返回MultiValueMap的一个只读视图
+     *
+     * @param map 目标Map
+     * @param <K> 键类型参数
+     * @param <V> 值类型参数
+     * @return 只读的MultiValueMap
+     */
+    @SuppressWarnings("unchecked")
+    public static <K, V> MultiValueMap<K, V> unmodifiableMultiValueMap(MultiValueMap<? extends K, ? extends V> map) {
+        Assert.notNull(map, "'map' must not be null");
+        Map<K, List<V>> result = new LinkedHashMap<>(map.size());
+        for (Map.Entry<? extends K, ? extends List<? extends V>> entry : map.entrySet()) {
+            List<? extends V> values = Collections.unmodifiableList(entry.getValue());
+            result.put(entry.getKey(), (List<V>) values);
+        }
+        Map<K, List<V>> unmodifiableMap = Collections.unmodifiableMap(result);
+        return toMultiValueMap(unmodifiableMap);
+    }
+
+
+    /**
+     * 将Properties实例中的内容合并到Map中
+     *
+     * @param props 待合并的Properties实例(可以为 {@code null})
+     * @param map   合并的目标Map
+     * @param <K>   键的类型参数
+     * @param <V>   值的类型参数
+     */
+    @SuppressWarnings("unchecked")
+    public static <K, V> void mergePropertiesIntoMap(Properties props, Map<K, V> map) {
+        if (map == null) {
+            throw new IllegalArgumentException("Map must not be null");
+        }
+        if (props != null) {
+            for (Enumeration<?> en = props.propertyNames(); en.hasMoreElements(); ) {
+                String key = (String) en.nextElement();
+                Object value = props.getProperty(key);
+                if (value == null) {
+                    // Potentially a non-String value...
+                    value = props.get(key);
+                }
+                map.put((K) key, (V) value);
+            }
+        }
+    }
+
+    /**
+     * 判断Map是否为空
+     *
+     * @param map 待判断的map
+     * @return 是否为空
+     */
+    public static boolean isEmpty(Map<?, ?> map) {
+        return (map == null || map.isEmpty());
+    }
+
+    /**
+     * Map到MultiValueMap的适配器
+     */
+    private static class MultiValueMapAdapter<K, V> implements MultiValueMap<K, V>, Serializable {
+        private static final long serialVersionUID = 1704461815464000179L;
+        private final Map<K, List<V>> map;
+
+        public MultiValueMapAdapter(Map<K, List<V>> map) {
+            Assert.notNull(map, "'map' must not be null");
+            this.map = map;
+        }
+
+        @Override
+        public void add(K key, V value) {
+            List<V> values = this.map.computeIfAbsent(key, k -> new LinkedList<>());
+            values.add(value);
+        }
+
+        @Override
+        public V getFirst(K key) {
+            List<V> values = this.map.get(key);
+            return (values != null ? values.get(0) : null);
+        }
+
+        @Override
+        public void set(K key, V value) {
+            List<V> values = new LinkedList<>();
+            values.add(value);
+            this.map.put(key, values);
+        }
+
+        @Override
+        public void setAll(Map<K, V> values) {
+            for (Entry<K, V> entry : values.entrySet()) {
+                set(entry.getKey(), entry.getValue());
+            }
+        }
+
+        @Override
+        public Map<K, V> toSingleValueMap() {
+            LinkedHashMap<K, V> singleValueMap = new LinkedHashMap<>(this.map.size());
+            for (Entry<K, List<V>> entry : map.entrySet()) {
+                singleValueMap.put(entry.getKey(), entry.getValue().get(0));
+            }
+            return singleValueMap;
+        }
+
+        @Override
+        public int size() {
+            return this.map.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return this.map.isEmpty();
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return this.map.containsKey(key);
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            return this.map.containsValue(value);
+        }
+
+        @Override
+        public List<V> get(Object key) {
+            return this.map.get(key);
+        }
+
+        @Override
+        public List<V> put(K key, List<V> value) {
+            return this.map.put(key, value);
+        }
+
+        @Override
+        public List<V> remove(Object key) {
+            return this.map.remove(key);
+        }
+
+        @Override
+        public void putAll(Map<? extends K, ? extends List<V>> map) {
+            this.map.putAll(map);
+        }
+
+        @Override
+        public void clear() {
+            this.map.clear();
+        }
+
+        @Override
+        public Set<K> keySet() {
+            return this.map.keySet();
+        }
+
+        @Override
+        public Collection<List<V>> values() {
+            return this.map.values();
+        }
+
+        @Override
+        public Set<Entry<K, List<V>>> entrySet() {
+            return this.map.entrySet();
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return other == this || other instanceof Map && map.equals(other);
+        }
+
+        @Override
+        public int hashCode() {
+            return this.map.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return this.map.toString();
+        }
     }
 }

@@ -110,6 +110,9 @@ public abstract class DateUtils {
 
     /**
      * 将日期字符串转换为日期(自动推断日期格式)
+     *
+     * @param date 日期字符串
+     * @return 日期
      */
     public static Date toDate(String date) {
         if (StringUtils.isEmpty(date))
@@ -147,6 +150,13 @@ public abstract class DateUtils {
         }
     }
 
+    /**
+     * 将日期字符串转换为日期
+     *
+     * @param date    日期字符串
+     * @param pattern 日期格式
+     * @return 日期
+     */
     public static Date toDate(String date, String pattern) {
         if (StringUtils.isEmpty(date))
             return null;
@@ -162,6 +172,12 @@ public abstract class DateUtils {
         }
     }
 
+    /**
+     * 将java8新的时间日期转为Date
+     *
+     * @param date 时间日期
+     * @return Date
+     */
     public static Date toDate(TemporalAccessor date) {
         try {
             return null == date ? null : millSecSdf.get().parse(millSecDtf.format(date));
@@ -172,12 +188,22 @@ public abstract class DateUtils {
 
     /**
      * 将日期字符串转换为日期(自动推断日期格式)
+     *
+     * @param date 日期字符串
+     * @return 日期
      */
     public static LocalDateTime toLocalDateTime(String date) {
         Date d = toDate(date);
         return toLocalDateTime(d);
     }
 
+    /**
+     * 将日期字符串转换为日期
+     *
+     * @param date    日期字符串
+     * @param pattern 日期格式
+     * @return 日期
+     */
     public static LocalDateTime toLocalDateTime(String date, String pattern) {
         if (StringUtils.isEmpty(date))
             return null;
@@ -195,6 +221,9 @@ public abstract class DateUtils {
 
     /**
      * 将Date转换为LocalDateTime
+     *
+     * @param date Date日期
+     * @return LocalDateTime
      */
     public static LocalDateTime toLocalDateTime(Date date) {
         return null == date ? null : LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
@@ -202,6 +231,9 @@ public abstract class DateUtils {
 
     /**
      * 将java.sql.Timestamp转换为LocalDateTime
+     *
+     * @param date java.sql.Timestamp日期
+     * @return LocalDateTime
      */
     public static LocalDateTime toLocalDateTime(Timestamp date) {
         return null == date ? null : date.toLocalDateTime();
@@ -209,6 +241,9 @@ public abstract class DateUtils {
 
     /**
      * 将java.sql.Date转换为LocalDateTime
+     *
+     * @param date java.sql.Date日期
+     * @return LocalDateTime
      */
     public static LocalDateTime toLocalDateTime(java.sql.Date date) {
         return null == date ? null : LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
@@ -230,6 +265,7 @@ public abstract class DateUtils {
      *
      * @param date    日期
      * @param seconds 秒数
+     * @param <T>     日期类型参数
      * @return 结果时间
      */
     public static <T extends Temporal> T addSeconds(T date, int seconds) {
@@ -253,6 +289,7 @@ public abstract class DateUtils {
      *
      * @param date    日期
      * @param minutes 分钟数
+     * @param <T>     日期类型参数
      * @return 结果时间
      */
     public static <T extends Temporal> T addMinutes(T date, int minutes) {
@@ -276,6 +313,7 @@ public abstract class DateUtils {
      *
      * @param date  日期
      * @param hours 小时数
+     * @param <T>   日期类型参数
      * @return 结果时间
      */
     public static <T extends Temporal> T addHours(T date, int hours) {
@@ -299,6 +337,7 @@ public abstract class DateUtils {
      *
      * @param date 日期
      * @param days 分钟数
+     * @param <T>  日期类型参数
      * @return 结果时间
      */
     public static <T extends Temporal> T addDays(T date, int days) {
@@ -322,6 +361,7 @@ public abstract class DateUtils {
      *
      * @param date  日期
      * @param weeks 周数
+     * @param <T>   日期类型参数
      * @return 结果时间
      */
     public static <T extends Temporal> T addWeeks(T date, int weeks) {
@@ -350,6 +390,7 @@ public abstract class DateUtils {
      *
      * @param date   日期
      * @param months 月数
+     * @param <T>    日期类型参数
      * @return 结果时间
      */
     public static <T extends Temporal> T addMonths(T date, int months) {
@@ -378,6 +419,7 @@ public abstract class DateUtils {
      *
      * @param date  日期
      * @param years 年数
+     * @param <T>   日期类型参数
      * @return 结果时间
      */
     public static <T extends Temporal> T addYears(T date, int years) {
@@ -387,6 +429,9 @@ public abstract class DateUtils {
 
     /**
      * 将日期格式化作为yyyy_MM_dd_HH_mm_ss_S
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForFullName(Date date) {
         return null == date ? null : fullDaySdf.get().format(date);
@@ -394,6 +439,9 @@ public abstract class DateUtils {
 
     /**
      * 将日期格式化作为yyyy_MM_dd_HH_mm_ss_S
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForFullName(TemporalAccessor date) {
         return null == date ? null : fullDayDtf.format(date);
@@ -402,6 +450,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化日期(精确到日)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForDay(Date date) {
         return null == date ? null : daySdf.get().format(date);
@@ -409,6 +460,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化日期(精确到日)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForDay(TemporalAccessor date) {
         return null == date ? null : dayDtf.format(date);
@@ -416,6 +470,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化日期(精确到秒)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForSecond(Date date) {
         return null == date ? null : secondSdf.get().format(date);
@@ -423,6 +480,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化日期(精确到毫秒)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForMillSec(Date date) {
         return null == date ? null : millSecSdf.get().format(date);
@@ -430,6 +490,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化日期(精确到秒)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForSecond(TemporalAccessor date) {
         return null == date ? null : secondDtf.format(date);
@@ -437,6 +500,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化日期(精确到毫秒)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForMillSec(TemporalAccessor date) {
         return null == date ? null : millSecDtf.format(date);
@@ -444,6 +510,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化中文日期(精确到日)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForZhDay(Date date) {
         return null == date ? null : zhDaySdf.get().format(date);
@@ -451,6 +520,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化中文日期(精确到日)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForZhDay(TemporalAccessor date) {
         return null == date ? null : zhDayDtf.format(date);
@@ -458,6 +530,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化中文日期(精确到秒)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForZhSecond(Date date) {
         return null == date ? null : zhSecondSdf.get().format(date);
@@ -465,6 +540,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化中文日期(精确到秒)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForZhSecond(TemporalAccessor date) {
         return null == date ? null : zhSecondDtf.format(date);
@@ -472,6 +550,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化日期(无格式)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForNoFormat(Date date) {
         return null == date ? null : noFormatSdf.get().format(date);
@@ -479,6 +560,9 @@ public abstract class DateUtils {
 
     /**
      * 格式化日期(无格式)
+     *
+     * @param date 日期
+     * @return 格式化后的日期字符串
      */
     public static String formatDateForNoFormat(TemporalAccessor date) {
         return null == date ? null : noFormatDtf.format(date);
@@ -486,6 +570,10 @@ public abstract class DateUtils {
 
     /**
      * 格式化日期
+     *
+     * @param date    日期
+     * @param pattern 日期格式
+     * @return 格式化后的日期字符串
      */
     public static String format(Date date, String pattern) {
         if (StringUtils.isEmpty(pattern))
@@ -495,6 +583,10 @@ public abstract class DateUtils {
 
     /**
      * 格式化日期
+     *
+     * @param date    日期
+     * @param pattern 日期格式
+     * @return 格式化后的日期字符串
      */
     public static String format(TemporalAccessor date, String pattern) {
         if (StringUtils.isEmpty(pattern))
@@ -544,6 +636,7 @@ public abstract class DateUtils {
      *
      * @param time      待判断时间
      * @param expiredIn 有效期
+     * @return 是否过期
      */
     public static boolean isTimeOut(Long time, Long expiredIn) {
         return (System.currentTimeMillis() - time) > expiredIn;
@@ -554,6 +647,7 @@ public abstract class DateUtils {
      *
      * @param time      待判断时间
      * @param expiredIn 有效期
+     * @return 是否过期
      */
     public static boolean isTimeOut(Date time, Long expiredIn) {
         return (System.currentTimeMillis() - time.getTime()) > expiredIn;
@@ -564,6 +658,7 @@ public abstract class DateUtils {
      *
      * @param time      待判断时间
      * @param expiredIn 有效期
+     * @return 是否过期
      */
     public static boolean isTimeOut(LocalDateTime time, Long expiredIn) {
         return LocalDateTime.now().compareTo(time.plus(expiredIn, ChronoUnit.MILLIS)) > 0;

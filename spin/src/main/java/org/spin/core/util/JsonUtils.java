@@ -52,6 +52,8 @@ public abstract class JsonUtils {
 
     /**
      * 获取一个默认的GSON实例
+     *
+     * @return 默认gson实例
      */
     public static Gson getDefaultGson() {
         return defaultGson;

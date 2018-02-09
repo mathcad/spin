@@ -120,16 +120,13 @@ public abstract class MethodUtils {
 
     /**
      * <p>Invoke a named method whose parameter type matches the object type.</p>
-     * <p>
      * <p>The behaviour of this method is less deterministic
      * than <code>invokeExactMethod()</code>.
      * It loops through all methods with names that match
      * and then executes the first it finds with compatible parameters.</p>
-     * <p>
      * <p>This method supports calls to methods taking primitive parameters
      * via passing in wrapping classes. So, for example, a <code>Boolean</code> class
      * would match a <code>boolean</code> primitive.</p>
-     * <p>
      * <p> This is a convenient wrapper for
      * </p>
      *
@@ -160,16 +157,13 @@ public abstract class MethodUtils {
 
     /**
      * <p>Invoke a named method whose parameter type matches the object type.</p>
-     * <p>
      * <p>The behaviour of this method is less deterministic
      * than {@link #invokeExactMethod(Object object, String methodName, Object [] args)}.
      * It loops through all methods with names that match
      * and then executes the first it finds with compatible parameters.</p>
-     * <p>
      * <p>This method supports calls to methods taking primitive parameters
      * via passing in wrapping classes. So, for example, a <code>Boolean</code> class
      * would match a <code>boolean</code> primitive.</p>
-     * <p>
      * <p> This is a convenient wrapper for
      * </p>
      *
@@ -207,11 +201,9 @@ public abstract class MethodUtils {
 
     /**
      * <p>Invoke a named method whose parameter type matches the object type.</p>
-     * <p>
      * <p>The behaviour of this method is less deterministic
      * It loops through all methods with names that match
      * and then executes the first it finds with compatible parameters.</p>
-     * <p>
      * <p>This method supports calls to methods taking primitive parameters
      * via passing in wrapping classes. So, for example, a <code>Boolean</code> class
      * would match a <code>boolean</code> primitive.</p>
@@ -260,7 +252,6 @@ public abstract class MethodUtils {
     /**
      * <p>Invoke a method whose parameter type matches exactly the object
      * type.</p>
-     * <p>
      * <p> This is a convenient wrapper for
      * </p>
      *
@@ -292,7 +283,6 @@ public abstract class MethodUtils {
     /**
      * <p>Invoke a method whose parameter types match exactly the object
      * types.</p>
-     * <p>
      * <p> This uses reflection to invoke the method obtained from a call to
      * <code>getAccessibleMethod()</code>.</p>
      *
@@ -331,7 +321,6 @@ public abstract class MethodUtils {
     /**
      * <p>Invoke a method whose parameter types match exactly the parameter
      * types given.</p>
-     * <p>
      * <p>This uses reflection to invoke the method obtained from a call to
      * <code>getAccessibleMethod()</code>.</p>
      *
@@ -379,7 +368,6 @@ public abstract class MethodUtils {
     /**
      * <p>Invoke a static method whose parameter types match exactly the parameter
      * types given.</p>
-     * <p>
      * <p>This uses reflection to invoke the method obtained from a call to
      * {@link #getAccessibleMethod(Class, String, Class[])}.</p>
      *
@@ -427,16 +415,13 @@ public abstract class MethodUtils {
 
     /**
      * <p>Invoke a named static method whose parameter type matches the object type.</p>
-     * <p>
      * <p>The behaviour of this method is less deterministic
      * than {@link #invokeExactMethod(Object, String, Object[], Class[])}.
      * It loops through all methods with names that match
      * and then executes the first it finds with compatible parameters.</p>
-     * <p>
      * <p>This method supports calls to methods taking primitive parameters
      * via passing in wrapping classes. So, for example, a <code>Boolean</code> class
      * would match a <code>boolean</code> primitive.</p>
-     * <p>
      * <p> This is a convenient wrapper for
      * </p>
      *
@@ -468,16 +453,13 @@ public abstract class MethodUtils {
 
     /**
      * <p>Invoke a named static method whose parameter type matches the object type.</p>
-     * <p>
      * <p>The behaviour of this method is less deterministic
      * than {@link #invokeExactMethod(Object object, String methodName, Object [] args)}.
      * It loops through all methods with names that match
      * and then executes the first it finds with compatible parameters.</p>
-     * <p>
      * <p>This method supports calls to methods taking primitive parameters
      * via passing in wrapping classes. So, for example, a <code>Boolean</code> class
      * would match a <code>boolean</code> primitive.</p>
-     * <p>
      * <p> This is a convenient wrapper for
      * </p>
      *
@@ -515,12 +497,10 @@ public abstract class MethodUtils {
 
 
     /**
-     * <p>Invoke a named static method whose parameter type matches the object type.</p>
-     * <p>
+     * Invoke a named static method whose parameter type matches the object type.
      * <p>The behaviour of this method is less deterministic
      * It loops through all methods with names that match
      * and then executes the first it finds with compatible parameters.</p>
-     * <p>
      * <p>This method supports calls to methods taking primitive parameters
      * via passing in wrapping classes. So, for example, a <code>Boolean</code> class
      * would match a <code>boolean</code> primitive.</p>
@@ -570,7 +550,6 @@ public abstract class MethodUtils {
     /**
      * <p>Invoke a static method whose parameter type matches exactly the object
      * type.</p>
-     * <p>
      * <p> This is a convenient wrapper for
      * </p>
      *
@@ -602,7 +581,6 @@ public abstract class MethodUtils {
     /**
      * <p>Invoke a static method whose parameter types match exactly the object
      * types.</p>
-     * <p>
      * <p> This uses reflection to invoke the method obtained from a call to
      * {@link #getAccessibleMethod(Class, String, Class[])}.</p>
      *
@@ -873,18 +851,15 @@ public abstract class MethodUtils {
     }
 
     /**
-     * <p>Find an accessible method that matches the given name and has compatible parameters.
+     * Find an accessible method that matches the given name and has compatible parameters.
      * Compatible parameters mean that every method parameter is assignable from
      * the given parameters.
      * In other words, it finds a method with the given name
-     * that will take the parameters given.<p>
-     * <p>
+     * that will take the parameters given.
      * <p>This method is slightly undeterministic since it loops
      * through methods names and return the first matching method.</p>
-     * <p>
-     * <p>This method is used by
-     * <p>
-     * <p>This method can match primitive parameter by passing in wrapper classes.
+     * <p>This method is used by</p>
+     * This method can match primitive parameter by passing in wrapper classes.
      * For example, a <code>Boolean</code> will match a primitive <code>boolean</code>
      * parameter.
      *

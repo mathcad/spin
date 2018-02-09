@@ -1,9 +1,7 @@
 package org.spin.core.util;
 
 import org.spin.core.Assert;
-import org.spin.core.collection.MultiValueMap;
 
-import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -20,28 +18,10 @@ public abstract class CollectionUtils {
      * 判断集合是否为空或{@code null}
      *
      * @param collection 待检查集合
+     * @return 是否为空
      */
     public static boolean isEmpty(Iterable<?> collection) {
         return (collection == null || !collection.iterator().hasNext());
-    }
-
-    /**
-     * 判断Map是否为空
-     */
-    public static boolean isEmpty(Map<?, ?> map) {
-        return (map == null || map.isEmpty());
-    }
-
-    /**
-     * 将数组转换为List。若数组元素是基本类型，会被转换为包装类型
-     * <p>若参数为{@code null}，将被转换为List</p>
-     *
-     * @param source the (potentially primitive) array
-     * @see ObjectUtils#toObjectArray(Object)
-     * @see Arrays#asList(Object[])
-     */
-    public static List arrayToList(Object source) {
-        return Arrays.asList(ObjectUtils.toObjectArray(source));
     }
 
     /**
@@ -49,14 +29,17 @@ public abstract class CollectionUtils {
      *
      * @param array      待合并的数组 (可以为 {@code null})
      * @param collection 合并的目标集合
+     * @param <E>        元素类型参数
      */
     @SuppressWarnings("unchecked")
-    public static <E> void mergeArrayIntoCollection(Object array, Collection<E> collection) {
+    public static <E> void mergeArrayIntoCollection(Object[] array, Collection<E> collection) {
         if (collection == null) {
             throw new IllegalArgumentException("Collection must not be null");
         }
-        Object[] arr = ObjectUtils.toObjectArray(array);
-        for (Object elem : arr) {
+        if (null == array) {
+            return;
+        }
+        for (Object elem : array) {
             collection.add((E) elem);
         }
     }
@@ -153,35 +136,12 @@ public abstract class CollectionUtils {
     }
 
     /**
-     * 将Properties实例中的内容合并到Map中
-     *
-     * @param props 待合并的Properties实例(可以为 {@code null})
-     * @param map   合并的目标Map
-     */
-    @SuppressWarnings("unchecked")
-    public static <K, V> void mergePropertiesIntoMap(Properties props, Map<K, V> map) {
-        if (map == null) {
-            throw new IllegalArgumentException("Map must not be null");
-        }
-        if (props != null) {
-            for (Enumeration<?> en = props.propertyNames(); en.hasMoreElements(); ) {
-                String key = (String) en.nextElement();
-                Object value = props.getProperty(key);
-                if (value == null) {
-                    // Potentially a non-String value...
-                    value = props.get(key);
-                }
-                map.put((K) key, (V) value);
-            }
-        }
-    }
-
-
-    /**
      * 检查迭代器中是否含有与指定元素相同的元素(equals)
      *
      * @param iterator 待检查的目标迭代器
      * @param element  待检查的目标元素
+     * @param <T>      元素类型参数
+     * @return 是否含有类型相同的元素
      */
     public static <T> boolean contains(Iterator<T> iterator, T element) {
         if (iterator != null) {
@@ -200,6 +160,7 @@ public abstract class CollectionUtils {
      *
      * @param enumeration 待检查的枚举
      * @param element     待检查的枚举常量
+     * @return 是否含有指定元素
      */
     public static boolean contains(Enumeration<?> enumeration, Object element) {
         if (enumeration != null) {
@@ -218,6 +179,7 @@ public abstract class CollectionUtils {
      *
      * @param iterator 待检查的目标迭代器
      * @param element  待检查的目标元素
+     * @return 是否含有指定元素
      */
     public static boolean containsInstance(Iterator<?> iterator, Object element) {
         if (iterator != null) {
@@ -236,6 +198,7 @@ public abstract class CollectionUtils {
      *
      * @param source     源集合
      * @param candidates 目标集合
+     * @return 是否相交
      */
     public static boolean containsAny(Collection<?> source, Collection<?> candidates) {
         if (isEmpty(source) || isEmpty(candidates)) {
@@ -255,6 +218,8 @@ public abstract class CollectionUtils {
      *
      * @param source     源集合
      * @param candidates 目标集合
+     * @param <E>        元素类型参数
+     * @return 查找到的元素
      */
     public static <E> E findFirstMatch(Collection<?> source, Collection<E> candidates) {
         if (isEmpty(source) || isEmpty(candidates)) {
@@ -273,6 +238,8 @@ public abstract class CollectionUtils {
      *
      * @param collection 待查找的目标集合
      * @param type       搜索的类型
+     * @param <T>        元素类型参数
+     * @return 查找到的元素
      */
     @SuppressWarnings("unchecked")
     public static <T> T findValueOfType(Collection<?> collection, Class<T> type) {
@@ -301,6 +268,7 @@ public abstract class CollectionUtils {
      *
      * @param collection 待查找的目标集合
      * @param types      搜索的类型
+     * @return 查找到的元素
      */
     public static Object findValueOfType(Collection<?> collection, Class<?>[] types) {
         if (isEmpty(collection) || ObjectUtils.isEmpty(types)) {
@@ -319,6 +287,7 @@ public abstract class CollectionUtils {
      * 判断集合中是否仅含有一个唯一元素(去重后唯一)
      *
      * @param collection 待检查的集合
+     * @return 是否唯一
      */
     public static boolean hasUniqueObject(Collection<?> collection) {
         if (isEmpty(collection)) {
@@ -341,6 +310,7 @@ public abstract class CollectionUtils {
      * 检查集合中元素的类型，如果元素类型不同或集合为空，返回null
      *
      * @param collection 待检查集合
+     * @return 元素类型
      */
     public static Class<?> findCommonElementType(Collection<?> collection) {
         if (isEmpty(collection)) {
@@ -361,9 +331,14 @@ public abstract class CollectionUtils {
 
     /**
      * 将枚举类型的所有枚举值包装成为一个数组
+     *
+     * @param enumeration 枚举
+     * @param array       存放枚举常量的容器
+     * @param <E>         枚举类型
+     * @return 枚举常量数组
      */
-    public static <A, E extends A> A[] toArray(Enumeration<E> enumeration, A[] array) {
-        ArrayList<A> elements = new ArrayList<>();
+    public static <E> E[] toArray(Enumeration<E> enumeration, E[] array) {
+        ArrayList<E> elements = new ArrayList<>();
         while (enumeration.hasMoreElements()) {
             elements.add(enumeration.nextElement());
         }
@@ -374,37 +349,12 @@ public abstract class CollectionUtils {
      * 获取枚举类型的迭代器
      *
      * @param enumeration 枚举
+     * @param <E>         枚举类型
+     * @return 枚举迭代器
      */
     public static <E> Iterator<E> toIterator(Enumeration<E> enumeration) {
         return new EnumerationIterator<>(enumeration);
     }
-
-    /**
-     * 将Map转换为MultiValueMap
-     *
-     * @param map 源Map
-     */
-    public static <K, V> MultiValueMap<K, V> toMultiValueMap(Map<K, List<V>> map) {
-        return new MultiValueMapAdapter<>(map);
-    }
-
-    /**
-     * 返回MultiValueMap的一个只读视图
-     *
-     * @param map 目标Map
-     */
-    @SuppressWarnings("unchecked")
-    public static <K, V> MultiValueMap<K, V> unmodifiableMultiValueMap(MultiValueMap<? extends K, ? extends V> map) {
-        Assert.notNull(map, "'map' must not be null");
-        Map<K, List<V>> result = new LinkedHashMap<>(map.size());
-        for (Map.Entry<? extends K, ? extends List<? extends V>> entry : map.entrySet()) {
-            List<? extends V> values = Collections.unmodifiableList(entry.getValue());
-            result.put(entry.getKey(), (List<V>) values);
-        }
-        Map<K, List<V>> unmodifiableMap = Collections.unmodifiableMap(result);
-        return toMultiValueMap(unmodifiableMap);
-    }
-
 
     @SafeVarargs
     public static <E> E[] ofArray(E... elements) {
@@ -478,130 +428,4 @@ public abstract class CollectionUtils {
             throw new UnsupportedOperationException("Not supported");
         }
     }
-
-
-    /**
-     * Map到MultiValueMap的适配器
-     */
-    @SuppressWarnings("serial")
-    private static class MultiValueMapAdapter<K, V> implements MultiValueMap<K, V>, Serializable {
-
-        private final Map<K, List<V>> map;
-
-        public MultiValueMapAdapter(Map<K, List<V>> map) {
-            Assert.notNull(map, "'map' must not be null");
-            this.map = map;
-        }
-
-        @Override
-        public void add(K key, V value) {
-            List<V> values = this.map.computeIfAbsent(key, k -> new LinkedList<>());
-            values.add(value);
-        }
-
-        @Override
-        public V getFirst(K key) {
-            List<V> values = this.map.get(key);
-            return (values != null ? values.get(0) : null);
-        }
-
-        @Override
-        public void set(K key, V value) {
-            List<V> values = new LinkedList<>();
-            values.add(value);
-            this.map.put(key, values);
-        }
-
-        @Override
-        public void setAll(Map<K, V> values) {
-            for (Entry<K, V> entry : values.entrySet()) {
-                set(entry.getKey(), entry.getValue());
-            }
-        }
-
-        @Override
-        public Map<K, V> toSingleValueMap() {
-            LinkedHashMap<K, V> singleValueMap = new LinkedHashMap<>(this.map.size());
-            for (Entry<K, List<V>> entry : map.entrySet()) {
-                singleValueMap.put(entry.getKey(), entry.getValue().get(0));
-            }
-            return singleValueMap;
-        }
-
-        @Override
-        public int size() {
-            return this.map.size();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return this.map.isEmpty();
-        }
-
-        @Override
-        public boolean containsKey(Object key) {
-            return this.map.containsKey(key);
-        }
-
-        @Override
-        public boolean containsValue(Object value) {
-            return this.map.containsValue(value);
-        }
-
-        @Override
-        public List<V> get(Object key) {
-            return this.map.get(key);
-        }
-
-        @Override
-        public List<V> put(K key, List<V> value) {
-            return this.map.put(key, value);
-        }
-
-        @Override
-        public List<V> remove(Object key) {
-            return this.map.remove(key);
-        }
-
-        @Override
-        public void putAll(Map<? extends K, ? extends List<V>> map) {
-            this.map.putAll(map);
-        }
-
-        @Override
-        public void clear() {
-            this.map.clear();
-        }
-
-        @Override
-        public Set<K> keySet() {
-            return this.map.keySet();
-        }
-
-        @Override
-        public Collection<List<V>> values() {
-            return this.map.values();
-        }
-
-        @Override
-        public Set<Entry<K, List<V>>> entrySet() {
-            return this.map.entrySet();
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            return other == this || other instanceof Map && map.equals(other);
-        }
-
-        @Override
-        public int hashCode() {
-            return this.map.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            return this.map.toString();
-        }
-    }
-
 }

@@ -103,7 +103,7 @@ public class AES {
      * @param data 待加密数据
      * @return 密文
      */
-    public static String encrypt(String key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+    public static String encrypt(String key, String data) {
         return encrypt(generateKey(key), data);
     }
 
@@ -114,7 +114,7 @@ public class AES {
      * @param data 待加密数据
      * @return 密文
      */
-    public static String encrypt(SecretKey key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+    public static String encrypt(SecretKey key, String data) {
         try {
             return encrypt(key, data.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
@@ -129,15 +129,23 @@ public class AES {
      * @param data 待加密数据
      * @return 密文
      */
-    public static String encrypt(SecretKey key, byte[] data) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public static String encrypt(SecretKey key, byte[] data) {
         Cipher cipher;
         try {
             cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, e);
         }
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        return Base64.encode(cipher.doFinal(data));
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+        } catch (InvalidKeyException e) {
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
+        }
+        try {
+            return Base64.encode(cipher.doFinal(data));
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
+        }
     }
 
     /**
@@ -147,7 +155,7 @@ public class AES {
      * @param data 待解密数据
      * @return 明文
      */
-    public static String decrypt(String key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+    public static String decrypt(String key, String data) {
         return decrypt(generateKey(key), data, "UTF-8");
     }
 
@@ -158,7 +166,7 @@ public class AES {
      * @param data 待解密数据
      * @return 明文
      */
-    public static String decrypt(SecretKey key, String data) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+    public static String decrypt(SecretKey key, String data) {
         return decrypt(key, data, "UTF-8");
     }
 
@@ -170,16 +178,24 @@ public class AES {
      * @param charset 明文字符集
      * @return 明文
      */
-    public static String decrypt(SecretKey key, String data, String charset) throws InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public static String decrypt(SecretKey key, String data, String charset) {
         Cipher cipher;
         try {
             cipher = Cipher.getInstance(CIPHER_ALGORITHM);
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.DEENCRYPT_FAIL, e);
         }
-        cipher.init(Cipher.DECRYPT_MODE, key);
         try {
-            return new String(cipher.doFinal(Base64.decode(data)), charset);
+            cipher.init(Cipher.DECRYPT_MODE, key);
+        } catch (InvalidKeyException e) {
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
+        }
+        try {
+            try {
+                return new String(cipher.doFinal(Base64.decode(data)), charset);
+            } catch (IllegalBlockSizeException | BadPaddingException e) {
+                throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
+            }
         } catch (UnsupportedEncodingException e) {
             throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, e);
         }

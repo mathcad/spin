@@ -51,8 +51,8 @@ public class SpinAutoConfiguration {
     }
 
     @Bean
-    public FilterRegistrationBean encodingFilterRegistration() {
-        FilterRegistrationBean registration = new FilterRegistrationBean();
+    public FilterRegistrationBean<?> encodingFilterRegistration() {
+        FilterRegistrationBean<CharacterEncodingFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new CharacterEncodingFilter());
         registration.addUrlPatterns("/*");
         registration.addInitParameter("encoding", "UTF-8");

@@ -118,47 +118,4 @@ public abstract class CnyUtils {
         }
         return sb.toString();
     }
-
-    /**
-     * 中文数字转化
-     */
-    public static String convertNum(String number) {
-        StringBuilder res = new StringBuilder();
-        for (int i = 0; i < number.length(); i++) {
-            res.append(CHT_NUMBER.charAt(number.charAt(i) - '0'));
-        }
-        return res.toString();
-    }
-
-    /**
-     * 中文金额转化
-     */
-    public static String convertCNYByCHT(String money) {
-        StringBuilder rsult = new StringBuilder();
-        String unit = "仟佰拾亿仟佰拾万仟佰拾元角分";
-        String moneyStr = money.replace(".", "");
-        int pos = unit.length() - moneyStr.length();
-        boolean zero = false;
-        for (int i = 0; i < moneyStr.length(); i++) {
-            if (moneyStr.charAt(i) == '0') {
-                zero = true;
-                if (((pos + i + 1) % 4) == 0) {
-                    rsult.append(unit.charAt(pos + i));
-                    zero = false;
-                }
-            } else {
-                if (zero) {
-                    rsult.append(CHT_NUMBER.charAt(0));
-                }
-                zero = false;
-                rsult.append(CHT_NUMBER.charAt(moneyStr.charAt(i) - '0')).append(unit.charAt(pos + i));
-            }
-        }
-        if (moneyStr.endsWith("00")) {
-            rsult.append('整');
-        } else if (moneyStr.endsWith("0")) {
-            rsult.append("零分");
-        }
-        return rsult.toString();
-    }
 }

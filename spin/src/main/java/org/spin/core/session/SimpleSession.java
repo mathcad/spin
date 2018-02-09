@@ -21,6 +21,7 @@ package org.spin.core.session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.MapUtils;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -355,7 +356,7 @@ public class SimpleSession implements Session, Serializable {
         if (host != null) {
             out.writeUTF(host);
         }
-        if (!CollectionUtils.isEmpty(attributes)) {
+        if (!MapUtils.isEmpty(attributes)) {
             out.writeObject(attributes);
         }
     }
@@ -376,7 +377,7 @@ public class SimpleSession implements Session, Serializable {
         bitMask = lastAccessTime != null ? bitMask | LAST_ACCESS_TIME_BIT_MASK : bitMask;
         bitMask = expired ? bitMask | EXPIRED_BIT_MASK : bitMask;
         bitMask = host != null ? bitMask | HOST_BIT_MASK : bitMask;
-        bitMask = !CollectionUtils.isEmpty(attributes) ? bitMask | ATTRIBUTES_BIT_MASK : bitMask;
+        bitMask = !MapUtils.isEmpty(attributes) ? bitMask | ATTRIBUTES_BIT_MASK : bitMask;
         return (short) bitMask;
     }
 }
