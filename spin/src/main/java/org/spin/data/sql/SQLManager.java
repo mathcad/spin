@@ -226,7 +226,7 @@ public class SQLManager {
             throw new SimplifiedException("执行查询出错：", ex);
         }
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ") out_alias";
+        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ") OUT_ALIAS";
 //        SqlParameterSource params = new MapSqlParameterSource(paramMap);
         Long total = getCurrentNamedJt().queryForObject(totalSqlTxt, paramMap, Long.class);
         return new Page<>(list, total != null ? total : 0, pageRequest.getPageSize());
@@ -289,7 +289,7 @@ public class SQLManager {
             }
         }
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ")";
+        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ") OUT_ALIAS";
 //        SqlParameterSource params = new MapSqlParameterSource(paramMap);
         Long total = getCurrentNamedJt().queryForObject(totalSqlTxt, paramMap, Long.class);
         return new Page<>(res, total != null ? total : 0, pageRequest.getPageSize());
@@ -314,7 +314,7 @@ public class SQLManager {
      */
     public Long count(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getTemplate();
-        sqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ")";
+        sqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ") OUT_ALIAS";
         if (logger.isDebugEnabled())
             logger.debug(sqlId + ":\n" + sqlTxt);
         Long number = getCurrentNamedJt().queryForObject(sqlTxt, paramMap, Long.class);
