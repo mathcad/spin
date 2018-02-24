@@ -3,6 +3,7 @@ package org.spin.enhance.ip;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 
 /**
  * ip db searcher class (Not thread safe)
@@ -94,7 +95,7 @@ public class IpLocator {
         int dataLen = (int) ((dataptr >> 24) & 0xFF);
         int dataPtr = (int) ((dataptr & 0x00FFFFFF));
         int city_id = (int) Util.getIntLong(dbBinStr, dataPtr);
-        String region = new String(dbBinStr, dataPtr + 4, dataLen - 4, "UTF-8");
+        String region = new String(dbBinStr, dataPtr + 4, dataLen - 4, StandardCharsets.UTF_8);
 
         return new DataBlock(city_id, region, dataPtr);
     }
@@ -126,7 +127,7 @@ public class IpLocator {
         raf.readFully(data, 0, data.length);
 
         int city_id = (int) Util.getIntLong(data, 0);
-        String region = new String(data, 4, data.length - 4, "UTF-8");
+        String region = new String(data, 4, data.length - 4, StandardCharsets.UTF_8);
 
         return new DataBlock(city_id, region, dataPtr);
     }
@@ -251,7 +252,7 @@ public class IpLocator {
         raf.readFully(data, 0, data.length);
 
         int city_id = (int) Util.getIntLong(data, 0);
-        String region = new String(data, 4, data.length - 4, "UTF-8");
+        String region = new String(data, 4, data.length - 4, StandardCharsets.UTF_8);
 
         return new DataBlock(city_id, region, dataPtr);
     }
@@ -312,7 +313,7 @@ public class IpLocator {
         raf.readFully(data, 0, data.length);
 
         int city_id = (int) Util.getIntLong(data, 0);
-        String region = new String(data, 4, data.length - 4, "UTF-8");
+        String region = new String(data, 4, data.length - 4, StandardCharsets.UTF_8);
 
         return new DataBlock(city_id, region, dataPtr);
     }

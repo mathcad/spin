@@ -1,5 +1,6 @@
 rootProject.name = 'fundamental'
-include 'test'
 include 'spin'
+include 'spin-kotlin'
 include 'spin-starter-restful'
+include 'test'
 

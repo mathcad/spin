@@ -102,7 +102,7 @@ open class UserService : Authenticator<User> {
 
     override fun checkAuthorities(id: Any, authRouter: String?): Boolean {
         // 权限验证
-        return BooleanExt.of(StringUtils.isEmpty(authRouter), Boolean::class.javaPrimitiveType).yes { true }.otherwise {
+        return BooleanExt.ofAny(StringUtils.isEmpty(authRouter)).yes { true }.otherwise {
             val apis = getUserFunctions(id as Long)[FunctionTypeE.API]
             apis?.any { a -> authRouter == a.code }
         }

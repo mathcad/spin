@@ -21,6 +21,9 @@ import java.util.function.Supplier;
  */
 public abstract class SerializeUtils {
 
+    private SerializeUtils() {
+    }
+
     /**
      * 将对象序列化为字节数组
      *

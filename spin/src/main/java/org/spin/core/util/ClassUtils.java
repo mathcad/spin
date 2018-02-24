@@ -137,8 +137,7 @@ public abstract class ClassUtils {
      * instance to operate.
      * </p>
      */
-    public ClassUtils() {
-        super();
+    private ClassUtils() {
     }
 
     /**
@@ -365,13 +364,13 @@ public abstract class ClassUtils {
      *
      * @param cls the class to look up, may be <code>null</code>
      * @return the <code>List</code> of superclasses in order going up from this
-     * one <code>null</code> if null input
+     * one <code>empty list</code> if null input
      */
     public static List<Class<?>> getAllSuperclasses(Class<?> cls) {
-        if (cls == null) {
-            return null;
-        }
         List<Class<?>> classes = new ArrayList<>();
+        if (cls == null) {
+            return classes;
+        }
         Class<?> superclass = cls.getSuperclass();
         while (superclass != null) {
             classes.add(superclass);
@@ -393,15 +392,15 @@ public abstract class ClassUtils {
      * </p>
      *
      * @param cls the class to look up, may be <code>null</code>
-     * @return the <code>List</code> of interfaces in order, <code>null</code>
+     * @return the <code>List</code> of interfaces in order, <code>empty list</code>
      * if null input
      */
     public static List<Class<?>> getAllInterfaces(Class<?> cls) {
+        List<Class<?>> interfacesFound = new ArrayList<>();
         if (cls == null) {
-            return null;
+            return interfacesFound;
         }
 
-        List<Class<?>> interfacesFound = new ArrayList<>();
         getAllInterfaces(cls, interfacesFound);
 
         return interfacesFound;
@@ -437,12 +436,12 @@ public abstract class ClassUtils {
      * in the <code>List</code> is <code>null</code>, <code>null</code> is stored in the output <code>List</code>.</p>
      *
      * @param classNames the classNames to change
-     * @return a <code>List</code> of Class objects corresponding to the class names, <code>null</code> if null input
+     * @return a <code>List</code> of Class objects corresponding to the class names, <code>empty list</code> if null input
      * @throws ClassCastException if classNames contains a non String entry
      */
     public static List<Class<?>> convertClassNamesToClasses(List<?> classNames) {
         if (classNames == null) {
-            return null;
+            return new ArrayList<>();
         }
         List<Class<?>> classes = new ArrayList<>(classNames.size());
         for (Iterator<?> it = classNames.iterator(); it.hasNext(); ) {
@@ -468,13 +467,13 @@ public abstract class ClassUtils {
      *
      * @param classes the classes to change
      * @return a <code>List</code> of class names corresponding to the Class
-     * objects, <code>null</code> if null input
+     * objects, <code>empty list</code> if null input
      * @throws ClassCastException if <code>classes</code> contains a non-<code>Class</code>
      *                            entry
      */
     public static List<String> convertClassesToClassNames(List<Class<?>> classes) {
         if (classes == null) {
-            return null;
+            return new ArrayList<>();
         }
         List<String> classNames = new ArrayList<>(classes.size());
         for (Iterator<Class<?>> it = classes.iterator(); it.hasNext(); ) {

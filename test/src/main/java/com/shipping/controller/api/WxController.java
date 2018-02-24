@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 微信相关接口
@@ -59,14 +59,7 @@ public class WxController {
     @RequestMapping(method = RequestMethod.POST)
     public String recive(String signature, String timestamp, String nonce, @RequestBody byte[] postData) {
         String reqData;
-        try {
-            reqData = new String(postData, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            logger.error("Read posted data from request error");
-            if (logger.isDebugEnabled())
-                logger.debug(e.getMessage());
-            return ERROR;
-        }
+        reqData = new String(postData, StandardCharsets.UTF_8);
         if (logger.isTraceEnabled())
             logger.trace("Encrypted data from request: {}", reqData);
 

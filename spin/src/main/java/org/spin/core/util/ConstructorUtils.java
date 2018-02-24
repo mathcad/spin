@@ -19,6 +19,9 @@ public abstract class ConstructorUtils {
      */
     private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
+    private ConstructorUtils() {
+    }
+
     // --------------------------------------------------------- Public Methods
 
     /**
@@ -75,7 +78,7 @@ public abstract class ConstructorUtils {
             args = EMPTY_OBJECT_ARRAY;
         }
         final int arguments = args.length;
-        final Class<?> parameterTypes[] = new Class<?>[arguments];
+        final Class<?>[] parameterTypes = new Class<?>[arguments];
         for (int i = 0; i < arguments; i++) {
             parameterTypes[i] = args[i].getClass();
         }
@@ -179,7 +182,7 @@ public abstract class ConstructorUtils {
             args = EMPTY_OBJECT_ARRAY;
         }
         final int arguments = args.length;
-        final Class<?> parameterTypes[] = new Class[arguments];
+        final Class<?>[] parameterTypes = new Class[arguments];
         for (int i = 0; i < arguments; i++) {
             parameterTypes[i] = args[i].getClass();
         }

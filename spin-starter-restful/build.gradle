@@ -1,5 +1,5 @@
 description 'spin-web的starter'
-version '2.1.9-RC14'
+version '2.1.9-RC15'
 def artifactId = 'spin-starter-restful'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -7,7 +7,7 @@ apply plugin: 'org.junit.platform.gradle.plugin'
 buildscript {
     ext {
 //        springBootVersion = '1.5.10.RELEASE'
-        springBootVersion = '2.0.0.RC1'
+        springBootVersion = '2.0.0.RC2'
         junitJupiterVersion = '5.0.3'
     }
     repositories {
@@ -72,7 +72,7 @@ dependencies {
     compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
-    compile group: 'org.mathcat', name: 'spin', version: '2.1.9-RC14'
+    compile group: 'org.mathcat', name: 'spin', version: '2.1.9-RC15'
 //    compile(project(":spin"))
 
     compileOnly group: 'com.atomikos', name: 'transactions-jdbc', version: '4.0.6'

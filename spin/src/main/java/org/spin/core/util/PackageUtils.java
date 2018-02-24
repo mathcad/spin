@@ -28,6 +28,9 @@ import java.util.stream.Stream;
 public abstract class PackageUtils {
     private static final Logger logger = LoggerFactory.getLogger(PackageUtils.class);
 
+    private PackageUtils() {
+    }
+
     /**
      * 获取某包下（包括该包的所有子包）所有类
      *
@@ -89,7 +92,7 @@ public abstract class PackageUtils {
     /**
      * 从jar获取某包下所有类（支持spring boot的fat jar）
      *
-     * @param jarPath      jar文件路径
+     * @param jarPath      jar路径
      * @param packageName  包名
      * @param childPackage 是否遍历子包
      * @return 类的完整名称
@@ -97,7 +100,7 @@ public abstract class PackageUtils {
     public static List<String> getClassNameByJar(String jarPath, String packageName, boolean childPackage) {
         List<String> classNames = new ArrayList<>();
         String[] jarInfo = jarPath.split("!");
-        String jarFilePath = jarInfo[0].substring(jarInfo[0].indexOf("/"));
+        String jarFilePath = jarInfo[0].substring(jarInfo[0].indexOf('/'));
         String contextPath = (jarInfo.length == 3 ? jarInfo[1] : "/").substring(1);
         boolean isJarInJar = contextPath.endsWith(".jar");
         String packagePath = (isJarInJar || StringUtils.isEmpty(contextPath) ? jarInfo[jarInfo.length - 1].substring(1) : (contextPath + jarInfo[2]));

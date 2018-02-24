@@ -55,7 +55,7 @@ public abstract class MethodUtils {
      * configurable per webapp would mean having a map keyed by context classloader
      * which may introduce memory-leak problems.
      */
-    private static boolean CACHE_METHODS = true;
+    private static boolean cacheMethods = true;
 
     /**
      * An empty class array
@@ -65,6 +65,9 @@ public abstract class MethodUtils {
      * An empty object array
      */
     private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
+
+    private MethodUtils() {
+    }
 
     /**
      * Stores a cache of MethodDescriptor -> Method in a WeakHashMap.
@@ -100,8 +103,8 @@ public abstract class MethodUtils {
      * @since 1.8.0
      */
     public static synchronized void setCacheMethods(final boolean cacheMethods) {
-        CACHE_METHODS = cacheMethods;
-        if (!CACHE_METHODS) {
+        MethodUtils.cacheMethods = cacheMethods;
+        if (!MethodUtils.cacheMethods) {
             clearCache();
         }
     }
@@ -1317,7 +1320,7 @@ public abstract class MethodUtils {
      * @return The cached method
      */
     private static Method getCachedMethod(final MethodDescriptor md) {
-        if (CACHE_METHODS) {
+        if (cacheMethods) {
             final Reference<Method> methodRef = cache.get(md);
             if (methodRef != null) {
                 return methodRef.get();
@@ -1333,7 +1336,7 @@ public abstract class MethodUtils {
      * @param method The method to cache
      */
     private static void cacheMethod(final MethodDescriptor md, final Method method) {
-        if (CACHE_METHODS) {
+        if (cacheMethods) {
             if (method != null) {
                 cache.put(md, new WeakReference<>(method));
             }

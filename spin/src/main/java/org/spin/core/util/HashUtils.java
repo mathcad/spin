@@ -6,6 +6,9 @@ package org.spin.core.util;
  */
 public abstract class HashUtils {
 
+    private HashUtils() {
+    }
+
     /**
      * 加法hash
      *

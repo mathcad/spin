@@ -56,6 +56,9 @@ public abstract class NumericUtils {
         numMap.put("9", 9L);
     }
 
+    private NumericUtils() {
+    }
+
     /**
      * 如果value是null，返回0，否则返回原始值
      *

@@ -7,8 +7,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.file.FileType;
@@ -30,7 +28,6 @@ import java.util.Objects;
  * @author xuweinan
  */
 public abstract class ExcelUtils {
-    private static final Logger logger = LoggerFactory.getLogger(ExcelUtils.class);
 
     public enum Type {
         XLS, XLSX

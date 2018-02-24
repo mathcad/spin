@@ -5,6 +5,7 @@ import org.spin.core.throwable.SimplifiedException;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.SecureRandom;
 
@@ -17,13 +18,17 @@ import java.security.SecureRandom;
  * @version 1.0
  */
 public class DES {
+
+    private DES() {
+    }
+
     public static Key generateKey(String keySeed) {
         KeyGenerator keyGenerator;
         SecureRandom secureRandom;
         try {
             keyGenerator = KeyGenerator.getInstance("DES");
             secureRandom = SecureRandom.getInstance("SHA1PRNG");
-            secureRandom.setSeed(keySeed.getBytes("UTF-8"));
+            secureRandom.setSeed(keySeed.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.KEY_FAIL, e);
         }
@@ -33,7 +38,7 @@ public class DES {
 
     public static String encrypt(Key key, String plainText) {
         try {
-            return Base64.encode(encrypt(key, plainText.getBytes("UTF-8")));
+            return Base64.encode(encrypt(key, plainText.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, e);
         }
@@ -41,7 +46,7 @@ public class DES {
 
     public static String decrypt(Key key, String cipherText) {
         try {
-            return new String(decrypt(key, Base64.decode(cipherText)), "UTF-8");
+            return new String(decrypt(key, Base64.decode(cipherText)), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.DEENCRYPT_FAIL, e);
         }

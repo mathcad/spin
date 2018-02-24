@@ -21,6 +21,7 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Implementation of {@link org.springframework.http.converter.HttpMessageConverter}
@@ -34,8 +35,6 @@ import java.nio.charset.Charset;
  */
 public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverter<Object> {
 
-    public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
-
     private Gson gson = JsonUtils.getDefaultGson();
 
     private String jsonPrefix;
@@ -46,7 +45,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
      */
     public JsonHttpMessageConverter() {
         super(MediaType.APPLICATION_JSON, new MediaType("application", "*+json"));
-        this.setDefaultCharset(DEFAULT_CHARSET);
+        this.setDefaultCharset(StandardCharsets.UTF_8);
     }
 
     /**
@@ -157,14 +156,14 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
     private Charset getCharset(HttpHeaders headers) {
         if (headers == null || headers.getContentType() == null || headers.getContentType().getCharset() == null) {
-            return DEFAULT_CHARSET;
+            return StandardCharsets.UTF_8;
         }
         return headers.getContentType().getCharset();
     }
 
     @Override
     protected void writeInternal(Object o, Type type, HttpOutputMessage outputMessage)
-        throws IOException, HttpMessageNotWritableException {
+        throws IOException {
 
         Charset charset = getCharset(outputMessage.getHeaders());
         OutputStreamWriter writer = new OutputStreamWriter(outputMessage.getBody(), charset);

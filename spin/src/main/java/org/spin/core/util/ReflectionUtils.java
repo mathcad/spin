@@ -337,28 +337,6 @@ public abstract class ReflectionUtils {
     }
 
     /**
-     * Rethrow the given {@link Throwable exception}, which is presumably the
-     * <em>target exception</em> of an {@link InvocationTargetException}.
-     * Should only be called if no checked exception is expected to be thrown
-     * by the target method.
-     * <p>Rethrows the underlying exception cast to an {@link Exception} or
-     * {@link Error} if appropriate; otherwise, throws an
-     * {@link UndeclaredThrowableException}.
-     *
-     * @param ex the exception to rethrow
-     * @throws Exception the rethrown exception (in case of a checked exception)
-     */
-    public static void rethrowException(Throwable ex) throws Exception {
-        if (ex instanceof Exception) {
-            throw (Exception) ex;
-        }
-        if (ex instanceof Error) {
-            throw (Error) ex;
-        }
-        throw new UndeclaredThrowableException(ex);
-    }
-
-    /**
      * Determine whether the given method explicitly declares the given
      * exception or one of its superclasses, which means that an exception
      * of that type can be propagated as-is within a reflective invocation.

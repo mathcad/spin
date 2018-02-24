@@ -34,6 +34,9 @@ import java.security.NoSuchAlgorithmException;
 public abstract class DigestUtils {
     private static final int STREAM_BUFFER_LENGTH = 1024;
 
+    private DigestUtils() {
+    }
+
     /**
      * Read through an InputStream and returns the digest for the data
      *
@@ -146,18 +149,6 @@ public abstract class DigestUtils {
      */
     public static MessageDigest getSha512Digest() {
         return getDigest(MessageDigestAlgorithms.SHA_512);
-    }
-
-    /**
-     * Returns an SHA-1 digest.
-     *
-     * @return An SHA-1 digest instance.
-     * @throws IllegalArgumentException when a {@link NoSuchAlgorithmException} is caught
-     * @deprecated Use {@link #getSha1Digest()}
-     */
-    @Deprecated
-    public static MessageDigest getShaDigest() {
-        return getSha1Digest();
     }
 
     /**
@@ -320,44 +311,6 @@ public abstract class DigestUtils {
      */
     public static String md5HexL16(final String data) {
         return HexUtils.encodeHexStringL(md5(data)).substring(8, 24);
-    }
-
-    /**
-     * Calculates the SHA-1 digest and returns the value as a <code>byte[]</code>.
-     *
-     * @param data Data to digest
-     * @return SHA-1 digest
-     * @deprecated Use {@link #sha1(byte[])}
-     */
-    @Deprecated
-    public static byte[] sha(final byte[] data) {
-        return sha1(data);
-    }
-
-    /**
-     * Calculates the SHA-1 digest and returns the value as a <code>byte[]</code>.
-     *
-     * @param data Data to digest
-     * @return SHA-1 digest
-     * @throws IOException On error reading from the stream
-     * @since 1.4
-     * @deprecated Use {@link #sha1(InputStream)}
-     */
-    @Deprecated
-    public static byte[] sha(final InputStream data) throws IOException {
-        return sha1(data);
-    }
-
-    /**
-     * Calculates the SHA-1 digest and returns the value as a <code>byte[]</code>.
-     *
-     * @param data Data to digest
-     * @return SHA-1 digest
-     * @deprecated Use {@link #sha1(String)}
-     */
-    @Deprecated
-    public static byte[] sha(final String data) {
-        return sha1(data);
     }
 
     /**
@@ -694,44 +647,6 @@ public abstract class DigestUtils {
      */
     public static String sha512Hex(final String data) {
         return HexUtils.encodeHexStringU(sha512(data));
-    }
-
-    /**
-     * Calculates the SHA-1 digest and returns the value as a hex string.
-     *
-     * @param data Data to digest
-     * @return SHA-1 digest as a hex string
-     * @deprecated Use {@link #sha1Hex(byte[])}
-     */
-    @Deprecated
-    public static String shaHex(final byte[] data) {
-        return sha1Hex(data);
-    }
-
-    /**
-     * Calculates the SHA-1 digest and returns the value as a hex string.
-     *
-     * @param data Data to digest
-     * @return SHA-1 digest as a hex string
-     * @throws IOException On error reading from the stream
-     * @since 1.4
-     * @deprecated Use {@link #sha1Hex(InputStream)}
-     */
-    @Deprecated
-    public static String shaHex(final InputStream data) throws IOException {
-        return sha1Hex(data);
-    }
-
-    /**
-     * Calculates the SHA-1 digest and returns the value as a hex string.
-     *
-     * @param data Data to digest
-     * @return SHA-1 digest as a hex string
-     * @deprecated Use {@link #sha1Hex(String)}
-     */
-    @Deprecated
-    public static String shaHex(final String data) {
-        return sha1Hex(data);
     }
 
     /**

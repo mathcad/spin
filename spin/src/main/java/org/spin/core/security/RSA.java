@@ -15,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -34,6 +35,9 @@ public class RSA {
     private static final int KEY_SIZE = 1024;
     private static final String SIGN_ALGORITHMS = "SHA1WithRSA";
     private static final String RSA_ALGORITHMS = "RSA";
+
+    private RSA() {
+    }
 
     /**
      * 生成随机密钥对
@@ -58,8 +62,9 @@ public class RSA {
      * @return 密钥对
      */
     public static KeyPair readKeyPair(String filePath) throws IOException {
-        FileInputStream fis = new FileInputStream(filePath);
-        return SerializeUtils.deserialize(() -> fis);
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            return SerializeUtils.deserialize(() -> fis);
+        }
     }
 
     /**
@@ -69,8 +74,9 @@ public class RSA {
      * @param filePath 存储路径
      */
     public static void saveKeyPair(KeyPair kp, String filePath) throws IOException {
-        FileOutputStream fos = new FileOutputStream(filePath);
-        SerializeUtils.serialize(kp, () -> fos);
+        try (FileOutputStream fos = new FileOutputStream(filePath)) {
+            SerializeUtils.serialize(kp, () -> fos);
+        }
     }
 
     /**
@@ -194,11 +200,7 @@ public class RSA {
      */
     public static String decrypt(String privateKey, String content) {
         PrivateKey key = getRSAPrivateKey(privateKey);
-        try {
-            return new String(decrypt(key, Base64.decode(content)), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException(ErrorCode.DEENCRYPT_FAIL, e);
-        }
+        return new String(decrypt(key, Base64.decode(content)), StandardCharsets.UTF_8);
     }
 
     /**
@@ -264,11 +266,7 @@ public class RSA {
     }
 
     private static byte[] getBytes(String str) {
-        try {
-            return str.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return new byte[0];
-        }
+        return str.getBytes(StandardCharsets.UTF_8);
     }
 
     private static KeyFactory getRSAKeyFactory() {

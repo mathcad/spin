@@ -28,16 +28,6 @@ public abstract class JsonUtils {
     private static final String EMPTY = "";
 
     /**
-     * 空{@code JSON}对象 - <code>"{}"</code>
-     */
-    private static final String EMPTY_JSON = "{}";
-
-    /**
-     * 空{@code JSON} 数组(集合) - {@code "[]"}
-     */
-    private static final String EMPTY_JSON_ARRAY = "[]";
-
-    /**
      * 默认的{@code JSON}日期/时间字段的格式化模式
      */
     private static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -48,6 +38,9 @@ public abstract class JsonUtils {
 
     static {
         defaultGson = baseBuilder(CollectionUtils.ofArray(DEFAULT_DATE_PATTERN, DEFAULT_LOCAL_DATE_PATTERN, DEFAULT_LOCAL_TIME_PATTERN)).create();
+    }
+
+    private JsonUtils() {
     }
 
     /**
@@ -96,10 +89,6 @@ public abstract class JsonUtils {
             }
         } catch (Exception ex) {
             throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, "目标对象 " + target.getClass().getName() + " 转换 JSON 字符串时，发生异常！", ex);
-//            if (target instanceof Iterable || target instanceof Iterator || target instanceof Enumeration || target.getClass().isArray()) {
-//                result = EMPTY_JSON_ARRAY;
-//            } else
-//                result = EMPTY_JSON;
         }
         return result;
     }

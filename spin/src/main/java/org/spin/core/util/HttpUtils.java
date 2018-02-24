@@ -3,7 +3,6 @@ package org.spin.core.util;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
-import org.apache.http.ParseException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -39,9 +38,9 @@ import java.util.stream.Collectors;
  */
 public abstract class HttpUtils {
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class);
-    private static final String schema = "http://";
-    private static final int socketTimeout = 1000;
-    private static final int connectTimeout = 10000;
+    private static final String SCHEMA = "http://";
+    private static final int SOCKET_TIMEOUT = 1000;
+    private static final int CONNECT_TIMEOUT = 10000;
 
     /**
      * get请求
@@ -56,8 +55,8 @@ public abstract class HttpUtils {
         try {
             uriBuilder = new URIBuilder(fixUrl(url));
             if (params != null) {
-                for (String key : params.keySet()) {
-                    uriBuilder.setParameter(key, params.get(key));
+                for (Map.Entry<String, String> e : params.entrySet()) {
+                    uriBuilder.setParameter(e.getKey(), e.getValue());
                 }
             }
             return get(uriBuilder.build(), headers);
@@ -99,8 +98,8 @@ public abstract class HttpUtils {
      */
     public static String get(URI uri, Map<String, String> headers) {
         RequestConfig requestConfig = RequestConfig.custom()
-            .setSocketTimeout(socketTimeout)
-            .setConnectTimeout(connectTimeout)
+            .setSocketTimeout(SOCKET_TIMEOUT)
+            .setConnectTimeout(CONNECT_TIMEOUT)
             .build();
 
         HttpGet request = new HttpGet(uri);
@@ -133,8 +132,8 @@ public abstract class HttpUtils {
      */
     public static String post(String url, Map<String, String> headers, Map<String, String> params) {
         RequestConfig requestConfig = RequestConfig.custom()
-            .setSocketTimeout(socketTimeout)
-            .setConnectTimeout(connectTimeout)
+            .setSocketTimeout(SOCKET_TIMEOUT)
+            .setConnectTimeout(CONNECT_TIMEOUT)
             .build();
 
         List<NameValuePair> nvps = params.entrySet().stream()
@@ -149,8 +148,7 @@ public abstract class HttpUtils {
         try {
             request.setEntity(new UrlEncodedFormEntity(nvps));
         } catch (UnsupportedEncodingException e) {
-            logger.error("生成请求报文体错误", e);
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "生成请求报文体错误");
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "生成请求报文体错误", e);
         }
 
         return excuteRequest(request, HttpUtils::resolveEntityToStr);
@@ -165,16 +163,15 @@ public abstract class HttpUtils {
      */
     public static String postJson(String url, Object jsonObj) {
         RequestConfig requestConfig = RequestConfig.custom()
-            .setSocketTimeout(socketTimeout)
-            .setConnectTimeout(connectTimeout)
+            .setSocketTimeout(SOCKET_TIMEOUT)
+            .setConnectTimeout(CONNECT_TIMEOUT)
             .build();
 
         StringEntity stringEntity = null;
         try {
             stringEntity = new StringEntity(JsonUtils.toJson(jsonObj));
         } catch (UnsupportedEncodingException e) {
-            logger.error("生成请求报文体错误", e);
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "生成请求报文体错误");
+            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "生成请求报文体错误", e);
         }
         stringEntity.setContentEncoding("UTF-8");
         stringEntity.setContentType("application/json");
@@ -196,8 +193,8 @@ public abstract class HttpUtils {
     public static Map<String, String> download(String url, String savePath) {
         URI uri = getUriFromString(url);
         RequestConfig requestConfig = RequestConfig.custom()
-            .setSocketTimeout(socketTimeout)
-            .setConnectTimeout(connectTimeout)
+            .setSocketTimeout(SOCKET_TIMEOUT)
+            .setConnectTimeout(CONNECT_TIMEOUT)
             .build();
         HttpGet request = new HttpGet(uri);
         request.setConfig(requestConfig);
@@ -251,7 +248,7 @@ public abstract class HttpUtils {
     }
 
     private static String fixUrl(String url) {
-        return url.toLowerCase().startsWith("http") ? url : schema + url;
+        return url.toLowerCase().startsWith("http") ? url : SCHEMA + url;
     }
 
     private static String resolveEntityToStr(HttpEntity entity) {
@@ -266,13 +263,13 @@ public abstract class HttpUtils {
         return URI.create(StringUtils.plainFormat(url, params));
     }
 
-    private static String getContentCharSet(final HttpEntity entity) throws ParseException {
+    private static String getContentCharSet(final HttpEntity entity) {
         if (entity == null) {
             throw new IllegalArgumentException("schema entity may not be null");
         }
         String charset = null;
         if (entity.getContentType() != null) {
-            HeaderElement values[] = entity.getContentType().getElements();
+            HeaderElement[] values = entity.getContentType().getElements();
             if (values.length > 0) {
                 NameValuePair param = values[0].getParameterByName("charset");
                 if (param != null) {

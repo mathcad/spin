@@ -24,6 +24,9 @@ public abstract class FileTypeUtils {
     private static final List<Trait> traits = new ArrayList<>();
     private static final int TRAIT_LEN = 16;
 
+    private FileTypeUtils() {
+    }
+
     private static final class Trait {
         public final String ext;
         public final String traitBin;

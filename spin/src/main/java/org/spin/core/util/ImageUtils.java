@@ -61,15 +61,15 @@ public abstract class ImageUtils {
 
     public static void scale(String srcImageFile, String result, int width, int height, boolean bb) {
         try {
-            double ratio = 0.0; // 缩放比例
+            double ratio; // 缩放比例
             BufferedImage bi = ImageIO.read(new File(srcImageFile));
             Image itemp = bi.getScaledInstance(width, height, Image.SCALE_SMOOTH);
             // 计算比例
             if ((bi.getHeight() > height) || (bi.getWidth() > width)) {
                 if (bi.getHeight() > bi.getWidth()) {
-                    ratio = (new Integer(height)).doubleValue() / bi.getHeight();
+                    ratio = (Integer.valueOf(height)).doubleValue() / bi.getHeight();
                 } else {
-                    ratio = (new Integer(width)).doubleValue() / bi.getWidth();
+                    ratio = (Integer.valueOf(width)).doubleValue() / bi.getWidth();
                 }
                 AffineTransformOp op = new AffineTransformOp(AffineTransform.getScaleInstance(ratio, ratio), null);
                 itemp = op.filter(bi, null);
@@ -137,18 +137,18 @@ public abstract class ImageUtils {
                 Image img;
                 ImageFilter cropFilter;
                 Image image = bi.getScaledInstance(srcWidth, srcHeight, Image.SCALE_DEFAULT);
-                int destWidth = srcWidth; // 每张切片的宽度
-                int destHeight = srcHeight; // 每张切片的高度
+                int destWidth; // 每张切片的宽度
+                int destHeight; // 每张切片的高度
                 // 计算切片的宽度和高度
                 if (srcWidth % cols == 0) {
                     destWidth = srcWidth / cols;
                 } else {
-                    destWidth = (int) Math.floor(srcWidth / cols) + 1;
+                    destWidth = srcWidth / cols + 1;
                 }
                 if (srcHeight % rows == 0) {
                     destHeight = srcHeight / rows;
                 } else {
-                    destHeight = (int) Math.floor(srcWidth / rows) + 1;
+                    destHeight = srcWidth / rows + 1;
                 }
                 // 循环建立切片
                 // 改进的想法:是否可用多线程加快切割速度
@@ -196,12 +196,12 @@ public abstract class ImageUtils {
                 if (srcWidth % destWidth == 0) {
                     cols = srcWidth / destWidth;
                 } else {
-                    cols = (int) Math.floor(srcWidth / destWidth) + 1;
+                    cols = srcWidth / destWidth + 1;
                 }
                 if (srcHeight % destHeight == 0) {
                     rows = srcHeight / destHeight;
                 } else {
-                    rows = (int) Math.floor(srcHeight / destHeight) + 1;
+                    rows = srcHeight / destHeight + 1;
                 }
                 // 循环建立切片
                 // 改进的想法:是否可用多线程加快切割速度
@@ -322,13 +322,13 @@ public abstract class ImageUtils {
             Graphics2D g = image.createGraphics();
             g.drawImage(src, 0, 0, wideth, height, null);
             // 水印文件
-            Image src_biao = ImageIO.read(new File(pressImg));
-            int wideth_biao = src_biao.getWidth(null);
-            int height_biao = src_biao.getHeight(null);
+            Image srcBiao = ImageIO.read(new File(pressImg));
+            int widethBiao = srcBiao.getWidth(null);
+            int heightBiao = srcBiao.getHeight(null);
             g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP,
                 alpha));
-            g.drawImage(src_biao, (wideth - wideth_biao) / 2,
-                (height - height_biao) / 2, wideth_biao, height_biao, null);
+            g.drawImage(srcBiao, (wideth - widethBiao) / 2,
+                (height - heightBiao) / 2, widethBiao, heightBiao, null);
             // 水印文件结束
             g.dispose();
             ImageIO.write(image, "JPEG", new File(destImageFile));

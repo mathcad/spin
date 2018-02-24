@@ -14,6 +14,9 @@ import java.util.stream.StreamSupport;
  * @author xuweinan
  */
 public abstract class StreamUtils {
+    private StreamUtils() {
+    }
+
     public static <T> Stream<T> enumerationAsStream(Enumeration<T> e) {
         return StreamSupport.stream(
             new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED) {
@@ -27,6 +30,7 @@ public abstract class StreamUtils {
                     return false;
                 }
 
+                @Override
                 public void forEachRemaining(Consumer<? super T> action) {
                     while (e.hasMoreElements()) action.accept(e.nextElement());
                 }

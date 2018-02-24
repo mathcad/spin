@@ -14,6 +14,7 @@ import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -21,8 +22,11 @@ import java.util.stream.Collectors;
  * 网络相关工具类
  */
 public abstract class NetUtils {
-    public final static String LOCAL_IP = "127.0.0.1";
-    public final static Pattern ipv4 = Pattern.compile("\\b((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\b");
+    public static final String LOCAL_IP = "127.0.0.1";
+    public static final Pattern ipv4 = Pattern.compile("\\b((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\b");
+
+    private NetUtils() {
+    }
 
     /**
      * 根据long值获取ip v4地址
@@ -35,11 +39,11 @@ public abstract class NetUtils {
         // 将高8位置0，然后右移16位
         return String.valueOf(longIP >>> 24) +
             "." +
-            String.valueOf((longIP & 0x00FFFFFF) >>> 16) +
+            ((longIP & 0x00FFFFFF) >>> 16) +
             "." +
-            String.valueOf((longIP & 0x0000FFFF) >>> 8) +
+            ((longIP & 0x0000FFFF) >>> 8) +
             "." +
-            String.valueOf(longIP & 0x000000FF);
+            (longIP & 0x000000FF);
     }
 
     /**
@@ -52,9 +56,9 @@ public abstract class NetUtils {
         if (isIpv4(strIP)) {
             long[] ip = new long[4];
             // 先找到IP地址字符串中.的位置
-            int position1 = strIP.indexOf(".");
-            int position2 = strIP.indexOf(".", position1 + 1);
-            int position3 = strIP.indexOf(".", position2 + 1);
+            int position1 = strIP.indexOf('.');
+            int position2 = strIP.indexOf('.', position1 + 1);
+            int position3 = strIP.indexOf('.', position2 + 1);
             // 将每个.之间的字符串转换成整型
             ip[0] = Long.parseLong(strIP.substring(0, position1));
             ip[1] = Long.parseLong(strIP.substring(position1 + 1, position2));
@@ -129,7 +133,7 @@ public abstract class NetUtils {
      *
      * @return IP地址列表 {@link LinkedHashSet}
      */
-    public static LinkedHashSet<String> localIpv4s() {
+    public static Set<String> localIpv4s() {
         Enumeration<NetworkInterface> networkInterfaces = null;
         try {
             networkInterfaces = NetworkInterface.getNetworkInterfaces();
@@ -181,7 +185,7 @@ public abstract class NetUtils {
      * @return 隐藏部分后的IP
      */
     public static String hideIpPart(String ip) {
-        return ip.substring(0, ip.lastIndexOf(".") + 1) + "*";
+        return ip.substring(0, ip.lastIndexOf('.') + 1) + "*";
     }
 
     /**
@@ -210,7 +214,7 @@ public abstract class NetUtils {
 
         String destHost = null;
         int port = 0;
-        int index = host.indexOf(":");
+        int index = host.indexOf(':');
         if (index != -1) {
             // host:port形式
             destHost = host.substring(0, index);
@@ -248,7 +252,7 @@ public abstract class NetUtils {
         try {
             networkInterfaces = NetworkInterface.getNetworkInterfaces();
         } catch (SocketException e) {
-            return null;
+            throw new SimplifiedException("获取本机网卡异常", e);
         }
 
         return StreamUtils.enumerationAsStream(networkInterfaces).collect(Collectors.toList());
@@ -284,7 +288,7 @@ public abstract class NetUtils {
                 }
             }
         } catch (SocketException e) {
-            //ignore socket exception, and return null;
+            //ignore
         }
 
         if (null == candidateAddress) {

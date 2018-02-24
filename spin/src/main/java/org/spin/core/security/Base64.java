@@ -1,5 +1,8 @@
 package org.spin.core.security;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * BASE64工具类
  *
@@ -7,18 +10,18 @@ package org.spin.core.security;
  * @version 1.0
  */
 public class Base64 {
+    private static final Logger logger = LoggerFactory.getLogger(Base64.class);
 
-    static private final int BASELENGTH = 128;
-    static private final int LOOKUPLENGTH = 64;
-    static private final int TWENTYFOURBITGROUP = 24;
-    static private final int EIGHTBIT = 8;
-    static private final int SIXTEENBIT = 16;
-    static private final int FOURBYTE = 4;
-    static private final int SIGN = -128;
-    static private final char PAD = '=';
-    static private final boolean fDebug = false;
-    static final private byte[] base64Alphabet = new byte[BASELENGTH];
-    static final private char[] lookUpBase64Alphabet = new char[LOOKUPLENGTH];
+    private static final int BASELENGTH = 128;
+    private static final int LOOKUPLENGTH = 64;
+    private static final int TWENTYFOURBITGROUP = 24;
+    private static final int EIGHTBIT = 8;
+    private static final int SIXTEENBIT = 16;
+    private static final int FOURBYTE = 4;
+    private static final int SIGN = -128;
+    private static final char PAD = '=';
+    private static final byte[] base64Alphabet = new byte[BASELENGTH];
+    private static final char[] lookUpBase64Alphabet = new char[LOOKUPLENGTH];
 
     static {
         for (int i = 0; i < BASELENGTH; ++i) {
@@ -52,6 +55,9 @@ public class Base64 {
         lookUpBase64Alphabet[62] = '+';
         lookUpBase64Alphabet[63] = '/';
 
+    }
+
+    private Base64() {
     }
 
     private static boolean isWhiteSpace(char octect) {
@@ -96,8 +102,8 @@ public class Base64 {
 
         int encodedIndex = 0;
         int dataIndex = 0;
-        if (fDebug) {
-            System.out.println("number of triplets = " + numberTriplets);
+        if (logger.isDebugEnabled()) {
+            logger.debug("number of triplets = " + numberTriplets);
         }
 
         for (int i = 0; i < numberTriplets; i++) {
@@ -105,8 +111,8 @@ public class Base64 {
             b2 = binaryData[dataIndex++];
             b3 = binaryData[dataIndex++];
 
-            if (fDebug) {
-                System.out.println("b1= " + b1 + ", b2= " + b2 + ", b3= " + b3);
+            if (logger.isDebugEnabled()) {
+                logger.debug("b1= " + b1 + ", b2= " + b2 + ", b3= " + b3);
             }
 
             l = (byte) (b2 & 0x0f);
@@ -116,10 +122,10 @@ public class Base64 {
             byte val2 = ((b2 & SIGN) == 0) ? (byte) (b2 >> 4) : (byte) ((b2) >> 4 ^ 0xf0);
             byte val3 = ((b3 & SIGN) == 0) ? (byte) (b3 >> 6) : (byte) ((b3) >> 6 ^ 0xfc);
 
-            if (fDebug) {
-                System.out.println("val2 = " + val2);
-                System.out.println("k4   = " + (k << 4));
-                System.out.println("vak  = " + (val2 | (k << 4)));
+            if (logger.isDebugEnabled()) {
+                logger.debug("val2 = " + val2);
+                logger.debug("k4   = " + (k << 4));
+                logger.debug("vak  = " + (val2 | (k << 4)));
             }
 
             encodedData[encodedIndex++] = lookUpBase64Alphabet[val1];
@@ -132,9 +138,9 @@ public class Base64 {
         if (fewerThan24bits == EIGHTBIT) {
             b1 = binaryData[dataIndex];
             k = (byte) (b1 & 0x03);
-            if (fDebug) {
-                System.out.println("b1=" + b1);
-                System.out.println("b1<<2 = " + (b1 >> 2));
+            if (logger.isDebugEnabled()) {
+                logger.debug("b1=" + b1);
+                logger.debug("b1<<2 = " + (b1 >> 2));
             }
             byte val1 = ((b1 & SIGN) == 0) ? (byte) (b1 >> 2) : (byte) ((b1) >> 2 ^ 0xc0);
             encodedData[encodedIndex++] = lookUpBase64Alphabet[val1];

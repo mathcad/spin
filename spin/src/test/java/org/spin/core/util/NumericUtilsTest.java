@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -24,5 +25,18 @@ public class NumericUtilsTest {
         diff = NumericUtils.valueCompare(-10000, null);
         System.out.println(diff);
         assertTrue(diff == 1);
+    }
+
+    @Test
+    public void testS(){
+        assertTrue(StringUtils.isNumeric("123"));
+        assertFalse(StringUtils.isNumeric("123d"));
+        assertTrue(StringUtils.isNumeric("123.1"));
+        assertFalse(StringUtils.isNumeric("123.1d"));
+        assertTrue(StringUtils.isNumeric("123.1234"));
+        assertFalse(StringUtils.isNumeric("123.12.12"));
+        assertFalse(StringUtils.isNumeric("123..1212"));
+        assertFalse(StringUtils.isNumeric(".1231212"));
+        assertFalse(StringUtils.isNumeric("1231212."));
     }
 }

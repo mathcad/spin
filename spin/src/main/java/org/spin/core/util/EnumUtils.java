@@ -89,7 +89,7 @@ public abstract class EnumUtils {
     }
 
     /**
-     * 通过枚举文本字段，获得枚举类型的常量
+     * 通过枚举名称，获得枚举类型的常量
      *
      * @param enumCls  枚举类型
      * @param enumName 枚举名称

@@ -26,63 +26,63 @@ import java.util.regex.Pattern;
  */
 public abstract class DateUtils {
     // 2017
-    private static final String yearPattern = "(\\d{4})";
+    private static final String YEAR_PATTERN = "(\\d{4})";
     // 17
-    private static final String shortYearPattern = "(\\d{2})";
+    private static final String SHORT_YEAR_PATTERN = "(\\d{2})";
     // 01-12 或 1-12
-    private static final String monthPattern = "(0?[1-9]|1[0-2])";
+    private static final String MONTH_PATTERN = "(0?[1-9]|1[0-2])";
     // 01-31 或 1-31
-    private static final String dayPattern = "(0?[1-9]|[1-2]\\d|3[0-1])";
+    private static final String DAY_PATTERN = "(0?[1-9]|[1-2]\\d|3[0-1])";
     // 00-23 或 0-23
-    private static final String hourPattern = "(0?\\d|1\\d|2[0-3])";
+    private static final String HOUR_PATTERN = "(0?\\d|1\\d|2[0-3])";
     // 00-59 或 0-59
-    private static final String minutePattern = "(0?\\d|[1-5]\\d)";
+    private static final String MINUTE_PATTERN = "(0?\\d|[1-5]\\d)";
     // 00-59 或 0-59
-    private static final String secondPattern = minutePattern;
+    private static final String SECOND_PATTERN = MINUTE_PATTERN;
     // 123
-    private static final String millionSecondPattern = "(\\d{3})";
+    private static final String MILLION_SECOND_PATTERN = "(\\d{3})";
 
-    private static final String day = "yyyy-MM-dd";
-    private static final String second = "yyyy-MM-dd HH:mm:ss";
-    private static final String millSec = "yyyy-MM-dd HH:mm:ss SSS";
-    private static final String zhDay = "yyyy年MM月dd日";
-    private static final String zhSecond = "yyyy年MM月dd日 HH时mm分ss秒";
-    private static final String fullDay = "yyyy_MM_dd_HH_mm_ss_S";
-    private static final String noFormat = "yyyyMMddHHmmss";
+    private static final String DAY = "yyyy-MM-dd";
+    private static final String SECOND = "yyyy-MM-dd HH:mm:ss";
+    private static final String MILLSEC = "yyyy-MM-dd HH:mm:ss SSS";
+    private static final String ZH_DAY = "yyyy年MM月dd日";
+    private static final String ZH_SECOND = "yyyy年MM月dd日 HH时mm分ss秒";
+    private static final String FULL_DAY = "yyyy_MM_dd_HH_mm_ss_S";
+    private static final String NO_FORMAT = "yyyyMMddHHmmss";
 
-    private static final ThreadLocal<SimpleDateFormat> daySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(day));
-    private static final ThreadLocal<SimpleDateFormat> secondSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(second));
-    private static final ThreadLocal<SimpleDateFormat> millSecSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(millSec));
-    private static final ThreadLocal<SimpleDateFormat> zhDaySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(zhDay));
-    private static final ThreadLocal<SimpleDateFormat> zhSecondSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(zhSecond));
-    private static final ThreadLocal<SimpleDateFormat> fullDaySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(fullDay));
-    private static final ThreadLocal<SimpleDateFormat> noFormatSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(noFormat));
+    private static final ThreadLocal<SimpleDateFormat> daySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(DAY));
+    private static final ThreadLocal<SimpleDateFormat> secondSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(SECOND));
+    private static final ThreadLocal<SimpleDateFormat> millSecSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(MILLSEC));
+    private static final ThreadLocal<SimpleDateFormat> zhDaySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(ZH_DAY));
+    private static final ThreadLocal<SimpleDateFormat> zhSecondSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(ZH_SECOND));
+    private static final ThreadLocal<SimpleDateFormat> fullDaySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(FULL_DAY));
+    private static final ThreadLocal<SimpleDateFormat> noFormatSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(NO_FORMAT));
 
-    private static final DateTimeFormatter dayDtf = DateTimeFormatter.ofPattern(day);
-    private static final DateTimeFormatter secondDtf = DateTimeFormatter.ofPattern(second);
-    private static final DateTimeFormatter millSecDtf = DateTimeFormatter.ofPattern(millSec);
-    private static final DateTimeFormatter zhDayDtf = DateTimeFormatter.ofPattern(zhDay);
-    private static final DateTimeFormatter zhSecondDtf = DateTimeFormatter.ofPattern(zhSecond);
-    private static final DateTimeFormatter fullDayDtf = DateTimeFormatter.ofPattern(fullDay);
-    private static final DateTimeFormatter noFormatDtf = DateTimeFormatter.ofPattern(noFormat);
+    private static final DateTimeFormatter dayDtf = DateTimeFormatter.ofPattern(DAY);
+    private static final DateTimeFormatter secondDtf = DateTimeFormatter.ofPattern(SECOND);
+    private static final DateTimeFormatter millSecDtf = DateTimeFormatter.ofPattern(MILLSEC);
+    private static final DateTimeFormatter zhDayDtf = DateTimeFormatter.ofPattern(ZH_DAY);
+    private static final DateTimeFormatter zhSecondDtf = DateTimeFormatter.ofPattern(ZH_SECOND);
+    private static final DateTimeFormatter fullDayDtf = DateTimeFormatter.ofPattern(FULL_DAY);
+    private static final DateTimeFormatter noFormatDtf = DateTimeFormatter.ofPattern(NO_FORMAT);
 
 
     private static final String[] datePatten = {
-        yearPattern + "(.)" + monthPattern + "(.)" + dayPattern,
+        YEAR_PATTERN + "(.)" + MONTH_PATTERN + "(.)" + DAY_PATTERN,
     };
     private static final String[] dateFormat = {
         "yyyy{0}MM{1}dd",
     };
 
     private static final String[] timePatten = {
-        hourPattern + ":" + minutePattern + ":" + secondPattern + "\\." + millionSecondPattern,
-        hourPattern + "时" + minutePattern + "分" + secondPattern + "秒" + "\\." + millionSecondPattern,
-        hourPattern + ":" + minutePattern + ":" + secondPattern,
-        hourPattern + "时" + minutePattern + "分" + secondPattern + "秒",
-        hourPattern + ":" + minutePattern,
-        hourPattern + "时" + minutePattern + "分",
-        hourPattern + "时",
-        hourPattern + "点"
+        HOUR_PATTERN + ":" + MINUTE_PATTERN + ":" + SECOND_PATTERN + "\\." + MILLION_SECOND_PATTERN,
+        HOUR_PATTERN + "时" + MINUTE_PATTERN + "分" + SECOND_PATTERN + "秒" + "\\." + MILLION_SECOND_PATTERN,
+        HOUR_PATTERN + ":" + MINUTE_PATTERN + ":" + SECOND_PATTERN,
+        HOUR_PATTERN + "时" + MINUTE_PATTERN + "分" + SECOND_PATTERN + "秒",
+        HOUR_PATTERN + ":" + MINUTE_PATTERN,
+        HOUR_PATTERN + "时" + MINUTE_PATTERN + "分",
+        HOUR_PATTERN + "时",
+        HOUR_PATTERN + "点"
     };
 
     private static final String[] timeFormat = {
@@ -106,6 +106,9 @@ public abstract class DateUtils {
                 pattens[i * (timePatten.length) + j] = pattern;
             }
         }
+    }
+
+    private DateUtils() {
     }
 
     /**

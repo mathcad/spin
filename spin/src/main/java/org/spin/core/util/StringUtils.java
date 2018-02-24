@@ -7,6 +7,7 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static java.lang.Character.isLetterOrDigit;
 import static java.lang.Character.isWhitespace;
@@ -44,6 +45,9 @@ public abstract class StringUtils {
     private static final String CURRENT_PATH = ".";
 
     private static final char EXTENSION_SEPARATOR = '.';
+
+    private static final Pattern NUMERIC_PATTERN = Pattern.compile("^\\d+(\\.\\d+)?$");
+    private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d+$");
 
     public static final String EMPTY = "";
 
@@ -3003,10 +3007,11 @@ public abstract class StringUtils {
     }
 
     /**
-     * 将字节数组解析为UTF-8字符串
+     * 将字节数组解析为指定编码字符串
      *
      * @param strContent 字符串数据
-     * @return UTF-8字符串
+     * @param charset    字符集
+     * @return 字符串
      */
     public static String toString(byte[] strContent, Charset charset) {
         if (null == strContent) {
@@ -3028,11 +3033,7 @@ public abstract class StringUtils {
         if (null == strContent) {
             return null;
         }
-        try {
-            return new String(strContent, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException("不支持[UTF-8]字符集编码", e);
-        }
+        return new String(strContent, StandardCharsets.UTF_8);
     }
 
     /**
@@ -3726,19 +3727,57 @@ public abstract class StringUtils {
         return String.copyValueOf(chars);
     }
 
+    /**
+     * 将字母转换为大写形式（如果可能的话）
+     *
+     * @param c 字母
+     * @return 大写字母
+     */
     public static char upper(char c) {
         return (char) (c > 96 && c < 123 ? c ^ 32 : c);
     }
 
+    /**
+     * 将字母转换为小写形式（如果可能的话）
+     *
+     * @param c 字母
+     * @return 小写字母
+     */
     public static char lower(char c) {
         return (char) (c > 64 && c < 91 ? c ^ 32 : c);
     }
 
+    /**
+     * 对字符串进行URL编码
+     *
+     * @param input 输入字符串
+     * @return 编码后的字符串
+     */
     public static String urlEncode(String input) {
         try {
             return URLEncoder.encode(input, "UTF-8");
         } catch (UnsupportedEncodingException ignore) {
             return input;
         }
+    }
+
+    /**
+     * 判断字符串是否是数字
+     *
+     * @param input 字符串
+     * @return 是否是有效的数值（整数或小数）
+     */
+    public static boolean isNumeric(final CharSequence input) {
+        return NUMERIC_PATTERN.matcher(input).matches();
+    }
+
+    /**
+     * 判断字符串是否是整数
+     *
+     * @param input 字符串
+     * @return 是否由数字构成
+     */
+    public static boolean isInteger(final CharSequence input) {
+        return INTEGER_PATTERN.matcher(input).matches();
     }
 }

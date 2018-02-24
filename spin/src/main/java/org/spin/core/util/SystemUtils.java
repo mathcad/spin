@@ -1605,17 +1605,7 @@ public abstract class SystemUtils {
 
     // -----------------------------------------------------------------------
 
-    /**
-     * <p>
-     * SystemUtils instances should NOT be constructed in standard programming. Instead, the class should be used as
-     * {@code SystemUtils.FILE_SEPARATOR}.
-     * </p>
-     * <p>
-     * This constructor is public to permit tools that require a JavaBean instance to operate.
-     * </p>
-     */
-    public SystemUtils() {
-        super();
+    private SystemUtils() {
     }
 
     public static String getRunningMethodInfo() {

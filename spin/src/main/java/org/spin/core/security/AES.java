@@ -2,6 +2,7 @@ package org.spin.core.security;
 
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.trait.IntEvaluatable;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -9,7 +10,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.SecureRandom;
@@ -29,7 +31,7 @@ public class AES {
     /**
      * 密钥强度，WEAK为128bit，MEDIAM为192bit，STRONG为256bit
      */
-    public enum KeyLength {
+    public enum KeyLength implements IntEvaluatable {
         /**
          * 最低强度(128bit)
          */
@@ -44,15 +46,19 @@ public class AES {
          * 最高强度(256bit)
          */
         STRONG(256);
-        private int _value;
+        private int value;
 
         KeyLength(int value) {
-            this._value = value;
+            this.value = value;
         }
 
+        @Override
         public int getValue() {
-            return this._value;
+            return this.value;
         }
+    }
+
+    private AES() {
     }
 
     /**
@@ -78,7 +84,7 @@ public class AES {
         try {
             kg = KeyGenerator.getInstance(KEY_ALGORITHM);
             secureRandom = SecureRandom.getInstance("SHA1PRNG");
-            secureRandom.setSeed(keySeed.getBytes("UTF-8"));
+            secureRandom.setSeed(keySeed.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new SimplifiedException(ErrorCode.KEY_FAIL, e);
         }
@@ -115,11 +121,7 @@ public class AES {
      * @return 密文
      */
     public static String encrypt(SecretKey key, String data) {
-        try {
-            return encrypt(key, data.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, e);
-        }
+        return encrypt(key, data.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -156,7 +158,7 @@ public class AES {
      * @return 明文
      */
     public static String decrypt(String key, String data) {
-        return decrypt(generateKey(key), data, "UTF-8");
+        return decrypt(generateKey(key), data, StandardCharsets.UTF_8);
     }
 
     /**
@@ -167,7 +169,7 @@ public class AES {
      * @return 明文
      */
     public static String decrypt(SecretKey key, String data) {
-        return decrypt(key, data, "UTF-8");
+        return decrypt(key, data, StandardCharsets.UTF_8);
     }
 
     /**
@@ -178,7 +180,7 @@ public class AES {
      * @param charset 明文字符集
      * @return 明文
      */
-    public static String decrypt(SecretKey key, String data, String charset) {
+    public static String decrypt(SecretKey key, String data, Charset charset) {
         Cipher cipher;
         try {
             cipher = Cipher.getInstance(CIPHER_ALGORITHM);
@@ -191,13 +193,9 @@ public class AES {
             throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
         }
         try {
-            try {
-                return new String(cipher.doFinal(Base64.decode(data)), charset);
-            } catch (IllegalBlockSizeException | BadPaddingException e) {
-                throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
-            }
-        } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, e);
+            return new String(cipher.doFinal(Base64.decode(data)), charset);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
         }
     }
 }

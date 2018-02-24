@@ -2,7 +2,6 @@ package org.spin.data.extend;
 
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.BeanUtils;
 import org.spin.data.core.EntityConverter;
 import org.spin.data.core.IEntity;
 import org.spin.data.util.EntityUtils;

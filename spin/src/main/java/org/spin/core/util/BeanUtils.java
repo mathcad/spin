@@ -20,6 +20,9 @@ import java.util.Properties;
 public abstract class BeanUtils {
     private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
 
+    private BeanUtils() {
+    }
+
     public static Method tailMethod(Class<?> type, String name) {
         try {
             return type.getMethod(name, String.class, Object.class);
@@ -164,10 +167,10 @@ public abstract class BeanUtils {
                     work.put(propName[i], bak);
                     work = bak;
                     ++i;
-                    continue;
+                } else {
+                    work.put(propName[i], entry.getValue());
+                    ++i;
                 }
-                work.put(propName[i], entry.getValue());
-                ++i;
             }
         }
         return treeSightMap;

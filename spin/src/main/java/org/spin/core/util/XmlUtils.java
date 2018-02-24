@@ -36,7 +36,7 @@ public final class XmlUtils {
     private Document document;
 
     public enum SourceType {
-        XmlFilePath, XmlContent
+        XML_FILE_PATH, XML_CONTENT
     }
 
 
@@ -53,13 +53,12 @@ public final class XmlUtils {
     public static XmlUtils getInstance(String xmlSource, SourceType type) {
         XmlUtils result = null;
         try {
-            switch (type) {
-                case XmlFilePath:
-                    result = new XmlUtils(new File(xmlSource));
-                    break;
-                case XmlContent:
-                    result = new XmlUtils(xmlSource);
-                    break;
+            if (type == SourceType.XML_FILE_PATH) {
+                result = new XmlUtils(new File(xmlSource));
+
+            } else if (type == SourceType.XML_CONTENT) {
+                result = new XmlUtils(xmlSource);
+
             }
 
         } catch (DocumentException e) {
@@ -69,18 +68,18 @@ public final class XmlUtils {
         return result;
     }
 
-    public List<?> getNodesbyXPath(String XPath) {
-        return document.selectNodes(XPath);
+    public List<Node> getNodesbyXPath(String xPath) {
+        return document.selectNodes(xPath);
     }
 
     /**
      * 获取指定xpath的最后一个值（如果有多个的话）
      *
-     * @param XPath xpath路径
+     * @param xPath xpath路径
      * @return 获取的最后一个值
      */
-    public String getLastValuebyXPath(String XPath) {
-        List<?> list = this.getNodesbyXPath(XPath);
+    public String getLastValuebyXPath(String xPath) {
+        List<?> list = this.getNodesbyXPath(xPath);
         if (list == null)
             return null;
         String result = null;
@@ -129,8 +128,7 @@ public final class XmlUtils {
             String tmp = elem.getName();
             if (!"".equals(prefix))
                 tmp = prefix + "." + tmp;
-            if (elem.elements().size() == 0) {
-
+            if (elem.elements().isEmpty()) {
                 result.put(tmp, elem.getText());
             }
             result.putAll(travels(tmp, elem));

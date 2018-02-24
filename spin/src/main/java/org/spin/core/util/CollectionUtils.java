@@ -12,7 +12,10 @@ import java.util.stream.Stream;
  */
 public abstract class CollectionUtils {
 
-    private static long PARALLEL_FACTORY = 10000L;
+    private static final long PARALLEL_FACTORY = 10000L;
+
+    private CollectionUtils() {
+    }
 
     /**
      * 判断集合是否为空或{@code null}
@@ -126,7 +129,7 @@ public abstract class CollectionUtils {
         return res;
     }
 
-    public static <T extends Collection<E>, E, P> T take(T collection, int size) {
+    public static <T extends Collection<E>, E> T take(T collection, int size) {
         T res = cloneWithoutValues(collection);
         if (null == res) {
             return null;
@@ -424,7 +427,7 @@ public abstract class CollectionUtils {
         }
 
         @Override
-        public void remove() throws UnsupportedOperationException {
+        public void remove() {
             throw new UnsupportedOperationException("Not supported");
         }
     }

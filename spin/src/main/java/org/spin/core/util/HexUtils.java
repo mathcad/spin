@@ -22,12 +22,9 @@ import org.spin.core.throwable.EncoderException;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 /**
  * 16进制工具类
- * {@link #DEFAULT_CHARSET_NAME}
  * <p>
  * This class is thread-safe.
  *
@@ -36,20 +33,6 @@ import java.nio.charset.StandardCharsets;
  * @since 1.1
  */
 public abstract class HexUtils {
-
-    /**
-     * 默认字符集： {@link StandardCharsets#UTF_8}
-     *
-     * @since 1.7
-     */
-    private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
-
-    /**
-     * 默认字符集名称： {@code UTF-8}
-     *
-     * @since 1.4
-     */
-    private static final String DEFAULT_CHARSET_NAME = StandardCharsets.UTF_8.name();
 
     /**
      * Used to build output as HexUtils
@@ -62,6 +45,9 @@ public abstract class HexUtils {
      */
     private static final char[] DIGITS_UPPER =
         {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+    private HexUtils() {
+    }
 
     /**
      * 将字符数组表示的16进制数值转换为等值字节数组。返回的字节数组长度应该是参数数组长度的一半(两个16进制字符转换出一个字节)

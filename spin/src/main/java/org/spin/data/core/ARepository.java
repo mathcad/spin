@@ -616,7 +616,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         ct.setMaxResults(1);
         @SuppressWarnings("unchecked")
         List<T> list = ct.list();
-        if (list.size() < 1)
+        if (list.isEmpty())
             return null;
         return list.get(0);
     }
@@ -657,7 +657,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         @SuppressWarnings("unchecked")
         List<T> list = ct.list();
         T t;
-        if (list.size() < 1)
+        if (list.isEmpty())
             throw new SQLException(SQLException.RESULT_NOT_FOUND);
         t = list.get(0);
         sess.buildLockRequest(LockOptions.UPGRADE).lock(t);

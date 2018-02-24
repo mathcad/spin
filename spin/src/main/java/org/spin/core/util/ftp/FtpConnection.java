@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,7 +51,6 @@ public class FtpConnection implements AutoCloseable {
     private String host;
     private int port = 21;
 
-    //    private String serverCharset = System.getProperty("sun.jnu.encoding");
     private Charset serverCharset = Charset.forName("GBK");
     private Charset ftpCharset = Charset.forName("ISO-8859-1");
 
@@ -66,31 +66,30 @@ public class FtpConnection implements AutoCloseable {
         if (!matcher.matches())
             throw new SimplifiedException("FTP连接URL格式错误");
 
-        Protocal protocal = EnumUtils.getEnum(Protocal.class, matcher.group(1).toLowerCase());
+        Protocal pt = EnumUtils.getEnum(Protocal.class, matcher.group(1).toLowerCase());
         String token = matcher.group(2);
-        String userName = null;
-        String password = null;
+        String u = null;
+        String pwd = null;
         if (StringUtils.isNotEmpty(token)) {
             int idx = token.indexOf(':');
-            userName = token.substring(0, idx);
-            password = token.substring(idx + 1, token.length() - 1);
+            u = token.substring(0, idx);
+            pwd = token.substring(idx + 1, token.length() - 1);
         }
-        String host = matcher.group(3).toLowerCase();
-        String port = matcher.group(4);
+        String h = matcher.group(3).toLowerCase();
+        String p = matcher.group(4);
 
-        Protocal p = null == protocal ? Protocal.FTP : protocal;
-        this.protocal = p;
-        this.host = host;
-        this.port = StringUtils.isEmpty(port) ? 21 : Integer.parseInt(port.substring(1));
-        this.userName = userName;
-        this.password = password;
-        switch (p) {
-            case FTP:
-                this.client = new FTPClient();
-                break;
-            case FTPS:
-                this.client = new FTPSClient("SSL");
-                break;
+        pt = null == pt ? Protocal.FTP : pt;
+        this.protocal = pt;
+        this.host = h;
+        this.port = StringUtils.isEmpty(p) ? 21 : Integer.parseInt(p.substring(1));
+        this.userName = u;
+        this.password = pwd;
+        if (pt == Protocal.FTP) {
+            this.client = new FTPClient();
+
+        } else if (pt == Protocal.FTPS) {
+            this.client = new FTPSClient("SSL");
+
         }
     }
 
@@ -133,13 +132,12 @@ public class FtpConnection implements AutoCloseable {
         this.port = port;
         this.userName = userName;
         this.password = password;
-        switch (p) {
-            case FTP:
-                this.client = new FTPClient();
-                break;
-            case FTPS:
-                this.client = new FTPSClient("SSL");
-                break;
+        if (p == Protocal.FTP) {
+            this.client = new FTPClient();
+
+        } else if (p == Protocal.FTPS) {
+            this.client = new FTPSClient("SSL");
+
         }
     }
 
@@ -258,9 +256,9 @@ public class FtpConnection implements AutoCloseable {
      */
     public boolean retrieveFile(String fullPath, String localPath) {
         this.connect();
-        int lastIdx = fullPath.lastIndexOf("/") + 1;
+        int lastIdx = fullPath.lastIndexOf('/') + 1;
         if (lastIdx <= 0)
-            lastIdx = fullPath.lastIndexOf("\\") + 1;
+            lastIdx = fullPath.lastIndexOf('\\') + 1;
         String dir = fullPath.substring(0, lastIdx);
         String fileName = fullPath.substring(lastIdx);
         return retrieveFile(dir, fileName, localPath);
@@ -278,9 +276,9 @@ public class FtpConnection implements AutoCloseable {
         boolean flag = false;
         FTPFile[] fs;
         try {
-            int lastIdx = fullPath.lastIndexOf("/") + 1;
+            int lastIdx = fullPath.lastIndexOf('/') + 1;
             if (lastIdx <= 0)
-                lastIdx = fullPath.lastIndexOf("\\") + 1;
+                lastIdx = fullPath.lastIndexOf('\\') + 1;
 
             String dir = fullPath.substring(0, lastIdx);
             String fileName = fullPath.substring(lastIdx);
@@ -309,12 +307,10 @@ public class FtpConnection implements AutoCloseable {
     public boolean storeFile(String path, String filename, String localFilePath) {
         this.connect();
         boolean flag = false;
-        try {
-            FileInputStream in = new FileInputStream(new File(localFilePath));
+        try (FileInputStream in = new FileInputStream(new File(localFilePath))) {
             if (StringUtils.isNotEmpty(path))
                 client.changeWorkingDirectory(path);
             flag = client.storeFile(filename, in);
-            in.close();
         } catch (Exception e) {
             logger.error("上传文件失败", e);
         }
@@ -455,10 +451,6 @@ public class FtpConnection implements AutoCloseable {
         return ftpCharset;
     }
 
-    private String encodeStr(String value) {
-        return new String(value.getBytes(serverCharset), ftpCharset);
-    }
-
     public boolean isAvaliable() {
         if (client.isConnected()) {
             try {
@@ -504,9 +496,10 @@ public class FtpConnection implements AutoCloseable {
         // 开启服务器对UTF-8的支持，如果服务器支持就用UTF-8编码，否则就使用默认编码.
         try {
             if (FTPReply.isPositiveCompletion(client.sendCommand("OPTS UTF8", "ON"))) {
-                serverCharset = Charset.forName("UTF-8");
+                serverCharset = StandardCharsets.UTF_8;
             }
         } catch (IOException e) {
+            // ignore
         }
         client.setControlEncoding(serverCharset.name());
         client.enterLocalPassiveMode();

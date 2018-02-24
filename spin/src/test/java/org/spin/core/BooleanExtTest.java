@@ -14,14 +14,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class BooleanExtTest {
     @Test
-    public void of(TestInfo testInfo) throws Exception {
-        Long res = BooleanExt.of(false, Long.class).yes(() -> 1L).otherwise(() -> -1L);
+    public void of(TestInfo testInfo) {
+        Long res = BooleanExt.ofAny(false).yes(() -> 1L).otherwise(() -> -1L);
         assertTrue(res.equals(-1L));
-        res = BooleanExt.of(true, Long.class).yes(() -> 1L).otherwise(() -> -1L);
+        res = BooleanExt.ofAny(true).yes(() -> 1L).otherwise(() -> -1L);
         assertTrue(res.equals(1L));
-        res = BooleanExt.of(true, Long.class).no(() -> 1L).otherwise(() -> -1L);
+        res = BooleanExt.ofAny(true).no(() -> 1L).otherwise(() -> -1L);
         assertTrue(res.equals(-1L));
-        res = BooleanExt.of(false, Long.class).no(() -> 1L).otherwise(() -> -1L);
+        res = BooleanExt.ofAny(false).no(() -> 1L).otherwise(() -> -1L);
         assertTrue(res.equals(1L));
 
         BooleanExt.of(true).yes(() -> System.out.println("true")).otherwise(() -> System.out.println("false"));

@@ -92,19 +92,19 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * 扩展字段1
      */
     @Transient
-    private Object extInfo1;
+    private Serializable extInfo1;
 
     /**
      * 扩展字段2
      */
     @Transient
-    private Object extInfo2;
+    private Serializable extInfo2;
 
     /**
      * 扩展字段3
      */
     @Transient
-    private Object extInfo3;
+    private Serializable extInfo3;
 
     /**
      * 获取当前实体的DTO。DTO是当前实体的浅拷贝。
@@ -290,27 +290,27 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.valid = valid;
     }
 
-    public Object getExtInfo1() {
+    public Serializable getExtInfo1() {
         return extInfo1;
     }
 
-    public void setExtInfo1(Object extInfo1) {
+    public void setExtInfo1(Serializable extInfo1) {
         this.extInfo1 = extInfo1;
     }
 
-    public Object getExtInfo2() {
+    public Serializable getExtInfo2() {
         return extInfo2;
     }
 
-    public void setExtInfo2(Object extInfo2) {
+    public void setExtInfo2(Serializable extInfo2) {
         this.extInfo2 = extInfo2;
     }
 
-    public Object getExtInfo3() {
+    public Serializable getExtInfo3() {
         return extInfo3;
     }
 
-    public void setExtInfo3(Object extInfo3) {
+    public void setExtInfo3(Serializable extInfo3) {
         this.extInfo3 = extInfo3;
     }
 }

@@ -55,7 +55,7 @@ public class MessageEntity implements Serializable {
 
     public static MessageEntity fromXml(String xmlContent) {
         MessageEntity entity = new MessageEntity();
-        entity.properties = XmlUtils.getInstance(xmlContent, XmlUtils.SourceType.XmlContent).getSubElementsValue();
+        entity.properties = XmlUtils.getInstance(xmlContent, XmlUtils.SourceType.XML_CONTENT).getSubElementsValue();
         return entity;
     }
 

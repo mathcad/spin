@@ -8,15 +8,17 @@
 
 package org.spin.wx.aes;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
  * 提供基于PKCS7算法的加解密接口.
  */
 public class PKCS7Encoder {
-    static Charset CHARSET = Charset.forName("UTF-8");
-    static int BLOCK_SIZE = 32;
+    private static final int BLOCK_SIZE = 32;
+
+    private PKCS7Encoder() {
+    }
 
     /**
      * 获得对明文进行补位填充的字节.
@@ -32,11 +34,11 @@ public class PKCS7Encoder {
         }
         // 获得补位所用的字符
         char padChr = chr(amountToPad);
-        String tmp = "";
+        StringBuilder tmp = new StringBuilder();
         for (int index = 0; index < amountToPad; index++) {
-            tmp += padChr;
+            tmp.append(padChr);
         }
-        return tmp.getBytes(CHARSET);
+        return tmp.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     /**

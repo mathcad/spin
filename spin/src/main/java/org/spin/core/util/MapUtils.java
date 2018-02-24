@@ -3,7 +3,6 @@ package org.spin.core.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
-import org.spin.core.ErrorCode;
 import org.spin.core.collection.MultiValueMap;
 import org.spin.core.throwable.SimplifiedException;
 
@@ -24,6 +23,9 @@ import java.util.stream.Collectors;
 public abstract class MapUtils {
     private static final Logger logger = LoggerFactory.getLogger(MapUtils.class);
 
+    private MapUtils() {
+    }
+
     /**
      * 通过数组快速创建参数Map (HashMap)
      *
@@ -36,9 +38,8 @@ public abstract class MapUtils {
         if (params.length % 2 != 0) {
             throw new IllegalArgumentException("键值对必须为偶数个");
         }
-        for (int i = 0; i < params.length; ) {
+        for (int i = 0; i < params.length; i += 2) {
             map.put(params[i].toString(), params[i + 1]);
-            i += 2;
         }
         return map;
     }

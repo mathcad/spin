@@ -6,16 +6,6 @@ import java.math.RoundingMode;
 public abstract class CnyUtils {
 
     /**
-     * 中文简体数字
-     */
-    private static String CHS_NUMBER = "零一二三四五六七八九";
-
-    /**
-     * 中文繁体数字
-     */
-    private static String CHT_NUMBER = "零壹贰叁肆伍陆柒捌玖";
-
-    /**
      * 汉语中数字大写
      */
     private static final String[] CN_UPPER_NUMBER = {"零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖"};
@@ -39,6 +29,9 @@ public abstract class CnyUtils {
      * 特殊字符：零元整
      */
     private static final String CN_ZEOR_FULL = "零元" + CN_FULL;
+
+    private CnyUtils() {
+    }
 
     /**
      * 把输入的金额转换为汉语中人民币的大写
@@ -64,12 +57,12 @@ public abstract class CnyUtils {
         int numIndex = 0;
         boolean getZero = false;
         // 判断最后两位数，一共有四种情况：00 = 0, 01 = 1, 10, 11
-        if (!(scale > 0)) {
+        if (scale <= 0) {
             numIndex = 2;
             number = number / 100;
             getZero = true;
         }
-        if ((scale > 0) && (!(scale % 10 > 0))) {
+        if ((scale > 0) && (scale % 10 <= 0)) {
             numIndex = 1;
             number = number / 10;
             getZero = true;
@@ -97,9 +90,7 @@ public abstract class CnyUtils {
                 if (!(getZero)) {
                     sb.insert(0, CN_UPPER_NUMBER[numUnit]);
                 }
-                if (numIndex == 2) {
-                    sb.insert(0, CN_UPPER_MONETRAY_UNIT[numIndex]);
-                } else if (((numIndex - 2) % 4 == 0) && (number % 1000 > 0)) {
+                if (numIndex == 2 || ((numIndex - 2) % 4 == 0) && (number % 1000 > 0)) {
                     sb.insert(0, CN_UPPER_MONETRAY_UNIT[numIndex]);
                 }
                 getZero = true;
@@ -113,7 +104,7 @@ public abstract class CnyUtils {
             sb.insert(0, CN_NEGATIVE);
         }
         // 输入的数字小数点后两位为"00"的情况，则要在最后追加特殊字符：整
-        if (!(scale > 0)) {
+        if (scale <= 0) {
             sb.append(CN_FULL);
         }
         return sb.toString();

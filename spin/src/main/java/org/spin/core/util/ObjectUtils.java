@@ -41,6 +41,8 @@ public abstract class ObjectUtils {
     private static final String EMPTY_ARRAY = ARRAY_START + ARRAY_END;
     private static final String ARRAY_ELEMENT_SEPARATOR = ", ";
 
+    private ObjectUtils() {
+    }
 
     /**
      * Return whether the given throwable is a checked exception:
@@ -252,7 +254,7 @@ public abstract class ObjectUtils {
      * @throws ClassCastException 转换失败，抛出异常
      */
     @SuppressWarnings("unchecked")
-    public static <T> T convert(Class<T> type, Object target) throws ClassCastException {
+    public static <T> T convert(Class<T> type, Object target) {
         if (null == type)
             throw new IllegalArgumentException("The type witch convert to can not be null");
         if (target != null && (type.isInstance(target) || ClassUtils.isAssignable(type, target.getClass(), true))) {
@@ -285,7 +287,7 @@ public abstract class ObjectUtils {
                 else if (typePrimitive.equals(boolean.class))
                     return (T) Boolean.valueOf(target.toString());
                 else if (typePrimitive.equals(char.class))
-                    return (T) Character.valueOf((char) Integer.valueOf(target.toString()).intValue());
+                    return (T) Character.valueOf((char) Integer.parseInt(target.toString()));
                 else if (CharSequence.class.isAssignableFrom(typePrimitive))
                     return (T) toString(target, null);
             }
