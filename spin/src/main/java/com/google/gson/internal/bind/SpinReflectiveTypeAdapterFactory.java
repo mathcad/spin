@@ -130,7 +130,7 @@ public final class SpinReflectiveTypeAdapterFactory implements TypeAdapterFactor
                 throws IOException, IllegalAccessException {
                 Object fieldValue = typeAdapter.read(reader);
                 if (typeAdapter instanceof UncertaintyMatchableTypeAdapter) {
-                    fieldValue = ((UncertaintyMatchableTypeAdapter<?>) typeAdapter).read(reader, (TypeToken<?>) fieldType);
+                    fieldValue = ((UncertaintyMatchableTypeAdapter<?>) typeAdapter).read(reader, fieldType);
                 }
                 if (fieldValue != null || !isPrimitive) {
                     field.set(value, fieldValue);
