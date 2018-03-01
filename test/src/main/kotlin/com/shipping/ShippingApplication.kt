@@ -8,9 +8,9 @@ import org.spin.core.SpinContext
 import org.spin.core.security.RSA
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.core.env.Environment
@@ -51,5 +51,5 @@ open class ShippingApplication : WebMvcConfigurer {
 }
 
 fun main(args: Array<String>) {
-    SpringApplication.run(ShippingApplication::class.java, *args)
+    runApplication<ShippingApplication>(*args)
 }
