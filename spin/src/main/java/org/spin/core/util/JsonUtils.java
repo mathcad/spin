@@ -332,7 +332,7 @@ public abstract class JsonUtils {
         Object[] factories = ClassUtils.getFieldValue(gson, "factories.list.elementData");
         int idx = -1;
         for (int i = factories.length - 1; i != -1; --i) {
-            if (null != factories[i] && ReflectiveTypeAdapterFactory.class.isAssignableFrom(factories[i].getClass())) {
+            if (null != factories[i] && factories[i] instanceof ReflectiveTypeAdapterFactory) {
                 idx = i;
                 break;
             }
