@@ -13,7 +13,6 @@ import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -36,6 +35,7 @@ public abstract class JsonUtils {
     private static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private static final String DEFAULT_LOCAL_DATE_PATTERN = "yyyy-MM-dd";
     private static final String DEFAULT_LOCAL_TIME_PATTERN = "HH:mm:ss";
+    private static final String DEFAULT_ERROR_MSG = "%s 无法转换为[%s]对象!";
 
     private static final Gson defaultGson;
 
@@ -271,7 +271,7 @@ public abstract class JsonUtils {
         try {
             return procGson(baseBuilder(datePattern).create()).fromJson(json, token.getType());
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + token.toString() + " 对象!", ex);
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, token.toString()), ex);
         }
     }
 
@@ -287,7 +287,7 @@ public abstract class JsonUtils {
         try {
             return defaultGson.fromJson(json, token.getType());
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + token.toString() + " 对象!", ex);
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, token.toString()), ex);
         }
     }
 
@@ -295,7 +295,7 @@ public abstract class JsonUtils {
         try {
             return defaultGson.fromJson(json, type);
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + type.getTypeName() + " 对象!", ex);
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, type.getTypeName()), ex);
         }
     }
 
@@ -303,7 +303,7 @@ public abstract class JsonUtils {
         try {
             return defaultGson.fromJson(json, clazz);
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + clazz.getTypeName() + " 对象!", ex);
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
         }
     }
 
@@ -324,20 +324,18 @@ public abstract class JsonUtils {
         try {
             return procGson(baseBuilder(datePattern).create()).fromJson(json, clazz);
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + clazz.getName() + " 对象!", ex);
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
         }
     }
 
     private static Gson procGson(Gson gson) {
         Object[] factories = ClassUtils.getFieldValue(gson, "factories.list.elementData");
-        int idx = -1;
         for (int i = factories.length - 1; i != -1; --i) {
             if (null != factories[i] && factories[i] instanceof ReflectiveTypeAdapterFactory) {
-                idx = i;
+                factories[i] = new SpinReflectiveTypeAdapterFactory((ReflectiveTypeAdapterFactory) factories[i]);
                 break;
             }
         }
-        factories[idx] = new SpinReflectiveTypeAdapterFactory((ReflectiveTypeAdapterFactory) factories[idx]);
         return gson;
     }
 
