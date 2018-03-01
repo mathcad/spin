@@ -5,7 +5,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.spin.core.util.EnumUtils;
 import org.spin.data.core.UserEnumColumn;
-import org.spin.enhance.gson.MatchableTypeAdapter;
+import org.spin.enhance.gson.UncertaintyMatchableTypeAdapter;
 
 import java.io.IOException;
 
@@ -13,11 +13,7 @@ import java.io.IOException;
  * GSON的枚举适配器
  * Created by xuweinan on 2017/1/25.
  */
-public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter<E> {
-    private ThreadLocal<Class<E>> clazz = new ThreadLocal<>();
-
-    public UserEnumTypeAdapter() {
-    }
+public class UserEnumTypeAdapter<E extends Enum<E>> extends UncertaintyMatchableTypeAdapter<E> {
 
     @Override
     public void write(JsonWriter out, E value) throws IOException {
@@ -29,29 +25,21 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
     }
 
     @Override
-    public E read(JsonReader in) throws IOException {
+    public E read(JsonReader in, TypeToken<?> type) throws IOException {
+        String v = in.nextString();
+        @SuppressWarnings("unchecked")
+        Class<E> t = (Class<E>) type.getRawType();
         try {
-            return EnumUtils.getEnum(clazz.get(), in.nextInt());
-        } catch (IllegalStateException | NumberFormatException e) {
-            return null;
+            Integer iv = Integer.valueOf(v);
+            return EnumUtils.getEnum(t, iv);
+        } catch (Exception e) {
+            return EnumUtils.getEnumByName(t, v);
         }
     }
 
     @Override
     public boolean isMatch(TypeToken<?> type) {
-        boolean matchIntf = false;
-        Class<?>[] intfs = type.getRawType().getInterfaces();
-        for (Class<?> intf : intfs) {
-            matchIntf = UserEnumColumn.class.getName().equals(intf.getName());
-            if (matchIntf) {
-                break;
-            }
-        }
-        boolean match = Enum.class.isAssignableFrom(type.getRawType()) && matchIntf;
-        if (match) {
-            //noinspection unchecked
-            clazz.set((Class<E>) type.getRawType());
-        }
-        return match;
+        boolean matchIntf = UserEnumColumn.class.isAssignableFrom(type.getRawType());
+        return Enum.class.isAssignableFrom(type.getRawType()) && matchIntf;
     }
 }

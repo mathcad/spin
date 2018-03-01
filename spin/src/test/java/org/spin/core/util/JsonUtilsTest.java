@@ -3,6 +3,7 @@ package org.spin.core.util;
 import org.junit.jupiter.api.Test;
 import org.spin.core.TypeIdentifier;
 import org.spin.data.core.AbstractEntity;
+import org.spin.data.core.UserEnumColumn;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -44,7 +45,60 @@ public class JsonUtilsTest {
         AbstractEntity c = JsonUtils.fromJson(b, E.class);
         System.out.println(c);
     }
+
+    @Test
+    public void testEnum() {
+        String json = "{id: 81241321817279489, status:1, type:2}";
+        E e = JsonUtils.fromJson(json, E.class);
+        assertTrue(true);
+    }
 }
 
 class E extends AbstractEntity {
+    private Status status;
+    private Type type;
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+}
+
+enum Status implements UserEnumColumn {
+    A(1), B(2);
+
+    private int value;
+    Status(int value) {
+        this.value = value;
+    }
+
+    @Override
+    public int getValue() {
+        return value;
+    }
+}
+
+enum Type implements UserEnumColumn {
+    C(1), D(2);
+
+    private int value;
+    Type(int value) {
+        this.value = value;
+    }
+
+    @Override
+    public int getValue() {
+        return value;
+    }
 }

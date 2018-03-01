@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
 import com.google.gson.TypeAdapterFactory;
+import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
+import com.google.gson.internal.bind.SpinReflectiveTypeAdapterFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
@@ -11,6 +13,7 @@ import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -37,7 +40,7 @@ public abstract class JsonUtils {
     private static final Gson defaultGson;
 
     static {
-        defaultGson = baseBuilder(CollectionUtils.ofArray(DEFAULT_DATE_PATTERN, DEFAULT_LOCAL_DATE_PATTERN, DEFAULT_LOCAL_TIME_PATTERN)).create();
+        defaultGson = procGson(baseBuilder(CollectionUtils.ofArray(DEFAULT_DATE_PATTERN, DEFAULT_LOCAL_DATE_PATTERN, DEFAULT_LOCAL_TIME_PATTERN)).create());
     }
 
     private JsonUtils() {
@@ -79,7 +82,7 @@ public abstract class JsonUtils {
         if (excludesFieldsWithoutExpose)
             builder.excludeFieldsWithoutExposeAnnotation();
         String result;
-        Gson gson = builder.create();
+        Gson gson = procGson(builder.create());
 
         try {
             if (targetType != null) {
@@ -266,7 +269,7 @@ public abstract class JsonUtils {
             return null;
         }
         try {
-            return baseBuilder(datePattern).create().fromJson(json, token.getType());
+            return procGson(baseBuilder(datePattern).create()).fromJson(json, token.getType());
         } catch (Exception ex) {
             throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + token.toString() + " 对象!", ex);
         }
@@ -319,10 +322,23 @@ public abstract class JsonUtils {
             return null;
         }
         try {
-            return baseBuilder(datePattern).create().fromJson(json, clazz);
+            return procGson(baseBuilder(datePattern).create()).fromJson(json, clazz);
         } catch (Exception ex) {
             throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, json + " 无法转换为 " + clazz.getName() + " 对象!", ex);
         }
+    }
+
+    private static Gson procGson(Gson gson) {
+        Object[] factories = ClassUtils.getFieldValue(gson, "factories.list.elementData");
+        int idx = -1;
+        for (int i = factories.length - 1; i != -1; --i) {
+            if (null != factories[i] && ReflectiveTypeAdapterFactory.class.isAssignableFrom(factories[i].getClass())) {
+                idx = i;
+                break;
+            }
+        }
+        factories[idx] = new SpinReflectiveTypeAdapterFactory((ReflectiveTypeAdapterFactory) factories[idx]);
+        return gson;
     }
 
     private static GsonBuilder baseBuilder(String[] pattern) {

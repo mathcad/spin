@@ -10,7 +10,7 @@ buildscript {
         kotlin_version = '1.2.21'
 //        springBootVersion = '1.5.10.RELEASE'
         springBootVersion = '2.0.0.RC2'
-        junitJupiterVersion = '5.0.3'
+        junitJupiterVersion = '5.1.0'
     }
     repositories {
         mavenLocal()
@@ -22,7 +22,7 @@ buildscript {
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath('org.springframework:springloaded:1.2.8.RELEASE')
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.3'
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -86,7 +86,7 @@ dependencies {
 //    compile group: 'com.atomikos', name: 'transactions-api', version: '4.0.6'
 
 //    compile(project(":spin-starter-restful"))
-    compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.9-RC15'
+    compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.9-RC16'
 
     compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
 }

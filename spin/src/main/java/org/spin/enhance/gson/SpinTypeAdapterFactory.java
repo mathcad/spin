@@ -44,6 +44,7 @@ public class SpinTypeAdapterFactory implements TypeAdapterFactory {
             cls = (Class<MatchableTypeAdapter>) ClassUtils.getClass("org.spin.enhance.gson.adapter.HibernatePersistentBagTypeAdapter");
             typeAdapters.add(cls.getConstructor().newInstance());
         } catch (Exception ignore) {
+            // ignore
         }
         typeAdapters.add(new LocalDateTimeTypeAdapter(datePattern));
         typeAdapters.add(new LocalDateTypeAdapter(localDatePatern));

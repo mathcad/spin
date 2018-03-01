@@ -1,5 +1,5 @@
 description = '基础框架'
-version = '2.1.9-RC15'
+version = '2.1.9-RC16'
 def artifactId = 'spin'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -11,13 +11,13 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.3'
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
     }
 }
 
 ext {
-    springVersion = "5.0.3.RELEASE"
-    junitJupiterVersion = '5.0.3'
+    springVersion = "5.0.4.RELEASE"
+    junitJupiterVersion = '5.1.0'
 }
 
 junitPlatform {
