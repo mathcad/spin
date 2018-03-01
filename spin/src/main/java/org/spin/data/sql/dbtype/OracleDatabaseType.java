@@ -25,11 +25,12 @@ public class OracleDatabaseType implements DatabaseType {
         String sql = sqlSource.getTemplate();
         String order = pageRequest.parseOrder("D");
         if (StringUtils.isNotEmpty(order))
-            sql = "SELECT * FROM (" + sqlSource.getTemplate() + ") D " + order;
-        String pagedSql = sql;
-        pagedSql = "SELECT * FROM (SELECT O.*, ROWNUM RN FROM (" + sql + ") O WHERE ROWNUM > "
-            + pageRequest.getOffset() + ") WHERE RN <= "
-            + (pageRequest.getOffset() + pageRequest.getPageSize());
+            sql = String.format("SELECT * FROM (%s) D %s", sqlSource.getTemplate(), order);
+        String pagedSql;
+        pagedSql = String.format("SELECT * FROM (SELECT O.*, ROWNUM RN FROM (%s) O WHERE ROWNUM > %d) WHERE RN <= %d",
+            sql,
+            pageRequest.getOffset(),
+            pageRequest.getOffset() + pageRequest.getPageSize());
         ss.setTemplate(pagedSql);
         return ss;
     }

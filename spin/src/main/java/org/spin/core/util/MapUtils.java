@@ -390,7 +390,7 @@ public abstract class MapUtils {
         }
         boolean eq = true;
         for (Object key : keys) {
-            eq = eq && ObjectUtils.equal(map1.get(key), map2.get(key));
+            eq = eq && ObjectUtils.nullSafeEquals(map1.get(key), map2.get(key));
         }
         return eq;
     }

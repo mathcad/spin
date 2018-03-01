@@ -112,7 +112,7 @@ public abstract class ReflectionUtils {
                         }
                     }
                 }
-                if(!isFinded) {
+                if (!isFinded) {
                     searchType = searchType.getSuperclass();
                 }
             }
@@ -761,7 +761,7 @@ public abstract class ReflectionUtils {
          *
          * @param method the method to operate on
          */
-        void doWith(Method method) throws IllegalArgumentException, IllegalAccessException;
+        void doWith(Method method) throws IllegalAccessException;
     }
 
 
@@ -789,7 +789,7 @@ public abstract class ReflectionUtils {
          *
          * @param field the field to operate on
          */
-        void doWith(Field field) throws IllegalArgumentException, IllegalAccessException;
+        void doWith(Field field) throws IllegalAccessException;
     }
 
 

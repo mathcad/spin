@@ -39,6 +39,10 @@ import java.util.regex.Pattern;
 public class SQLManager {
     private static final Logger logger = LoggerFactory.getLogger(SQLManager.class);
     private static final Map<String, DataSource> DATA_SOURCE_MAP = new HashMap<>();
+    private static final String COUNT_SQL = "SELECT COUNT(1) FROM (%s) OUT_ALIAS";
+    private static final String WRAPPE_ERROR = "Entity wrappe error";
+    private static final String QUERY_ERROR = "执行查询出错";
+    private static final String SQL_LOG = "sqlId: %s%nsqlText: %s";
     private final Map<String, SQLLoader> loaderMap = new HashMap<>();
     private final Map<String, NamedParameterJdbcTemplate> nameJtMap = new HashMap<>();
     private final String primaryDataSourceName;
@@ -180,7 +184,7 @@ public class SQLManager {
             try {
                 return EntityUtils.wrapperMapToBean(entityClazz, list.get(0));
             } catch (Exception e) {
-                logger.error("Entity vrappe error", e);
+                logger.error(WRAPPE_ERROR, e);
             }
         }
         return null;
@@ -199,13 +203,12 @@ public class SQLManager {
     public List<Map<String, Object>> listAsMap(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getTemplate();
         if (logger.isDebugEnabled())
-            logger.debug(sqlId + ":\n" + sqlTxt);
+            logger.debug(String.format(SQL_LOG, sqlId, sqlTxt));
         try {
             return getCurrentNamedJt().queryForList(sqlTxt, paramMap);
         } catch (Exception ex) {
-            logger.error("执行查询出错：" + sqlId);
-            logger.error(sqlTxt);
-            throw new SimplifiedException("执行查询出错：", ex);
+            logger.error(String.format(SQL_LOG, sqlId, sqlTxt));
+            throw new SimplifiedException(QUERY_ERROR, ex);
         }
     }
 
@@ -217,19 +220,17 @@ public class SQLManager {
         SQLSource pageSql = getCurrentSqlLoader().getPagedSQL(sqlId, paramMap, pageRequest);
         List<Map<String, Object>> list;
         if (logger.isDebugEnabled())
-            logger.debug(sqlId + ":\n" + pageSql.getTemplate());
+            logger.debug(String.format(SQL_LOG, sqlId, sql.getTemplate()));
         try {
             list = getCurrentNamedJt().queryForList(pageSql.getTemplate(), paramMap);
         } catch (Exception ex) {
-            logger.error("执行查询出错：" + sqlId);
-            logger.error(pageSql.getTemplate());
-            throw new SimplifiedException("执行查询出错：", ex);
+            logger.error(String.format(SQL_LOG, sqlId, pageSql.getTemplate()));
+            throw new SimplifiedException(QUERY_ERROR, ex);
         }
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ") OUT_ALIAS";
-//        SqlParameterSource params = new MapSqlParameterSource(paramMap);
+        String totalSqlTxt = String.format(COUNT_SQL, sql.getTemplate());
         Long total = getCurrentNamedJt().queryForObject(totalSqlTxt, paramMap, Long.class);
-        return new Page<>(list, total != null ? total : 0, pageRequest.getPageSize());
+        return new Page<>(list, total, pageRequest.getPageSize());
     }
 
     /**
@@ -242,7 +243,7 @@ public class SQLManager {
             try {
                 res.add(EntityUtils.wrapperMapToBean(entityClazz, map));
             } catch (Exception e) {
-                logger.error("Entity vrappe error", e);
+                logger.error(WRAPPE_ERROR, e);
             }
         }
         return res;
@@ -258,7 +259,7 @@ public class SQLManager {
             try {
                 res.add(EntityUtils.wrapperMapToBean(entityClazz, map));
             } catch (Exception e) {
-                logger.error("Entity vrappe error", e);
+                logger.error(WRAPPE_ERROR, e);
             }
         }
         return res;
@@ -272,27 +273,25 @@ public class SQLManager {
         SQLSource pageSql = getCurrentSqlLoader().getPagedSQL(sqlId, paramMap, pageRequest);
         List<Map<String, Object>> list;
         if (logger.isDebugEnabled())
-            logger.debug(sqlId + ":\n" + pageSql.getTemplate());
+            logger.debug(String.format(SQL_LOG, sqlId, sql.getTemplate()));
         try {
             list = getCurrentNamedJt().queryForList(pageSql.getTemplate(), paramMap);
         } catch (Exception ex) {
-            logger.error("执行查询出错：" + sqlId);
-            logger.error(pageSql.getTemplate());
-            throw new SimplifiedException("执行查询出错：", ex);
+            logger.error(String.format(SQL_LOG, sqlId, pageSql.getTemplate()));
+            throw new SimplifiedException(QUERY_ERROR, ex);
         }
         List<T> res = new ArrayList<>();
         for (Map<String, Object> map : list) {
             try {
                 res.add(EntityUtils.wrapperMapToBean(entityClazz, map));
             } catch (Exception e) {
-                logger.error("Entity vrappe error", e);
+                logger.error(WRAPPE_ERROR, e);
             }
         }
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = "SELECT COUNT(1) FROM (" + sql.getTemplate() + ") OUT_ALIAS";
-//        SqlParameterSource params = new MapSqlParameterSource(paramMap);
+        String totalSqlTxt = String.format(COUNT_SQL, sql.getTemplate());
         Long total = getCurrentNamedJt().queryForObject(totalSqlTxt, paramMap, Long.class);
-        return new Page<>(res, total != null ? total : 0, pageRequest.getPageSize());
+        return new Page<>(res, total, pageRequest.getPageSize());
     }
 
     /**
@@ -314,11 +313,10 @@ public class SQLManager {
      */
     public Long count(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getTemplate();
-        sqlTxt = "SELECT COUNT(1) FROM (" + sqlTxt + ") OUT_ALIAS";
+        sqlTxt = String.format(COUNT_SQL, sqlTxt);
         if (logger.isDebugEnabled())
-            logger.debug(sqlId + ":\n" + sqlTxt);
-        Long number = getCurrentNamedJt().queryForObject(sqlTxt, paramMap, Long.class);
-        return number != null ? number : 0;
+            logger.debug(String.format(SQL_LOG, sqlId, sqlTxt));
+        return getCurrentNamedJt().queryForObject(sqlTxt, paramMap, Long.class);
     }
 
     /**
@@ -331,7 +329,7 @@ public class SQLManager {
     public int executeCUD(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getTemplate();
         if (logger.isDebugEnabled())
-            logger.debug(sqlId + ":\n" + sqlTxt);
+            logger.debug(String.format(SQL_LOG, sqlId, sqlTxt));
         return getCurrentNamedJt().update(sqlTxt, paramMap);
     }
 
@@ -342,7 +340,7 @@ public class SQLManager {
     public void batchExec(String sqlId, List<Map<String, ?>> argsMap) {
         String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, null).getTemplate();
         if (logger.isDebugEnabled())
-            logger.debug(sqlId + ":\n" + sqlTxt);
+            logger.debug(String.format(SQL_LOG, sqlId, sqlTxt));
         getCurrentNamedJt().batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
     }
 

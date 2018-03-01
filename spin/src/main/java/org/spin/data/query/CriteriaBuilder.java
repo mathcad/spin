@@ -575,7 +575,7 @@ public class CriteriaBuilder {
             }
             projectionList.add(Property.forName(tmp), aliasMap.getOrDefault(pf, pf));
 
-            String objFileds[] = pf.split("\\.");
+            String[] objFileds = pf.split("\\.");
             if (objFileds.length > 1) {
                 for (int idx = 0; idx != objFileds.length - 1; ++idx) {
                     StringBuilder join = new StringBuilder();

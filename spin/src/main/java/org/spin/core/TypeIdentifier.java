@@ -1,8 +1,8 @@
 package org.spin.core;
 
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.ObjectUtils;
 
-import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Modifier;
@@ -43,7 +43,7 @@ public class TypeIdentifier<T> {
     static Type getSuperclassTypeParameter(Class<?> subclass) {
         Type superclass = subclass.getGenericSuperclass();
         if (superclass instanceof Class) {
-            throw new RuntimeException("Missing type parameter.");
+            throw new SimplifiedException("Missing type parameter.");
         }
         ParameterizedType parameterized = (ParameterizedType) superclass;
         return TypeIdentifier.canonicalize(parameterized.getActualTypeArguments()[0]);
@@ -156,21 +156,6 @@ public class TypeIdentifier<T> {
             return true;
         }
         return false;
-    }
-
-    private static AssertionError buildUnexpectedTypeError(
-        Type token, Class<?>... expected) {
-
-        // Build exception message
-        StringBuilder exceptionMessage =
-            new StringBuilder("Unexpected type. Expected one of: ");
-        for (Class<?> clazz : expected) {
-            exceptionMessage.append(clazz.getName()).append(", ");
-        }
-        exceptionMessage.append("but got: ").append(token.getClass().getName())
-            .append(", for type token: ").append(token.toString()).append('.');
-
-        return new AssertionError(exceptionMessage.toString());
     }
 
     /**
@@ -299,7 +284,7 @@ public class TypeIdentifier<T> {
 
             ParameterizedType pa = (ParameterizedType) a;
             ParameterizedType pb = (ParameterizedType) b;
-            return ObjectUtils.equal(pa.getOwnerType(), pb.getOwnerType())
+            return ObjectUtils.nullSafeEquals(pa.getOwnerType(), pb.getOwnerType())
                 && pa.getRawType().equals(pb.getRawType())
                 && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
 
@@ -337,7 +322,7 @@ public class TypeIdentifier<T> {
         }
     }
 
-    private static final class GenericArrayTypeImpl implements GenericArrayType, Serializable {
+    private static final class GenericArrayTypeImpl implements GenericArrayType {
         private final Type componentType;
 
         public GenericArrayTypeImpl(Type componentType) {
@@ -351,7 +336,7 @@ public class TypeIdentifier<T> {
         @Override
         public boolean equals(Object o) {
             return o instanceof GenericArrayType
-                && ObjectUtils.equal(this, o);
+                && ObjectUtils.nullSafeEquals(this, o);
         }
 
         @Override
@@ -367,7 +352,7 @@ public class TypeIdentifier<T> {
         private static final long serialVersionUID = 0;
     }
 
-    private static final class ParameterizedTypeImpl implements ParameterizedType, Serializable {
+    private static final class ParameterizedTypeImpl implements ParameterizedType {
         private final Type ownerType;
         private final Type rawType;
         private final Type[] typeArguments;
@@ -440,7 +425,7 @@ public class TypeIdentifier<T> {
      * lower bounds. We only support what the Java 6 language needs - at most one
      * bound. If a lower bound is set, the upper bound must be Object.class.
      */
-    private static final class WildcardTypeImpl implements WildcardType, Serializable {
+    private static final class WildcardTypeImpl implements WildcardType {
         private final Type upperBound;
         private final Type lowerBound;
         private static final Type[] EMPTY_TYPE_ARRAY = new Type[]{};
@@ -480,7 +465,6 @@ public class TypeIdentifier<T> {
 
         @Override
         public int hashCode() {
-            // this equals Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds());
             return (lowerBound != null ? 31 + lowerBound.hashCode() : 1)
                 ^ (31 + upperBound.hashCode());
         }

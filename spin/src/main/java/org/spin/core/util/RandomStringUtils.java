@@ -26,6 +26,9 @@ public abstract class RandomStringUtils {
      */
     private static final Random RANDOM = ThreadLocalRandom.current();
 
+    private RandomStringUtils() {
+    }
+
     // Random
     //-----------------------------------------------------------------------
 

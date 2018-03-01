@@ -19,10 +19,7 @@ import java.util.function.Supplier;
  *
  * @author xuweinan
  */
-public abstract class SerializeUtils {
-
-    private SerializeUtils() {
-    }
+public interface SerializeUtils {
 
     /**
      * 将对象序列化为字节数组
@@ -30,7 +27,7 @@ public abstract class SerializeUtils {
      * @param object 对象
      * @return 字节数组
      */
-    public static byte[] serialize(Object object) {
+    static byte[] serialize(Object object) {
         FixedVector<byte[]> bytes = new FixedVector<>(1);
         serialize(object, ByteArrayOutputStream::new, os -> bytes.put(os.toByteArray()));
         return bytes.get();
@@ -42,7 +39,7 @@ public abstract class SerializeUtils {
      * @param object 对象
      * @param output 输出流提供者
      */
-    public static void serialize(Object object, Supplier<OutputStream> output) {
+    static void serialize(Object object, Supplier<OutputStream> output) {
         OutputStream os = output.get();
         try (ObjectOutputStream oos = os instanceof ObjectOutputStream ? (ObjectOutputStream) os : new ObjectOutputStream(os)) {
             oos.writeObject(object);
@@ -58,7 +55,7 @@ public abstract class SerializeUtils {
      * @param output 输出流提供者
      * @param proc   自定义处理逻辑
      */
-    public static <T extends OutputStream> void serialize(Object object, Supplier<T> output, Consumer<T> proc) {
+    static <T extends OutputStream> void serialize(Object object, Supplier<T> output, Consumer<T> proc) {
         T os = output.get();
         try (ObjectOutputStream oos = os instanceof ObjectOutputStream ? (ObjectOutputStream) os : new ObjectOutputStream(os)) {
             oos.writeObject(object);
@@ -75,7 +72,7 @@ public abstract class SerializeUtils {
      * @param <T>   类型参数
      * @return 反序列化的对象
      */
-    public static <T> T deserialize(byte[] bytes) {
+    static <T> T deserialize(byte[] bytes) {
         if (bytes == null) {
             return null;
         }
@@ -89,7 +86,7 @@ public abstract class SerializeUtils {
      * @param <T>   对象类型参数
      * @return 反序列化的对象
      */
-    public static <T> T deserialize(Supplier<InputStream> input) {
+    static <T> T deserialize(Supplier<InputStream> input) {
         if (null == input) {
             return null;
         }

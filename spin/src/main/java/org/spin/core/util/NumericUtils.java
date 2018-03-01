@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
  * @author xuweinan
  */
 public abstract class NumericUtils {
+    private static final String UNKNOW_NUM = "无法识别的数字格式";
     private static Pattern numPattern = Pattern.compile("^([-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]+)[^-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]{0,2}$");
     private static Pattern pureNum = Pattern.compile("^-?\\d+$|^\\d+\\.\\d+$");
     private static String[] scales = {"亿", "万", "千", "仟", "百", "佰", "十", "拾"};
@@ -248,7 +249,7 @@ public abstract class NumericUtils {
                 case "亿":
                     parts = tmp.split(scale);
                     if (parts.length > 2)
-                        throw new SimplifiedException("无法识别的数字格式");
+                        throw new SimplifiedException(UNKNOW_NUM);
                     h = decodeNum(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 100000000L;
@@ -256,7 +257,7 @@ public abstract class NumericUtils {
                 case "万":
                     parts = tmp.split(scale);
                     if (parts.length > 2)
-                        throw new SimplifiedException("无法识别的数字格式");
+                        throw new SimplifiedException(UNKNOW_NUM);
                     h = decodeNum(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 10000L;
@@ -265,7 +266,7 @@ public abstract class NumericUtils {
                 case "仟":
                     parts = tmp.split(scale);
                     if (parts.length > 2)
-                        throw new SimplifiedException("无法识别的数字格式");
+                        throw new SimplifiedException(UNKNOW_NUM);
                     h = parts[0].length() > 1 ? Long.parseLong(parts[0]) : numMap.get(parts[0]);
 
                     tmp = parts.length > 1 ? parts[1] : null;
@@ -275,7 +276,7 @@ public abstract class NumericUtils {
                 case "佰":
                     parts = tmp.split(scale);
                     if (parts.length > 2)
-                        throw new SimplifiedException("无法识别的数字格式");
+                        throw new SimplifiedException(UNKNOW_NUM);
                     h = parts[0].length() > 1L ? Long.parseLong(parts[0]) : numMap.get(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 100L;
@@ -284,14 +285,14 @@ public abstract class NumericUtils {
                 case "拾":
                     parts = tmp.split(scale);
                     if (parts.length > 2)
-                        throw new SimplifiedException("无法识别的数字格式");
+                        throw new SimplifiedException(UNKNOW_NUM);
                     h = tmp.startsWith("十") ? 1L : (parts[0].length() > 1 ? Long.parseLong(parts[0]) : numMap.get(parts[0]));
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 10L;
                     break;
                 default:
                     if (!numMap.containsKey(tmp))
-                        throw new SimplifiedException("无法识别的数字格式");
+                        throw new SimplifiedException(UNKNOW_NUM);
                     resN += numMap.get(tmp);
                     tmp = null;
             }

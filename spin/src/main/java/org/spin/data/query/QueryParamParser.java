@@ -215,12 +215,6 @@ public class QueryParamParser {
 
     private Criterion createCriterion(List<String> qPath, String op, Object value) {
         String propName = StringUtils.join(qPath, ".");
-//        if (qPath.size() == 2) {
-//            propName = qPath.get(0) + "." + qPath.get(1);
-//        } else if (qPath.size() == 1)
-//            propName = qPath.get(0);
-//        else
-//            throw new SimplifiedException("查询字段最多2层:" + qPath);
         Criterion ct = null;
         switch (op) {
             case "eq":

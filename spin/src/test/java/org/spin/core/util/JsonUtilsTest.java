@@ -52,6 +52,12 @@ public class JsonUtilsTest {
         E e = JsonUtils.fromJson(json, E.class);
         assertTrue(true);
     }
+
+    @Test
+    public void testStringFormat() {
+        System.out.println(String.format("sqlId: %s%nsqlText: %s", "aaaaa", "bbbbb"));
+        assertTrue(true);
+    }
 }
 
 class E extends AbstractEntity {

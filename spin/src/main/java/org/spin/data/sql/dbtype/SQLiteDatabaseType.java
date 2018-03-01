@@ -24,8 +24,11 @@ public class SQLiteDatabaseType implements DatabaseType {
         SQLSource ss = new SQLSource();
         ss.setId(sqlSource.getId());
         String order = pageRequest.parseOrder("out_alias");
-        String pagedSql = "SELECT * FROM (" + sqlSource.getTemplate() + ") AS out_alias " + (StringUtils.isBlank(order) ? "" : order);
-        pagedSql += " LIMIT " + pageRequest.getPageSize() + " OFFSET " + pageRequest.getOffset();
+        String pagedSql = String.format("SELECT * FROM (%s) AS out_alias %s LIMIT %d OFFSET %d",
+            sqlSource.getTemplate(),
+            StringUtils.isBlank(order) ? "" : order,
+            pageRequest.getPageSize(),
+            pageRequest.getOffset());
         ss.setTemplate(pagedSql);
         return ss;
     }

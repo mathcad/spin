@@ -10,6 +10,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class PinyinUtils {
+
+    private PinyinUtils() {
+    }
+
     /**
      * Description : 根据汉字获得此汉字的拼音
      */
@@ -30,7 +34,6 @@ public abstract class PinyinUtils {
 
         // 设置输出格式
         HanyuPinyinOutputFormat formatParam = new HanyuPinyinOutputFormat();
-//        formatParam.setCaseType(HanyuPinyinCaseType.UPPERCASE);
         formatParam.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
         formatParam.setVCharType(HanyuPinyinVCharType.WITH_V);
 

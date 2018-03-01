@@ -53,6 +53,9 @@ public abstract class StringUtils {
 
     public static final int INDEX_NOT_FOUND = -1;
 
+    private StringUtils() {
+    }
+
     //---------------------------------------------------------------------
     // General convenience methods for working with Strings
     //---------------------------------------------------------------------
@@ -344,7 +347,7 @@ public abstract class StringUtils {
      */
     public static String trimAllWhitespace(CharSequence str) {
         if (isEmpty(str)) {
-            return str.toString();
+            return null == str ? null : "";
         }
         StringBuilder sb = new StringBuilder();
         str.chars().filter(c -> !isWhitespace(c)).forEach(sb::append);
@@ -360,7 +363,7 @@ public abstract class StringUtils {
      */
     public static String trimLeadingWhitespace(CharSequence str) {
         if (isEmpty(str)) {
-            return str.toString();
+            return null == str ? null : "";
         }
         StringBuilder sb = new StringBuilder(str);
         while (sb.length() > 0 && isWhitespace(sb.charAt(0))) {
@@ -378,7 +381,7 @@ public abstract class StringUtils {
      */
     public static String trimTrailingWhitespace(CharSequence str) {
         if (isEmpty(str)) {
-            return str.toString();
+            return null == str ? null : "";
         }
         StringBuilder sb = new StringBuilder(str);
         while (sb.length() > 0 && isWhitespace(sb.charAt(sb.length() - 1))) {
@@ -396,7 +399,7 @@ public abstract class StringUtils {
      */
     public static String trimLeadingCharacter(CharSequence str, char leadingCharacter) {
         if (isEmpty(str)) {
-            return str.toString();
+            return null == str ? null : "";
         }
         StringBuilder sb = new StringBuilder(str);
         while (sb.length() > 0 && sb.charAt(0) == leadingCharacter) {
@@ -414,7 +417,7 @@ public abstract class StringUtils {
      */
     public static String trimTrailingCharacter(CharSequence str, char trailingCharacter) {
         if (isEmpty(str)) {
-            return str.toString();
+            return null == str ? null : "";
         }
         StringBuilder sb = new StringBuilder(str);
         while (sb.length() > 0 && sb.charAt(sb.length() - 1) == trailingCharacter) {
@@ -857,11 +860,7 @@ public abstract class StringUtils {
 
         int tmp;
         for (String search : searchStrs) {
-            if (search == null) {
-                continue;
-            }
-            tmp = str.indexOf(search);
-            if (tmp == -1) {
+            if (search == null || (tmp = str.indexOf(search)) == -1) {
                 continue;
             }
 
@@ -2736,7 +2735,7 @@ public abstract class StringUtils {
         // first path element. This is necessary to correctly parse paths like
         // "file:core/../core/io/Resource.class", where the ".." should just
         // strip the first "core" directory while keeping the "file:" prefix.
-        int prefixIndex = pathToUse.indexOf(":");
+        int prefixIndex = pathToUse.indexOf(':');
         String prefix = "";
         if (prefixIndex != -1) {
             prefix = pathToUse.substring(0, prefixIndex + 1);
@@ -2804,18 +2803,18 @@ public abstract class StringUtils {
      */
     public static Locale parseLocaleString(String localeString) {
         String[] parts = tokenizeToStringArray(localeString, "_ ", false, false);
-        String language = (parts.length > 0 ? parts[0] : "");
-        String country = (parts.length > 1 ? parts[1] : "");
+        String language = (null != parts && parts.length > 0 ? parts[0] : "");
+        String country = (null != parts && parts.length > 1 ? parts[1] : "");
         validateLocalePart(language);
         validateLocalePart(country);
         String variant = "";
-        if (parts.length > 2) {
+        if (null != parts && parts.length > 2) {
             // There is definitely a variant, and it is everything after the country
             // code sans the separator between the country code and the variant.
             int endIndexOfCountryCode = localeString.indexOf(country, language.length()) + country.length();
             // Strip off any leading '_' and whitespace, what's left is the variant.
             variant = trimLeadingWhitespace(localeString.substring(endIndexOfCountryCode));
-            if (variant.startsWith("_")) {
+            if (null != variant && variant.startsWith("_")) {
                 variant = trimLeadingCharacter(variant, '_');
             }
         }
@@ -3447,7 +3446,7 @@ public abstract class StringUtils {
      * @see #getBytesUnchecked(String, String)
      * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
      */
-    public static byte[] getBytesIso8859_1(final String string) {
+    public static byte[] getBytesLatin1(final String string) {
         return getBytes(string, StandardCharsets.ISO_8859_1);
     }
 
@@ -3613,7 +3612,7 @@ public abstract class StringUtils {
      *                              required by the Java platform specification.
      * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
      */
-    public static String newStringIso8859_1(final byte[] bytes) {
+    public static String newStringLatin1(final byte[] bytes) {
         return new String(bytes, StandardCharsets.ISO_8859_1);
     }
 
@@ -3734,7 +3733,7 @@ public abstract class StringUtils {
      * @return 大写字母
      */
     public static char upper(char c) {
-        return (char) (c > 96 && c < 123 ? c ^ 32 : c);
+        return c > 96 && c < 123 ? (char) (c ^ 32) : c;
     }
 
     /**
@@ -3744,7 +3743,7 @@ public abstract class StringUtils {
      * @return 小写字母
      */
     public static char lower(char c) {
-        return (char) (c > 64 && c < 91 ? c ^ 32 : c);
+        return c > 64 && c < 91 ? (char) (c ^ 32) : c;
     }
 
     /**

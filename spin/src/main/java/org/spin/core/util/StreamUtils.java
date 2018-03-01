@@ -13,11 +13,9 @@ import java.util.stream.StreamSupport;
  *
  * @author xuweinan
  */
-public abstract class StreamUtils {
-    private StreamUtils() {
-    }
+public interface StreamUtils {
 
-    public static <T> Stream<T> enumerationAsStream(Enumeration<T> e) {
+    static <T> Stream<T> enumerationAsStream(Enumeration<T> e) {
         return StreamSupport.stream(
             new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED) {
 

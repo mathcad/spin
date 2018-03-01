@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class QueryPredicate implements Serializable {
     private static final long serialVersionUID = 1381761812232116307L;
-    private static final String salt = "54b4ad84eddb38";
+    private static final String SALT = "54b4ad84eddb38";
 
     private Map<String, String> conditions = new HashMap<>();
     private String sort = null;
@@ -25,7 +25,7 @@ public class QueryPredicate implements Serializable {
     public String calcSignature() {
         StringBuilder msg = new StringBuilder();
         conditions.entrySet().stream().map(entry -> entry.getKey() + entry.getValue()).sorted().forEach(msg::append);
-        msg.append(salt);
+        msg.append(SALT);
         return DigestUtils.md5Hex(msg.toString());
     }
 

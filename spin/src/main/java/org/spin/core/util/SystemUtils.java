@@ -1,5 +1,8 @@
 package org.spin.core.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 
 /**
@@ -8,6 +11,9 @@ import java.io.File;
  * @author xuweinan
  */
 public abstract class SystemUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(SystemUtils.class);
+
     /**
      * The prefix String for all Windows OS.
      */
@@ -36,6 +42,8 @@ public abstract class SystemUtils {
      * The System property key for the Java home directory.
      */
     private static final String JAVA_HOME_KEY = "java.home";
+
+    private static final String MAC_OS_X = "Mac OS X";
 
     /**
      * <p>
@@ -1013,7 +1021,7 @@ public abstract class SystemUtils {
      *
      * @since 2.0
      */
-    public static final boolean IS_OS_MAC_OSX = getOSMatchesName("Mac OS X");
+    public static final boolean IS_OS_MAC_OSX = getOSMatchesName(MAC_OS_X);
 
     /**
      * <p>
@@ -1025,7 +1033,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_CHEETAH = getOSMatches("Mac OS X", "10.0");
+    public static final boolean IS_OS_MAC_OSX_CHEETAH = getOSMatches(MAC_OS_X, "10.0");
 
     /**
      * <p>
@@ -1037,7 +1045,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_PUMA = getOSMatches("Mac OS X", "10.1");
+    public static final boolean IS_OS_MAC_OSX_PUMA = getOSMatches(MAC_OS_X, "10.1");
 
     /**
      * <p>
@@ -1049,7 +1057,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_JAGUAR = getOSMatches("Mac OS X", "10.2");
+    public static final boolean IS_OS_MAC_OSX_JAGUAR = getOSMatches(MAC_OS_X, "10.2");
 
     /**
      * <p>
@@ -1061,7 +1069,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_PANTHER = getOSMatches("Mac OS X", "10.3");
+    public static final boolean IS_OS_MAC_OSX_PANTHER = getOSMatches(MAC_OS_X, "10.3");
 
     /**
      * <p>
@@ -1073,7 +1081,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_TIGER = getOSMatches("Mac OS X", "10.4");
+    public static final boolean IS_OS_MAC_OSX_TIGER = getOSMatches(MAC_OS_X, "10.4");
 
     /**
      * <p>
@@ -1085,7 +1093,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_LEOPARD = getOSMatches("Mac OS X", "10.5");
+    public static final boolean IS_OS_MAC_OSX_LEOPARD = getOSMatches(MAC_OS_X, "10.5");
 
     /**
      * <p>
@@ -1097,7 +1105,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_SNOW_LEOPARD = getOSMatches("Mac OS X", "10.6");
+    public static final boolean IS_OS_MAC_OSX_SNOW_LEOPARD = getOSMatches(MAC_OS_X, "10.6");
 
     /**
      * <p>
@@ -1109,7 +1117,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_LION = getOSMatches("Mac OS X", "10.7");
+    public static final boolean IS_OS_MAC_OSX_LION = getOSMatches(MAC_OS_X, "10.7");
 
     /**
      * <p>
@@ -1121,7 +1129,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_MOUNTAIN_LION = getOSMatches("Mac OS X", "10.8");
+    public static final boolean IS_OS_MAC_OSX_MOUNTAIN_LION = getOSMatches(MAC_OS_X, "10.8");
 
     /**
      * <p>
@@ -1133,7 +1141,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_MAVERICKS = getOSMatches("Mac OS X", "10.9");
+    public static final boolean IS_OS_MAC_OSX_MAVERICKS = getOSMatches(MAC_OS_X, "10.9");
 
     /**
      * <p>
@@ -1145,7 +1153,7 @@ public abstract class SystemUtils {
      *
      * @since 3.4
      */
-    public static final boolean IS_OS_MAC_OSX_YOSEMITE = getOSMatches("Mac OS X", "10.10");
+    public static final boolean IS_OS_MAC_OSX_YOSEMITE = getOSMatches(MAC_OS_X, "10.10");
 
     /**
      * <p>
@@ -1483,7 +1491,7 @@ public abstract class SystemUtils {
             return System.getProperty(property);
         } catch (final SecurityException ex) {
             // we are not allowed to look at this property
-            System.err.println("Caught a SecurityException reading the system property '" + property
+            logger.error("Caught a SecurityException reading the system property '" + property
                 + "'; the SystemUtils property value will default to null.");
             return "";
         }

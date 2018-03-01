@@ -1082,10 +1082,6 @@ public abstract class ObjectUtils {
         return obj == null ? nullStr : obj.toString();
     }
 
-    public static boolean equal(Object a, Object b) {
-        return a == b || (a != null && a.equals(b));
-    }
-
     /**
      * 计算对象长度，如果是字符串调用其length函数，集合类调用其size函数，数组调用其length属性，其他可遍历对象遍历计算长度<br>
      * 支持的类型包括：
