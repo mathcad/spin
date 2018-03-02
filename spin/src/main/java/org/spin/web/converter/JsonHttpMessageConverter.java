@@ -108,7 +108,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
     @Override
     protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
-        throws IOException, HttpMessageNotReadableException {
+        throws IOException {
 
         TypeToken<?> token = getTypeToken(clazz);
         return readTypeToken(token, inputMessage);
@@ -116,7 +116,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
     @Override
     public Object read(Type type, Class<?> contextClass, HttpInputMessage inputMessage)
-        throws IOException, HttpMessageNotReadableException {
+        throws IOException {
 
         TypeToken<?> token = getTypeToken(type);
         return readTypeToken(token, inputMessage);

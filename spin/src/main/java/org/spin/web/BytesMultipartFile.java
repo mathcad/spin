@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 
 /**
@@ -56,9 +57,9 @@ public class BytesMultipartFile implements MultipartFile, Serializable {
             return "";
         }
         // Check for Unix-style path
-        int unixSep = filename.lastIndexOf("/");
+        int unixSep = filename.lastIndexOf('/');
         // Check for Windows-style path
-        int winSep = filename.lastIndexOf("\\");
+        int winSep = filename.lastIndexOf('\\');
         // Cut off at latest possible point
         int pos = (winSep > unixSep ? winSep : unixSep);
         if (pos != -1) {
@@ -96,7 +97,9 @@ public class BytesMultipartFile implements MultipartFile, Serializable {
     }
 
     @Override
-    public void transferTo(File dest) throws IOException, IllegalStateException {
-        new FileOutputStream(dest).write(fileContent);
+    public void transferTo(File dest) throws IOException {
+        try (OutputStream os = new FileOutputStream(dest)) {
+            os.write(fileContent);
+        }
     }
 }

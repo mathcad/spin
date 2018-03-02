@@ -39,6 +39,9 @@ public class FileOperator {
     private static final String CREATETIME = "createTime";
     private static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("/yyyyMM/ddHHmmss");
 
+    private FileOperator() {
+    }
+
     /**
      * 上传文件,默认上传到Env.FileUploadDir目录
      */
@@ -47,10 +50,9 @@ public class FileOperator {
         if (null != baseDir && baseDir.length > 0 && StringUtils.isNotBlank(baseDir[0]))
             bDir = baseDir[0];
         String fileName = file.getOriginalFilename();
-        String extention = compress ? ".zip" : (fileName.contains(".") ? fileName.substring(fileName.lastIndexOf('.')
-        ).toLowerCase() : "");
+        String extention = compress ? ".zip" : (fileName.contains(".") ? fileName.substring(fileName.lastIndexOf('.')).toLowerCase() : "");
         String storeName = generateFileName();
-        String path = storeName.substring(0, storeName.lastIndexOf("/") + 1);
+        String path = storeName.substring(0, storeName.lastIndexOf('/') + 1);
         File uploadDir = new File(bDir + path);
         if (!uploadDir.exists() && !uploadDir.mkdirs() || uploadDir.exists() && !uploadDir.isDirectory()) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "创建文件夹失败");
@@ -58,10 +60,10 @@ public class FileOperator {
         String fullName = bDir + storeName + extention;
         File storedFile = new File(fullName);
         if (compress) {
-            ZipOutputStream zipOutStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(fullName)));
-            zipOutStream.putNextEntry(new ZipEntry(fileName));
-            FileCopyUtils.copy(file.getInputStream(), zipOutStream);
-            zipOutStream.close();
+            try (ZipOutputStream zipOutStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(fullName)))) {
+                zipOutStream.putNextEntry(new ZipEntry(fileName));
+                FileCopyUtils.copy(file.getInputStream(), zipOutStream);
+            }
         } else
             file.transferTo(storedFile);
         UploadResult rs = new UploadResult();
@@ -80,7 +82,7 @@ public class FileOperator {
      */
     public static List<UploadResult> upload(List<MultipartFile> files, boolean compress, String... baseDir) {
         List<UploadResult> result = new ArrayList<>();
-        if (null == files || 0 == files.size()) {
+        if (null == files || files.isEmpty()) {
             return result;
         }
         for (MultipartFile file : files) {
@@ -100,7 +102,7 @@ public class FileOperator {
     public static UploadResult saveFileFromUrl(String url) {
         UploadResult rs = new UploadResult();
         String storeName = generateFileName();
-        String path = storeName.substring(0, storeName.lastIndexOf("/") + 1);
+        String path = storeName.substring(0, storeName.lastIndexOf('/') + 1);
         File uploadDir = new File(SpinContext.FILE_UPLOAD_DIR + path);
         if (!uploadDir.exists() && !uploadDir.mkdirs() || uploadDir.exists() && !uploadDir.isDirectory()) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "创建文件夹失败");

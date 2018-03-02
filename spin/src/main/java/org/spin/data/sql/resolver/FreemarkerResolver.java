@@ -63,5 +63,6 @@ public class FreemarkerResolver implements TemplateResolver {
 
     public void setCharset(String charset) {
         this.charset = charset;
+        configuration.setEncoding(Locale.CHINESE, charset);
     }
 }

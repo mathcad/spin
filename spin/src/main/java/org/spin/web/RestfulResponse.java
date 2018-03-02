@@ -10,14 +10,14 @@ import org.spin.core.throwable.SimplifiedException;
  * @author xuweinan
  */
 public class RestfulResponse {
-    private int code = -1;
+    private int code;
     private String message;
     private Object data;
 
     private RestfulResponse(ErrorCode errorCode) {
-        ErrorCode code = errorCode.getCode() >= 400 || errorCode.getCode() == 200 ? errorCode : ErrorCode.INTERNAL_ERROR;
-        this.code = code.getCode();
-        this.message = code.getDesc();
+        ErrorCode c = errorCode.getCode() >= 400 || errorCode.getCode() == 200 ? errorCode : ErrorCode.INTERNAL_ERROR;
+        this.code = c.getCode();
+        this.message = c.getDesc();
     }
 
     private RestfulResponse(int code, String message, Object data) {

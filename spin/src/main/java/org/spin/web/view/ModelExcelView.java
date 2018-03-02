@@ -175,7 +175,7 @@ public class ModelExcelView extends AbstractView {
                 cell.setCellStyle(columnHeadStyle);
                 if (FileType.Document.XLSX.equals(fileType))
                     cell.setCellValue(new XSSFRichTextString(col.getHeader()));
-                else if (FileType.Document.XLSX.equals(fileType))
+                else if (FileType.Document.XLS.equals(fileType))
                     cell.setCellValue(new HSSFRichTextString(col.getHeader()));
 
                 columnStyleMap.put(col.getDataIndex(), getDataCellStyle(workbook, col.getDataType()));
@@ -289,7 +289,8 @@ public class ModelExcelView extends AbstractView {
         } else if (o instanceof TemporalAccessor) {
             try {
                 t = DateUtils.toDate((TemporalAccessor) o);
-            } catch (Exception e) {
+            } catch (Exception ignore) {
+                // ignore
             }
         }
         if (null != t) {
@@ -317,7 +318,7 @@ public class ModelExcelView extends AbstractView {
                         cell.setCellValue("否");
                     }
                 } else {
-                    if (o.toString().toLowerCase().equals("false") || o.toString().toLowerCase().equals("0")) {
+                    if (o.toString().equalsIgnoreCase("false") || o.toString().equals("0")) {
                         cell.setCellValue("否");
                     } else {
                         cell.setCellValue("是");

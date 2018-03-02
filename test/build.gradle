@@ -86,7 +86,8 @@ dependencies {
 //    compile group: 'com.atomikos', name: 'transactions-api', version: '4.0.6'
 
 //    compile(project(":spin-starter-restful"))
-    compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.9-RC16'
+    compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.10.RC1'
+    compile group: 'com.ibeetl', name: 'beetl', version: '2.7.27'
 
     compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
 }
