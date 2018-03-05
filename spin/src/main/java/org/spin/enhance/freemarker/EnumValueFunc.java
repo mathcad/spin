@@ -16,7 +16,7 @@ public class EnumValueFunc implements TemplateMethodModelEx {
     @Override
     public Object exec(List arguments) {
         if (arguments.size() != 3)
-            throw new IllegalArgumentException("ValidValue 参数个数不正确（需3个）");
+            throw new IllegalArgumentException("E函数参数个数不正确（需3个）");
         String enumName = arguments.get(0).toString();
         String field = arguments.get(1).toString();
         String asField = arguments.get(2).toString();

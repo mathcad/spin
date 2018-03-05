@@ -16,21 +16,26 @@ public class BeetlTest {
     @Test
     public void testTmpl() {
         String template = "```js\n" +
-            "var table = '';\n" +
-            "var v = value;\n" +
-            "switch (v) {\n" +
+            "switch (value) {\n" +
             "    case 1:\n" +
-            "        table = 'demo1';\n" +
+            "        table = 'demo_a';\n" +
             "        break;\n" +
             "    case 2:\n" +
-            "        table=\"demo2\";\n" +
+            "        table=\"demo_b\";\n" +
             "        break;\n" +
+            "    default:\n" +
+            "        table=\"undefined\";\n" +
             "}\n" +
             "```\n" +
-            "select ${enum('org.spin.data.sql.BeetlTest$Type', 'a.type', 'type')} from ${table};";
+            "select\n" +
+            "  ${enum('org.spin.data.sql.BeetlTest$Type', 'a.type', 'type')}\n" +
+            "from ${table} t\n" +
+            "where 1=1\n" +
+            "  ${valid(table, \"and t.name like '\" + table + \"'\")}\n" +
+            "  ${has(flag) ? \"and t.flag = \" + flag}\n";
         System.out.println(template);
         TemplateResolver resolver = new BeetlResolver();
-        System.out.println(resolver.resolve("1", template, MapUtils.ofMap("value", 1)));
+        System.out.println(resolver.resolve("1", template, MapUtils.ofMap("value", 3, "flag", true), null));
     }
 
     public enum Type implements UserEnumColumn {

@@ -1,5 +1,6 @@
 package org.spin.data.sql.resolver;
 
+import org.spin.data.core.DatabaseType;
 import org.spin.enhance.freemarker.ConcurrentStrTemplateLoader;
 import org.spin.enhance.freemarker.EnumValueFunc;
 import org.spin.enhance.freemarker.ValidValueFunc;
@@ -39,7 +40,7 @@ public class FreemarkerResolver implements TemplateResolver {
     }
 
     @Override
-    public String resolve(String id, String templateSrc, Map<String, ?> model) {
+    public String resolve(String id, String templateSrc, Map<String, ?> model, DatabaseType dbType) {
         this.strTemplateLoader.putTemplate(id, templateSrc);
         Template template;
         try {

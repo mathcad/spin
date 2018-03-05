@@ -1,5 +1,7 @@
 package org.spin.data.sql.resolver;
 
+import org.spin.data.core.DatabaseType;
+
 import java.util.Map;
 
 /**
@@ -9,7 +11,6 @@ import java.util.Map;
  * @author xuweinan
  * @version 1.0
  */
-@FunctionalInterface
 public interface TemplateResolver {
 
     /**
@@ -18,7 +19,8 @@ public interface TemplateResolver {
      * @param id       模板id
      * @param template 模板对象
      * @param model    数据
+     * @param dbType   数据库类型
      * @return 解析后的文本
      */
-    String resolve(String id, String template, Map<String, ?> model);
+    String resolve(String id, String template, Map<String, ?> model, DatabaseType dbType);
 }

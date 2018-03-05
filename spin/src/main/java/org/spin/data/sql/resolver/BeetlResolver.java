@@ -8,6 +8,8 @@ import org.beetl.core.resource.StringTemplateResourceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.StringUtils;
+import org.spin.data.core.DatabaseType;
 import org.spin.data.core.UserEnumColumn;
 
 import java.io.IOException;
@@ -38,9 +40,29 @@ public class BeetlResolver implements TemplateResolver {
         configuration.setStatementStart("```js");
         configuration.setStatementEnd("```");
         groupTemplate = new GroupTemplate(resourceLoader, configuration);
+
+        groupTemplate.registerFunction("valid", (params, contex) -> {
+            if (params.length != 2 && params.length != 3) {
+                throw new IllegalArgumentException("valid函数参数个数不正确（需2个或3个）");
+            }
+            Object cond = params[0];
+            String yes = params[1].toString();
+            String no = params.length == 3 ? params[2].toString() : "";
+            if (null == cond) {
+                return no;
+            }
+            if (cond instanceof CharSequence) {
+                return StringUtils.isEmpty(cond.toString()) ? no : yes;
+            }
+            if (cond instanceof Boolean) {
+                return ((Boolean) cond) ? yes : no;
+            }
+            return yes;
+        });
         groupTemplate.registerFunction("enum", (params, contex) -> {
-            if (params.length != 3)
-                throw new IllegalArgumentException("ValidValue 参数个数不正确（需3个）");
+            if (params.length != 3) {
+                throw new IllegalArgumentException("enum函数参数个数不正确（需3个）");
+            }
             String enumName = params[0].toString();
             String field = params[1].toString();
             String asField = params[2].toString();
@@ -61,13 +83,13 @@ public class BeetlResolver implements TemplateResolver {
             } else {
                 throw new SimplifiedException(enumName + "不是有效的枚举类型(请检查是否实现了UserEnumColumn接口)");
             }
-            sb.append("END) AS ").append(asField);
+            sb.append(" END) AS ").append(asField);
             return sb.toString();
         });
     }
 
     @Override
-    public String resolve(String id, String templateSrc, Map<String, ?> model) {
+    public String resolve(String id, String templateSrc, Map<String, ?> model, DatabaseType dbType) {
         Template template = groupTemplate.getTemplate(templateSrc);
 
         for (Map.Entry<String, ?> e : model.entrySet()) {

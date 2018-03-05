@@ -16,6 +16,9 @@ import java.net.URL;
  */
 public abstract class FileSystemSQLLoader extends GenericSqlLoader {
 
+    private volatile boolean absolutePath = true;
+    private final Object lock = new Object();
+
     @Override
     public boolean isModified(String id) {
         File file = this.getFile(id);
@@ -27,30 +30,69 @@ public abstract class FileSystemSQLLoader extends GenericSqlLoader {
     }
 
     /**
-     * 根据ID与扩展名读取文件
+     * 根据ID(路径)读取文件
+     *
+     * @param id SQL的id
+     * @return SQL文件
      */
     protected File getFile(String id) {
         String cmdFileName = id.substring(0, id.lastIndexOf('.'));
-        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + this.getDbType().getProductName() + "/" + cmdFileName + getExtension();
-        URL url;
+        String pathDbSep = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + fileDelimiter)) + this.getDbType().getProductName() + fileDelimiter + cmdFileName + getExtension();
+        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + fileDelimiter)) + cmdFileName + getExtension();
         try {
-            url = this.getClass().getResource(path);
-            if (null == url) {
-                path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + "/")) + cmdFileName + getExtension();
-                url = this.getClass().getResource(path);
-            }
-            if (null == url) {
-                File file = new File(path);
+            if (absolutePath) {
+                File file = new File(pathDbSep);
                 if (file.exists()) {
                     return file;
                 } else {
-                    throw new FileNotFoundException("sql模板文件不存在");
+                    file = new File(path);
+                    if (file.exists()) {
+                        return file;
+                    } else {
+                        URL url = this.getClass().getResource(pathDbSep);
+                        if (null == url) {
+                            url = this.getClass().getResource(path);
+                        }
+                        if (null == url) {
+                            throw new FileNotFoundException("sql模板文件不存在");
+                        }
+                        synchronized (lock) {
+                            absolutePath = false;
+                        }
+                        return new File(url.getPath());
+                    }
                 }
+            } else {
+                URL url = this.getClass().getResource(pathDbSep);
+                if (null == url) {
+                    url = this.getClass().getResource(path);
+                }
+                if (null == url) {
+                    File file = new File(pathDbSep);
+                    if (file.exists()) {
+                        synchronized (lock) {
+                            absolutePath = true;
+                        }
+                        return file;
+                    } else {
+                        file = new File(path);
+                        if (file.exists()) {
+                            synchronized (lock) {
+                                absolutePath = true;
+                            }
+                            return file;
+                        } else {
+                            throw new FileNotFoundException("sql模板文件不存在");
+                        }
+                    }
+                }
+                return new File(url.getPath());
             }
         } catch (Exception e) {
-            throw new SimplifiedException("加载sql模板文件异常:[" + path + "]", e);
+            throw new SimplifiedException("加载sql模板文件异常:[" + pathDbSep + "]", e);
         }
-        return new File(url.getPath());
+
+
     }
 
     protected abstract String getExtension();

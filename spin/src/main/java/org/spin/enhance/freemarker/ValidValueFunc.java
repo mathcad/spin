@@ -45,7 +45,7 @@ public class ValidValueFunc implements TemplateMethodModelEx {
                 valid = ObjectUtils.nullSafeEquals(o1, o);
             }
         } else
-            throw new SimplifiedException("ValidValue 参数个数不正确（需1,2个）");
+            throw new SimplifiedException("V函数参数个数不正确（需1,2个）");
 
         return valid;
     }

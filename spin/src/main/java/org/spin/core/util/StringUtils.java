@@ -2368,6 +2368,62 @@ public abstract class StringUtils {
     }
 
     /**
+     * 测试是否以指定字符串开头(忽略前导空白字符)
+     *
+     * @param str    待测试字符串
+     * @param prefix 前缀
+     * @return 是否以指定字符串开头
+     */
+    public static boolean startsWithIgnoreBlank(String str, String prefix) {
+        if (str == null || prefix == null) {
+            return false;
+        }
+        if (str.startsWith(prefix)) {
+            return true;
+        }
+        if (str.length() < prefix.length()) {
+            return false;
+        }
+
+        if (isEmpty(str)) {
+            return false;
+        }
+        StringBuilder sb = new StringBuilder(str);
+        while (sb.length() > 0 && isWhitespace(sb.charAt(0))) {
+            sb.deleteCharAt(0);
+        }
+        return sb.toString().startsWith(prefix);
+    }
+
+    /**
+     * 测试是否以指定字符串结尾(忽略后缀空白字符)
+     *
+     * @param str    待测试字符串
+     * @param prefix 后缀
+     * @return 是否以指定字符串结尾
+     */
+    public static boolean endsWithIgnoreBlank(String str, String prefix) {
+        if (str == null || prefix == null) {
+            return false;
+        }
+        if (str.endsWith(prefix)) {
+            return true;
+        }
+        if (str.length() < prefix.length()) {
+            return false;
+        }
+
+        if (isEmpty(str)) {
+            return false;
+        }
+        StringBuilder sb = new StringBuilder(str);
+        while (sb.length() > 0 && isWhitespace(sb.charAt(sb.length() - 1))) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        return sb.toString().endsWith(prefix);
+    }
+
+    /**
      * Test if the given {@code String} starts with the specified prefix,
      * ignoring upper/lower case.
      *

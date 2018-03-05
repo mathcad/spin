@@ -1,6 +1,7 @@
 package org.spin.data.sql.resolver;
 
 import org.spin.core.util.StringUtils;
+import org.spin.data.core.DatabaseType;
 
 import java.util.Map;
 
@@ -14,7 +15,7 @@ import java.util.Map;
  */
 public class SimpleResolver implements TemplateResolver {
     @Override
-    public String resolve(String id, String template, Map<String, ?> model) {
+    public String resolve(String id, String template, Map<String, ?> model, DatabaseType dbType) {
         if (StringUtils.isEmpty(template))
             return StringUtils.EMPTY;
         String result = template;

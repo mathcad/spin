@@ -16,6 +16,9 @@ import java.util.LinkedList;
  * @author xuweinan
  */
 public class ArchiveMdLoader extends ArchiveSQLLoader {
+    private static final String SPLITER = "===";
+    private static final String REMARK = "//";
+
     @Override
     public String getSqlTemplateSrc(String id) {
         // 检查缓存
@@ -33,18 +36,18 @@ public class ArchiveMdLoader extends ArchiveSQLLoader {
             String lastLine = "";
             StringBuilder sql = new StringBuilder();
             String key = "";
-            while ((temp = bf.readLine()) != null) {
-                temp = StringUtils.trimTrailingWhitespace(temp);
-                if (temp.startsWith("===") || lastLine.startsWith("===")) {// 读取到===号，说明上一行是key，下面是注释或者SQL语句
-                    if (list.size() != 1)
+            while ((temp = StringUtils.trimTrailingWhitespace(bf.readLine())) != null) {
+                if (temp.startsWith(SPLITER) || lastLine.startsWith(SPLITER)) {// 读取到===号，说明上一行是key，下面是注释或者SQL语句
+                    if (list.size() != 1) {
                         throw new SQLException(SQLException.CANNOT_GET_SQL, "模板文件格式不正确:");
+                    }
                     key = list.pollLast();
-                    if (lastLine.startsWith("===") && !StringUtils.trimLeadingWhitespace(temp).startsWith("//"))
+                    if (lastLine.startsWith(SPLITER) && !StringUtils.startsWithIgnoreBlank(temp, REMARK)) {
                         sql.append(temp).append("\n");
-                    while ((tempNext = bf.readLine()) != null) {
-                        if (StringUtils.isNotBlank(tempNext)) {
-                            tempNext = StringUtils.trimTrailingWhitespace(tempNext);
-                            if (tempNext.startsWith("===")) {
+                    }
+                    while ((tempNext = StringUtils.trimTrailingWhitespace(bf.readLine())) != null) {
+                        if (StringUtils.isNotEmpty(tempNext)) {
+                            if (tempNext.startsWith(SPLITER)) {
                                 if (StringUtils.isEmpty(lastLine))
                                     throw new SQLException(SQLException.CANNOT_GET_SQL, "模板文件格式不正确:");
                                 list.add(lastLine);
@@ -53,13 +56,13 @@ public class ArchiveMdLoader extends ArchiveSQLLoader {
                                 this.sqlSourceVersion.put(path + "." + key, version);
                                 sql = new StringBuilder();
                                 break;
-                            } else if (!StringUtils.trimLeadingWhitespace(tempNext).startsWith("//")) {
+                            } else if (!StringUtils.startsWithIgnoreBlank(tempNext, REMARK)) {
                                 sql.append(tempNext).append("\n");
                                 lastLine = tempNext;
                             }
                         }
                     }
-                } else if (!StringUtils.isBlank(temp) && !temp.startsWith("//") && !temp.startsWith("===")) {
+                } else if (StringUtils.isNotEmpty(temp) && !temp.startsWith(REMARK) && !temp.startsWith(SPLITER)) {
                     list.add(temp);
                 }
             }

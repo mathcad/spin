@@ -24,6 +24,7 @@ public abstract class GenericSqlLoader implements SQLLoader {
     protected volatile boolean useCache = true;
     protected boolean autoCheck = true;
     protected String charset = "UTF-8";
+    protected String fileDelimiter = "/";
     protected Map<String, String> sqlSourceMap = new ConcurrentHashMap<>();
     protected Map<String, Long> sqlSourceVersion = new ConcurrentHashMap<>();
 
@@ -44,7 +45,7 @@ public abstract class GenericSqlLoader implements SQLLoader {
     public SQLSource getSQL(String id, Map<String, ?> model) {
         if (null == this.resolver)
             this.resolver = new SimpleResolver();
-        String sql = this.resolver.resolve(id, getSqlTemplateSrc(id), model);
+        String sql = this.resolver.resolve(id, getSqlTemplateSrc(id), model, dbType);
         return new SQLSource(id, sql);
     }
 
