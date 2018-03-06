@@ -3,12 +3,15 @@ package org.spin.data.util;
 import javassist.util.proxy.ProxyFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.internal.PersistentBag;
+import org.hibernate.collection.internal.PersistentList;
+import org.hibernate.collection.internal.PersistentSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.SpinContext;
 import org.spin.core.throwable.CloneFailedException;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.ClassUtils;
+import org.spin.core.util.JsonUtils;
 import org.spin.core.util.ObjectUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
@@ -47,16 +50,23 @@ public abstract class EntityUtils {
     private static final Logger logger = LoggerFactory.getLogger(EntityUtils.class);
     private static final Map<String, Map<String, EntityUtils.PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
 
+    private EntityUtils() {
+    }
+
     /**
-     * 将s对象属性，copy至d，遇到@Entity类型，只copy一层
+     * 将实体转换为dto。遇到最外层@Entity类型，只带出id
      *
-     * @param entity Hibernate的Entity实体
+     * @param entity 标记有的Entity注解的实体
      * @param depth  copy层次
      * @return 返回一个实体
      */
     public static <T> T getDTO(final T entity, final int depth) {
-        if (entity == null)
+        if (entity == null) {
             return null;
+        }
+        if (null == entity.getClass().getAnnotation(Entity.class)) {
+            return entity;
+        }
         final Class<?> tcls = Hibernate.getClass(entity);
         final T target;
         try {
@@ -66,36 +76,55 @@ public abstract class EntityUtils {
             logger.error("Can not create new Entity instance:[" + tcls.getName() + "]", e);
             return null;
         }
+
         ReflectionUtils.doWithFields(tcls, f -> {
             String getM = StringUtils.capitalize(f.getName());
             Method getMethod = ReflectionUtils.findMethod(tcls, (f.getType().equals(boolean.class) ? "is" : "get") + getM);
             Method setMethod = ReflectionUtils.findMethod(tcls, "set" + getM, f.getType());
-            if (setMethod == null || getMethod == null)
+            if (setMethod == null || getMethod == null) {
                 return;
+            }
             try {
                 if (depth <= 0) {
-                    if (f.getType().equals(List.class)) {
-                        setMethod.invoke(target, new ArrayList());
-                    } else if (f.getAnnotation(Id.class) != null) {
+                    if (f.getAnnotation(Id.class) != null) {
                         setMethod.invoke(target, getMethod.invoke(entity));
                     }
                     return;
                 }
-                if (f.getType().equals(List.class)) {
-                    Object d_ = getMethod.invoke(entity);
-                    if (d_ != null && d_ instanceof PersistentBag) {
-                        PersistentBag bag = (PersistentBag) d_;
-                        bag.clearDirty();
-                        Object[] array = bag.toArray();
-                        List list = Arrays.stream(array).map(obj -> ProxyFactory.isProxyClass(obj.getClass()) ? getDTO(obj, 0) : obj).collect(Collectors.toList());
-                        setMethod.invoke(target, list);
-                    }
-                } else if (f.getType().getAnnotation(Entity.class) != null) {
+                if (f.getType().getAnnotation(Entity.class) != null) {
                     setMethod.invoke(target, getDTO(getMethod.invoke(entity), depth - 1));
                 } else if (Objects.nonNull(ClassUtils.wrapperToPrimitive(f.getType())) || CharSequence.class.isAssignableFrom(f.getType())) {
                     // 基本类型或字符串，直接赋值字段
                     ReflectionUtils.makeAccessible(f);
                     f.set(target, getMethod.invoke(entity));
+                } else if (List.class.isAssignableFrom(f.getType())) {
+                    Object d = getMethod.invoke(entity);
+                    if (d != null && d instanceof PersistentBag) {
+                        PersistentBag bag = (PersistentBag) d;
+                        bag.clearDirty();
+                        List list = (List) JsonUtils.fromJson("[]", f.getType());
+                        //noinspection unchecked
+                        bag.forEach(obj -> list.add(ProxyFactory.isProxyClass(obj.getClass()) ? getDTO(obj, depth - 1) : obj));
+                        setMethod.invoke(target, list);
+                    } else if (d != null && d instanceof PersistentList) {
+                        PersistentList bag = (PersistentList) d;
+                        bag.clearDirty();
+
+                        List list = (List) JsonUtils.fromJson("[]", f.getType());
+                        //noinspection unchecked
+                        bag.forEach(obj -> list.add(ProxyFactory.isProxyClass(obj.getClass()) ? getDTO(obj, depth - 1) : obj));
+                        setMethod.invoke(target, list);
+                    }
+                } else if (Set.class.isAssignableFrom(f.getType())) {
+                    Object d = getMethod.invoke(entity);
+                    if (d != null && d instanceof PersistentSet) {
+                        PersistentSet set = (PersistentSet) d;
+                        set.clearDirty();
+                        Set list = (Set) JsonUtils.fromJson("[]", f.getType());
+                        //noinspection unchecked
+                        set.forEach(obj -> list.add(ProxyFactory.isProxyClass(obj.getClass()) ? getDTO(obj, depth - 1) : obj));
+                        setMethod.invoke(target, list);
+                    }
                 } else {
                     // 其他类型，调用set方法
                     setMethod.invoke(target, getMethod.invoke(entity));
@@ -142,9 +171,9 @@ public abstract class EntityUtils {
             Field f1 = ReflectionUtils.findField(src.getClass(), field);
             Field f2 = ReflectionUtils.findField(dest.getClass(), field);
             if (f1 == null)
-                throw new RuntimeException(field + "不存在于" + src.getClass().getSimpleName());
+                throw new SimplifiedException(field + "不存在于" + src.getClass().getSimpleName());
             if (f2 == null)
-                throw new RuntimeException(field + "不存在于" + dest.getClass().getSimpleName());
+                throw new SimplifiedException(field + "不存在于" + dest.getClass().getSimpleName());
             ReflectionUtils.makeAccessible(f1);
             ReflectionUtils.makeAccessible(f2);
             Object o1 = ReflectionUtils.getField(f1, src);
@@ -162,9 +191,9 @@ public abstract class EntityUtils {
             Field f1 = ReflectionUtils.findField(src.getClass(), field);
             Field f2 = ReflectionUtils.findField(dest.getClass(), field);
             if (f1 == null)
-                throw new RuntimeException(field + "不存在于" + src.getClass().getSimpleName());
+                throw new SimplifiedException(field + "不存在于" + src.getClass().getSimpleName());
             if (f2 == null)
-                throw new RuntimeException(field + "不存在于" + dest.getClass().getSimpleName());
+                throw new SimplifiedException(field + "不存在于" + dest.getClass().getSimpleName());
             ReflectionUtils.makeAccessible(f1);
             ReflectionUtils.makeAccessible(f2);
             Object o1 = ReflectionUtils.getField(f1, src);
