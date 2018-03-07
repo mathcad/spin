@@ -20,11 +20,16 @@ public class RSATest {
     String encrypted = "MKAGCn2x2TtP6ByCVTWrBVzIiddcpBYLYRBPbGkfnjX1YdjRPawNXGZpE0N0kv1BqXRuD+dTa+VPlzhmqJoJuML9VpCWMKmpMTRySUgJGleHfRd4HW7vNvsB7ng+rosVD/jrUawfddaMu6hzo7oTz3lYKGlRukZnhj2YIN/Zu80=";
 
     @Test
-    public void testRsaJs() throws InvalidKeyException, BadPaddingException, InvalidKeySpecException, IllegalBlockSizeException, NoSuchPaddingException, ShortBufferException {
+    public void testRsaJs() {
         String dencrypted = RSA.decrypt(privateKey, encrypted);
         System.out.println(dencrypted);
 
         System.out.println(RSA.encrypt(publicKey, "abcd"));
         assertTrue(true);
+    }
+
+    @Test
+    public void testAes() {
+        System.out.println(AES.decrypt("c4b2a7d36f9a2e61", "9TmfV96iIEIaYnIDTtt/1w=="));
     }
 }

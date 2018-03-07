@@ -56,7 +56,7 @@ public abstract class EntityUtils {
     /**
      * 将实体转换为dto。遇到最外层@Entity类型，只带出id
      *
-     * @param entity 标记有的Entity注解的实体
+     * @param entity 标记有的Entity注解的Hibernate实体代理
      * @param depth  copy层次
      * @return 返回一个实体
      */
@@ -64,7 +64,7 @@ public abstract class EntityUtils {
         if (entity == null) {
             return null;
         }
-        if (null == entity.getClass().getAnnotation(Entity.class)) {
+        if (null == entity.getClass().getAnnotation(Entity.class) || !ProxyFactory.isProxyClass(entity.getClass())) {
             return entity;
         }
         final Class<?> tcls = Hibernate.getClass(entity);

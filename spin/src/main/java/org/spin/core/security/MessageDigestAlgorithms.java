@@ -32,13 +32,13 @@ public enum MessageDigestAlgorithms {
      */
     SHA_512("SHA-512");
 
-    private String _value;
+    private String value;
 
-    MessageDigestAlgorithms(String _value) {
-        this._value = _value;
+    MessageDigestAlgorithms(String value) {
+        this.value = value;
     }
 
     public String value() {
-        return this._value;
+        return this.value;
     }
 }

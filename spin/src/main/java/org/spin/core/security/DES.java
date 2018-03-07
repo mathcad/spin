@@ -18,6 +18,7 @@ import java.security.SecureRandom;
  * @version 1.0
  */
 public class DES {
+    private static final String DES_ALGORITHM = "DES/ECB/PKCS5Padding";
 
     private DES() {
     }
@@ -54,7 +55,7 @@ public class DES {
 
     public static byte[] encrypt(Key key, byte[] bytes) {
         try {
-            Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+            Cipher cipher = Cipher.getInstance(DES_ALGORITHM);
             cipher.init(1, key);
             return cipher.doFinal(bytes);
         } catch (Exception e) {
@@ -64,7 +65,7 @@ public class DES {
 
     public static byte[] decrypt(Key key, byte[] bytes) {
         try {
-            Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+            Cipher cipher = Cipher.getInstance(DES_ALGORITHM);
             cipher.init(2, key);
             return cipher.doFinal(bytes);
         } catch (Exception e) {

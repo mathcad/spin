@@ -1,6 +1,10 @@
 package org.spin.core.security;
 
 public class BCD {
+
+    private BCD() {
+    }
+
     /**
      * ASCII码转BCD码
      *
@@ -10,13 +14,13 @@ public class BCD {
     public static byte[] decode(String content) {
 
         byte[] ascii = content.getBytes();
-        int asc_len = ascii.length;
-        byte[] bcd = new byte[asc_len / 2];
+        int ascLen = ascii.length;
+        byte[] bcd = new byte[ascLen / 2];
         int j = 0;
 
-        for (int i = 0; i < (asc_len + 1) / 2; i++) {
-            bcd[i] = asc_to_bcd(ascii[j++]);
-            bcd[i] = (byte) (((j >= asc_len) ? 0x00 : asc_to_bcd(ascii[j++])) + (bcd[i] << 4));
+        for (int i = 0; i < (ascLen + 1) / 2; i++) {
+            bcd[i] = ascToBcd(ascii[j++]);
+            bcd[i] = (byte) (((j >= ascLen) ? 0x00 : ascToBcd(ascii[j++])) + (bcd[i] << 4));
         }
 
         return bcd;
@@ -43,7 +47,7 @@ public class BCD {
         return new String(temp);
     }
 
-    private static byte asc_to_bcd(byte asc) {
+    private static byte ascToBcd(byte asc) {
 
         byte bcd;
 

@@ -13,7 +13,6 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -35,6 +34,8 @@ public class RSA {
     private static final int KEY_SIZE = 1024;
     private static final String SIGN_ALGORITHMS = "SHA1WithRSA";
     private static final String RSA_ALGORITHMS = "RSA";
+    private static final String KEY_INVALIE = "密钥不合法";
+    private static final String NO_SUCH_ALGORITHM = "加密算法不存在";
 
     private RSA() {
     }
@@ -90,7 +91,7 @@ public class RSA {
         try {
             return Assert.notNull(keyFactory).generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(key)));
         } catch (InvalidKeySpecException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "密钥不合法", e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
     }
 
@@ -105,7 +106,7 @@ public class RSA {
         try {
             return Assert.notNull(keyFactory).generatePublic(new X509EncodedKeySpec(Base64.decode(key)));
         } catch (InvalidKeySpecException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "密钥不合法", e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
     }
 
@@ -137,11 +138,11 @@ public class RSA {
             cipher.init(Cipher.ENCRYPT_MODE, pk);
             return cipher.doFinal(data);
         } catch (NoSuchAlgorithmException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "加密算法不存在", e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         } catch (NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
             throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
         } catch (InvalidKeyException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "密钥不合法", e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
     }
 
@@ -183,11 +184,11 @@ public class RSA {
             cipher.init(Cipher.DECRYPT_MODE, pk);
             return cipher.doFinal(raw);
         } catch (NoSuchAlgorithmException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "加密算法不存在", e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         } catch (BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException e) {
             throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
         } catch (InvalidKeyException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "密钥不合法", e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
     }
 
@@ -235,7 +236,7 @@ public class RSA {
         } catch (SignatureException e) {
             throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "签名失败", e);
         } catch (InvalidKeyException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "密钥不合法", e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
 
     }
@@ -261,7 +262,7 @@ public class RSA {
         } catch (SignatureException e) {
             throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "签名校验失败", e);
         } catch (InvalidKeyException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "密钥不合法", e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
     }
 
@@ -274,7 +275,7 @@ public class RSA {
         try {
             keyFactory = KeyFactory.getInstance(RSA_ALGORITHMS);
         } catch (NoSuchAlgorithmException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "加密算法不存在", e);
+            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         }
         return keyFactory;
     }

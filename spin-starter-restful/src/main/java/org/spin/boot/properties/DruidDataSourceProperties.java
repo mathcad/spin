@@ -6,9 +6,6 @@ import org.spin.core.util.NumericUtils;
 import org.spin.data.extend.DataSourceConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import java.security.InvalidKeyException;
 import java.util.Properties;
 
 /**
@@ -127,7 +124,7 @@ public class DruidDataSourceProperties implements DataSourceConfig {
         return password;
     }
 
-    public void setPassword(String password) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+    public void setPassword(String password) {
         this.password = AES.decrypt("c4b2a7d36f9a2e61", password);
     }
 
