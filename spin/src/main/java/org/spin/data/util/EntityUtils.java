@@ -1,6 +1,5 @@
 package org.spin.data.util;
 
-import javassist.util.proxy.ProxyFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.internal.PersistentBag;
 import org.hibernate.collection.internal.PersistentList;
@@ -64,7 +63,7 @@ public abstract class EntityUtils {
         if (entity == null) {
             return null;
         }
-        if (null == entity.getClass().getAnnotation(Entity.class) || !ProxyFactory.isProxyClass(entity.getClass())) {
+        if (null == entity.getClass().getAnnotation(Entity.class)) {
             return entity;
         }
         final Class<?> tcls = Hibernate.getClass(entity);
@@ -104,7 +103,7 @@ public abstract class EntityUtils {
                         bag.clearDirty();
                         List list = (List) JsonUtils.fromJson("[]", f.getType());
                         //noinspection unchecked
-                        bag.forEach(obj -> list.add(ProxyFactory.isProxyClass(obj.getClass()) ? getDTO(obj, depth - 1) : obj));
+                        bag.forEach(obj -> list.add( getDTO(obj, depth - 1)));
                         setMethod.invoke(target, list);
                     } else if (d != null && d instanceof PersistentList) {
                         PersistentList bag = (PersistentList) d;
@@ -112,7 +111,7 @@ public abstract class EntityUtils {
 
                         List list = (List) JsonUtils.fromJson("[]", f.getType());
                         //noinspection unchecked
-                        bag.forEach(obj -> list.add(ProxyFactory.isProxyClass(obj.getClass()) ? getDTO(obj, depth - 1) : obj));
+                        bag.forEach(obj -> list.add(getDTO(obj, depth - 1)));
                         setMethod.invoke(target, list);
                     }
                 } else if (Set.class.isAssignableFrom(f.getType())) {
@@ -122,7 +121,7 @@ public abstract class EntityUtils {
                         set.clearDirty();
                         Set list = (Set) JsonUtils.fromJson("[]", f.getType());
                         //noinspection unchecked
-                        set.forEach(obj -> list.add(ProxyFactory.isProxyClass(obj.getClass()) ? getDTO(obj, depth - 1) : obj));
+                        set.forEach(obj -> list.add(getDTO(obj, depth)));
                         setMethod.invoke(target, list);
                     }
                 } else {
