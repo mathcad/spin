@@ -103,7 +103,7 @@ public abstract class EntityUtils {
                         bag.clearDirty();
                         List list = (List) JsonUtils.fromJson("[]", f.getType());
                         //noinspection unchecked
-                        bag.forEach(obj -> list.add( getDTO(obj, depth - 1)));
+                        bag.forEach(obj -> list.add(getDTO(obj, depth - 1)));
                         setMethod.invoke(target, list);
                     } else if (d != null && d instanceof PersistentList) {
                         PersistentList bag = (PersistentList) d;
@@ -113,16 +113,20 @@ public abstract class EntityUtils {
                         //noinspection unchecked
                         bag.forEach(obj -> list.add(getDTO(obj, depth - 1)));
                         setMethod.invoke(target, list);
+                    } else {
+                        setMethod.invoke(target, d);
                     }
                 } else if (Set.class.isAssignableFrom(f.getType())) {
                     Object d = getMethod.invoke(entity);
                     if (d != null && d instanceof PersistentSet) {
-                        PersistentSet set = (PersistentSet) d;
-                        set.clearDirty();
-                        Set list = (Set) JsonUtils.fromJson("[]", f.getType());
+                        PersistentSet pSet = (PersistentSet) d;
+                        pSet.clearDirty();
+                        Set set = (Set) JsonUtils.fromJson("[]", f.getType());
                         //noinspection unchecked
-                        set.forEach(obj -> list.add(getDTO(obj, depth)));
-                        setMethod.invoke(target, list);
+                        pSet.forEach(obj -> set.add(getDTO(obj, depth)));
+                        setMethod.invoke(target, set);
+                    } else {
+                        setMethod.invoke(target, d);
                     }
                 } else {
                     // 其他类型，调用set方法
