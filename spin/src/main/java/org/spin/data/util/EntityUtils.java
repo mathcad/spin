@@ -63,10 +63,10 @@ public abstract class EntityUtils {
         if (entity == null) {
             return null;
         }
-        if (null == entity.getClass().getAnnotation(Entity.class)) {
+        final Class<?> tcls = Hibernate.getClass(entity);
+        if (null == tcls.getAnnotation(Entity.class)) {
             return entity;
         }
-        final Class<?> tcls = Hibernate.getClass(entity);
         final T target;
         try {
             //noinspection unchecked
