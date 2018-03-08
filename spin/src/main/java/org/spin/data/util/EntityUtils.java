@@ -123,7 +123,7 @@ public abstract class EntityUtils {
                         pSet.clearDirty();
                         Set set = (Set) JsonUtils.fromJson("[]", f.getType());
                         //noinspection unchecked
-                        pSet.forEach(obj -> set.add(getDTO(obj, depth)));
+                        pSet.forEach(obj -> set.add(getDTO(obj, depth - 1)));
                         setMethod.invoke(target, set);
                     } else {
                         setMethod.invoke(target, d);
