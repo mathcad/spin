@@ -4,11 +4,11 @@ import com.shipping.domain.dto.MenuDto
 import com.shipping.domain.dto.RegionDto
 import com.shipping.domain.enums.FunctionTypeE
 import com.shipping.domain.sys.Function
-import com.shipping.repository.sys.FunctionRepository
-import com.shipping.repository.sys.RegionRepository
+import com.shipping.domain.sys.Region
 import org.slf4j.LoggerFactory
 import org.spin.core.collection.FixedVector
 import org.spin.core.session.SessionManager
+import org.spin.data.extend.RepositoryContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Objects
@@ -25,10 +25,7 @@ import kotlin.collections.HashMap
 class SystemService {
 
     @Autowired
-    private lateinit var functionDao: FunctionRepository
-
-    @Autowired
-    private lateinit var regionDao: RegionRepository
+    private lateinit var repoCtx: RepositoryContext
 
     @Autowired
     private lateinit var userService: UserService
@@ -40,8 +37,7 @@ class SystemService {
         get() {
             val result = ArrayList<MenuDto>()
 
-            val group = userService.getUserFunctions(SessionManager.getCurrentUser().id)[FunctionTypeE.MEMU]!!.
-                map { MenuDto.toDto(it) }.groupBy { it.idPath.split(",").size }
+            val group = userService.getUserFunctions(SessionManager.getCurrentUser().id)[FunctionTypeE.MEMU]!!.map { MenuDto.toDto(it) }.groupBy { it.idPath.split(",").size }
 //                .stream()
 //                .map<MenuDto>(Function({ MenuDto.toDto(it) })).collect<Map<Int, List<MenuDto>>, Any>(Collectors.groupingBy { f -> f.idPath!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray().size })
 
@@ -67,7 +63,7 @@ class SystemService {
 
     val regions: List<RegionDto>
         get() {
-            val allRegion = regionDao.findAll().map { ::RegionDto.call() }.groupBy { it.level!! }
+            val allRegion = repoCtx.findAll(Region::class.java).map { ::RegionDto.call() }.groupBy { it.level!! }
 
             val cities = allRegion[2]!!.map { it.value!! to it }.toMap()
             var work = allRegion[3]!!.groupBy { it.parent }
@@ -82,14 +78,14 @@ class SystemService {
 
     private fun wraperFuncToMap(func: Function): Map<String, Any?> {
         val f: MutableMap<String, Any?> = HashMap()
-        f.put("id", func.id!!.toString())
-        f.put("name", func.name)
-        f.put("icon", func.name)
-        f.put("link", func.name)
+        f["id"] = func.id!!.toString()
+        f["name"] = func.name
+        f["icon"] = func.name
+        f["link"] = func.name
         if (Objects.nonNull(func.parent)) {
-            f.put("parent", func.parent!!.id)
+            f["parent"] = func.parent!!.id
         }
-        f.put("visable", true)
+        f["visable"] = true
         return f
     }
 

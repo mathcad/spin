@@ -2,13 +2,6 @@ package org.spin.core.security;
 
 import org.junit.jupiter.api.Test;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
-import java.security.InvalidKeyException;
-import java.security.spec.InvalidKeySpecException;
-
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**

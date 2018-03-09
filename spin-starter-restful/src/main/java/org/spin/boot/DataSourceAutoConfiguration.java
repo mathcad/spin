@@ -90,11 +90,9 @@ public class DataSourceAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(SQLManager.class)
-    public RepositoryContext repositoryContext() {
-        RepositoryContext context = new RepositoryContext();
-        context.setApplicationContext(applicationContext);
-        return context;
+    @ConditionalOnBean({SQLManager.class, QueryParamParser.class})
+    public RepositoryContext repositoryContext(SQLManager sqlManager, QueryParamParser paramParser) {
+        return new RepositoryContext(sqlManager, paramParser, applicationContext);
     }
 
     @Bean(name = "transactionManager")
@@ -106,7 +104,7 @@ public class DataSourceAutoConfiguration {
 
     @Bean
     public FilterRegistrationBean openSessionInViewFilterRegistration() {
-        FilterRegistrationBean registration = new FilterRegistrationBean();
+        FilterRegistrationBean<OpenSessionInViewFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new OpenSessionInViewFilter());
         registration.addUrlPatterns("/*");
         registration.addInitParameter("sessionFactoryBeanName", "sessionFactory");
@@ -126,7 +124,8 @@ public class DataSourceAutoConfiguration {
         try {
             propertiesFactoryBean.afterPropertiesSet();
             properties = propertiesFactoryBean.getObject();
-        } catch (IOException e) {
+        } catch (IOException ignore) {
+            // ignore
         }
         return properties;
     }

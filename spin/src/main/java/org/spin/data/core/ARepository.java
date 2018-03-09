@@ -42,6 +42,7 @@ import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureExcep
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -70,6 +72,7 @@ import java.util.stream.Collectors;
 public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     private static final Logger logger = LoggerFactory.getLogger(ARepository.class);
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
+    private static final String ORDER_ENTRIES = "orderEntries";
     private static final int MAX_RECORDS = 100000000;
     private static final Map<String, SessionFactory> SESSION_FACTORY_MAP = new HashMap<>();
     private static final ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
@@ -559,7 +562,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 分页条件查询
      */
-    public List<T> find(CriteriaBuilder cb) {
+    public List<T> find(CriteriaBuilder<T> cb) {
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
         }
@@ -605,7 +608,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 通过唯一属性查询
      * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      */
-    public T findOne(CriteriaBuilder cb) {
+    public T findOne(CriteriaBuilder<T> cb) {
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
         }
@@ -722,7 +725,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         Session sess = getSession();
         // 总数查询
         Criteria ct = dc.getExecutableCriteria(sess);
-        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, "orderEntries");
+        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         return total > 0;
@@ -731,7 +734,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 判断是否存在已有实体
      */
-    public boolean exist(CriteriaBuilder cb, PK notId) {
+    public boolean exist(CriteriaBuilder<T> cb, PK notId) {
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
         }
@@ -741,14 +744,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         return c > 0;
     }
 
-    public Long count(CriteriaBuilder cb) {
+    public Long count(CriteriaBuilder<T> cb) {
         Session sess = getSession();
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
         }
         Criteria ct = cb.buildDeCriteria(false).getExecutableCriteria(sess);
         ct.setCacheable(false);
-        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, "orderEntries");
+        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
         orderEntries.clear();
         return (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
     }
@@ -760,7 +763,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 根据条件查询DTO列表
      */
-    public Page<T> page(CriteriaBuilder cb) {
+    public Page<T> page(CriteriaBuilder<T> cb) {
         Assert.notNull(cb, "CriteriaBuilder need a non-null value");
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
@@ -777,7 +780,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         List<Map<String, Object>> list = ct.list();
         ct.setFirstResult(0);
         ct.setMaxResults(MAX_RECORDS);
-        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, "orderEntries");
+        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         List<T> res = EntityUtils.wrapperMapToBeanList(this.entityClazz, list);
@@ -796,7 +799,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 根据条件查询DTO（扁平化的Map）
      */
-    public Page<Map<String, Object>> pageFlatMap(CriteriaBuilder cb) {
+    public Page<Map<String, Object>> pageFlatMap(CriteriaBuilder<T> cb) {
         return pageMap(cb, false);
     }
 
@@ -812,7 +815,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 根据条件查询DTO（层次化的Map）
      */
-    public Page<Map<String, Object>> pageMap(CriteriaBuilder cb) {
+    public Page<Map<String, Object>> pageMap(CriteriaBuilder<T> cb) {
         return pageMap(cb, true);
     }
 
@@ -829,7 +832,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 根据条件查询DTO列表
      */
     public List<T> list(Map<String, Object> map) {
-        CriteriaBuilder cb = CriteriaBuilder.forClass(entityClazz)
+        CriteriaBuilder<T> cb = CriteriaBuilder.forClass(entityClazz)
             .addCriterion(map.entrySet().stream().map(entry -> Restrictions.eq(entry.getKey(), entry.getValue())).collect(Collectors.toList()));
         return list(cb);
     }
@@ -837,7 +840,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 根据条件查询DTO列表
      */
-    public List<T> list(CriteriaBuilder cb) {
+    public List<T> list(CriteriaBuilder<T> cb) {
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
         }
@@ -855,7 +858,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 根据条件查询DTO（扁平化的Map）
      */
-    public List<Map<String, Object>> listFlatMap(CriteriaBuilder cb) {
+    public List<Map<String, Object>> listFlatMap(CriteriaBuilder<T> cb) {
         return listMap(cb, false);
     }
 
@@ -869,7 +872,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 根据条件查询DTO（层次化的Map）
      */
-    public List<Map<String, Object>> listMap(CriteriaBuilder cb) {
+    public List<Map<String, Object>> listMap(CriteriaBuilder<T> cb) {
         return listMap(cb, true);
     }
 
@@ -962,14 +965,16 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param work 需要执行的任务
      */
     public void doWork(Work work) {
-        getSession().doWork(work);
+        if (null != work) {
+            getSession().doWork(work);
+        }
     }
 
     /**
      * 通过使用指定的jdbc连接执行CUD操作
      *
      * @param sql 需要执行的CUD语句
-     * @return 受影响行数
+     * @return 受影响行数 {@link PreparedStatement#executeUpdate}.
      */
     public int doWork(String sql) {
         Assert.notEmpty(sql, "SQL语句不能为空");
@@ -983,13 +988,35 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 通过使用指定的jdbc连接执行用户自定义任务，可以获取执行厚度返回结果{@link ReturningWork#execute} call.
+     * 通过使用指定的jdbc连接执行用户自定义任务，可以获取执行后的返回结果{@link ReturningWork#execute} call.
      *
      * @param work 需要执行的任务
-     * @return 执行结果 {@link ReturningWork#execute}.
+     * @param <R>  转换结果类型
+     * @return 执行结果
      */
-    T doReturningWork(ReturningWork<T> work) {
+    public <R> R doReturningWork(ReturningWork<R> work) {
+        if (null == work) {
+            return null;
+        }
         return getSession().doReturningWork(work);
+    }
+
+    /**
+     * 通过使用指定的jdbc连接执行用户自定义查询，可以获取执行后的返回结果{@link ReturningWork#execute} call.
+     * <p>只有执行SELECT语句时才有返回结果</p>
+     *
+     * @param sql         需要执行的查询语句
+     * @param transformer 结果转换器
+     * @param <R>         转换结果类型
+     * @return 执行结果 {@link PreparedStatement#execute}
+     */
+    public <R> R doReturningWork(String sql, Function<ResultSet, R> transformer) {
+        Assert.notEmpty(sql, "SQL语句不能为空");
+        return getSession().doReturningWork(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            boolean isRs = ps.execute();
+            return isRs ? transformer.apply(ps.getResultSet()) : null;
+        });
     }
 
     public Class<T> getEntityClazz() {
@@ -998,6 +1025,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     public void setEntityClazz(Class<T> entityClazz) {
         this.entityClazz = entityClazz;
+    }
+
+    public void setQueryParamParser(QueryParamParser queryParamParser) {
+        this.queryParamParser = queryParamParser;
     }
 
     /**
@@ -1092,18 +1123,19 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         }
     }
 
-    private CriteriaBuilder compileCondition(QueryParam qp) {
+    private CriteriaBuilder<T> compileCondition(QueryParam qp) {
         Assert.notNull(qp, "查询条件参数不能为null");
-        CriteriaBuilder cb;
+        CriteriaBuilder<?> cb;
         try {
             cb = queryParamParser.parseCriteria(qp);
-            if (!entityClazz.equals(cb.getEnCls())) {
-                cb.setEnCls(entityClazz);
-            }
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("Can not find Entity Class[" + qp.getCls() + "]");
         }
-        return cb;
+        if (!entityClazz.equals(cb.getEnCls())) {
+            throw new SimplifiedException("查询参数的实体与Repository中指定的实体类型不一致");
+        }
+        //noinspection unchecked
+        return (CriteriaBuilder<T>) cb;
     }
 
     /**
@@ -1112,7 +1144,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param cb   查询条件
      * @param wrap 是否需要转换成层次Map
      */
-    public List<Map<String, Object>> listMap(CriteriaBuilder cb, boolean wrap) {
+    public List<Map<String, Object>> listMap(CriteriaBuilder<T> cb, boolean wrap) {
         Assert.notNull(cb, "CriteriaBuilder need a non-null value");
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
@@ -1139,7 +1171,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @param cb   查询条件
      * @param wrap 是否需要转换成层次Map
      */
-    private Page<Map<String, Object>> pageMap(CriteriaBuilder cb, boolean wrap) {
+    private Page<Map<String, Object>> pageMap(CriteriaBuilder<T> cb, boolean wrap) {
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
         }
@@ -1158,7 +1190,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
         ct.setFirstResult(0);
         ct.setMaxResults(MAX_RECORDS);
-        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, "orderEntries");
+        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         // 关联对象，填充映射对象

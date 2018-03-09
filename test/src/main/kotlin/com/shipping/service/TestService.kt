@@ -1,7 +1,7 @@
 package com.shipping.service
 
 import com.shipping.domain.sys.User
-import com.shipping.repository.sys.UserRepository
+import org.spin.data.extend.RepositoryContext
 import org.spin.web.annotation.RestfulMethod
 import org.spin.web.annotation.RestfulService
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,11 +18,13 @@ import org.springframework.web.multipart.MultipartFile
 open class TestService {
 
     @Autowired
-    private lateinit var userDao: UserRepository
+    private lateinit var repoCtx: RepositoryContext
 
     @RestfulMethod(auth = false, authRouter = "a")
-    fun aaa(pp: Array<String>, a: List<*>, b: Array<MultipartFile>): Int {
+    fun aaa(pp: Array<String>, a: List<*>?, b: Array<MultipartFile>?): Int {
         //        throw new SimplifiedException("aaa");
+        println(a?.size)
+        println(b?.size)
         return pp.size
     }
 
@@ -35,14 +37,14 @@ open class TestService {
         user.password = "123"
         user.mobile = "13111111111"
         user.email = "none@qq.com"
-        println(userDao.currentDataSourceName)
-        userDao.save(user)
-        userDao.switchDataSource("db2")
-        println(userDao.currentDataSourceName)
+        println(repoCtx.currentDataSourceName)
+        repoCtx.save(user)
+        repoCtx.switchDataSource("db2")
+        println(repoCtx.currentDataSourceName)
         user = user.getDTO(1)
         user.id = null
-        userDao.save(user)
-        userDao.switchDataSource("db1")
+        repoCtx.save(user)
+        repoCtx.switchDataSource("db1")
         //        throw new SimplifiedException("aa");
     }
 
@@ -55,8 +57,8 @@ open class TestService {
         user.password = "123"
         user.mobile = "13111111111"
         user.email = "none@qq.com"
-        println(userDao.currentDataSourceName)
-        userDao.save(user)
+        println(repoCtx.currentDataSourceName)
+        repoCtx.save(user)
         //        throw new SimplifiedException("aa");
     }
 }

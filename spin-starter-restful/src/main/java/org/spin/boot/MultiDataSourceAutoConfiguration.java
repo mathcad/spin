@@ -111,11 +111,9 @@ public class MultiDataSourceAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(SQLManager.class)
-    public RepositoryContext repositoryContext() {
-        RepositoryContext context = new RepositoryContext();
-        context.setApplicationContext(applicationContext);
-        return context;
+    @ConditionalOnBean({SQLManager.class, QueryParamParser.class})
+    public RepositoryContext repositoryContext(SQLManager sqlManager, QueryParamParser paramParser) {
+        return new RepositoryContext(sqlManager, paramParser, applicationContext);
     }
 
     @Bean(name = "atomikosTransactionService", initMethod = "init", destroyMethod = "shutdownForce")
@@ -236,7 +234,8 @@ public class MultiDataSourceAutoConfiguration {
         try {
             propertiesFactoryBean.afterPropertiesSet();
             properties = propertiesFactoryBean.getObject();
-        } catch (IOException e) {
+        } catch (IOException ignore) {
+            // ignore
         }
         return properties;
     }

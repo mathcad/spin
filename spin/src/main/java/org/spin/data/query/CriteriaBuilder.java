@@ -13,6 +13,7 @@ import org.spin.data.core.IEntity;
 import org.spin.data.core.PageRequest;
 import org.spin.data.util.EntityUtils;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,14 +31,14 @@ import java.util.Set;
  *
  * @author xuweinan
  */
-public class CriteriaBuilder {
+public class CriteriaBuilder<T extends IEntity<?>> {
 
     /**
      * 包含所有字段
      */
     public static final String ALL_COLUMNS = "ALL_COLUMNS";
 
-    private Class<? extends IEntity> enCls;
+    private Class<T> enCls;
     private DetachedCriteria deCriteria;
     private Set<String> fields = new HashSet<>();
     private Map<String, String> aliasMap = new HashMap<>();
@@ -56,21 +57,12 @@ public class CriteriaBuilder {
      * @param enCls 查询的实体类
      * @return {@link CriteriaBuilder}
      */
-    public static CriteriaBuilder forClass(Class<? extends IEntity> enCls) {
-        CriteriaBuilder instance = new CriteriaBuilder();
+    public static <T extends IEntity<P>, P extends Serializable> CriteriaBuilder<T> forClass(Class<T> enCls) {
+        CriteriaBuilder<T> instance = new CriteriaBuilder<>();
         instance.enCls = enCls;
         instance.projected = false;
         instance.deCriteria = DetachedCriteria.forClass(enCls);
         return instance;
-    }
-
-    /**
-     * 创建离线查询条件(不指定查询实体，在Repository环境中动态关联实体)
-     *
-     * @return {@link CriteriaBuilder}
-     */
-    public static CriteriaBuilder newInstance() {
-        return forClass(IEntity.class);
     }
 
     /**
@@ -80,7 +72,7 @@ public class CriteriaBuilder {
      * @param size 页参数
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder page(int page, int size) {
+    public CriteriaBuilder<T> page(int page, int size) {
         pageRequest = new PageRequest(page, size);
         return this;
     }
@@ -91,7 +83,7 @@ public class CriteriaBuilder {
      * @param fields 字段列表
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder addFields(String... fields) {
+    public CriteriaBuilder<T> addFields(String... fields) {
         Arrays.stream(fields).filter(StringUtils::isNotEmpty).forEach(this.fields::add);
         projected = false;
         return this;
@@ -104,7 +96,7 @@ public class CriteriaBuilder {
      * @param alias 别名
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder createAlias(String field, String alias) {
+    public CriteriaBuilder<T> createAlias(String field, String alias) {
         aliasMap.put(field, alias);
         projected = false;
         return this;
@@ -116,7 +108,7 @@ public class CriteriaBuilder {
      * @param params 字段与别名的映射：field1, alias1, field2, alias2...
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder createAliases(String... params) {
+    public CriteriaBuilder<T> createAliases(String... params) {
         if (null != params) {
             if (params.length % 2 != 0) {
                 throw new IllegalArgumentException("别名映射参数长度必须为偶数");
@@ -136,7 +128,7 @@ public class CriteriaBuilder {
      * @param criterions 条件
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder addCriterion(Criterion... criterions) {
+    public CriteriaBuilder<T> addCriterion(Criterion... criterions) {
         if (null != criterions) {
             for (Criterion ct : criterions) {
                 deCriteria.add(ct);
@@ -151,7 +143,7 @@ public class CriteriaBuilder {
      * @param criterions 条件
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder addCriterion(Iterable<Criterion> criterions) {
+    public CriteriaBuilder<T> addCriterion(Iterable<Criterion> criterions) {
         if (null != criterions) {
             for (Criterion ct : criterions) {
                 deCriteria.add(ct);
@@ -166,7 +158,7 @@ public class CriteriaBuilder {
      * @param ords 排序
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder orderBy(Order... ords) {
+    public CriteriaBuilder<T> orderBy(Order... ords) {
         if (null != ords)
             for (Order ord : ords) {
                 if (null != ord)
@@ -183,7 +175,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder eq(String prop, Object value) {
+    public CriteriaBuilder<T> eq(String prop, Object value) {
         if (null == value) {
             return this;
         }
@@ -197,7 +189,7 @@ public class CriteriaBuilder {
      * @param value id
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder idEq(Object value) {
+    public CriteriaBuilder<T> idEq(Object value) {
         if (null == value) {
             return this;
         }
@@ -212,7 +204,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder notEq(String prop, Object value) {
+    public CriteriaBuilder<T> notEq(String prop, Object value) {
         if (null == value) {
             return this;
         }
@@ -225,7 +217,7 @@ public class CriteriaBuilder {
      * @param prop 属性名
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder isNull(String prop) {
+    public CriteriaBuilder<T> isNull(String prop) {
         return addCriterion(Restrictions.isNull(prop));
     }
 
@@ -237,7 +229,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder eqOrIsNull(String prop, Object value) {
+    public CriteriaBuilder<T> eqOrIsNull(String prop, Object value) {
         if (null == value) {
             return addCriterion(Restrictions.isNull(prop));
         }
@@ -250,7 +242,7 @@ public class CriteriaBuilder {
      * @param prop 属性名
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder notNull(String prop) {
+    public CriteriaBuilder<T> notNull(String prop) {
         return addCriterion(Restrictions.isNotNull(prop));
     }
 
@@ -262,7 +254,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder startWith(String prop, String value) {
+    public CriteriaBuilder<T> startWith(String prop, String value) {
         if (StringUtils.isEmpty(value)) {
             return this;
         }
@@ -277,7 +269,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder endWith(String prop, String value) {
+    public CriteriaBuilder<T> endWith(String prop, String value) {
         if (StringUtils.isEmpty(value)) {
             return this;
         }
@@ -292,7 +284,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder like(String prop, String value) {
+    public CriteriaBuilder<T> like(String prop, String value) {
         if (StringUtils.isEmpty(value)) {
             return this;
         }
@@ -307,7 +299,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder gt(String prop, Object value) {
+    public CriteriaBuilder<T> gt(String prop, Object value) {
         if (null == value) {
             return this;
         }
@@ -322,7 +314,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder ge(String prop, Object value) {
+    public CriteriaBuilder<T> ge(String prop, Object value) {
         if (null == value) {
             return this;
         }
@@ -338,7 +330,7 @@ public class CriteriaBuilder {
      * @param high 上限
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder between(String prop, Object low, Object high) {
+    public CriteriaBuilder<T> between(String prop, Object low, Object high) {
         if (null == low && null == high) {
             return this;
         } else if (null == low) {
@@ -358,7 +350,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder lt(String prop, Object value) {
+    public CriteriaBuilder<T> lt(String prop, Object value) {
         if (null == value) {
             return this;
         }
@@ -373,7 +365,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder le(String prop, Object value) {
+    public CriteriaBuilder<T> le(String prop, Object value) {
         if (null == value) {
             return this;
         }
@@ -388,7 +380,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder in(String prop, Collection<?> value) {
+    public CriteriaBuilder<T> in(String prop, Collection<?> value) {
         if (null == value) {
             return this;
         }
@@ -402,7 +394,7 @@ public class CriteriaBuilder {
      * @param value 属性值
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder in(String prop, Object... value) {
+    public CriteriaBuilder<T> in(String prop, Object... value) {
         return addCriterion(Restrictions.in(prop, value));
     }
 
@@ -412,7 +404,7 @@ public class CriteriaBuilder {
      * @param predicates 需要and运算的条件
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder and(Criterion... predicates) {
+    public CriteriaBuilder<T> and(Criterion... predicates) {
         return addCriterion(Restrictions.and(predicates));
     }
 
@@ -422,7 +414,7 @@ public class CriteriaBuilder {
      * @param predicates 需要or运算的条件
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder or(Criterion... predicates) {
+    public CriteriaBuilder<T> or(Criterion... predicates) {
         return addCriterion(Restrictions.or(predicates));
     }
 
@@ -432,7 +424,7 @@ public class CriteriaBuilder {
      * @param sql sql条件
      * @return {@link CriteriaBuilder}
      */
-    public CriteriaBuilder sqlRestriction(String sql) {
+    public CriteriaBuilder<T> sqlRestriction(String sql) {
         return addCriterion(Restrictions.sqlRestriction(sql));
     }
 
@@ -448,11 +440,11 @@ public class CriteriaBuilder {
         return deCriteria;
     }
 
-    public Class<? extends IEntity> getEnCls() {
+    public Class<T> getEnCls() {
         return enCls;
     }
 
-    public final void setEnCls(Class<? extends IEntity> enCls) {
+    public final void setEnCls(Class<T> enCls) {
         this.enCls = enCls;
         Field criteriaField = ReflectionUtils.findField(DetachedCriteria.class, "criteria");
         ReflectionUtils.makeAccessible(criteriaField);

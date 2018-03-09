@@ -1,7 +1,7 @@
 package com.shipping.service.biz
 
 import com.shipping.domain.biz.Order
-import com.shipping.repository.biz.OrderRepository
+import org.spin.data.extend.RepositoryContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.transaction.Transactional
@@ -17,7 +17,7 @@ import javax.transaction.Transactional
 open class OrderService {
 
     @Autowired
-    private lateinit var orderRepository: OrderRepository
+    private lateinit var repoCtx: RepositoryContext
 
     /**
      * 新增运单
@@ -26,7 +26,7 @@ open class OrderService {
      */
     @Transactional
     open fun save(order: Order): Order {
-        return orderRepository.save(order)
+        return repoCtx.save(order)
     }
 
 }

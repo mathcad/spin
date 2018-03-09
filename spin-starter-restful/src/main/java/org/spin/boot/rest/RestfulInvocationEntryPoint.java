@@ -8,6 +8,7 @@ import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.core.ErrorCode;
 import org.spin.core.SpinContext;
 import org.spin.core.auth.Authenticator;
+import org.spin.core.auth.SecretManager;
 import org.spin.core.inspection.ArgumentsDescriptor;
 import org.spin.core.inspection.MethodDescriptor;
 import org.spin.core.session.SessionManager;
@@ -70,6 +71,9 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
 
     @Autowired(required = false)
     private Authenticator authenticator;
+
+    @Autowired(required = false)
+    private SecretManager secretManager;
 
     @Autowired
     private SpinWebPorperties webPorperties;
@@ -205,6 +209,21 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                 return RestfulResponse.error(new SimplifiedException("无法唯一定位请求的资源"));
             }
 
+            RestfulMethod rMethod = argumentsDescriptors.get(selected).getMethodDescriptor().getMethod().getAnnotation(RestfulMethod.class);
+
+            if (null != secretManager) {
+                String token = request.getParameter("token");
+                if (StringUtils.isEmpty(token)) {
+                    token = request.getHeader("token");
+                }
+                try {
+                    secretManager.bindCurrentSession(token);
+                } catch (SimplifiedException e) {
+                    if (rMethod.auth()) {
+                        return RestfulResponse.error(e);
+                    }
+                }
+            }
             return invoke(argumentsDescriptors.get(selected));
         } else {
             return RestfulResponse.error(new SimplifiedException("请求的资源不存在"));
@@ -282,7 +301,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                         return null;
                     }
                 }
-            } else if (request instanceof MultipartRequest && ((MultipartRequest) request).getFiles(parameterName).size() > 0) {
+            } else if (request instanceof MultipartRequest && !((MultipartRequest) request).getFiles(parameterName).isEmpty()) {
                 Collection<MultipartFile> value = JsonUtils.fromJson("[]", parameter.getParameterizedType());
                 if (Objects.nonNull(value)) {
                     value.addAll(((MultipartRequest) request).getFiles(parameterName));
@@ -354,6 +373,8 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                     return DateUtils.toLocalDateTime(value.toString(), fmt).toLocalTime();
                 case "java.time.LocalDate":
                     return DateUtils.toLocalDateTime(value.toString(), fmt).toLocalDate();
+                default:
+                    return null;
             }
         }
         try {
@@ -361,7 +382,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         } catch (ClassCastException e) {
             try {
                 return JsonUtils.fromJson(value.toString(), parameter.getParameterizedType());
-            } catch (Throwable ignore) {
+            } catch (Exception ignore) {
                 return JsonUtils.fromJson(value.toString(), parameter.getType());
             }
         }
@@ -386,7 +407,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
         if (isAllowed || !needAuth) {
             if (descriptor.getRank() > 100) {
-                logger.error("索引为" + JsonUtils.toJson(descriptor.getNeededNulls()) + "的参数不能为空");
+                logger.error(String.format("索引为%s的参数不能为空", JsonUtils.toJson(descriptor.getNeededNulls())));
                 return RestfulResponse.error(ErrorCode.INVALID_PARAM);
             }
 
@@ -424,7 +445,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                 }
 
                 return RestfulResponse.error(new SimplifiedException("服务执行异常"));
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 logger.error("服务调用错误", e);
                 return RestfulResponse.error(new SimplifiedException("服务调用错误"));
             }
@@ -434,7 +455,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 }

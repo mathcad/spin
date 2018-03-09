@@ -74,6 +74,7 @@ public class DistributedIdGenerator implements IdGenerator<Long, DistributedId> 
         setIdConverter(new DistributedIdConverter(idType));
     }
 
+    @Override
     public Long genId() {
         DistributedId id = new DistributedId();
         populateId(id);
@@ -89,8 +90,14 @@ public class DistributedIdGenerator implements IdGenerator<Long, DistributedId> 
         return ret;
     }
 
+    @Override
     public DistributedId expId(Long id) {
         return idConverter.convert(id);
+    }
+
+    @Override
+    public Class<Long> getIdType() {
+        return Long.class;
     }
 
     public long makeId(long time, long seq) {

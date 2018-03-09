@@ -1,7 +1,7 @@
 package com.shipping.service
 
 import com.shipping.domain.sys.File
-import com.shipping.repository.sys.FileRepository
+import org.spin.data.extend.RepositoryContext
 import org.spin.web.FileOperator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -21,7 +21,7 @@ import java.util.UUID
 open class FileService {
 
     @Autowired
-    private lateinit var fileDao: FileRepository
+    private lateinit var repoCtx: RepositoryContext
 
     @Transactional
     open fun saveFile(uploadResult: FileOperator.UploadResult): File {
@@ -32,7 +32,7 @@ open class FileService {
         file.filePath = uploadResult.storeName
         file.extension = uploadResult.extention
         file.size = uploadResult.size
-        return fileDao.save(file)
+        return repoCtx.save(file)
     }
 
     @Transactional
@@ -46,7 +46,7 @@ open class FileService {
             file.filePath = uploadResult.storeName
             file.extension = uploadResult.extention
             file.size = uploadResult.size
-            result.add(fileDao.save(file))
+            result.add(repoCtx.save(file))
         }
         return result
     }

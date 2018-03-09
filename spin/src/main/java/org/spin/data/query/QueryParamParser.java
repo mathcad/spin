@@ -39,21 +39,17 @@ import java.util.Map;
 public class QueryParamParser {
     private static final Logger logger = LoggerFactory.getLogger(QueryParamParser.class);
     private static final String SPLITOR = "__";
+    private static final String INVALID_DATE = "时间格式不正确 ";
     private Gson gson = new Gson();
 
     /**
      * 将通用查询参数转换为DetachedCriteria
-     * <pre>
-     * PageRequest pr = new PageRequest(args.page, args.pageSize);
-     * DetachedCriteria deCriteria = DetachedCriteria.forClass(SpTransOrder.class);
-     * deCriteria.createAlias("CUSTOMER", "c");
-     * deCriteria.createAlias("ROUTE", "r");
-     * </pre>
      */
     public CriteriaBuilder parseCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
         // 解析查询实体类型
-        if (StringUtils.isEmpty(p.getCls()))
-            p.setCls(IEntity.class.getName());
+        if (StringUtils.isEmpty(p.getCls())) {
+            throw new SimplifiedException("必须指定查询的实体");
+        }
         Class<?> enCls = Class.forName(p.getCls());
         if (!IEntity.class.isAssignableFrom(enCls) || null == enCls.getAnnotation(Entity.class))
             throw new SimplifiedException(p.getCls() + " is not an Entity Class");
@@ -191,16 +187,16 @@ public class QueryParamParser {
                 v = DateUtils.toDate(val);
             } else if (fieldType.equals(Timestamp.class)) {
                 Date tmp = DateUtils.toDate(val);
-                v = new Timestamp(Assert.notNull(tmp, "时间格式不正确").getTime());
+                v = new Timestamp(Assert.notNull(tmp, INVALID_DATE).getTime());
             } else if (fieldType.equals(LocalDateTime.class)) {
                 LocalDateTime tmp = DateUtils.toLocalDateTime(val);
-                v = Assert.notNull(tmp, "时间格式不正确");
+                v = Assert.notNull(tmp, INVALID_DATE);
             } else if (fieldType.equals(LocalDate.class)) {
                 LocalDateTime tmp = DateUtils.toLocalDateTime(val);
-                v = Assert.notNull(tmp, "时间格式不正确").toLocalDate();
+                v = Assert.notNull(tmp, INVALID_DATE).toLocalDate();
             } else if (fieldType.equals(LocalTime.class)) {
                 LocalDateTime tmp = DateUtils.toLocalDateTime(val);
-                v = Assert.notNull(tmp, "时间格式不正确").toLocalTime();
+                v = Assert.notNull(tmp, INVALID_DATE).toLocalTime();
             } else if (fieldType.isEnum()) {
                 //noinspection unchecked
                 v = EnumUtils.getEnum((Class<Enum>) fieldType, Integer.valueOf(val));

@@ -1,7 +1,7 @@
 package com.shipping.service.biz
 
 import com.shipping.domain.biz.Port
-import com.shipping.repository.biz.PortRepository
+import org.spin.data.extend.RepositoryContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional
 open class PortService {
 
     @Autowired
-    private lateinit var portRepository: PortRepository
+    private lateinit var repoCtx: RepositoryContext
 
     /**
      * 根据港口名取港口信息
@@ -26,7 +26,7 @@ open class PortService {
      */
     fun getByName(name: String): Port {
 
-        return portRepository.findOne("name", name)
+        return repoCtx.findOne(Port::class.java, "name", name)
     }
 
     /**
@@ -36,7 +36,7 @@ open class PortService {
      */
     @Transactional
     open fun save(port: Port): Port {
-        return portRepository.save(port)
+        return repoCtx.save(port)
     }
 
 }

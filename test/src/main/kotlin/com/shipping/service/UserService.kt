@@ -7,9 +7,6 @@ import com.shipping.domain.sys.File
 import com.shipping.domain.sys.Function
 import com.shipping.domain.sys.User
 import com.shipping.internal.InfoCache
-import com.shipping.repository.sys.FileRepository
-import com.shipping.repository.sys.FunctionRepository
-import com.shipping.repository.sys.UserRepository
 import org.hibernate.criterion.Restrictions
 import org.spin.core.ErrorCode
 import org.spin.core.auth.Authenticator
@@ -43,13 +40,7 @@ import java.util.*
 open class UserService : Authenticator<User> {
 
     @Autowired
-    private lateinit var userDao: UserRepository
-
-    @Autowired
-    private lateinit var fileDao: FileRepository
-
-    @Autowired
-    private lateinit var functionDao: FunctionRepository
+    private lateinit var repoCtx: RepositoryContext
 
     @Autowired
     private lateinit var secretManager: SecretManager
@@ -59,13 +50,13 @@ open class UserService : Authenticator<User> {
 
     val currentUser: Map<String, Any?>?
         get() {
-            val user: User? = userDao.get(SessionManager.getCurrentUser().id)
+            val user: User? = repoCtx.get(User::class.java, SessionManager.getCurrentUser().id)
             return if (null == user) null else let {
                 val userMap = HashMap<String, Any?>()
-                userMap.put("userId", user.id)
-                userMap.put("nickName", user.nickname)
-                userMap.put("headImg", user.headImg?.filePath)
-                userMap.put("createTime", user.createTime)
+                userMap["userId"] = user.id
+                userMap["nickName"] = user.nickname
+                userMap["headImg"] = user.headImg?.filePath
+                userMap["createTime"] = user.createTime
                 return userMap
             }
         }
@@ -79,11 +70,11 @@ open class UserService : Authenticator<User> {
         val id = identity as Long
         return InfoCache.permissionCache[id] ?: let {
             val rp = RolePermission()
-            val user: User? = userDao.get(id)
+            val user: User? = repoCtx.get(User::class.java, id)
             rp.userIdentifier = id
             rp.permissions = user?.permissions?.map { it.code }
             rp.roles = user?.roles?.map { it.code }
-            InfoCache.permissionCache.put(id, rp)
+            InfoCache.permissionCache[id] = rp
             rp
         }
     }
@@ -92,9 +83,9 @@ open class UserService : Authenticator<User> {
         if (null == id || StringUtils.isEmpty(password))
             return false
         val user: User? = try {
-            userDao.get(java.lang.Long.parseLong(id.toString()))
+            repoCtx.get(User::class.java, id.toString().toLong())
         } catch (e: NumberFormatException) {
-            userDao.findOne(CriteriaBuilder.newInstance().eq("userName", id.toString()))
+            repoCtx.findOne(CriteriaBuilder.forClass(User::class.java).eq("userName", id.toString()))
         }
 
         return user != null && !StringUtils.isEmpty(user.password) && DigestUtils.sha256Hex(password + user.salt) == user.password
@@ -110,15 +101,15 @@ open class UserService : Authenticator<User> {
 
     @Transactional
     open fun saveUser(user: User): User {
-        return userDao.save(user)
+        return repoCtx.save(user)
     }
 
     fun getUser(id: Long): User {
-        return userDao.get(id)
+        return repoCtx.get(User::class.java, id)
     }
 
     fun getWxUser(openid: String): User {
-        return userDao.findOne("openid", openid)
+        return repoCtx.findOne(User::class.java, "openid", openid)
     }
 
     @Transactional
@@ -138,10 +129,10 @@ open class UserService : Authenticator<User> {
         file.filePath = rs.storeName
         file.extension = rs.extention
         file.size = rs.size
-        file = fileDao.save(file)
+        file = repoCtx.save(file)
 
         user.headImg = file
-        return userDao.save(user)
+        return repoCtx.save(user)
     }
 
     /**
@@ -170,7 +161,7 @@ open class UserService : Authenticator<User> {
             throw SimplifiedException(ErrorCode.SECRET_INVALID)
         }
 
-        val user = userDao.get(java.lang.Long.parseLong(info.identifier))
+        val user = repoCtx.get(User::class.java, info.identifier.toLong())
         if (null != user) {
             val loginInfo: LoginInfo
             if (StringUtils.isNotEmpty(user.password)) {
@@ -214,9 +205,9 @@ open class UserService : Authenticator<User> {
     private fun checkUser(identity: String, secret: String, user: User?, isPassword: Boolean): LoginInfo {
         val usr = user ?: let {
             try {
-                userDao.get(identity.toLong())
+                repoCtx.get(User::class.java, identity.toLong())
             } catch (ignore: NumberFormatException) {
-                userDao.findOne(CriteriaBuilder.newInstance().eq("userName", identity))
+                repoCtx.findOne(CriteriaBuilder.forClass(User::class.java).eq("userName", identity))
             }
         }
         val authenticated: Boolean
@@ -235,26 +226,26 @@ open class UserService : Authenticator<User> {
     }
 
     fun userList(): List<User> {
-        return userDao.list(CriteriaBuilder.newInstance().notEq("userType", UserTypeE.微信用户))
+        return repoCtx.list(CriteriaBuilder.forClass(User::class.java).notEq("userType", UserTypeE.微信用户))
     }
 
     fun getUserFunctions(id: Long): Map<FunctionTypeE, List<Function>> {
         return InfoCache.functionCache[id] ?: let {
             val rolePermission = getRolePermissionList(SessionManager.getCurrentUser().id)
-            val cb = CriteriaBuilder.newInstance()
+            val cb = CriteriaBuilder.forClass(Function::class.java)
             if (rolePermission.permissions.isEmpty()) {
                 cb.isNull("permission")
             } else {
                 cb.or(Restrictions.isNull("permission"),
                     Restrictions.`in`("permission.code", rolePermission.permissions))
             }
-            val functions = functionDao.list(cb)
+            val functions = repoCtx.list(cb)
             val r = functions.groupBy { it.type!! }.map { (k, v) -> k to v.toMutableList() }.toMap().toMutableMap()
             if (r.isEmpty()) {
-                r.put(FunctionTypeE.API, ArrayList())
-                r.put(FunctionTypeE.MEMU, ArrayList())
+                r[FunctionTypeE.API] = ArrayList()
+                r[FunctionTypeE.MEMU] = ArrayList()
             }
-            InfoCache.functionCache.put(id, r)
+            InfoCache.functionCache[id] = r
             r
         }
     }
