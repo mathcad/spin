@@ -2,13 +2,13 @@ package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
 
-import java.sql.Date;
 import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -66,6 +66,15 @@ public class DateUtilsTest {
         String b = "2016-08-31";
         System.out.println(JsonUtils.fromJson(a, A.class).date);
         System.out.println(JsonUtils.fromJson(b, LocalDate.class).toString());
+    }
+
+    @Test
+    public void testDuration() {
+        Date dateTime = new Date();
+        Date end = DateUtils.addHours(dateTime, 4);
+        end = DateUtils.addMinutes(end, 31);
+//        end = DateUtils.addYears(end, 2);
+        System.out.println(DateUtils.prettyDuration(end, dateTime));
     }
 
     public static class A {
