@@ -113,9 +113,8 @@ public class CriteriaBuilder<T extends IEntity<?>> {
             if (params.length % 2 != 0) {
                 throw new IllegalArgumentException("别名映射参数长度必须为偶数");
             }
-            for (int i = 0; i < params.length; ) {
+            for (int i = 0; i < params.length; i += 2) {
                 this.aliasMap.put(params[i], params[i + 1]);
-                i += 2;
             }
         }
         projected = false;

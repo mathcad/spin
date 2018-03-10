@@ -11,7 +11,6 @@ import org.spin.data.extend.SpringJtaPlatformAdapter;
 import org.spin.web.annotation.RestfulInterface;
 import org.spin.web.annotation.RestfulMethod;
 import org.spin.web.annotation.RestfulService;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.jta.JtaTransactionManager;
@@ -30,7 +29,7 @@ import java.util.Optional;
 public class SpinBeanPostProcessor implements BeanPostProcessor {
 
     @Override
-    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+    public Object postProcessBeforeInitialization(Object bean, String beanName) {
         Class<?> cls = bean.getClass();
         if (bean instanceof JtaTransactionManager) {
             SpringJtaPlatformAdapter.setJtaTransactionManager((JtaTransactionManager) bean);
@@ -63,7 +62,7 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
 
 
     @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+    public Object postProcessAfterInitialization(Object bean, String beanName) {
         return bean;
     }
 }

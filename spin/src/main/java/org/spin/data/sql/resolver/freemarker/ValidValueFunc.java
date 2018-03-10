@@ -1,4 +1,4 @@
-package org.spin.enhance.freemarker;
+package org.spin.data.sql.resolver.freemarker;
 
 import freemarker.template.SimpleScalar;
 import freemarker.template.TemplateBooleanModel;

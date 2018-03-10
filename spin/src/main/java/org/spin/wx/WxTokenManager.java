@@ -98,8 +98,8 @@ public class WxTokenManager {
                         if (null == token || StringUtils.isEmpty(token.getToken()) || System.currentTimeMillis() > token.getExpiredSince()) {
                             String result;
                             try {
-                                result = HttpUtils.get(WxUrl.AccessTokenUrl.getUrl(appId, appSecret));
-                            } catch (Throwable e) {
+                                result = HttpUtils.get(WxUrl.ACCESS_TOKEN.getUrl(appId, appSecret));
+                            } catch (Exception e) {
                                 throw new SimplifiedException("获取access_token失败", e);
                             }
                             token = new AccessToken(result);
@@ -118,13 +118,13 @@ public class WxTokenManager {
                             String result;
                             try {
                                 if (StringUtils.isNotEmpty(code)) {
-                                    result = HttpUtils.get(WxUrl.OAuthTokenUrl.getUrl(appId, appSecret, code));
+                                    result = HttpUtils.get(WxUrl.OAUTH_TOKEN.getUrl(appId, appSecret, code));
                                 } else if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L)) {
-                                    result = HttpUtils.get(WxUrl.RefreshTokenUrl.getUrl(appId, token.getRefreshToken()));
+                                    result = HttpUtils.get(WxUrl.REFRESH_TOKEN.getUrl(appId, token.getRefreshToken()));
                                 } else {
                                     throw new SimplifiedException("获取网页授权access_token失败, 缺少code参数");
                                 }
-                            } catch (Throwable e) {
+                            } catch (Exception e) {
                                 throw new SimplifiedException("获取网页授权access_token失败", e);
                             }
                             token = new AccessToken(result);
@@ -164,11 +164,11 @@ public class WxTokenManager {
             synchronized (ticketLock) {
                 ticket = ticketInstances.get(configName);
                 if (ticket == null || StringUtils.isEmpty(ticket.getTicket()) || System.currentTimeMillis() > ticket.getExpiredSince()) {
-                    String token = getToken(configName).getToken();
                     String result;
                     try {
-                        result = HttpUtils.get(WxUrl.ApiTicketUrl.getUrl(token));
-                    } catch (Throwable e) {
+                        String token = getToken(configName).getToken();
+                        result = HttpUtils.get(WxUrl.API_TICKET.getUrl(token));
+                    } catch (Exception e) {
                         throw new SimplifiedException("获取access_token失败", e);
                     }
                     ticket = new ApiTicket(result);

@@ -1,9 +1,9 @@
 package org.spin.data.sql.resolver;
 
 import org.spin.data.core.DatabaseType;
-import org.spin.enhance.freemarker.ConcurrentStrTemplateLoader;
-import org.spin.enhance.freemarker.EnumValueFunc;
-import org.spin.enhance.freemarker.ValidValueFunc;
+import org.spin.data.sql.resolver.freemarker.ConcurrentStrTemplateLoader;
+import org.spin.data.sql.resolver.freemarker.EnumValueFunc;
+import org.spin.data.sql.resolver.freemarker.ValidValueFunc;
 import org.spin.core.throwable.SimplifiedException;
 import freemarker.template.Configuration;
 import freemarker.template.Template;

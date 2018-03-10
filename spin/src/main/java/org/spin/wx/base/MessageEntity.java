@@ -34,7 +34,7 @@ public class MessageEntity implements Serializable {
      * @return xml字符串
      */
     public String toXml() {
-        StringBuffer result = new StringBuffer(512);
+        StringBuilder result = new StringBuilder(512);
         result.append("<xml>");
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             if (StringUtils.isEmpty(entry.getValue())) {
@@ -64,7 +64,7 @@ public class MessageEntity implements Serializable {
     }
 
     public String[] getPropNames() {
-        return (String[]) properties.keySet().toArray();
+        return properties.keySet().toArray(new String[0]);
     }
 
     public String getProperty(String name) {

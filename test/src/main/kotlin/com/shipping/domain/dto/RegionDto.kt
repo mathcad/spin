@@ -20,7 +20,7 @@ class RegionDto(region: Region) {
     init {
         this.label = region.name
         this.value = region.code
-        this.level = region.level?.value
+        this.level = region.level.value
         this.parent = region.parentCode
     }
 }

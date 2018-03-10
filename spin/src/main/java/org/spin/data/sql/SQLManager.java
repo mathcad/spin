@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.data.core.DatabaseType;
 import org.spin.data.core.Page;
 import org.spin.data.core.PageRequest;
 import org.spin.data.core.SQLLoader;
@@ -71,26 +72,7 @@ public class SQLManager {
                     loader.setRootUri(rootUri);
                 }
                 loader.setTemplateResolver(resolver);
-                switch (config.getVenderName()) {
-                    case "MYSQL":
-                        loader.setDbType(new MySQLDatabaseType());
-                        break;
-                    case "ORACLE":
-                        loader.setDbType(new OracleDatabaseType());
-                        break;
-                    case "MICROSOFT":
-                    case "SQLSERVER":
-                        loader.setDbType(new SQLServerDatabaseType());
-                        break;
-                    case "POSTGRESQL":
-                        loader.setDbType(new PostgreSQLDatabaseType());
-                        break;
-                    case "SQLITE":
-                        loader.setDbType(new SQLiteDatabaseType());
-                        break;
-                    default:
-                        throw new SimplifiedException("Unsupported Database vender:" + config.getVenderName());
-                }
+                loader.setDbType(getDbType(config.getVenderName()));
                 loaderMap.put(name, loader);
                 NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DATA_SOURCE_MAP.get(name));
                 nameJtMap.put(name, jt);
@@ -125,26 +107,7 @@ public class SQLManager {
                 loader.setRootUri(rootUri);
             }
             loader.setTemplateResolver(resolver);
-            switch (dsConfig.getVenderName()) {
-                case "MYSQL":
-                    loader.setDbType(new MySQLDatabaseType());
-                    break;
-                case "ORACLE":
-                    loader.setDbType(new OracleDatabaseType());
-                    break;
-                case "MICROSOFT":
-                case "SQLSERVER":
-                    loader.setDbType(new SQLServerDatabaseType());
-                    break;
-                case "POSTGRESQL":
-                    loader.setDbType(new PostgreSQLDatabaseType());
-                    break;
-                case "SQLITE":
-                    loader.setDbType(new SQLiteDatabaseType());
-                    break;
-                default:
-                    throw new SimplifiedException("Unsupported Database vender:" + dsConfig.getVenderName());
-            }
+            loader.setDbType(getDbType(dsConfig.getVenderName()));
             loaderMap.put(name, loader);
             NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DATA_SOURCE_MAP.get(name));
             nameJtMap.put(name, jt);
@@ -389,6 +352,24 @@ public class SQLManager {
             switchDataSource(primaryDataSourceName);
         }
         return currentNameJt.get();
+    }
+
+    private DatabaseType getDbType(String vender) {
+        switch (vender) {
+            case "MYSQL":
+                return new MySQLDatabaseType();
+            case "ORACLE":
+                return new OracleDatabaseType();
+            case "MICROSOFT":
+            case "SQLSERVER":
+                return new SQLServerDatabaseType();
+            case "POSTGRESQL":
+                return new PostgreSQLDatabaseType();
+            case "SQLITE":
+                return new SQLiteDatabaseType();
+            default:
+                throw new SimplifiedException("Unsupported Database vender:" + vender);
+        }
     }
 
     private String removeLastOrderBy(String sql) {

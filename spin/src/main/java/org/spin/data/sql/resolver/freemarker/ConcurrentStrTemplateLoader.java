@@ -1,4 +1,4 @@
-package org.spin.enhance.freemarker;
+package org.spin.data.sql.resolver.freemarker;
 
 import freemarker.cache.TemplateLoader;
 import freemarker.template.Configuration;
@@ -23,6 +23,7 @@ public class ConcurrentStrTemplateLoader implements TemplateLoader {
 
     @Override
     public void closeTemplateSource(Object templateSource) {
+        // donothing
     }
 
     @Override

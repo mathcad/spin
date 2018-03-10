@@ -15,9 +15,12 @@ import java.util.Objects;
  */
 public class WxConfigManager {
 
+    private WxConfigManager() {
+    }
+
     private static final Map<String, WxConfigInfo> infos = new HashMap<>();
 
-    public static String DEFAULT = "default";
+    public static final String DEFAULT = "default";
 
     public static WxConfigInfo getConfig(String name) {
         WxConfigInfo info = infos.get(name);
