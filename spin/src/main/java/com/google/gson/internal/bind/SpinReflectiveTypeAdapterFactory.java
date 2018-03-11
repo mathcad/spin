@@ -17,7 +17,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import org.spin.core.util.ClassUtils;
-import org.spin.enhance.gson.UncertaintyMatchableTypeAdapter;
+import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -120,18 +120,19 @@ public final class SpinReflectiveTypeAdapterFactory implements TypeAdapterFactor
             void write(JsonWriter writer, Object value)
                 throws IOException, IllegalAccessException {
                 Object fieldValue = field.get(value);
-                TypeAdapter t = jsonAdapterPresent ? typeAdapter
-                    : new TypeAdapterRuntimeTypeWrapper(context, typeAdapter, fieldType.getType());
-                t.write(writer, fieldValue);
+                if (typeAdapter instanceof MatchableTypeAdapter) {
+                    ((MatchableTypeAdapter) typeAdapter).write(writer, fieldValue, field);
+                } else {
+                    TypeAdapter t = jsonAdapterPresent ? typeAdapter
+                        : new TypeAdapterRuntimeTypeWrapper(context, typeAdapter, fieldType.getType());
+                    t.write(writer, fieldValue);
+                }
             }
 
             @Override
             void read(JsonReader reader, Object value)
                 throws IOException, IllegalAccessException {
-                Object fieldValue = typeAdapter.read(reader);
-                if (typeAdapter instanceof UncertaintyMatchableTypeAdapter) {
-                    fieldValue = ((UncertaintyMatchableTypeAdapter<?>) typeAdapter).read(reader, fieldType);
-                }
+                Object fieldValue = typeAdapter instanceof MatchableTypeAdapter ? ((MatchableTypeAdapter<?>) typeAdapter).read(reader, fieldType, field) : typeAdapter.read(reader);
                 if (fieldValue != null || !isPrimitive) {
                     field.set(value, fieldValue);
                 }

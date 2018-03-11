@@ -4,9 +4,11 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.spin.core.util.StringUtils;
+import org.spin.enhance.gson.DatePatternParser;
 import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -24,21 +26,21 @@ public class LocalDateTypeAdapter extends MatchableTypeAdapter<LocalDate> {
     }
 
     @Override
-    public void write(JsonWriter out, LocalDate value) throws IOException {
-        if (null == value) {
-            out.nullValue();
-        } else {
-            out.value(formater.format(value));
-        }
-    }
-
-    @Override
-    public LocalDate read(JsonReader in) throws IOException {
+    public LocalDate read(JsonReader in, TypeToken<?> type, Field field) throws IOException {
         String tmp = in.nextString();
         if (StringUtils.isEmpty(tmp)) {
             return null;
         } else {
-            return LocalDate.parse(tmp, formater);
+            return LocalDate.parse(tmp, DatePatternParser.getReadPattern(formater, field));
+        }
+    }
+
+    @Override
+    public void write(JsonWriter out, LocalDate value, Field field) throws IOException {
+        if (null == value) {
+            out.nullValue();
+        } else {
+            out.value(DatePatternParser.getWritePattern(formater, field).format(value));
         }
     }
 

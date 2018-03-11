@@ -7,6 +7,7 @@ import org.hibernate.collection.internal.PersistentBag;
 import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 /**
  * lazy-load 解决方案
@@ -14,12 +15,12 @@ import java.io.IOException;
 public class HibernatePersistentBagTypeAdapter extends MatchableTypeAdapter<PersistentBag> {
 
     @Override
-    public PersistentBag read(JsonReader in) {
+    public PersistentBag read(JsonReader in, TypeToken<?> type, Field field) {
         throw new UnsupportedOperationException("Not supported");
     }
 
     @Override
-    public void write(JsonWriter out, PersistentBag value) throws IOException {
+    public void write(JsonWriter out, PersistentBag value, Field field) throws IOException {
         if (value == null) {
             out.nullValue();
         } else {

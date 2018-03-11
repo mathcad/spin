@@ -21,6 +21,7 @@ public class AccessAllowFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) {
+        // do nothing
     }
 
     @Override
@@ -34,5 +35,6 @@ public class AccessAllowFilter implements Filter {
 
     @Override
     public void destroy() {
+        // do nothing
     }
 }

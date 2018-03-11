@@ -5,27 +5,19 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.spin.core.util.EnumUtils;
 import org.spin.data.core.UserEnumColumn;
-import org.spin.enhance.gson.UncertaintyMatchableTypeAdapter;
+import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 /**
  * GSON的枚举适配器
  * Created by xuweinan on 2017/1/25.
  */
-public class UserEnumTypeAdapter<E extends Enum<E>> extends UncertaintyMatchableTypeAdapter<E> {
+public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter<E> {
 
     @Override
-    public void write(JsonWriter out, E value) throws IOException {
-        if (null == value) {
-            out.nullValue();
-        } else {
-            out.value(((UserEnumColumn) value).getValue());
-        }
-    }
-
-    @Override
-    public E read(JsonReader in, TypeToken<?> type) throws IOException {
+    public E read(JsonReader in, TypeToken<?> type, Field field) throws IOException {
         String v = in.nextString();
         @SuppressWarnings("unchecked")
         Class<E> t = (Class<E>) type.getRawType();
@@ -34,6 +26,15 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends UncertaintyMatchable
             return EnumUtils.getEnum(t, iv);
         } catch (Exception e) {
             return EnumUtils.getEnumByName(t, v);
+        }
+    }
+
+    @Override
+    public void write(JsonWriter out, E value, Field field) throws IOException {
+        if (null == value) {
+            out.nullValue();
+        } else {
+            out.value(((UserEnumColumn) value).getValue());
         }
     }
 

@@ -30,6 +30,7 @@ public class TokenResolveFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) {
+        // do nothing
     }
 
     @Override
@@ -50,5 +51,6 @@ public class TokenResolveFilter implements Filter {
 
     @Override
     public void destroy() {
+        // do nothing
     }
 }

@@ -30,13 +30,13 @@ public class HibernateProxyTypeAdapter extends MatchableTypeAdapter<HibernatePro
     }
 
     @Override
-    public HibernateProxy read(JsonReader in) {
+    public HibernateProxy read(JsonReader in, TypeToken<?> type, Field field) {
         throw new UnsupportedOperationException("Not supported");
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void write(JsonWriter out, HibernateProxy value) throws IOException {
+    public void write(JsonWriter out, HibernateProxy value, Field field) throws IOException {
         if (value == null) {
             out.nullValue();
             return;

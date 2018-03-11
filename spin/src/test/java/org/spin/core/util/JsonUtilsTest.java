@@ -2,6 +2,7 @@ package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
 import org.spin.core.TypeIdentifier;
+import org.spin.enhance.gson.annotation.DatePattern;
 import org.spin.data.core.AbstractEntity;
 import org.spin.data.core.UserEnumColumn;
 
@@ -36,9 +37,10 @@ public class JsonUtilsTest {
 
     @Test
     public void testEntityId() {
-        AbstractEntity a = new E();
+        E a = new E();
         a.setId(81241321817279489L);
         a.setCreateUserId(9007299254740992L);
+        a.setXxx(LocalDateTime.now());
         a.setUpdateUserId(2L);
         System.out.println(JsonUtils.toJson(a));
         String b = "{\"id\":81241321817279489,\"createUserId\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true}";
@@ -61,8 +63,19 @@ public class JsonUtilsTest {
 }
 
 class E extends AbstractEntity {
+
+    @DatePattern(write = "yyyyMMdd")
+    private LocalDateTime xxx;
     private Status status;
     private Type type;
+
+    public LocalDateTime getXxx() {
+        return xxx;
+    }
+
+    public void setXxx(LocalDateTime xxx) {
+        this.xxx = xxx;
+    }
 
     public Status getStatus() {
         return status;
