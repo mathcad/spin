@@ -43,7 +43,7 @@ public class JsonUtilsTest {
         a.setXxx(LocalDateTime.now());
         a.setUpdateUserId(2L);
         System.out.println(JsonUtils.toJson(a));
-        String b = "{\"id\":81241321817279489,\"createUserId\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true}";
+        String b = "{\"id\":81241321817279489,\"createUserId\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212'}";
         AbstractEntity c = JsonUtils.fromJson(b, E.class);
         System.out.println(c);
     }
@@ -64,7 +64,7 @@ public class JsonUtilsTest {
 
 class E extends AbstractEntity {
 
-    @DatePattern(write = "yyyyMMdd")
+    @DatePattern(write = "yyyyMMddHH")
     private LocalDateTime xxx;
     private Status status;
     private Type type;
