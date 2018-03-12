@@ -110,9 +110,10 @@ public final class SpinReflectiveTypeAdapterFactory implements TypeAdapterFactor
             mapped = jsonAdapterFactory.getTypeAdapter(
                 constructorConstructor, context, fieldType, annotation);
         }
+        final boolean jsonAdapterPresent = mapped != null;
         if (mapped == null) mapped = context.getAdapter(fieldType);
 
-        final TypeAdapter typeAdapter = mapped;
+        final TypeAdapter<?> typeAdapter = mapped;
         return new BoundField(name, serialize, deserialize) {
             @SuppressWarnings({"unchecked", "rawtypes"}) // the type adapter and field type always agree
             @Override
@@ -122,7 +123,9 @@ public final class SpinReflectiveTypeAdapterFactory implements TypeAdapterFactor
                 if (typeAdapter instanceof MatchableTypeAdapter) {
                     ((MatchableTypeAdapter) typeAdapter).write(writer, fieldValue, field);
                 } else {
-                    typeAdapter.write(writer, fieldValue);
+                    TypeAdapter t = jsonAdapterPresent ? typeAdapter
+                        : new TypeAdapterRuntimeTypeWrapper(context, typeAdapter, fieldType.getType());
+                    t.write(writer, fieldValue);
                 }
             }
 

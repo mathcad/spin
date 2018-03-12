@@ -1,7 +1,10 @@
 package org.spin.core.util;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.junit.jupiter.api.Test;
 import org.spin.core.TypeIdentifier;
+import org.spin.data.core.Page;
 import org.spin.enhance.gson.annotation.DatePattern;
 import org.spin.data.core.AbstractEntity;
 import org.spin.data.core.UserEnumColumn;
@@ -59,6 +62,13 @@ public class JsonUtilsTest {
     public void testStringFormat() {
         System.out.println(String.format("sqlId: %s%nsqlText: %s", "aaaaa", "bbbbb"));
         assertTrue(true);
+    }
+
+    @Test
+    public void testBug() {
+        String a = "{\"rows\":[{\"id\":107875263349522433,\"name\":\"1\",\"type\":\"教育\",\"status\":5},{\"id\":107875650970320897,\"name\":\"\",\"status\":5},{\"id\":107946270970085377,\"name\":\"共生\",\"enroll_end\":\"三月 8, 2018\",\"actualArea\":100.0,\"actualCost\":600.00,\"type\":\"商业\",\"item\":\"办公\",\"status\":1,\"filePath\":\"/201803/09134517Qg0UJd0P.png\"}],\"total\":3,\"pageSize\":10000000}";
+        Page<Map<String, Object>> p = new Gson().fromJson(a, new TypeToken<Page<Map<String, Object>>>(){}.getType());
+        System.out.println(JsonUtils.toJson(p));
     }
 }
 

@@ -25,14 +25,14 @@ public abstract class MatchableTypeAdapter<T> extends TypeAdapter<T> {
     public abstract boolean isMatch(TypeToken<?> type);
 
     /**
-     * 该类的子类中，该方法无意义，不会被调用。只能返回null且不允许子类重写
+     * 该类的子类中，该方法无意义，不会被调用。且不允许子类重写
      *
      * @param in read in class TypeAdapter
      * @return null
      */
     @Override
-    public final T read(JsonReader in) {
-        return null;
+    public final T read(JsonReader in) throws IOException {
+        return read(in, null, null);
     }
 
     /**
@@ -47,13 +47,14 @@ public abstract class MatchableTypeAdapter<T> extends TypeAdapter<T> {
     public abstract T read(JsonReader in, TypeToken<?> type, Field field) throws IOException;
 
     /**
-     * 该类的子类中，该方法无意义，不会被调用。什么都不做，且不允许子类重写
+     * 该类的子类中，该方法无意义，不会被调用。且不允许子类重写
      *
      * @param out   输出流
      * @param value 字段值
      */
     @Override
-    public final void write(JsonWriter out, T value) {
+    public final void write(JsonWriter out, T value) throws IOException {
+        write(out, value, null);
     }
 
     /**
