@@ -11,7 +11,7 @@ import java.time.LocalTime;
  *
  * @author xuweinan
  */
-@Converter(autoApply = true)
+//@Converter(autoApply = true)
 public class LocalTimeConverter implements AttributeConverter<LocalTime, Time> {
 
     @Override

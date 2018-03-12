@@ -24,6 +24,7 @@ public enum ErrorCode {
     // 4** 访问及权限错误
     LOGGIN_DENINED(400, "登录失败"),
     ACCESS_DENINED(401, "未授权的访问"),
+    ASSERT_FAIL(410, "数据验证失败"),
     INVALID_PARAM(412, "参数不合法"),
     NO_BIND_USER(413, "无关联用户"),
     SMS_VALICODE_ERROR(420, "短信验证码错误"),

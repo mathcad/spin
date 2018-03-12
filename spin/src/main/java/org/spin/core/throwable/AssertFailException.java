@@ -10,7 +10,19 @@ import org.spin.core.ErrorCode;
 public class AssertFailException extends SimplifiedException {
     private static final long serialVersionUID = 1174360235354917591L;
 
-    public AssertFailException(String argName) {
-        super(ErrorCode.INVALID_PARAM, (argName == null ? "Argument" : argName) + " must not be null.");
+    public AssertFailException() {
+        super(ErrorCode.ASSERT_FAIL);
+    }
+
+    public AssertFailException(String message) {
+        super(ErrorCode.ASSERT_FAIL, message);
+    }
+
+    public AssertFailException(Throwable e) {
+        super(ErrorCode.ASSERT_FAIL, e);
+    }
+
+    public AssertFailException(String message, Throwable e) {
+        super(ErrorCode.ASSERT_FAIL, message, e);
     }
 }

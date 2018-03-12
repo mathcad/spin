@@ -1,6 +1,6 @@
 package org.spin.core;
 
-import org.spin.core.throwable.NullArgumentException;
+import org.spin.core.throwable.AssertFailException;
 import org.spin.core.util.StringUtils;
 
 import java.util.Collection;
@@ -12,9 +12,7 @@ import java.util.regex.Pattern;
  * 断言工具
  * <p>异常抛出规则：</p>
  * <ul>
- * <li>空引用 {@code null} 将抛出 {@link NullArgumentException}.</li>
- * <li>非空引用将抛出 {@link IllegalArgumentException}.</li>
- * <li>array/collection/map/string的非法索引将抛出 {@link IndexOutOfBoundsException}.</li>
+ * <li>断言失败将抛出 {@link AssertFailException}.</li>
  * </ul>
  * <p>线程安全</p>
  */
@@ -43,7 +41,7 @@ public abstract class Assert {
     //---------------------------------------------------------------------------------
 
     /**
-     * 断言指定的bool表达式结果为 {@code true}; 否则使用抛出指定的异常
+     * 断言指定的bool表达式结果为 {@code true}; 否则抛出指定的异常
      * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;d", i);</pre>
      *
      * @param expression 需要判断的bool表达式
@@ -54,7 +52,7 @@ public abstract class Assert {
             throw exception.get();
         }
     }
-    
+
     /**
      * 断言指定的bool表达式结果为 {@code true}; 否则使用指定的消息抛出异常
      * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;d", i);</pre>
@@ -62,14 +60,14 @@ public abstract class Assert {
      * @param expression 需要判断的bool表达式
      * @param message    {@link String#format(String, Object...)} 条件不成立时的异常信息, 不能为空
      * @param value      条件不成立时，追加在异常信息中的long值
-     * @throws IllegalArgumentException 条件不成立时抛出异常 {@code false}
+     * @throws AssertFailException 条件不成立时抛出异常 {@code false}
      * @see #isTrue(boolean)
      * @see #isTrue(boolean, String, double)
      * @see #isTrue(boolean, String, Object...)
      */
     public static void isTrue(final boolean expression, final String message, final long value) {
         if (!expression) {
-            throw new IllegalArgumentException(String.format(message, value));
+            throw new AssertFailException(String.format(message, value));
         }
     }
 
@@ -80,14 +78,14 @@ public abstract class Assert {
      * @param expression 需要判断的bool表达式
      * @param message    {@link String#format(String, Object...)} 条件不成立时的异常信息, 不能为空
      * @param value      条件不成立时，追加在异常信息中的double值
-     * @throws IllegalArgumentException 条件不成立时抛出异常 {@code false}
+     * @throws AssertFailException 条件不成立时抛出异常 {@code false}
      * @see #isTrue(boolean)
      * @see #isTrue(boolean, String, long)
      * @see #isTrue(boolean, String, Object...)
      */
     public static void isTrue(final boolean expression, final String message, final double value) {
         if (!expression) {
-            throw new IllegalArgumentException(String.format(message, value));
+            throw new AssertFailException(String.format(message, value));
         }
     }
 
@@ -98,14 +96,14 @@ public abstract class Assert {
      * @param expression 需要判断的bool表达式
      * @param message    {@link String#format(String, Object...)} 条件不成立时的异常信息, 不能为空
      * @param values     条件不成立时，追加在异常信息中的参数
-     * @throws IllegalArgumentException 条件不成立时抛出异常 {@code false}
+     * @throws AssertFailException 条件不成立时抛出异常 {@code false}
      * @see #isTrue(boolean)
      * @see #isTrue(boolean, String, long)
      * @see #isTrue(boolean, String, double)
      */
     public static void isTrue(final boolean expression, final String message, final Object... values) {
         if (!expression) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
     }
 
@@ -114,14 +112,14 @@ public abstract class Assert {
      * <pre>Assert.notTrue(i &gt; 0, "必须大于0");</pre>
      *
      * @param expression 需要判断的bool表达式
-     * @throws IllegalArgumentException 条件不成立时抛出异常 {@code false}
+     * @throws AssertFailException 条件不成立时抛出异常 {@code false}
      * @see #isTrue(boolean, String, long)
      * @see #isTrue(boolean, String, double)
      * @see #isTrue(boolean, String, Object...)
      */
     public static void isTrue(final boolean expression) {
         if (!expression) {
-            throw new IllegalArgumentException(DEFAULT_IS_TRUE_EX_MESSAGE);
+            throw new AssertFailException(DEFAULT_IS_TRUE_EX_MESSAGE);
         }
     }
 
@@ -151,14 +149,14 @@ public abstract class Assert {
      * @param expression 需要判断的bool表达式
      * @param message    {@link String#format(String, Object...)} 条件成立时的异常信息, 不能为空
      * @param value      条件成立时，追加在异常信息中的long值
-     * @throws IllegalArgumentException 条件成立时抛出异常 {@code true}
+     * @throws AssertFailException 条件成立时抛出异常 {@code true}
      * @see #notTrue(boolean)
      * @see #notTrue(boolean, String, double)
      * @see #notTrue(boolean, String, Object...)
      */
     public static void notTrue(final boolean expression, final String message, final long value) {
         if (expression) {
-            throw new IllegalArgumentException(String.format(message, value));
+            throw new AssertFailException(String.format(message, value));
         }
     }
 
@@ -169,14 +167,14 @@ public abstract class Assert {
      * @param expression 需要判断的bool表达式
      * @param message    {@link String#format(String, Object...)} 条件成立时的异常信息, 不能为空
      * @param value      条件成立时，追加在异常信息中的double值
-     * @throws IllegalArgumentException 条件成立时抛出异常 {@code true}
+     * @throws AssertFailException 条件成立时抛出异常 {@code true}
      * @see #notTrue(boolean)
      * @see #notTrue(boolean, String, long)
      * @see #notTrue(boolean, String, Object...)
      */
     public static void notTrue(final boolean expression, final String message, final double value) {
         if (expression) {
-            throw new IllegalArgumentException(String.format(message, value));
+            throw new AssertFailException(String.format(message, value));
         }
     }
 
@@ -187,14 +185,14 @@ public abstract class Assert {
      * @param expression 需要判断的bool表达式
      * @param message    {@link String#format(String, Object...)} 条件成立时的异常信息, 不能为空
      * @param values     条件成立时，追加在异常信息中的参数
-     * @throws IllegalArgumentException 条件成立时抛出异常 {@code true}
+     * @throws AssertFailException 条件成立时抛出异常 {@code true}
      * @see #notTrue(boolean)
      * @see #notTrue(boolean, String, long)
      * @see #notTrue(boolean, String, double)
      */
     public static void notTrue(final boolean expression, final String message, final Object... values) {
         if (expression) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
     }
 
@@ -203,14 +201,14 @@ public abstract class Assert {
      * <pre>Assert.notTrue(i &gt; 0.0, "必须小于等于0");</pre>
      *
      * @param expression 需要判断的bool表达式
-     * @throws IllegalArgumentException 条件成立时抛出异常 {@code true}
+     * @throws AssertFailException 条件成立时抛出异常 {@code true}
      * @see #notTrue(boolean, String, long)
      * @see #notTrue(boolean, String, double)
      * @see #notTrue(boolean, String, Object...)
      */
     public static void notTrue(final boolean expression) {
         if (expression) {
-            throw new IllegalArgumentException(DEFAULT_IS_TRUE_EX_MESSAGE);
+            throw new AssertFailException(DEFAULT_IS_TRUE_EX_MESSAGE);
         }
     }
 
@@ -226,7 +224,7 @@ public abstract class Assert {
      * @param <T>    类型参数
      * @param object 待检查对象
      * @return 返回对象自身 (一定不为 {@code null})
-     * @throws NullArgumentException 当对象为空时抛出 {@code null}
+     * @throws AssertFailException 当对象为空时抛出 {@code null}
      * @see #notNull(Object, String, Object...)
      */
     public static <T> T notNull(final T object) {
@@ -242,12 +240,12 @@ public abstract class Assert {
      * @param message 对象为null时的异常信息 {@link String#format(String, Object...)}，不能为空
      * @param values  异常信息的填充参数
      * @return 返回对象自身 (一定不为 {@code null})
-     * @throws NullArgumentException 当对象为空时抛出 {@code null}
+     * @throws AssertFailException 当对象为空时抛出 {@code null}
      * @see #notNull(Object)
      */
     public static <T> T notNull(final T object, final String message, final Object... values) {
         if (object == null) {
-            throw new NullArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return object;
     }
@@ -264,15 +262,15 @@ public abstract class Assert {
      * @param message 异常信息 {@link String#format(String, Object...)}，不能为空
      * @param values  异常信息的填充参数
      * @return 检查通过时返回原数组
-     * @throws NullArgumentException    当数组为{@code null}时抛出
-     * @throws IllegalArgumentException 当数组为空时抛出
+     * @throws AssertFailException 当数组为{@code null}时抛出
+     * @throws AssertFailException 当数组为空时抛出
      */
     public static <T> T[] notEmpty(final T[] array, final String message, final Object... values) {
         if (array == null) {
-            throw new NullArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         if (array.length == 0) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return array;
     }
@@ -287,8 +285,8 @@ public abstract class Assert {
      * @param <T>   数组元素类型
      * @param array 待检查的数组
      * @return 检查通过时返回原数组
-     * @throws NullArgumentException    当数组为{@code null}时抛出
-     * @throws IllegalArgumentException 当数组为空时抛出
+     * @throws AssertFailException 当数组为{@code null}时抛出
+     * @throws AssertFailException 当数组为空时抛出
      */
     public static <T> T[] notEmpty(final T[] array) {
         return notEmpty(array, DEFAULT_NOT_EMPTY_ARRAY_EX_MESSAGE);
@@ -306,15 +304,15 @@ public abstract class Assert {
      * @param message    异常信息 {@link String#format(String, Object...)}，不能为空
      * @param values     异常信息的填充参数
      * @return 检查通过时返回原集合
-     * @throws NullArgumentException    当集合为{@code null}时抛出
-     * @throws IllegalArgumentException 当集合为空时抛出
+     * @throws AssertFailException 当集合为{@code null}时抛出
+     * @throws AssertFailException 当集合为空时抛出
      */
     public static <T extends Collection<?>> T notEmpty(final T collection, final String message, final Object... values) {
         if (collection == null) {
-            throw new NullArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         if (collection.isEmpty()) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return collection;
     }
@@ -329,8 +327,8 @@ public abstract class Assert {
      * @param <T>        集合参数类型
      * @param collection 待检查的集合
      * @return 检查通过时返回原集合
-     * @throws NullArgumentException    当集合为{@code null}时抛出
-     * @throws IllegalArgumentException 当集合为空时抛出
+     * @throws AssertFailException 当集合为{@code null}时抛出
+     * @throws AssertFailException 当集合为空时抛出
      */
     public static <T extends Collection<?>> T notEmpty(final T collection) {
         return notEmpty(collection, DEFAULT_NOT_EMPTY_COLLECTION_EX_MESSAGE);
@@ -348,15 +346,15 @@ public abstract class Assert {
      * @param message 异常信息 {@link String#format(String, Object...)}，不能为空
      * @param values  异常信息的填充参数
      * @return 检查通过时返回原Map
-     * @throws NullArgumentException    当Map为{@code null}时抛出
-     * @throws IllegalArgumentException 当Map为空时抛出
+     * @throws AssertFailException 当Map为{@code null}时抛出
+     * @throws AssertFailException 当Map为空时抛出
      */
     public static <T extends Map<?, ?>> T notEmpty(final T map, final String message, final Object... values) {
         if (map == null) {
-            throw new NullArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         if (map.isEmpty()) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return map;
     }
@@ -371,8 +369,8 @@ public abstract class Assert {
      * @param <T> Map参数类型
      * @param map 待检查的Map
      * @return 检查通过时返回原Map
-     * @throws NullArgumentException    当Map为{@code null}时抛出
-     * @throws IllegalArgumentException 当Map为空时抛出
+     * @throws AssertFailException 当Map为{@code null}时抛出
+     * @throws AssertFailException 当Map为空时抛出
      */
     public static <T extends Map<?, ?>> T notEmpty(final T map) {
         return notEmpty(map, DEFAULT_NOT_EMPTY_MAP_EX_MESSAGE);
@@ -393,15 +391,15 @@ public abstract class Assert {
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
      * @return the validated character sequence (never {@code null} method for chaining)
-     * @throws NullArgumentException    if the character sequence is {@code null}
-     * @throws IllegalArgumentException if the character sequence is empty
+     * @throws AssertFailException if the character sequence is {@code null}
+     * @throws AssertFailException if the character sequence is empty
      */
     public static <T extends CharSequence> T notEmpty(final T chars, final String message, final Object... values) {
         if (chars == null) {
-            throw new NullArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         if (chars.length() == 0) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return chars;
     }
@@ -419,8 +417,8 @@ public abstract class Assert {
      * @param <T>   the character sequence type
      * @param chars the character sequence to check, validated not null by this method
      * @return the validated character sequence (never {@code null} method for chaining)
-     * @throws NullArgumentException    if the character sequence is {@code null}
-     * @throws IllegalArgumentException if the character sequence is empty
+     * @throws AssertFailException if the character sequence is {@code null}
+     * @throws AssertFailException if the character sequence is empty
      */
     public static <T extends CharSequence> T notEmpty(final T chars) {
         return notEmpty(chars, DEFAULT_NOT_EMPTY_CHAR_SEQUENCE_EX_MESSAGE);
@@ -444,15 +442,15 @@ public abstract class Assert {
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
      * @return the validated array (never {@code null} for method chaining)
-     * @throws NullArgumentException     if the array is {@code null}
-     * @throws IndexOutOfBoundsException if the index is invalid
+     * @throws AssertFailException if the array is {@code null}
+     * @throws AssertFailException if the index is invalid
      * @see #validIndex(Object[], int)
      * @since 3.0
      */
     public static <T> T[] validIndex(final T[] array, final int index, final String message, final Object... values) {
         Assert.notNull(array);
         if (index < 0 || index >= array.length) {
-            throw new IndexOutOfBoundsException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return array;
     }
@@ -474,8 +472,8 @@ public abstract class Assert {
      * @param array the array to check, validated not null by this method
      * @param index the index to check
      * @return the validated array (never {@code null} for method chaining)
-     * @throws NullArgumentException     if the array is {@code null}
-     * @throws IndexOutOfBoundsException if the index is invalid
+     * @throws AssertFailException if the array is {@code null}
+     * @throws AssertFailException if the index is invalid
      * @see #validIndex(Object[], int, String, Object...)
      * @since 3.0
      */
@@ -501,15 +499,14 @@ public abstract class Assert {
      * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values     the optional values for the formatted exception message, null array not recommended
      * @return the validated collection (never {@code null} for chaining)
-     * @throws NullArgumentException     if the collection is {@code null}
-     * @throws IndexOutOfBoundsException if the index is invalid
+     * @throws AssertFailException if the index is invalid
      * @see #validIndex(Collection, int)
      * @since 3.0
      */
     public static <T extends Collection<?>> T validIndex(final T collection, final int index, final String message, final Object... values) {
         Assert.notNull(collection);
         if (index < 0 || index >= collection.size()) {
-            throw new IndexOutOfBoundsException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return collection;
     }
@@ -528,8 +525,7 @@ public abstract class Assert {
      * @param collection the collection to check, validated not null by this method
      * @param index      the index to check
      * @return the validated collection (never {@code null} for method chaining)
-     * @throws NullArgumentException     if the collection is {@code null}
-     * @throws IndexOutOfBoundsException if the index is invalid
+     * @throws AssertFailException if the index is invalid
      * @see #validIndex(Collection, int, String, Object...)
      * @since 3.0
      */
@@ -556,15 +552,14 @@ public abstract class Assert {
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
      * @return the validated character sequence (never {@code null} for method chaining)
-     * @throws NullArgumentException     if the character sequence is {@code null}
-     * @throws IndexOutOfBoundsException if the index is invalid
+     * @throws AssertFailException if the index is invalid
      * @see #validIndex(CharSequence, int)
      * @since 3.0
      */
     public static <T extends CharSequence> T validIndex(final T chars, final int index, final String message, final Object... values) {
         Assert.notNull(chars);
         if (index < 0 || index >= chars.length()) {
-            throw new IndexOutOfBoundsException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return chars;
     }
@@ -587,8 +582,7 @@ public abstract class Assert {
      * @param chars the character sequence to check, validated not null by this method
      * @param index the index to check
      * @return the validated character sequence (never {@code null} for method chaining)
-     * @throws NullArgumentException     if the character sequence is {@code null}
-     * @throws IndexOutOfBoundsException if the index is invalid
+     * @throws AssertFailException if the character sequence is {@code null}
      * @see #validIndex(CharSequence, int, String, Object...)
      * @since 3.0
      */
@@ -603,11 +597,11 @@ public abstract class Assert {
      *
      * @param text    the String to check
      * @param message the exception message to use if the assertion fails
-     * @throws IllegalArgumentException if the text does not contain valid text content
+     * @throws AssertFailException if the text does not contain valid text content
      */
     public static String notBlank(String text, String message) {
         if (StringUtils.isBlank(text)) {
-            throw new IllegalArgumentException(message);
+            throw new AssertFailException(message);
         }
         return text;
     }
@@ -618,7 +612,7 @@ public abstract class Assert {
      * <pre class="code">Assert.hasText(name, "'name' must not be empty");</pre>
      *
      * @param text the String to check
-     * @throws IllegalArgumentException if the text does not contain valid text content
+     * @throws AssertFailException if the text does not contain valid text content
      */
     public static String notBlank(String text) {
         return notBlank(text, "[Assertion failed] - this String argument must have text; it must not be null, empty, or blank");
@@ -632,12 +626,12 @@ public abstract class Assert {
      * @param textToSearch the text to search
      * @param substring    the substring to find within the text
      * @param message      the exception message to use if the assertion fails
-     * @throws IllegalArgumentException if the text contains the substring
+     * @throws AssertFailException if the text contains the substring
      */
     public static String doesNotContain(String textToSearch, String substring, String message) {
         if (StringUtils.isNotEmpty(textToSearch) && StringUtils.isNotEmpty(substring) &&
             textToSearch.contains(substring)) {
-            throw new IllegalArgumentException(message);
+            throw new AssertFailException(message);
         }
         return textToSearch;
     }
@@ -648,7 +642,7 @@ public abstract class Assert {
      *
      * @param textToSearch the text to search
      * @param substring    the substring to find within the text
-     * @throws IllegalArgumentException if the text contains the substring
+     * @throws AssertFailException if the text contains the substring
      */
     public static String doesNotContain(String textToSearch, String substring) {
         return doesNotContain(textToSearch, substring,
@@ -668,13 +662,13 @@ public abstract class Assert {
      *
      * @param input   the character sequence to validate, not null
      * @param pattern the regular expression pattern, not null
-     * @throws IllegalArgumentException if the character sequence does not match the pattern
+     * @throws AssertFailException if the character sequence does not match the pattern
      * @see #matchesPattern(CharSequence, String, String, Object...)
      * @since 3.0
      */
     public static <T extends CharSequence> T matchesPattern(final T input, final String pattern) {
         if (!Pattern.matches(pattern, input)) {
-            throw new IllegalArgumentException(String.format(DEFAULT_MATCHES_PATTERN_EX, input, pattern));
+            throw new AssertFailException(String.format(DEFAULT_MATCHES_PATTERN_EX, input, pattern));
         }
         return input;
     }
@@ -691,13 +685,13 @@ public abstract class Assert {
      * @param pattern the regular expression pattern, not null
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
-     * @throws IllegalArgumentException if the character sequence does not match the pattern
+     * @throws AssertFailException if the character sequence does not match the pattern
      * @see #matchesPattern(CharSequence, String)
      * @since 3.0
      */
     public static <T extends CharSequence> T matchesPattern(final T input, final String pattern, final String message, final Object... values) {
         if (!Pattern.matches(pattern, input)) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return input;
     }
@@ -715,12 +709,12 @@ public abstract class Assert {
      * @param start the inclusive start value, not null
      * @param end   the inclusive end value, not null
      * @param value the object to validate, not null
-     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.0
      */
     public static <T extends Comparable<T>> T inclusiveBetween(final T start, final T end, final T value) {
         if (value.compareTo(start) < 0 || value.compareTo(end) > 0) {
-            throw new IllegalArgumentException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+            throw new AssertFailException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
         }
         return value;
     }
@@ -738,12 +732,12 @@ public abstract class Assert {
      * @param value   the object to validate, not null
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
-     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.0
      */
     public static <T extends Comparable<T>> T inclusiveBetween(final T start, final T end, final T value, final String message, final Object... values) {
         if (value.compareTo(start) < 0 || value.compareTo(end) > 0) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return value;
     }
@@ -757,12 +751,12 @@ public abstract class Assert {
      * @param start the inclusive start value
      * @param end   the inclusive end value
      * @param value the value to validate
-     * @throws IllegalArgumentException if the value falls outside the boundaries (inclusive)
+     * @throws AssertFailException if the value falls outside the boundaries (inclusive)
      * @since 3.3
      */
     public static long inclusiveBetween(final long start, final long end, final long value) {
         if (value < start || value > end) {
-            throw new IllegalArgumentException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+            throw new AssertFailException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
         }
         return value;
     }
@@ -778,12 +772,12 @@ public abstract class Assert {
      * @param end     the inclusive end value
      * @param value   the value to validate
      * @param message the exception message if invalid, not null
-     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.3
      */
     public static long inclusiveBetween(final long start, final long end, final long value, final String message) {
         if (value < start || value > end) {
-            throw new IllegalArgumentException(message);
+            throw new AssertFailException(message);
         }
         return value;
     }
@@ -797,12 +791,12 @@ public abstract class Assert {
      * @param start the inclusive start value
      * @param end   the inclusive end value
      * @param value the value to validate
-     * @throws IllegalArgumentException if the value falls outside the boundaries (inclusive)
+     * @throws AssertFailException if the value falls outside the boundaries (inclusive)
      * @since 3.3
      */
     public static double inclusiveBetween(final double start, final double end, final double value) {
         if (value < start || value > end) {
-            throw new IllegalArgumentException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+            throw new AssertFailException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
         }
         return value;
     }
@@ -818,12 +812,12 @@ public abstract class Assert {
      * @param end     the inclusive end value
      * @param value   the value to validate
      * @param message the exception message if invalid, not null
-     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.3
      */
     public static double inclusiveBetween(final double start, final double end, final double value, final String message) {
         if (value < start || value > end) {
-            throw new IllegalArgumentException(message);
+            throw new AssertFailException(message);
         }
         return value;
     }
@@ -841,12 +835,12 @@ public abstract class Assert {
      * @param start the exclusive start value, not null
      * @param end   the exclusive end value, not null
      * @param value the object to validate, not null
-     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.0
      */
     public static <T extends Comparable<T>> T exclusiveBetween(final T start, final T end, final T value) {
         if (value.compareTo(start) <= 0 || value.compareTo(end) >= 0) {
-            throw new IllegalArgumentException(String.format(DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+            throw new AssertFailException(String.format(DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
         }
         return value;
     }
@@ -864,12 +858,12 @@ public abstract class Assert {
      * @param value   the object to validate, not null
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
-     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.0
      */
     public static <T extends Comparable<T>> T exclusiveBetween(final T start, final T end, final T value, final String message, final Object... values) {
         if (value.compareTo(start) <= 0 || value.compareTo(end) >= 0) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return value;
     }
@@ -883,12 +877,12 @@ public abstract class Assert {
      * @param start the exclusive start value
      * @param end   the exclusive end value
      * @param value the value to validate
-     * @throws IllegalArgumentException if the value falls out of the boundaries
+     * @throws AssertFailException if the value falls out of the boundaries
      * @since 3.3
      */
     public static long exclusiveBetween(final long start, final long end, final long value) {
         if (value <= start || value >= end) {
-            throw new IllegalArgumentException(String.format(DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+            throw new AssertFailException(String.format(DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
         }
         return value;
     }
@@ -904,12 +898,12 @@ public abstract class Assert {
      * @param end     the exclusive end value
      * @param value   the value to validate
      * @param message the exception message if invalid, not null
-     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.3
      */
     public static long exclusiveBetween(final long start, final long end, final long value, final String message) {
         if (value <= start || value >= end) {
-            throw new IllegalArgumentException(message);
+            throw new AssertFailException(message);
         }
         return value;
     }
@@ -923,12 +917,12 @@ public abstract class Assert {
      * @param start the exclusive start value
      * @param end   the exclusive end value
      * @param value the value to validate
-     * @throws IllegalArgumentException if the value falls out of the boundaries
+     * @throws AssertFailException if the value falls out of the boundaries
      * @since 3.3
      */
     public static double exclusiveBetween(final double start, final double end, final double value) {
         if (value <= start || value >= end) {
-            throw new IllegalArgumentException(String.format(DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+            throw new AssertFailException(String.format(DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
         }
         return value;
     }
@@ -944,12 +938,12 @@ public abstract class Assert {
      * @param end     the exclusive end value
      * @param value   the value to validate
      * @param message the exception message if invalid, not null
-     * @throws IllegalArgumentException if the value falls outside the boundaries
+     * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.3
      */
     public static double exclusiveBetween(final double start, final double end, final double value, final String message) {
         if (value <= start || value >= end) {
-            throw new IllegalArgumentException(message);
+            throw new AssertFailException(message);
         }
         return value;
     }
@@ -968,7 +962,7 @@ public abstract class Assert {
      *
      * @param type the class the object must be validated against, not null
      * @param obj  the object to check, null throws an exception
-     * @throws IllegalArgumentException if argument is not of specified class
+     * @throws AssertFailException if argument is not of specified class
      * @see #isInstanceOf(Class, Object, String, Object...)
      * @since 3.0
      */
@@ -988,13 +982,13 @@ public abstract class Assert {
      * @param obj     the object to check, null throws an exception
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
-     * @throws IllegalArgumentException if argument is not of specified class
+     * @throws AssertFailException if argument is not of specified class
      * @see #isInstanceOf(Class, Object)
      * @since 3.0
      */
     public static <T> T isInstanceOf(final Class<?> type, final Object obj, final String message, final Object... values) {
         if (!notNull(type).isInstance(obj)) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         //noinspection unchecked
         return (T) obj;
@@ -1014,7 +1008,7 @@ public abstract class Assert {
      *
      * @param superType the class the class must be validated against, not null
      * @param type      the class to check, not null
-     * @throws IllegalArgumentException if type argument is not assignable to the specified superType
+     * @throws AssertFailException if type argument is not assignable to the specified superType
      * @see #isAssignableFrom(Class, Class, String, Object...)
      * @since 3.0
      */
@@ -1037,12 +1031,12 @@ public abstract class Assert {
      * @param type      the class to check, not null
      * @param message   the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values    the optional values for the formatted exception message, null array not recommended
-     * @throws IllegalArgumentException if argument can not be converted to the specified class
+     * @throws AssertFailException if argument can not be converted to the specified class
      * @see #isAssignableFrom(Class, Class)
      */
     public static <T> Class<T> isAssignableFrom(final Class<?> superType, final Class<T> type, final String message, final Object... values) {
         if (!superType.isAssignableFrom(type)) {
-            throw new IllegalArgumentException(String.format(message, values));
+            throw new AssertFailException(String.format(message, values));
         }
         return type;
     }
