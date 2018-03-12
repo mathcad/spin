@@ -8,7 +8,11 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -75,6 +79,19 @@ public class DateUtilsTest {
         end = DateUtils.addMinutes(end, 31);
 //        end = DateUtils.addYears(end, 2);
         System.out.println(DateUtils.prettyDuration(end, dateTime));
+    }
+
+    @Test
+    public void testUtc() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSz");
+        System.out.println(dtf.format(ZonedDateTime.now()));
+        ZonedDateTime z = ZonedDateTime.parse("2018-03-12T01:11:16.912Z", dtf);
+
+        Pattern p = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[A-Z]+");
+        System.out.println(p.matcher("2018-03-12T01:11:16.912CTS").matches());
+        System.out.println(z.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime());
+
+        System.out.println(DateUtils.toLocalDateTime("2018-03-12T01:11:16.912Asia/Shanghai"));
     }
 
     public static class A {

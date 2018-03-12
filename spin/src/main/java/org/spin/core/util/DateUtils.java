@@ -9,6 +9,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
@@ -43,6 +44,8 @@ public abstract class DateUtils {
     // 123
     private static final String MILLION_SECOND_PATTERN = "(\\d{3})";
 
+    private static final String ZONED_PATTERN_S = "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[A-Za-z/]+";
+
     private static final String DAY = "yyyy-MM-dd";
     private static final String SECOND = "yyyy-MM-dd HH:mm:ss";
     private static final String MILLSEC = "yyyy-MM-dd HH:mm:ss SSS";
@@ -50,6 +53,7 @@ public abstract class DateUtils {
     private static final String ZH_SECOND = "yyyy年MM月dd日 HH时mm分ss秒";
     private static final String FULL_DAY = "yyyy_MM_dd_HH_mm_ss_S";
     private static final String NO_FORMAT = "yyyyMMddHHmmss";
+    private static final String ZONED_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSz";
 
     private static final ThreadLocal<SimpleDateFormat> daySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(DAY));
     private static final ThreadLocal<SimpleDateFormat> secondSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(SECOND));
@@ -66,6 +70,7 @@ public abstract class DateUtils {
     private static final DateTimeFormatter zhSecondDtf = DateTimeFormatter.ofPattern(ZH_SECOND);
     private static final DateTimeFormatter fullDayDtf = DateTimeFormatter.ofPattern(FULL_DAY);
     private static final DateTimeFormatter noFormatDtf = DateTimeFormatter.ofPattern(NO_FORMAT);
+    private static final DateTimeFormatter zonedDtf = DateTimeFormatter.ofPattern(ZONED_FORMAT);
 
 
     private static final String[] datePatten = {
@@ -98,6 +103,8 @@ public abstract class DateUtils {
     };
 
     private static final Pattern[] pattens = new Pattern[datePatten.length * timePatten.length + datePatten.length];
+
+    private static final Pattern ZONED_PATTERN = Pattern.compile(ZONED_PATTERN_S);
 
     static {
         for (int i = 0; i < datePatten.length; i++) {
@@ -197,6 +204,9 @@ public abstract class DateUtils {
      * @return 日期
      */
     public static LocalDateTime toLocalDateTime(String date) {
+        if (ZONED_PATTERN.matcher(date).matches()) {
+            return ZonedDateTime.parse(date, zonedDtf).withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+        }
         Date d = toDate(date);
         return toLocalDateTime(d);
     }
@@ -262,6 +272,10 @@ public abstract class DateUtils {
      */
     public static Date addSeconds(Date date, int seconds) {
         return null == date ? null : new Date(date.getTime() + seconds * 1000L);
+    }
+
+    public static ZonedDateTime toZonedDateTime(String date) {
+        return ZonedDateTime.parse(date, zonedDtf);
     }
 
     /**
@@ -570,6 +584,10 @@ public abstract class DateUtils {
      */
     public static String formatDateForNoFormat(TemporalAccessor date) {
         return null == date ? null : noFormatDtf.format(date);
+    }
+
+    public static String formatDateForZoned(ZonedDateTime zonedDateTime) {
+        return zonedDtf.format(zonedDateTime);
     }
 
     /**
