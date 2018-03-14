@@ -33,7 +33,7 @@ public class LongTypeAdapter extends MatchableTypeAdapter<Long> {
         if (null == value) {
             out.nullValue();
         } else {
-            if (null != field && null != field.getAnnotation(PreventOverflow.class)) {
+            if (value > 9007199254740992L || null != field && null != field.getAnnotation(PreventOverflow.class)) {
                 out.value(value.toString());
             } else {
                 out.value(value);
