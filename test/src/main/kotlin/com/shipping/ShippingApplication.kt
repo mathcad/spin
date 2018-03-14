@@ -31,7 +31,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 @EnableConfigurationProperties(DruidDataSourceProperties::class)
 @EnableSecretManager
 @EnableIdGenerator
-open class ShippingApplication : WebMvcConfigurer {
+class ShippingApplication : WebMvcConfigurer {
 
     @Autowired
     private lateinit var env: Environment
@@ -42,7 +42,7 @@ open class ShippingApplication : WebMvcConfigurer {
     }
 
     @Bean
-    open fun readConfig(): InitializingBean {
+    fun readConfig(): InitializingBean {
         return InitializingBean {
             InfoCache.RSA_PUBKEY = RSA.getRSAPublicKey(env.getProperty("encrypt.rsa.publicKey"))
             InfoCache.RSA_PRIKEY = RSA.getRSAPrivateKey(env.getProperty("encrypt.rsa.privatekey"))

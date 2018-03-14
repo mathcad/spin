@@ -17,15 +17,15 @@ import javax.transaction.Transactional
  * @author xuweinan
  */
 @RestfulService
-open class FunctionService {
+class FunctionService {
 
     @Autowired
     private lateinit var repoCtx: RepositoryContext
 
     @RestfulMethod
     @Transactional
-    open fun add(func: Function) {
-        if (Objects.nonNull(func.parent)) {
+    fun add(func: Function) {
+        func.parent?.let {
             OrganizationTypeE.GROUP
             repoCtx.get(Function::class.java, func.parent!!.id)
             repoCtx.save(func, true)

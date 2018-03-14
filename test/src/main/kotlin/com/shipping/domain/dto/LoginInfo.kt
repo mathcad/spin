@@ -25,8 +25,8 @@ class LoginInfo {
     }
 
     fun setTokenInfo(tokenInfo: TokenInfo, expiredIn: Long?) {
-        this.tokenInfo.put("token", tokenInfo.token)
-        this.tokenInfo.put("expiredSince", Date(tokenInfo.generateTime!! + expiredIn!!))
+        this.tokenInfo["token"] = tokenInfo.token
+        this.tokenInfo["expiredSince"] = Date(tokenInfo.generateTime!! + expiredIn!!)
     }
 
     fun getKeyInfo(): Map<String, Any> {
@@ -34,8 +34,8 @@ class LoginInfo {
     }
 
     fun setKeyInfo(keyInfo: KeyInfo, expiredIn: Long?) {
-        this.keyInfo.put("key", keyInfo.key)
-        this.keyInfo.put("expiredSince", Date(keyInfo.generateTime!! + expiredIn!!))
+        this.keyInfo["key"] = keyInfo.key
+        this.keyInfo["expiredSince"] = Date(keyInfo.generateTime!! + expiredIn!!)
     }
 
     fun setUserInfo(user: User) {

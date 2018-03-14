@@ -11,30 +11,29 @@ import java.util.*
  *
  * @author xuweinan
  */
-class MenuDto {
+class MenuDto(
+    var id: Long? = null,
 
-    var id: Long? = null
+    var name: String? = null,
 
-    var name: String? = null
+    var type: FunctionTypeE? = null,
 
-    var type: FunctionTypeE? = null
+    var code: String? = null,
 
-    var code: String? = null
+    var icon: String? = null,
 
-    var icon: String? = null
+    var link: String? = null,
 
-    var link: String? = null
+    var parent: Long? = null,
 
-    var parent: Long? = null
+    var idPath: String = "",
 
-    var idPath: String = ""
+    var orderNo: Float = 0F,
 
-    var orderNo: Float = 0F
-
-    var isLeaf: Boolean = false
+    var isLeaf: Boolean = false,
 
     var children: MutableList<MenuDto> = ArrayList()
-
+) {
     companion object {
 
         fun toDto(function: Function): MenuDto {

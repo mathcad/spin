@@ -20,7 +20,7 @@ public class WxConfigManager {
 
     private static final Map<String, WxConfigInfo> infos = new HashMap<>();
 
-    public static final String DEFAULT = "default";
+    public static String DEFAULT = "default";
 
     public static WxConfigInfo getConfig(String name) {
         WxConfigInfo info = infos.get(name);

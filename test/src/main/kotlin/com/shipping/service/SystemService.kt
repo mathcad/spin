@@ -8,12 +8,12 @@ import com.shipping.domain.sys.Region
 import org.slf4j.LoggerFactory
 import org.spin.core.collection.FixedVector
 import org.spin.core.session.SessionManager
+import org.spin.core.util.MapUtils
 import org.spin.data.extend.RepositoryContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Objects
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 /**
  *
@@ -77,15 +77,10 @@ class SystemService {
         }
 
     private fun wraperFuncToMap(func: Function): Map<String, Any?> {
-        val f: MutableMap<String, Any?> = HashMap()
-        f["id"] = func.id!!.toString()
-        f["name"] = func.name
-        f["icon"] = func.name
-        f["link"] = func.name
+        val f: MutableMap<String, Any?> = MapUtils.ofMap("id", func.id?.toString(), "name", func.name, "icon", func.icon, "link", func.link, "visable", true)
         if (Objects.nonNull(func.parent)) {
             f["parent"] = func.parent!!.id
         }
-        f["visable"] = true
         return f
     }
 

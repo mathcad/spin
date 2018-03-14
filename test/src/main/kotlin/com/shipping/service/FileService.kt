@@ -6,9 +6,7 @@ import org.spin.web.FileOperator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-
-import java.util.ArrayList
-import java.util.UUID
+import java.util.*
 
 /**
  * 文件服务
@@ -18,36 +16,30 @@ import java.util.UUID
  * @author xuweinan
  */
 @Service
-open class FileService {
+class FileService {
 
     @Autowired
     private lateinit var repoCtx: RepositoryContext
 
     @Transactional
-    open fun saveFile(uploadResult: FileOperator.UploadResult): File {
-        val file = File()
-        file.guid = UUID.randomUUID().toString()
-        file.originName = uploadResult.originName
-        file.fileName = uploadResult.storeName.substring(uploadResult.storeName.lastIndexOf('/') + 1)
-        file.filePath = uploadResult.storeName
-        file.extension = uploadResult.extention
-        file.size = uploadResult.size
-        return repoCtx.save(file)
-    }
+    fun saveFile(uploadResult: FileOperator.UploadResult): File =
+        repoCtx.save(File(guid = UUID.randomUUID().toString(),
+            originName = uploadResult.originName,
+            fileName = uploadResult.storeName.substring(uploadResult.storeName.lastIndexOf('/') + 1),
+            filePath = uploadResult.storeName,
+            extension = uploadResult.extention,
+            size = uploadResult.size
+        ))
 
     @Transactional
-    open fun saveFiles(uploadResults: Collection<FileOperator.UploadResult>): List<File> {
-        val result = ArrayList<File>()
-        for (uploadResult in uploadResults) {
-            val file = File()
-            file.guid = UUID.randomUUID().toString()
-            file.originName = uploadResult.originName
-            file.fileName = uploadResult.storeName.substring(uploadResult.storeName.lastIndexOf('/') + 1)
-            file.filePath = uploadResult.storeName
-            file.extension = uploadResult.extention
-            file.size = uploadResult.size
-            result.add(repoCtx.save(file))
+    fun saveFiles(uploadResults: Collection<FileOperator.UploadResult>): List<File> =
+        uploadResults.map {
+            File(guid = UUID.randomUUID().toString(),
+                originName = it.originName,
+                fileName = it.storeName.substring(it.storeName.lastIndexOf('/') + 1),
+                filePath = it.storeName,
+                extension = it.extention,
+                size = it.size)
         }
-        return result
-    }
+
 }

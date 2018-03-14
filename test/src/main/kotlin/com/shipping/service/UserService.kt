@@ -8,6 +8,7 @@ import com.shipping.domain.sys.Function
 import com.shipping.domain.sys.User
 import com.shipping.internal.InfoCache
 import org.hibernate.criterion.Restrictions
+import org.spin.core.Assert
 import org.spin.core.ErrorCode
 import org.spin.core.auth.Authenticator
 import org.spin.core.auth.KeyInfo
@@ -21,7 +22,6 @@ import org.spin.core.util.StringUtils
 import org.spin.data.extend.RepositoryContext
 import org.spin.data.query.CriteriaBuilder
 import org.spin.web.FileOperator
-import org.spin.wx.AccessToken
 import org.spin.wx.WxHelper
 import org.spin.wx.WxTokenManager
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,16 +37,13 @@ import java.util.*
  * @author xuweinan
  */
 @Service
-open class UserService : Authenticator<User> {
+class UserService : Authenticator<User> {
 
     @Autowired
     private lateinit var repoCtx: RepositoryContext
 
     @Autowired
     private lateinit var secretManager: SecretManager
-
-    @Autowired
-    private lateinit var repositoryContext: RepositoryContext
 
     val currentUser: Map<String, Any?>?
         get() {
@@ -61,9 +58,8 @@ open class UserService : Authenticator<User> {
             }
         }
 
-    override fun getSubject(identity: Any): User {
-        return repositoryContext.getRepo(User::class.java).get(identity.toString().toLong())
-    }
+    override fun getSubject(identity: Any): User = repoCtx.getRepo(User::class.java).get(identity.toString().toLong())
+
 
     override fun getRolePermissionList(identity: Any): RolePermission {
         // 角色权限
@@ -79,8 +75,8 @@ open class UserService : Authenticator<User> {
         }
     }
 
-    override fun authenticate(id: Any?, password: String): Boolean {
-        if (null == id || StringUtils.isEmpty(password))
+    override fun authenticate(id: Any, password: String): Boolean {
+        if (StringUtils.isEmpty(password))
             return false
         val user: User? = try {
             repoCtx.get(User::class.java, id.toString().toLong())
@@ -88,66 +84,58 @@ open class UserService : Authenticator<User> {
             repoCtx.findOne(CriteriaBuilder.forClass(User::class.java).eq("userName", id.toString()))
         }
 
-        return user != null && !StringUtils.isEmpty(user.password) && DigestUtils.sha256Hex(password + user.salt) == user.password
+        return DigestUtils.sha256Hex(password + user?.salt) == user?.password
     }
 
-    override fun checkAuthorities(id: Any, authRouter: String?): Boolean {
-        // 权限验证
-        return BooleanExt.ofAny(StringUtils.isEmpty(authRouter)).yes { true }.otherwise {
+    override fun checkAuthorities(id: Any, authRouter: String?): Boolean =
+    // 权限验证
+        BooleanExt.ofAny(StringUtils.isEmpty(authRouter)).yes { true }.otherwise {
             val apis = getUserFunctions(id as Long)[FunctionTypeE.API]
             apis?.any { a -> authRouter == a.code }
         }
-    }
 
     @Transactional
-    open fun saveUser(user: User): User {
-        return repoCtx.save(user)
-    }
+    fun saveUser(user: User): User = repoCtx.save(user)
 
-    fun getUser(id: Long): User {
-        return repoCtx.get(User::class.java, id)
-    }
 
-    fun getWxUser(openid: String): User {
-        return repoCtx.findOne(User::class.java, "openid", openid)
-    }
+    fun getUser(id: Long): User = repoCtx.get(User::class.java, id)
+
+
+    fun getWxUser(openid: String): User? = repoCtx.findOne(User::class.java, "openid", openid)
+
 
     @Transactional
-    open fun createUserFromWx(openId: String): User {
-        val accessToken = WxTokenManager.getDefaultOAuthToken()
-        val wxUserInfo = WxHelper.getUserInfo(accessToken.token, openId)
-        val user = User()
-        user.openId = openId
-        user.nickname = wxUserInfo.nickname
-        user.userType = UserTypeE.普通用户
+    fun createUserFromWx(openId: String): User =
+        WxHelper.getUserInfo(WxTokenManager.getDefaultOAuthToken().token, openId).run {
+            FileOperator.saveFileFromUrl(headimgurl).run {
+                repoCtx.save(User(
+                    openId = openId,
+                    nickname = nickname,
+                    userType = UserTypeE.普通用户,
+                    headImg = repoCtx.save(File(
+                        guid = UUID.randomUUID().toString(),
+                        originName = originName,
+                        fileName = storeName.substring(storeName.lastIndexOf('/') + 1),
+                        filePath = storeName,
+                        extension = extention,
+                        size = size
+                    ))
+                ))
+            }
+        }
 
-        val rs = FileOperator.saveFileFromUrl(wxUserInfo.headimgurl)
-        var file = File()
-        file.guid = UUID.randomUUID().toString()
-        file.originName = rs.originName
-        file.fileName = rs.storeName.substring(rs.storeName.lastIndexOf('/') + 1)
-        file.filePath = rs.storeName
-        file.extension = rs.extention
-        file.size = rs.size
-        file = repoCtx.save(file)
-
-        user.headImg = file
-        return repoCtx.save(user)
-    }
 
     /**
      * 常规登录
      */
-    fun login(identity: String, password: String): LoginInfo {
-        return checkUser(identity, password, null, true)
-    }
+    fun login(identity: String, password: String): LoginInfo = checkUser(identity, password, null, true)
+
 
     /**
      * 注销
      */
-    fun logout(key: String) {
-        secretManager.invalidKeyByKeyStr(key)
-    }
+    fun logout(key: String) = secretManager.invalidKeyByKeyStr(key)
+
 
     /**
      * 密钥登录
@@ -181,25 +169,22 @@ open class UserService : Authenticator<User> {
      * 微信授权登录
      */
     fun wxLogin(code: String): LoginInfo {
-        val accessToken: AccessToken
-        try {
-            accessToken = WxTokenManager.getDefaultOAuthToken(code)
+        return try {
+            WxTokenManager.getDefaultOAuthToken(code)
         } catch (e: Exception) {
             throw SimplifiedException(ErrorCode.INVALID_PARAM, "非法的code")
+        }.run out@{
+            (getWxUser(openId) ?: createUserFromWx(openId)).run inner@{
+                LoginInfo().apply {
+                    userId = this@inner.id
+                    setUserInfo(this@inner)
+                    secretManager.generateKey(this@inner.id!!.toString(), this@inner.openId, "openId").run {
+                        setKeyInfo(this, secretManager.keyExpiredIn)
+                        setTokenInfo(secretManager.generateToken(key), secretManager.tokenExpiredIn)
+                    }
+                }
+            }
         }
-
-        var user: User? = getWxUser(accessToken.openId)
-        if (null == user) {
-            // 创建新用户并关联微信
-            user = createUserFromWx(accessToken.openId)
-        }
-        val dto = LoginInfo()
-        dto.userId = user.id
-        dto.setUserInfo(user)
-        val keyInfo = secretManager.generateKey(user.id!!.toString(), user.openId, "openId")
-        dto.setKeyInfo(keyInfo, secretManager.keyExpiredIn)
-        dto.setTokenInfo(secretManager.generateToken(keyInfo.key), secretManager.tokenExpiredIn)
-        return dto
     }
 
     private fun checkUser(identity: String, secret: String, user: User?, isPassword: Boolean): LoginInfo {
@@ -207,37 +192,37 @@ open class UserService : Authenticator<User> {
             try {
                 repoCtx.get(User::class.java, identity.toLong())
             } catch (ignore: NumberFormatException) {
-                repoCtx.findOne(CriteriaBuilder.forClass(User::class.java).eq("userName", identity))
+                Assert.notNull(repoCtx.findOne(User::class.java, "userName", identity), "指定的用户不存在")
             }
         }
-        val authenticated: Boolean
-        authenticated = if (isPassword) authenticate(identity, secret) else usr!!.openId == secret
-        if (authenticated) {
-            val dto = LoginInfo()
-            dto.userId = usr.id
-            dto.setUserInfo(usr)
-            val keyInfo = secretManager.generateKey(usr.id.toString(), secret, "password")
-            dto.setKeyInfo(keyInfo, secretManager.keyExpiredIn)
-            dto.setTokenInfo(secretManager.generateToken(keyInfo.key), secretManager.tokenExpiredIn)
-            return dto
-        } else {
-            throw SimplifiedException("登录凭据无效")
+        return (if (isPassword) authenticate(identity, secret) else usr?.openId == secret).run {
+            if (this) {
+                LoginInfo().apply {
+                    userId = usr.id
+                    userId = usr.id
+                    setUserInfo(usr)
+                    val keyInfo = secretManager.generateKey(usr.id.toString(), secret, "password")
+                    setKeyInfo(keyInfo, secretManager.keyExpiredIn)
+                    setTokenInfo(secretManager.generateToken(keyInfo.key), secretManager.tokenExpiredIn)
+                }
+            } else {
+                throw SimplifiedException("登录凭据无效")
+            }
         }
     }
 
-    fun userList(): List<User> {
-        return repoCtx.list(CriteriaBuilder.forClass(User::class.java).notEq("userType", UserTypeE.微信用户))
-    }
+    fun userList(): List<User> = repoCtx.list(CriteriaBuilder.forClass(User::class.java).notEq("userType", UserTypeE.微信用户))
 
-    fun getUserFunctions(id: Long): Map<FunctionTypeE, List<Function>> {
-        return InfoCache.functionCache[id] ?: let {
+    fun getUserFunctions(id: Long): Map<FunctionTypeE, List<Function>> =
+        InfoCache.functionCache[id] ?: let {
             val rolePermission = getRolePermissionList(SessionManager.getCurrentUser().id)
-            val cb = CriteriaBuilder.forClass(Function::class.java)
-            if (rolePermission.permissions.isEmpty()) {
-                cb.isNull("permission")
-            } else {
-                cb.or(Restrictions.isNull("permission"),
-                    Restrictions.`in`("permission.code", rolePermission.permissions))
+            val cb = CriteriaBuilder.forClass(Function::class.java).apply {
+                if (rolePermission.permissions.isEmpty()) {
+                    isNull("permission")
+                } else {
+                    or(Restrictions.isNull("permission"),
+                        Restrictions.`in`("permission.code", rolePermission.permissions))
+                }
             }
             val functions = repoCtx.list(cb)
             val r = functions.groupBy { it.type!! }.map { (k, v) -> k to v.toMutableList() }.toMap().toMutableMap()
@@ -248,5 +233,4 @@ open class UserService : Authenticator<User> {
             InfoCache.functionCache[id] = r
             r
         }
-    }
 }

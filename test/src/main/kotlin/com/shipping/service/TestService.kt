@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile
  * @author xuweinan
  */
 @RestfulService("Test")
-open class TestService {
+class TestService {
 
     @Autowired
     private lateinit var repoCtx: RepositoryContext
@@ -30,13 +30,14 @@ open class TestService {
 
     @Transactional
     @RestfulMethod(auth = false, value = "b")
-    open fun testTransaction() {
-        var user = User()
-        user.realName = "二傻子"
-        user.userName = "admin"
-        user.password = "123"
-        user.mobile = "13111111111"
-        user.email = "none@qq.com"
+    fun testTransaction() {
+        var user = User().apply {
+            realName = "二傻子"
+            userName = "admin"
+            password = "123"
+            mobile = "13111111111"
+            email = "none@qq.com"
+        }
         println(repoCtx.currentDataSourceName)
         repoCtx.save(user)
         repoCtx.switchDataSource("db2")
@@ -50,13 +51,14 @@ open class TestService {
 
     @Transactional
     @RestfulMethod(auth = false, value = "c")
-    open fun testSTransaction() {
-        val user = User()
-        user.realName = "二傻子"
-        user.userName = "admin"
-        user.password = "123"
-        user.mobile = "13111111111"
-        user.email = "none@qq.com"
+    fun testSTransaction() {
+        val user = User().apply {
+            realName = "二傻子"
+            userName = "admin"
+            password = "123"
+            mobile = "13111111111"
+            email = "none@qq.com"
+        }
         println(repoCtx.currentDataSourceName)
         repoCtx.save(user)
         //        throw new SimplifiedException("aa");
