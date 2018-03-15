@@ -36,8 +36,8 @@ class ShippingApplication : WebMvcConfigurer {
     @Autowired
     private lateinit var env: Environment
 
-    override fun addResourceHandlers(registry: ResourceHandlerRegistry?) {
-        registry!!.addResourceHandler("/static/**").addResourceLocations("classpath:/static/")
+    override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
+        registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/")
         registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + SpinContext.FILE_UPLOAD_DIR)
     }
 

@@ -28,4 +28,12 @@ public @interface RestfulMethod {
      * 权限路径
      */
     String authRouter() default "";
+
+    /**
+     * 返回hibernate实体时，懒加载对象获取深度
+     * <p>指定深度小于0时，不做处理</p>
+     *
+     * @return 深度，默认1
+     */
+    int fetchDepth() default 1;
 }
