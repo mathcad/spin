@@ -11,6 +11,8 @@ import org.spin.data.core.UserEnumColumn;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -68,6 +70,19 @@ public class JsonUtilsTest {
     public void testBug() {
         String a = "{\"rows\":[{\"id\":107875263349522433,\"name\":\"1\",\"type\":\"教育\",\"status\":5},{\"id\":107875650970320897,\"name\":\"\",\"status\":5},{\"id\":107946270970085377,\"name\":\"共生\",\"enroll_end\":\"三月 8, 2018\",\"actualArea\":100.0,\"actualCost\":600.00,\"type\":\"商业\",\"item\":\"办公\",\"status\":1,\"filePath\":\"/201803/09134517Qg0UJd0P.png\"}],\"total\":3,\"pageSize\":10000000}";
         Page<Map<String, Object>> p = new Gson().fromJson(a, new TypeToken<Page<Map<String, Object>>>(){}.getType());
+        System.out.println(JsonUtils.toJson(p));
+    }
+
+    @Test
+    public void testBug2() {
+
+        Page<Map<String, Object>> p = new Page<>();
+        List<Map<String, Object>> r = new ArrayList<>();
+        Map<String, Object> d = new HashMap<>();
+        d.put("name", "sb");
+        d.put("time", LocalDateTime.now());
+        r.add(d);
+        p.setRows(r);
         System.out.println(JsonUtils.toJson(p));
     }
 }

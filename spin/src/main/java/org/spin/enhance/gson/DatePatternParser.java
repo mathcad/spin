@@ -22,6 +22,9 @@ public final class DatePatternParser {
     private static final Map<String, DateTimeFormatter> FORMATS = new ConcurrentHashMap<>(64);
 
     public static DateTimeFormatter getReadPattern(DateTimeFormatter defaultPattern, Field field) {
+        if (null == field) {
+            return defaultPattern;
+        }
         String name = field.getDeclaringClass().getName() + "." + field.getName() + "-read";
         DateTimeFormatter dateTimeFormatter = null;
         if (FORMATS.containsKey(name)) {
@@ -44,6 +47,9 @@ public final class DatePatternParser {
     }
 
     public static DateTimeFormatter getWritePattern(DateTimeFormatter defaultPattern, Field field) {
+        if (null == field) {
+            return defaultPattern;
+        }
         String name = field.getDeclaringClass().getName() + "." + field.getName() + "-write";
         DateTimeFormatter dateTimeFormatter = null;
         if (FORMATS.containsKey(name)) {
