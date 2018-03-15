@@ -14,7 +14,7 @@ import javax.transaction.Transactional
  * @create 2017-09-04 下午11:05
  */
 @Service
-open class OrderService {
+class OrderService {
 
     @Autowired
     private lateinit var repoCtx: RepositoryContext
@@ -25,7 +25,7 @@ open class OrderService {
      * @return 运单
      */
     @Transactional
-    open fun save(order: Order): Order {
+    fun save(order: Order): Order {
         return repoCtx.save(order)
     }
 

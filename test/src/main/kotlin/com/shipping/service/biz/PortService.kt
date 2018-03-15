@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional
  * @create 2017-09-05 下午11:07
  */
 @Service
-open class PortService {
+class PortService {
 
     @Autowired
     private lateinit var repoCtx: RepositoryContext
@@ -24,10 +24,7 @@ open class PortService {
      * @param name 港口名
      * @return 港口
      */
-    fun getByName(name: String): Port {
-
-        return repoCtx.findOne(Port::class.java, "name", name)
-    }
+    fun getByName(name: String): Port = repoCtx.findOne(Port::class.java, "name", name)
 
     /**
      * 新增港口
@@ -35,7 +32,7 @@ open class PortService {
      * @return 港口
      */
     @Transactional
-    open fun save(port: Port): Port {
+    fun save(port: Port): Port {
         return repoCtx.save(port)
     }
 

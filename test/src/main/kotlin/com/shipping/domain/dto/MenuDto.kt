@@ -11,7 +11,7 @@ import java.util.*
  *
  * @author xuweinan
  */
-class MenuDto(
+data class MenuDto(
     var id: Long? = null,
 
     var name: String? = null,
@@ -34,13 +34,15 @@ class MenuDto(
 
     var children: MutableList<MenuDto> = ArrayList()
 ) {
-    companion object {
-
-        fun toDto(function: Function): MenuDto {
-            val dto = MenuDto()
-            EntityUtils.copyTo(function, dto, "id", "name", "type", "code", "icon", "link", "idPath", "orderNo", "isLeaf")
-            dto.parent = function.parent?.id
-            return dto
-        }
-    }
+    constructor(function: Function) : this(function.id,
+        function.name,
+        function.type,
+        function.code,
+        function.icon,
+        function.link,
+        function.parent?.id,
+        function.idPath,
+        function.orderNo,
+        function.isLeaf
+    )
 }

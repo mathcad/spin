@@ -8,19 +8,19 @@ import com.shipping.domain.sys.Region
  *
  * @author xuweinan
  */
-class RegionDto(region: Region) {
-    var label: String? = null
-    var value: String? = null
-    var children: List<RegionDto>? = null
+data class RegionDto(
+    var label: String? = null,
+    var value: String? = null,
+    var children: List<RegionDto>? = null,
     @Transient
-    var parent: String? = null
+    var parent: String? = null,
     @Transient
-    var level: Int? = null
+    var level: Int? = null) {
 
-    init {
-        this.label = region.name
-        this.value = region.code
-        this.level = region.level.value
-        this.parent = region.parentCode
-    }
+    constructor(region: Region) : this(
+        label = region.name,
+        value = region.code,
+        level = region.level.value,
+        parent = region.parentCode
+    )
 }

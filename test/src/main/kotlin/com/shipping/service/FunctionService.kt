@@ -2,6 +2,7 @@ package com.shipping.service
 
 import com.shipping.domain.enums.OrganizationTypeE
 import com.shipping.domain.sys.Function
+import mu.KLogging
 import org.slf4j.LoggerFactory
 import org.spin.data.extend.RepositoryContext
 import org.spin.web.annotation.RestfulMethod
@@ -18,6 +19,7 @@ import javax.transaction.Transactional
  */
 @RestfulService
 class FunctionService {
+    companion object : KLogging()
 
     @Autowired
     private lateinit var repoCtx: RepositoryContext
@@ -32,9 +34,5 @@ class FunctionService {
             repoCtx.doReturningWork("SELECT * FROM sys_function") {
             }
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(FunctionService::class.java)
     }
 }

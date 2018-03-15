@@ -1,6 +1,7 @@
 package com.shipping.service
 
 import com.shipping.domain.sys.User
+import mu.KLogging
 import org.spin.data.extend.RepositoryContext
 import org.spin.web.annotation.RestfulMethod
 import org.spin.web.annotation.RestfulService
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile
  */
 @RestfulService("Test")
 class TestService {
+    companion object : KLogging()
 
     @Autowired
     private lateinit var repoCtx: RepositoryContext
@@ -25,6 +27,7 @@ class TestService {
         //        throw new SimplifiedException("aaa");
         println(a?.size)
         println(b?.size)
+        logger.debug { "aaa" }
         return pp.size
     }
 

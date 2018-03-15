@@ -5,7 +5,7 @@ import com.shipping.domain.dto.RegionDto
 import com.shipping.domain.enums.FunctionTypeE
 import com.shipping.domain.sys.Function
 import com.shipping.domain.sys.Region
-import org.slf4j.LoggerFactory
+import mu.KLogging
 import org.spin.core.collection.FixedVector
 import org.spin.core.session.SessionManager
 import org.spin.core.util.MapUtils
@@ -23,6 +23,7 @@ import kotlin.collections.ArrayList
  */
 @Service
 class SystemService {
+    companion object : KLogging()
 
     @Autowired
     private lateinit var repoCtx: RepositoryContext
@@ -37,7 +38,7 @@ class SystemService {
         get() {
             val result = ArrayList<MenuDto>()
 
-            val group = userService.getUserFunctions(SessionManager.getCurrentUser().id)[FunctionTypeE.MEMU]!!.map { MenuDto.toDto(it) }.groupBy { it.idPath.split(",").size }
+            val group = userService.getUserFunctions(SessionManager.getCurrentUser().id)[FunctionTypeE.MEMU]!!.map { MenuDto(it) }.groupBy { it.idPath.split(",").size }
 //                .stream()
 //                .map<MenuDto>(Function({ MenuDto.toDto(it) })).collect<Map<Int, List<MenuDto>>, Any>(Collectors.groupingBy { f -> f.idPath!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray().size })
 
@@ -82,9 +83,5 @@ class SystemService {
             f["parent"] = func.parent!!.id
         }
         return f
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(SystemService::class.java)
     }
 }

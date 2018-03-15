@@ -13,43 +13,42 @@ import java.util.*
  *
  * @author xuweinan
  */
-class UserDto(user: User) : Serializable {
+class UserDto(
+    var id: String? = null,
 
-    var id: String? = null
+    var userName: String? = null,
 
-    var userName: String? = null
+    var nickname: String? = null,
 
-    var nickname: String? = null
+    var realName: String? = null,
 
-    var realName: String? = null
+    var headImg: String? = null,
 
-    var headImg: String? = null
+    var email: String? = null,
 
-    var email: String? = null
+    var mobile: String? = null,
 
-    var mobile: String? = null
+    var userType: UserTypeE? = null,
 
-    var userType: UserTypeE? = null
+    var about: String? = null,
 
-    var about: String? = null
-
-    var organ: Organization? = null
+    var organ: Organization? = null,
 
     var createTime: LocalDateTime? = null
-
-    init {
-        this.id = user.id!!.toString()
-        this.userName = user.userName
-        this.nickname = user.nickname
-        this.realName = user.realName
-        this.headImg = if (Objects.isNull(user.headImg)) null else user.headImg?.filePath
-        this.email = user.email
-        this.mobile = user.mobile
-        this.userType = user.userType
-        this.about = user.about
-        this.organ = user.organ
-        this.createTime = user.createTime
-    }
+) : Serializable {
+    constructor(user: User) : this(
+        id = user.id!!.toString(),
+        userName = user.userName,
+        nickname = user.nickname,
+        realName = user.realName,
+        headImg = if (Objects.isNull(user.headImg)) null else user.headImg?.filePath,
+        email = user.email,
+        mobile = user.mobile,
+        userType = user.userType,
+        about = user.about,
+        organ = user.organ,
+        createTime = user.createTime
+    )
 
     companion object {
         private const val serialVersionUID = -4926348221616077329L
