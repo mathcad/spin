@@ -970,6 +970,17 @@ public abstract class ClassUtils {
     }
 
     /**
+     * 判断两个类是否相同（类名完全相同，类加载器相同）
+     *
+     * @param cls1 参数1
+     * @param cls2 参数2
+     * @return 是否相同
+     */
+    public static boolean equal(Class<?> cls1, Class<?> cls2) {
+        return cls1 == cls2 || null != cls1 && null != cls2 && cls1.getName().equals(cls2.getName()) && cls1.getClassLoader() == cls2.getClassLoader();
+    }
+
+    /**
      * <p>
      * Converts a given name of class into canonical format. If name of class is
      * not a name of array class it returns unchanged name.

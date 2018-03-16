@@ -43,7 +43,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
@@ -55,6 +54,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * restful请求分发
@@ -206,12 +207,12 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
 
             int selected = selectMethod(argumentsDescriptors);
             if (selected < 0) {
-                logger.info("无法唯一定位请求的资源" + service + "@" + module);
+                logger.info("无法唯一定位请求的资源{}@{}", service, module);
                 return RestfulResponse.error(new SimplifiedException("无法唯一定位请求的资源"));
             }
 
+            // token验证
             RestfulMethod rMethod = argumentsDescriptors.get(selected).getMethodDescriptor().getMethod().getAnnotation(RestfulMethod.class);
-
             if (null != secretManager) {
                 String token = request.getParameter("token");
                 if (StringUtils.isEmpty(token)) {
@@ -279,7 +280,8 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
      * @return 解析后的实参
      */
     private Object resolveArg(Parameter parameter, String parameterName, HttpServletRequest request) {
-        if (MultipartFile.class.equals(parameter.getType())) {
+        // 方法参数接收单个文件
+        if (MultipartFile.class.equals(parameter.getParameterizedType())) {
             if (!(request instanceof MultipartRequest)) {
                 return null;
             }
@@ -290,10 +292,15 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             return files.get(0);
         }
 
+        // 方法参数为文件集合类型
         if (Collection.class.isAssignableFrom(parameter.getType())) {
             if (parameter.getParameterizedType() instanceof ParameterizedType) {
+                // 方法参数类型中有泛型信息
                 Type[] types = ((ParameterizedType) parameter.getParameterizedType()).getActualTypeArguments();
-                if (request instanceof MultipartRequest && types.length > 0 && types[0] instanceof Class && MultipartFile.class.equals(types[0])) {
+                Type type = types.length > 0 ? types[0] : null;
+
+                if (null != type && MultipartFile.class.equals(type) && request instanceof MultipartRequest) {
+                    // 方法参数是中的泛型类型为文件
                     Collection<MultipartFile> value = JsonUtils.fromJson("[]", parameter.getParameterizedType());
                     if (Objects.nonNull(value)) {
                         value.addAll(((MultipartRequest) request).getFiles(parameterName));
@@ -303,16 +310,14 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                     }
                 }
             } else if (request instanceof MultipartRequest && !((MultipartRequest) request).getFiles(parameterName).isEmpty()) {
+                // 方法参数类型中没有泛型信息，但请求中包含文件，且文件参数名与方法参数名相同
                 Collection<MultipartFile> value = JsonUtils.fromJson("[]", parameter.getParameterizedType());
-                if (Objects.nonNull(value)) {
-                    value.addAll(((MultipartRequest) request).getFiles(parameterName));
-                    return value;
-                } else {
-                    return null;
-                }
+                value.addAll(((MultipartRequest) request).getFiles(parameterName));
+                return value;
             }
         }
 
+        // 方法参数为文件数组类型
         if (parameter.getType().isArray() && MultipartFile.class.equals(parameter.getType().getComponentType())) {
             if (!(request instanceof MultipartRequest)) {
                 return null;
@@ -321,9 +326,11 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             return files.toArray(new MultipartFile[files.size()]);
         }
 
+        //方法参数为非文件类型时的处理，从requestBody，attribute，parameter中获取所有指定名称参数，优先级从前到后，找到为止
         Object[] values;
         Object value = null;
         if (Objects.nonNull(parameter.getAnnotation(Payload.class))) {
+            // RequestBody参数处理
             value = request.getAttribute(REQUEST_BODY_NAME);
         }
         if (Objects.isNull(value)) {
@@ -335,25 +342,38 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             values = new Object[]{value};
         }
 
-
         if (Objects.isNull(values) || values.length == 0) {
+            // 请求中没有指定参数，直接返回
             return null;
         }
 
         if (!parameter.getType().isArray() && !Iterable.class.isAssignableFrom(parameter.getType()) && values.length > 1) {
+            // 参数不接收数组/集合类型，但请求中参数为多个，直接返回null
             return null;
         }
 
         if (parameter.getType().equals(QueryParam.class)) {
+            // 参数为QueryParam对象，特殊处理
             value = values[0];
             return QueryParam.parseFromJson(value.toString());
         }
 
         if (parameter.getType().isArray() || Iterable.class.isAssignableFrom(parameter.getType())) {
-            return JsonUtils.fromJson(JsonUtils.toJson(values), parameter.getType());
+            // 参数为数组/集合类型，直接json转换
+            String json = JsonUtils.toJson(values);
+            try {
+                // 基本类型失败时，用json转换（使用泛型类型参数）
+                return JsonUtils.fromJson(json, parameter.getParameterizedType());
+            } catch (Exception ignore) {
+                // 使用json+泛型参数转换失败时，使用普通类型转换
+                return JsonUtils.fromJson(json, parameter.getType());
+            }
         }
 
+        // 方法参数为Java bean（非数组/集合类型）时，只取请求中找到的第一个参数来处理
         value = values[0];
+
+        // 时间日期类型的处理
         DateFormat df = parameter.getAnnotation(DateFormat.class);
         if (null != df) {
             String fmt = df.value();
@@ -378,12 +398,16 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                     return null;
             }
         }
+
         try {
+            // 先尝试基本类型时的转换
             return ObjectUtils.convert(parameter.getType(), value);
         } catch (ClassCastException e) {
             try {
+                // 基本类型失败时，用json转换（使用泛型类型参数）
                 return JsonUtils.fromJson(value.toString(), parameter.getParameterizedType());
             } catch (Exception ignore) {
+                // 使用json+泛型参数转换失败时，使用普通类型转换
                 return JsonUtils.fromJson(value.toString(), parameter.getType());
             }
         }
