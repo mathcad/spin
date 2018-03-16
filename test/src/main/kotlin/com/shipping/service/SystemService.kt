@@ -6,6 +6,7 @@ import com.shipping.domain.enums.FunctionTypeE
 import com.shipping.domain.sys.Function
 import com.shipping.domain.sys.Region
 import mu.KLogging
+import org.slf4j.LoggerFactory
 import org.spin.core.collection.FixedVector
 import org.spin.core.session.SessionManager
 import org.spin.core.util.MapUtils
@@ -64,7 +65,8 @@ class SystemService {
 
     val regions: List<RegionDto>
         get() {
-            val allRegion = repoCtx.findAll(Region::class.java).map { ::RegionDto.call() }.groupBy { it.level!! }
+//            val allRegion = repoCtx.findAll(Region::class.java).map { ::RegionDto.call() }.groupBy { it.level!! }
+            val allRegion = repoCtx.findAll(Region::class.java).map { RegionDto() }.groupBy { it.level!! }
 
             val cities = allRegion[2]!!.map { it.value!! to it }.toMap()
             var work = allRegion[3]!!.groupBy { it.parent }

@@ -1,0 +1,86 @@
+description = '数据访问模块'
+version = '0.0.1.RC1'
+def artifactId = 'spin-data'
+
+apply plugin: 'org.junit.platform.gradle.plugin'
+
+buildscript {
+    repositories {
+        mavenLocal()
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
+    }
+}
+
+ext {
+    springVersion = "5.0.4.RELEASE"
+    junitJupiterVersion = '5.1.0'
+}
+
+junitPlatform {
+    // platformVersion '1.0.1'
+//    filters {
+//        engines {
+//            // include 'junit-jupiter', 'junit-vintage'
+//            // exclude 'custom-engine'
+//        }
+//        tags {
+//            // include 'fast'
+//            exclude 'slow'
+//        }
+//        // includeClassNamePattern '.*Test'
+//    }
+    // enableStandardTestTask true
+    // reportsDir file('build/test-results/junit-platform') // this is the default
+    logManager 'org.apache.logging.log4j.jul.LogManager'
+}
+
+// 关闭java8 javadoc检查
+//if (JavaVersion.current().isJava8Compatible()) {
+//    tasks.withType(Javadoc) {
+//        options.addStringOption('Xdoclint:none', '-quiet')
+//    }
+//}
+
+install {
+    repositories.mavenInstaller {
+        pom.version = "$project.version"
+        pom.artifactId = "$artifactId"
+        pom.groupId = "$project.group"
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "http://139.199.59.195:8081/repository/ne/") {
+                authentication(userName: "admin", password: "admin123")
+            }
+            pom.version = "$project.version"
+            pom.artifactId = "$artifactId"
+            pom.groupId = "$project.group"
+        }
+    }
+}
+
+dependencies {
+    testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+//    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
+
+//    data
+    compile(project(":spin-enhance"))
+    compile group: 'org.springframework', name: 'spring-orm', version: springVersion
+    compile group: 'org.springframework', name: 'spring-oxm', version: springVersion
+    compile group: 'org.springframework.data', name: 'spring-data-redis', version: '2.0.5.RELEASE'
+    compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.15.Final') {
+        exclude(module: 'jboss-logging')
+        transitive = true
+    }
+    compile group: 'javax.transaction', name: 'javax.transaction-api', version: '1.2'
+    compileOnly group: 'org.freemarker', name: 'freemarker', version: '2.3.27-incubating'
+    compileOnly group: 'com.ibeetl', name: 'beetl', version: '2.7.27'
+}

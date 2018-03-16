@@ -22,6 +22,7 @@ import org.spin.core.util.StringUtils;
 import org.spin.data.core.IEntity;
 import org.spin.data.core.Page;
 import org.spin.data.query.QueryParam;
+import org.spin.data.util.EntityUtils;
 import org.spin.web.RestfulResponse;
 import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.Payload;
@@ -425,12 +426,16 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                     descriptor.getMethodDescriptor().setTarget(bean);
                 } catch (BeansException ignore) {
                     logger.error("获取Service Bean失败", ignore);
-                    throw new SimplifiedException(ErrorCode.INTERNAL_ERROR, "无法获取服务提供者");
+                    return RestfulResponse.error(new SimplifiedException("无法获取服务提供者"));
                 }
             }
 
             try {
-                return RestfulResponse.ok(descriptor.invoke());
+                Object result = descriptor.invoke();
+                if (null != result && result instanceof IEntity<?> && anno.fetchDepth() > -1) {
+                    result = EntityUtils.getDTO(result, anno.fetchDepth());
+                }
+                return RestfulResponse.ok(result);
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause();
                 logger.error("服务执行异常", cause);

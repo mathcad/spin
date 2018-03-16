@@ -1,5 +1,5 @@
-description = 'spin kotlin扩展'
-version = '0.0.1'
+description = 'kotlin扩展模块'
+version = '0.0.1.RC1'
 def artifactId = 'spin-kotlin'
 
 apply plugin: 'kotlin'
@@ -40,8 +40,12 @@ junitPlatform {
     logManager 'org.apache.logging.log4j.jul.LogManager'
 }
 
-repositories {
-    mavenCentral()
+install {
+    repositories.mavenInstaller {
+        pom.version = "$project.version"
+        pom.artifactId = "$artifactId"
+        pom.groupId = "$project.group"
+    }
 }
 
 dependencies {

@@ -1,6 +1,11 @@
-rootProject.name = 'fundamental'
-include 'spin'
+rootProject.name = 'spin'
+include 'spin-all'
+include 'spin-core'
+include 'spin-data'
+include 'spin-enhance'
 include 'spin-kotlin'
+include 'spin-web'
+include 'spin-wx'
 include 'spin-starter-restful'
 include 'test'
 
