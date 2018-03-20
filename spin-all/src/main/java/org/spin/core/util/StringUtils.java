@@ -2160,7 +2160,7 @@ public abstract class StringUtils {
      * StringUtils.join(["a", "b", "c"], "--")  = "a--b--c"
      * StringUtils.join(["a", "b", "c"], null)  = "abc"
      * StringUtils.join(["a", "b", "c"], "")    = "abc"
-     * StringUtils.join([null, "", "a"], ',')   = ",,a"
+     * StringUtils.join([null, "", "a"], ',')   = "a"
      * </pre>
      *
      * @param array     the array of values to join together, may be null
@@ -2193,7 +2193,7 @@ public abstract class StringUtils {
      * StringUtils.join(["a", "b", "c"], "--", 2, 2)  = ""
      * StringUtils.join(["a", "b", "c"], null, 0, 3)  = "abc"
      * StringUtils.join(["a", "b", "c"], "", 0, 3)    = "abc"
-     * StringUtils.join([null, "", "a"], ',', 0, 3)   = ",,a"
+     * StringUtils.join([null, "", "a"], ',', 0, 3)   = "a"
      * </pre>
      *
      * @param array      the array of values to join together, may be null
@@ -2227,12 +2227,13 @@ public abstract class StringUtils {
         final StringBuilder buf = new StringBuilder(noOfItems * 16);
 
         for (int i = startIndex; i < endIndex; i++) {
+            if (null == array[i] || array[i].toString().length() == 0) {
+                continue;
+            }
             if (i > startIndex) {
                 buf.append(separator);
             }
-            if (array[i] != null) {
-                buf.append(array[i]);
-            }
+            buf.append(array[i]);
         }
         return buf.toString();
     }

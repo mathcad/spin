@@ -7,7 +7,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import javax.annotation.PostConstruct;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 
 /**
  * <p>Created by xuweinan on 2017/9/16.</p>
@@ -34,7 +33,7 @@ public class SecretManagerProperties {
     private String keyExpireTime = "15d";
 
     @PostConstruct
-    public void init() throws ClassNotFoundException, IllegalAccessException, InstantiationException, InvalidKeySpecException {
+    public void init() {
         if (StringUtils.isNotEmpty(publicKey)) {
             rsaPubkey = RSA.getRSAPublicKey(publicKey);
         }

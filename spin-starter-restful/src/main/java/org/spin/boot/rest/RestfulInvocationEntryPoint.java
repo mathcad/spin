@@ -43,6 +43,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
@@ -54,8 +55,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * restful请求分发
@@ -174,6 +173,11 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
     }
 
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
     private RestfulResponse exec(String module, String service, HttpServletRequest request) {
         if (StringUtils.isEmpty(module) || StringUtils.isEmpty(service)) {
             return RestfulResponse.error(new SimplifiedException("未完全指定请求的资源"));
@@ -280,8 +284,17 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
      * @return 解析后的实参
      */
     private Object resolveArg(Parameter parameter, String parameterName, HttpServletRequest request) {
+        Class<?> type = parameter.getType();
+        Type pType = parameter.getParameterizedType();
+        Type actualType = null;
+        Class<?> cType = parameter.getType().getComponentType();
+        if (pType instanceof ParameterizedType) {
+            Type[] ts = ((ParameterizedType) pType).getActualTypeArguments();
+            actualType = ts.length > 0 ? ts[0] : null;
+        }
+
         // 方法参数接收单个文件
-        if (MultipartFile.class.equals(parameter.getParameterizedType())) {
+        if (MultipartFile.class.isAssignableFrom(type)) {
             if (!(request instanceof MultipartRequest)) {
                 return null;
             }
@@ -293,32 +306,20 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
 
         // 方法参数为文件集合类型
-        if (Collection.class.isAssignableFrom(parameter.getType())) {
-            if (parameter.getParameterizedType() instanceof ParameterizedType) {
-                // 方法参数类型中有泛型信息
-                Type[] types = ((ParameterizedType) parameter.getParameterizedType()).getActualTypeArguments();
-                Type type = types.length > 0 ? types[0] : null;
-
-                if (null != type && MultipartFile.class.equals(type) && request instanceof MultipartRequest) {
-                    // 方法参数是中的泛型类型为文件
-                    Collection<MultipartFile> value = JsonUtils.fromJson("[]", parameter.getParameterizedType());
-                    if (Objects.nonNull(value)) {
-                        value.addAll(((MultipartRequest) request).getFiles(parameterName));
-                        return value;
-                    } else {
-                        return null;
-                    }
-                }
-            } else if (request instanceof MultipartRequest && !((MultipartRequest) request).getFiles(parameterName).isEmpty()) {
-                // 方法参数类型中没有泛型信息，但请求中包含文件，且文件参数名与方法参数名相同
-                Collection<MultipartFile> value = JsonUtils.fromJson("[]", parameter.getParameterizedType());
+        if (Collection.class.isAssignableFrom(type)
+            && (null == actualType || actualType instanceof Class && MultipartFile.class.isAssignableFrom((Class) actualType))) {
+            // 方法参数中含有泛型信息，且泛型类型为文件
+            Collection<MultipartFile> value = JsonUtils.fromJson("[]", pType);
+            if (request instanceof MultipartRequest) {
                 value.addAll(((MultipartRequest) request).getFiles(parameterName));
+            }
+            if (actualType != null || !value.isEmpty()) {
                 return value;
             }
         }
 
         // 方法参数为文件数组类型
-        if (parameter.getType().isArray() && MultipartFile.class.equals(parameter.getType().getComponentType())) {
+        if (null != cType && MultipartFile.class.isAssignableFrom(cType)) {
             if (!(request instanceof MultipartRequest)) {
                 return null;
             }
@@ -327,57 +328,47 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
 
         //方法参数为非文件类型时的处理，从requestBody，attribute，parameter中获取所有指定名称参数，优先级从前到后，找到为止
-        Object[] values;
-        Object value = null;
-        if (Objects.nonNull(parameter.getAnnotation(Payload.class))) {
-            // RequestBody参数处理
-            value = request.getAttribute(REQUEST_BODY_NAME);
-        }
-        if (Objects.isNull(value)) {
-            value = request.getAttribute(parameterName);
-        }
-        if (Objects.isNull(value)) {
-            values = request.getParameterValues(parameterName);
-        } else {
-            values = new Object[]{value};
-        }
+        Object[] values = extractArg(parameter, parameterName, request);
+        Object value;
 
         if (Objects.isNull(values) || values.length == 0) {
             // 请求中没有指定参数，直接返回
             return null;
         }
 
-        if (!parameter.getType().isArray() && !Iterable.class.isAssignableFrom(parameter.getType()) && values.length > 1) {
+        if (!type.isArray() && !Iterable.class.isAssignableFrom(type) && values.length > 1) {
             // 参数不接收数组/集合类型，但请求中参数为多个，直接返回null
             return null;
         }
 
-        if (parameter.getType().equals(QueryParam.class)) {
+        if (QueryParam.class.isAssignableFrom(type)) {
             // 参数为QueryParam对象，特殊处理
             value = values[0];
             return QueryParam.parseFromJson(value.toString());
         }
 
-        if (parameter.getType().isArray() || Iterable.class.isAssignableFrom(parameter.getType())) {
+        if (type.isArray() || Iterable.class.isAssignableFrom(type)) {
             // 参数为数组/集合类型，直接json转换
-            String json = JsonUtils.toJson(values);
+            boolean isStr = null != actualType && actualType instanceof Class && CharSequence.class.isAssignableFrom((Class<?>) actualType)
+                || null != cType && CharSequence.class.isAssignableFrom(cType);
+            String json = assembleJson(values, isStr);
             try {
-                // 基本类型失败时，用json转换（使用泛型类型参数）
-                return JsonUtils.fromJson(json, parameter.getParameterizedType());
+                // 用json转换（使用泛型类型参数）
+                return JsonUtils.fromJson(json, pType);
             } catch (Exception ignore) {
                 // 使用json+泛型参数转换失败时，使用普通类型转换
-                return JsonUtils.fromJson(json, parameter.getType());
+                return JsonUtils.fromJson(json, type);
             }
         }
 
-        // 方法参数为Java bean（非数组/集合类型）时，只取请求中找到的第一个参数来处理
+        // 方法参数为普通Java对象（非数组/集合类型）时，只取请求中找到的第一个参数来处理
         value = values[0];
 
         // 时间日期类型的处理
         DateFormat df = parameter.getAnnotation(DateFormat.class);
         if (null != df) {
             String fmt = df.value();
-            switch (parameter.getType().getName()) {
+            switch (type.getName()) {
                 case "java.util.Date":
                 case "java.sql.Date":
                 case "java.sql.Time":
@@ -400,17 +391,43 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
 
         try {
-            // 先尝试基本类型时的转换
-            return ObjectUtils.convert(parameter.getType(), value);
+            // 先尝试基本类型的转换
+            return ObjectUtils.convert(type, value);
         } catch (ClassCastException e) {
             try {
                 // 基本类型失败时，用json转换（使用泛型类型参数）
-                return JsonUtils.fromJson(value.toString(), parameter.getParameterizedType());
+                return JsonUtils.fromJson(value.toString(), pType);
             } catch (Exception ignore) {
                 // 使用json+泛型参数转换失败时，使用普通类型转换
-                return JsonUtils.fromJson(value.toString(), parameter.getType());
+                return JsonUtils.fromJson(value.toString(), type);
             }
         }
+    }
+
+    /**
+     * 根据parameter信息，从对象中抽取实参
+     *
+     * @param parameter     方法形参定义
+     * @param parameterName 参数名称
+     * @param request       请求
+     * @return 实参
+     */
+    private Object[] extractArg(Parameter parameter, String parameterName, HttpServletRequest request) {
+        Object[] values;
+        Object value = null;
+        if (Objects.nonNull(parameter.getAnnotation(Payload.class))) {
+            // RequestBody参数处理
+            value = request.getAttribute(REQUEST_BODY_NAME);
+        }
+        if (Objects.isNull(value)) {
+            value = request.getAttribute(parameterName);
+        }
+        if (Objects.isNull(value)) {
+            values = request.getParameterValues(parameterName);
+        } else {
+            values = new Object[]{value};
+        }
+        return values;
     }
 
     /**
@@ -483,8 +500,41 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    /**
+     * 将对象数组组装成合法的json数组字符串
+     *
+     * @param values 对象数组
+     * @param isStr  是否强制转成字符串集合
+     * @return json数组字符串
+     */
+    private String assembleJson(Object[] values, boolean isStr) {
+        String json;
+        char s = values[0].toString().trim().charAt(0);
+        if (values.length == 1) {
+            json = values[0].toString().trim();
+            if (s != '[') {
+                if (s != '"' && s != '\'' && (s != '{' || isStr)) {
+                    json = "\"" + json + "\"";
+                }
+                json = "[" + json + "]";
+            }
+        } else {
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < values.length; i++) {
+                if (null == values[i]) {
+                    continue;
+                }
+                if (i > 0) {
+                    b.append(",");
+                }
+                if (s != '"' && s != '\'' && (s != '{' && s != '[' || isStr)) {
+                    b.append("\"").append(values[i]).append("\"");
+                } else {
+                    b.append(values[i]);
+                }
+            }
+            json = "[" + b.toString() + "]";
+        }
+        return json;
     }
 }
