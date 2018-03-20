@@ -418,7 +418,6 @@ public abstract class ReflectionUtils {
      * following the pattern "CGLIB$methodName$0".
      *
      * @param renamedMethod the method to check
-     * @see org.springframework.cglib.proxy.Enhancer#rename
      */
     public static boolean isCglibRenamedMethod(Method renamedMethod) {
         String name = renamedMethod.getName();
