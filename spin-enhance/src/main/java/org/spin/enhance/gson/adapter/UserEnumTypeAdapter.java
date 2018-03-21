@@ -25,7 +25,7 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
             Integer iv = Integer.valueOf(v);
             return EnumUtils.getEnum(t, iv);
         } catch (Exception e) {
-            return EnumUtils.getEnumByName(t, v);
+            return EnumUtils.fromName(t, v);
         }
     }
 

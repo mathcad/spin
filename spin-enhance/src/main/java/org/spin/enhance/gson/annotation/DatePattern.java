@@ -26,12 +26,16 @@ public @interface DatePattern {
     /**
      * 指定读取时的时间日期模式
      * <p>默认为空，采用全局设置</p>
+     *
+     * @return 日期格式
      */
     String read() default "";
 
     /**
      * 指定写出时的时间日期模式
      * <p>默认为空，采用全局设置</p>
+     *
+     * @return 日期格式
      */
     String write() default "";
 }
