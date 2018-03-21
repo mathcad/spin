@@ -105,10 +105,6 @@ public class Tuple9<A, B, C, D, E, F, G, H, I> implements Tuple<Tuple9<I, H, G, 
         action.accept(8, c9);
     }
 
-    public Tuple9<I, H, G, F, E, D, C, B, A> reverse() {
-        return of(c9, c8, c7, c6, c5, c4, c3, c2, c1);
-    }
-
     @Override
     public void forEach(Consumer<? super Object> action) {
         action.accept(c1);
@@ -120,6 +116,10 @@ public class Tuple9<A, B, C, D, E, F, G, H, I> implements Tuple<Tuple9<I, H, G, 
         action.accept(c7);
         action.accept(c8);
         action.accept(c9);
+    }
+
+    public Tuple9<I, H, G, F, E, D, C, B, A> reverse() {
+        return of(c9, c8, c7, c6, c5, c4, c3, c2, c1);
     }
 
     @Override

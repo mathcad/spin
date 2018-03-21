@@ -75,16 +75,16 @@ public class Tuple4<A, B, C, D> implements Tuple<Tuple4<D, C, B, A>> {
         action.accept(3, c4);
     }
 
-    public Tuple4<D, C, B, A> reverse() {
-        return of(c4, c3, c2, c1);
-    }
-
     @Override
     public void forEach(Consumer<? super Object> action) {
         action.accept(c1);
         action.accept(c2);
         action.accept(c3);
         action.accept(c4);
+    }
+
+    public Tuple4<D, C, B, A> reverse() {
+        return of(c4, c3, c2, c1);
     }
 
     @Override

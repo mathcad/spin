@@ -87,10 +87,6 @@ public class Tuple6<A, B, C, D, E, F> implements Tuple<Tuple6<F, E, D, C, B, A>>
         action.accept(5, c6);
     }
 
-    public Tuple6<F, E, D, C, B, A> reverse() {
-        return of(c6, c5, c4, c3, c2, c1);
-    }
-
     @Override
     public void forEach(Consumer<? super Object> action) {
         action.accept(c1);
@@ -99,6 +95,10 @@ public class Tuple6<A, B, C, D, E, F> implements Tuple<Tuple6<F, E, D, C, B, A>>
         action.accept(c4);
         action.accept(c5);
         action.accept(c6);
+    }
+
+    public Tuple6<F, E, D, C, B, A> reverse() {
+        return of(c6, c5, c4, c3, c2, c1);
     }
 
     @Override

@@ -8,13 +8,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * 8个元素的元组
+ * 10个元素的元组
  * <p>Created by xuweinan on 2018/3/20.</p>
  *
  * @author xuweinan
  */
-public class Tuple8<A, B, C, D, E, F, G, H> implements Tuple<Tuple8<H, G, F, E, D, C, B, A>> {
-    private static final long serialVersionUID = -4890095254089376029L;
+public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I, H, G, F, E, D, C, B, A>> {
+    private static final long serialVersionUID = 4174904167224762039L;
 
     public final A c1;
     public final B c2;
@@ -24,8 +24,10 @@ public class Tuple8<A, B, C, D, E, F, G, H> implements Tuple<Tuple8<H, G, F, E, 
     public final F c6;
     public final G c7;
     public final H c8;
+    public final I c9;
+    public final J c10;
 
-    private Tuple8(final A c1, final B c2, final C c3, final D c4, final E c5, final F c6, final G c7, final H c8) {
+    private Tuple10(final A c1, final B c2, final C c3, final D c4, final E c5, final F c6, final G c7, final H c8, final I c9, final J c10) {
         this.c1 = c1;
         this.c2 = c2;
         this.c3 = c3;
@@ -34,20 +36,22 @@ public class Tuple8<A, B, C, D, E, F, G, H> implements Tuple<Tuple8<H, G, F, E, 
         this.c6 = c6;
         this.c7 = c7;
         this.c8 = c8;
+        this.c9 = c9;
+        this.c10 = c10;
     }
 
-    public static <A, B, C, D, E, F, G, H> Tuple8<A, B, C, D, E, F, G, H> of(final A c1, final B c2, final C c3, final D c4, final E c5, final F c6, final G c7, final H c8) {
-        return new Tuple8<>(c1, c2, c3, c4, c5, c6, c7, c8);
+    public static <A, B, C, D, E, F, G, H, I, J> Tuple10<A, B, C, D, E, F, G, H, I, J> of(final A c1, final B c2, final C c3, final D c4, final E c5, final F c6, final G c7, final H c8, final I c9, final J c10) {
+        return new Tuple10<>(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10);
     }
 
     @Override
     public Object[] toArray() {
-        return CollectionUtils.ofArray(c1, c2, c3, c4, c5, c6, c7, c8);
+        return CollectionUtils.ofArray(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10);
     }
 
     @Override
     public int size() {
-        return 8;
+        return 10;
     }
 
     @Override
@@ -70,8 +74,12 @@ public class Tuple8<A, B, C, D, E, F, G, H> implements Tuple<Tuple8<H, G, F, E, 
                 return (E1) c7;
             case 7:
                 return (E1) c8;
+            case 8:
+                return (E1) c9;
+            case 9:
+                return (E1) c10;
             default:
-                throw new SimplifiedException("索引超出范围[0, 7]，实际:" + pos);
+                throw new SimplifiedException("索引超出范围[0, 9]，实际:" + pos);
         }
     }
 
@@ -84,7 +92,9 @@ public class Tuple8<A, B, C, D, E, F, G, H> implements Tuple<Tuple8<H, G, F, E, 
             || ObjectUtils.nullSafeEquals(c5, value)
             || ObjectUtils.nullSafeEquals(c6, value)
             || ObjectUtils.nullSafeEquals(c7, value)
-            || ObjectUtils.nullSafeEquals(c8, value);
+            || ObjectUtils.nullSafeEquals(c8, value)
+            || ObjectUtils.nullSafeEquals(c9, value)
+            || ObjectUtils.nullSafeEquals(c10, value);
     }
 
     @Override
@@ -97,6 +107,8 @@ public class Tuple8<A, B, C, D, E, F, G, H> implements Tuple<Tuple8<H, G, F, E, 
         action.accept(5, c6);
         action.accept(6, c7);
         action.accept(7, c8);
+        action.accept(8, c9);
+        action.accept(9, c10);
     }
 
     @Override
@@ -109,10 +121,12 @@ public class Tuple8<A, B, C, D, E, F, G, H> implements Tuple<Tuple8<H, G, F, E, 
         action.accept(c6);
         action.accept(c7);
         action.accept(c8);
+        action.accept(c9);
+        action.accept(c10);
     }
 
-    public Tuple8<H, G, F, E, D, C, B, A> reverse() {
-        return of(c8, c7, c6, c5, c4, c3, c2, c1);
+    public Tuple10<J, I, H, G, F, E, D, C, B, A> reverse() {
+        return of(c10, c9, c8, c7, c6, c5, c4, c3, c2, c1);
     }
 
     @Override
@@ -125,7 +139,9 @@ public class Tuple8<A, B, C, D, E, F, G, H> implements Tuple<Tuple8<H, G, F, E, 
             + c5 + ", "
             + c6 + ", "
             + c7 + ", "
-            + c8 +
+            + c8 + ", "
+            + c9 + ", "
+            + c10 +
             ')';
     }
 }

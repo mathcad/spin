@@ -81,10 +81,6 @@ public class Tuple5<A, B, C, D, E> implements Tuple<Tuple5<E, D, C, B, A>> {
         action.accept(4, c5);
     }
 
-    public Tuple5<E, D, C, B, A> reverse() {
-        return of(c5, c4, c3, c2, c1);
-    }
-
     @Override
     public void forEach(Consumer<? super Object> action) {
         action.accept(c1);
@@ -92,6 +88,10 @@ public class Tuple5<A, B, C, D, E> implements Tuple<Tuple5<E, D, C, B, A>> {
         action.accept(c3);
         action.accept(c4);
         action.accept(c5);
+    }
+
+    public Tuple5<E, D, C, B, A> reverse() {
+        return of(c5, c4, c3, c2, c1);
     }
 
     @Override

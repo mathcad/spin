@@ -67,15 +67,15 @@ public class Triple<A, B, C> implements Tuple<Triple<C, B, A>> {
         action.accept(2, third);
     }
 
-    public Triple<C, B, A> reverse() {
-        return of(third, second, first);
-    }
-
     @Override
     public void forEach(Consumer<? super Object> action) {
         action.accept(first);
         action.accept(second);
         action.accept(third);
+    }
+
+    public Triple<C, B, A> reverse() {
+        return of(third, second, first);
     }
 
     @Override

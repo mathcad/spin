@@ -62,14 +62,14 @@ public class Pair<A, B> implements Tuple<Pair<B, A>> {
         action.accept(1, second);
     }
 
-    public Pair<B, A> reverse() {
-        return of(second, first);
-    }
-
     @Override
     public void forEach(Consumer<? super Object> action) {
         action.accept(first);
         action.accept(second);
+    }
+
+    public Pair<B, A> reverse() {
+        return of(second, first);
     }
 
     @Override
