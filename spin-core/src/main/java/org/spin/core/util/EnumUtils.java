@@ -95,12 +95,33 @@ public abstract class EnumUtils {
      * @param enumName 枚举名称
      * @return 枚举常量
      */
-    public static <E extends Enum<E>> E getEnumByName(Class<E> enumCls, String enumName) {
+    public static <E extends Enum<E>> E fromName(Class<E> enumCls, String enumName) {
         try {
             return Enum.valueOf(enumCls, enumName);
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * 通过序号，获取枚举类型常量
+     *
+     * @param enumCls 枚举类型
+     * @param ordinal 序号
+     * @return 枚举常量
+     */
+    public static <E extends Enum<E>> E fromOrdinal(Class<E> enumCls, int ordinal) {
+        E[] enumConstants = enumCls.getEnumConstants();
+        if (ordinal < 0 || ordinal >= enumConstants.length) {
+            throw new SimplifiedException(
+                String.format(
+                    "Unknown ordinal value [%s] for enum class [%s]",
+                    ordinal,
+                    enumCls.getName()
+                )
+            );
+        }
+        return enumConstants[ordinal];
     }
 
     /**
