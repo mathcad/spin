@@ -16,21 +16,21 @@ import java.util.function.Consumer;
 public class Pair<A, B> implements Tuple<Pair<B, A>> {
     private static final long serialVersionUID = 5250117296300174625L;
 
-    public final A first;
-    public final B second;
+    public final A c1;
+    public final B c2;
 
-    private Pair(final A first, final B second) {
-        this.first = first;
-        this.second = second;
+    private Pair(final A c1, final B c2) {
+        this.c1 = c1;
+        this.c2 = c2;
     }
 
-    public static <A, B> Pair<A, B> of(final A first, final B second) {
-        return new Pair<>(first, second);
+    public static <A, B> Pair<A, B> of(final A c1, final B second) {
+        return new Pair<>(c1, second);
     }
 
     @Override
     public Object[] toArray() {
-        return CollectionUtils.ofArray(first, second);
+        return CollectionUtils.ofArray(c1, c2);
     }
 
     @Override
@@ -43,9 +43,9 @@ public class Pair<A, B> implements Tuple<Pair<B, A>> {
     public <E> E get(int pos) {
         switch (pos) {
             case 0:
-                return (E) first;
+                return (E) c1;
             case 1:
-                return (E) second;
+                return (E) c2;
             default:
                 throw new SimplifiedException("索引超出范围[0, 1]，实际:" + pos);
         }
@@ -53,27 +53,27 @@ public class Pair<A, B> implements Tuple<Pair<B, A>> {
 
     @Override
     public boolean contains(Object value) {
-        return ObjectUtils.nullSafeEquals(first, value) || ObjectUtils.nullSafeEquals(second, value);
+        return ObjectUtils.nullSafeEquals(c1, value) || ObjectUtils.nullSafeEquals(c2, value);
     }
 
     @Override
     public void forEachWithIndex(BiConsumer<Integer, Object> action) {
-        action.accept(0, first);
-        action.accept(1, second);
+        action.accept(0, c1);
+        action.accept(1, c2);
     }
 
     @Override
     public void forEach(Consumer<? super Object> action) {
-        action.accept(first);
-        action.accept(second);
+        action.accept(c1);
+        action.accept(c2);
     }
 
     public Pair<B, A> reverse() {
-        return of(second, first);
+        return of(c2, c1);
     }
 
     @Override
     public String toString() {
-        return "(" + first + ", " + second + ')';
+        return "(" + c1 + ", " + c2 + ')';
     }
 }

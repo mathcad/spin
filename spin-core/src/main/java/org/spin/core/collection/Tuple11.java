@@ -8,13 +8,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * 10个元素的元组
+ * 11个元素的元组
  * <p>Created by xuweinan on 2018/3/20.</p>
  *
  * @author xuweinan
  */
-public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I, H, G, F, E, D, C, B, A>> {
-    private static final long serialVersionUID = -6498859982411998304L;
+public class Tuple11<A, B, C, D, E, F, G, H, I, J, K> implements Tuple<Tuple11<K, J, I, H, G, F, E, D, C, B, A>> {
+    private static final long serialVersionUID = 6854710276893062714L;
 
     public final A c1;
     public final B c2;
@@ -26,8 +26,11 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
     public final H c8;
     public final I c9;
     public final J c10;
+    public final K c11;
 
-    private Tuple10(final A c1, final B c2, final C c3, final D c4, final E c5, final F c6, final G c7, final H c8, final I c9, final J c10) {
+    private Tuple11(final A c1, final B c2, final C c3, final D c4,
+                    final E c5, final F c6, final G c7, final H c8,
+                    final I c9, final J c10, final K c11) {
         this.c1 = c1;
         this.c2 = c2;
         this.c3 = c3;
@@ -38,20 +41,24 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
         this.c8 = c8;
         this.c9 = c9;
         this.c10 = c10;
+        this.c11 = c11;
     }
 
-    public static <A, B, C, D, E, F, G, H, I, J> Tuple10<A, B, C, D, E, F, G, H, I, J> of(final A c1, final B c2, final C c3, final D c4, final E c5, final F c6, final G c7, final H c8, final I c9, final J c10) {
-        return new Tuple10<>(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10);
+    public static <A, B, C, D, E, F, G, H, I, J, K>
+    Tuple11<A, B, C, D, E, F, G, H, I, J, K> of(final A c1, final B c2, final C c3, final D c4,
+                                                final E c5, final F c6, final G c7, final H c8,
+                                                final I c9, final J c10, final K c11) {
+        return new Tuple11<>(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11);
     }
 
     @Override
     public Object[] toArray() {
-        return CollectionUtils.ofArray(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10);
+        return CollectionUtils.ofArray(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11);
     }
 
     @Override
     public int size() {
-        return 10;
+        return 11;
     }
 
     @Override
@@ -78,8 +85,10 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
                 return (E1) c9;
             case 9:
                 return (E1) c10;
+            case 10:
+                return (E1) c11;
             default:
-                throw new SimplifiedException("索引超出范围[0, 9]，实际:" + pos);
+                throw new SimplifiedException("索引超出范围[0, 10]，实际:" + pos);
         }
     }
 
@@ -94,7 +103,8 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
             || ObjectUtils.nullSafeEquals(c7, value)
             || ObjectUtils.nullSafeEquals(c8, value)
             || ObjectUtils.nullSafeEquals(c9, value)
-            || ObjectUtils.nullSafeEquals(c10, value);
+            || ObjectUtils.nullSafeEquals(c10, value)
+            || ObjectUtils.nullSafeEquals(c11, value);
     }
 
     @Override
@@ -109,6 +119,7 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
         action.accept(7, c8);
         action.accept(8, c9);
         action.accept(9, c10);
+        action.accept(10, c11);
     }
 
     @Override
@@ -123,10 +134,11 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
         action.accept(c8);
         action.accept(c9);
         action.accept(c10);
+        action.accept(c11);
     }
 
-    public Tuple10<J, I, H, G, F, E, D, C, B, A> reverse() {
-        return of(c10, c9, c8, c7, c6, c5, c4, c3, c2, c1);
+    public Tuple11<K, J, I, H, G, F, E, D, C, B, A> reverse() {
+        return of(c11, c10, c9, c8, c7, c6, c5, c4, c3, c2, c1);
     }
 
     @Override
@@ -141,7 +153,8 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
             + c7 + ", "
             + c8 + ", "
             + c9 + ", "
-            + c10 +
+            + c10 + ", "
+            + c11 +
             ')';
     }
 }

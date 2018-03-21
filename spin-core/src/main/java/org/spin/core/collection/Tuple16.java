@@ -8,14 +8,15 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * 10个元素的元组
+ * 16个元素的元组
  * <p>Created by xuweinan on 2018/3/20.</p>
  *
  * @author xuweinan
  */
-public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I, H, G, F, E, D, C, B, A>> {
-    private static final long serialVersionUID = -6498859982411998304L;
-
+public class Tuple16<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P> implements
+    Tuple<Tuple16<P, O, N, M, L, K, J, I, H, G, F, E, D, C, B, A>> {
+    private static final long serialVersionUID = -8713872107745537242L;
+    
     public final A c1;
     public final B c2;
     public final C c3;
@@ -26,8 +27,17 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
     public final H c8;
     public final I c9;
     public final J c10;
+    public final K c11;
+    public final L c12;
+    public final M c13;
+    public final N c14;
+    public final O c15;
+    public final P c16;
 
-    private Tuple10(final A c1, final B c2, final C c3, final D c4, final E c5, final F c6, final G c7, final H c8, final I c9, final J c10) {
+    private Tuple16(final A c1, final B c2, final C c3, final D c4,
+                    final E c5, final F c6, final G c7, final H c8,
+                    final I c9, final J c10, final K c11, final L c12,
+                    final M c13, final N c14, final O c15, final P c16) {
         this.c1 = c1;
         this.c2 = c2;
         this.c3 = c3;
@@ -38,20 +48,31 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
         this.c8 = c8;
         this.c9 = c9;
         this.c10 = c10;
+        this.c11 = c11;
+        this.c12 = c12;
+        this.c13 = c13;
+        this.c14 = c14;
+        this.c15 = c15;
+        this.c16 = c16;
     }
 
-    public static <A, B, C, D, E, F, G, H, I, J> Tuple10<A, B, C, D, E, F, G, H, I, J> of(final A c1, final B c2, final C c3, final D c4, final E c5, final F c6, final G c7, final H c8, final I c9, final J c10) {
-        return new Tuple10<>(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10);
+    public static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P>
+    Tuple16<A, B, C, D, E, F, G, H, I, J, K, L,
+        M, N, O, P> of(final A c1, final B c2, final C c3, final D c4,
+                       final E c5, final F c6, final G c7, final H c8,
+                       final I c9, final J c10, final K c11, final L c12,
+                       final M c13, final N c14, final O c15, final P c16) {
+        return new Tuple16<>(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16);
     }
 
     @Override
     public Object[] toArray() {
-        return CollectionUtils.ofArray(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10);
+        return CollectionUtils.ofArray(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16);
     }
 
     @Override
     public int size() {
-        return 10;
+        return 16;
     }
 
     @Override
@@ -78,8 +99,20 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
                 return (E1) c9;
             case 9:
                 return (E1) c10;
+            case 10:
+                return (E1) c11;
+            case 11:
+                return (E1) c12;
+            case 12:
+                return (E1) c13;
+            case 13:
+                return (E1) c14;
+            case 14:
+                return (E1) c15;
+            case 15:
+                return (E1) c16;
             default:
-                throw new SimplifiedException("索引超出范围[0, 9]，实际:" + pos);
+                throw new SimplifiedException("索引超出范围[0, 15]，实际:" + pos);
         }
     }
 
@@ -94,7 +127,13 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
             || ObjectUtils.nullSafeEquals(c7, value)
             || ObjectUtils.nullSafeEquals(c8, value)
             || ObjectUtils.nullSafeEquals(c9, value)
-            || ObjectUtils.nullSafeEquals(c10, value);
+            || ObjectUtils.nullSafeEquals(c10, value)
+            || ObjectUtils.nullSafeEquals(c11, value)
+            || ObjectUtils.nullSafeEquals(c12, value)
+            || ObjectUtils.nullSafeEquals(c13, value)
+            || ObjectUtils.nullSafeEquals(c14, value)
+            || ObjectUtils.nullSafeEquals(c15, value)
+            || ObjectUtils.nullSafeEquals(c16, value);
     }
 
     @Override
@@ -109,6 +148,12 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
         action.accept(7, c8);
         action.accept(8, c9);
         action.accept(9, c10);
+        action.accept(10, c11);
+        action.accept(11, c12);
+        action.accept(12, c13);
+        action.accept(13, c14);
+        action.accept(14, c15);
+        action.accept(15, c16);
     }
 
     @Override
@@ -123,10 +168,16 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
         action.accept(c8);
         action.accept(c9);
         action.accept(c10);
+        action.accept(c11);
+        action.accept(c12);
+        action.accept(c13);
+        action.accept(c14);
+        action.accept(c15);
+        action.accept(c16);
     }
 
-    public Tuple10<J, I, H, G, F, E, D, C, B, A> reverse() {
-        return of(c10, c9, c8, c7, c6, c5, c4, c3, c2, c1);
+    public Tuple16<P, O, N, M, L, K, J, I, H, G, F, E, D, C, B, A> reverse() {
+        return of(c16, c15, c14, c13, c12, c11, c10, c9, c8, c7, c6, c5, c4, c3, c2, c1);
     }
 
     @Override
@@ -141,7 +192,13 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
             + c7 + ", "
             + c8 + ", "
             + c9 + ", "
-            + c10 +
+            + c10 + ", "
+            + c11 + ", "
+            + c12 + ", "
+            + c13 + ", "
+            + c14 + ", "
+            + c15 + ", "
+            + c16 +
             ')';
     }
 }
