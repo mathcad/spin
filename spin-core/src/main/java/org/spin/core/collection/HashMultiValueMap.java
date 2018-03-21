@@ -173,20 +173,6 @@ public class HashMultiValueMap<K, V> implements MultiValueMap<K, V>, Serializabl
         return this.targetMap.entrySet();
     }
 
-
-    /**
-     * Create a regular copy of this Map.
-     *
-     * @return a shallow copy of this Map, reusing this Map's value-holding List entries
-     * @see HashMultiValueMap#HashMultiValueMap(Map)
-     * @see #deepCopy()
-     * @since 4.2
-     */
-    @Override
-    public HashMultiValueMap<K, V> clone() {
-        return new HashMultiValueMap<>(this);
-    }
-
     /**
      * Create a deep copy of this Map.
      *

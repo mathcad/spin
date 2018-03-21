@@ -71,5 +71,6 @@ dependencies {
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
 
-    compile(project(":spin-core"))
+//    compile(project(":spin-core"))
+    compile group: 'org.mathcat', name: 'spin-core', version: '0.0.1.RC1'
 }

@@ -72,7 +72,8 @@ dependencies {
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
 
 //    web
-    compile(project(":spin-core"))
+//    compile(project(":spin-core"))
+    compile group: 'org.mathcat', name: 'spin-core', version: '0.0.1.RC1'
     compile group: 'org.springframework', name: 'spring-context-support', version: springVersion
     compile group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compile group: 'org.springframework', name: 'spring-aspects', version: springVersion
