@@ -62,10 +62,6 @@ public class ModelExcelView extends AbstractView {
         this.data = data;
     }
 
-    /**
-     * Default Constructor.
-     * Sets the FileType to XLSX.
-     */
     public ModelExcelView(ExcelGrid grid, Iterable<?> data) {
         this(FileType.Document.XLSX, grid, data);
     }
@@ -76,9 +72,6 @@ public class ModelExcelView extends AbstractView {
         return true;
     }
 
-    /**
-     * Renders the Document view, given the specified model.
-     */
     @Override
     protected final void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
 

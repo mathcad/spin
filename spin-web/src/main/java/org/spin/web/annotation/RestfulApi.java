@@ -25,35 +25,47 @@ public @interface RestfulApi {
 
     /**
      * 是否需要认证，默认true
+     *
+     * @return 是否需要认证
      */
     boolean auth() default true;
 
     /**
      * 权限路径(RequestMapping的名称)
+     *
+     * @return 权限路径字符串
      */
     @AliasFor(annotation = RequestMapping.class, attribute = "name")
     String authRouter() default "";
 
     /**
      * 权限路径(RequestMapping的名称)
+     *
+     * @return 权限路径字符串
      */
     @AliasFor(annotation = RequestMapping.class, attribute = "name")
     String name() default "";
 
     /**
      * RequestMapping的路径
+     *
+     * @return 资源访问路径
      */
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] value() default {};
 
     /**
      * RequestMapping的路径
+     *
+     * @return 资源访问路径
      */
     @AliasFor(annotation = RequestMapping.class, attribute = "path")
     String[] path() default {};
 
     /**
      * 请求的方法
+     *
+     * @return 请求方法
      */
     @AliasFor(annotation = RequestMapping.class, attribute = "method")
     RequestMethod[] method() default {};
@@ -68,6 +80,7 @@ public @interface RestfulApi {
      * </pre>
      * 将会匹配请求的Content-Type类型为"text/html", "text/plain", 这类的请求
      *
+     * @return 请求Head部分
      * @see org.springframework.http.MediaType
      */
     @AliasFor(annotation = RequestMapping.class, attribute = "headers")

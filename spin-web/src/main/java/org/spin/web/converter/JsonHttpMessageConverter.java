@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets;
  * that can read and write JSON using the
  * <a href="https://code.google.com/p/google-gson/">Google Gson</a> library's
  * {@link Gson} class.
- * <p>
  * <p>Created by xuweinan on 2017/2/5.</p>
  *
  * @author xuweinan
@@ -53,6 +52,8 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
      * If not set, a default {@link Gson#Gson() Gson} instance is used.
      * <p>Setting a custom-configured {@code Gson} is one way to take further
      * control of the JSON serialization process.
+     *
+     * @param gson gson bject
      */
     public void setGson(Gson gson) {
         Assert.notNull(gson, "'gson' is required");
@@ -61,6 +62,8 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
     /**
      * Return the configured {@code Gson} instance for this converter.
+     *
+     * @return gson object
      */
     public Gson getGson() {
         return this.gson;
@@ -69,6 +72,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     /**
      * Specify a custom prefix to use for JSON output. Default is none.
      *
+     * @param jsonPrefix prefix
      * @see #setPrefixJson
      */
     public void setJsonPrefix(String jsonPrefix) {
@@ -83,6 +87,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
      * so that it cannot be hijacked.
      * This prefix should be stripped before parsing the string as JSON.
      *
+     * @param prefixJson prefix
      * @see #setJsonPrefix
      */
     public void setPrefixJson(boolean prefixJson) {
