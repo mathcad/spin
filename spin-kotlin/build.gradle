@@ -51,6 +51,8 @@ install {
 dependencies {
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
     testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
+    testRuntime group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: kotlin_version
+    testRuntime group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlin_version
 
     compileOnly group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: kotlin_version
     compileOnly group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlin_version

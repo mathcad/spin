@@ -78,5 +78,5 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compile group: 'org.springframework', name: 'spring-aspects', version: springVersion
     compile group: 'com.itextpdf', name: 'itextpdf', version: '5.5.13'
-    compile group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+    compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 }
