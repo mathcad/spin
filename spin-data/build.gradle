@@ -69,6 +69,10 @@ uploadArchives {
 dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+    testRuntime group: 'com.ibeetl', name: 'beetl', version: '2.7.27'
+    testRuntime group: 'org.freemarker', name: 'freemarker', version: '2.3.27-incubating'
+
+
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
 
 //    data

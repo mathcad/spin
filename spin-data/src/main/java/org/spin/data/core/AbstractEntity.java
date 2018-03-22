@@ -110,6 +110,7 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * 获取当前实体的DTO。DTO是当前实体的浅拷贝。
      *
      * @param depth 属性解析深度
+     * @param <E>   实体类型
      * @return DTO
      */
     public final <E extends AbstractEntity> E getDTO(final int depth) {
@@ -164,128 +165,74 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.id = id;
     }
 
-    /**
-     * 记录创建者id
-     */
     public Long getCreateUserId() {
         return createUserId;
     }
 
-    /**
-     * 记录创建者id
-     */
     public void setCreateUserId(Long createUserId) {
         this.createUserId = createUserId;
     }
 
-    /**
-     * 记录创建者用户名
-     */
     public String getCreateUserName() {
         return createUserName;
     }
 
-    /**
-     * 记录创建者用户名
-     */
     public void setCreateUserName(String createUserName) {
         this.createUserName = createUserName;
     }
 
-    /**
-     * 创建时间，禁止更改
-     */
     public LocalDateTime getCreateTime() {
         return createTime;
     }
 
-    /**
-     * 创建时间，禁止更改
-     */
     public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
     }
 
-    /**
-     * 记录更新者id
-     */
     public Long getUpdateUserId() {
         return updateUserId;
     }
 
-    /**
-     * 记录更新者用户名
-     */
     public String getUpdateUserName() {
         return updateUserName;
     }
 
-    /**
-     * 记录更新者用户名
-     */
     public void setUpdateUserName(String updateUserName) {
         this.updateUserName = updateUserName;
     }
 
-    /**
-     * 记录更新者id
-     */
     public void setUpdateUserId(Long updateUserId) {
         this.updateUserId = updateUserId;
     }
 
-    /**
-     * 最后更新时间
-     */
     public LocalDateTime getUpdateTime() {
         return updateTime;
     }
 
-    /**
-     * 最后更新时间
-     */
     public void setUpdateTime(LocalDateTime updateTime) {
         this.updateTime = updateTime;
     }
 
-    /**
-     * 版本号
-     */
     public int getVersion() {
         return version;
     }
 
-    /**
-     * 版本号
-     */
     public void setVersion(int version) {
         this.version = version;
     }
 
-    /**
-     * 排序号
-     */
     public float getOrderNo() {
         return orderNo;
     }
 
-    /**
-     * 排序号
-     */
     public void setOrderNo(float orderNo) {
         this.orderNo = orderNo;
     }
 
-    /**
-     * 是否逻辑删除
-     */
     public boolean isValid() {
         return valid;
     }
 
-    /**
-     * 是否逻辑删除
-     */
     public void setValid(boolean valid) {
         this.valid = valid;
     }

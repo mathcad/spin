@@ -57,6 +57,7 @@ public abstract class EntityUtils {
      *
      * @param entity 标记有的Entity注解的Hibernate实体代理
      * @param depth  copy层次
+     * @param <T>    实体类型
      * @return 返回一个实体
      */
     public static <T> T getDTO(final T entity, final int depth) {
@@ -156,6 +157,9 @@ public abstract class EntityUtils {
 
     /**
      * 获取实体主键值
+     *
+     * @param en 实体
+     * @return 主键值
      */
     public static Object getPK(Object en) {
         Field opkF = EntityUtils.getPKField(en.getClass());
@@ -165,7 +169,11 @@ public abstract class EntityUtils {
     }
 
     /**
-     * copy属性到另一个字段
+     * copy实体的属性到另一个实体中
+     *
+     * @param src    源实体
+     * @param dest   目标实体
+     * @param fields 字段名列表
      */
     public static void copyTo(Object src, Object dest, String... fields) {
         if (null == src || null == dest || null == fields)
@@ -185,7 +193,11 @@ public abstract class EntityUtils {
     }
 
     /**
-     * copy属性到另一个字段
+     * copy实体的属性到另一个实体中
+     *
+     * @param src    源实体
+     * @param dest   目标实体
+     * @param fields 字段名列表
      */
     public static void copyTo(Object src, Object dest, Collection<String> fields) {
         if (null == src || null == dest || null == fields)
@@ -209,6 +221,7 @@ public abstract class EntityUtils {
      *
      * @param src 源对象
      * @param <T> 实体类型
+     * @return 复制后的对象
      */
     public static <T extends IEntity> T copy(T src) {
         try {
@@ -225,6 +238,9 @@ public abstract class EntityUtils {
 
     /**
      * 解析实体中所有映射到数据库列的字段
+     *
+     * @param entityClazz 实体类型
+     * @return 映射到数据库的字段名集合
      */
     public static Set<String> parseEntityColumns(Class entityClazz) {
         if (SpinContext.ENTITY_COLUMNS.containsKey(entityClazz.getName()))
@@ -244,6 +260,7 @@ public abstract class EntityUtils {
     /**
      * 获得引用类型的n对一的引用字段列表
      *
+     * @param cls 对象类型
      * @return 字段列表
      */
     public static Map<String, Field> getJoinFields(final Class cls) {
@@ -264,6 +281,16 @@ public abstract class EntityUtils {
      * 复合属性，请在语句中指定别名为实体属性的路径。如createUser.id对应createUser的id属性。<br>
      * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
      * </p>
+     *
+     * @param type   对象类型
+     * @param values map
+     * @param <T>    类型参数
+     * @return 转换后的对象
+     * @throws IllegalAccessException    对象访问异常
+     * @throws InstantiationException    对象初始化异常
+     * @throws IntrospectionException    内省异常
+     * @throws InvocationTargetException 方法调用异常
+     * @throws NoSuchMethodException     方法不存在
      */
     public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException, NoSuchMethodException {
         T bean = type.getDeclaredConstructor().newInstance();
@@ -357,6 +384,16 @@ public abstract class EntityUtils {
      * 如果Map中存在某些Key不能与实体的属性对应，将被舍弃。
      * </p>
      * 由于递归实现效率低下，不建议使用
+     *
+     * @param type       对象类型
+     * @param values     map
+     * @param propPrefix 属性前缀
+     * @param <T>        类型参数
+     * @return 转换后的对象
+     * @throws IllegalAccessException    对象访问异常
+     * @throws InstantiationException    对象初始化异常
+     * @throws IntrospectionException    内省异常
+     * @throws InvocationTargetException 方法调用异常
      */
     @Deprecated
     public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values, String propPrefix) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
@@ -436,6 +473,9 @@ public abstract class EntityUtils {
 
     /**
      * 判断字段是否是映射到数据库
+     *
+     * @param field 字段
+     * @return 是否映射
      */
     private static boolean isDbColumn(Field field) {
         Annotation[] annotations = field.getAnnotations();

@@ -22,7 +22,9 @@ public abstract class QueryParamHandler {
     public abstract void processCriteria(CriteriaBuilder dc, String val);
 
     /**
-     * 获取条件字段
+     * 获取处理字段
+     *
+     * @return 处理字段
      */
     public String getField() {
         return field;

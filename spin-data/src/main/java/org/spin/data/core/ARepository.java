@@ -24,6 +24,7 @@ import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.session.SessionManager;
 import org.spin.core.session.SessionUser;
+import org.spin.core.throwable.AssertFailException;
 import org.spin.core.throwable.SQLException;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
@@ -117,6 +118,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 获得当前线程的session 如果Thread Local变量中有绑定，返回该session
      * 否则，调用sessFactory的getCurrentSession
+     *
+     * @return 打开的Session
      */
     public Session getSession() {
         Session sess = peekThreadSession();
@@ -128,6 +131,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 打开一个新Session，如果线程上有其他Session，则返回最后一个Session
+     *
+     * @return 打开的Session
      */
     public Session openSession() {
         return openSession(false);
@@ -137,6 +142,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 在当前线程上手动打开一个Session，其他的Thread local事务可能会失效
      *
      * @param requiredNew 强制打开新Session
+     * @return 打开的Session
      */
     public Session openSession(boolean requiredNew) {
         Session session = peekThreadSession();
@@ -173,6 +179,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 打开事务 如果线程已有事务就返回，不重复打开
+     *
+     * @return 打开的事务对象
      */
     public Transaction openTransaction() {
         return openTransaction(false);
@@ -182,6 +190,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 在当前线程上打开一个Session，并启动事务
      *
      * @param requiredNew 强制开启事务
+     * @return 打开的事务对象
      */
     public Transaction openTransaction(boolean requiredNew) {
         Session session = openSession(requiredNew);
@@ -318,6 +327,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 获取持久态实体对象并锁定(FOR UPDATE悲观锁)
+     *
+     * @param k 主键
+     * @return 锁定后的实体
      */
     public T getWithLock(final PK k) {
         Session sess = getSession();
@@ -358,6 +370,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 主键获取指定深度的属性的瞬态对象
+     *
+     * @param k     主键
+     * @param depth 深度
+     * @return DTO对象
      */
     public T getDto(final PK k, int depth) {
         return EntityUtils.getDTO(get(k), depth);
@@ -392,6 +408,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 检查Session缓存中是否存在指定的持久化对象
      *
      * @param entity 待检查的持久化对象
+     * @return 是否存在于缓存中
      * @see Session#contains
      */
     public boolean contains(final T entity) {
@@ -401,7 +418,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 删除指定实体
      *
-     * @throws IllegalArgumentException 当待删除的实体为{@literal null}时抛出该异常
+     * @param entity 待删除实体
+     * @throws AssertFailException 当待删除的实体为{@literal null}时抛出该异常
      */
     public void delete(T entity) {
         getSession().delete(Assert.notNull(entity, "The entity to be deleted is null"));
@@ -410,7 +428,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 通过ID删除指定实体
      *
-     * @throws IllegalArgumentException 当待删除的{@code id}为{@literal null}时抛出该异常
+     * @param k 待删除实体id
+     * @throws AssertFailException 当待删除的{@code id}为{@literal null}时抛出该异常
      */
     public void delete(PK k) {
         T entity = get(Assert.notNull(k, ID_MUST_NOT_BE_NULL));
@@ -421,7 +440,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 通过ID集合删除指定实体
      *
-     * @throws IllegalArgumentException 当待删除的{@code ids}为{@literal null}时抛出该异常
+     * @param ids 待删除实体主键集合
+     * @throws AssertFailException 当待删除的{@code ids}为{@literal null}时抛出该异常
      */
     public void delete(Iterator<PK> ids) {
         Assert.notNull(ids, ID_MUST_NOT_BE_NULL);
@@ -431,7 +451,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 删除指定实体
      *
-     * @throws IllegalArgumentException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
+     * @param entities 待删除实体集合
+     * @throws AssertFailException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
      */
     public void delete(Iterable<? extends T> entities) {
         Assert.notNull(entities, "The given Iterable of entities not be null!");
@@ -443,6 +464,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 批量删除实体
      * <p>如果条件为空，删除所有</p>
+     *
+     * @param cs 删除条件
      */
     public void delete(Criterion... cs) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
@@ -456,6 +479,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 通过hql批量删除实体
      * <p>如果条件为空，删除所有</p>
+     *
+     * @param conditions 删除条件(HQL)
      */
     public void delete(String conditions) {
         StringBuilder hql = new StringBuilder("from ");
@@ -468,7 +493,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 逻辑删除指定实体
      *
-     * @throws IllegalArgumentException 当待删除的实体为{@literal null}时抛出该异常
+     * @param entity 待删除实体
+     * @throws AssertFailException 当待删除的实体为{@literal null}时抛出该异常
      */
     public void logicDelete(T entity) {
         Assert.notNull(entity, "The entity to be deleted is null");
@@ -482,7 +508,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 通过ID逻辑删除指定实体
      *
-     * @throws IllegalArgumentException 当待删除的{@code id}为{@literal null}时抛出该异常
+     * @param k 待删除主键
+     * @throws AssertFailException 当待删除的{@code id}为{@literal null}时抛出该异常
      */
     public void logicDelete(PK k) {
         T entity = get(Assert.notNull(k, ID_MUST_NOT_BE_NULL));
@@ -497,7 +524,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 通过ID集合逻辑删除指定实体
      *
-     * @throws IllegalArgumentException 当待删除的{@code ids}为{@literal null}时抛出该异常
+     * @param ids 待删除主键集合
+     * @throws AssertFailException 当待删除的{@code ids}为{@literal null}时抛出该异常
      */
     public void logicDelete(Iterator<PK> ids) {
         Assert.notNull(ids, ID_MUST_NOT_BE_NULL);
@@ -507,7 +535,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 逻辑删除指定实体
      *
-     * @throws IllegalArgumentException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
+     * @param entities 实体集合
+     * @throws AssertFailException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
      */
     public void logicDelete(Iterable<? extends T> entities) {
         Assert.notNull(entities, "The given Iterable of entities not be null!");
@@ -519,6 +548,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 批量逻辑删除实体
      * <p>如果条件为空，删除所有</p>
+     *
+     * @param cs 删除条件
      */
     public void logicDelete(Criterion... cs) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
@@ -534,6 +565,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      *
      * @param dc 离线条件
      * @param pr 分页请求
+     * @return 查询结果
      */
     public List<T> find(DetachedCriteria dc, PageRequest... pr) {
         Session sess = getSession();
@@ -550,6 +582,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 条件查询
+     *
+     * @param cs 查询条件
+     * @return 查询结果
      */
     public List<T> find(Criterion... cs) {
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
@@ -561,6 +596,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 分页条件查询
+     *
+     * @param cb 查询参数
+     * @return 查询结果
      */
     public List<T> find(CriteriaBuilder<T> cb) {
         if (!entityClazz.equals(cb.getEnCls())) {
@@ -572,6 +610,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 分页条件查询
+     *
+     * @param qp 查询参数
+     * @return 查询结果
      */
     public List<T> find(QueryParam qp) {
         return find(compileCondition(qp));
@@ -579,6 +620,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据hql查询
+     *
+     * @param hql  查询语句
+     * @param args 查询参数
+     * @return 查询结果
      */
     public List<T> find(String hql, Object... args) {
         Session sess = getSession();
@@ -607,6 +652,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * 通过唯一属性查询
      * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
+     *
+     * @param cb 查询参数
+     * @return 查询到的实体
      */
     public T findOne(CriteriaBuilder<T> cb) {
         if (!entityClazz.equals(cb.getEnCls())) {
@@ -629,6 +677,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      *
      * @param cts 条件数组
+     * @return 查询到的实体
      */
     public T findOne(Criterion... cts) {
         return findOne(CriteriaBuilder.forClass(entityClazz).addCriterion(cts));
@@ -640,6 +689,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      *
      * @param prop  属性名称
      * @param value 值
+     * @return 查询到的实体
      */
     public T findOne(String prop, Object value) {
         return findOne(Restrictions.eq(prop, value));
@@ -647,6 +697,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 查询且锁定
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return 查询到的实体
      */
     public T findOneWithLock(String prop, Object value) {
         Session sess = getSession();
@@ -668,7 +722,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /**
-     * 判断是否有存在已有实体
+     * 判断是否存在已有实体
      *
      * @param id 指定ID
      * @return 是/否
@@ -695,6 +749,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 判断是否有存在已有实体 默认多个字段条件为，条件并列and
      *
      * @param params 查询参数
+     * @param notId  排除的id
      * @return 是/否
      */
     public boolean exist(Map<String, Object> params, PK notId) {
@@ -733,6 +788,10 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 判断是否存在已有实体
+     *
+     * @param cb    查询参数
+     * @param notId 排除的id
+     * @return 是否存在
      */
     public boolean exist(CriteriaBuilder<T> cb, PK notId) {
         if (!entityClazz.equals(cb.getEnCls())) {
@@ -762,6 +821,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据条件查询DTO列表
+     *
+     * @param cb 查询参数
+     * @return 查询结果
      */
     public Page<T> page(CriteriaBuilder<T> cb) {
         Assert.notNull(cb, "CriteriaBuilder need a non-null value");
@@ -791,6 +853,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 根据条件查询DTO列表
      *
      * @param qp 通用查询参数
+     * @return 查询结果
      */
     public Page<T> page(QueryParam qp) {
         return page(compileCondition(qp));
@@ -798,6 +861,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据条件查询DTO（扁平化的Map）
+     *
+     * @param cb 查询参数
+     * @return 查询结果
      */
     public Page<Map<String, Object>> pageFlatMap(CriteriaBuilder<T> cb) {
         return pageMap(cb, false);
@@ -807,6 +873,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 根据条件查询DTO（扁平化的Map）
      *
      * @param qp 通用查询参数
+     * @return 查询结果
      */
     public Page<Map<String, Object>> pageFlatMap(QueryParam qp) {
         return pageFlatMap(compileCondition(qp));
@@ -814,6 +881,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据条件查询DTO（层次化的Map）
+     *
+     * @param cb 查询参数
+     * @return 查询结果
      */
     public Page<Map<String, Object>> pageMap(CriteriaBuilder<T> cb) {
         return pageMap(cb, true);
@@ -823,6 +893,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * 根据条件查询DTO（层次化的Map）
      *
      * @param qp 通用查询参数
+     * @return 查询结果
      */
     public Page<Map<String, Object>> pageMap(QueryParam qp) {
         return pageMap(compileCondition(qp));
@@ -830,6 +901,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据条件查询DTO列表
+     *
+     * @param map 查询参数
+     * @return 查询结果
      */
     public List<T> list(Map<String, Object> map) {
         CriteriaBuilder<T> cb = CriteriaBuilder.forClass(entityClazz)
@@ -839,6 +913,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据条件查询DTO列表
+     *
+     * @param cb 查询参数
+     * @return 查询结果
      */
     public List<T> list(CriteriaBuilder<T> cb) {
         if (!entityClazz.equals(cb.getEnCls())) {
@@ -850,6 +927,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据条件查询DTO列表
+     *
+     * @param qp 查询参数
+     * @return 查询结果
      */
     public List<T> list(QueryParam qp) {
         return list(compileCondition(qp));
@@ -857,6 +937,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据条件查询DTO（扁平化的Map）
+     *
+     * @param cb 查询参数
+     * @return 查询结果
      */
     public List<Map<String, Object>> listFlatMap(CriteriaBuilder<T> cb) {
         return listMap(cb, false);
@@ -864,6 +947,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据条件查询DTO（扁平化的Map）
+     *
+     * @param qp 查询参数
+     * @return 查询结果
      */
     public List<Map<String, Object>> listFlatMap(QueryParam qp) {
         return listFlatMap(compileCondition(qp));
@@ -871,6 +957,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据条件查询DTO（层次化的Map）
+     *
+     * @param cb 查询参数
+     * @return 查询结果
      */
     public List<Map<String, Object>> listMap(CriteriaBuilder<T> cb) {
         return listMap(cb, true);
@@ -878,6 +967,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 根据条件查询DTO（层次化的Map）
+     *
+     * @param qp 查询参数
+     * @return 查询结果
      */
     public List<Map<String, Object>> listMap(QueryParam qp) {
         return listMap(compileCondition(qp));
@@ -1034,6 +1126,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     /**
      * Return whether to check that the Hibernate Session is not in read-only
      * mode in case of write operations (save/update/delete).
+     *
+     * @return 是否检查写操作
      */
     public boolean isCheckWriteOperations() {
         return checkWriteOperations;
@@ -1046,6 +1140,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * within a read-only transaction. Turn this off to allow save/update/delete
      * on a Session with flush mode MANUAL.
      *
+     * @param checkWriteOperations 是否检查写操作
      * @see #checkWriteOperationAllowed
      * @see org.springframework.transaction.TransactionDefinition#isReadOnly
      */
@@ -1143,6 +1238,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      *
      * @param cb   查询条件
      * @param wrap 是否需要转换成层次Map
+     * @return 查询结果
      */
     public List<Map<String, Object>> listMap(CriteriaBuilder<T> cb, boolean wrap) {
         Assert.notNull(cb, "CriteriaBuilder need a non-null value");

@@ -12,6 +12,8 @@ public interface DatabaseType {
 
     /**
      * 数据库产品名称
+     *
+     * @return 产品名称
      */
     String getProductName();
 
@@ -20,6 +22,7 @@ public interface DatabaseType {
      *
      * @param sqlSource   sql
      * @param pageRequest 分页参数
+     * @return 包含分页信息的sql
      */
     SQLSource getPagedSQL(SQLSource sqlSource, PageRequest pageRequest);
 }

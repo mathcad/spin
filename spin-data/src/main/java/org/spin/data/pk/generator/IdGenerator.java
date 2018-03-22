@@ -9,11 +9,16 @@ public interface IdGenerator<K extends Serializable, I extends Id> {
 
     /**
      * 生成Id
+     *
+     * @return 主键
      */
     K genId();
 
     /**
      * 解构Id中的信息
+     *
+     * @param id 主键
+     * @return 主键信息
      */
     I expId(K id);
 

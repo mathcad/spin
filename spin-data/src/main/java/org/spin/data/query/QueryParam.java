@@ -28,10 +28,25 @@ public class QueryParam implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(QueryParam.class);
 
     ///页面查询需要携带的信息，其中cls必填////////////////////////////////////////////////////////////////
+    /**
+     * 查询的实体类
+     */
     private String cls;
+    /**
+     * 查询的字段列表
+     */
     private Set<String> fields = new HashSet<>();
+    /**
+     * 查询的字段别名
+     */
     private Map<String, String> aliasMap = new HashMap<>();
+    /**
+     * 查询条件
+     */
     private QueryPredicate predicate = new QueryPredicate();
+    /**
+     * 分页参数
+     */
     private PageRequest pagger = new PageRequest();
     private String signature;
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,6 +69,8 @@ public class QueryParam implements Serializable {
 
     /**
      * 验证查询条件是否被客户端篡改
+     *
+     * @return 校验结果
      */
     public boolean validation() {
         String sign = predicate.calcSignature();
@@ -175,74 +192,45 @@ public class QueryParam implements Serializable {
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * 查询的实体类
-     */
     public String getCls() {
         return cls;
     }
 
-    /**
-     * 查询的实体类
-     */
     public void setCls(String cls) {
         this.cls = cls;
     }
 
-    /**
-     * 查询的字段列表
-     */
     public Set<String> getFields() {
         return fields;
     }
 
-    /**
-     * 查询的字段列表
-     */
     public void setFields(Set<String> fields) {
         this.fields = fields;
     }
 
-    /**
-     * 查询的字段别名
-     */
     public Map<String, String> getAliasMap() {
         return aliasMap;
     }
 
-    /**
-     * 查询的字段别名
-     */
+
     public void setAliasMap(Map<String, String> aliasMap) {
         this.aliasMap = aliasMap;
     }
 
-    /**
-     * 查询条件
-     */
     public QueryPredicate getPredicate() {
         return predicate;
     }
 
-    /**
-     * 分页参数
-     */
+    public void setPredicate(QueryPredicate predicate) {
+        this.predicate = predicate;
+    }
+
     public PageRequest getPagger() {
         return pagger;
     }
 
-    /**
-     * 分页参数
-     */
     public void setPagger(PageRequest pagger) {
         this.pagger = pagger;
-    }
-
-    /**
-     * 查询条件
-     */
-    public void setPredicate(QueryPredicate predicate) {
-        this.predicate = predicate;
     }
 
     /**
@@ -250,6 +238,8 @@ public class QueryParam implements Serializable {
      * <p>
      * in 条件请使用,分割的value组合
      * {person__city__in:"wuhu,nanjing"}
+     *
+     * @return 查询条件
      */
     public Map<String, String> getConditions() {
         return predicate.getConditions();
@@ -258,6 +248,8 @@ public class QueryParam implements Serializable {
     /**
      * 多个排序字段用,隔开
      * name__desc,id__desc
+     *
+     * @return 排序语句
      */
     public String getSort() {
         return predicate.getSort();
@@ -265,6 +257,8 @@ public class QueryParam implements Serializable {
 
     /**
      * 分页页码，从1开始
+     *
+     * @return 分页页码
      */
     public Integer getPage() {
         return null == pagger ? null : pagger.getPage();
@@ -272,6 +266,8 @@ public class QueryParam implements Serializable {
 
     /**
      * 分页大小
+     *
+     * @return 分页大小
      */
     public Integer getPageSize() {
         return null == pagger ? null : pagger.getPageSize();

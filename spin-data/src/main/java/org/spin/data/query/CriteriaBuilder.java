@@ -29,6 +29,7 @@ import java.util.Set;
  * 离线查询条件构造器
  * <p>Created by xuweinan on 2016/12/14.</p>
  *
+ * @param <T> 实体类型参数，必须具有{@link javax.persistence.Entity}注解
  * @author xuweinan
  */
 public class CriteriaBuilder<T extends IEntity<?>> {
@@ -55,6 +56,8 @@ public class CriteriaBuilder<T extends IEntity<?>> {
      * 创建离线查询条件
      *
      * @param enCls 查询的实体类
+     * @param <T>   实体类型
+     * @param <P>   实体主键类型
      * @return {@link CriteriaBuilder}
      */
     public static <T extends IEntity<P>, P extends Serializable> CriteriaBuilder<T> forClass(Class<T> enCls) {
