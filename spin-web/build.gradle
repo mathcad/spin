@@ -78,5 +78,11 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compile group: 'org.springframework', name: 'spring-aspects', version: springVersion
     compile group: 'com.itextpdf', name: 'itextpdf', version: '5.5.13'
+
+    compileOnly group: 'org.springframework', name: 'spring-orm', version: springVersion
+    compileOnly(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.15.Final') {
+        exclude(module: 'jboss-logging')
+        transitive = true
+    }
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 }

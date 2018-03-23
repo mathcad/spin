@@ -83,8 +83,8 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-oxm', version: springVersion
     compile group: 'org.springframework.data', name: 'spring-data-redis', version: '2.0.5.RELEASE'
     compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.15.Final') {
-        exclude(module: 'jboss-logging')
-        transitive = true
+//        exclude(module: 'jboss-logging')
+//        transitive = true
     }
     compile group: 'javax.transaction', name: 'javax.transaction-api', version: '1.2'
     compileOnly group: 'org.freemarker', name: 'freemarker', version: '2.3.27-incubating'

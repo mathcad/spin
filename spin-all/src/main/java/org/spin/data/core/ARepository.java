@@ -63,7 +63,9 @@ import java.util.stream.Collectors;
  * 1、基于Jpa规范的Repository
  * 2、基于NamedJdbcTemplate的动态SQL查询
  * 3、基于JTA的多数据源分布式事务
+ * 4、线程安全，Session与线程绑定
  * </pre>
+ * <p>手动开启的Session，Transaction需要在恰当的时机手动关闭，避免泄露</p>
  * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @author xuweinan
