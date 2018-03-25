@@ -7,8 +7,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
@@ -18,8 +16,6 @@ import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.session.SessionManager;
@@ -45,10 +41,7 @@ import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -74,13 +67,9 @@ import java.util.stream.Collectors;
  * @version V1.5
  */
 public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
-    private static final Logger logger = LoggerFactory.getLogger(ARepository.class);
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
     private static final String ORDER_ENTRIES = "orderEntries";
     private static final int MAX_RECORDS = 100000000;
-    private static final Map<String, SessionFactory> SESSION_FACTORY_MAP = new HashMap<>();
-    private static final ThreadLocal<Deque<Session>> THREADLOCAL_SESSIONS = new ThreadLocal<Deque<Session>>() {
-    };
 
     private boolean checkWriteOperations = true;
 
@@ -102,104 +91,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     public ARepository(Class<T> entityClass) {
         this.entityClazz = entityClass;
-    }
-
-    /**
-     * 注册SessionFactory，应该在使用任何Repository持久化方法之前完成所有SessionFactory的注册
-     *
-     * @param name           名称
-     * @param sessionFactory 注册SessionFactory
-     */
-    public static void registSessionFactory(String name, SessionFactory sessionFactory) {
-        SESSION_FACTORY_MAP.put(name, sessionFactory);
-    }
-
-    public SessionFactory getCurrentSessionFactory() {
-        return SESSION_FACTORY_MAP.get(sqlManager.getCurrentDataSourceName());
-    }
-
-    /**
-     * 获得当前线程的session 如果Thread Local变量中有绑定，返回该session
-     * 否则，调用sessFactory的getCurrentSession
-     *
-     * @return 打开的Session
-     */
-    public Session getSession() {
-        Session sess = peekThreadSession();
-        if (sess == null) {
-            sess = getCurrentSessionFactory().getCurrentSession();
-        }
-        return sess;
-    }
-
-    /**
-     * 打开一个新Session，如果线程上有其他Session，则返回最后一个Session
-     *
-     * @return 打开的Session
-     */
-    public Session openSession() {
-        return openSession(false);
-    }
-
-    /**
-     * 在当前线程上手动打开一个Session，其他的Thread local事务可能会失效
-     *
-     * @param requiredNew 强制打开新Session
-     * @return 打开的Session
-     */
-    public Session openSession(boolean requiredNew) {
-        Session session = peekThreadSession();
-        if (requiredNew || session == null) {
-            session = getCurrentSessionFactory().openSession();
-            pushTreadSession(session);
-        }
-        return session;
-    }
-
-    /**
-     * 关闭当前线程上手动开启的所有Session
-     */
-    public void closeAllManualSession() {
-        while (!THREADLOCAL_SESSIONS.get().isEmpty()) {
-            closeManualSession();
-        }
-    }
-
-    /**
-     * 关闭当前线程上手动打开的最后一个Session，如果Session上有事务，提交之
-     */
-    public void closeManualSession() {
-        Session session = popTreadSession();
-        if (session != null && session.isOpen()) {
-            Transaction tran = session.getTransaction();
-            if (tran != null && tran.isActive()) {
-                tran.commit();
-                logger.info("commit before closeSession");
-            }
-            session.close();
-        }
-    }
-
-    /**
-     * 打开事务 如果线程已有事务就返回，不重复打开
-     *
-     * @return 打开的事务对象
-     */
-    public Transaction openTransaction() {
-        return openTransaction(false);
-    }
-
-    /**
-     * 在当前线程上打开一个Session，并启动事务
-     *
-     * @param requiredNew 强制开启事务
-     * @return 打开的事务对象
-     */
-    public Transaction openTransaction(boolean requiredNew) {
-        Session session = openSession(requiredNew);
-        Transaction tran = session.getTransaction() == null ? session.beginTransaction() : session.getTransaction();
-        tran.begin();
-        return tran;
     }
 
     /**
@@ -238,9 +129,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
                 if (null != idGenerator && null == entity.getId()) {
                     entity.setId(idGenerator.genId());
                 }
-                getSession().save(entity);
+                DataSourceContext.getSession().save(entity);
             } else {
-                getSession().update(entity);
+                DataSourceContext.getSession().update(entity);
             }
         } catch (HibernateOptimisticLockingFailureException ope) {
             throw new SimplifiedException("The entity is expired", ope);
@@ -278,7 +169,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public T merge(final T entity) {
         //noinspection unchecked
-        return (T) getSession().merge(entity);
+        return (T) DataSourceContext.getSession().merge(entity);
     }
 
     /**
@@ -289,8 +180,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @see Session#replicate(Object, ReplicationMode)
      */
     public void replicate(final T entity, final ReplicationMode replicationMode) {
-        checkWriteOperationAllowed(getSession());
-        getSession().replicate(entity, replicationMode);
+        checkWriteOperationAllowed(DataSourceContext.getSession());
+        DataSourceContext.getSession().replicate(entity, replicationMode);
     }
 
     /**
@@ -307,7 +198,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             return null;
         }
 
-        return getSession().get(this.entityClazz, id);
+        return DataSourceContext.getSession().get(this.entityClazz, id);
     }
 
     /**
@@ -322,9 +213,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public T get(final PK id, final LockMode lockMode) {
         if (lockMode != null) {
-            return getSession().get(this.entityClazz, id, new LockOptions(lockMode));
+            return DataSourceContext.getSession().get(this.entityClazz, id, new LockOptions(lockMode));
         } else {
-            return getSession().get(this.entityClazz, id);
+            return DataSourceContext.getSession().get(this.entityClazz, id);
         }
     }
 
@@ -335,7 +226,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return 锁定后的实体
      */
     public T getWithLock(final PK k) {
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         T t = sess.get(this.entityClazz, k);
         sess.buildLockRequest(LockOptions.UPGRADE).lock(t);
         return t;
@@ -350,7 +241,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @see Session#load(Class, Serializable)
      */
     public T load(final PK id) {
-        return getSession().load(this.entityClazz, id);
+        return DataSourceContext.getSession().load(this.entityClazz, id);
     }
 
     /**
@@ -365,9 +256,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public T load(final PK id, final LockMode lockMode) {
         if (lockMode != null) {
-            return getSession().load(entityClazz, id, new LockOptions(lockMode));
+            return DataSourceContext.getSession().load(entityClazz, id, new LockOptions(lockMode));
         } else {
-            return getSession().load(entityClazz, id);
+            return DataSourceContext.getSession().load(entityClazz, id);
         }
     }
 
@@ -401,9 +292,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public void refresh(final T entity, final LockMode lockMode) {
         if (lockMode != null) {
-            getSession().refresh(entity, new LockOptions(lockMode));
+            DataSourceContext.getSession().refresh(entity, new LockOptions(lockMode));
         } else {
-            getSession().refresh(entity);
+            DataSourceContext.getSession().refresh(entity);
         }
     }
 
@@ -415,7 +306,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @see Session#contains
      */
     public boolean contains(final T entity) {
-        return getSession().contains(entity);
+        return DataSourceContext.getSession().contains(entity);
     }
 
     /**
@@ -425,7 +316,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @throws AssertFailException 当待删除的实体为{@literal null}时抛出该异常
      */
     public void delete(T entity) {
-        getSession().delete(Assert.notNull(entity, "The entity to be deleted is null"));
+        DataSourceContext.getSession().delete(Assert.notNull(entity, "The entity to be deleted is null"));
     }
 
     /**
@@ -436,8 +327,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public void delete(PK k) {
         T entity = get(Assert.notNull(k, ID_MUST_NOT_BE_NULL));
-        getSession().delete(Assert.notNull(entity, "Entity not found, or was deleted: [" + this.entityClazz.getSimpleName() + "|" + k + "]"));
-        getSession().flush();
+        DataSourceContext.getSession().delete(Assert.notNull(entity, "Entity not found, or was deleted: [" + this.entityClazz.getSimpleName() + "|" + k + "]"));
+        DataSourceContext.getSession().flush();
     }
 
     /**
@@ -490,7 +381,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         hql.append(this.entityClazz.getSimpleName()).append(" ");
         if (StringUtils.isEmpty(conditions))
             hql.append("where ").append(conditions);
-        getSession().delete(hql);
+        DataSourceContext.getSession().delete(hql);
     }
 
     /**
@@ -571,7 +462,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return 查询结果
      */
     public List<T> find(DetachedCriteria dc, PageRequest... pr) {
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
         if (null != pr && pr.length > 0 && null != pr[0]) {
             ct.setFirstResult(pr[0].getOffset());
@@ -629,7 +520,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return 查询结果
      */
     public List<T> find(String hql, Object... args) {
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Query<T> q = sess.createQuery(hql, entityClazz);
         if (args != null && args.length > 0) {
             for (int i = 0; i < args.length; i++) {
@@ -645,7 +536,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return 结果数据
      */
     public List<T> findAll() {
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = DetachedCriteria.forClass(this.entityClazz).getExecutableCriteria(sess);
         ct.setCacheMode(CacheMode.NORMAL);
         //noinspection unchecked
@@ -664,7 +555,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             cb.setEnCls(entityClazz);
         }
         DetachedCriteria dc = cb.buildDeCriteria(false);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
         ct.setFirstResult(0);
         ct.setMaxResults(1);
@@ -706,7 +597,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @return 查询到的实体
      */
     public T findOneWithLock(String prop, Object value) {
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
         dc.add(Restrictions.eq(prop, value));
         Criteria ct = dc.getExecutableCriteria(sess);
@@ -780,7 +671,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             dc.add(Restrictions.or(criteriaList.toArray(new Criterion[]{})));
         if (notId != null)
             dc.add(Restrictions.ne("id", notId));
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         // 总数查询
         Criteria ct = dc.getExecutableCriteria(sess);
         List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
@@ -807,7 +698,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     public Long count(CriteriaBuilder<T> cb) {
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
         }
@@ -833,7 +724,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
         }
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
         ct.setCacheable(false);
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
@@ -1030,7 +921,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @see Session#flush
      */
     public void flush() {
-        getSession().flush();
+        DataSourceContext.getSession().flush();
     }
 
     /**
@@ -1041,7 +932,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public void evict(T entity) {
         if (Objects.nonNull(entity)) {
-            getSession().evict(entity);
+            DataSourceContext.getSession().evict(entity);
         }
     }
 
@@ -1051,7 +942,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      * @see Session#clear
      */
     public void clear() {
-        getSession().clear();
+        DataSourceContext.getSession().clear();
     }
 
     /**
@@ -1061,7 +952,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public void doWork(Work work) {
         if (null != work) {
-            getSession().doWork(work);
+            DataSourceContext.getSession().doWork(work);
         }
     }
 
@@ -1075,7 +966,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         Assert.notEmpty(sql, "SQL语句不能为空");
         Assert.isTrue(!StringUtils.trimToEmpty(sql).toLowerCase().startsWith("select"), "不能执行select语句，只能执行CUD语句");
         int[] affects = {-1};
-        getSession().doWork(connection -> {
+        DataSourceContext.getSession().doWork(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql);
             affects[0] = ps.executeUpdate();
         });
@@ -1093,7 +984,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         if (null == work) {
             return null;
         }
-        return getSession().doReturningWork(work);
+        return DataSourceContext.getSession().doReturningWork(work);
     }
 
     /**
@@ -1107,7 +998,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
      */
     public <R> R doReturningWork(String sql, Function<ResultSet, R> transformer) {
         Assert.notEmpty(sql, "SQL语句不能为空");
-        return getSession().doReturningWork(connection -> {
+        return DataSourceContext.getSession().doReturningWork(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql);
             boolean isRs = ps.execute();
             return isRs ? transformer.apply(ps.getResultSet()) : null;
@@ -1151,22 +1042,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         this.checkWriteOperations = checkWriteOperations;
     }
 
-    /**
-     * 切换数据源
-     *
-     * @param name 数据源名称
-     */
-    public void switchDataSource(String name) {
-        sqlManager.switchDataSource(name);
-    }
-
-    /**
-     * 切换到默认数据源
-     */
-    public void usePrimaryDataSource() {
-        sqlManager.usePrimaryDataSource();
-    }
-
     public SQLManager getSqlManager() {
         return sqlManager;
     }
@@ -1181,15 +1056,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     public void setIdGenerator(IdGenerator<PK, ?> idGenerator) {
         this.idGenerator = idGenerator;
-    }
-
-    /**
-     * 获取当前数据源名称
-     *
-     * @return 数据源名称
-     */
-    public String getCurrentDataSourceName() {
-        return sqlManager.getCurrentDataSourceName();
     }
 
     /**
@@ -1248,7 +1114,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         if (!entityClazz.equals(cb.getEnCls())) {
             cb.setEnCls(entityClazz);
         }
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
         ct.setCacheable(false);
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
@@ -1275,7 +1141,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             cb.setEnCls(entityClazz);
         }
         // 总数查询
-        Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(getSession());
+        Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(DataSourceContext.getSession());
         ct.setCacheable(false);
 
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
@@ -1297,35 +1163,5 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             list = list.stream().map(BeanUtils::wrapperFlatMap).collect(Collectors.toList());
         }
         return new Page<>(list, total, null == cb.getPageRequest() ? total.intValue() : cb.getPageRequest().getPageSize());
-    }
-
-    private Session peekThreadSession() {
-        Deque<Session> sessQueue = THREADLOCAL_SESSIONS.get();
-        if (sessQueue != null && !sessQueue.isEmpty()) {
-            return sessQueue.peek();
-        }
-        return null;
-    }
-
-    private void pushTreadSession(Session session) {
-        Deque<Session> sessQueue = THREADLOCAL_SESSIONS.get();
-        if (sessQueue == null) {
-            sessQueue = new ArrayDeque<>();
-            THREADLOCAL_SESSIONS.set(sessQueue);
-        }
-        sessQueue.push(session);
-    }
-
-    private static Session popTreadSession() {
-        Session session = null;
-        Deque<Session> sessQueue = THREADLOCAL_SESSIONS.get();
-        if (sessQueue != null && !sessQueue.isEmpty()) {
-            session = sessQueue.pop();
-        }
-        if (sessQueue == null || sessQueue.isEmpty()) {
-            THREADLOCAL_SESSIONS.remove();
-            logger.info("remove THREADLOCAL_SESSIONS");
-        }
-        return session;
     }
 }

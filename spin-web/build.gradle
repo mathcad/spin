@@ -77,10 +77,10 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-context-support', version: springVersion
     compile group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compile group: 'org.springframework', name: 'spring-aspects', version: springVersion
-    compile group: 'com.itextpdf', name: 'itextpdf', version: '5.5.13'
+    compileOnly group: 'com.itextpdf', name: 'itextpdf', version: '5.5.13'
 
     compileOnly group: 'org.springframework', name: 'spring-orm', version: springVersion
-    compileOnly(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.15.Final') {
+    compileOnly(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.16.Final') {
         exclude(module: 'jboss-logging')
         transitive = true
     }

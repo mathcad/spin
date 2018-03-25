@@ -66,11 +66,11 @@ subprojects {
 
     idea {
         module {
-            inheritOutputDirs = false
+            inheritOutputDirs = true
             downloadSources = true
             downloadJavadoc = true
-            outputDir = file("$buildDir/classes/main/")
-            testOutputDir = file("$buildDir/classes/test/")
+//            outputDir = file("$buildDir/classes/main/")
+//            testOutputDir = file("$buildDir/classes/test/")
         }
     }
 }
