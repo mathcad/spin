@@ -31,11 +31,15 @@ public abstract class EnumUtils {
     private static final String ENUM_CLASS_MUST_BE_DEFINED = "EnumClass must be defined.";
 
 
+    private EnumUtils() {
+    }
+
     /**
      * 将枚举转换为Map
      *
      * @param <E>       枚举类
      * @param enumClass 待转换的枚举
+     * @return 枚举Map
      */
     public static <E extends Enum<E>> Map<String, E> getEnumMap(final Class<E> enumClass) {
         return Arrays.stream(enumClass.getEnumConstants()).collect(Collectors.toMap(Enum::name, e -> e));
@@ -46,6 +50,7 @@ public abstract class EnumUtils {
      *
      * @param <E>       枚举类
      * @param enumClass 待转换的枚举
+     * @return 枚举常量列表
      */
     public static <E extends Enum<E>> List<E> getEnumList(final Class<E> enumClass) {
         return new ArrayList<>(Arrays.asList(enumClass.getEnumConstants()));
@@ -57,6 +62,7 @@ public abstract class EnumUtils {
      * @param <E>       枚举类
      * @param enumClass 枚举
      * @param enumName  枚举常量名称
+     * @return 枚举
      */
     public static <E extends Enum<E>> boolean isValidEnum(final Class<E> enumClass, final String enumName) {
         if (enumName == null) {
@@ -157,6 +163,7 @@ public abstract class EnumUtils {
             valueField = enumCls.getDeclaredField(fieldName);
             ReflectionUtils.makeAccessible(valueField);
         } catch (NoSuchFieldException ignore) {
+            // do nothing
         }
 
         if (Objects.isNull(valueField)) {

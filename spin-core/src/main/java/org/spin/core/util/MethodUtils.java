@@ -1091,7 +1091,6 @@ public abstract class MethodUtils {
     /**
      * <p>Determine whether a type can be used as a parameter in a method invocation.
      * This method handles primitive conversions correctly.</p>
-     * <p>
      * <p>In order words, it will match a <code>Boolean</code> to a <code>boolean</code>,
      * a <code>Long</code> to a <code>long</code>,
      * a <code>Float</code> to a <code>float</code>,

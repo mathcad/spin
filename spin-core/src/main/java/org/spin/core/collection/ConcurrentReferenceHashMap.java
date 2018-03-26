@@ -18,6 +18,7 @@
 package org.spin.core.collection;
 
 import org.spin.core.Assert;
+import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.ObjectUtils;
 
 import java.lang.ref.ReferenceQueue;
@@ -262,7 +263,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 	}
 
 	private V put(final K key, final V value, final boolean overwriteExisting) {
-		return doTask(key, new Task<V>(TaskOption.RESTRUCTURE_BEFORE, TaskOption.RESIZE) {
+		return doTask(key, new Task<V>(CollectionUtils.ofArray(TaskOption.RESTRUCTURE_BEFORE, TaskOption.RESIZE)) {
 			@Override
 			protected V execute(Reference<K, V> reference, Entry<K, V> entry, Entries entries) {
 				if (entry != null) {
@@ -280,7 +281,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 
 	@Override
 	public V remove(Object key) {
-		return doTask(key, new Task<V>(TaskOption.RESTRUCTURE_AFTER, TaskOption.SKIP_IF_EMPTY) {
+		return doTask(key, new Task<V>(CollectionUtils.ofArray(TaskOption.RESTRUCTURE_AFTER, TaskOption.SKIP_IF_EMPTY)) {
 			@Override
 			protected V execute(Reference<K, V> reference, Entry<K, V> entry) {
 				if (entry != null) {
@@ -294,7 +295,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 
 	@Override
 	public boolean remove(Object key, final Object value) {
-		return doTask(key, new Task<Boolean>(TaskOption.RESTRUCTURE_AFTER, TaskOption.SKIP_IF_EMPTY) {
+		return doTask(key, new Task<Boolean>(CollectionUtils.ofArray(TaskOption.RESTRUCTURE_AFTER, TaskOption.SKIP_IF_EMPTY)) {
 			@Override
 			protected Boolean execute(Reference<K, V> reference, Entry<K, V> entry) {
 				if (entry != null && ObjectUtils.nullSafeEquals(entry.getValue(), value)) {
@@ -308,7 +309,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 
 	@Override
 	public boolean replace(K key, final V oldValue, final V newValue) {
-		return doTask(key, new Task<Boolean>(TaskOption.RESTRUCTURE_BEFORE, TaskOption.SKIP_IF_EMPTY) {
+		return doTask(key, new Task<Boolean>(CollectionUtils.ofArray(TaskOption.RESTRUCTURE_BEFORE, TaskOption.SKIP_IF_EMPTY)) {
 			@Override
 			protected Boolean execute(Reference<K, V> reference, Entry<K, V> entry) {
 				if (entry != null && ObjectUtils.nullSafeEquals(entry.getValue(), oldValue)) {
@@ -322,7 +323,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 
 	@Override
 	public V replace(K key, final V value) {
-		return doTask(key, new Task<V>(TaskOption.RESTRUCTURE_BEFORE, TaskOption.SKIP_IF_EMPTY) {
+		return doTask(key, new Task<V>(CollectionUtils.ofArray(TaskOption.RESTRUCTURE_BEFORE, TaskOption.SKIP_IF_EMPTY)) {
 			@Override
 			protected V execute(Reference<K, V> reference, Entry<K, V> entry) {
 				if (entry != null) {
@@ -461,14 +462,6 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 			return findInChain(head, key, hash);
 		}
 
-		/**
-		 * Apply an update operation to this segment.
-		 * The segment will be locked during the update.
-		 * @param hash the hash of the key
-		 * @param key the key
-		 * @param task the update operation
-		 * @return the result of the operation
-		 */
 		public <T> T doTask(final int hash, final Object key, final Task<T> task) {
 			boolean resize = task.hasOption(TaskOption.RESIZE);
 			if (task.hasOption(TaskOption.RESTRUCTURE_BEFORE)) {
@@ -733,7 +726,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 
 		private final EnumSet<TaskOption> options;
 
-		public Task(TaskOption... options) {
+		public Task(TaskOption[] options) {
 			this.options = (options.length == 0 ? EnumSet.noneOf(TaskOption.class) : EnumSet.of(options[0], options));
 		}
 
@@ -765,12 +758,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 		}
 	}
 
-
-	/**
-	 * Various options supported by a {@code Task}.
-	 */
 	private enum TaskOption {
-
 		RESTRUCTURE_BEFORE, RESTRUCTURE_AFTER, SKIP_IF_EMPTY, RESIZE
 	}
 

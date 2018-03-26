@@ -30,6 +30,7 @@ public abstract class MapUtils {
      * 通过数组快速创建参数Map (HashMap)
      *
      * @param params key1,value1,key2,value2,key3,value3 ...
+     * @param <T>    值类型
      * @return map
      */
     @SafeVarargs
@@ -401,6 +402,8 @@ public abstract class MapUtils {
      * @param list   列表
      * @param key    统计字段
      * @param objCpt 比较器
+     * @param <K>    键类型
+     * @param <V>    值类型
      * @return 统计结果
      */
     public static <K, V> List<V> distinctList(List<Map<K, V>> list, K key, Comparator<V> objCpt) {

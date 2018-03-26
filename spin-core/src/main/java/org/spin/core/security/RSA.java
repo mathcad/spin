@@ -76,6 +76,7 @@ public class RSA {
      *
      * @param filePath 密钥文件路径
      * @return 密钥对
+     * @throws IOException 文件读写异常
      */
     public static KeyPair readKeyPair(String filePath) throws IOException {
         try (FileInputStream fis = new FileInputStream(filePath)) {
@@ -88,6 +89,7 @@ public class RSA {
      *
      * @param kp       密钥对
      * @param filePath 存储路径
+     * @throws IOException 文件读写异常
      */
     public static void saveKeyPair(KeyPair kp, String filePath) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(filePath)) {

@@ -55,6 +55,8 @@ public abstract class SessionManager {
 
     /**
      * 得到Session中，当前登录用户
+     *
+     * @return 当前登录用户
      */
     public static SessionUser getCurrentUser() {
         Session sess = getCurrentSession();
@@ -63,6 +65,9 @@ public abstract class SessionManager {
 
     /**
      * 返回session中的值
+     *
+     * @param key 属性名
+     * @return 属性值
      */
     public static Object getSessionAttr(String key) {
         Session sess = getCurrentSession();
@@ -71,6 +76,9 @@ public abstract class SessionManager {
 
     /**
      * 设置session中的值
+     *
+     * @param key   属性名
+     * @param value 属性值
      */
     public static void setSessionAttr(String key, Object value) {
         Session sess = getCurrentSession();
@@ -80,6 +88,9 @@ public abstract class SessionManager {
 
     /**
      * 删除session中的值，并返回
+     *
+     * @param key 属性名称
+     * @return 删除的属性值
      */
     public static Object removeSessionAttr(String key) {
         Session sess = getCurrentSession();
@@ -101,7 +112,9 @@ public abstract class SessionManager {
     }
 
     /**
-     * 移除所有属性，除 attr 以外
+     * 移除所有属性，除attr 以外
+     *
+     * @param attr 保留的属性
      */
     public static void removeAllSessionAttrExc(String... attr) {
         Session sess = getCurrentSession();
@@ -147,6 +160,9 @@ public abstract class SessionManager {
 
     /**
      * 新的sessionid继承原有session
+     *
+     * @param oldSessionId 原SessionId
+     * @param newSessionId 新SessionId
      */
     public static void extendSession(String oldSessionId, String newSessionId) {
         Session session = ALL_SESSIONS.get(oldSessionId);
@@ -165,6 +181,7 @@ public abstract class SessionManager {
      * 判断Session是否存在
      *
      * @param sessionId session id
+     * @return session是否存在
      */
     public static boolean containsSession(String sessionId) {
         return ALL_SESSIONS.containsKey(sessionId);

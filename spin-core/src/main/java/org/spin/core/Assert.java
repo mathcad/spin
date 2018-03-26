@@ -37,6 +37,8 @@ public abstract class Assert {
     private static final String DEFAULT_IS_ASSIGNABLE_EX_MESSAGE = "[Assertion failed] - Cannot assign a %s to a %s";
     private static final String DEFAULT_IS_INSTANCE_OF_EX_MESSAGE = "[Assertion failed] - Expected type: %s, actual: %s";
 
+    private Assert() {
+    }
     // isTrue
     //---------------------------------------------------------------------------------
 
@@ -383,7 +385,7 @@ public abstract class Assert {
      * <p>Assert that the specified argument character sequence is
      * neither {@code null} nor a length of zero (no characters);
      * otherwise throwing an exception with the specified message.
-     * <p>
+     * </p>
      * <pre>Assert.notEmpty(myString, "The string must not be empty");</pre>
      *
      * @param <T>     the character sequence type
@@ -407,8 +409,7 @@ public abstract class Assert {
     /**
      * <p>Assert that the specified argument character sequence is
      * neither {@code null} nor a length of zero (no characters);
-     * otherwise throwing an exception with the specified message.
-     * <p>
+     * otherwise throwing an exception with the specified message.</p>
      * <pre>Assert.notEmpty(myString);</pre>
      *
      * <p>The message in the exception is &quot;The validated
@@ -430,7 +431,6 @@ public abstract class Assert {
     /**
      * <p>Validates that the index is within the bounds of the argument
      * array; otherwise throwing an exception with the specified message.</p>
-     * <p>
      * <pre>Assert.validIndex(myArray, 2, "The array index is invalid: ");</pre>
      *
      * <p>If the array is {@code null}, then the message of the exception
@@ -458,7 +458,6 @@ public abstract class Assert {
     /**
      * <p>Validates that the index is within the bounds of the argument
      * array; otherwise throwing an exception.</p>
-     * <p>
      * <pre>Assert.validIndex(myArray, 2);</pre>
      *
      * <p>If the array is {@code null}, then the message of the exception
@@ -487,7 +486,6 @@ public abstract class Assert {
     /**
      * <p>Validates that the index is within the bounds of the argument
      * collection; otherwise throwing an exception with the specified message.</p>
-     * <p>
      * <pre>Assert.validIndex(myCollection, 2, "The collection index is invalid: ");</pre>
      *
      * <p>If the collection is {@code null}, then the message of the
@@ -514,7 +512,6 @@ public abstract class Assert {
     /**
      * <p>Validates that the index is within the bounds of the argument
      * collection; otherwise throwing an exception.</p>
-     * <p>
      * <pre>Assert.validIndex(myCollection, 2);</pre>
      *
      * <p>If the index is invalid, then the message of the exception
@@ -540,7 +537,6 @@ public abstract class Assert {
      * <p>Validates that the index is within the bounds of the argument
      * character sequence; otherwise throwing an exception with the
      * specified message.</p>
-     * <p>
      * <pre>Assert.validIndex(myStr, 2, "The string index is invalid: ");</pre>
      *
      * <p>If the character sequence is {@code null}, then the message
@@ -567,7 +563,6 @@ public abstract class Assert {
     /**
      * <p>Validates that the index is within the bounds of the argument
      * character sequence; otherwise throwing an exception.</p>
-     * <p>
      * <pre>Assert.validIndex(myStr, 2);</pre>
      *
      * <p>If the character sequence is {@code null}, then the message
@@ -597,6 +592,7 @@ public abstract class Assert {
      *
      * @param text    the String to check
      * @param message the exception message to use if the assertion fails
+     * @return text本身
      * @throws AssertFailException if the text does not contain valid text content
      */
     public static String notBlank(String text, String message) {
@@ -612,6 +608,7 @@ public abstract class Assert {
      * <pre class="code">Assert.hasText(name, "'name' must not be empty");</pre>
      *
      * @param text the String to check
+     * @return text本身
      * @throws AssertFailException if the text does not contain valid text content
      */
     public static String notBlank(String text) {
@@ -626,6 +623,7 @@ public abstract class Assert {
      * @param textToSearch the text to search
      * @param substring    the substring to find within the text
      * @param message      the exception message to use if the assertion fails
+     * @return textToSearch本身
      * @throws AssertFailException if the text contains the substring
      */
     public static String doesNotContain(String textToSearch, String substring, String message) {
@@ -642,6 +640,7 @@ public abstract class Assert {
      *
      * @param textToSearch the text to search
      * @param substring    the substring to find within the text
+     * @return textToSearch本身
      * @throws AssertFailException if the text contains the substring
      */
     public static String doesNotContain(String textToSearch, String substring) {
@@ -655,13 +654,13 @@ public abstract class Assert {
     /**
      * <p>Assert that the specified argument character sequence matches the specified regular
      * expression pattern; otherwise throwing an exception.</p>
-     * <p>
      * <pre>Assert.matchesPattern("hi", "[a-z]*");</pre>
      *
      * <p>The syntax of the pattern is the one used in the {@link Pattern} class.</p>
      *
      * @param input   the character sequence to validate, not null
      * @param pattern the regular expression pattern, not null
+     * @return input本身
      * @throws AssertFailException if the character sequence does not match the pattern
      * @see #matchesPattern(CharSequence, String, String, Object...)
      * @since 3.0
@@ -676,7 +675,6 @@ public abstract class Assert {
     /**
      * <p>Assert that the specified argument character sequence matches the specified regular
      * expression pattern; otherwise throwing an exception with the specified message.</p>
-     * <p>
      * <pre>Assert.matchesPattern("hi", "[a-z]*", "%s does not match %s", "hi" "[a-z]*");</pre>
      *
      * <p>The syntax of the pattern is the one used in the {@link Pattern} class.</p>
@@ -685,6 +683,7 @@ public abstract class Assert {
      * @param pattern the regular expression pattern, not null
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
+     * @return value本身
      * @throws AssertFailException if the character sequence does not match the pattern
      * @see #matchesPattern(CharSequence, String)
      * @since 3.0
@@ -702,13 +701,13 @@ public abstract class Assert {
     /**
      * <p>Assert that the specified argument object fall between the two
      * inclusive values specified; otherwise, throws an exception.</p>
-     * <p>
      * <pre>Assert.inclusiveBetween(0, 2, 1);</pre>
      *
      * @param <T>   the type of the argument object
      * @param start the inclusive start value, not null
      * @param end   the inclusive end value, not null
      * @param value the object to validate, not null
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.0
      */
@@ -723,7 +722,6 @@ public abstract class Assert {
      * <p>Assert that the specified argument object fall between the two
      * inclusive values specified; otherwise, throws an exception with the
      * specified message.</p>
-     * <p>
      * <pre>Assert.inclusiveBetween(0, 2, 1, "Not in boundaries");</pre>
      *
      * @param <T>     the type of the argument object
@@ -732,6 +730,7 @@ public abstract class Assert {
      * @param value   the object to validate, not null
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.0
      */
@@ -745,12 +744,12 @@ public abstract class Assert {
     /**
      * Assert that the specified primitive value falls between the two
      * inclusive values specified; otherwise, throws an exception.
-     * <p>
      * <pre>Assert.inclusiveBetween(0, 2, 1);</pre>
      *
      * @param start the inclusive start value
      * @param end   the inclusive end value
      * @param value the value to validate
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries (inclusive)
      * @since 3.3
      */
@@ -765,13 +764,13 @@ public abstract class Assert {
      * Assert that the specified primitive value falls between the two
      * inclusive values specified; otherwise, throws an exception with the
      * specified message.
-     * <p>
      * <pre>Assert.inclusiveBetween(0, 2, 1, "Not in range");</pre>
      *
      * @param start   the inclusive start value
      * @param end     the inclusive end value
      * @param value   the value to validate
      * @param message the exception message if invalid, not null
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.3
      */
@@ -785,12 +784,12 @@ public abstract class Assert {
     /**
      * Assert that the specified primitive value falls between the two
      * inclusive values specified; otherwise, throws an exception.
-     * <p>
      * <pre>Assert.inclusiveBetween(0, 2, 1);</pre>
      *
      * @param start the inclusive start value
      * @param end   the inclusive end value
      * @param value the value to validate
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries (inclusive)
      * @since 3.3
      */
@@ -805,13 +804,13 @@ public abstract class Assert {
      * Assert that the specified primitive value falls between the two
      * inclusive values specified; otherwise, throws an exception with the
      * specified message.
-     * <p>
      * <pre>Assert.inclusiveBetween(0, 2, 1, "Not in range");</pre>
      *
      * @param start   the inclusive start value
      * @param end     the inclusive end value
      * @param value   the value to validate
      * @param message the exception message if invalid, not null
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.3
      */
@@ -825,12 +824,12 @@ public abstract class Assert {
     /**
      * Assert that the specified primitive value falls between the two
      * inclusive values specified; otherwise, throws an exception.
-     * <p>
      * <pre>Assert.inclusiveBetween(0.1, 2.1, 1.1);</pre>
      *
      * @param start the inclusive start value
      * @param end   the inclusive end value
      * @param value the value to validate
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries (inclusive)
      * @since 3.3
      */
@@ -845,13 +844,13 @@ public abstract class Assert {
      * Assert that the specified primitive value falls between the two
      * inclusive values specified; otherwise, throws an exception with the
      * specified message.
-     * <p>
      * <pre>Assert.inclusiveBetween(0.1, 2.1, 1.1, "Not in range");</pre>
      *
      * @param start   the inclusive start value
      * @param end     the inclusive end value
      * @param value   the value to validate
      * @param message the exception message if invalid, not null
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.3
      */
@@ -868,13 +867,13 @@ public abstract class Assert {
     /**
      * <p>Assert that the specified argument object fall between the two
      * exclusive values specified; otherwise, throws an exception.</p>
-     * <p>
      * <pre>Assert.exclusiveBetween(0, 2, 1);</pre>
      *
      * @param <T>   the type of the argument object
      * @param start the exclusive start value, not null
      * @param end   the exclusive end value, not null
      * @param value the object to validate, not null
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.0
      */
@@ -889,7 +888,6 @@ public abstract class Assert {
      * <p>Assert that the specified argument object fall between the two
      * exclusive values specified; otherwise, throws an exception with the
      * specified message.</p>
-     * <p>
      * <pre>Assert.exclusiveBetween(0, 2, 1, "Not in boundaries");</pre>
      *
      * @param <T>     the type of the argument object
@@ -898,6 +896,7 @@ public abstract class Assert {
      * @param value   the object to validate, not null
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.0
      */
@@ -911,12 +910,12 @@ public abstract class Assert {
     /**
      * Assert that the specified primitive value falls between the two
      * exclusive values specified; otherwise, throws an exception.
-     * <p>
      * <pre>Assert.exclusiveBetween(0, 2, 1);</pre>
      *
      * @param start the exclusive start value
      * @param end   the exclusive end value
      * @param value the value to validate
+     * @return value本身
      * @throws AssertFailException if the value falls out of the boundaries
      * @since 3.3
      */
@@ -931,13 +930,13 @@ public abstract class Assert {
      * Assert that the specified primitive value falls between the two
      * exclusive values specified; otherwise, throws an exception with the
      * specified message.
-     * <p>
      * <pre>Assert.exclusiveBetween(0, 2, 1, "Not in range");</pre>
      *
      * @param start   the exclusive start value
      * @param end     the exclusive end value
      * @param value   the value to validate
      * @param message the exception message if invalid, not null
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.3
      */
@@ -951,12 +950,12 @@ public abstract class Assert {
     /**
      * Assert that the specified primitive value falls between the two
      * exclusive values specified; otherwise, throws an exception.
-     * <p>
      * <pre>Assert.exclusiveBetween(0, 2, 1);</pre>
      *
      * @param start the exclusive start value
      * @param end   the exclusive end value
      * @param value the value to validate
+     * @return value本身
      * @throws AssertFailException if the value falls out of the boundaries
      * @since 3.3
      */
@@ -971,13 +970,13 @@ public abstract class Assert {
      * Assert that the specified primitive value falls between the two
      * exclusive values specified; otherwise, throws an exception with the
      * specified message.
-     * <p>
      * <pre>Assert.exclusiveBetween(0, 2, 1, "Not in range");</pre>
      *
      * @param start   the exclusive start value
      * @param end     the exclusive end value
      * @param value   the value to validate
      * @param message the exception message if invalid, not null
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.3
      */
@@ -991,12 +990,12 @@ public abstract class Assert {
     /**
      * Assert that the specified primitive value falls between the two
      * exclusive values specified; otherwise, throws an exception.
-     * <p>
      * <pre>Assert.exclusiveBetween(0.1, 2.1, 1.1);</pre>
      *
      * @param start the exclusive start value
      * @param end   the exclusive end value
      * @param value the value to validate
+     * @return value本身
      * @throws AssertFailException if the value falls out of the boundaries
      * @since 3.3
      */
@@ -1011,13 +1010,13 @@ public abstract class Assert {
      * Assert that the specified primitive value falls between the two
      * exclusive values specified; otherwise, throws an exception with the
      * specified message.
-     * <p>
      * <pre>Assert.exclusiveBetween(0.1, 2.1, 1.1, "Not in range");</pre>
      *
      * @param start   the exclusive start value
      * @param end     the exclusive end value
      * @param value   the value to validate
      * @param message the exception message if invalid, not null
+     * @return value本身
      * @throws AssertFailException if the value falls outside the boundaries
      * @since 3.3
      */
@@ -1033,15 +1032,14 @@ public abstract class Assert {
 
     /**
      * Validates that the argument is an instance of the specified class, if not throws an exception.
-     * <p>
      * <p>This method is useful when validating according to an arbitrary class</p>
-     * <p>
      * <pre>Assert.isInstanceOf(OkClass.class, object);</pre>
      *
      * <p>The message of the exception is &quot;Expected type: {type}, actual: {obj_type}&quot;</p>
      *
      * @param type the class the object must be validated against, not null
      * @param obj  the object to check, null throws an exception
+     * @return value本身
      * @throws AssertFailException if argument is not of specified class
      * @see #isInstanceOf(Class, Object, String, Object...)
      * @since 3.0
@@ -1054,7 +1052,6 @@ public abstract class Assert {
      * <p>Assert that the argument is an instance of the specified class; otherwise
      * throwing an exception with the specified message. This method is useful when
      * validating according to an arbitrary class</p>
-     * <p>
      * <pre>Assert.isInstanceOf(OkClass.classs, object, "Wrong class, object is of class %s",
      *   object.getClass().getName());</pre>
      *
@@ -1062,6 +1059,7 @@ public abstract class Assert {
      * @param obj     the object to check, null throws an exception
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
+     * @return value本身
      * @throws AssertFailException if argument is not of specified class
      * @see #isInstanceOf(Class, Object)
      * @since 3.0
@@ -1079,15 +1077,14 @@ public abstract class Assert {
 
     /**
      * Validates that the argument can be converted to the specified class, if not, throws an exception.
-     * <p>
      * <p>This method is useful when validating that there will be no casting errors.</p>
-     * <p>
      * <pre>Assert.isAssignableFrom(SuperClass.class, object.getClass());</pre>
      *
      * <p>The message format of the exception is &quot;Cannot assign {type} to {superType}&quot;</p>
      *
      * @param superType the class the class must be validated against, not null
      * @param type      the class to check, not null
+     * @return value本身
      * @throws AssertFailException if type argument is not assignable to the specified superType
      * @see #isAssignableFrom(Class, Class, String, Object...)
      * @since 3.0
@@ -1099,9 +1096,7 @@ public abstract class Assert {
 
     /**
      * Validates that the argument can be converted to the specified class, if not throws an exception.
-     * <p>
      * <p>This method is useful when validating if there will be no casting errors.</p>
-     * <p>
      * <pre>Assert.isAssignableFrom(SuperClass.class, object.getClass());</pre>
      *
      * <p>The message of the exception is &quot;The validated object can not be converted to the&quot;
@@ -1111,6 +1106,7 @@ public abstract class Assert {
      * @param type      the class to check, not null
      * @param message   the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values    the optional values for the formatted exception message, null array not recommended
+     * @return type本身
      * @throws AssertFailException if argument can not be converted to the specified class
      * @see #isAssignableFrom(Class, Class)
      */

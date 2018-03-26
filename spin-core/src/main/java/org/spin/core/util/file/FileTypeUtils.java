@@ -51,6 +51,8 @@ public abstract class FileTypeUtils {
 
     /**
      * 注册自定义类型
+     *
+     * @param types 自定义类型
      */
     public static void registType(Collection<FileType> types) {
         for (FileType f : types) {
