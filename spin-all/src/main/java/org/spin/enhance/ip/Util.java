@@ -6,6 +6,11 @@ package org.spin.enhance.ip;
 public class Util {
     /**
      * write specfield bytes to a byte array start from offset
+     *
+     * @param b      字节数组
+     * @param offset 偏移
+     * @param v      数值
+     * @param bytes  字节数
      */
     public static void write(byte[] b, int offset, long v, int bytes) {
         for (int i = 0; i < bytes; i++) {
@@ -15,6 +20,10 @@ public class Util {
 
     /**
      * write a int to a byte array
+     *
+     * @param b      字节数组
+     * @param offset 偏移
+     * @param v      数值
      */
     public static void writeIntLong(byte[] b, int offset, long v) {
         b[offset++] = (byte) ((v) & 0xFF);
@@ -25,6 +34,10 @@ public class Util {
 
     /**
      * get a int from a byte array start from the specifiled offset
+     *
+     * @param b      字节数组
+     * @param offset 偏移
+     * @return 转换后的数值
      */
     public static long getIntLong(byte[] b, int offset) {
         return (
@@ -35,9 +48,6 @@ public class Util {
         );
     }
 
-    /**
-     * get a int from a byte array start from the specifield offset
-     */
     public static int getInt3(byte[] b, int offset) {
         return (
             (b[offset++] & 0x000000FF) |
@@ -61,6 +71,9 @@ public class Util {
 
     /**
      * string ip to long ip
+     *
+     * @param ip 点分十加近制的ip字符串
+     * @return 数值格式的ip地址
      */
     public static long ip2long(String ip) {
         String[] p = ip.split("\\.");
@@ -76,6 +89,9 @@ public class Util {
 
     /**
      * int to ip string
+     *
+     * @param ip 数值类型的ip地址
+     * @return 点分十加近制的ip字符串
      */
     public static String long2ip(long ip) {
         return String.valueOf((ip >> 24) & 0xFF) + '.' +
@@ -86,6 +102,9 @@ public class Util {
 
     /**
      * check the validate of the specifeld ip address
+     *
+     * @param ip ip地址
+     * @return ip是否合法
      */
     public static boolean isIpAddress(String ip) {
         String[] p = ip.split("\\.");

@@ -341,7 +341,6 @@ public abstract class JsonUtils {
         } catch (Exception ignore) {
             return gson;
         }
-
     }
 
     private static GsonBuilder baseBuilder(String[] pattern) {
@@ -362,7 +361,7 @@ public abstract class JsonUtils {
         try {
             Class<?> queryParamCls = ClassUtils.getClass("org.spin.data.query.QueryParam");
             @SuppressWarnings("unchecked")
-            Class<InstanceCreator> instanceCreatorCls = (Class<InstanceCreator>) ClassUtils.getClass("org.spin.enhance.gson.adapter.QueryParamInstanceCreater");
+            Class<InstanceCreator> instanceCreatorCls = (Class<InstanceCreator>) ClassUtils.getClass("org.spin.data.gson.adapter.QueryParamInstanceCreater");
             InstanceCreator instanceCreator = instanceCreatorCls.newInstance();
             builder.registerTypeAdapter(queryParamCls, instanceCreator);
         } catch (Exception ignore) {

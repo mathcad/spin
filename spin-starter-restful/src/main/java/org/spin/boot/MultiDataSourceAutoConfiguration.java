@@ -10,12 +10,13 @@ import org.spin.boot.properties.SpinDataProperties;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.core.util.SystemUtils;
-import org.spin.data.core.ARepository;
+import org.spin.data.core.DataSourceContext;
 import org.spin.data.extend.DataSourceConfig;
 import org.spin.data.extend.MultiDataSourceConfig;
 import org.spin.data.extend.RepositoryContext;
 import org.spin.data.query.QueryParamParser;
 import org.spin.data.sql.SQLManager;
+import org.spin.web.filter.OpenSessionInViewFilter;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
@@ -32,7 +33,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
-import org.springframework.orm.hibernate5.support.OpenSessionInViewFilter;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
 import javax.transaction.SystemException;
@@ -79,13 +79,13 @@ public class MultiDataSourceAutoConfiguration {
             acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
 
             AtomikosDataSourceBean ds = (AtomikosDataSourceBean) acf.getBean(beanName);
-            SQLManager.registDataSource(name, ds);
+            DataSourceContext.registDataSource(name, ds);
             // SessionFactory
             bdb = sfDefinitionBuilder(name, acf.getBean(beanName), defaultProperties);
             beanName = name + "SessionFactory";
             acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
             SessionFactory sf = (SessionFactory) acf.getBean(beanName);
-            ARepository.registSessionFactory(name, sf);
+            DataSourceContext.registSessionFactory(name, sf);
 
             // OpenSessionInViewFilter
             if (config.isOpenSessionInView()) {

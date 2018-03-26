@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.data.core.DataSourceContext;
 import org.spin.data.core.DatabaseType;
 import org.spin.data.core.Page;
 import org.spin.data.core.PageRequest;
@@ -20,13 +21,11 @@ import org.spin.data.sql.resolver.TemplateResolver;
 import org.spin.data.util.EntityUtils;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
-import javax.sql.DataSource;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,18 +38,12 @@ import java.util.regex.Pattern;
  */
 public class SQLManager {
     private static final Logger logger = LoggerFactory.getLogger(SQLManager.class);
-    private static final Map<String, DataSource> DATA_SOURCE_MAP = new HashMap<>();
     private static final String COUNT_SQL = "SELECT COUNT(1) FROM (%s) OUT_ALIAS";
     private static final String WRAPPE_ERROR = "Entity wrappe error";
     private static final String QUERY_ERROR = "执行查询出错";
     private static final String SQL_LOG = "sqlId: %s%nsqlText: %s";
     private final Map<String, SQLLoader> loaderMap = new HashMap<>();
     private final Map<String, NamedParameterJdbcTemplate> nameJtMap = new HashMap<>();
-    private final String primaryDataSourceName;
-
-    private ThreadLocal<String> currentDataSourceName = new ThreadLocal<>();
-    private ThreadLocal<SQLLoader> currentLoader = new ThreadLocal<>();
-    private ThreadLocal<NamedParameterJdbcTemplate> currentNameJt = new ThreadLocal<>();
 
     /**
      * 多数据源时的构造方法
@@ -59,12 +52,13 @@ public class SQLManager {
      * @param loaderClassName SQLLoader类名
      * @param rootUri         sql文件根路径
      * @param resolver        sql模板解析器
+     * @throws ClassNotFoundException 当sql加载器不存在时抛出
      */
     public SQLManager(MultiDataSourceConfig<?> dsConfigs, String loaderClassName, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
         @SuppressWarnings("unchecked")
         Class<SQLLoader> loaderClass = (Class<SQLLoader>) Class.forName(loaderClassName);
 
-        primaryDataSourceName = dsConfigs.getPrimaryDataSource();
+        DataSourceContext.setPrimaryDataSourceName(dsConfigs.getPrimaryDataSource());
         dsConfigs.getDataSources().forEach((name, config) -> {
             try {
                 SQLLoader loader = loaderClass.getDeclaredConstructor().newInstance();
@@ -74,13 +68,13 @@ public class SQLManager {
                 loader.setTemplateResolver(resolver);
                 loader.setDbType(getDbType(config.getVenderName()));
                 loaderMap.put(name, loader);
-                NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DATA_SOURCE_MAP.get(name));
+                NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DataSourceContext.getDataSource(name));
                 nameJtMap.put(name, jt);
             } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClassName);
             }
         });
-        switchDataSource(primaryDataSourceName);
+        DataSourceContext.usePrimaryDataSource();
     }
 
     /**
@@ -90,6 +84,7 @@ public class SQLManager {
      * @param loaderClassName SQLLoader类名
      * @param rootUri         sql文件根路径
      * @param resolver        sql模板解析器
+     * @throws ClassNotFoundException 当sql加载器不存在时抛出
      */
     public SQLManager(DataSourceConfig dsConfig, String loaderClassName, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
         @SuppressWarnings("unchecked")
@@ -100,7 +95,7 @@ public class SQLManager {
             name = "main";
             dsConfig.setName(name);
         }
-        primaryDataSourceName = name;
+        DataSourceContext.setPrimaryDataSourceName(name);
         try {
             SQLLoader loader = loaderClass.getDeclaredConstructor().newInstance();
             if (StringUtils.isEmpty(rootUri)) {
@@ -109,26 +104,20 @@ public class SQLManager {
             loader.setTemplateResolver(resolver);
             loader.setDbType(getDbType(dsConfig.getVenderName()));
             loaderMap.put(name, loader);
-            NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DATA_SOURCE_MAP.get(name));
+            NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DataSourceContext.getDataSource(name));
             nameJtMap.put(name, jt);
         } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
             throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClassName);
         }
-        switchDataSource(primaryDataSourceName);
-    }
-
-    /**
-     * 注册数据源，应该在调用SQLManager构造方法之前完成所有数据源的注册
-     *
-     * @param name       数据源名称
-     * @param dataSource 数据源
-     */
-    public static void registDataSource(String name, DataSource dataSource) {
-        DATA_SOURCE_MAP.put(name, dataSource);
+        DataSourceContext.usePrimaryDataSource();
     }
 
     /**
      * 查找单个对象
+     *
+     * @param sqlId    sqlId
+     * @param paramMap 参数map
+     * @return 查询结果
      */
     public Map<String, Object> findOneAsMap(String sqlId, Map<String, ?> paramMap) {
         List<Map<String, Object>> list = listAsMap(sqlId, paramMap);
@@ -140,6 +129,12 @@ public class SQLManager {
 
     /**
      * 查找单个对象
+     *
+     * @param sqlId       sqlId
+     * @param entityClazz 查询的实体类型
+     * @param paramMap    参数map
+     * @param <T>         实体类型
+     * @return 查询结果
      */
     public <T> T findOne(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
         List<Map<String, Object>> list = listAsMap(sqlId, paramMap);
@@ -155,6 +150,10 @@ public class SQLManager {
 
     /**
      * 通过命令文件查询
+     *
+     * @param sqlId     sqlId
+     * @param mapParams 参数
+     * @return 查询结果
      */
     public List<Map<String, Object>> listAsMap(String sqlId, Object... mapParams) {
         return listAsMap(sqlId, MapUtils.ofMap(mapParams));
@@ -162,6 +161,10 @@ public class SQLManager {
 
     /**
      * 通过命令文件查询
+     *
+     * @param sqlId    sqlId
+     * @param paramMap 参数map
+     * @return 查询结果
      */
     public List<Map<String, Object>> listAsMap(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getTemplate();
@@ -177,6 +180,11 @@ public class SQLManager {
 
     /**
      * 分页查询
+     *
+     * @param sqlId       sqlId
+     * @param paramMap    参数map
+     * @param pageRequest 分页参数
+     * @return 查询结果
      */
     public Page<Map<String, Object>> listAsPageMap(String sqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
         SQLSource sql = getCurrentSqlLoader().getSQL(sqlId, paramMap);
@@ -198,6 +206,12 @@ public class SQLManager {
 
     /**
      * 通过命令文件查询
+     *
+     * @param sqlId       sqlId
+     * @param entityClazz 查询实体类型
+     * @param mapParams   参数
+     * @param <T>         实体类型
+     * @return 查询结果
      */
     public <T> List<T> list(String sqlId, Class<T> entityClazz, Object... mapParams) {
         List<Map<String, Object>> maps = listAsMap(sqlId, MapUtils.ofMap(mapParams));
@@ -214,6 +228,12 @@ public class SQLManager {
 
     /**
      * 通过命令文件查询
+     *
+     * @param sqlId       sqlId
+     * @param entityClazz 查询实体类型
+     * @param paramMap    参数map
+     * @param <T>         实体类型
+     * @return 查询结果
      */
     public <T> List<T> list(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
         List<Map<String, Object>> maps = listAsMap(sqlId, paramMap);
@@ -230,6 +250,13 @@ public class SQLManager {
 
     /**
      * 分页查询
+     *
+     * @param sqlId       sqlId
+     * @param entityClazz 查询实体类型
+     * @param paramMap    参数map
+     * @param pageRequest 分页参数
+     * @param <T>         实体类型
+     * @return 查询结果
      */
     public <T> Page<T> listAsPage(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap, PageRequest pageRequest) {
         SQLSource sql = getCurrentSqlLoader().getSQL(sqlId, paramMap);
@@ -273,6 +300,7 @@ public class SQLManager {
      *
      * @param sqlId    命令名称
      * @param paramMap 参数
+     * @return 记录总数
      */
     public Long count(String sqlId, Map<String, ?> paramMap) {
         String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getTemplate();
@@ -298,6 +326,9 @@ public class SQLManager {
 
     /**
      * 批量更新
+     *
+     * @param sqlId   sqlId
+     * @param argsMap 参数
      */
     @SuppressWarnings({"unchecked"})
     public void batchExec(String sqlId, List<Map<String, ?>> argsMap) {
@@ -307,51 +338,12 @@ public class SQLManager {
         getCurrentNamedJt().batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
     }
 
-    /**
-     * 切换数据源
-     *
-     * @param name 数据源名称
-     */
-    public void switchDataSource(String name) {
-        if (!DATA_SOURCE_MAP.containsKey(name)) {
-            throw new SimplifiedException("切换的数据源不存在:" + name);
-        }
-        currentDataSourceName.set(name);
-        currentLoader.set(loaderMap.get(name));
-        currentNameJt.set(nameJtMap.get(name));
-    }
-
-    /**
-     * 切换到默认数据源
-     */
-    public void usePrimaryDataSource() {
-        switchDataSource(primaryDataSourceName);
-    }
-
-    /**
-     * 获取当前数据源名称
-     *
-     * @return 数据源名称
-     */
-    public String getCurrentDataSourceName() {
-        if (Objects.isNull(currentDataSourceName.get())) {
-            switchDataSource(primaryDataSourceName);
-        }
-        return currentDataSourceName.get();
-    }
-
     private SQLLoader getCurrentSqlLoader() {
-        if (Objects.isNull(currentLoader.get())) {
-            switchDataSource(primaryDataSourceName);
-        }
-        return currentLoader.get();
+        return loaderMap.get(DataSourceContext.getCurrentDataSourceName());
     }
 
     private NamedParameterJdbcTemplate getCurrentNamedJt() {
-        if (Objects.isNull(currentNameJt.get())) {
-            switchDataSource(primaryDataSourceName);
-        }
-        return currentNameJt.get();
+        return nameJtMap.get(DataSourceContext.getCurrentDataSourceName());
     }
 
     private DatabaseType getDbType(String vender) {

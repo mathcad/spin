@@ -1,4 +1,4 @@
-package org.spin.enhance.gson.adapter;
+package org.spin.data.gson.adapter;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;

@@ -58,30 +58,18 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
     @Transient
     private Serializable sessionId;
 
-    /**
-     * 用户名
-     */
     public String getUserName() {
         return userName;
     }
 
-    /**
-     * 用户名
-     */
     public void setUserName(String userName) {
         this.userName = userName;
     }
 
-    /**
-     * 密码
-     */
     public String getPassword() {
         return password;
     }
 
-    /**
-     * 密码
-     */
     public void setPassword(String password) {
         if (StringUtils.isEmpty(salt)) {
             this.salt = RandomStringUtils.randomAlphanumeric(16);
@@ -90,54 +78,33 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
 
     }
 
-    /**
-     * 盐
-     */
     public String getSalt() {
         return salt;
     }
 
-    /**
-     * 盐
-     */
     public void setSalt(String salt) {
         this.salt = salt;
     }
 
-    /**
-     * 是否有效
-     */
     @Override
     public boolean isActive() {
         return active;
     }
 
-    /**
-     * 是否有效
-     */
     public void setActive(boolean active) {
         this.active = active;
     }
 
-    /**
-     * 登录时间
-     */
     @Override
     public LocalDateTime getLoginTime() {
         return loginTime;
     }
 
-    /**
-     * 登录时间
-     */
     @Override
     public Serializable getSessionId() {
         return sessionId;
     }
 
-    /**
-     * 如果与session关联，session的id
-     */
     @Override
     public void setSessionId(Serializable sessionId) {
         this.sessionId = sessionId;

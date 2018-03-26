@@ -8,14 +8,25 @@ import java.util.List;
  * 分页数据（列表使用)
  * <p>Created by xuweinan on 2016/10/5.</p>
  *
- * @param <T>
+ * @param <T> 数据类型
  * @author xuweinan
  */
 public class Page<T> implements Serializable {
     private static final long serialVersionUID = -1433098389717460681L;
 
+    /**
+     * 数据
+     */
     private List<T> rows = new ArrayList<>();
+
+    /**
+     * 总数
+     */
     private long total = 0L;
+
+    /**
+     * 分页大小
+     */
     private int pageSize = 0;
 
     public Page() {
@@ -34,44 +45,26 @@ public class Page<T> implements Serializable {
         this.pageSize = pageSize;
     }
 
-    /**
-     * 数据
-     */
     public List<T> getRows() {
         return rows;
     }
 
-    /**
-     * 数据
-     */
     public void setRows(List<T> rows) {
         this.rows = rows;
     }
 
-    /**
-     * 总数
-     */
     public long getTotal() {
         return total;
     }
 
-    /**
-     * 总数
-     */
     public void setTotal(long total) {
         this.total = total;
     }
 
-    /**
-     * 页面大小
-     */
     public int getPageSize() {
         return pageSize;
     }
 
-    /**
-     * 页面大小
-     */
     public void setPageSize(int pageSize) {
         this.pageSize = pageSize;
     }

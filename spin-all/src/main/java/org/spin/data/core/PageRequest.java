@@ -13,8 +13,20 @@ import java.io.Serializable;
 public class PageRequest implements Serializable {
     private static final long serialVersionUID = 3820016886407002254L;
 
+    /**
+     * 分页页码，从1开始
+     */
     private int page = 1;
+
+    /**
+     * 分页大小
+     */
     private int pageSize = 10000000;
+
+    /**
+     * 多个排序字段用,隔开
+     * name desc,id desc
+     */
     private String sort;
 
     /**
@@ -56,21 +68,18 @@ public class PageRequest implements Serializable {
 
     /**
      * 根据page与pageSize计算偏移
+     *
+     * @return 偏移量
      */
     public int getOffset() {
         return (page - 1) * pageSize;
     }
 
-    /**
-     * 分页页码，从1开始
-     */
+
     public int getPage() {
         return page;
     }
 
-    /**
-     * 分页页码，从1开始
-     */
     public void setPage(int page) {
         if (page < 1) {
             throw new IllegalArgumentException("Page index must not be less than one!");
@@ -78,16 +87,10 @@ public class PageRequest implements Serializable {
         this.page = page;
     }
 
-    /**
-     * 分页大小
-     */
     public int getPageSize() {
         return pageSize;
     }
 
-    /**
-     * 分页大小
-     */
     public void setPageSize(int pageSize) {
         if (pageSize < 0) {
             throw new IllegalArgumentException("Page pageSize must not be less than zero!");
@@ -95,18 +98,10 @@ public class PageRequest implements Serializable {
         this.pageSize = pageSize;
     }
 
-    /**
-     * 多个排序字段用,隔开
-     * name desc,id desc
-     */
     public String getSort() {
         return sort;
     }
 
-    /**
-     * 多个排序字段用,隔开
-     * name desc,id desc
-     */
     public void setSort(String sort) {
         this.sort = sort;
     }

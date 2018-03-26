@@ -84,7 +84,7 @@ public interface DataSourceConfig {
      *
      * @param password 密码密文
      */
-    void setPassword(String password) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException;
+    void setPassword(String password);
 
     /**
      * 获取连接池最大连接数

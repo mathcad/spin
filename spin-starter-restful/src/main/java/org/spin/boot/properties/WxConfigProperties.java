@@ -3,6 +3,7 @@ package org.spin.boot.properties;
 import org.spin.core.util.StringUtils;
 import org.spin.wx.WxConfigManager;
 import org.spin.wx.base.WxConfigInfo;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import javax.annotation.PostConstruct;
@@ -15,6 +16,7 @@ import java.util.Map;
  *
  * @author xuweinan
  */
+@ConditionalOnClass(name = "org.spin.wx.base.WxConfigInfo")
 @ConfigurationProperties(prefix = "spin.wx")
 public class WxConfigProperties {
     private Map<String, WxConfigInfo> config = new HashMap<>();

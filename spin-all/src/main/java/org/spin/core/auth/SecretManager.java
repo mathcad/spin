@@ -5,10 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.security.RSA;
 import org.spin.core.session.SessionManager;
+import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.data.core.AbstractUser;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -86,13 +86,13 @@ public class SecretManager {
      */
     public void bindCurrentSession(String tokenStr) {
         // 解析token
-        TokenInfo tokenInfo = getTokenInfo(tokenStr);
+        getTokenInfo(tokenStr);
 
         // 设置SessionId
         SessionManager.setCurrentSessionId(tokenStr);
 
         // 设置CurrentUser
-        AbstractUser user = (AbstractUser) SessionManager.getCurrentSession().getAttribute(SessionManager.USER_SESSION_KEY);
+        SessionUser user = (SessionUser) SessionManager.getCurrentSession().getAttribute(SessionManager.USER_SESSION_KEY);
         user.setSessionId(tokenStr);
         SessionManager.setCurrentUser(user);
     }

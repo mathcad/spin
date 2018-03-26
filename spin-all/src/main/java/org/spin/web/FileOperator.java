@@ -44,6 +44,12 @@ public class FileOperator {
 
     /**
      * 上传文件,默认上传到Env.FileUploadDir目录
+     *
+     * @param file     文件
+     * @param compress 是否开启压缩
+     * @param baseDir  上传路径
+     * @return 上传结果
+     * @throws IOException 文件读写异常时抛出
      */
     public static UploadResult upload(MultipartFile file, boolean compress, String... baseDir) throws IOException {
         String bDir = SpinContext.FILE_UPLOAD_DIR;
@@ -79,6 +85,11 @@ public class FileOperator {
 
     /**
      * 批量上传文件
+     *
+     * @param files    文件
+     * @param compress 是否开启压缩
+     * @param baseDir  上传路径
+     * @return 上传结果
      */
     public static List<UploadResult> upload(List<MultipartFile> files, boolean compress, String... baseDir) {
         List<UploadResult> result = new ArrayList<>();
@@ -98,6 +109,9 @@ public class FileOperator {
 
     /**
      * 将指定URL的图片保存至服务器端
+     *
+     * @param url 资源路径
+     * @return 上传结果
      */
     public static UploadResult saveFileFromUrl(String url) {
         UploadResult rs = new UploadResult();
@@ -118,6 +132,8 @@ public class FileOperator {
 
     /**
      * 生成统一格式的文件名
+     *
+     * @return 文件名
      */
     private static String generateFileName() {
         return dateFormat.format(LocalDateTime.now()) + RandomStringUtils.randomAlphanumeric(8);

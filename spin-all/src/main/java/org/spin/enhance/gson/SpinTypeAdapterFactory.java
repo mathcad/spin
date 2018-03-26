@@ -42,9 +42,9 @@ public class SpinTypeAdapterFactory implements TypeAdapterFactory {
                 if (!inited) {
                     inited = true;
                     try {
-                        Class<MatchableTypeAdapter> cls = (Class<MatchableTypeAdapter>) ClassUtils.getClass("org.spin.enhance.gson.adapter.HibernateProxyTypeAdapter");
+                        Class<MatchableTypeAdapter> cls = (Class<MatchableTypeAdapter>) ClassUtils.getClass("org.spin.data.gson.adapter.HibernateProxyTypeAdapter");
                         typeAdapters.add(ConstructorUtils.invokeConstructor(cls, gson));
-                        cls = (Class<MatchableTypeAdapter>) ClassUtils.getClass("org.spin.enhance.gson.adapter.HibernatePersistentBagTypeAdapter");
+                        cls = (Class<MatchableTypeAdapter>) ClassUtils.getClass("org.spin.data.gson.adapter.HibernatePersistentBagTypeAdapter");
                         typeAdapters.add(cls.getConstructor().newInstance());
                     } catch (Exception ignore) {
                         // ignore

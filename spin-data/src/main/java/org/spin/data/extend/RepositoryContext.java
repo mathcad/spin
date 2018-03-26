@@ -6,7 +6,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
@@ -23,7 +22,7 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.core.ARepository;
-import org.spin.data.core.AbstractEntity;
+import org.spin.data.core.DataSourceContext;
 import org.spin.data.core.IEntity;
 import org.spin.data.core.Page;
 import org.spin.data.core.PageRequest;
@@ -67,11 +66,6 @@ public class RepositoryContext {
     private ApplicationContext applicationContext;
 
     /**
-     * 通用的基础Repo，仅供内部使用，用于执行指定的有限操作
-     */
-    private ARepository<AbstractEntity, Long> commonRepo;
-
-    /**
      * 所有注册到Spring上下文的Repository的缓存，用于快速获取
      */
     private final Map<String, ARepository> repositoryCache = new HashMap<>(128);
@@ -82,12 +76,6 @@ public class RepositoryContext {
         this.applicationContext = Assert.notNull(applicationContext);
         applicationContext.getBeansOfType(IdGenerator.class).values()
             .forEach(idGen -> idGenerators.put(idGen.getIdType().getName(), idGen));
-
-        commonRepo = new ARepository<>(AbstractEntity.class);
-        commonRepo.setSqlManager(sqlManager);
-        commonRepo.setQueryParamParser(paramParser);
-        //noinspection unchecked
-        commonRepo.setIdGenerator((IdGenerator<Long, ?>) idGenerators.get(Long.class.getName()));
     }
 
     /**
@@ -129,68 +117,6 @@ public class RepositoryContext {
             repositoryCache.put(cls.getName(), repository);
             return repository;
         }
-    }
-
-    /**
-     * 获得当前线程的session 如果Thread Local变量中有绑定，返回该session
-     * 否则，调用sessFactory的getCurrentSession
-     *
-     * @return 打开的Session
-     */
-    public Session getSession() {
-        return commonRepo.getSession();
-    }
-
-    /**
-     * 打开一个新Session，如果线程上有其他Session，则返回最后一个Session
-     *
-     * @return 打开的Session
-     */
-    public Session openSession() {
-        return openSession(false);
-    }
-
-    /**
-     * 在当前线程上手动打开一个Session，其他的Thread local事务可能会失效
-     *
-     * @param requiredNew 强制打开新Session
-     * @return 打开的Session
-     */
-    public Session openSession(boolean requiredNew) {
-        return commonRepo.openSession(requiredNew);
-    }
-
-    /**
-     * 关闭当前线程上手动开启的所有Session
-     */
-    public void closeAllManualSession() {
-        commonRepo.closeAllManualSession();
-    }
-
-    /**
-     * 关闭当前线程上手动打开的最后一个Session，如果Session上有事务，提交之
-     */
-    public void closeManualSession() {
-        commonRepo.closeManualSession();
-    }
-
-    /**
-     * 打开事务 如果线程已有事务就返回，不重复打开
-     *
-     * @return 事务对象
-     */
-    public Transaction openTransaction() {
-        return openTransaction(false);
-    }
-
-    /**
-     * 在当前线程上打开一个Session，并启动事务
-     *
-     * @param requiredNew 强制开启事务
-     * @return 事务对象
-     */
-    public Transaction openTransaction(boolean requiredNew) {
-        return commonRepo.openTransaction(requiredNew);
     }
 
     /**
@@ -561,7 +487,7 @@ public class RepositoryContext {
      * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> find(DetachedCriteria dc, PageRequest... pr) {
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
         if (null != pr && pr.length > 0 && null != pr[0]) {
             ct.setFirstResult(pr[0].getOffset());
@@ -629,7 +555,7 @@ public class RepositoryContext {
      * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> find(Class<T> entityClazz, String hql, Object... args) {
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Query<T> q = sess.createQuery(hql, entityClazz);
         if (args != null && args.length > 0) {
             for (int i = 0; i < args.length; i++) {
@@ -649,7 +575,7 @@ public class RepositoryContext {
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> findAll(Class<T> entityClazz) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = DetachedCriteria.forClass(entityClazz).getExecutableCriteria(sess);
         ct.setCacheMode(CacheMode.NORMAL);
         //noinspection unchecked
@@ -668,7 +594,7 @@ public class RepositoryContext {
     public <T extends IEntity<P>, P extends Serializable> T findOne(CriteriaBuilder<T> cb) {
         checkCriteriaBuilder(cb);
         DetachedCriteria dc = cb.buildDeCriteria(false);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
         ct.setFirstResult(0);
         ct.setMaxResults(1);
@@ -721,7 +647,7 @@ public class RepositoryContext {
      */
     public <T extends IEntity<P>, P extends Serializable> T findOneWithLock(Class<T> entityClazz, String prop, Object value) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         DetachedCriteria dc = DetachedCriteria.forClass(entityClazz);
         dc.add(Restrictions.eq(prop, value));
         Criteria ct = dc.getExecutableCriteria(sess);
@@ -810,7 +736,7 @@ public class RepositoryContext {
             dc.add(Restrictions.or(criteriaList.toArray(new Criterion[]{})));
         if (notId != null)
             dc.add(Restrictions.ne("id", notId));
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         // 总数查询
         Criteria ct = dc.getExecutableCriteria(sess);
         List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
@@ -838,7 +764,7 @@ public class RepositoryContext {
 
     public Long count(CriteriaBuilder<? extends IEntity> cb) {
         checkCriteriaBuilder(cb);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = cb.buildDeCriteria(false).getExecutableCriteria(sess);
         ct.setCacheable(false);
         List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
@@ -861,7 +787,7 @@ public class RepositoryContext {
      */
     public <T extends IEntity<P>, P extends Serializable> Page<T> page(CriteriaBuilder<T> cb) {
         checkCriteriaBuilder(cb);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
         ct.setCacheable(false);
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
@@ -1090,7 +1016,7 @@ public class RepositoryContext {
      * @see Session#flush
      */
     public void flush() {
-        getSession().flush();
+        DataSourceContext.getSession().flush();
     }
 
     /**
@@ -1103,7 +1029,7 @@ public class RepositoryContext {
      */
     public <T extends IEntity<P>, P extends Serializable> void evict(T entity) {
         if (Objects.nonNull(entity)) {
-            getSession().evict(entity);
+            DataSourceContext.getSession().evict(entity);
         }
     }
 
@@ -1113,7 +1039,7 @@ public class RepositoryContext {
      * @see Session#clear
      */
     public void clear() {
-        getSession().clear();
+        DataSourceContext.getSession().clear();
     }
 
     /**
@@ -1123,7 +1049,7 @@ public class RepositoryContext {
      */
     public void doWork(Work work) {
         if (null != work) {
-            getSession().doWork(work);
+            DataSourceContext.getSession().doWork(work);
         }
     }
 
@@ -1137,7 +1063,7 @@ public class RepositoryContext {
         Assert.notEmpty(sql, "SQL语句不能为空");
         Assert.isTrue(!StringUtils.trimToEmpty(sql).toLowerCase().startsWith("select"), "不能执行select语句，只能执行CUD语句");
         int[] affects = {-1};
-        getSession().doWork(connection -> {
+        DataSourceContext.getSession().doWork(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql);
             affects[0] = ps.executeUpdate();
         });
@@ -1155,7 +1081,7 @@ public class RepositoryContext {
         if (null == work) {
             return null;
         }
-        return getSession().doReturningWork(work);
+        return DataSourceContext.getSession().doReturningWork(work);
     }
 
     /**
@@ -1169,7 +1095,7 @@ public class RepositoryContext {
      */
     public <R> R doReturningWork(String sql, Function<ResultSet, R> transformer) {
         Assert.notEmpty(sql, "SQL语句不能为空");
-        return getSession().doReturningWork(connection -> {
+        return DataSourceContext.getSession().doReturningWork(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql);
             boolean isRs = ps.execute();
             return isRs ? transformer.apply(ps.getResultSet()) : null;
@@ -1187,31 +1113,6 @@ public class RepositoryContext {
      */
     public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listMap(CriteriaBuilder<T> cb, boolean wrap) {
         return getRepo(cb.getEnCls()).listMap(cb, wrap);
-    }
-
-    /**
-     * 切换数据源
-     *
-     * @param name 数据源名称
-     */
-    public void switchDataSource(String name) {
-        sqlManager.switchDataSource(name);
-    }
-
-    /**
-     * 切换到默认数据源
-     */
-    public void usePrimaryDataSource() {
-        sqlManager.usePrimaryDataSource();
-    }
-
-    /**
-     * 获取当前数据源名称
-     *
-     * @return 数据源名称
-     */
-    public String getCurrentDataSourceName() {
-        return sqlManager.getCurrentDataSourceName();
     }
 
     private void checkCriteriaBuilder(CriteriaBuilder<?> cb) {

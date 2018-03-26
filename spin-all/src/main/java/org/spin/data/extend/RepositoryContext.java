@@ -6,7 +6,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
@@ -17,12 +16,13 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
 import org.spin.core.Assert;
+import org.spin.core.throwable.AssertFailException;
 import org.spin.core.throwable.SQLException;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.core.ARepository;
-import org.spin.data.core.AbstractEntity;
+import org.spin.data.core.DataSourceContext;
 import org.spin.data.core.IEntity;
 import org.spin.data.core.Page;
 import org.spin.data.core.PageRequest;
@@ -66,11 +66,6 @@ public class RepositoryContext {
     private ApplicationContext applicationContext;
 
     /**
-     * 通用的基础Repo，仅供内部使用，用于执行指定的有限操作
-     */
-    private ARepository<AbstractEntity, Long> commonRepo;
-
-    /**
      * 所有注册到Spring上下文的Repository的缓存，用于快速获取
      */
     private final Map<String, ARepository> repositoryCache = new HashMap<>(128);
@@ -81,12 +76,6 @@ public class RepositoryContext {
         this.applicationContext = Assert.notNull(applicationContext);
         applicationContext.getBeansOfType(IdGenerator.class).values()
             .forEach(idGen -> idGenerators.put(idGen.getIdType().getName(), idGen));
-
-        commonRepo = new ARepository<>(AbstractEntity.class);
-        commonRepo.setSqlManager(sqlManager);
-        commonRepo.setQueryParamParser(paramParser);
-        //noinspection unchecked
-        commonRepo.setIdGenerator((IdGenerator<Long, ?>) idGenerators.get(Long.class.getName()));
     }
 
     /**
@@ -131,63 +120,11 @@ public class RepositoryContext {
     }
 
     /**
-     * 获得当前线程的session 如果Thread Local变量中有绑定，返回该session
-     * 否则，调用sessFactory的getCurrentSession
-     */
-    public Session getSession() {
-        return commonRepo.getSession();
-    }
-
-    /**
-     * 打开一个新Session，如果线程上有其他Session，则返回最后一个Session
-     */
-    public Session openSession() {
-        return openSession(false);
-    }
-
-    /**
-     * 在当前线程上手动打开一个Session，其他的Thread local事务可能会失效
-     *
-     * @param requiredNew 强制打开新Session
-     */
-    public Session openSession(boolean requiredNew) {
-        return commonRepo.openSession(requiredNew);
-    }
-
-    /**
-     * 关闭当前线程上手动开启的所有Session
-     */
-    public void closeAllManualSession() {
-        commonRepo.closeAllManualSession();
-    }
-
-    /**
-     * 关闭当前线程上手动打开的最后一个Session，如果Session上有事务，提交之
-     */
-    public void closeManualSession() {
-        commonRepo.closeManualSession();
-    }
-
-    /**
-     * 打开事务 如果线程已有事务就返回，不重复打开
-     */
-    public Transaction openTransaction() {
-        return openTransaction(false);
-    }
-
-    /**
-     * 在当前线程上打开一个Session，并启动事务
-     *
-     * @param requiredNew 强制开启事务
-     */
-    public Transaction openTransaction(boolean requiredNew) {
-        return commonRepo.openTransaction(requiredNew);
-    }
-
-    /**
      * 保存指定实体
      *
      * @param entity 需要保存的实体
+     * @param <T>    实体类型
+     * @param <P>    实体主键类型
      * @return 保存后的实体(has id)
      */
     public <T extends IEntity<P>, P extends Serializable> T save(final T entity) {
@@ -200,6 +137,8 @@ public class RepositoryContext {
      *
      * @param entity     需要保存的实体
      * @param saveWithPk 用指定的ID执行insert
+     * @param <T>        实体类型
+     * @param <P>        实体主键类型
      * @return 保存后的实体(has id)
      */
     public <T extends IEntity<P>, P extends Serializable> T save(final T entity, boolean saveWithPk) {
@@ -211,6 +150,8 @@ public class RepositoryContext {
      * 保存指定的实体
      *
      * @param entities 需要保存的实体集合
+     * @param <T>      实体类型
+     * @param <P>      实体主键类型
      * @return 保存后的实体
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> save(Iterable<T> entities) {
@@ -233,6 +174,8 @@ public class RepositoryContext {
      * 该方法的语义由 JSR-220定义.
      *
      * @param entity 待合并的瞬态实例
+     * @param <T>    实体类型
+     * @param <P>    实体主键类型
      * @return 更新后的持久化对象
      */
     public <T extends IEntity<P>, P extends Serializable> T merge(final T entity) {
@@ -245,6 +188,8 @@ public class RepositoryContext {
      *
      * @param entity          待复制的实体
      * @param replicationMode Hibernate ReplicationMode
+     * @param <T>             实体类型
+     * @param <P>             实体主键类型
      * @see Session#replicate(Object, ReplicationMode)
      */
     public <T extends IEntity<P>, P extends Serializable> void replicate(final T entity, final ReplicationMode replicationMode) {
@@ -259,6 +204,8 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param id          主键值
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      * @return 持久化对象, 或 {@code null}
      * @see Session#get(Class, Serializable)
      */
@@ -274,6 +221,8 @@ public class RepositoryContext {
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param id          主键值
      * @param lockMode    锁定模式
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      * @return 持久化对象, 或 {@code null}
      * @see Session#get(Class, Serializable, LockMode)
      */
@@ -286,6 +235,9 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param id          主键值
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
+     * @return 持久化对象
      */
     public <T extends IEntity<P>, P extends Serializable> T getWithLock(Class<T> entityClazz, final P id) {
         return getRepo(entityClazz).getWithLock(id);
@@ -296,6 +248,8 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param id          主键值
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      * @return 持久化对象
      * @throws org.springframework.orm.ObjectRetrievalFailureException 如果id不存在则抛出该异常
      * @see Session#load(Class, Serializable)
@@ -311,6 +265,8 @@ public class RepositoryContext {
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param id          主键值
      * @param lockMode    锁定模式
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      * @return 持久化对象
      * @throws org.springframework.orm.ObjectRetrievalFailureException 如果id不存在则抛出该异常
      * @see Session#load(Class, Serializable)
@@ -325,6 +281,8 @@ public class RepositoryContext {
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param id          主键值
      * @param depth       深度
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      * @return 瞬态DTO对象
      */
     public <T extends IEntity<P>, P extends Serializable> T getDto(Class<T> entityClazz, final P id, int depth) {
@@ -335,6 +293,8 @@ public class RepositoryContext {
      * 刷新指定持久化对象的状态
      *
      * @param entity 待刷新的持久化对象
+     * @param <T>    实体类型
+     * @param <P>    实体主键类型
      * @see Session#refresh(Object)
      */
     public <T extends IEntity<P>, P extends Serializable> void refresh(final T entity) {
@@ -347,6 +307,8 @@ public class RepositoryContext {
      *
      * @param entity   待刷新的持久化对象
      * @param lockMode 需要获取的锁
+     * @param <T>      实体类型
+     * @param <P>      实体主键类型
      * @see Session#refresh(Object, LockMode)
      */
     public <T extends IEntity<P>, P extends Serializable> void refresh(final T entity, final LockMode lockMode) {
@@ -358,6 +320,9 @@ public class RepositoryContext {
      * 检查Session缓存中是否存在指定的持久化对象
      *
      * @param entity 待检查的持久化对象
+     * @param <T>    实体类型
+     * @param <P>    实体主键类型
+     * @return 是否存在
      * @see Session#contains
      */
     public <T extends IEntity<P>, P extends Serializable> boolean contains(final T entity) {
@@ -368,7 +333,10 @@ public class RepositoryContext {
     /**
      * 删除指定实体
      *
-     * @throws IllegalArgumentException 当待删除的实体为{@literal null}时抛出该异常
+     * @param entity 要删除的实体
+     * @param <T>    实体类型
+     * @param <P>    实体主键类型
+     * @throws AssertFailException 当待删除的实体为{@literal null}时抛出该异常
      */
     public <T extends IEntity<P>, P extends Serializable> void delete(T entity) {
         //noinspection unchecked
@@ -380,7 +348,9 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param id          主键值
-     * @throws IllegalArgumentException 当待删除的{@code id}为{@literal null}时抛出该异常
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
+     * @throws AssertFailException 当待删除的{@code id}为{@literal null}时抛出该异常
      */
     public <T extends IEntity<P>, P extends Serializable> void delete(Class<T> entityClazz, P id) {
         getRepo(entityClazz).delete(id);
@@ -391,7 +361,9 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param ids         主键值集合
-     * @throws IllegalArgumentException 当待删除的{@code ids}为{@literal null}时抛出该异常
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
+     * @throws AssertFailException 当待删除的{@code ids}为{@literal null}时抛出该异常
      */
     public <T extends IEntity<P>, P extends Serializable> void delete(Class<T> entityClazz, Iterator<P> ids) {
         getRepo(entityClazz).delete(ids);
@@ -401,7 +373,9 @@ public class RepositoryContext {
      * 删除指定实体
      *
      * @param entities 要删除的实例列表
-     * @throws IllegalArgumentException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
+     * @param <T>      实体类型
+     * @param <P>      实体主键类型
+     * @throws AssertFailException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
      */
     public <T extends IEntity<P>, P extends Serializable> void delete(Iterable<? extends T> entities) {
         Assert.notNull(entities, "The given Iterable of entities not be null!");
@@ -416,6 +390,8 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param cs          删除条件
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      */
     public <T extends IEntity<P>, P extends Serializable> void delete(Class<T> entityClazz, Criterion... cs) {
         getRepo(entityClazz).delete(cs);
@@ -427,6 +403,8 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param conditions  hql删除条件
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      */
     public <T extends IEntity<P>, P extends Serializable> void delete(Class<T> entityClazz, String conditions) {
         getRepo(entityClazz).delete(conditions);
@@ -435,7 +413,10 @@ public class RepositoryContext {
     /**
      * 逻辑删除指定实体
      *
-     * @throws IllegalArgumentException 当待删除的实体为{@literal null}时抛出该异常
+     * @param entity 要逻辑删除的实体
+     * @param <T>    实体类型
+     * @param <P>    实体主键类型
+     * @throws AssertFailException 当待删除的实体为{@literal null}时抛出该异常
      */
     public <T extends IEntity<P>, P extends Serializable> void logicDelete(T entity) {
         //noinspection unchecked
@@ -447,7 +428,9 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param id          主键值
-     * @throws IllegalArgumentException 当待删除的{@code id}为{@literal null}时抛出该异常
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
+     * @throws AssertFailException 当待删除的{@code id}为{@literal null}时抛出该异常
      */
     public <T extends IEntity<P>, P extends Serializable> void logicDelete(Class<T> entityClazz, P id) {
         getRepo(entityClazz).logicDelete(id);
@@ -458,7 +441,9 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param ids         主键值集合
-     * @throws IllegalArgumentException 当待删除的{@code ids}为{@literal null}时抛出该异常
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
+     * @throws AssertFailException 当待删除的{@code ids}为{@literal null}时抛出该异常
      */
     public <T extends IEntity<P>, P extends Serializable> void logicDelete(Class<T> entityClazz, Iterator<P> ids) {
         getRepo(entityClazz).logicDelete(ids);
@@ -468,7 +453,9 @@ public class RepositoryContext {
      * 逻辑删除指定实体
      *
      * @param entities 要删除的实例列表
-     * @throws IllegalArgumentException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
+     * @param <T>      实体类型
+     * @param <P>      实体主键类型
+     * @throws AssertFailException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
      */
     public <T extends IEntity<P>, P extends Serializable> void logicDelete(Iterable<? extends T> entities) {
         Assert.notNull(entities, "The given Iterable of entities not be null!");
@@ -483,6 +470,8 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param cs          删除条件
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      */
     public <T extends IEntity<P>, P extends Serializable> void logicDelete(Class<T> entityClazz, Criterion... cs) {
         getRepo(entityClazz).logicDelete(cs);
@@ -491,11 +480,14 @@ public class RepositoryContext {
     /**
      * 分页条件查询
      *
-     * @param dc 离线条件
-     * @param pr 分页请求
+     * @param dc  离线条件
+     * @param pr  分页参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> find(DetachedCriteria dc, PageRequest... pr) {
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
         if (null != pr && pr.length > 0 && null != pr[0]) {
             ct.setFirstResult(pr[0].getOffset());
@@ -512,6 +504,9 @@ public class RepositoryContext {
      *
      * @param entityClazz 实体类Class，必须具有{@link Entity}注解
      * @param cs          查询条件
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> find(Class<T> entityClazz, Criterion... cs) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
@@ -524,6 +519,11 @@ public class RepositoryContext {
 
     /**
      * 分页条件查询
+     *
+     * @param cb  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> find(CriteriaBuilder<T> cb) {
         checkCriteriaBuilder(cb);
@@ -533,6 +533,11 @@ public class RepositoryContext {
 
     /**
      * 分页条件查询
+     *
+     * @param qp  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> find(QueryParam qp) {
         //noinspection unchecked
@@ -541,9 +546,16 @@ public class RepositoryContext {
 
     /**
      * 根据hql查询
+     *
+     * @param entityClazz 实体类Class，必须具有{@link Entity}注解
+     * @param hql         hql语句
+     * @param args        查询参数
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> find(Class<T> entityClazz, String hql, Object... args) {
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Query<T> q = sess.createQuery(hql, entityClazz);
         if (args != null && args.length > 0) {
             for (int i = 0; i < args.length; i++) {
@@ -556,11 +568,14 @@ public class RepositoryContext {
     /**
      * 全记录查询
      *
+     * @param entityClazz 实体类Class，必须具有{@link Entity}注解
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      * @return 结果数据
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> findAll(Class<T> entityClazz) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = DetachedCriteria.forClass(entityClazz).getExecutableCriteria(sess);
         ct.setCacheMode(CacheMode.NORMAL);
         //noinspection unchecked
@@ -570,11 +585,16 @@ public class RepositoryContext {
     /**
      * 通过唯一属性查询
      * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
+     *
+     * @param cb  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> T findOne(CriteriaBuilder<T> cb) {
         checkCriteriaBuilder(cb);
         DetachedCriteria dc = cb.buildDeCriteria(false);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
         ct.setFirstResult(0);
         ct.setMaxResults(1);
@@ -589,7 +609,11 @@ public class RepositoryContext {
      * 通过属性查询
      * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      *
-     * @param cts 条件数组
+     * @param entityClazz 实体类Class，必须具有{@link Entity}注解
+     * @param cts         条件数组
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> T findOne(Class<T> entityClazz, Criterion... cts) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
@@ -600,8 +624,12 @@ public class RepositoryContext {
      * 通过属性查询
      * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      *
-     * @param prop  属性名称
-     * @param value 值
+     * @param entityClazz 实体类Class，必须具有{@link Entity}注解
+     * @param prop        属性名称
+     * @param value       值
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
+     * @return 查询到的实体
      */
     public <T extends IEntity<P>, P extends Serializable> T findOne(Class<T> entityClazz, String prop, Object value) {
         return findOne(entityClazz, Restrictions.eq(prop, value));
@@ -609,10 +637,17 @@ public class RepositoryContext {
 
     /**
      * 查询且锁定
+     *
+     * @param entityClazz 实体类Class，必须具有{@link Entity}注解
+     * @param prop        属性名
+     * @param value       属性值
+     * @param <T>         实体类型参数
+     * @param <P>         实体主键类型
+     * @return 查询到的实体
      */
     public <T extends IEntity<P>, P extends Serializable> T findOneWithLock(Class<T> entityClazz, String prop, Object value) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         DetachedCriteria dc = DetachedCriteria.forClass(entityClazz);
         dc.add(Restrictions.eq(prop, value));
         Criteria ct = dc.getExecutableCriteria(sess);
@@ -634,7 +669,10 @@ public class RepositoryContext {
     /**
      * 判断是否有存在已有实体
      *
-     * @param id 指定ID
+     * @param entityClazz 实体类Class，必须具有{@link Entity}注解
+     * @param id          指定ID
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      * @return 是/否
      */
     public <T extends IEntity<P>, P extends Serializable> boolean exist(Class<T> entityClazz, P id) {
@@ -649,7 +687,10 @@ public class RepositoryContext {
     /**
      * 判断是否有存在已有实体 默认多个字段条件为，条件并列and
      *
-     * @param params 查询参数
+     * @param entityClazz 实体类Class，必须具有{@link Entity}注解
+     * @param params      查询参数
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      * @return 是/否
      */
     public <T extends IEntity<P>, P extends Serializable> boolean exist(Class<T> entityClazz, Map<String, Object> params) {
@@ -659,7 +700,11 @@ public class RepositoryContext {
     /**
      * 判断是否有存在已有实体 默认多个字段条件为，条件并列and
      *
-     * @param params 查询参数
+     * @param entityClazz 实体类Class，必须具有{@link Entity}注解
+     * @param params      查询参数
+     * @param notId       忽略匹配的Id
+     * @param <T>         实体类型
+     * @param <P>         实体主键类型
      * @return 是/否
      */
     public <T extends IEntity<P>, P extends Serializable> boolean exist(Class<T> entityClazz, Map<String, Object> params, P notId) {
@@ -669,9 +714,12 @@ public class RepositoryContext {
     /**
      * 判断是否有存在已有实体
      *
-     * @param params 查询参数
-     * @param notId  忽略匹配的Id
-     * @param isAnd  使用and / or 连接条件
+     * @param entityClazz 实体类Class，必须具有{@link Entity}注解
+     * @param params      查询参数
+     * @param notId       忽略匹配的Id
+     * @param isAnd       使用and / or 连接条件
+     * @param <T>         实体类型参数
+     * @param <P>         实体主键类型
      * @return 是/否
      */
     public <T extends IEntity<P>, P extends Serializable> boolean exist(Class<T> entityClazz, Map<String, Object> params, P notId, boolean isAnd) {
@@ -688,7 +736,7 @@ public class RepositoryContext {
             dc.add(Restrictions.or(criteriaList.toArray(new Criterion[]{})));
         if (notId != null)
             dc.add(Restrictions.ne("id", notId));
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         // 总数查询
         Criteria ct = dc.getExecutableCriteria(sess);
         List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
@@ -699,8 +747,14 @@ public class RepositoryContext {
 
     /**
      * 判断是否存在已有实体
+     *
+     * @param cb    查询参数
+     * @param notId 拆除的id
+     * @param <T>   实体类型
+     * @param <P>   实体主键类型
+     * @return 查询结果
      */
-    public <P extends Serializable> boolean exist(CriteriaBuilder cb, P notId) {
+    public <T extends IEntity<P>, P extends Serializable> boolean exist(CriteriaBuilder<T> cb, P notId) {
         checkCriteriaBuilder(cb);
         if (notId != null)
             cb.notEq("id", notId);
@@ -708,9 +762,9 @@ public class RepositoryContext {
         return c > 0;
     }
 
-    public Long count(CriteriaBuilder cb) {
+    public Long count(CriteriaBuilder<? extends IEntity> cb) {
         checkCriteriaBuilder(cb);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = cb.buildDeCriteria(false).getExecutableCriteria(sess);
         ct.setCacheable(false);
         List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
@@ -725,10 +779,15 @@ public class RepositoryContext {
 
     /**
      * 根据条件查询DTO列表
+     *
+     * @param cb  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> Page<T> page(CriteriaBuilder<T> cb) {
         checkCriteriaBuilder(cb);
-        Session sess = getSession();
+        Session sess = DataSourceContext.getSession();
         Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
         ct.setCacheable(false);
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
@@ -750,7 +809,10 @@ public class RepositoryContext {
     /**
      * 根据条件查询DTO列表
      *
-     * @param qp 通用查询参数
+     * @param qp  通用查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> Page<T> page(QueryParam qp) {
         //noinspection unchecked
@@ -759,6 +821,11 @@ public class RepositoryContext {
 
     /**
      * 根据条件查询DTO（扁平化的Map）
+     *
+     * @param cb  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> Page<Map<String, Object>> pageFlatMap(CriteriaBuilder<T> cb) {
         return getRepo(cb.getEnCls()).pageFlatMap(cb);
@@ -767,7 +834,10 @@ public class RepositoryContext {
     /**
      * 根据条件查询DTO（扁平化的Map）
      *
-     * @param qp 通用查询参数
+     * @param qp  通用查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> Page<Map<String, Object>> pageFlatMap(QueryParam qp) {
         //noinspection unchecked
@@ -776,6 +846,11 @@ public class RepositoryContext {
 
     /**
      * 根据条件查询DTO（层次化的Map）
+     *
+     * @param cb  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> Page<Map<String, Object>> pageMap(CriteriaBuilder<T> cb) {
         return getRepo(cb.getEnCls()).pageMap(cb);
@@ -784,7 +859,10 @@ public class RepositoryContext {
     /**
      * 根据条件查询DTO（层次化的Map）
      *
-     * @param qp 通用查询参数
+     * @param qp  通用查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> Page<Map<String, Object>> pageMap(QueryParam qp) {
         //noinspection unchecked
@@ -794,6 +872,12 @@ public class RepositoryContext {
 
     /**
      * 根据条件查询DTO列表
+     *
+     * @param entityClazz 实体类Class，必须具有{@link Entity}注解
+     * @param map         参数
+     * @param <T>         实体类型参数
+     * @param <P>         实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> list(Class<T> entityClazz, Map<String, Object> map) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
@@ -804,6 +888,11 @@ public class RepositoryContext {
 
     /**
      * 根据条件查询DTO列表
+     *
+     * @param cb  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> list(CriteriaBuilder<T> cb) {
         List<Map<String, Object>> list = listFlatMap(cb);
@@ -812,6 +901,11 @@ public class RepositoryContext {
 
     /**
      * 根据条件查询DTO列表
+     *
+     * @param qp  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> list(QueryParam qp) {
         //noinspection unchecked
@@ -820,6 +914,11 @@ public class RepositoryContext {
 
     /**
      * 根据条件查询DTO（扁平化的Map）
+     *
+     * @param cb  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listFlatMap(CriteriaBuilder<T> cb) {
         return listMap(cb, false);
@@ -827,6 +926,11 @@ public class RepositoryContext {
 
     /**
      * 根据条件查询DTO（扁平化的Map）
+     *
+     * @param qp  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listFlatMap(QueryParam qp) {
         //noinspection unchecked
@@ -835,6 +939,11 @@ public class RepositoryContext {
 
     /**
      * 根据条件查询DTO（层次化的Map）
+     *
+     * @param cb  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listMap(CriteriaBuilder<T> cb) {
         return listMap(cb, true);
@@ -842,6 +951,11 @@ public class RepositoryContext {
 
     /**
      * 根据条件查询DTO（层次化的Map）
+     *
+     * @param qp  查询参数
+     * @param <T> 实体类型
+     * @param <P> 实体主键类型
+     * @return 查询结果
      */
     public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listMap(QueryParam qp) {
         //noinspection unchecked
@@ -902,7 +1016,7 @@ public class RepositoryContext {
      * @see Session#flush
      */
     public void flush() {
-        getSession().flush();
+        DataSourceContext.getSession().flush();
     }
 
     /**
@@ -910,10 +1024,12 @@ public class RepositoryContext {
      * {@code cascade="evict"}，该操作将会级联剔除所有的关联实体
      *
      * @param entity 需要剔除的实体
+     * @param <T>    实体类型
+     * @param <P>    实体主键类型
      */
     public <T extends IEntity<P>, P extends Serializable> void evict(T entity) {
         if (Objects.nonNull(entity)) {
-            getSession().evict(entity);
+            DataSourceContext.getSession().evict(entity);
         }
     }
 
@@ -923,7 +1039,7 @@ public class RepositoryContext {
      * @see Session#clear
      */
     public void clear() {
-        getSession().clear();
+        DataSourceContext.getSession().clear();
     }
 
     /**
@@ -933,7 +1049,7 @@ public class RepositoryContext {
      */
     public void doWork(Work work) {
         if (null != work) {
-            getSession().doWork(work);
+            DataSourceContext.getSession().doWork(work);
         }
     }
 
@@ -947,7 +1063,7 @@ public class RepositoryContext {
         Assert.notEmpty(sql, "SQL语句不能为空");
         Assert.isTrue(!StringUtils.trimToEmpty(sql).toLowerCase().startsWith("select"), "不能执行select语句，只能执行CUD语句");
         int[] affects = {-1};
-        getSession().doWork(connection -> {
+        DataSourceContext.getSession().doWork(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql);
             affects[0] = ps.executeUpdate();
         });
@@ -965,7 +1081,7 @@ public class RepositoryContext {
         if (null == work) {
             return null;
         }
-        return getSession().doReturningWork(work);
+        return DataSourceContext.getSession().doReturningWork(work);
     }
 
     /**
@@ -979,7 +1095,7 @@ public class RepositoryContext {
      */
     public <R> R doReturningWork(String sql, Function<ResultSet, R> transformer) {
         Assert.notEmpty(sql, "SQL语句不能为空");
-        return getSession().doReturningWork(connection -> {
+        return DataSourceContext.getSession().doReturningWork(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql);
             boolean isRs = ps.execute();
             return isRs ? transformer.apply(ps.getResultSet()) : null;
@@ -991,34 +1107,12 @@ public class RepositoryContext {
      *
      * @param cb   查询条件
      * @param wrap 是否需要转换成层次Map
+     * @param <T>  实体类型
+     * @param <P>  实体主键类型
+     * @return 查询到的DTO
      */
     public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listMap(CriteriaBuilder<T> cb, boolean wrap) {
         return getRepo(cb.getEnCls()).listMap(cb, wrap);
-    }
-
-    /**
-     * 切换数据源
-     *
-     * @param name 数据源名称
-     */
-    public void switchDataSource(String name) {
-        sqlManager.switchDataSource(name);
-    }
-
-    /**
-     * 切换到默认数据源
-     */
-    public void usePrimaryDataSource() {
-        sqlManager.usePrimaryDataSource();
-    }
-
-    /**
-     * 获取当前数据源名称
-     *
-     * @return 数据源名称
-     */
-    public String getCurrentDataSourceName() {
-        return sqlManager.getCurrentDataSourceName();
     }
 
     private void checkCriteriaBuilder(CriteriaBuilder<?> cb) {

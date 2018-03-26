@@ -16,12 +16,12 @@ public class IpLocator {
     /**
      * db config
      */
-    private DbConfig dbConfig = null;
+    private DbConfig dbConfig;
 
     /**
      * db file access handler
      */
-    private RandomAccessFile raf = null;
+    private RandomAccessFile raf;
 
     /**
      * header blocks buffer
@@ -43,17 +43,11 @@ public class IpLocator {
      */
     private byte[] dbBinStr = null;
 
-    /**
-     * construct class
-     */
     public IpLocator(DbConfig dbConfig, String dbFile) throws FileNotFoundException {
         this.dbConfig = dbConfig;
         raf = new RandomAccessFile(dbFile, "r");
     }
 
-    /**
-     * get the region with a int ip address with memory binary search algorithm
-     */
     public DataBlock memorySearch(long ip) throws IOException {
         int blen = IndexBlock.getIndexBlockLength();
         if (dbBinStr == null) {
@@ -100,17 +94,10 @@ public class IpLocator {
         return new DataBlock(city_id, region, dataPtr);
     }
 
-    /**
-     * get the region throught the ip address with memory binary search algorithm
-     */
     public DataBlock memorySearch(String ip) throws IOException {
         return memorySearch(Util.ip2long(ip));
     }
 
-
-    /**
-     * get by index ptr
-     */
     public DataBlock getByIndexPtr(long ptr) throws IOException {
         raf.seek(ptr);
         byte[] buffer = new byte[12];
@@ -132,9 +119,6 @@ public class IpLocator {
         return new DataBlock(city_id, region, dataPtr);
     }
 
-    /**
-     * get the region with a int ip address with b-tree algorithm
-     */
     public DataBlock btreeSearch(long ip) throws IOException {
         //check and load the header
         if (HeaderSip == null) {
@@ -257,16 +241,10 @@ public class IpLocator {
         return new DataBlock(city_id, region, dataPtr);
     }
 
-    /**
-     * get the region throught the ip address with b-tree search algorithm
-     */
     public DataBlock btreeSearch(String ip) throws IOException {
         return btreeSearch(Util.ip2long(ip));
     }
 
-    /**
-     * get the region with a int ip address with binary search algorithm
-     */
     public DataBlock binarySearch(long ip) throws IOException {
         int blen = IndexBlock.getIndexBlockLength();
         if (totalIndexBlocks == 0) {
@@ -318,9 +296,6 @@ public class IpLocator {
         return new DataBlock(city_id, region, dataPtr);
     }
 
-    /**
-     * get the region throught the ip address with binary search algorithm
-     */
     public DataBlock binarySearch(String ip) throws IOException {
         return binarySearch(Util.ip2long(ip));
     }
@@ -334,9 +309,6 @@ public class IpLocator {
         return dbConfig;
     }
 
-    /**
-     * close the db
-     */
     public void close() throws IOException {
         HeaderSip = null;    //let gc do its work
         HeaderPtr = null;

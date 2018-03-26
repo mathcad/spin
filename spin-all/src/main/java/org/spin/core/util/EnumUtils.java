@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.data.core.UserEnumColumn;
+import org.spin.core.trait.IntEvaluatable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -95,12 +95,33 @@ public abstract class EnumUtils {
      * @param enumName 枚举名称
      * @return 枚举常量
      */
-    public static <E extends Enum<E>> E getEnumByName(Class<E> enumCls, String enumName) {
+    public static <E extends Enum<E>> E fromName(Class<E> enumCls, String enumName) {
         try {
             return Enum.valueOf(enumCls, enumName);
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * 通过序号，获取枚举类型常量
+     *
+     * @param enumCls 枚举类型
+     * @param ordinal 序号
+     * @return 枚举常量
+     */
+    public static <E extends Enum<E>> E fromOrdinal(Class<E> enumCls, int ordinal) {
+        E[] enumConstants = enumCls.getEnumConstants();
+        if (ordinal < 0 || ordinal >= enumConstants.length) {
+            throw new SimplifiedException(
+                String.format(
+                    "Unknown ordinal value [%s] for enum class [%s]",
+                    ordinal,
+                    enumCls.getName()
+                )
+            );
+        }
+        return enumConstants[ordinal];
     }
 
     /**
@@ -181,7 +202,7 @@ public abstract class EnumUtils {
         HashMap<String, List<Map>> enumsMap = new HashMap<>();
         Method getValueMehod = null;
         try {
-            getValueMehod = UserEnumColumn.class.getMethod("getValue");
+            getValueMehod = IntEvaluatable.class.getMethod("getValue");
         } catch (NoSuchMethodException ignore) {
             return null;
         }
@@ -192,7 +213,7 @@ public abstract class EnumUtils {
             } catch (ClassNotFoundException e) {
                 continue;
             }
-            if (cls.isEnum() && UserEnumColumn.class.isAssignableFrom(cls)) {
+            if (cls.isEnum() && IntEvaluatable.class.isAssignableFrom(cls)) {
                 List<Map> valueList = new ArrayList<>();
                 //取value值
                 for (Object o : cls.getEnumConstants()) {

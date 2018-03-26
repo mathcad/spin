@@ -16,16 +16,22 @@ public @interface RestfulMethod {
 
     /**
      * 是否需要认证，默认true
+     *
+     * @return 是否需要认证
      */
     boolean auth() default true;
 
     /**
-     * 名称，默认为方法名
+     * 名称，默认为方法名(资源访问路径)
+     *
+     * @return 资源访问路径
      */
     String value() default "";
 
     /**
      * 权限路径
+     *
+     * @return 权限定义字符串
      */
     String authRouter() default "";
 

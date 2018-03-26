@@ -9,11 +9,11 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.EnumUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.Enumerated;
 import javax.persistence.MapKeyEnumerated;
@@ -23,6 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -56,12 +57,12 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
     @Override
     public boolean equals(Object x, Object y) {
-        return x == y;
+        return Objects.equals(x, y);
     }
 
     @Override
     public int hashCode(Object x) {
-        return x == null ? 0 : x.hashCode();
+        return Objects.hashCode(x);
     }
 
     @Override
@@ -233,25 +234,25 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
     @Override
     public String objectToSQLString(Object value) {
-        return enumValueMapper.objectToSQLString((Enum<?>) value);
+        return enumValueMapper.toSQLString((Enum<?>) value);
     }
 
     @Override
     @Deprecated
     public String toXMLString(Object value) {
-        return enumValueMapper.toXMLString((Enum<?>) value);
+        return enumValueMapper.toSQLString((Enum<?>) value);
     }
 
     @Override
     @Deprecated
     public Object fromXMLString(String xmlValue) {
-        return enumValueMapper.fromXMLString(xmlValue);
+        return enumValueMapper.fromStringValue(xmlValue);
     }
 
     @Override
     public String toLoggableString(Object value, SessionFactoryImplementor factory) {
         if (enumValueMapper != null) {
-            return enumValueMapper.toXMLString((Enum<?>) value);
+            return enumValueMapper.toSQLString((Enum<?>) value);
         }
         return value.toString();
     }
@@ -280,23 +281,62 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
         }
     }
 
-    private interface EnumValueMapper extends Serializable {
+    /**
+     * 枚举-jdbc数据类型转换器
+     */
+    private interface EnumValueMapper {
+        /**
+         * 获取jdbc数据类型
+         *
+         * @return jdbc数据类型
+         */
         int getSqlType();
 
+        /**
+         * 从ResultSet中解析枚举
+         *
+         * @param rs    结果集
+         * @param names 字段名称
+         * @return 解析出的枚举
+         * @throws SQLException 异常时抛出
+         */
         Enum<?> getValue(ResultSet rs, String[] names) throws SQLException;
 
+        /**
+         * 将枚举解析为数据库支持的类型并设置到Statement中
+         *
+         * @param st    语句
+         * @param value 枚举值
+         * @param index 参数在语句中的索引
+         * @throws SQLException 异常时抛出
+         */
         void setValue(PreparedStatement st, Enum<?> value, int index) throws SQLException;
 
-        String objectToSQLString(Enum<?> value);
+        /**
+         * 将枚举转换为字符串
+         *
+         * @param value 枚举值
+         * @return 转换后的字符串
+         */
+        String toSQLString(Enum<?> value);
 
-        String toXMLString(Enum<?> value);
-
-        Enum<?> fromXMLString(String xml);
+        /**
+         * 将字符串转换为枚举
+         *
+         * @param string 字符串
+         * @return 转换后的枚举
+         */
+        Enum<?> fromStringValue(String string);
     }
 
     public abstract class EnumValueMapperSupport implements EnumValueMapper {
-        private static final long serialVersionUID = 1929721731025741707L;
 
+        /**
+         * 将枚举解析成jdbc类型
+         *
+         * @param value 枚举值
+         * @return 解析后的jdbc类型数据
+         */
         protected abstract Object extractJdbcValue(Enum<?> value);
 
         @Override
@@ -320,8 +360,6 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     }
 
     private class ValueEnumValueMapper extends EnumValueMapperSupport {
-        private static final long serialVersionUID = -1329754149883071778L;
-
         @Override
         public int getSqlType() {
             return Types.INTEGER;
@@ -329,7 +367,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
         @Override
         public Enum<?> getValue(ResultSet rs, String[] names) throws SQLException {
-            final int value = rs.getInt(names[0]);
+            final Integer value = rs.getInt(names[0]);
             if (rs.wasNull()) {
                 if (logger.isDebugEnabled()) {
                     logger.debug(String.format("Returning null as column [%s]", names[0]));
@@ -338,24 +376,21 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
             }
             @SuppressWarnings("unchecked")
             Enum<?> enumValue = EnumUtils.getEnum(enumClass, value);
-            logger.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
+            if (logger.isDebugEnabled()) {
+                logger.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
+            }
             return enumValue;
         }
 
         @Override
-        public String objectToSQLString(Enum<?> value) {
-            return toXMLString(value);
-        }
-
-        @Override
-        public String toXMLString(Enum<?> value) {
+        public String toSQLString(Enum<?> value) {
             return ClassUtils.getFieldValue(value, "value").toString();
         }
 
         @Override
-        public Enum<?> fromXMLString(String xml) {
+        public Enum<?> fromStringValue(String string) {
             //noinspection unchecked
-            return EnumUtils.getEnum(enumClass, Integer.parseInt(xml));
+            return EnumUtils.getEnum(enumClass, Integer.parseInt(string));
         }
 
         @Override
@@ -365,7 +400,6 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     }
 
     private class OrdinalEnumValueMapper extends EnumValueMapperSupport {
-        private static final long serialVersionUID = 3425742296198497687L;
         private transient Enum<?>[] enumsByOrdinal;
 
         @Override
@@ -375,7 +409,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
         @Override
         public Enum<?> getValue(ResultSet rs, String[] names) throws SQLException {
-            final int ordinal = rs.getInt(names[0]);
+            final Integer ordinal = rs.getInt(names[0]);
             final boolean traceEnabled = logger.isTraceEnabled();
             if (rs.wasNull()) {
                 if (traceEnabled) {
@@ -417,18 +451,13 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
         }
 
         @Override
-        public String objectToSQLString(Enum<?> value) {
-            return toXMLString(value);
-        }
-
-        @Override
-        public String toXMLString(Enum<?> value) {
+        public String toSQLString(Enum<?> value) {
             return Integer.toString(value.ordinal());
         }
 
         @Override
-        public Enum<?> fromXMLString(String xml) {
-            return fromOrdinal(Integer.parseInt(xml));
+        public Enum<?> fromStringValue(String string) {
+            return fromOrdinal(Integer.parseInt(string));
         }
 
         @Override

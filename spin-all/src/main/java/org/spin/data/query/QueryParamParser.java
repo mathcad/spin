@@ -44,6 +44,11 @@ public class QueryParamParser {
 
     /**
      * 将通用查询参数转换为DetachedCriteria
+     *
+     * @param p        查询参数
+     * @param handlers 自定义条件处理器
+     * @return 离线查询构造器
+     * @throws ClassNotFoundException 查询的实体不存在时抛出
      */
     public CriteriaBuilder parseCriteria(QueryParam p, QueryParamHandler... handlers) throws ClassNotFoundException {
         // 解析查询实体类型
@@ -113,6 +118,9 @@ public class QueryParamParser {
     /**
      * 处理排序字段
      * order desc,id desc
+     *
+     * @param p 查询参数
+     * @return 排序字段
      */
     public List<Order> parseOrders(QueryParam p) {
         List<Order> orders = new ArrayList<>();

@@ -3,8 +3,8 @@ package org.spin.enhance.gson.adapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import org.spin.core.trait.IntEvaluatable;
 import org.spin.core.util.EnumUtils;
-import org.spin.data.core.UserEnumColumn;
 import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
@@ -25,7 +25,7 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
             Integer iv = Integer.valueOf(v);
             return EnumUtils.getEnum(t, iv);
         } catch (Exception e) {
-            return EnumUtils.getEnumByName(t, v);
+            return EnumUtils.fromName(t, v);
         }
     }
 
@@ -34,13 +34,13 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
         if (null == value) {
             out.nullValue();
         } else {
-            out.value(((UserEnumColumn) value).getValue());
+            out.value(((IntEvaluatable) value).getValue());
         }
     }
 
     @Override
     public boolean isMatch(TypeToken<?> type) {
-        boolean matchIntf = UserEnumColumn.class.isAssignableFrom(type.getRawType());
+        boolean matchIntf = IntEvaluatable.class.isAssignableFrom(type.getRawType());
         return Enum.class.isAssignableFrom(type.getRawType()) && matchIntf;
     }
 }

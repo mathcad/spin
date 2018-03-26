@@ -754,6 +754,46 @@ public abstract class Assert {
      * @throws AssertFailException if the value falls outside the boundaries (inclusive)
      * @since 3.3
      */
+    public static int inclusiveBetween(final int start, final int end, final int value) {
+        if (value < start || value > end) {
+            throw new AssertFailException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+        }
+        return value;
+    }
+
+    /**
+     * Assert that the specified primitive value falls between the two
+     * inclusive values specified; otherwise, throws an exception with the
+     * specified message.
+     * <p>
+     * <pre>Assert.inclusiveBetween(0, 2, 1, "Not in range");</pre>
+     *
+     * @param start   the inclusive start value
+     * @param end     the inclusive end value
+     * @param value   the value to validate
+     * @param message the exception message if invalid, not null
+     * @throws AssertFailException if the value falls outside the boundaries
+     * @since 3.3
+     */
+    public static int inclusiveBetween(final int start, final int end, final int value, final String message) {
+        if (value < start || value > end) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    /**
+     * Assert that the specified primitive value falls between the two
+     * inclusive values specified; otherwise, throws an exception.
+     * <p>
+     * <pre>Assert.inclusiveBetween(0, 2, 1);</pre>
+     *
+     * @param start the inclusive start value
+     * @param end   the inclusive end value
+     * @param value the value to validate
+     * @throws AssertFailException if the value falls outside the boundaries (inclusive)
+     * @since 3.3
+     */
     public static long inclusiveBetween(final long start, final long end, final long value) {
         if (value < start || value > end) {
             throw new AssertFailException(String.format(DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
@@ -864,6 +904,46 @@ public abstract class Assert {
     public static <T extends Comparable<T>> T exclusiveBetween(final T start, final T end, final T value, final String message, final Object... values) {
         if (value.compareTo(start) <= 0 || value.compareTo(end) >= 0) {
             throw new AssertFailException(String.format(message, values));
+        }
+        return value;
+    }
+
+    /**
+     * Assert that the specified primitive value falls between the two
+     * exclusive values specified; otherwise, throws an exception.
+     * <p>
+     * <pre>Assert.exclusiveBetween(0, 2, 1);</pre>
+     *
+     * @param start the exclusive start value
+     * @param end   the exclusive end value
+     * @param value the value to validate
+     * @throws AssertFailException if the value falls out of the boundaries
+     * @since 3.3
+     */
+    public static int exclusiveBetween(final int start, final int end, final int value) {
+        if (value <= start || value >= end) {
+            throw new AssertFailException(String.format(DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE, value, start, end));
+        }
+        return value;
+    }
+
+    /**
+     * Assert that the specified primitive value falls between the two
+     * exclusive values specified; otherwise, throws an exception with the
+     * specified message.
+     * <p>
+     * <pre>Assert.exclusiveBetween(0, 2, 1, "Not in range");</pre>
+     *
+     * @param start   the exclusive start value
+     * @param end     the exclusive end value
+     * @param value   the value to validate
+     * @param message the exception message if invalid, not null
+     * @throws AssertFailException if the value falls outside the boundaries
+     * @since 3.3
+     */
+    public static int exclusiveBetween(final int start, final int end, final int value, final String message) {
+        if (value <= start || value >= end) {
+            throw new AssertFailException(message);
         }
         return value;
     }

@@ -15,9 +15,6 @@ public class DbConfig {
      */
     private int indexBlockSize;
 
-    /**
-     * construct method
-     */
     public DbConfig(int totalHeaderSize) throws DbMakerConfigException {
         if ((totalHeaderSize % 8) != 0) {
             throw new DbMakerConfigException("totalHeaderSize must be times of 8");

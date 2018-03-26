@@ -15,14 +15,8 @@ import java.io.Serializable;
  */
 public interface IEntity<PK extends Serializable> extends Serializable {
 
-    /**
-     * 获取主键
-     */
     PK getId();
 
-    /**
-     * 设置主键
-     */
     void setId(PK id);
 
     @SuppressWarnings("unchecked")

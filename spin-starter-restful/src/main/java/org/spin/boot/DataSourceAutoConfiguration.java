@@ -4,11 +4,12 @@ import org.hibernate.SessionFactory;
 import org.spin.boot.properties.SpinDataProperties;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.data.core.ARepository;
+import org.spin.data.core.DataSourceContext;
 import org.spin.data.extend.DataSourceConfig;
 import org.spin.data.extend.RepositoryContext;
 import org.spin.data.query.QueryParamParser;
 import org.spin.data.sql.SQLManager;
+import org.spin.web.filter.OpenSessionInViewFilter;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
@@ -21,7 +22,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
-import org.springframework.orm.hibernate5.support.OpenSessionInViewFilter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -54,7 +54,7 @@ public class DataSourceAutoConfiguration {
     public DataSource dataSource() {
         DataSource ds = BeanUtils.instantiateClass(dsConfig.getDataSourceClassName());
         BeanUtils.applyProperties(ds, dsConfig.toProperties());
-        SQLManager.registDataSource(getDsName(), ds);
+        DataSourceContext.registDataSource(getDsName(), ds);
         return ds;
     }
 
@@ -98,7 +98,7 @@ public class DataSourceAutoConfiguration {
     @Bean(name = "transactionManager")
     @ConditionalOnBean(SessionFactory.class)
     public PlatformTransactionManager getTransactionManager(SessionFactory sessionFactory) {
-        ARepository.registSessionFactory(getDsName(), sessionFactory);
+        DataSourceContext.registSessionFactory(getDsName(), sessionFactory);
         return new HibernateTransactionManager(sessionFactory);
     }
 
