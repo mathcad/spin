@@ -433,12 +433,12 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     /**
      * 构造Hibernate离线查询条件
      *
-     * @param processProjection 是否解析投影字段
+     * @param useProjection 是否解析投影字段
      * @return {@link DetachedCriteria}
      */
-    public DetachedCriteria buildDeCriteria(boolean processProjection) {
-        if (processProjection && !projected)
-            processProjection();
+    public DetachedCriteria buildDeCriteria(boolean useProjection) {
+        if (!projected)
+            processProjection(useProjection);
         return deCriteria;
     }
 
@@ -535,12 +535,14 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     /**
      * 处理字段投影，设置2层甚至更多层关联的关联关系
      */
-    private void processProjection() {
+    private void processProjection(boolean useProjection) {
         processCondJoin();
-        if (CollectionUtils.isEmpty(fields) || fields.contains(ALL_COLUMNS)) {
-            fields.addAll(EntityUtils.parseEntityColumns(enCls));
+        if (useProjection) {
+            if (CollectionUtils.isEmpty(fields) || fields.contains(ALL_COLUMNS)) {
+                fields.addAll(EntityUtils.parseEntityColumns(enCls));
+            }
+            fields.remove(ALL_COLUMNS);
         }
-        fields.remove(ALL_COLUMNS);
 
         // 该实体的所有n->1关联属性
         Map<String, Field> entityJoinFields = EntityUtils.getJoinFields(enCls);
@@ -593,7 +595,9 @@ public class CriteriaBuilder<T extends IEntity<?>> {
             String fetchF = referField + "." + pkf;
             projectionList.add(Property.forName(fetchF), fetchF);
         }
-        deCriteria.setProjection(projectionList);
+        if (useProjection) {
+            deCriteria.setProjection(projectionList);
+        }
         projected = true;
     }
 }

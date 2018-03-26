@@ -25,7 +25,6 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -478,13 +477,8 @@ public abstract class EntityUtils {
      * @return 是否映射
      */
     private static boolean isDbColumn(Field field) {
-        Annotation[] annotations = field.getAnnotations();
-        for (Annotation annotation : annotations) {
-            if (annotation instanceof Transient) {
-                return false;
-            }
-        }
-        return true;
+        // 非静态，final，且没有通过Transient注解排除的普通成员变量
+        return (0x18 & field.getModifiers()) == 0 && null == field.getAnnotation(Transient.class);
     }
 
     public static class PropertyDescriptorWrapper {
