@@ -1,4 +1,4 @@
-package org.spin.data.core;
+package org.spin.data.rs;
 
 
 import java.sql.ResultSet;

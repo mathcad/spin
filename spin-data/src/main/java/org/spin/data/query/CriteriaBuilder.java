@@ -534,6 +534,8 @@ public class CriteriaBuilder<T extends IEntity<?>> {
 
     /**
      * 处理字段投影，设置2层甚至更多层关联的关联关系
+     *
+     * @param useProjection 是否使用投影
      */
     private void processProjection(boolean useProjection) {
         processCondJoin();

@@ -2,6 +2,7 @@ package com.shipping.service
 
 import com.shipping.domain.sys.User
 import mu.KLogging
+import org.spin.data.core.DataSourceContext
 import org.spin.data.extend.RepositoryContext
 import org.spin.web.annotation.RestfulMethod
 import org.spin.web.annotation.RestfulService
@@ -41,14 +42,14 @@ class TestService {
             mobile = "13111111111"
             email = "none@qq.com"
         }
-        println(repoCtx.currentDataSourceName)
+        println(DataSourceContext.getCurrentDataSourceName())
         repoCtx.save(user)
-        repoCtx.switchDataSource("db2")
-        println(repoCtx.currentDataSourceName)
+        DataSourceContext.switchDataSource("db2")
+        println(DataSourceContext.getCurrentDataSourceName())
         user = user.getDTO(1)
         user.id = null
         repoCtx.save(user)
-        repoCtx.switchDataSource("db1")
+        DataSourceContext.usePrimaryDataSource()
         //        throw new SimplifiedException("aa");
     }
 
@@ -62,7 +63,7 @@ class TestService {
             mobile = "13111111111"
             email = "none@qq.com"
         }
-        println(repoCtx.currentDataSourceName)
+        println(DataSourceContext.getCurrentDataSourceName())
         repoCtx.save(user)
         //        throw new SimplifiedException("aa");
     }

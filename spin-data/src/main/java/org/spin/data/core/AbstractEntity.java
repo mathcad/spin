@@ -22,7 +22,6 @@ import java.util.Objects;
  */
 @MappedSuperclass
 public abstract class AbstractEntity implements IEntity<Long>, Serializable {
-    @Transient
     private static final long serialVersionUID = -6820468799272316789L;
 
     /**
