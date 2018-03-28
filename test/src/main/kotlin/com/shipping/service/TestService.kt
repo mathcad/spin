@@ -55,6 +55,28 @@ class TestService {
 
     @Transactional
     @RestfulMethod(auth = false, value = "c")
+    fun testTransaction2() {
+        var user = User().apply {
+            realName = "二傻子"
+            userName = "admin"
+            password = "123"
+            mobile = "13111111111"
+            email = "none@qq.com"
+        }
+        println(DataSourceContext.getCurrentDataSourceName())
+        print(DataSourceContext.getCurrentSchema())
+        repoCtx.save(user)
+        DataSourceContext.switchSchema("db2")
+        print(DataSourceContext.getCurrentSchema())
+        user = user.getDTO(1)
+        user.id = null
+        repoCtx.save(user)
+        DataSourceContext.restoreSchema()
+        //        throw new SimplifiedException("aa");
+    }
+
+    @Transactional
+    @RestfulMethod(auth = false, value = "d")
     fun testSTransaction() {
         val user = User().apply {
             realName = "二傻子"
