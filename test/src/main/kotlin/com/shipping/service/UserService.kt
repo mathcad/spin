@@ -149,15 +149,14 @@ class UserService : Authenticator<User> {
             throw SimplifiedException(ErrorCode.SECRET_INVALID)
         }
 
-        val user = repoCtx.get(User::class.java, info.identifier.toLong())
-        if (null != user) {
+        repoCtx.get(User::class.java, info.identifier.toLong())?.let {
             val loginInfo: LoginInfo
-            if (StringUtils.isNotEmpty(user.password)) {
-                loginInfo = checkUser(info.identifier, info.secret, user, true)
+            if (StringUtils.isNotEmpty(it.password)) {
+                loginInfo = checkUser(info.identifier, info.secret, it, true)
                 SessionManager.extendSession(DigestUtils.md5Hex(key), DigestUtils.md5Hex(loginInfo.getKeyInfo()["key"].toString()))
                 return loginInfo
-            } else if (StringUtils.isNotEmpty(user.openId)) {
-                loginInfo = checkUser(info.identifier, info.secret, user, false)
+            } else if (StringUtils.isNotEmpty(it.openId)) {
+                loginInfo = checkUser(info.identifier, info.secret, it, false)
                 SessionManager.extendSession(DigestUtils.md5Hex(key), DigestUtils.md5Hex(loginInfo.getKeyInfo()["key"].toString()))
                 return loginInfo
             }

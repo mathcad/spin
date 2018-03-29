@@ -78,6 +78,6 @@ class Organization(
     var remark: String? = null
 ) : AbstractEntity() {
     companion object {
-        private val serialVersionUID = 8610089447094514827L
+        private const val serialVersionUID = 8610089447094514827L
     }
 }

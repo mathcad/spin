@@ -34,6 +34,6 @@ class Role(
     var permissions: MutableList<Permission> = ArrayList()
 ) : AbstractEntity() {
     companion object {
-        private val serialVersionUID = 8934787783435264166L
+        private const val serialVersionUID = 8934787783435264166L
     }
 }

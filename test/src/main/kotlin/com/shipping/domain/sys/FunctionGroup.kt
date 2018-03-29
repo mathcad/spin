@@ -44,6 +44,6 @@ class FunctionGroup(
 
 ) : AbstractEntity() {
     companion object {
-        private val serialVersionUID = -5089878281368192910L
+        private const val serialVersionUID = -5089878281368192910L
     }
 }

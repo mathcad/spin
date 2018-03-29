@@ -37,6 +37,6 @@ class Region(
     var path: String = ""
 ) : AbstractEntity() {
     companion object {
-        private val serialVersionUID = -4148357794686831875L
+        private const val serialVersionUID = -4148357794686831875L
     }
 }

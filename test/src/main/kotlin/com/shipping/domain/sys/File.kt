@@ -65,6 +65,6 @@ class File(
     var isPriv: Boolean = false
 ) : AbstractEntity() {
     companion object {
-        private val serialVersionUID = 5524987141178520509L
+        private const val serialVersionUID = 5524987141178520509L
     }
 }

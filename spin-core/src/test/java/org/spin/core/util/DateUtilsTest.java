@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class DateUtilsTest {
     @Test
-    public void parseDate() throws Exception {
+    public void parseDate() {
         String date = "星期二 十月 13 22:23:54 CST 2016";
 //        String patten = "(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2]\\d|3[0-1])(.+)([0-1]\\d|2[0-3]):([0-5]\\d):([0-5]\\d)";
 //        Pattern p = Pattern.compile(patten);
@@ -62,14 +62,6 @@ public class DateUtilsTest {
     public void toDate() {
         System.out.println(DateUtils.toDate("2017-5-23"));
         System.out.println(DateUtils.toLocalDateTime("2017年05-23"));
-    }
-
-    @Test
-    public void testJson() {
-        String a = "{date: '2016-08-31'}";
-        String b = "2016-08-31";
-        System.out.println(JsonUtils.fromJson(a, A.class).date);
-        System.out.println(JsonUtils.fromJson(b, LocalDate.class).toString());
     }
 
     @Test

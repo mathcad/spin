@@ -87,6 +87,7 @@ dependencies {
 //        transitive = true
     }
     compile group: 'javax.transaction', name: 'javax.transaction-api', version: '1.2'
+
     compileOnly group: 'org.freemarker', name: 'freemarker', version: '2.3.27-incubating'
     compileOnly group: 'com.ibeetl', name: 'beetl', version: '2.7.27'
 }

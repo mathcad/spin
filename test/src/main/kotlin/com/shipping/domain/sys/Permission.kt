@@ -27,6 +27,6 @@ class Permission(
 
 ) : AbstractEntity() {
     companion object {
-        private val serialVersionUID = -724121483134748879L
+        private const val serialVersionUID = -724121483134748879L
     }
 }

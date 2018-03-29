@@ -72,6 +72,6 @@ class User(
     var permissions: MutableList<Permission> = ArrayList()
 ) : AbstractUser() {
     companion object {
-        private val serialVersionUID = -7875157725232505055L
+        private const val serialVersionUID = -7875157725232505055L
     }
 }

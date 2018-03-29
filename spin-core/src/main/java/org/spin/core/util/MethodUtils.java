@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Method工具类
@@ -675,8 +676,7 @@ public abstract class MethodUtils {
                 return method;
             }
 
-            method = getAccessibleMethod
-                (clazz, clazz.getMethod(methodName, parameterTypes));
+            method = getAccessibleMethod(clazz, clazz.getMethod(methodName, parameterTypes));
             cacheMethod(md, method);
             return method;
         } catch (final NoSuchMethodException e) {
@@ -748,17 +748,12 @@ public abstract class MethodUtils {
         final Class<?>[] parameterTypes = method.getParameterTypes();
 
         // Check the implemented interfaces and subinterfaces
-        method =
-            getAccessibleMethodFromInterfaceNest(clazz,
-                methodName,
-                parameterTypes);
+//        method = getAccessibleMethodFromInterfaceNest(clazz, methodName, parameterTypes);
 
         // Check the superclass chain
-        if (method == null) {
-            method = getAccessibleMethodFromSuperclass(clazz,
-                methodName,
-                parameterTypes);
-        }
+//        if (method == null) {
+//            method = getAccessibleMethodFromSuperclass(clazz, methodName, parameterTypes);
+//        }
 
         return (method);
     }
@@ -1249,6 +1244,7 @@ public abstract class MethodUtils {
      * @return 参数名称数组
      */
     public static String[] getMethodParamNames(final Method m) {
+        boolean isNotStatic = !Modifier.isStatic(m.getModifiers());
         final String[] paramNames = new String[m.getParameterTypes().length];
         final String clsName = m.getDeclaringClass().getName().replace('.', '/') + ".class";
         ClassReader cr = null;
@@ -1268,18 +1264,19 @@ public abstract class MethodUtils {
                         return null;
                     }
                     MethodVisitor v = super.visitMethod(access, name, desc, signature, exceptions);
+                    AtomicInteger idx = new AtomicInteger(0);
                     return new MethodVisitor(Opcodes.ASM6, v) {
                         @Override
                         public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-                            int i = index - 1;
+                            int i = idx.get();
                             // 如果是静态方法，则第一就是参数
                             // 如果不是静态方法，则第一个是"this"，然后才是方法的参数
-                            if (Modifier.isStatic(m.getModifiers())) {
-                                i = index;
-                            }
-                            if (i >= 0 && i < paramNames.length) {
+                            if (isNotStatic && 0 == index) {
+                                return;
+                            } else if (i < paramNames.length) {
                                 paramNames[i] = name;
                             }
+                            idx.incrementAndGet();
                         }
 
                     };
