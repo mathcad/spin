@@ -24,9 +24,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Method工具类
@@ -1244,6 +1244,9 @@ public abstract class MethodUtils {
      * @return 参数名称数组
      */
     public static String[] getMethodParamNames(final Method m) {
+        if (0 == m.getParameterCount()) {
+            return new String[0];
+        }
         boolean isNotStatic = !Modifier.isStatic(m.getModifiers());
         final String[] paramNames = new String[m.getParameterTypes().length];
         final String clsName = m.getDeclaringClass().getName().replace('.', '/') + ".class";
@@ -1264,19 +1267,23 @@ public abstract class MethodUtils {
                         return null;
                     }
                     MethodVisitor v = super.visitMethod(access, name, desc, signature, exceptions);
-                    AtomicInteger idx = new AtomicInteger(0);
+                    Map<Integer, Integer> paramMapping = new HashMap<>(m.getParameterCount());
+                    Class<?>[] parameterTypes = m.getParameterTypes();
+                    int mapping = isNotStatic ? 1 : 0;
+                    paramMapping.put(mapping, 0);
+                    for (int i = 1, parameterTypesLength = parameterTypes.length; i < parameterTypesLength; ++i) {
+                        Class<?> aClass = parameterTypes[i - 1];
+                        if (long.class.isAssignableFrom(aClass) || double.class.isAssignableFrom(aClass)) {
+                            ++mapping;
+                        }
+                        paramMapping.put(++mapping, i);
+                    }
                     return new MethodVisitor(Opcodes.ASM6, v) {
                         @Override
                         public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-                            int i = idx.get();
-                            // 如果是静态方法，则第一就是参数
-                            // 如果不是静态方法，则第一个是"this"，然后才是方法的参数
-                            if (isNotStatic && 0 == index) {
-                                return;
-                            } else if (i < paramNames.length) {
-                                paramNames[i] = name;
+                            if (paramMapping.containsKey(index)) {
+                                paramNames[paramMapping.get(index)] = name;
                             }
-                            idx.incrementAndGet();
                         }
 
                     };
