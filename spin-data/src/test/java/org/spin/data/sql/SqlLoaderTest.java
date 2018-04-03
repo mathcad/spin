@@ -39,9 +39,9 @@ public class SqlLoaderTest {
         SQLLoader loader = new FileSystemXmlLoader();
 //        SQLLoader loader = new FileSystemMdLoader();
         loader.setTemplateResolver(new FreemarkerResolver());
-//        String template = loader.getSQL("product.findProductTarget", param).getTemplate();
-//        template = loader.getSQL("product.findProductTarget", param).getTemplate();
-//        template = loader.getSQL("product.test2", param).getTemplate();
+//        String template = loader.getSQL("product.findProductTarget", param).getSql();
+//        template = loader.getSQL("product.findProductTarget", param).getSql();
+//        template = loader.getSQL("product.test2", param).getSql();
 //        System.out.println(template);
         assertTrue(true);
     }

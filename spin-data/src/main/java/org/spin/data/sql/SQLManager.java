@@ -167,7 +167,7 @@ public class SQLManager {
      * @return 查询结果
      */
     public List<Map<String, Object>> listAsMap(String sqlId, Map<String, ?> paramMap) {
-        String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getTemplate();
+        String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getSql();
         if (logger.isDebugEnabled())
             logger.debug(String.format(SQL_LOG, sqlId, sqlTxt));
         try {
@@ -187,19 +187,19 @@ public class SQLManager {
      * @return 查询结果
      */
     public Page<Map<String, Object>> listAsPageMap(String sqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
-        SQLSource sql = getCurrentSqlLoader().getSQL(sqlId, paramMap);
-        SQLSource pageSql = getCurrentSqlLoader().getPagedSQL(sqlId, paramMap, pageRequest);
+        SqlSource sql = getCurrentSqlLoader().getSQL(sqlId, paramMap);
+        SqlSource pageSql = getCurrentSqlLoader().getPagedSQL(sqlId, paramMap, pageRequest);
         List<Map<String, Object>> list;
         if (logger.isDebugEnabled())
-            logger.debug(String.format(SQL_LOG, sqlId, sql.getTemplate()));
+            logger.debug(String.format(SQL_LOG, sqlId, sql.getSql()));
         try {
-            list = getCurrentNamedJt().queryForList(pageSql.getTemplate(), paramMap);
+            list = getCurrentNamedJt().queryForList(pageSql.getSql(), paramMap);
         } catch (Exception ex) {
-            logger.error(String.format(SQL_LOG, sqlId, pageSql.getTemplate()));
+            logger.error(String.format(SQL_LOG, sqlId, pageSql.getSql()));
             throw new SimplifiedException(QUERY_ERROR, ex);
         }
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = String.format(COUNT_SQL, sql.getTemplate());
+        String totalSqlTxt = String.format(COUNT_SQL, sql.getSql());
         Long total = getCurrentNamedJt().queryForObject(totalSqlTxt, paramMap, Long.class);
         return new Page<>(list, total, pageRequest.getPageSize());
     }
@@ -259,15 +259,15 @@ public class SQLManager {
      * @return 查询结果
      */
     public <T> Page<T> listAsPage(String sqlId, Class<T> entityClazz, Map<String, ?> paramMap, PageRequest pageRequest) {
-        SQLSource sql = getCurrentSqlLoader().getSQL(sqlId, paramMap);
-        SQLSource pageSql = getCurrentSqlLoader().getPagedSQL(sqlId, paramMap, pageRequest);
+        SqlSource sql = getCurrentSqlLoader().getSQL(sqlId, paramMap);
+        SqlSource pageSql = getCurrentSqlLoader().getPagedSQL(sqlId, paramMap, pageRequest);
         List<Map<String, Object>> list;
         if (logger.isDebugEnabled())
-            logger.debug(String.format(SQL_LOG, sqlId, sql.getTemplate()));
+            logger.debug(String.format(SQL_LOG, sqlId, sql.getSql()));
         try {
-            list = getCurrentNamedJt().queryForList(pageSql.getTemplate(), paramMap);
+            list = getCurrentNamedJt().queryForList(pageSql.getSql(), paramMap);
         } catch (Exception ex) {
-            logger.error(String.format(SQL_LOG, sqlId, pageSql.getTemplate()));
+            logger.error(String.format(SQL_LOG, sqlId, pageSql.getSql()));
             throw new SimplifiedException(QUERY_ERROR, ex);
         }
         List<T> res = new ArrayList<>();
@@ -279,7 +279,7 @@ public class SQLManager {
             }
         }
         // 增加总数统计 去除排序语句
-        String totalSqlTxt = String.format(COUNT_SQL, sql.getTemplate());
+        String totalSqlTxt = String.format(COUNT_SQL, sql.getSql());
         Long total = getCurrentNamedJt().queryForObject(totalSqlTxt, paramMap, Long.class);
         return new Page<>(res, total, pageRequest.getPageSize());
     }
@@ -291,7 +291,7 @@ public class SQLManager {
      * @param paramMap 参数
      * @return sqlmap中的语句
      */
-    public SQLSource getSQL(String sqlId, Map<String, ?> paramMap) {
+    public SqlSource getSQL(String sqlId, Map<String, ?> paramMap) {
         return getCurrentSqlLoader().getSQL(sqlId, paramMap);
     }
 
@@ -303,7 +303,7 @@ public class SQLManager {
      * @return 记录总数
      */
     public Long count(String sqlId, Map<String, ?> paramMap) {
-        String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getTemplate();
+        String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getSql();
         sqlTxt = String.format(COUNT_SQL, sqlTxt);
         if (logger.isDebugEnabled())
             logger.debug(String.format(SQL_LOG, sqlId, sqlTxt));
@@ -318,7 +318,7 @@ public class SQLManager {
      * @return 影响条目
      */
     public int executeCUD(String sqlId, Map<String, ?> paramMap) {
-        String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getTemplate();
+        String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, paramMap).getSql();
         if (logger.isDebugEnabled())
             logger.debug(String.format(SQL_LOG, sqlId, sqlTxt));
         return getCurrentNamedJt().update(sqlTxt, paramMap);
@@ -332,7 +332,7 @@ public class SQLManager {
      */
     @SuppressWarnings({"unchecked"})
     public void batchExec(String sqlId, List<Map<String, ?>> argsMap) {
-        String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, null).getTemplate();
+        String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, null).getSql();
         if (logger.isDebugEnabled())
             logger.debug(String.format(SQL_LOG, sqlId, sqlTxt));
         getCurrentNamedJt().batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));

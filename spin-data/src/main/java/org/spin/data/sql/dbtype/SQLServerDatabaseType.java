@@ -4,7 +4,7 @@ import org.spin.core.Assert;
 import org.spin.core.util.StringUtils;
 import org.spin.data.core.DatabaseType;
 import org.spin.data.core.PageRequest;
-import org.spin.data.sql.SQLSource;
+import org.spin.data.sql.SqlSource;
 
 /**
  * <p>Created by xuweinan on 2016/9/12.</p>
@@ -19,12 +19,10 @@ public class SQLServerDatabaseType implements DatabaseType {
     }
 
     @Override
-    public SQLSource getPagedSQL(SQLSource sqlSource, PageRequest pageRequest) {
+    public SqlSource getPagedSQL(SqlSource sqlSource, PageRequest pageRequest) {
         // TODO: 未完成
         Assert.notNull(pageRequest, "Page request must be a NON-NULL value");
-        SQLSource ss = new SQLSource();
-        ss.setId(sqlSource.getId());
-        String orderedSql = sqlSource.getTemplate();
+        String orderedSql = sqlSource.getSql();
         String order = pageRequest.parseOrder("I_");
 //        String tmp = "SELECT D.* FROM (SELECT TOP 60 row_number() OVER ({order}) rwn, I.* FROM (sql) I) D WHERE D.rwn > {}";
         if (StringUtils.isNotEmpty(order)) {
@@ -38,7 +36,6 @@ public class SQLServerDatabaseType implements DatabaseType {
         pagedSql = "SELECT * FROM (SELECT O.*, ROWNUM RN FROM (" + orderedSql + ") O WHERE ROWNUM > "
             + pageRequest.getOffset() + ") WHERE RN <= "
             + (pageRequest.getOffset() + pageRequest.getPageSize());
-        ss.setTemplate(pagedSql);
-        return ss;
+        return new SqlSource(sqlSource.getId(), pagedSql);
     }
 }

@@ -1,6 +1,6 @@
 package org.spin.data.core;
 
-import org.spin.data.sql.SQLSource;
+import org.spin.data.sql.SqlSource;
 
 /**
  * 描述不同数据库之间的差异，如分页等
@@ -24,5 +24,5 @@ public interface DatabaseType {
      * @param pageRequest 分页参数
      * @return 包含分页信息的sql
      */
-    SQLSource getPagedSQL(SQLSource sqlSource, PageRequest pageRequest);
+    SqlSource getPagedSQL(SqlSource sqlSource, PageRequest pageRequest);
 }

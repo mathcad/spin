@@ -1,6 +1,6 @@
 package org.spin.data.core;
 
-import org.spin.data.sql.SQLSource;
+import org.spin.data.sql.SqlSource;
 import org.spin.data.sql.resolver.TemplateResolver;
 
 import java.util.Map;
@@ -25,7 +25,7 @@ public interface SQLLoader {
      * @param model 参数
      * @return 参数化的sql
      */
-    SQLSource getSQL(String id, Map<String, ?> model);
+    SqlSource getSQL(String id, Map<String, ?> model);
 
     /**
      * 加载分页的参数化SQL语句
@@ -35,7 +35,7 @@ public interface SQLLoader {
      * @param pageRequest 分页参数
      * @return 参数化的sql
      */
-    SQLSource getPagedSQL(String id, Map<String, ?> model, PageRequest pageRequest);
+    SqlSource getPagedSQL(String id, Map<String, ?> model, PageRequest pageRequest);
 
     /**
      * 加载SQL模板
