@@ -104,7 +104,7 @@ public class ParameterizedSql {
         int escapes = 0;
         int i = 0;
         while (i < statement.length) {
-            int skipToPosition = i, s = i;
+            int skipToPosition, s = i;
             while (i < statement.length) {
                 skipToPosition = skipCommentsAndQuotes(statement, i);
                 if (i == skipToPosition) {
@@ -128,7 +128,7 @@ public class ParameterizedSql {
                 String parameter = null;
                 if (j < statement.length && c == ':' && statement[j] == '{') {
                     // :{x} style parameter
-                    while (j < statement.length && !('}' == statement[j])) {
+                    while (j < statement.length && '}' != statement[j]) {
                         j++;
                         if (':' == statement[j] || '{' == statement[j]) {
                             throw new SimplifiedException("Parameter name contains invalid character '" +
@@ -144,6 +144,7 @@ public class ParameterizedSql {
                         parameters.add(new SqlParameter(parameter, i - escapes, j + 1 - escapes));
                         ++namedParameterCount;
                         ++totalParameterCount;
+                        actualSql.append("? ");
                     }
                     j++;
                 } else {
@@ -155,6 +156,7 @@ public class ParameterizedSql {
                         ++namedParameterCount;
                         ++totalParameterCount;
                         parameters.add(new SqlParameter(parameter, i - escapes, j + 1 - escapes));
+                        actualSql.append("? ");
                     }
                 }
                 i = j - 1;
@@ -197,7 +199,7 @@ public class ParameterizedSql {
                                 // last comment not closed properly
                                 return statement.length;
                             }
-                            if (!(statement[m + n] == STOP_SKIP[i][n])) {
+                            if (statement[m + n] != STOP_SKIP[i][n]) {
                                 endMatch = false;
                                 break;
                             }
