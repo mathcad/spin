@@ -1,7 +1,7 @@
 package org.spin.data.sql.param;
 
 import org.spin.core.Assert;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SQLException;
 import org.spin.data.sql.SqlSource;
 
 import java.util.LinkedList;
@@ -11,30 +11,13 @@ import java.util.List;
  * 参数化SQL
  */
 public class ParameterizedSql {
-    /**
-     * Set of characters that qualify as comment or quotes starting characters.
-     */
     private static final char[][] START_SKIP = new char[][]{{'\''}, {'"'}, {'-', '-'}, {'/', '*'}};
-
-    /**
-     * Set of characters that at are the corresponding comment or quotes ending characters.
-     */
     private static final char[][] STOP_SKIP = new char[][]{{'\''}, {'"'}, {'\n'}, {'*', '/'}};
-
-    /**
-     * Set of characters that qualify as parameter separators,
-     * indicating that a parameter name in a SQL String has ended.
-     */
-    private static final String PARAMETER_SEPARATORS = "\"':&,;()|=+-*%/\\<>^";
-
-    /**
-     * An index with separator flags per character code.
-     * Technically only needed between 34 and 124 at this point.
-     */
+    private static final char[] PARAMETER_SEPARATORS = {'"', '\'', ':', '&', ',', ';', '(', ')', '|', '=', '+', '-', '*', '%', '/', '\\', '<', '>', '^'};
     private static final boolean[] separatorIndex = new boolean[128];
 
     static {
-        for (char c : PARAMETER_SEPARATORS.toCharArray()) {
+        for (char c : PARAMETER_SEPARATORS) {
             separatorIndex[c] = true;
         }
     }
@@ -43,7 +26,7 @@ public class ParameterizedSql {
 
     private SqlSource actualSql;
 
-    private List<SqlParameter> parameters = new LinkedList<>();
+    private List<SqlParameter> namedParameters = new LinkedList<>();
 
     private int namedParameterCount;
 
@@ -52,7 +35,7 @@ public class ParameterizedSql {
     private int totalParameterCount;
 
 
-    ParameterizedSql(SqlSource originalSql) {
+    public ParameterizedSql(SqlSource originalSql) {
         this.originalSql = originalSql;
         parseSqlStatement();
     }
@@ -69,8 +52,8 @@ public class ParameterizedSql {
         return actualSql;
     }
 
-    public List<SqlParameter> getParameters() {
-        return parameters;
+    public List<SqlParameter> getNamedParameters() {
+        return namedParameters;
     }
 
     public int getNamedParameterCount() {
@@ -101,7 +84,7 @@ public class ParameterizedSql {
 
         char[] statement = sqlToUse.toCharArray();
 
-        int escapes = 0;
+        // 当前位置
         int i = 0;
         while (i < statement.length) {
             int skipToPosition, s = i;
@@ -118,36 +101,38 @@ public class ParameterizedSql {
                 break;
             }
             char c = statement[i];
+            // :或&开头，命名参数
             if (c == ':' || c == '&') {
+                // 参数名称起始
                 int j = i + 1;
                 if (j < statement.length && statement[j] == ':' && c == ':') {
                     // Postgres-style "::" casting operator should be skipped
                     i = i + 2;
+                    actualSql.append("::");
                     continue;
                 }
                 String parameter = null;
                 if (j < statement.length && c == ':' && statement[j] == '{') {
-                    // :{x} style parameter
+                    // :{x}形式的命名参数
                     while (j < statement.length && '}' != statement[j]) {
-                        j++;
+                        ++j;
                         if (':' == statement[j] || '{' == statement[j]) {
-                            throw new SimplifiedException("Parameter name contains invalid character '" +
-                                statement[j] + "' at position " + i + " in statement: " + sqlToUse);
+                            throw new SQLException(SQLException.SQL_EXCEPTION, String.format("命名参数在索引%d发现非法字符'%c'%n原始SQL:%s", i, statement[j], sqlToUse));
                         }
                     }
                     if (j >= statement.length) {
-                        throw new SimplifiedException(
-                            "Non-terminated named parameter declaration at position " + i + " in statement: " + sqlToUse);
+                        throw new SQLException(SQLException.SQL_EXCEPTION, String.format("命名参数声明在%d处未正确结束%n原始SQL:%s ", i, sqlToUse));
                     }
                     if (j - i > 3) {
                         parameter = sqlToUse.substring(i + 2, j);
-                        parameters.add(new SqlParameter(parameter, i - escapes, j + 1 - escapes));
+                        namedParameters.add(new SqlParameter(parameter, i, j + 1));
                         ++namedParameterCount;
                         ++totalParameterCount;
-                        actualSql.append("? ");
+                        actualSql.append('?');
                     }
                     j++;
                 } else {
+                    // :x或&x形式的命名参数
                     while (j < statement.length && !isParameterSeparator(statement[j])) {
                         j++;
                     }
@@ -155,35 +140,42 @@ public class ParameterizedSql {
                         parameter = sqlToUse.substring(i + 1, j);
                         ++namedParameterCount;
                         ++totalParameterCount;
-                        parameters.add(new SqlParameter(parameter, i - escapes, j + 1 - escapes));
-                        actualSql.append("? ");
+                        namedParameters.add(new SqlParameter(parameter, i, j));
+                        actualSql.append('?');
                     }
                 }
                 i = j - 1;
             } else {
                 if (c == '\\') {
+                    // 遇到转义的\: 跳过参数解析
+                    actualSql.append(c);
                     int j = i + 1;
                     if (j < statement.length && statement[j] == ':') {
                         // escaped ":" should be skipped
-                        sqlToUse = sqlToUse.substring(0, i - escapes) + sqlToUse.substring(i - escapes + 1);
-                        escapes++;
-                        i = i + 2;
+                        i += 2;
+                        actualSql.append(':');
                         continue;
                     }
                 }
                 if (c == '?') {
+                    actualSql.append(c);
                     int j = i + 1;
                     if (j < statement.length && (statement[j] == '?' || statement[j] == '|' || statement[j] == '&')) {
                         // Postgres-style "??", "?|", "?&" operator should be skipped
-                        i = i + 2;
+                        i += 2;
+                        actualSql.append(statement[j]);
                         continue;
                     }
                     unnamedParameterCount++;
                     totalParameterCount++;
                 }
             }
+            if (c != ':' && c != '?' && c != '&') {
+                actualSql.append(c);
+            }
             i++;
         }
+        this.actualSql = new SqlSource(originalSql.getId(), actualSql.toString());
     }
 
     private int skipCommentsAndQuotes(char[] statement, int position) {

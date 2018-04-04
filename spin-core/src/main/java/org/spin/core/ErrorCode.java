@@ -52,7 +52,7 @@ public class ErrorCode {
     private final int code;
     private final String desc;
 
-    private ErrorCode(int value, String desc) {
+    public ErrorCode(int value, String desc) {
         this.code = value;
         this.desc = desc;
     }

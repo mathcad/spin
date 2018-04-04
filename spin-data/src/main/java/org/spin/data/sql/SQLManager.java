@@ -17,6 +17,7 @@ import org.spin.data.sql.dbtype.OracleDatabaseType;
 import org.spin.data.sql.dbtype.PostgreSQLDatabaseType;
 import org.spin.data.sql.dbtype.SQLServerDatabaseType;
 import org.spin.data.sql.dbtype.SQLiteDatabaseType;
+import org.spin.data.sql.param.ParameterizedSql;
 import org.spin.data.sql.resolver.TemplateResolver;
 import org.spin.data.util.EntityUtils;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -24,6 +25,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -42,6 +44,21 @@ public class SQLManager {
     private static final String WRAPPE_ERROR = "Entity wrappe error";
     private static final String QUERY_ERROR = "执行查询出错";
     private static final String SQL_LOG = "sqlId: %s%nsqlText: %s";
+    private static final int DEFAULT_CACHE_LIMIT = 256;
+
+    /**
+     * SQL缓存容量
+     */
+    private volatile int cacheLimit = DEFAULT_CACHE_LIMIT;
+    private final Map<String, ParameterizedSql> parsedSqlCache =
+        new LinkedHashMap<String, ParameterizedSql>(DEFAULT_CACHE_LIMIT, 0.75f, true) {
+            private static final long serialVersionUID = 3202723764687686913L;
+
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, ParameterizedSql> eldest) {
+                return size() > cacheLimit;
+            }
+        };
     private final Map<String, SQLLoader> loaderMap = new HashMap<>();
     private final Map<String, NamedParameterJdbcTemplate> nameJtMap = new HashMap<>();
 
@@ -338,6 +355,14 @@ public class SQLManager {
         getCurrentNamedJt().batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
     }
 
+    public int getCacheLimit() {
+        return cacheLimit;
+    }
+
+    public void setCacheLimit(int cacheLimit) {
+        this.cacheLimit = cacheLimit;
+    }
+
     private SQLLoader getCurrentSqlLoader() {
         return loaderMap.get(DataSourceContext.getCurrentDataSourceName());
     }
@@ -362,6 +387,29 @@ public class SQLManager {
             default:
                 throw new SimplifiedException("Unsupported Database vender:" + vender);
         }
+    }
+
+    /**
+     * 解析命名参数
+     *
+     * @param originSql 原始SQL
+     * @return 解析后的SQL
+     */
+    private ParameterizedSql getParsedSql(SqlSource originSql) {
+        if (getCacheLimit() <= 0) {
+            return new ParameterizedSql(originSql);
+        }
+        ParameterizedSql parsedSql = this.parsedSqlCache.get(originSql.getSql());
+        if (parsedSql == null) {
+            synchronized (this.parsedSqlCache) {
+                parsedSql = this.parsedSqlCache.get(originSql.getSql());
+                if (parsedSql == null) {
+                    parsedSql = new ParameterizedSql(originSql);
+                    this.parsedSqlCache.put(originSql.getSql(), parsedSql);
+                }
+            }
+        }
+        return parsedSql;
     }
 
     private String removeLastOrderBy(String sql) {
