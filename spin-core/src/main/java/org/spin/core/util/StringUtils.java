@@ -2,6 +2,7 @@ package org.spin.core.util;
 
 import org.spin.core.throwable.SimplifiedException;
 
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -14,11 +15,11 @@ import static java.lang.Character.isWhitespace;
 
 /**
  * Miscellaneous {@link String} utility methods.
- * <p>
+ *
  * <p>Mainly for internal use within the framework; consider
  * <a href="http://commons.apache.org/proper/commons-lang/">Apache's Commons Lang</a>
  * for a more comprehensive suite of {@code String} utilities.
- * <p>
+ *
  * <p>This class delivers some simple functionality that should really be
  * provided by the core Java {@link String} and {@link StringBuilder}
  * classes. It also provides easy-to-use methods to convert between
@@ -161,7 +162,7 @@ public abstract class StringUtils {
      * <p>示例:<br>
      * <code>difference("i am a machine", "i am a robot") -&gt; "robot"</code>.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.difference(null, null) = null
      * StringUtils.difference("", "") = ""
@@ -195,7 +196,7 @@ public abstract class StringUtils {
      * 比较2个字符串，计算两个字符串在第几个字符时不同
      * <p>示例:<br>
      * <code>indexOfDifference("i am a machine", "i am a robot") -&gt; 7</code></p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOfDifference(null, null) = -1
      * StringUtils.indexOfDifference("", "") = -1
@@ -234,7 +235,7 @@ public abstract class StringUtils {
      * 比较多个字符串，计算他们在第几个字符时不同
      * <p>示例:<br>
      * <code>indexOfDifference(new String[] {"i am a machine", "i am a robot"}) -&gt; 7</code></p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOfDifference(null) = -1
      * StringUtils.indexOfDifference(new String[] {}) = -1
@@ -472,7 +473,7 @@ public abstract class StringUtils {
      * This method uses {@link String#indexOf(int)}.</p>
      * <p>
      * <p>A <code>null</code> or empty ("") String will return <code>-1</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOf(null, *)         = -1
      * StringUtils.indexOf("", *)           = -1
@@ -501,7 +502,7 @@ public abstract class StringUtils {
      * <p>A <code>null</code> or empty ("") String will return <code>-1</code>.
      * A negative start position is treated as zero.
      * A start position greater than the string length returns <code>-1</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOf(null, *, *)          = -1
      * StringUtils.indexOf("", *, *)            = -1
@@ -530,7 +531,7 @@ public abstract class StringUtils {
      * This method uses {@link String#indexOf(String)}.</p>
      * <p>
      * <p>A <code>null</code> String will return <code>-1</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOf(null, *)          = -1
      * StringUtils.indexOf(*, null)          = -1
@@ -563,7 +564,7 @@ public abstract class StringUtils {
      * An empty ("") search String always matches.
      * A start position greater than the string length only matches
      * an empty search String.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOf(null, *, *)          = -1
      * StringUtils.indexOf(*, null, *)          = -1
@@ -617,7 +618,7 @@ public abstract class StringUtils {
      * </pre>
      * <p>
      * <p>Note that 'head(String str, int n)' may be implemented as: </p>
-     * <p>
+     *
      * <pre>
      *   str.substring(0, lastOrdinalIndexOf(str, "\n", n))
      * </pre>
@@ -678,7 +679,7 @@ public abstract class StringUtils {
      * An empty ("") search String always matches.
      * A start position greater than the string length only matches
      * an empty search String.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOfIgnoreCase(null, *)          = -1
      * StringUtils.indexOfIgnoreCase(*, null)          = -1
@@ -707,7 +708,7 @@ public abstract class StringUtils {
      * An empty ("") search String always matches.
      * A start position greater than the string length only matches
      * an empty search String.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOfIgnoreCase(null, *, *)          = -1
      * StringUtils.indexOfIgnoreCase(*, null, *)          = -1
@@ -760,7 +761,7 @@ public abstract class StringUtils {
      * <p>
      * <p>A <code>null</code> String will return <code>-1</code>.
      * A <code>null</code> or zero length search array will return <code>-1</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOfAny(null, *)                = -1
      * StringUtils.indexOfAny("", *)                  = -1
@@ -797,7 +798,7 @@ public abstract class StringUtils {
      * <p>
      * <p>A <code>null</code> String will return <code>-1</code>.
      * A <code>null</code> search string will return <code>-1</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOfAny(null, *)            = -1
      * StringUtils.indexOfAny("", *)              = -1
@@ -832,7 +833,7 @@ public abstract class StringUtils {
      * A <code>null</code> search array entry will be ignored, but a search
      * array containing "" will return <code>0</code> if <code>str</code> is not
      * null. This method uses {@link String#indexOf(String)}.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOfAny(null, *)                     = -1
      * StringUtils.indexOfAny(*, null)                     = -1
@@ -916,7 +917,7 @@ public abstract class StringUtils {
      * <p>
      * <p>A <code>null</code> String will return <code>-1</code>.
      * A <code>null</code> search string will return <code>-1</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.indexOfAnyBut(null, *)            = -1
      * StringUtils.indexOfAnyBut("", *)              = -1
@@ -953,7 +954,7 @@ public abstract class StringUtils {
      * This method uses {@link String#lastIndexOf(int)}.</p>
      * <p>
      * <p>A <code>null</code> or empty ("") String will return <code>-1</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.lastIndexOf(null, *)         = -1
      * StringUtils.lastIndexOf("", *)           = -1
@@ -982,7 +983,7 @@ public abstract class StringUtils {
      * <p>A <code>null</code> or empty ("") String will return <code>-1</code>.
      * A negative start position returns <code>-1</code>.
      * A start position greater than the string length searches the whole string.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.lastIndexOf(null, *, *)          = -1
      * StringUtils.lastIndexOf("", *,  *)           = -1
@@ -1013,7 +1014,7 @@ public abstract class StringUtils {
      * This method uses {@link String#lastIndexOf(String)}.</p>
      * <p>
      * <p>A <code>null</code> String will return <code>-1</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.lastIndexOf(null, *)          = -1
      * StringUtils.lastIndexOf(*, null)          = -1
@@ -1058,7 +1059,7 @@ public abstract class StringUtils {
      * </pre>
      * <p>
      * <p>Note that 'tail(String str, int n)' may be implemented as: </p>
-     * <p>
+     *
      * <pre>
      *   str.substring(lastOrdinalIndexOf(str, "\n", n) + 1)
      * </pre>
@@ -1082,7 +1083,7 @@ public abstract class StringUtils {
      * A negative start position returns <code>-1</code>.
      * An empty ("") search String always matches unless the start position is negative.
      * A start position greater than the string length searches the whole string.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.lastIndexOf(null, *, *)          = -1
      * StringUtils.lastIndexOf(*, null, *)          = -1
@@ -1116,7 +1117,7 @@ public abstract class StringUtils {
      * A negative start position returns <code>-1</code>.
      * An empty ("") search String always matches unless the start position is negative.
      * A start position greater than the string length searches the whole string.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.lastIndexOfIgnoreCase(null, *)          = -1
      * StringUtils.lastIndexOfIgnoreCase(*, null)          = -1
@@ -1146,7 +1147,7 @@ public abstract class StringUtils {
      * A negative start position returns <code>-1</code>.
      * An empty ("") search String always matches unless the start position is negative.
      * A start position greater than the string length searches the whole string.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.lastIndexOfIgnoreCase(null, *, *)          = -1
      * StringUtils.lastIndexOfIgnoreCase(*, null, *)          = -1
@@ -1196,7 +1197,7 @@ public abstract class StringUtils {
      * A <code>null</code> or zero length search array entry will be ignored,
      * but a search array containing "" will return the length of <code>str</code>
      * if <code>str</code> is not null. This method uses {@link String#indexOf(String)}</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.lastIndexOfAny(null, *)                   = -1
      * StringUtils.lastIndexOfAny(*, null)                   = -1
@@ -1239,7 +1240,7 @@ public abstract class StringUtils {
      * This method uses {@link String#indexOf(int)}.</p>
      * <p>
      * <p>A <code>null</code> or empty ("") String will return <code>false</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.contains(null, *)    = false
      * StringUtils.contains("", *)      = false
@@ -1262,7 +1263,7 @@ public abstract class StringUtils {
      * This method uses {@link String#indexOf(String)}.</p>
      * <p>
      * <p>A <code>null</code> String will return <code>false</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.contains(null, *)     = false
      * StringUtils.contains(*, null)     = false
@@ -1288,7 +1289,7 @@ public abstract class StringUtils {
      * {@link String#equalsIgnoreCase(String)}.
      * <p>
      * <p>A <code>null</code> String will return <code>false</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.contains(null, *) = false
      * StringUtils.contains(*, null) = false
@@ -1329,7 +1330,7 @@ public abstract class StringUtils {
      * <p>
      * <p>A <code>null</code> String will return <code>false</code>.
      * A <code>null</code> or zero length search array will return <code>false</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.containsAny(null, *)                = false
      * StringUtils.containsAny("", *)                  = false
@@ -1370,7 +1371,7 @@ public abstract class StringUtils {
      * A <code>null</code> String will return <code>false</code>. A <code>null</code> search string will return
      * <code>false</code>.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.containsAny(null, *)            = false
      * StringUtils.containsAny("", *)              = false
@@ -1399,7 +1400,7 @@ public abstract class StringUtils {
      * <p>A <code>null</code> String will return <code>false</code>.
      * A <code>null</code> valid character array will return <code>false</code>.
      * An empty String ("") always returns <code>true</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.containsOnly(null, *)       = false
      * StringUtils.containsOnly(*, null)       = false
@@ -1425,7 +1426,7 @@ public abstract class StringUtils {
      * <p>A <code>null</code> String will return <code>false</code>.
      * A <code>null</code> valid character String will return <code>false</code>.
      * An empty String ("") always returns <code>true</code>.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.containsOnly(null, *)       = false
      * StringUtils.containsOnly(*, null)       = false
@@ -1454,7 +1455,7 @@ public abstract class StringUtils {
      * <p>A <code>null</code> String will return <code>true</code>.
      * A <code>null</code> invalid character array will return <code>true</code>.
      * An empty String ("") always returns true.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.containsNone(null, *)       = true
      * StringUtils.containsNone(*, null)       = true
@@ -1492,7 +1493,7 @@ public abstract class StringUtils {
      * <p>A <code>null</code> String will return <code>true</code>.
      * A <code>null</code> invalid character array will return <code>true</code>.
      * An empty String ("") always returns true.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.containsNone(null, *)       = true
      * StringUtils.containsNone(*, null)       = true
@@ -1523,7 +1524,7 @@ public abstract class StringUtils {
      * <p>No separator is added to the joined String.
      * Null objects or empty strings within the array are represented by
      * empty strings.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null)            = null
      * StringUtils.join([])              = ""
@@ -1549,7 +1550,7 @@ public abstract class StringUtils {
      * <p>No delimiter is added before or after the list.
      * Null objects or empty strings within the array are represented by
      * empty strings.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1580,7 +1581,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1610,7 +1611,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1640,7 +1641,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1670,7 +1671,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1700,7 +1701,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1730,7 +1731,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1760,7 +1761,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1789,7 +1790,7 @@ public abstract class StringUtils {
      * <p>No delimiter is added before or after the list.
      * Null objects or empty strings within the array are represented by
      * empty strings.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1837,7 +1838,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1882,7 +1883,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1927,7 +1928,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -1972,7 +1973,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -2017,7 +2018,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -2062,7 +2063,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -2107,7 +2108,7 @@ public abstract class StringUtils {
      * No delimiter is added before or after the list. Null objects or empty strings within the array are represented
      * by empty strings.
      * </p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)               = null
      * StringUtils.join([], *)                 = ""
@@ -2152,7 +2153,7 @@ public abstract class StringUtils {
      * A {@code null} separator is the same as an empty String ("").
      * Null objects or empty strings within the array are represented by
      * empty strings.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *)                = null
      * StringUtils.join([], *)                  = ""
@@ -2182,7 +2183,7 @@ public abstract class StringUtils {
      * A {@code null} separator is the same as an empty String ("").
      * Null objects or empty strings within the array are represented by
      * empty strings.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.join(null, *, *, *)                = null
      * StringUtils.join([], *, *, *)                  = ""
@@ -2528,7 +2529,7 @@ public abstract class StringUtils {
         // the index of an occurrence we've found, or -1
         int patLen = oldPattern.length();
         while (index >= 0) {
-            sb.append(inString.substring(pos, index));
+            sb.append(inString, pos, index);
             sb.append(newPattern);
             pos = index + patLen;
             index = inString.indexOf(oldPattern, pos);
@@ -2574,7 +2575,7 @@ public abstract class StringUtils {
     /**
      * <p>Deletes all whitespaces from a String as defined by
      * {@link Character#isWhitespace(char)}.</p>
-     * <p>
+     *
      * <pre>
      * StringUtils.deleteWhitespace(null)         = null
      * StringUtils.deleteWhitespace("")           = ""
@@ -3835,5 +3836,15 @@ public abstract class StringUtils {
      */
     public static boolean isInteger(final CharSequence input) {
         return INTEGER_PATTERN.matcher(input).matches();
+    }
+
+    /**
+     * 判断对象是否是字符串（包括StringBuilder, StringBuffer, StringWriter）
+     *
+     * @param input 待判断对象
+     * @return 是否是字符串
+     */
+    public static boolean isString(Object input) {
+        return input instanceof CharSequence || input instanceof StringWriter;
     }
 }

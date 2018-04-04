@@ -31,7 +31,7 @@ public class LocalTimeTypeAdapter extends MatchableTypeAdapter<LocalTime> {
         if (StringUtils.isEmpty(tmp)) {
             return null;
         } else {
-            return LocalTime.parse(in.nextString(), DatePatternParser.getReadPattern(formater, field));
+            return LocalTime.parse(tmp, DatePatternParser.getReadPattern(formater, field));
         }
     }
 

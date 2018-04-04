@@ -4,13 +4,18 @@ import org.spin.core.Assert;
 import org.spin.core.throwable.SQLException;
 import org.spin.data.sql.SqlSource;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * 参数化SQL
+ * <p>Created by xuweinan on 2018/4/3.</p>
+ *
+ * @author xuweinan
  */
-public class ParameterizedSql {
+public class ParameterizedSql implements Serializable {
+    private static final long serialVersionUID = -3841234687808576992L;
     private static final char[][] START_SKIP = new char[][]{{'\''}, {'"'}, {'-', '-'}, {'/', '*'}};
     private static final char[][] STOP_SKIP = new char[][]{{'\''}, {'"'}, {'\n'}, {'*', '/'}};
     private static final char[] PARAMETER_SEPARATORS = {'"', '\'', ':', '&', ',', ';', '(', ')', '|', '=', '+', '-', '*', '%', '/', '\\', '<', '>', '^'};
@@ -80,7 +85,7 @@ public class ParameterizedSql {
         Assert.notNull(originalSql, "SQL must not be null");
 
         String sqlToUse = Assert.notEmpty(originalSql.getSql(), "SQL must not be empty");
-        StringBuilder actualSql = new StringBuilder(sqlToUse.length());
+        StringBuilder actualSqlStr = new StringBuilder(sqlToUse.length());
 
         char[] statement = sqlToUse.toCharArray();
 
@@ -96,7 +101,7 @@ public class ParameterizedSql {
                     i = skipToPosition;
                 }
             }
-            actualSql.append(sqlToUse, s, i);
+            actualSqlStr.append(sqlToUse, s, i);
             if (i >= statement.length) {
                 break;
             }
@@ -108,7 +113,7 @@ public class ParameterizedSql {
                 if (j < statement.length && statement[j] == ':' && c == ':') {
                     // Postgres-style "::" casting operator should be skipped
                     i = i + 2;
-                    actualSql.append("::");
+                    actualSqlStr.append("::");
                     continue;
                 }
                 String parameter = null;
@@ -128,7 +133,7 @@ public class ParameterizedSql {
                         namedParameters.add(new SqlParameter(parameter, i, j + 1));
                         ++namedParameterCount;
                         ++totalParameterCount;
-                        actualSql.append('?');
+                        actualSqlStr.append('?');
                     }
                     j++;
                 } else {
@@ -141,29 +146,29 @@ public class ParameterizedSql {
                         ++namedParameterCount;
                         ++totalParameterCount;
                         namedParameters.add(new SqlParameter(parameter, i, j));
-                        actualSql.append('?');
+                        actualSqlStr.append('?');
                     }
                 }
                 i = j - 1;
             } else {
                 if (c == '\\') {
                     // 遇到转义的\: 跳过参数解析
-                    actualSql.append(c);
+                    actualSqlStr.append(c);
                     int j = i + 1;
                     if (j < statement.length && statement[j] == ':') {
                         // escaped ":" should be skipped
                         i += 2;
-                        actualSql.append(':');
+                        actualSqlStr.append(':');
                         continue;
                     }
                 }
                 if (c == '?') {
-                    actualSql.append(c);
+                    actualSqlStr.append(c);
                     int j = i + 1;
                     if (j < statement.length && (statement[j] == '?' || statement[j] == '|' || statement[j] == '&')) {
                         // Postgres-style "??", "?|", "?&" operator should be skipped
                         i += 2;
-                        actualSql.append(statement[j]);
+                        actualSqlStr.append(statement[j]);
                         continue;
                     }
                     unnamedParameterCount++;
@@ -171,11 +176,11 @@ public class ParameterizedSql {
                 }
             }
             if (c != ':' && c != '?' && c != '&') {
-                actualSql.append(c);
+                actualSqlStr.append(c);
             }
             i++;
         }
-        this.actualSql = new SqlSource(originalSql.getId(), actualSql.toString());
+        actualSql = new SqlSource(originalSql.getId(), actualSqlStr.toString());
     }
 
     private int skipCommentsAndQuotes(char[] statement, int position) {

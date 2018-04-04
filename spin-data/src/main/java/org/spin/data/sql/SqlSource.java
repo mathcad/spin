@@ -26,4 +26,9 @@ public class SqlSource implements Serializable {
     public String getId() {
         return id;
     }
+
+    @Override
+    public String toString() {
+        return "[" + id + "]: " + sql;
+    }
 }

@@ -17,12 +17,15 @@ import org.spin.data.sql.dbtype.OracleDatabaseType;
 import org.spin.data.sql.dbtype.PostgreSQLDatabaseType;
 import org.spin.data.sql.dbtype.SQLServerDatabaseType;
 import org.spin.data.sql.dbtype.SQLiteDatabaseType;
+import org.spin.data.sql.param.ParameterUtils;
 import org.spin.data.sql.param.ParameterizedSql;
 import org.spin.data.sql.resolver.TemplateResolver;
 import org.spin.data.util.EntityUtils;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -60,7 +63,7 @@ public class SQLManager {
             }
         };
     private final Map<String, SQLLoader> loaderMap = new HashMap<>();
-    private final Map<String, NamedParameterJdbcTemplate> nameJtMap = new HashMap<>();
+//    private final Map<String, NamedParameterJdbcTemplate> nameJtMap = new HashMap<>();
 
     /**
      * 多数据源时的构造方法
@@ -85,8 +88,8 @@ public class SQLManager {
                 loader.setTemplateResolver(resolver);
                 loader.setDbType(getDbType(config.getVenderName()));
                 loaderMap.put(name, loader);
-                NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DataSourceContext.getDataSource(name));
-                nameJtMap.put(name, jt);
+//                NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DataSourceContext.getDataSource(name));
+//                nameJtMap.put(name, jt);
             } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClassName);
             }
@@ -121,8 +124,8 @@ public class SQLManager {
             loader.setTemplateResolver(resolver);
             loader.setDbType(getDbType(dsConfig.getVenderName()));
             loaderMap.put(name, loader);
-            NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DataSourceContext.getDataSource(name));
-            nameJtMap.put(name, jt);
+//            NamedParameterJdbcTemplate jt = new NamedParameterJdbcTemplate(DataSourceContext.getDataSource(name));
+//            nameJtMap.put(name, jt);
         } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
             throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClassName);
         }
@@ -348,11 +351,18 @@ public class SQLManager {
      * @param argsMap 参数
      */
     @SuppressWarnings({"unchecked"})
-    public void batchExec(String sqlId, List<Map<String, ?>> argsMap) {
-        String sqlTxt = getCurrentSqlLoader().getSQL(sqlId, null).getSql();
+    public void batchExec(Connection connection, String sqlId, List<Map<String, ?>> argsMap) {
+        ParameterizedSql parsedSql = getParsedSql(getCurrentSqlLoader().getSQL(sqlId, null));
         if (logger.isDebugEnabled())
-            logger.debug(String.format(SQL_LOG, sqlId, sqlTxt));
-        getCurrentNamedJt().batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
+            logger.debug(String.format(SQL_LOG, sqlId, parsedSql.getActualSql()));
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(parsedSql.getActualSql().getSql());
+            ParameterUtils.setParameterValues(preparedStatement, parsedSql.getNamedParameters(), argsMap);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+//        getCurrentNamedJt().batchUpdate(sqlTxt, argsMap.toArray(new Map[]{}));
     }
 
     public int getCacheLimit() {
@@ -367,9 +377,9 @@ public class SQLManager {
         return loaderMap.get(DataSourceContext.getCurrentDataSourceName());
     }
 
-    private NamedParameterJdbcTemplate getCurrentNamedJt() {
-        return nameJtMap.get(DataSourceContext.getCurrentDataSourceName());
-    }
+//    private NamedParameterJdbcTemplate getCurrentNamedJt() {
+//        return nameJtMap.get(DataSourceContext.getCurrentDataSourceName());
+//    }
 
     private DatabaseType getDbType(String vender) {
         switch (vender) {
