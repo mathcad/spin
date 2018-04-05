@@ -73,6 +73,7 @@ dependencies {
     compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
     compile group: 'org.mathcat', name: 'spin-all', version: '2.1.10.RC2'
+    compile group: 'org.glassfish', name: 'javax.annotation', version: '10.0-b28'
 //    compile(project(":spin"))
 
     compileOnly group: 'com.atomikos', name: 'transactions-jdbc', version: '4.0.6'

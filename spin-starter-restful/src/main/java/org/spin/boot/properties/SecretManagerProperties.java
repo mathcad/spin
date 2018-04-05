@@ -4,9 +4,10 @@ import org.spin.core.security.RSA;
 import org.spin.core.util.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import javax.annotation.PostConstruct;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+
+import javax.annotation.PostConstruct;
 
 /**
  * <p>Created by xuweinan on 2017/9/16.</p>

@@ -1,61 +1,34 @@
 package org.spin.data.sql;
 
+import java.io.Serializable;
+
 /**
  * 定义SQL语句
  * <p>Created by xuweinan on 2016/9/24.</p>
  *
  * @author xuweinan
  */
-public class SQLSource {
+public class SqlSource implements Serializable {
+    private static final long serialVersionUID = 6127332045883688265L;
 
-    private String id;
-    private String template;
-    private int line = 0;
-    //数据库插入用
-    private int idType;
+    private final String id;
+    private final String sql;
 
-    public SQLSource() {
-    }
-
-    public SQLSource(String id, String template) {
+    public SqlSource(String id, String sql) {
         this.id = id;
-        this.template = template;
+        this.sql = sql;
     }
 
-    public SQLSource(String template) {
-        this.template = template;
-    }
-
-    public String getTemplate() {
-        return template;
-    }
-
-    public void setTemplate(String template) {
-        this.template = template;
-    }
-
-    public int getIdType() {
-        return idType;
-    }
-
-    public void setIdType(int idType) {
-        this.idType = idType;
+    public String getSql() {
+        return sql;
     }
 
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    @Override
+    public String toString() {
+        return "[" + id + "]: " + sql;
     }
-
-    public int getLine() {
-        return line;
-    }
-
-    public void setLine(int line) {
-        this.line = line;
-    }
-
 }

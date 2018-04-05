@@ -85,5 +85,8 @@ dependencies {
         exclude(module: 'jboss-logging')
         transitive = true
     }
+    compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: '3.17') {
+        exclude(module: 'ant')
+    }
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 }

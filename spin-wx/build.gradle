@@ -73,4 +73,5 @@ dependencies {
 
 //    compile(project(":spin-core"))
     compile group: 'org.mathcat', name: 'spin-core', version: '0.0.1.RC1'
+    compileOnly group: 'org.dom4j', name: 'dom4j', version: '2.1.0'
 }

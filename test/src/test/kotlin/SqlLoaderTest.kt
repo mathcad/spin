@@ -27,6 +27,6 @@ class SqlLoaderTest {
         val ss = loader.getSQL("biz/example.test2", MapUtils.ofMap("value", 3, "flag", true))
         val ends = System.currentTimeMillis()
         println(ends - starts)
-        println(s.template)
+        println(s.sql)
     }
 }

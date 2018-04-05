@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.persistence.TransactionRequiredException;
 import javax.sql.DataSource;
 
 /**
@@ -258,9 +259,12 @@ public final class DataSourceContext {
             if (schema.equals(currentSchema.get().get(getCurrentDataSourceName()))) {
                 return;
             }
-            extractConnection(session).setCatalog(schema);
+            session.flush();
+            session.doWork(connection -> connection.setCatalog(schema));
             currentSchema.get().put(getCurrentDataSourceName(), schema);
-        } catch (SQLException e) {
+        } catch (TransactionRequiredException ignore) {
+            // do nothing
+        } catch (Exception e) {
             throw new SimplifiedException("切换Schema失败", e);
         }
     }

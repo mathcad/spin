@@ -19,13 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ApplicationTest {
 
     @Test
-    public void testDbPassword() throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
-        System.out.println(AES.encrypt("c4b2a7d36f9a2e61", "123"));
+    public void testDbPassword() {
+        System.out.println(AES.encrypt("c4b2a7d36f9a2e61", "1q2w3e4r"));
         assertTrue(true);
     }
 
     @Test
-    public void testPassword() throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+    public void testPassword() {
         System.out.println(DigestUtils.sha256Hex("123" + "xP8F4vjKSYQladtp"));
         assertTrue(true);
     }

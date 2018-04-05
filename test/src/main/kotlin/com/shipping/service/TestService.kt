@@ -79,7 +79,7 @@ class TestService {
     @RestfulMethod(auth = false, value = "d")
     fun testSTransaction() {
         val user = User().apply {
-            realName = "二傻子"
+            realName = "xuweinan"
             userName = "admin"
             password = "123"
             mobile = "13111111111"
@@ -88,5 +88,17 @@ class TestService {
         println(DataSourceContext.getCurrentDataSourceName())
         repoCtx.save(user)
         //        throw new SimplifiedException("aa");
+        println(DataSourceContext.getCurrentSchema())
+        DataSourceContext.switchSchema("dev_db2")
+        println(DataSourceContext.getCurrentSchema())
+        val u2 = User().apply {
+            realName = "mathcat"
+            userName = "admin"
+            password = "123"
+            mobile = "13111112222"
+            email = "none@qq.com"
+        }
+        u2.id = null
+        repoCtx.save(u2)
     }
 }

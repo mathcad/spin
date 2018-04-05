@@ -534,15 +534,15 @@ public class CriteriaBuilder<T extends IEntity<?>> {
 
     /**
      * 处理字段投影，设置2层甚至更多层关联的关联关系
+     *
+     * @param useProjection 是否使用投影
      */
     private void processProjection(boolean useProjection) {
         processCondJoin();
-        if (useProjection) {
-            if (CollectionUtils.isEmpty(fields) || fields.contains(ALL_COLUMNS)) {
-                fields.addAll(EntityUtils.parseEntityColumns(enCls));
-            }
-            fields.remove(ALL_COLUMNS);
+        if (CollectionUtils.isEmpty(fields) || fields.contains(ALL_COLUMNS)) {
+            fields.addAll(EntityUtils.parseEntityColumns(enCls));
         }
+        fields.remove(ALL_COLUMNS);
 
         // 该实体的所有n->1关联属性
         Map<String, Field> entityJoinFields = EntityUtils.getJoinFields(enCls);

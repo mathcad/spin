@@ -5,10 +5,11 @@ import org.spin.data.extend.MultiDataSourceConfig;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.annotation.PostConstruct;
 
 /**
  * Druid的多数据源配置

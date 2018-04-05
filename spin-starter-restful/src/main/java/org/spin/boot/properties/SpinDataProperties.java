@@ -6,8 +6,9 @@ import org.spin.data.sql.resolver.FreemarkerResolver;
 import org.spin.data.sql.resolver.TemplateResolver;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import javax.annotation.PostConstruct;
 import java.util.Objects;
+
+import javax.annotation.PostConstruct;
 
 /**
  * 数据库配置

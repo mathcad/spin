@@ -3,7 +3,7 @@ package org.spin.data.sql.loader;
 import org.spin.data.core.DatabaseType;
 import org.spin.data.core.PageRequest;
 import org.spin.data.core.SQLLoader;
-import org.spin.data.sql.SQLSource;
+import org.spin.data.sql.SqlSource;
 import org.spin.data.sql.resolver.SimpleResolver;
 import org.spin.data.sql.resolver.TemplateResolver;
 
@@ -42,15 +42,17 @@ public abstract class GenericSqlLoader implements SQLLoader {
     }
 
     @Override
-    public SQLSource getSQL(String id, Map<String, ?> model) {
-        if (null == this.resolver)
-            this.resolver = new SimpleResolver();
-        String sql = this.resolver.resolve(id, getSqlTemplateSrc(id), model, dbType);
-        return new SQLSource(id, sql);
+    public SqlSource getSQL(String id, Map<String, ?> model) {
+        if (null == resolver) {
+            resolver = new SimpleResolver();
+        }
+        // 模板解析
+        String sql = resolver.resolve(id, getSqlTemplateSrc(id), model, dbType);
+        return new SqlSource(id, sql);
     }
 
     @Override
-    public SQLSource getPagedSQL(String id, Map<String, ?> model, PageRequest pageRequest) {
+    public SqlSource getPagedSQL(String id, Map<String, ?> model, PageRequest pageRequest) {
         return dbType.getPagedSQL(getSQL(id, model), pageRequest);
     }
 
