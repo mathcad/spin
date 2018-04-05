@@ -13,7 +13,7 @@ public class SqlParameter {
 
     private final int endIndex;
 
-    private int sqlType = ParameterUtils.TYPE_UNKNOWN;
+    private int sqlType = JdbcUtils.TYPE_UNKNOWN;
 
     // Used for types that are user-named like: STRUCT, DISTINCT, JAVA_OBJECT, named array types
     private String typeName;

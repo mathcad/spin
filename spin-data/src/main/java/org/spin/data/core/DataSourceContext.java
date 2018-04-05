@@ -14,7 +14,6 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.data.extend.RepositoryContext;
 
-import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -23,6 +22,9 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.persistence.TransactionRequiredException;
+import javax.sql.DataSource;
 
 /**
  * 数据源上下文
@@ -257,8 +259,11 @@ public final class DataSourceContext {
             if (schema.equals(currentSchema.get().get(getCurrentDataSourceName()))) {
                 return;
             }
+            session.flush();
             session.doWork(connection -> connection.setCatalog(schema));
             currentSchema.get().put(getCurrentDataSourceName(), schema);
+        } catch (TransactionRequiredException ignore) {
+            // do nothing
         } catch (Exception e) {
             throw new SimplifiedException("切换Schema失败", e);
         }

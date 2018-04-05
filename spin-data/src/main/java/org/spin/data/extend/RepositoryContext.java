@@ -36,7 +36,6 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
-import javax.persistence.Entity;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -48,6 +47,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.persistence.Entity;
 
 /**
  * 存储对象上下文
@@ -772,11 +773,6 @@ public class RepositoryContext {
         return (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
     }
 
-    public Long count(String sqlId, Map<String, ?> paramMap) {
-        return sqlManager.count(sqlId, paramMap);
-    }
-
-
     /**
      * 根据条件查询DTO列表
      *
@@ -965,43 +961,47 @@ public class RepositoryContext {
 
     /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */
     public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
-        return sqlManager.findOneAsMap(sqlId, paramMap);
+        return doReturningWork(connection -> sqlManager.findOneAsMap(connection, sqlId, paramMap));
     }
 
     public <T extends IEntity<P>, P extends Serializable> T findOneBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap) {
-        return sqlManager.findOne(sqlId, entityClazz, paramMap);
+        return doReturningWork(connection -> sqlManager.findOne(connection, sqlId, entityClazz, paramMap));
     }
 
     public <T extends IEntity<P>, P extends Serializable> List<T> listBySql(Class<T> entityClazz, String sqlId, Object... mapParams) {
-        return sqlManager.list(sqlId, entityClazz, mapParams);
+        return doReturningWork(connection -> sqlManager.list(connection, sqlId, entityClazz, mapParams));
     }
 
     public <T extends IEntity<P>, P extends Serializable> List<T> listBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap) {
-        return sqlManager.list(sqlId, entityClazz, paramMap);
+        return doReturningWork(connection -> sqlManager.list(connection, sqlId, entityClazz, paramMap));
     }
 
     public List<Map<String, Object>> listMapBySql(String sqlId, Object... mapParams) {
-        return sqlManager.listAsMap(sqlId, mapParams);
+        return doReturningWork(connection -> sqlManager.listAsMap(connection, sqlId, mapParams));
     }
 
     public List<Map<String, Object>> listMapBySql(String sqlId, Map<String, ?> paramMap) {
-        return sqlManager.listAsMap(sqlId, paramMap);
+        return doReturningWork(connection -> sqlManager.listAsMap(connection, sqlId, paramMap));
     }
 
     public <T extends IEntity<P>, P extends Serializable> Page<T> pageBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
-        return sqlManager.listAsPage(sqlId, entityClazz, paramMap, pageRequest);
+        return doReturningWork(connection -> sqlManager.listAsPage(connection, sqlId, entityClazz, paramMap, pageRequest));
     }
 
     public Page<Map<String, Object>> pageMapBySql(String sqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
-        return sqlManager.listAsPageMap(sqlId, paramMap, pageRequest);
+        return doReturningWork(connection -> sqlManager.listAsPageMap(connection, sqlId, paramMap, pageRequest));
+    }
+
+    public Long count(String sqlId, Map<String, ?> paramMap) {
+        return doReturningWork(connection -> sqlManager.count(connection, sqlId, paramMap));
     }
 
     public int executeCUD(String sqlId, Map<String, ?> paramMap) {
-        return sqlManager.executeCUD(sqlId, paramMap);
+        return doReturningWork(connection -> sqlManager.executeCUD(connection, sqlId, paramMap));
     }
 
-    public void batchExec(String sqlId, List<Map<String, ?>> argsMap) {
-        sqlManager.batchExec(sqlId, argsMap);
+    public int[] executeBatch(String sqlId, List<Map<String, ?>> paramMaps) {
+        return doReturningWork(connection -> sqlManager.executeBatch(connection, sqlId, paramMaps));
     }
     /* ---END---***********************委托SQLManager执行SQL语句******************************* */
 
@@ -1064,8 +1064,9 @@ public class RepositoryContext {
         Assert.isTrue(!StringUtils.trimToEmpty(sql).toLowerCase().startsWith("select"), "不能执行select语句，只能执行CUD语句");
         int[] affects = {-1};
         DataSourceContext.getSession().doWork(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            affects[0] = ps.executeUpdate();
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                affects[0] = ps.executeUpdate();
+            }
         });
         return affects[0];
     }
@@ -1096,9 +1097,12 @@ public class RepositoryContext {
     public <R> R doReturningWork(String sql, Function<ResultSet, R> transformer) {
         Assert.notEmpty(sql, "SQL语句不能为空");
         return DataSourceContext.getSession().doReturningWork(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            boolean isRs = ps.execute();
-            return isRs ? transformer.apply(ps.getResultSet()) : null;
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                boolean isRs = ps.execute();
+                try (ResultSet rs = isRs ? ps.getResultSet() : null) {
+                    return isRs ? transformer.apply(rs) : null;
+                }
+            }
         });
     }
 
