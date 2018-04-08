@@ -1,9 +1,10 @@
-package org.spin.data.sql.param;
+package org.spin.data.sql;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.data.sql.param.SqlParameter;
 
 import java.io.StringReader;
 import java.math.BigDecimal;
@@ -20,6 +21,12 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * JDBC工具类
+ * <p>Created by xuweinan on 2018/4/4.</p>
+ *
+ * @author xuweinan
+ */
 public abstract class JdbcUtils {
     private static final Logger logger = LoggerFactory.getLogger(JdbcUtils.class);
 
@@ -60,7 +67,7 @@ public abstract class JdbcUtils {
 
     public static void setParameterValues(PreparedStatement ps, List<SqlParameter> parameters, Map<String, ?> model) throws SQLException {
         for (int i = 0; i < parameters.size(); i++) {
-            setParameterValue(ps, i, model.get(parameters.get(i).getParameterName()));
+            setParameterValue(ps, parameters.get(i).getParamIndex(), model.get(parameters.get(i).getParameterName()));
         }
     }
 

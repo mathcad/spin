@@ -130,22 +130,20 @@ public class ParameterizedSql implements Serializable {
                     }
                     if (j - i > 3) {
                         parameter = sqlToUse.substring(i + 2, j);
-                        namedParameters.add(new SqlParameter(parameter, i, j + 1));
+                        namedParameters.add(new SqlParameter(parameter, ++totalParameterCount, i, j + 1));
                         ++namedParameterCount;
-                        ++totalParameterCount;
                         actualSqlStr.append('?');
                     }
                     j++;
                 } else {
                     // :x或&x形式的命名参数
-                    while (j < statement.length && !isParameterSeparator(statement[j])) {
+                    while (j < statement.length && !isParameterTerminate(statement[j])) {
                         j++;
                     }
                     if (j - i > 1) {
                         parameter = sqlToUse.substring(i + 1, j);
+                        namedParameters.add(new SqlParameter(parameter, ++totalParameterCount, i, j));
                         ++namedParameterCount;
-                        ++totalParameterCount;
-                        namedParameters.add(new SqlParameter(parameter, i, j));
                         actualSqlStr.append('?');
                     }
                 }
@@ -183,6 +181,13 @@ public class ParameterizedSql implements Serializable {
         actualSql = new SqlSource(originalSql.getId(), actualSqlStr.toString());
     }
 
+    /**
+     * 从当前位置跳过注释与字符串
+     *
+     * @param statement 语句
+     * @param position  当前位置
+     * @return 从当前位置后的第一个非注释与字符串的位置
+     */
     private int skipCommentsAndQuotes(char[] statement, int position) {
         for (int i = 0; i < START_SKIP.length; i++) {
             if (statement[position] == START_SKIP[i][0] && (i < 2 || statement[position + 1] == START_SKIP[i][1])) {
@@ -215,7 +220,7 @@ public class ParameterizedSql implements Serializable {
         return position;
     }
 
-    private boolean isParameterSeparator(char c) {
+    private boolean isParameterTerminate(char c) {
         return (c < 128 && separatorIndex[c]) || Character.isWhitespace(c);
     }
 }

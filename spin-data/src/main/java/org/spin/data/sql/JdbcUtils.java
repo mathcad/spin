@@ -1,9 +1,10 @@
-package org.spin.data.sql.param;
+package org.spin.data.sql;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.data.sql.param.SqlParameter;
 
 import java.io.StringReader;
 import java.math.BigDecimal;
@@ -20,6 +21,12 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * JDBC工具类
+ * <p>Created by xuweinan on 2018/4/4.</p>
+ *
+ * @author xuweinan
+ */
 public abstract class JdbcUtils {
     private static final Logger logger = LoggerFactory.getLogger(JdbcUtils.class);
 
@@ -36,6 +43,7 @@ public abstract class JdbcUtils {
      * the JDBC 2.0 batch mechanism or simply in a traditional one-by-one fashion.
      * <p>Logs a warning if the "supportsBatchUpdates" methods throws an exception
      * and simply returns {@code false} in that case.
+     *
      * @param con the Connection to check
      * @return whether JDBC 2.0 batch updates are supported
      * @see java.sql.DatabaseMetaData#supportsBatchUpdates()
@@ -47,13 +55,11 @@ public abstract class JdbcUtils {
                 if (dbmd.supportsBatchUpdates()) {
                     logger.debug("JDBC driver supports batch updates");
                     return true;
-                }
-                else {
+                } else {
                     logger.debug("JDBC driver does not support batch updates");
                 }
             }
-        }
-        catch (SQLException ex) {
+        } catch (SQLException ex) {
             logger.debug("JDBC driver 'supportsBatchUpdates' method threw exception", ex);
         }
         return false;
@@ -61,7 +67,7 @@ public abstract class JdbcUtils {
 
     public static void setParameterValues(PreparedStatement ps, List<SqlParameter> parameters, Map<String, ?> model) throws SQLException {
         for (int i = 0; i < parameters.size(); i++) {
-            setParameterValue(ps, i, model.get(parameters.get(i).getParameterName()));
+            setParameterValue(ps, parameters.get(i).getParamIndex(), model.get(parameters.get(i).getParameterName()));
         }
     }
 

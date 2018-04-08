@@ -19,7 +19,6 @@ import org.spin.data.sql.dbtype.OracleDatabaseType;
 import org.spin.data.sql.dbtype.PostgreSQLDatabaseType;
 import org.spin.data.sql.dbtype.SQLServerDatabaseType;
 import org.spin.data.sql.dbtype.SQLiteDatabaseType;
-import org.spin.data.sql.param.JdbcUtils;
 import org.spin.data.sql.param.ParameterizedSql;
 import org.spin.data.sql.resolver.TemplateResolver;
 import org.spin.data.util.EntityUtils;
@@ -134,7 +133,7 @@ public class SQLManager {
      *
      * @param connection jdbc连接
      * @param sqlId      sqlId
-     * @param paramMap   参数map
+     * @param paramMap   命名参数
      * @return 查询结果
      */
     public Map<String, Object> findOneAsMap(Connection connection, String sqlId, Map<String, ?> paramMap) {
@@ -148,7 +147,7 @@ public class SQLManager {
      * @param connection  jdbc连接
      * @param sqlId       sqlId
      * @param entityClazz 查询的实体类型
-     * @param paramMap    参数map
+     * @param paramMap    命名参数
      * @param <T>         实体类型
      * @return 查询结果
      */
@@ -181,7 +180,7 @@ public class SQLManager {
      *
      * @param connection jdbc连接
      * @param sqlId      sqlId
-     * @param paramMap   参数map
+     * @param paramMap   命名参数
      * @return 查询结果
      */
     public List<Map<String, Object>> listAsMap(Connection connection, String sqlId, Map<String, ?> paramMap) {
@@ -194,7 +193,7 @@ public class SQLManager {
      *
      * @param connection  jdbc连接
      * @param sqlId       sqlId
-     * @param paramMap    参数map
+     * @param paramMap    命名参数
      * @param pageRequest 分页参数
      * @return 查询结果
      */
@@ -240,7 +239,7 @@ public class SQLManager {
      * @param connection  jdbc连接
      * @param sqlId       sqlId
      * @param entityClazz 查询实体类型
-     * @param paramMap    参数map
+     * @param paramMap    命名参数
      * @param <T>         实体类型
      * @return 查询结果
      */
@@ -263,7 +262,7 @@ public class SQLManager {
      * @param connection  jdbc连接
      * @param sqlId       sqlId
      * @param entityClazz 查询实体类型
-     * @param paramMap    参数map
+     * @param paramMap    命名参数
      * @param pageRequest 分页参数
      * @param <T>         实体类型
      * @return 查询结果
@@ -302,7 +301,7 @@ public class SQLManager {
      *
      * @param connection jdbc连接
      * @param sqlId      命令名称
-     * @param paramMap   参数
+     * @param paramMap   命名参数
      * @return 记录总数
      */
     public Long count(Connection connection, String sqlId, Map<String, ?> paramMap) {
@@ -319,7 +318,7 @@ public class SQLManager {
      *
      * @param connection jdbc连接
      * @param sqlId      命令名称
-     * @param paramMap   参数
+     * @param paramMap   命名参数
      * @return 受影响行数
      */
     public int executeCUD(Connection connection, String sqlId, Map<String, ?> paramMap) {
@@ -340,7 +339,7 @@ public class SQLManager {
      *
      * @param connection jdbc连接
      * @param sqlId      sqlId
-     * @param paramMaps  参数
+     * @param paramMaps  命名参数
      * @return 受影响行数
      */
     @SuppressWarnings({"unchecked"})
@@ -409,7 +408,7 @@ public class SQLManager {
      *
      * @param connection jdbc连接
      * @param parsedSql  解析后的SQL
-     * @param paramMap   参数
+     * @param paramMap   命名参数
      * @param mapper     数据转换器
      * @return 数据列表
      */
@@ -432,7 +431,7 @@ public class SQLManager {
      *
      * @param connection jdbc连接
      * @param parsedSql  解析后的SQL
-     * @param paramMap   参数
+     * @param paramMap   命名参数
      * @param mapper     数据转换器
      * @return 第一条数据
      */

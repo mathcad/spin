@@ -66,12 +66,12 @@ class TestService {
         println(DataSourceContext.getCurrentDataSourceName())
         print(DataSourceContext.getCurrentSchema())
         repoCtx.save(user)
-        DataSourceContext.switchSchema("db2")
+        DataSourceContext.switchDataSource("db2")
         print(DataSourceContext.getCurrentSchema())
         user = user.getDTO(1)
         user.id = null
         repoCtx.save(user)
-        DataSourceContext.restoreSchema()
+        DataSourceContext.usePrimaryDataSource()
         //        throw new SimplifiedException("aa");
     }
 
