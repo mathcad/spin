@@ -1,8 +1,8 @@
 package org.spin.wx;
 
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.JsonUtils;
 
@@ -18,7 +18,7 @@ import java.util.Map;
 public class ApiTicket {
     private static final Logger logger = LoggerFactory.getLogger(ApiTicket.class);
 
-    private static final TypeIdentifier<Map<String, String>> type = new TypeIdentifier<Map<String, String>>() {
+    private static final TypeToken<Map<String, String>> type = new TypeToken<Map<String, String>>() {
     };
 
     private String jsapiTicket;

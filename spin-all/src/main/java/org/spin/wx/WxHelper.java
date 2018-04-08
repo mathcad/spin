@@ -1,15 +1,15 @@
 package org.spin.wx;
 
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
-import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.DigestUtils;
-import org.spin.core.util.MapUtils;
 import org.spin.core.util.HexUtils;
 import org.spin.core.util.HttpUtils;
 import org.spin.core.util.JsonUtils;
+import org.spin.core.util.MapUtils;
 import org.spin.core.util.RandomStringUtils;
 import org.spin.wx.base.TmplMsgEntity;
 import org.spin.wx.base.WxUrl;
@@ -33,7 +33,7 @@ import java.util.SortedMap;
 public class WxHelper {
     private static final Logger logger = LoggerFactory.getLogger(WxHelper.class);
 
-    private static final TypeIdentifier<Map<String, String>> type = new TypeIdentifier<Map<String, String>>() {
+    private static final TypeToken<Map<String, String>> type = new TypeToken<Map<String, String>>() {
     };
 
     /**

@@ -158,7 +158,7 @@ public class SQLManager {
             try {
                 return EntityUtils.wrapperMapToBean(entityClazz, map);
             } catch (Exception e) {
-                throw new org.spin.core.throwable.SQLException(org.spin.core.throwable.SQLException.MAPPING_ERROR, WRAPPE_ERROR);
+                throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.MAPPING_ERROR, WRAPPE_ERROR);
             }
         }));
     }
@@ -251,7 +251,7 @@ public class SQLManager {
             try {
                 return EntityUtils.wrapperMapToBean(entityClazz, map);
             } catch (Exception e) {
-                throw new org.spin.core.throwable.SQLException(org.spin.core.throwable.SQLException.MAPPING_ERROR, WRAPPE_ERROR);
+                throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.MAPPING_ERROR, WRAPPE_ERROR);
             }
         }));
     }
@@ -276,7 +276,7 @@ public class SQLManager {
             try {
                 return EntityUtils.wrapperMapToBean(entityClazz, map);
             } catch (Exception e) {
-                throw new org.spin.core.throwable.SQLException(org.spin.core.throwable.SQLException.MAPPING_ERROR, "转换实体出现错误");
+                throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.MAPPING_ERROR, "转换实体出现错误");
             }
         }));
         Long total = -1L;
@@ -308,7 +308,7 @@ public class SQLManager {
         ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
         Long cnt = executeQueryForOneRow(connection, parsedSql, paramMap, (rs, idx) -> rs.getLong(1));
         if (null == cnt) {
-            throw new org.spin.core.throwable.SQLException(org.spin.core.throwable.SQLException.NOT_UNIQUE_ERROR, "执行查询失败");
+            throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.NOT_UNIQUE_ERROR, "执行查询失败");
         }
         return cnt;
     }

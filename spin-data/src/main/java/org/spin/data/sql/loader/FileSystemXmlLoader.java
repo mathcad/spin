@@ -4,7 +4,8 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
-import org.spin.core.throwable.SQLException;
+import org.spin.data.throwable.SQLError;
+import org.spin.data.throwable.SQLException;
 
 import java.io.File;
 import java.util.List;
@@ -41,11 +42,11 @@ public class FileSystemXmlLoader extends FileSystemSQLLoader {
                 this.sqlSourceVersion.put(cmdFileName + "." + sqlName, version);
             }
         } catch (DocumentException e) {
-            throw new SQLException(SQLException.CANNOT_GET_SQL, "读取模板文件异常:" + sqlFile.getName());
+            throw new SQLException(SQLError.CANNOT_GET_SQL, "读取模板文件异常:" + sqlFile.getName());
         }
 
         if (!this.sqlSourceMap.containsKey(id))
-            throw new SQLException(SQLException.CANNOT_GET_SQL, "模板[" + sqlFile.getName() + "]中未找到指定ID的SQL:" + id);
+            throw new SQLException(SQLError.CANNOT_GET_SQL, "模板[" + sqlFile.getName() + "]中未找到指定ID的SQL:" + id);
         return this.sqlSourceMap.get(id);
     }
 

@@ -1,8 +1,9 @@
 package org.spin.data.sql.param;
 
 import org.spin.core.Assert;
-import org.spin.core.throwable.SQLException;
 import org.spin.data.sql.SqlSource;
+import org.spin.data.throwable.SQLError;
+import org.spin.data.throwable.SQLException;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -122,11 +123,11 @@ public class ParameterizedSql implements Serializable {
                     while (j < statement.length && '}' != statement[j]) {
                         ++j;
                         if (':' == statement[j] || '{' == statement[j]) {
-                            throw new SQLException(SQLException.SQL_EXCEPTION, String.format("命名参数在索引%d发现非法字符'%c'%n原始SQL:%s", i, statement[j], sqlToUse));
+                            throw new SQLException(SQLError.SQL_EXCEPTION, String.format("命名参数在索引%d发现非法字符'%c'%n原始SQL:%s", i, statement[j], sqlToUse));
                         }
                     }
                     if (j >= statement.length) {
-                        throw new SQLException(SQLException.SQL_EXCEPTION, String.format("命名参数声明在%d处未正确结束%n原始SQL:%s ", i, sqlToUse));
+                        throw new SQLException(SQLError.SQL_EXCEPTION, String.format("命名参数声明在%d处未正确结束%n原始SQL:%s ", i, sqlToUse));
                     }
                     if (j - i > 3) {
                         parameter = sqlToUse.substring(i + 2, j);

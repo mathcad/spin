@@ -1,21 +1,26 @@
 package org.spin.core;
 
+import java.io.Serializable;
+
 /**
  * 异常与错误代码
- * <p>自定义代码，并且需要传递给外部请取200以上的值作code，200以内为内部错误不应暴露出去</p>
+ * <p>自定义代码，请选择800以上的编码，800以内框架保留使用</p>
  * 编码规范：
  * <pre>
- *     -1     其他错误
- *     0-199  内部错误
- *     4**    访问及权限错误
- *     5**    服务端运行错误
- *     6**    认证相关错误
+ *     -1      其他错误
+ *     0-149   内部错误
+ *     150-180 SQL错误
+ *     4**     访问及权限错误
+ *     5**     服务端运行错误
+ *     6**     认证相关错误
  * </pre>
  * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @author xuweinan
  */
-public class ErrorCode {
+public class ErrorCode implements Serializable {
+    private static final long serialVersionUID = 2938403856515968992L;
+
     public static final ErrorCode OTHER = new ErrorCode(-1, "其他");
     public static final ErrorCode OK = new ErrorCode(200, "OK");
 

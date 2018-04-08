@@ -7,9 +7,26 @@ package org.spin.core.util.file;
  * @author xuweinna
  */
 public abstract class FileType {
+    /**
+     * 文件扩展名，包含"."
+     * 如<code>.exe</code>
+     */
     protected String extension;
+
+    /**
+     * 文件格式
+     * 如<code>"JPEG"</code>
+     */
     protected String format;
+
+    /**
+     * 文件MIME类型
+     */
     protected String contentType;
+
+    /**
+     * 二进制特征码
+     */
     protected String trait;
 
     protected FileType(String extension, String contentType, String trait) {
@@ -19,32 +36,22 @@ public abstract class FileType {
         this.trait = trait.length() > 16 ? trait.toUpperCase().substring(0, 16) : trait.toUpperCase();
     }
 
-    /**
-     * 文件扩展名，包含"."
-     * 如<code>.exe</code>
-     */
+
     public String getExtension() {
         return extension;
     }
 
-    /**
-     * 文件格式
-     * 如<code>"JPEG"</code>
-     */
+
     public String getFormat() {
         return format;
     }
 
-    /**
-     * 文件MIME类型
-     */
+
     public String getContentType() {
         return contentType;
     }
 
-    /**
-     * 二进制特征码
-     */
+
     public String getTrait() {
         return trait;
     }

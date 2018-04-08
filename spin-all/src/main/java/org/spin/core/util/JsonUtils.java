@@ -5,10 +5,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
-import org.spin.core.TypeIdentifier;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Type;
@@ -259,11 +259,11 @@ public abstract class JsonUtils {
      *
      * @param <T>         要转换的目标类型。
      * @param json        给定的 {@code JSON} 字符串。
-     * @param token       {@code TypeIdentifier} 的类型指示类对象。
+     * @param token       {@code TypeToken} 的类型指示类对象。
      * @param datePattern 日期格式模式。
      * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
      */
-    public static <T> T fromJson(String json, TypeIdentifier<T> token, String... datePattern) {
+    public static <T> T fromJson(String json, TypeToken<T> token, String... datePattern) {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
@@ -279,10 +279,10 @@ public abstract class JsonUtils {
      *
      * @param <T>   要转换的目标类型。
      * @param json  给定的 {@code JSON} 字符串。
-     * @param token {@code TypeIdentifier} 的类型指示类对象。
+     * @param token {@code TypeToken} 的类型指示类对象。
      * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
      */
-    public static <T> T fromJson(String json, TypeIdentifier<T> token) {
+    public static <T> T fromJson(String json, TypeToken<T> token) {
         try {
             return defaultGson.fromJson(json, token.getType());
         } catch (Exception ex) {

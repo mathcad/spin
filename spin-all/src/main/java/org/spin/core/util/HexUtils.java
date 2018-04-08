@@ -175,7 +175,8 @@ public abstract class HexUtils {
      * The returned array will be half the length of the passed array, as it takes two characters to represent any given
      * byte. An exception is thrown if the passed char array has an odd number of elements.
      *
-     * @param array An array of character bytes containing hexadecimal digits
+     * @param array   An array of character bytes containing hexadecimal digits
+     * @param charset charset
      * @return A byte array containing binary data decoded from the supplied byte array (representing characters).
      * @throws DecoderException Thrown if an odd number of characters is supplied to this function
      * @see #decodeHex(char[])
@@ -213,7 +214,8 @@ public abstract class HexUtils {
      * byte in order. The returned array will be double the length of the passed array, as it takes two characters to
      * represent any given byte.
      *
-     * @param array a byte[] to convert to HexUtils characters
+     * @param array   a byte[] to convert to HexUtils characters
+     * @param charset charset
      * @return A byte[] containing the bytes of the hexadecimal characters
      * @see #encodeHex(byte[])
      * @since 1.7 No longer throws IllegalStateException if the charsetName is invalid.
@@ -231,7 +233,8 @@ public abstract class HexUtils {
      * byte in order. The returned array will be double the length of the passed String or array, as it takes two
      * characters to represent any given byte.
      *
-     * @param object a String, or byte[] to convert to HexUtils characters
+     * @param object  a String, or byte[] to convert to HexUtils characters
+     * @param charset charset
      * @return A char[] containing hexadecimal characters
      * @throws EncoderException Thrown if the given object is not a String or byte[]
      * @see #encodeHex(byte[])

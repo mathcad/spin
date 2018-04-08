@@ -17,11 +17,9 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
 import org.spin.core.Assert;
-import org.spin.core.ErrorCode;
 import org.spin.core.session.SessionManager;
 import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.AssertFailException;
-import org.spin.core.throwable.SQLException;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.ClassUtils;
@@ -32,6 +30,8 @@ import org.spin.data.query.CriteriaBuilder;
 import org.spin.data.query.QueryParam;
 import org.spin.data.query.QueryParamParser;
 import org.spin.data.sql.SQLManager;
+import org.spin.data.throwable.SQLError;
+import org.spin.data.throwable.SQLException;
 import org.spin.data.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
@@ -549,6 +549,85 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
 
     /**
      * 通过唯一属性查询
+     * <p>如果结果不唯一或不存在，抛出异常</p>
+     *
+     * @param cb 查询参数
+     * @return 查询到的实体
+     */
+    public T unique(CriteriaBuilder<T> cb) {
+        if (!entityClazz.equals(cb.getEnCls())) {
+            cb.setEnCls(entityClazz);
+        }
+        DetachedCriteria dc = cb.buildDeCriteria(false);
+        Session sess = DataSourceContext.getSession();
+        Criteria ct = dc.getExecutableCriteria(sess);
+        ct.setFirstResult(0);
+        ct.setMaxResults(2);
+        @SuppressWarnings("unchecked")
+        List<T> list = ct.list();
+        if (list.isEmpty()) {
+            throw new SQLException(SQLError.RESULT_NOT_FOUND);
+        } else if (list.size() > 1) {
+            throw new SQLException(SQLError.UNIQUE_EXCEPT_ERROR);
+        }
+        return list.get(0);
+    }
+
+    /**
+     * 通过属性查询
+     * <p>如果结果不唯一或不存在，抛出异常</p>
+     *
+     * @param cts 条件数组
+     * @return 查询到的实体
+     */
+    public T unique(Criterion... cts) {
+        return unique(CriteriaBuilder.forClass(entityClazz).addCriterion(cts));
+    }
+
+    /**
+     * 通过属性查询
+     * <p>如果结果不唯一或不存在，抛出异常</p>
+     *
+     * @param prop  属性名称
+     * @param value 值
+     * @return 查询到的实体
+     */
+    public T unique(String prop, Object value) {
+        return unique(Restrictions.eq(prop, value));
+    }
+
+    /**
+     * 查询且锁定
+     * <p>如果结果不唯一或不存在，抛出异常</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return 查询到的实体
+     */
+    public T uniqueWithLock(String prop, Object value) {
+        Session sess = DataSourceContext.getSession();
+        DetachedCriteria dc = DetachedCriteria.forClass(this.entityClazz);
+        dc.add(Restrictions.eq(prop, value));
+        Criteria ct = dc.getExecutableCriteria(sess);
+        ct.setCacheable(true);
+        ct.setFirstResult(0);
+        ct.setMaxResults(2);
+
+        @SuppressWarnings("unchecked")
+        List<T> list = ct.list();
+        T t;
+        if (list.isEmpty()) {
+            throw new SQLException(SQLError.RESULT_NOT_FOUND);
+        } else if (list.size() > 1) {
+            throw new SQLException(SQLError.UNIQUE_EXCEPT_ERROR);
+        }
+        t = list.get(0);
+        sess.buildLockRequest(LockOptions.UPGRADE).lock(t);
+        return t;
+    }
+
+    /**
+     * 通过唯一属性查询
      * <p>如果不是唯一属性，则返回第一个满足条件的实体</p>
      *
      * @param cb 查询参数
@@ -612,8 +691,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         @SuppressWarnings("unchecked")
         List<T> list = ct.list();
         T t;
-        if (list.isEmpty())
-            throw new SQLException(SQLException.RESULT_NOT_FOUND);
+        if (list.isEmpty()) {
+            throw new SQLException(SQLError.RESULT_NOT_FOUND);
+        }
         t = list.get(0);
         sess.buildLockRequest(LockOptions.UPGRADE).lock(t);
         return t;
@@ -1089,7 +1169,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             }
         }
         if (isCheckWriteOperations() && ((FlushMode) ReflectionUtils.invokeMethod(getFlushMode, session)).lessThan(FlushMode.COMMIT)) {
-            throw new SQLException(ErrorCode.OTHER.getCode(),
+            throw new SQLException(SQLError.WRITE_NOT_PERMISSION,
                 "Write operations are not allowed in read-only mode (FlushMode.MANUAL): " +
                     "Turn your Session into FlushMode.COMMIT/AUTO or remove 'readOnly' marker from transaction definition.");
         }

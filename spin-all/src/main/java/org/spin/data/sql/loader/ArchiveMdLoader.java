@@ -1,7 +1,8 @@
 package org.spin.data.sql.loader;
 
-import org.spin.core.throwable.SQLException;
 import org.spin.core.util.StringUtils;
+import org.spin.data.throwable.SQLError;
+import org.spin.data.throwable.SQLException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,7 +40,7 @@ public class ArchiveMdLoader extends ArchiveSQLLoader {
             while ((temp = StringUtils.trimTrailingWhitespace(bf.readLine())) != null) {
                 if (temp.startsWith(SPLITER) || lastLine.startsWith(SPLITER)) {// 读取到===号，说明上一行是key，下面是注释或者SQL语句
                     if (list.size() != 1) {
-                        throw new SQLException(SQLException.CANNOT_GET_SQL, "模板文件格式不正确:");
+                        throw new SQLException(SQLError.CANNOT_GET_SQL, "模板文件格式不正确:");
                     }
                     key = list.pollLast();
                     if (lastLine.startsWith(SPLITER) && !StringUtils.startsWithIgnoreBlank(temp, REMARK)) {
@@ -49,7 +50,7 @@ public class ArchiveMdLoader extends ArchiveSQLLoader {
                         if (StringUtils.isNotEmpty(tempNext)) {
                             if (tempNext.startsWith(SPLITER)) {
                                 if (StringUtils.isEmpty(lastLine))
-                                    throw new SQLException(SQLException.CANNOT_GET_SQL, "模板文件格式不正确:");
+                                    throw new SQLException(SQLError.CANNOT_GET_SQL, "模板文件格式不正确:");
                                 list.add(lastLine);
                                 lastLine = tempNext;
                                 this.sqlSourceMap.put(path + "." + key, sql.replace(sql.length() - 1, sql.length(), "").substring(0, sql.lastIndexOf("\n")));
@@ -69,10 +70,10 @@ public class ArchiveMdLoader extends ArchiveSQLLoader {
             this.sqlSourceMap.put(path + "." + key, sql.substring(0, sql.lastIndexOf("\n")));
             this.sqlSourceVersion.put(path + "." + key, version);
         } catch (IOException e) {
-            throw new SQLException(SQLException.CANNOT_GET_SQL, "读取模板文件异常:", e);
+            throw new SQLException(SQLError.CANNOT_GET_SQL, "读取模板文件异常:", e);
         }
         if (!this.sqlSourceMap.containsKey(id))
-            throw new SQLException(SQLException.CANNOT_GET_SQL, "模板中未找到指定ID的SQL:" + id);
+            throw new SQLException(SQLError.CANNOT_GET_SQL, "模板中未找到指定ID的SQL:" + id);
         return this.sqlSourceMap.get(id);
     }
 

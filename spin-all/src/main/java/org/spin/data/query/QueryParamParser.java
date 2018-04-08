@@ -8,13 +8,14 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
-import org.spin.core.throwable.SQLException;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.EnumUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.core.IEntity;
+import org.spin.data.throwable.SQLError;
+import org.spin.data.throwable.SQLException;
 
 import javax.persistence.Entity;
 import java.lang.reflect.Field;
@@ -133,7 +134,7 @@ public class QueryParamParser {
                 else if ("desc".equalsIgnoreCase(t[1]))
                     orders.add(Order.desc(t[0]));
                 else
-                    throw new SQLException(SQLException.UNKNOW_MAPPER_SQL_TYPE, "查询参数存在非法的排序字段: [" + sort + "]");
+                    throw new SQLException(SQLError.UNKNOW_MAPPER_SQL_TYPE, "查询参数存在非法的排序字段: [" + sort + "]");
             }
         }
         return orders;
@@ -263,7 +264,7 @@ public class QueryParamParser {
                     ct = Restrictions.isNull(propName);
                 break;
             default:
-                throw new SQLException(SQLException.UNKNOW_MAPPER_SQL_TYPE, StringUtils.format("不支持的查询条件[{0}.{1}={2}]", propName, op, value));
+                throw new SQLException(SQLError.UNKNOW_MAPPER_SQL_TYPE, StringUtils.format("不支持的查询条件[{0}.{1}={2}]", propName, op, value));
         }
         return ct;
     }

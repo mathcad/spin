@@ -97,7 +97,7 @@ public interface BooleanExt {
          * 当bool值为false时的操作
          *
          * @param body 逻辑
-         *             * @return otherwise操作
+         * @return otherwise操作
          */
         public YesThen no(Handler body) {
             if (!value) {
