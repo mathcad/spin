@@ -3,9 +3,9 @@ package org.spin.core.util;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
-import java.util.Map;
+import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MethodUtilsTest {
 
@@ -19,5 +19,10 @@ class MethodUtilsTest {
 
     public void auditingProject(boolean a, long b, boolean c, double d, int e) {
         // 1,2,4,5,7
+    }
+
+    @Test
+    public void test2() {
+        ReflectionUtils.fieldName(ArrayList::new);
     }
 }

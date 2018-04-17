@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.HttpUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.core.util.http.HttpUtils;
 import org.spin.wx.base.WxConfigInfo;
 import org.spin.wx.base.WxUrl;
 
@@ -23,9 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WxTokenManager {
     private static final Logger logger = LoggerFactory.getLogger(WxTokenManager.class);
 
-    private static Map<String, AccessToken> tokenInstances;
-    private static Map<String, AccessToken> oauthTokenInstances;
-    private static Map<String, ApiTicket> ticketInstances;
+    private static Map<String, AccessToken> tokenInstances = new ConcurrentHashMap<>();
+    private static Map<String, AccessToken> oauthTokenInstances = new ConcurrentHashMap<>();
+    private static Map<String, ApiTicket> ticketInstances = new ConcurrentHashMap<>();
 
     private static final Object tokenLock = new Object();
     private static final Object tokenLockWithCode = new Object();
@@ -80,13 +80,6 @@ public class WxTokenManager {
     public static AccessToken getToken(String configName, String appId, String appSecret, String code, AccessToken.TokenType type) {
         logger.info("getInstance({}, {}, {}, {})", configName, appId, appSecret, code);
 
-        if (null == tokenInstances) {
-            tokenInstances = new ConcurrentHashMap<>();
-        }
-        if (null == oauthTokenInstances) {
-            oauthTokenInstances = new ConcurrentHashMap<>();
-        }
-
         AccessToken token = null;
         switch (type) {
             case NORMAL:
@@ -103,7 +96,7 @@ public class WxTokenManager {
                                 throw new SimplifiedException("获取access_token失败", e);
                             }
                             token = new AccessToken(result);
-                            oauthTokenInstances.put(configName, token);
+                            tokenInstances.put(configName, token);
                         }
                     }
                 }
@@ -156,9 +149,6 @@ public class WxTokenManager {
      * @return jsapi ticket
      */
     public static ApiTicket getTicket(String configName) {
-        if (null == ticketInstances) {
-            ticketInstances = new ConcurrentHashMap<>();
-        }
         ApiTicket ticket = ticketInstances.get(configName);
         if (ticket == null || StringUtils.isEmpty(ticket.getTicket()) || System.currentTimeMillis() > ticket.getExpiredSince()) {
             synchronized (ticketLock) {

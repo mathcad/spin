@@ -2,14 +2,14 @@ buildscript {
     ext {
         kotlin_version = '1.2.31'
 //        springBootVersion = '1.5.10.RELEASE'
-        springBootVersion = '2.0.0.RELEASE'
+        springBootVersion = '2.0.1.RELEASE'
         junitJupiterVersion = '5.1.0'
     }
     repositories {
         mavenLocal()
-        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-        maven { url 'https://repo.spring.io/libs-release' }
-        maven { url 'https://repo.spring.io/libs-milestone' }
+        maven { url = 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        maven { url = 'https://repo.spring.io/libs-release' }
+        maven { url = 'https://repo.spring.io/libs-milestone' }
         mavenCentral()
     }
     dependencies {
@@ -31,8 +31,8 @@ allOpen {
     // annotations("com.another.Annotation", "com.third.Annotation")
 }
 
-version '1.0-SNAPSHOT'
-def artifactId = 'shipping-mis'
+version = '1.0-SNAPSHOT'
+//def artifactId = 'shipping-mis'
 
 apply plugin: 'org.springframework.boot'
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -54,7 +54,7 @@ junitPlatform {
 //    }
     // enableStandardTestTask true
     // reportsDir file('build/test-results/junit-platform') // this is the default
-    logManager 'org.apache.logging.log4j.jul.LogManager'
+    logManager = 'org.apache.logging.log4j.jul.LogManager'
 }
 
 bootRun {

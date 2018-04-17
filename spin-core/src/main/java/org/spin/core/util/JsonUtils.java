@@ -6,7 +6,6 @@ import com.google.gson.InstanceCreator;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
@@ -57,8 +56,7 @@ public abstract class JsonUtils {
 
     /**
      * 将给定的目标对象根据指定的条件参数转换成 {@code JSON} 格式的字符串。<br>
-     * <strong>该方法转换发生错误时，不会抛出任何异常。若发生错误时，曾通对象返回 <code>"{}"</code>； 集合或数组对象返回
-     * <code>"[]"</code></strong>
+     * <strong>该方法转换发生错误时，会抛出异常</strong>
      *
      * @param target                      目标对象。
      * @param targetType                  目标对象的类型。
@@ -97,13 +95,10 @@ public abstract class JsonUtils {
     }
 
     /**
-     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。<strong>此方法只用来转换普通的 {@code JavaBean}
-     * 对象。</strong>
+     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。
      * <ul>
-     * <li>该方法只会转换标有 {@literal @Expose} 注解的字段；</li>
      * <li>该方法不会转换 {@code null} 值字段；</li>
-     * <li>该方法会转换所有未标注或已标注 {@literal @Since} 的字段；</li>
-     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss SSS}；</li>
+     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss}；</li>
      * </ul>
      *
      * @param target 要转换成 {@code JSON} 的目标对象。
@@ -120,12 +115,9 @@ public abstract class JsonUtils {
     }
 
     /**
-     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。<strong>此方法只用来转换普通的 {@code JavaBean}
-     * 对象。</strong>
+     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。
      * <ul>
-     * <li>该方法只会转换标有 {@literal @Expose} 注解的字段；</li>
      * <li>该方法不会转换 {@code null} 值字段；</li>
-     * <li>该方法会转换所有未标注或已标注 {@literal @Since} 的字段；</li>
      * </ul>
      *
      * @param target      要转换成 {@code JSON} 的目标对象。
@@ -137,12 +129,10 @@ public abstract class JsonUtils {
     }
 
     /**
-     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。<strong>此方法只用来转换普通的 {@code JavaBean}
-     * 对象。</strong>
+     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。
      * <ul>
-     * <li>该方法只会转换标有 {@literal @Expose} 注解的字段；</li>
      * <li>该方法不会转换 {@code null} 值字段；</li>
-     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss SSS}；</li>
+     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss}；</li>
      * </ul>
      *
      * @param target  要转换成 {@code JSON} 的目标对象。
@@ -154,12 +144,11 @@ public abstract class JsonUtils {
     }
 
     /**
-     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。<strong>此方法只用来转换普通的 {@code JavaBean}
-     * 对象。</strong>
+     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。
      * <ul>
      * <li>该方法不会转换 {@code null} 值字段；</li>
      * <li>该方法会转换所有未标注或已标注 {@literal @Since} 的字段；</li>
-     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss SSS}；</li>
+     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss}；</li>
      * </ul>
      *
      * @param target                      要转换成 {@code JSON} 的目标对象。
@@ -171,8 +160,7 @@ public abstract class JsonUtils {
     }
 
     /**
-     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。<strong>此方法只用来转换普通的 {@code JavaBean}
-     * 对象。</strong>
+     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。
      * <ul>
      * <li>该方法不会转换 {@code null} 值字段；</li>
      * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss SSS}；</li>
@@ -188,12 +176,11 @@ public abstract class JsonUtils {
     }
 
     /**
-     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。<strong>此方法通常用来转换使用泛型的对象。</strong>
+     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。
      * <ul>
-     * <li>该方法只会转换标有 {@literal @Expose} 注解的字段；</li>
      * <li>该方法不会转换 {@code null} 值字段；</li>
      * <li>该方法会转换所有未标注或已标注 {@literal @Since} 的字段；</li>
-     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss SSSS}；</li>
+     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss}；</li>
      * </ul>
      *
      * @param target     要转换成 {@code JSON} 的目标对象。
@@ -205,11 +192,10 @@ public abstract class JsonUtils {
     }
 
     /**
-     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。<strong>此方法通常用来转换使用泛型的对象。</strong>
+     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。
      * <ul>
-     * <li>该方法只会转换标有 {@literal @Expose} 注解的字段；</li>
      * <li>该方法不会转换 {@code null} 值字段；</li>
-     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss SSSS}；</li>
+     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss}；</li>
      * </ul>
      *
      * @param target     要转换成 {@code JSON} 的目标对象。
@@ -222,11 +208,11 @@ public abstract class JsonUtils {
     }
 
     /**
-     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。<strong>此方法通常用来转换使用泛型的对象。</strong>
+     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。
      * <ul>
      * <li>该方法不会转换 {@code null} 值字段；</li>
      * <li>该方法会转换所有未标注或已标注 {@literal @Since} 的字段；</li>
-     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss SSS}；</li>
+     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss}；</li>
      * </ul>
      *
      * @param target                      要转换成 {@code JSON} 的目标对象。
@@ -239,10 +225,10 @@ public abstract class JsonUtils {
     }
 
     /**
-     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。<strong>此方法通常用来转换使用泛型的对象。</strong>
+     * 将给定的目标对象转换成 {@code JSON} 格式的字符串。
      * <ul>
      * <li>该方法不会转换 {@code null} 值字段；</li>
-     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss SSS}；</li>
+     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss}；</li>
      * </ul>
      *
      * @param target                      要转换成 {@code JSON} 的目标对象。
@@ -308,8 +294,7 @@ public abstract class JsonUtils {
     }
 
     /**
-     * 将给定的 {@code JSON} 字符串转换成指定的类型对象。<strong>此方法通常用来转换普通的 {@code JavaBean}
-     * 对象。</strong>
+     * 将给定的 {@code JSON} 字符串转换成指定的类型对象。
      *
      * @param <T>         要转换的目标类型。
      * @param json        给定的 {@code JSON} 字符串。

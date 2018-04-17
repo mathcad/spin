@@ -1,8 +1,7 @@
 package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
-import org.spin.core.util.MapUtils;
-import org.spin.core.util.HttpUtils;
+import org.spin.core.util.http.HttpUtils;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

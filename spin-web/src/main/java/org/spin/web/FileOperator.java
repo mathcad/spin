@@ -2,12 +2,12 @@ package org.spin.web;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.SpinContext;
 import org.spin.core.ErrorCode;
+import org.spin.core.SpinContext;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.HttpUtils;
 import org.spin.core.util.RandomStringUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.core.util.http.HttpUtils;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 

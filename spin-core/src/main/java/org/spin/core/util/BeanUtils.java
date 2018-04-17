@@ -11,7 +11,6 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
 
 /**
  * Bean工具类
@@ -101,7 +100,7 @@ public abstract class BeanUtils {
      * @param bean       目标对象
      * @param properties 属性properties
      */
-    public static void applyProperties(Object bean, Properties properties) {
+    public static void applyProperties(Object bean, Map<?, ?> properties) {
         properties.forEach((key, value) -> {
             String getterName = "get" + StringUtils.capitalize(key.toString());
             String setterName = "set" + StringUtils.capitalize(key.toString());

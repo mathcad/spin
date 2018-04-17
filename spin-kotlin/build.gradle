@@ -13,7 +13,7 @@ buildscript {
     }
     repositories {
         mavenLocal()
-        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        maven { url = 'http://maven.aliyun.com/nexus/content/groups/public/' }
         mavenCentral()
     }
     dependencies {
@@ -37,7 +37,7 @@ junitPlatform {
 //    }
     // enableStandardTestTask true
     // reportsDir file('build/test-results/junit-platform') // this is the default
-    logManager 'org.apache.logging.log4j.jul.LogManager'
+    logManager = 'org.apache.logging.log4j.jul.LogManager'
 }
 
 install {
