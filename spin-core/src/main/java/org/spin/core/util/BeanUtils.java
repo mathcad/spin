@@ -95,7 +95,7 @@ public abstract class BeanUtils {
     }
 
     /**
-     * 将properties中的属性设置到bean中，bean中不存在的属性将被忽略
+     * 将properties中的属性通过setter设置到bean中，bean中不存在的属性将被忽略
      *
      * @param bean       目标对象
      * @param properties 属性properties
