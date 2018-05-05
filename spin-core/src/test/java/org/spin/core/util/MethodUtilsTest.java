@@ -20,9 +20,4 @@ class MethodUtilsTest {
     public void auditingProject(boolean a, long b, boolean c, double d, int e) {
         // 1,2,4,5,7
     }
-
-    @Test
-    public void test2() {
-        ReflectionUtils.fieldName(ArrayList::new);
-    }
 }

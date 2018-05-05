@@ -17,7 +17,7 @@ buildscript {
 
 ext {
     springVersion = "5.0.4.RELEASE"
-    junitJupiterVersion = '5.1.0'
+    junitJupiterVersion = '5.2.0'
 }
 
 junitPlatform {

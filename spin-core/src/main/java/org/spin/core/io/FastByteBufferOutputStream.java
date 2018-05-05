@@ -1,4 +1,4 @@
-package org.spin.core;
+package org.spin.core.io;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -1,4 +1,4 @@
-package org.spin.core;
+package org.spin.core.io;
 
 /**
  * 快速缓冲，将数据存放在缓冲集中，取代以往的单一数组

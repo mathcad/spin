@@ -8,6 +8,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.core.ErrorCode;
+import org.spin.core.collection.FixedVector;
+import org.spin.core.io.BytesCombinedInputStream;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.file.FileType;
 import org.spin.core.util.file.FileTypeUtils;
@@ -43,11 +45,10 @@ public abstract class ExcelUtils {
     public static void readWorkBook(InputStream is, RowReader reader) {
         byte[] trait = new byte[16];
         FileType fileType = null;
+        BytesCombinedInputStream bcis = null;
         try {
-            int read = is.read(trait, 0, 16);
-            if (read < 16) {
-                throw new SimplifiedException(ErrorCode.IO_FAIL, "输入流中不包含有效内容");
-            }
+            bcis = new BytesCombinedInputStream(is, 16);
+            bcis.readCombinedBytes(trait);
             fileType = FileTypeUtils.detectFileType(trait);
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "输入流读取失败", e);
@@ -55,9 +56,9 @@ public abstract class ExcelUtils {
         if (Objects.isNull(fileType)) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
         } else if (fileType.equals(FileType.Document.XLS)) {
-            readWorkBook(is, Type.XLS, reader);
+            readWorkBook(bcis, Type.XLS, reader);
         } else if (fileType.equals(FileType.Document.XLSX)) {
-            readWorkBook(is, Type.XLSX, reader);
+            readWorkBook(bcis, Type.XLSX, reader);
         } else {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
         }
@@ -73,10 +74,11 @@ public abstract class ExcelUtils {
     public static void readWorkBook(InputStream is, Type type, RowReader reader) {
         Workbook workbook;
         try {
-            if (Type.XLS.equals(type))
+            if (Type.XLS.equals(type)) {
                 workbook = new HSSFWorkbook(is);
-            else
+            } else {
                 workbook = new XSSFWorkbook(is);
+            }
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "读取文件失败", e);
         }
@@ -88,18 +90,18 @@ public abstract class ExcelUtils {
             }
             // 循环行Row
             int rowIndex = 0;
+            FixedVector<String> rowData = new FixedVector<>(sheet.getRow(sheet.getLastRowNum()).getLastCellNum() * 3);
             for (int rowNum = 0; rowNum <= sheet.getLastRowNum(); rowNum++) {
                 Row row = sheet.getRow(rowNum);
-                if (row == null) {
+                if (row == null || row.getLastCellNum() < 1) {
                     continue;
                 }
-
-                String[] rowData = new String[row.getLastCellNum()];
+                rowData.clear();
 
                 Iterator<Cell> cells = row.cellIterator();
                 while (cells.hasNext()) {
                     Cell cell = cells.next();
-                    rowData[cell.getColumnIndex()] = getCellValue(cell);
+                    rowData.add(getCellValue(cell));
                 }
                 reader.readRow(sheetIndex, sheet.getSheetName(), rowIndex, rowData);
                 rowIndex++;
@@ -199,6 +201,6 @@ public abstract class ExcelUtils {
          * @param rowIndex   行索引
          * @param row        行数据
          */
-        void readRow(int sheetIndex, String sheetName, int rowIndex, String[] row);
+        void readRow(int sheetIndex, String sheetName, int rowIndex, FixedVector<String> row);
     }
 }

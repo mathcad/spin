@@ -34,7 +34,7 @@ import org.spin.data.throwable.SQLError;
 import org.spin.data.throwable.SQLException;
 import org.spin.data.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate5.HibernateOptimisticLockingFailureException;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -137,7 +137,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             } else {
                 DataSourceContext.getSession().update(entity);
             }
-        } catch (HibernateOptimisticLockingFailureException ope) {
+        } catch (OptimisticLockingFailureException ope) {
             throw new SimplifiedException("The entity is expired", ope);
         }
         return get(entity.getId());

@@ -3,7 +3,7 @@ buildscript {
         kotlin_version = '1.2.31'
 //        springBootVersion = '1.5.10.RELEASE'
         springBootVersion = '2.0.1.RELEASE'
-        junitJupiterVersion = '5.1.0'
+        junitJupiterVersion = '5.2.0'
     }
     repositories {
         mavenLocal()
