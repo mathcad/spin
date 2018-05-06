@@ -102,13 +102,11 @@ public abstract class ExcelUtils {
                 rowData.clear();
 
                 Iterator<Cell> cells = row.cellIterator();
+                String cellValue = null;
                 while (cells.hasNext()) {
-                    Cell cell = cells.next();
-                    String cellValue = getCellValue(cell);
-                    if (StringUtils.isNotEmpty(cellValue)) {
-                        rowData.add(cellValue);
-                        hasValidCell = true;
-                    }
+                    cellValue = getCellValue(cells.next());
+                    rowData.add(cellValue);
+                    hasValidCell = hasValidCell || StringUtils.isNotEmpty(cellValue);
                 }
                 if (hasValidCell) {
                     reader.readRow(sheetIndex, sheet.getSheetName(), rowIndex, rowData);
