@@ -69,6 +69,8 @@ uploadArchives {
 dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+    testRuntime group: 'org.apache.poi', name: 'poi-scratchpad', version: '3.17'
+
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
 
 //    core

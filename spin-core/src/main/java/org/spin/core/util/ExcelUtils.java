@@ -91,8 +91,11 @@ public abstract class ExcelUtils {
             // 循环行Row
             int rowIndex = 0;
             FixedVector<String> rowData = new FixedVector<>(sheet.getRow(sheet.getLastRowNum()).getLastCellNum() * 3);
+            Row row = null;
+            boolean hasValidCell = false;
             for (int rowNum = 0; rowNum <= sheet.getLastRowNum(); rowNum++) {
-                Row row = sheet.getRow(rowNum);
+                hasValidCell = false;
+                row = sheet.getRow(rowNum);
                 if (row == null || row.getLastCellNum() < 1) {
                     continue;
                 }
@@ -101,9 +104,15 @@ public abstract class ExcelUtils {
                 Iterator<Cell> cells = row.cellIterator();
                 while (cells.hasNext()) {
                     Cell cell = cells.next();
-                    rowData.add(getCellValue(cell));
+                    String cellValue = getCellValue(cell);
+                    if (StringUtils.isNotEmpty(cellValue)) {
+                        rowData.add(cellValue);
+                        hasValidCell = true;
+                    }
                 }
-                reader.readRow(sheetIndex, sheet.getSheetName(), rowIndex, rowData);
+                if (hasValidCell) {
+                    reader.readRow(sheetIndex, sheet.getSheetName(), rowIndex, rowData);
+                }
                 rowIndex++;
             }
         }
