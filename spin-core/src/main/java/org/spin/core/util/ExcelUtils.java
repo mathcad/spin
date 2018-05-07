@@ -1,24 +1,18 @@
 package org.spin.core.util;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DateUtil;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.core.ErrorCode;
 import org.spin.core.collection.FixedVector;
 import org.spin.core.io.BytesCombinedInputStream;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.excel.RowData;
+import org.spin.core.util.excel.RowReader;
 import org.spin.core.util.file.FileType;
 import org.spin.core.util.file.FileTypeUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Objects;
@@ -109,7 +103,7 @@ public abstract class ExcelUtils {
                     hasValidCell = hasValidCell || StringUtils.isNotEmpty(cellValue);
                 }
                 if (hasValidCell) {
-                    reader.readRow(sheetIndex, sheet.getSheetName(), rowIndex, rowData);
+                    reader.readRow(new RowData(sheetIndex, sheet.getSheetName(), rowIndex, rowData));
                 }
                 rowIndex++;
             }
@@ -194,20 +188,4 @@ public abstract class ExcelUtils {
         return result;
     }
 
-    /**
-     * 单行数据读取
-     */
-    @FunctionalInterface
-    public interface RowReader {
-
-        /**
-         * 顺序读取行
-         *
-         * @param sheetIndex 工作簿索引
-         * @param sheetName  工作簿名称
-         * @param rowIndex   行索引
-         * @param row        行数据
-         */
-        void readRow(int sheetIndex, String sheetName, int rowIndex, FixedVector<String> row);
-    }
 }

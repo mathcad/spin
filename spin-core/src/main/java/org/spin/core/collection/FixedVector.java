@@ -184,4 +184,11 @@ public class FixedVector<T> implements Collection<T> {
 
         }
     }
+
+    @Override
+    public String toString() {
+        return "FixedVector{" +
+            "elementData=" + Arrays.toString(elementData) +
+            '}';
+    }
 }

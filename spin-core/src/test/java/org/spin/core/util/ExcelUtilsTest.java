@@ -18,7 +18,10 @@ class ExcelUtilsTest {
     void readWorkBook() {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         try (InputStream fis = loader.getResourceAsStream("ExcelDemo.xls")) {
-            ExcelUtils.readWorkBook(fis, (sheetIndex, sheetName, rowIndex, row) -> System.out.println(rowIndex + ":" + row.get(0)));
+            ExcelUtils.readWorkBook(fis, (row) ->
+//                System.out.println(rowIndex + ":" + row.get(0))
+                    System.out.println(row.getRow())
+            );
             assertTrue(true);
         } catch (IOException e) {
             e.printStackTrace();

@@ -310,6 +310,21 @@ public abstract class NumericUtils {
         return resD == null ? sign + resN.toString() : sign + resN.toString() + "." + resD.toString();
     }
 
+    /**
+     *
+     * @param object
+     * @return
+     */
+    public static boolean isNum(Object object) {
+        if (object instanceof Number) {
+            return true;
+        } else if (object instanceof CharSequence) {
+            return pureNum.matcher(object.toString()).matches();
+        } else {
+            return false;
+        }
+    }
+
     private static Long decodeNum(String n) {
         if (pureNum.matcher(n).matches())
             return Long.parseLong(n);
