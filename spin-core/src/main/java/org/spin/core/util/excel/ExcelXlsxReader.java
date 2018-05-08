@@ -88,11 +88,6 @@ public class ExcelXlsxReader extends DefaultHandler {
     private boolean isTElement;
 
     /**
-     * 异常信息，如果为空则表示没有异常
-     */
-    private String exceptionMessage;
-
-    /**
      * 单元格数据类型，默认为字符串类型
      */
     private CellDataType nextDataType = CellDataType.SSTINDEX;
@@ -102,12 +97,6 @@ public class ExcelXlsxReader extends DefaultHandler {
     private short formatIndex;
 
     private String formatString;
-
-    // 定义前一个元素和当前元素的位置，用来计算其中空的单元格数量，如A6和A8等
-//    private String preRef = null, ref = null;
-
-    // 定义该文档一行最大的单元格数，用来补全一行最后可能缺失的单元格
-//    private String maxRef = null;
 
     /**
      * 单元格
