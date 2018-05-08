@@ -70,6 +70,9 @@ dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
     testRuntime group: 'org.apache.poi', name: 'poi-scratchpad', version: '3.17'
+    testRuntime(group: 'org.apache.poi', name: 'poi-excelant', version: '3.17') {
+        exclude(module: 'ant')
+    }
 
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
 
@@ -81,6 +84,7 @@ dependencies {
     compile group: 'com.belerweb', name: 'pinyin4j', version: '2.5.1'
     compile group: 'org.ow2.asm', name: 'asm', version: '6.1.1'
 
+    compile group: 'xerces', name: 'xercesImpl', version: '2.11.0'
     compileOnly group: 'org.dom4j', name: 'dom4j', version: '2.1.0'
     compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: '3.17') {
         exclude(module: 'ant')

@@ -311,9 +311,10 @@ public abstract class NumericUtils {
     }
 
     /**
+     * 判断一个对象是否是一个数字或数字字符串
      *
-     * @param object
-     * @return
+     * @param object 待判断对象
+     * @return 是否是一个数字，或者数字字符串
      */
     public static boolean isNum(Object object) {
         if (object instanceof Number) {

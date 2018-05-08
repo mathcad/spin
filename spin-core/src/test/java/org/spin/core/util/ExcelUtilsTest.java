@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -20,7 +21,7 @@ class ExcelUtilsTest {
         try (InputStream fis = loader.getResourceAsStream("ExcelDemo.xls")) {
             ExcelUtils.readWorkBook(fis, (row) ->
 //                System.out.println(rowIndex + ":" + row.get(0))
-                    System.out.println(row.getRow())
+                    System.out.println(row.getColumnNum() + Arrays.toString(row.getRow()))
             );
             assertTrue(true);
         } catch (IOException e) {

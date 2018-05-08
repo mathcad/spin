@@ -1,14 +1,10 @@
 package org.spin.core.util.excel;
 
-import org.apache.poi.hssf.eventusermodel.HSSFEventFactory;
-import org.apache.poi.hssf.eventusermodel.HSSFRequest;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.junit.jupiter.api.Test;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 /**
  * description
@@ -21,20 +17,14 @@ class ExcelUtilsTest {
     @Test
     void readWorkBook() {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        try (InputStream fis = loader.getResourceAsStream("ExcelDemo.xlsx")) {
-            ExcelUtils.readWorkBook(fis, ((row) -> {
-                System.out.println(row.getRowlist());
-            }));
-
-            ExcelUtils.readWorkBook(
-//                new FileInputStream("C:\\Users\\thinkpad\\Desktop\\2.xlsx"),
-                loader.getResourceAsStream("ExcelDemo.xls"),
-                ((row) -> {
-                System.out.println(row.getRow());
-            }));
-
-        } catch (FileNotFoundException e) {
+        try (InputStream fis = loader.getResourceAsStream("ExcelDemo.xls")) {
+            ExcelUtils.readWorkBook(fis, (row -> System.out.println(row.getSheetIndex() + row.getSheetName() + row.getRowIndex() + Arrays.toString(row.getRow()))));
+        } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        try (InputStream fis = loader.getResourceAsStream("ExcelDemo.xlsx")) {
+            ExcelUtils.readWorkBook(fis, (row -> System.out.println(row.getSheetIndex() + row.getSheetName() + row.getRowIndex() + Arrays.toString(row.getRow()))));
         } catch (IOException e) {
             e.printStackTrace();
         }
