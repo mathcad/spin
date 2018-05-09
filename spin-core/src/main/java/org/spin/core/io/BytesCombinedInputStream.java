@@ -39,7 +39,7 @@ public class BytesCombinedInputStream extends InputStream implements AutoCloseab
      */
     public BytesCombinedInputStream(InputStream source, int bufLen) throws IOException {
         this.bytesBuf = new byte[bufLen];
-        int total = source.read(bytesBuf, 0, bufLen);
+        int total = Assert.notNull(source, "输入流不能为空").read(bytesBuf, 0, bufLen);
         if (total != bufLen) {
             throw new IOException("source read EOF");
         }

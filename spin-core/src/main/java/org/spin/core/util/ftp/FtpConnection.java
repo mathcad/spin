@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.EnumUtils;
 import org.spin.core.util.StringUtils;
 
 import java.io.File;
@@ -45,28 +44,28 @@ public class FtpConnection implements AutoCloseable {
     private static final Pattern protocalPattern = Pattern.compile("^(ftp[s]?)://(.+:.+@)?([^:]+)(:\\d{2,5})?$", Pattern.CASE_INSENSITIVE);
 
     private String name;
-    private Protocal protocal;
+    private boolean secure;
+    private String protocal;
     private String userName;
     private String password;
     private String host;
     private int port = 21;
 
     private Charset serverCharset = Charset.forName("GBK");
-    private Charset ftpCharset = Charset.forName("ISO-8859-1");
 
     private FTPClient client;
 
     /**
      * 创建FTP客户端
      *
-     * @param url 标准FTP连接地址，形如：ftp://用户名:密码@服务器ip地址
+     * @param url      标准FTP连接地址，形如：ftp://用户名:密码@服务器ip地址
+     * @param protocal 如果是ftps连接，需指明加密协议
      */
-    public FtpConnection(String url) {
+    public static FtpConnection ofUrl(String url, String protocal) {
         Matcher matcher = protocalPattern.matcher(url);
         if (!matcher.matches())
             throw new SimplifiedException("FTP连接URL格式错误");
 
-        Protocal pt = EnumUtils.getEnum(Protocal.class, matcher.group(1).toLowerCase());
         String token = matcher.group(2);
         String u = null;
         String pwd = null;
@@ -77,32 +76,26 @@ public class FtpConnection implements AutoCloseable {
         }
         String h = matcher.group(3).toLowerCase();
         String p = matcher.group(4);
-
-        pt = null == pt ? Protocal.FTP : pt;
-        this.protocal = pt;
-        this.host = h;
-        this.port = StringUtils.isEmpty(p) ? 21 : Integer.parseInt(p.substring(1));
-        this.userName = u;
-        this.password = pwd;
-        if (pt == Protocal.FTP) {
-            this.client = new FTPClient();
-
-        } else if (pt == Protocal.FTPS) {
-            this.client = new FTPSClient("SSL");
-
-        }
+        return new FtpConnection(StringUtils.trimToSpec(protocal, "TLS"), u, pwd, h, StringUtils.isEmpty(p) ? 21 : Integer.parseInt(p.substring(1)));
     }
 
     /**
      * 创建FTP客户端
      *
-     * @param protocal 协议
-     * @param userName 用户名
-     * @param password 密码
-     * @param host     主机
+     * @param host 主机
      */
-    public FtpConnection(Protocal protocal, String userName, String password, String host) {
-        this(protocal, userName, password, host, 21);
+    public FtpConnection(String host) {
+        this(null, null, null, host, 21);
+    }
+
+    /**
+     * 创建FTP客户端
+     *
+     * @param host 主机
+     * @param port 端口
+     */
+    public FtpConnection(String host, int port) {
+        this(null, null, null, host, port);
     }
 
     /**
@@ -113,32 +106,38 @@ public class FtpConnection implements AutoCloseable {
      * @param host     主机
      */
     public FtpConnection(String userName, String password, String host) {
-        this(Protocal.FTP, userName, password, host, 21);
+        this(null, userName, password, host, 21);
     }
 
     /**
      * 创建FTP客户端
      *
-     * @param protocal 协议
      * @param userName 用户名
      * @param password 密码
      * @param host     主机
      * @param port     端口
      */
-    public FtpConnection(Protocal protocal, String userName, String password, String host, int port) {
-        Protocal p = null == protocal ? Protocal.FTP : protocal;
-        this.protocal = p;
+    public FtpConnection(String userName, String password, String host, int port) {
+        this(null, userName, password, host, port);
+    }
+
+    /**
+     * 创建FTP客户端
+     *
+     * @param protocal 加密协议
+     * @param userName 用户名
+     * @param password 密码
+     * @param host     主机
+     * @param port     端口
+     */
+    public FtpConnection(String protocal, String userName, String password, String host, int port) {
+        secure = StringUtils.isNotEmpty(protocal);
+        this.protocal = protocal;
         this.host = host;
         this.port = port;
         this.userName = userName;
         this.password = password;
-        if (p == Protocal.FTP) {
-            this.client = new FTPClient();
-
-        } else if (p == Protocal.FTPS) {
-            this.client = new FTPSClient("SSL");
-
-        }
+        client = secure ? new FTPSClient(protocal) : new FTPClient();
     }
 
     /**
@@ -417,7 +416,11 @@ public class FtpConnection implements AutoCloseable {
         this.name = name;
     }
 
-    public Protocal getProtocal() {
+    public boolean isSecure() {
+        return secure;
+    }
+
+    public String getProtocal() {
         return protocal;
     }
 
@@ -445,10 +448,6 @@ public class FtpConnection implements AutoCloseable {
         this.serverCharset = serverCharset;
         close();
         connect();
-    }
-
-    public Charset getFtpCharset() {
-        return ftpCharset;
     }
 
     public boolean isAvaliable() {

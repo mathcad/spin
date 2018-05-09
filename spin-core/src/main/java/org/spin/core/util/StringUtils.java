@@ -7,7 +7,23 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import static java.lang.Character.isLetterOrDigit;
@@ -463,6 +479,25 @@ public abstract class StringUtils {
      */
     public static String trimToEmpty(String str) {
         return str == null ? EMPTY : str.trim();
+    }
+
+    /**
+     * 删除字符串开头与结尾处的不可见的控制字符(char &lt;= 32)
+     * <p>如果字符串为<code>null</code>，返回指定的字符串</p>
+     * <p>通过 {@link String#trim()}实现.</p>
+     * <pre>
+     * StringUtils.trimToNull(null)          = null
+     * StringUtils.trimToNull("")            = null
+     * StringUtils.trimToNull("     ")       = null
+     * StringUtils.trimToNull("abc")         = "abc"
+     * StringUtils.trimToNull("    abc    ") = "abc"
+     * </pre>
+     *
+     * @param str 待处理字符串
+     * @return trim后的字符串
+     */
+    public static String trimToSpec(String str, String nullStr) {
+        return str == null ? nullStr : str.trim();
     }
 
     // IndexOf
