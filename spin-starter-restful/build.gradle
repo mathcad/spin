@@ -40,7 +40,7 @@ junitPlatform {
 //    }
     // enableStandardTestTask true
     // reportsDir file('build/test-results/junit-platform') // this is the default
-    logManager = 'org.apache.logging.log4j.jul.LogManager'
+    logManager = 'java.util.logging.LogManager'
 }
 
 install {
