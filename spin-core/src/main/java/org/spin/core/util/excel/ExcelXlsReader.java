@@ -38,7 +38,7 @@ import java.util.Arrays;
  * 基于事件驱动的03格式的读取器
  *
  * @author wangy QQ 837195190
- * <p>Created by thinkpad on 2018/5/5.<p/>
+ * <p>Created by thinkpad on 2018/5/5.</p>
  */
 public class ExcelXlsReader implements HSSFListener {
     private static final int[] DATE_INT = new int[]{14, 31, 57, 58, 20, 32, 178};

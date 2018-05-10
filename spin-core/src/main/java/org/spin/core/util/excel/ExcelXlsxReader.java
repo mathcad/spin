@@ -19,9 +19,7 @@ import org.spin.core.util.StringUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,12 +27,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 
 /**
  * 基于SaxReader的07格式读取器
  *
  * @author wangy QQ 837195190
- * <p>Created by thinkpad on 2018/5/5.<p/>
+ * <p>Created by thinkpad on 2018/5/5.</p>
  */
 public class ExcelXlsxReader extends DefaultHandler {
 
@@ -161,19 +163,17 @@ public class ExcelXlsxReader extends DefaultHandler {
         ALPHA_NUM.put('Z', 26);
     }
 
-    /**
-     * 遍历工作簿中所有的电子表格
-     */
     public void process(InputStream is, FinalConsumer<ExcelRow> rowReader) {
         this.rowReader = rowReader;
-        XMLReader parser;
+        SAXParserFactory parserFactory = SAXParserFactory.newInstance();
         XSSFReader.SheetIterator sheets;
+        SAXParser parser;
         try {
+            parser = parserFactory.newSAXParser();
             OPCPackage pkg = OPCPackage.open(is);
             XSSFReader xssfReader = new XSSFReader(pkg);
             stylesTable = xssfReader.getStylesTable();
-            SharedStringsTable sst = xssfReader.getSharedStringsTable();
-            parser = fetchSheetParser(sst);
+            sst = xssfReader.getSharedStringsTable();
             sheets = (XSSFReader.SheetIterator) xssfReader.getSheetsData();
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "文件读取异常", e);
@@ -181,6 +181,8 @@ public class ExcelXlsxReader extends DefaultHandler {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "XML解析异常", e);
         } catch (SAXException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "SAX解析异常", e);
+        } catch (ParserConfigurationException e) {
+            throw new SimplifiedException(ErrorCode.IO_FAIL, "SAX解析器创建异常", e);
         }
 
         while (sheets.hasNext()) {
@@ -189,7 +191,7 @@ public class ExcelXlsxReader extends DefaultHandler {
             try (InputStream sheet = sheets.next()) {
                 rowData.setSheetName(sheets.getSheetName());
                 InputSource sheetSource = new InputSource(sheet);
-                parser.parse(sheetSource);
+                parser.parse(sheetSource, this);
             } catch (IOException e) {
                 throw new SimplifiedException(ErrorCode.IO_FAIL, "文件读取异常", e);
             } catch (SAXException e) {
@@ -198,19 +200,10 @@ public class ExcelXlsxReader extends DefaultHandler {
         }
     }
 
-    public XMLReader fetchSheetParser(SharedStringsTable sst) throws SAXException {
-        XMLReader parser = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-        this.sst = sst;
-        parser.setContentHandler(this);
-        return parser;
-    }
-
     @Override
     public void startElement(String uri, String localName, String name, Attributes attributes) {
         // c => 单元格
         if ("c".equals(name)) {
-            String r = attributes.getValue("r");
-            getColIdx(r);
             // 设定单元格类型
             setNextDataType(attributes);
             // Figure out if the value is an index in the SST
@@ -223,46 +216,6 @@ public class ExcelXlsxReader extends DefaultHandler {
 
         // 置空
         lastContents = "";
-    }
-
-    /**
-     * 处理数据类型
-     */
-    public void setNextDataType(Attributes attributes) {
-        nextDataType = CellDataType.NUMBER;
-        formatIndex = -1;
-        formatString = null;
-        String cellType = attributes.getValue("t");
-        String cellStyleStr = attributes.getValue("s");
-
-        if ("b".equals(cellType)) {
-            nextDataType = CellDataType.BOOL;
-        } else if ("e".equals(cellType)) {
-            nextDataType = CellDataType.ERROR;
-        } else if ("inlineStr".equals(cellType)) {
-            nextDataType = CellDataType.INLINESTR;
-        } else if ("s".equals(cellType)) {
-            nextDataType = CellDataType.SSTINDEX;
-        } else if ("str".equals(cellType)) {
-            nextDataType = CellDataType.FORMULA;
-        }
-
-        if (cellStyleStr != null) {
-            int styleIndex = Integer.parseInt(cellStyleStr);
-            XSSFCellStyle style = stylesTable.getStyleAt(styleIndex);
-            formatIndex = style.getDataFormat();
-            formatString = style.getDataFormatString();
-
-            if (Arrays.binarySearch(DATE_INT, formatIndex) >= 0) {
-                nextDataType = CellDataType.DATE;
-                formatString = "yyyy-MM-dd hh:mm:ss";
-            }
-
-            if (formatString == null) {
-                nextDataType = CellDataType.NULL;
-                formatString = BuiltinFormats.getBuiltinFormat(formatIndex);
-            }
-        }
     }
 
     @Override
@@ -301,12 +254,58 @@ public class ExcelXlsxReader extends DefaultHandler {
         }
     }
 
+    @Override
+    public void characters(char[] ch, int start, int length) {
+        // 得到单元格内容的值
+        lastContents += new String(ch, start, length);
+    }
+
+    private void setNextDataType(Attributes attributes) {
+        String r = attributes.getValue("r");
+        resolveColIdx(r);
+
+        nextDataType = CellDataType.NUMBER;
+        formatIndex = -1;
+        formatString = null;
+        String cellType = attributes.getValue("t");
+        String cellStyleStr = attributes.getValue("s");
+
+        if ("b".equals(cellType)) {
+            nextDataType = CellDataType.BOOL;
+        } else if ("e".equals(cellType)) {
+            nextDataType = CellDataType.ERROR;
+        } else if ("inlineStr".equals(cellType)) {
+            nextDataType = CellDataType.INLINESTR;
+        } else if ("s".equals(cellType)) {
+            nextDataType = CellDataType.SSTINDEX;
+        } else if ("str".equals(cellType)) {
+            nextDataType = CellDataType.FORMULA;
+        }
+
+        if (cellStyleStr != null) {
+            int styleIndex = Integer.parseInt(cellStyleStr);
+            XSSFCellStyle style = stylesTable.getStyleAt(styleIndex);
+            formatIndex = style.getDataFormat();
+            formatString = style.getDataFormatString();
+
+            if (Arrays.binarySearch(DATE_INT, formatIndex) >= 0) {
+                nextDataType = CellDataType.DATE;
+                formatString = "yyyy-MM-dd hh:mm:ss";
+            }
+
+            if (formatString == null) {
+                nextDataType = CellDataType.NULL;
+                formatString = BuiltinFormats.getBuiltinFormat(formatIndex);
+            }
+        }
+    }
+
     /**
      * 对解析出来的数据进行类型处理
      *
      * @param value 单元格的值（这时候是一串数字）
      */
-    public String getDataValue(String value) {
+    private String getDataValue(String value) {
         String thisStr;
         switch (nextDataType) {
             // 这几个的顺序不能随便交换，交换了很可能会导致数据错误
@@ -356,7 +355,7 @@ public class ExcelXlsxReader extends DefaultHandler {
         return thisStr;
     }
 
-    public void getColIdx(String colName) {
+    private void resolveColIdx(String colName) {
         int idx = -1;
         if (StringUtils.isNotEmpty(colName)) {
             String col = colName.split("\\d")[0];
@@ -367,11 +366,5 @@ public class ExcelXlsxReader extends DefaultHandler {
             curCol = idx;
             rowData.setRowIndex(Integer.parseInt(colName.substring(col.length())) - 1);
         }
-    }
-
-    @Override
-    public void characters(char[] ch, int start, int length) {
-        // 得到单元格内容的值
-        lastContents += new String(ch, start, length);
     }
 }
