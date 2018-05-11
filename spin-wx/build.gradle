@@ -1,5 +1,5 @@
 description = '微信模块'
-version = '0.0.1.RC1'
+version = '2.1.10.RELEASE'
 def artifactId = 'spin-wx'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -11,39 +11,17 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.2.0'
     }
 }
 
 ext {
-    springVersion = "5.0.4.RELEASE"
     junitJupiterVersion = '5.2.0'
 }
 
 junitPlatform {
-    // platformVersion '1.0.1'
-//    filters {
-//        engines {
-//            // include 'junit-jupiter', 'junit-vintage'
-//            // exclude 'custom-engine'
-//        }
-//        tags {
-//            // include 'fast'
-//            exclude 'slow'
-//        }
-//        // includeClassNamePattern '.*Test'
-//    }
-    // enableStandardTestTask true
-    // reportsDir file('build/test-results/junit-platform') // this is the default
     logManager = 'java.util.logging.LogManager'
 }
-
-// 关闭java8 javadoc检查
-//if (JavaVersion.current().isJava8Compatible()) {
-//    tasks.withType(Javadoc) {
-//        options.addStringOption('Xdoclint:none', '-quiet')
-//    }
-//}
 
 install {
     repositories.mavenInstaller {
@@ -69,9 +47,6 @@ uploadArchives {
 dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
-//    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
 
-//    compile(project(":spin-core"))
-    compile group: 'org.mathcat', name: 'spin-core', version: '0.0.1.RC1'
-    compileOnly group: 'org.dom4j', name: 'dom4j', version: '2.1.0'
+    compile group: 'org.mathcat', name: 'spin-core', version: '2.1.10.RELEASE'
 }

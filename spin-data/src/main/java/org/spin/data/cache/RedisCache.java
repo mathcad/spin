@@ -67,9 +67,6 @@ public class RedisCache<V> implements Cache<V> {
     public String getString(final String key) {
         return redisTemplate.execute((RedisCallback<String>) connection -> {
             byte[] bs = connection.get(StringUtils.getBytesUtf8(key));
-            if (bs == null) {
-                return null;
-            }
             return StringUtils.newStringUtf8(bs);
         });
     }

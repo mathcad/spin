@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -35,40 +36,37 @@ public final class XmlUtils {
     private static SAXReader reader = new SAXReader();
     private Document document;
 
-    public enum SourceType {
-        XML_FILE_PATH, XML_CONTENT
-    }
-
-
-    private XmlUtils(File xmlFile) throws DocumentException {
-        this.document = XmlUtils.reader.read(xmlFile);
-    }
-
-    private XmlUtils(String xmlContent) throws DocumentException {
-        StringReader strReader = new StringReader(xmlContent);
-        this.document = XmlUtils.reader.read(strReader);
-        strReader.close();
-    }
-
-    public static XmlUtils getInstance(String xmlSource, SourceType type) {
-        XmlUtils result = null;
+    public XmlUtils(File xmlFile) {
         try {
-            if (type == SourceType.XML_FILE_PATH) {
-                result = new XmlUtils(new File(xmlSource));
-
-            } else if (type == SourceType.XML_CONTENT) {
-                result = new XmlUtils(xmlSource);
-
-            }
-
+            document = reader.read(xmlFile);
         } catch (DocumentException e) {
-            logger.error("XmlUtils parse ERROR 无法解析指定文档({}) -----------", xmlSource);
+            logger.error("XmlUtils parse ERROR 无法解析指定文档({}) -----------", xmlFile.getName());
             logger.debug("Exception Message:{}", e.getMessage());
         }
-        return result;
+    }
+
+    public XmlUtils(InputStream xmlStream) {
+        try {
+            document = reader.read(xmlStream);
+        } catch (DocumentException e) {
+            logger.error("XmlUtils parse ERROR 无法解析指定文档({}) -----------");
+            logger.debug("Exception Message:{}", e.getMessage());
+        }
+    }
+
+    public XmlUtils(String xmlContent) {
+        try {
+            StringReader strReader = new StringReader(xmlContent);
+            document = reader.read(strReader);
+            strReader.close();
+        } catch (DocumentException e) {
+            logger.error("XmlUtils parse ERROR 无法解析指定文档({}) -----------", xmlContent);
+            logger.debug("Exception Message:{}", e.getMessage());
+        }
     }
 
     public List<Node> getNodesbyXPath(String xPath) {
+        //noinspection unchecked
         return document.selectNodes(xPath);
     }
 
@@ -112,27 +110,28 @@ public final class XmlUtils {
      * @return HashMap键值对
      */
     public Map<String, String> travelDocument() {
-        return this.travels("", null);
+        Map<String, String> result = new HashMap<>();
+        this.travels("", null, result);
+        return result;
     }
 
-    private Map<String, String> travels(String prefix, Element root) {
+    private void travels(String prefix, Element root, Map<String, String> result) {
         if (null == root) {
             root = document.getRootElement();
         }
-        Map<String, String> result = new HashMap<>();
-        List<?> sub = root.elements();
-        if (null == sub)
-            return result;
-        for (Object aSub : sub) {
-            Element elem = (Element) aSub;
-            String tmp = elem.getName();
-            if (!"".equals(prefix))
-                tmp = prefix + "." + tmp;
+        @SuppressWarnings("unchecked")
+        List<Element> subElems = root.elements();
+        if (null == subElems || subElems.isEmpty()) {
+            return;
+        }
+        prefix = prefix.length() == 0 ? prefix : prefix + ".";
+        String tmp;
+        for (Element elem : subElems) {
+            tmp = prefix + elem.getName();
             if (elem.elements().isEmpty()) {
                 result.put(tmp, elem.getText());
             }
-            result.putAll(travels(tmp, elem));
+            travels(tmp, elem, result);
         }
-        return result;
     }
 }

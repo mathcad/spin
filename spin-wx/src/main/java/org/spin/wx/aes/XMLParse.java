@@ -1,18 +1,16 @@
 package org.spin.wx.aes;
 
-import org.dom4j.DocumentHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.TreeMap;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * XMLParse class
@@ -71,10 +69,10 @@ public class XMLParse {
      * 拼装xml，专为微信设计
      *
      * @param map 请求参数
-     * @return
+     * @return 拼装后的xml
      */
     public static String parseXml(SortedMap<String, Object> map) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("<xml>");
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             sb.append("<").append(entry.getKey()).append(">");
@@ -83,24 +81,5 @@ public class XMLParse {
         }
         sb.append("</xml>");
         return sb.toString();
-    }
-
-    /**
-     * 微信返回xml转换成map
-     *
-     * @param xml 返回xml
-     * @return
-     * @throws Exception
-     */
-    public static Map<String, Object> revertFromXml(String xml) throws Exception {
-        SortedMap<String, Object> map = new TreeMap<>();
-        org.dom4j.Document document = DocumentHelper.parseText(xml);
-        org.dom4j.Element root = document.getRootElement();
-        List<org.dom4j.Element> elementList = root.elements();
-        for (org.dom4j.Element e : elementList) {
-            map.put(e.getName(), e.getText());
-        }
-
-        return map;
     }
 }

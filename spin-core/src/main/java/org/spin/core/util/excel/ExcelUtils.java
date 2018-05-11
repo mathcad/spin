@@ -22,6 +22,9 @@ import java.util.Objects;
  */
 public abstract class ExcelUtils {
 
+    private ExcelUtils() {
+    }
+
     public static void readWorkBook(InputStream is, FinalConsumer<ExcelRow> rowReader) {
         byte[] trait = new byte[16];
         int read;

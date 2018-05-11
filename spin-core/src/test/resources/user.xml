@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Application>
+    <Info>
+        <Caption>卡口数据上传组件</Caption>
+        <!--图片优先模式。true：仅当图片上传成功才写入过车信息 false：不论图片上传成功与否均写入过车信息 -->
+        <ImageFirst>true</ImageFirst>
+        <AutoStart>true</AutoStart>
+    </Info>
+    <!--FTP服务器配置选项26B7387DB267CA53 -->
+    <FTPServer>
+        <Address>10.125.146.35</Address>
+        <Port>21</Port>
+        <User>supcon</User>
+        <PWD>26B7387DB267CA53</PWD>
+        <Encoding>UTF-8</Encoding>
+    </FTPServer>
+    <!--卡口设备配置列表 -->
+    <Devices>
+        <Device enable="false">
+            <ID>340221001</ID>
+            <Name>世纪大道排灌站</Name>
+            <AccessIP>10.125.135.142</AccessIP>
+            <Key>9cd6c8e90132b374d6104bcd17b1d0d6</Key>
+        </Device>
+        <Device enable="true">
+            <ID>340221002</ID>
+            <Name>湾西路方山路段</Name>
+            <AccessIP>10.125.135.143</AccessIP>
+            <Key>13d6f03041826c67de79f1fb87cd1991</Key>
+        </Device>
+        <Device enable="false">
+            <ID>340221003</ID>
+            <Name>芜屯路新竹段</Name>
+            <AccessIP>10.125.135.144</AccessIP>
+            <Key>9e39ef8822f542240ce5e6ebccd44555</Key>
+        </Device>
+        <Device enable="true">
+            <ID>340221004</ID>
+            <Name>车管所</Name>
+            <AccessIP>10.125.135.145</AccessIP>
+            <Key>2ef1b36f7c9e1c0753bf732331720e0a</Key>
+        </Device>
+        <Device enable="true">
+            <ID>340221005</ID>
+            <Name>新交通饭店</Name>
+            <AccessIP>10.125.135.146</AccessIP>
+            <Key>fa5001eb0b927c317a125b923c591d17</Key>
+        </Device>
+        <Device enable="false">
+            <ID>340221006</ID>
+            <Name>新都小区</Name>
+            <AccessIP>10.125.135.147</AccessIP>
+            <Key>1481c205db266ae8a76799426f867db8</Key>
+        </Device>
+        <Device enable="true">
+            <ID>340221007</ID>
+            <Name>清弋江大桥</Name>
+            <AccessIP>10.125.135.148</AccessIP>
+            <Key>9f7abd666ba1207337818b409f7fe4b7</Key>
+        </Device>
+        <Device enable="false">
+            <ID>340221008</ID>
+            <Name>清水桥南</Name>
+            <AccessIP>10.125.135.149</AccessIP>
+            <Key>795190851314e272d534a1977ed7b450</Key>
+        </Device>
+        <Device enable="false">
+            <ID>340221009</ID>
+            <Name>东湾路</Name>
+            <AccessIP>10.125.135.150</AccessIP>
+            <Key>f9bfe3b2344b94d5ac4ac67b38a63a2e</Key>
+        </Device>
+    </Devices>
+</Application>

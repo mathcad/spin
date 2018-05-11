@@ -1,5 +1,5 @@
 description = '核心模块'
-version = '0.0.1.RC1'
+version = '2.1.10.RELEASE'
 def artifactId = 'spin-core'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -11,12 +11,11 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.2.0'
     }
 }
 
 ext {
-    springVersion = "5.0.4.RELEASE"
     junitJupiterVersion = '5.2.0'
 }
 
@@ -74,6 +73,8 @@ dependencies {
         exclude(module: 'ant')
     }
     testRuntime group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.5'
+    testRuntime group: 'dom4j', name: 'dom4j', version: '1.6.1'
+
 
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
 
@@ -85,7 +86,7 @@ dependencies {
     compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.5'
     compileOnly group: 'commons-net', name: 'commons-net', version: '3.6'
     compileOnly group: 'com.belerweb', name: 'pinyin4j', version: '2.5.1'
-    compileOnly group: 'org.dom4j', name: 'dom4j', version: '2.1.0'
+    compileOnly group: 'dom4j', name: 'dom4j', version: '1.6.1'
     compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: '3.17') {
         exclude(module: 'ant')
     }

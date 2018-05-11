@@ -1,5 +1,5 @@
 description 'spin-web的starter'
-version '2.1.10.RC2'
+version '2.1.10.RELEASE'
 def artifactId = 'spin-starter-restful'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -19,27 +19,13 @@ buildscript {
     dependencies {
         classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
         classpath 'org.springframework:springloaded:1.2.8.RELEASE'
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.2.0'
     }
 }
 
 compileJava.dependsOn(processResources)
 
 junitPlatform {
-    // platformVersion '1.0.1'
-//    filters {
-//        engines {
-//            // include 'junit-jupiter', 'junit-vintage'
-//            // exclude 'custom-engine'
-//        }
-//        tags {
-//            // include 'fast'
-//            exclude 'slow'
-//        }
-//        // includeClassNamePattern '.*Test'
-//    }
-    // enableStandardTestTask true
-    // reportsDir file('build/test-results/junit-platform') // this is the default
     logManager = 'java.util.logging.LogManager'
 }
 
@@ -68,13 +54,14 @@ dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 
+    compile group: 'org.mathcat', name: 'spin-web', version: '2.1.10.RELEASE'
+    compileOnly group: 'org.mathcat', name: 'spin-data', version: '2.1.10.RELEASE'
+    compileOnly group: 'org.mathcat', name: 'spin-wx', version: '2.1.10.RELEASE'
+
     compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
-    compile group: 'org.mathcat', name: 'spin-all', version: '2.1.10.RC2'
     compile group: 'org.glassfish', name: 'javax.annotation', version: '10.0-b28'
-//    compile(project(":spin"))
-
     compileOnly group: 'com.atomikos', name: 'transactions-jdbc', version: '4.0.6'
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 }
