@@ -1,5 +1,4 @@
 rootProject.name = 'spin'
-include 'spin-all'
 include 'spin-core'
 include 'spin-data'
 include 'spin-enhance'
