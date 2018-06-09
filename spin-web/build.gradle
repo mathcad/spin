@@ -16,8 +16,11 @@ buildscript {
 }
 
 ext {
-    springVersion = "5.0.6.RELEASE"
     junitJupiterVersion = '5.2.0'
+    springVersion = '5.0.6.RELEASE'
+    itextpdfVersion = '5.5.13'
+    hibernateVersion = '5.3.1.Final'
+    poiVersion = '3.17'
 }
 
 junitPlatform {
@@ -51,16 +54,16 @@ dependencies {
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
 
 //    web
-    compile group: 'org.mathcat', name: 'spin-core', version: '2.1.10.RELEASE'
-    compileOnly group: 'org.mathcat', name: 'spin-data', version: '2.1.10.RELEASE'
+    compile group: 'org.mathcat', name: 'spin-core', version: "$project.version"
+    compileOnly group: 'org.mathcat', name: 'spin-data', version: "$project.version"
 
     compile group: 'org.springframework', name: 'spring-context-support', version: springVersion
     compile group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compile group: 'org.springframework', name: 'spring-aspects', version: springVersion
 
-    compileOnly group: 'com.itextpdf', name: 'itextpdf', version: '5.5.13'
+    compileOnly group: 'com.itextpdf', name: 'itextpdf', version: itextpdfVersion
     compileOnly group: 'org.springframework', name: 'spring-orm', version: springVersion
-    compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '5.2.17.Final'
-    compileOnly group: 'org.apache.poi', name: 'poi-excelant', version: '3.17'
+    compileOnly group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
+    compileOnly group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 }

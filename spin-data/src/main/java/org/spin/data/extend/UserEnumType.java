@@ -15,8 +15,6 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.EnumUtils;
 
-import javax.persistence.Enumerated;
-import javax.persistence.MapKeyEnumerated;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.sql.PreparedStatement;
@@ -25,6 +23,9 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Objects;
 import java.util.Properties;
+
+import javax.persistence.Enumerated;
+import javax.persistence.MapKeyEnumerated;
 
 /**
  * 枚举映射
@@ -200,7 +201,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     }
 
     private void treatAsOrdinal() {
-        if (this.enumValueMapper == null || !OrdinalEnumValueMapper.class.isInstance(this.enumValueMapper)) {
+        if (!OrdinalEnumValueMapper.class.isInstance(this.enumValueMapper)) {
             this.enumValueMapper = new ValueEnumValueMapper();
             this.sqlType = this.enumValueMapper.getSqlType();
         }

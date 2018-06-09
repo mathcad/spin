@@ -17,6 +17,15 @@ buildscript {
 
 ext {
     junitJupiterVersion = '5.2.0'
+    slf4jVersion = '1.7.25'
+    gsonVersion = '2.8.5'
+    asmVersion = '6.2'
+    httpclientVersion = '4.5.5'
+    commonsNetVersion = '3.6'
+    pinyin4jVersion = '2.5.1'
+    dom4jVersion = '1.6'
+    poiVersion = '3.17'
+    bouncyVersion = '1.59'
 }
 
 junitPlatform {
@@ -68,28 +77,27 @@ uploadArchives {
 dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
-    testRuntime group: 'org.apache.poi', name: 'poi-scratchpad', version: '3.17'
-    testRuntime(group: 'org.apache.poi', name: 'poi-excelant', version: '3.17') {
+    testRuntime group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
+    testRuntime(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
-    testRuntime group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.5'
-    testRuntime group: 'dom4j', name: 'dom4j', version: '1.6.1'
-
+    testRuntime group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
+    testRuntime group: 'dom4j', name: 'dom4j', version: dom4jVersion
 
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
 
 //    core
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
-    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.4'
-    compile group: 'org.ow2.asm', name: 'asm', version: '6.1.1'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    compile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
+    compile group: 'org.ow2.asm', name: 'asm', version: asmVersion
 
-    compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.5'
-    compileOnly group: 'commons-net', name: 'commons-net', version: '3.6'
-    compileOnly group: 'com.belerweb', name: 'pinyin4j', version: '2.5.1'
-    compileOnly group: 'dom4j', name: 'dom4j', version: '1.6.1'
-    compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: '3.17') {
+    compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
+    compileOnly group: 'commons-net', name: 'commons-net', version: commonsNetVersion
+    compileOnly group: 'com.belerweb', name: 'pinyin4j', version: pinyin4jVersion
+    compileOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
+    compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
-    compileOnly group: 'org.apache.poi', name: 'poi-scratchpad', version: '3.17'
-    compileOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: '1.59'
+    compileOnly group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
+    compileOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
 }

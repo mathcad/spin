@@ -37,7 +37,6 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
-import javax.persistence.Entity;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -49,6 +48,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.persistence.Entity;
 
 /**
  * 存储对象上下文
@@ -512,9 +513,11 @@ public class RepositoryContext {
     public <T extends IEntity<P>, P extends Serializable> List<T> find(Class<T> entityClazz, Criterion... cs) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
         DetachedCriteria dc = DetachedCriteria.forClass(entityClazz);
-        for (Criterion c : cs)
-            if (null != c)
+        for (Criterion c : cs) {
+            if (null != c) {
                 dc.add(c);
+            }
+        }
         return find(dc);
     }
 

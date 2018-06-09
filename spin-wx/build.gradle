@@ -48,5 +48,5 @@ dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 
-    compile group: 'org.mathcat', name: 'spin-core', version: '2.1.10.RELEASE'
+    compile group: 'org.mathcat', name: 'spin-core', version: "$project.version"
 }

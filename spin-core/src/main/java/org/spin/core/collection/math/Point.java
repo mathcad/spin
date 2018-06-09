@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * N维欧氏空间中的点（直角坐标系）
+ * 内积空间中的点
  * <p>Created by xuweinan on 2018/3/20.</p>
  *
  * @author xuweinan
@@ -122,10 +122,10 @@ public class Point {
     }
 
     /**
-     * 向指定坐标轴投影
+     * 指定维上的投影分量
      *
-     * @param axis 坐标轴
-     * @return 指定坐标轴上的分量
+     * @param axis 维度
+     * @return 指定维上的投影分量
      */
     public BigDecimal projection(int axis) {
         return coords[Assert.inclusiveBetween(1, dimension(), axis, "指定的坐标轴超出维数") - 1];
