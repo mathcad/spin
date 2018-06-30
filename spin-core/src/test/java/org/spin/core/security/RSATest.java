@@ -20,9 +20,4 @@ public class RSATest {
         System.out.println(RSA.encrypt(publicKey, "abcd"));
         assertTrue(true);
     }
-
-    @Test
-    public void testAes() {
-        System.out.println(AES.decrypt("c4b2a7d36f9a2e61", "9TmfV96iIEIaYnIDTtt/1w=="));
-    }
 }

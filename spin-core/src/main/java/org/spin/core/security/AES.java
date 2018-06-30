@@ -4,17 +4,18 @@ import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.trait.IntEvaluatable;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.SecureRandom;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.SecureRandom;
 
 /**
  * AES工具类
@@ -89,7 +90,11 @@ public class AES {
             throw new SimplifiedException(ErrorCode.KEY_FAIL, e);
         }
         kg.init(keySize.getValue(), secureRandom);
-        return kg.generateKey();
+        //获取密匙对象
+        SecretKey skey = kg.generateKey();
+        //获取随机密匙
+        byte[] raw = skey.getEncoded();
+        return new SecretKeySpec(raw, "AES");
     }
 
     /**

@@ -119,7 +119,7 @@ public abstract class HttpUtils {
                     .map(p -> new BasicNameValuePair(p.getKey(), p.getValue()))
                     .collect(Collectors.toList());
                 try {
-                    req.setEntity(new UrlEncodedFormEntity(nvps));
+                    req.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
                     throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "生成请求报文体错误", e);
                 }

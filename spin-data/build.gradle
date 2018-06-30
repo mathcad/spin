@@ -20,8 +20,8 @@ ext {
     hibernateVersion = '5.3.1.Final'
     freemarkerVersion = '2.3.28'
     beetlVersion = '2.8.4'
-    springVersion = '5.0.6.RELEASE'
-    springDataRedisVersion = '2.0.7.RELEASE'
+    springVersion = '5.0.7.RELEASE'
+    springDataRedisVersion = '2.0.8.RELEASE'
 }
 
 junitPlatform {

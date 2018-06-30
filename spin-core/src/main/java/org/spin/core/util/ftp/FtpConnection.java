@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  */
 public class FtpConnection implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(FtpConnection.class);
-    private static final Pattern protocalPattern = Pattern.compile("^(ftp[s]?)://(.+:.+@)?([^:]+)(:\\d{2,5})?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PROTOCAL_PATTERN = Pattern.compile("^(ftp[s]?)://(.+:.+@)?([^:]+)(:\\d{2,5})?$", Pattern.CASE_INSENSITIVE);
 
     private String name;
     private boolean secure;
@@ -62,9 +62,10 @@ public class FtpConnection implements AutoCloseable {
      * @param protocal 如果是ftps连接，需指明加密协议
      */
     public static FtpConnection ofUrl(String url, String protocal) {
-        Matcher matcher = protocalPattern.matcher(url);
-        if (!matcher.matches())
+        Matcher matcher = PROTOCAL_PATTERN.matcher(url);
+        if (!matcher.matches()) {
             throw new SimplifiedException("FTP连接URL格式错误");
+        }
 
         String token = matcher.group(2);
         String u = null;
@@ -256,8 +257,9 @@ public class FtpConnection implements AutoCloseable {
     public boolean retrieveFile(String fullPath, String localPath) {
         this.connect();
         int lastIdx = fullPath.lastIndexOf('/') + 1;
-        if (lastIdx <= 0)
+        if (lastIdx <= 0) {
             lastIdx = fullPath.lastIndexOf('\\') + 1;
+        }
         String dir = fullPath.substring(0, lastIdx);
         String fileName = fullPath.substring(lastIdx);
         return retrieveFile(dir, fileName, localPath);
@@ -276,12 +278,14 @@ public class FtpConnection implements AutoCloseable {
         FTPFile[] fs;
         try {
             int lastIdx = fullPath.lastIndexOf('/') + 1;
-            if (lastIdx <= 0)
+            if (lastIdx <= 0) {
                 lastIdx = fullPath.lastIndexOf('\\') + 1;
+            }
 
             String dir = fullPath.substring(0, lastIdx);
             String fileName = fullPath.substring(lastIdx);
-            client.changeWorkingDirectory(dir);//进到FTP服务器目录
+            // 进到FTP服务器目录
+            client.changeWorkingDirectory(dir);
             fs = client.listFiles();
             for (FTPFile ff : fs) {
                 if (ff.getName().equals(fileName)) {
@@ -307,8 +311,9 @@ public class FtpConnection implements AutoCloseable {
         this.connect();
         boolean flag = false;
         try (FileInputStream in = new FileInputStream(new File(localFilePath))) {
-            if (StringUtils.isNotEmpty(path))
+            if (StringUtils.isNotEmpty(path)) {
                 client.changeWorkingDirectory(path);
+            }
             flag = client.storeFile(filename, in);
         } catch (Exception e) {
             logger.error("上传文件失败", e);
@@ -503,10 +508,11 @@ public class FtpConnection implements AutoCloseable {
         client.setControlEncoding(serverCharset.name());
         client.enterLocalPassiveMode();
         try {
-            if (!client.setFileType(FTPClient.BINARY_FILE_TYPE))
+            if (!client.setFileType(FTPClient.BINARY_FILE_TYPE)) {
                 throw new SimplifiedException("无法设置FileType到BIN模式");
+            }
         } catch (IOException e) {
-            throw new SimplifiedException("无法设置FileType到BIN模式");
+            throw new SimplifiedException("无法设置FileType到BIN模式", e);
         }
     }
 }

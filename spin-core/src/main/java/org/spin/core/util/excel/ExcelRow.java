@@ -1,7 +1,8 @@
 package org.spin.core.util.excel;
 
-import org.spin.core.util.SerializeUtils;
 import org.spin.core.util.StringUtils;
+
+import java.io.Serializable;
 
 /**
  * EXCEL表格中的一行
@@ -10,7 +11,9 @@ import org.spin.core.util.StringUtils;
  *
  * @author xuweinan
  */
-public class ExcelRow implements SerializeUtils {
+public class ExcelRow implements Serializable {
+
+    private static final long serialVersionUID = -2095576083028510444L;
 
     /**
      * sheet索引(从0开始)

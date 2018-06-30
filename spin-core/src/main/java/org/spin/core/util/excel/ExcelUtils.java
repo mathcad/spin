@@ -21,19 +21,20 @@ import java.util.Objects;
  * <p>Created by thinkpad on 2018/5/4.</p>
  */
 public abstract class ExcelUtils {
+    private static final int TRAIT_LEN = 16;
 
     private ExcelUtils() {
     }
 
     public static void readWorkBook(InputStream is, FinalConsumer<ExcelRow> rowReader) {
-        byte[] trait = new byte[16];
+        byte[] trait = new byte[TRAIT_LEN];
         int read;
         FileType fileType;
         BytesCombinedInputStream bcis;
         try {
-            bcis = new BytesCombinedInputStream(is, 16);
+            bcis = new BytesCombinedInputStream(is, TRAIT_LEN);
             read = bcis.readCombinedBytes(trait);
-            if (read < 16) {
+            if (read < TRAIT_LEN) {
                 throw new SimplifiedException(ErrorCode.IO_FAIL, "输入流中不包含有效内容");
             }
             fileType = FileTypeUtils.detectFileType(trait);

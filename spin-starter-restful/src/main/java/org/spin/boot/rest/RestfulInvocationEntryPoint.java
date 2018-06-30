@@ -43,7 +43,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
@@ -56,6 +55,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * restful请求分发
  * <p>Created by xuweinan on 2017/9/13.</p>
@@ -67,6 +68,7 @@ import java.util.function.Function;
 @ConditionalOnProperty("spin.web.restfulPrefix")
 public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     private static final Logger logger = LoggerFactory.getLogger(RestfulInvocationEntryPoint.class);
+    private static final String PATH_NOT_VALID = "请求的路径不正确";
     private static final String REQUEST_BODY_NAME = "request_body_param";
     private static final Function<Parameter, Boolean> checkNeeded = p -> Objects.nonNull(p.getAnnotation(Needed.class));
 
@@ -86,7 +88,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     public RestfulResponse exec(HttpServletRequest request, @RequestBody(required = false) String requestBody) {
         String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
         if (resc.length != 2) {
-            return RestfulResponse.error(new SimplifiedException("请求的路径不正确"));
+            return RestfulResponse.error(new SimplifiedException(PATH_NOT_VALID));
         }
         String module = resc[0];
         String service = resc[1];
@@ -101,7 +103,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     public String plainExec(HttpServletRequest request, @RequestBody(required = false) String requestBody) {
         String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
         if (resc.length != 3) {
-            return "请求的路径不正确";
+            return PATH_NOT_VALID;
         }
         String module = resc[1];
         String service = resc[2];
@@ -122,9 +124,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     public ModelAndView exportExec(HttpServletRequest request, String grid) {
         ModelAndView mv = new ModelAndView();
         if (StringUtils.isEmpty(grid)) {
-            mv.addObject("code", -1);
-            mv.addObject("message", "未定义导出格式");
-            return mv;
+            return addCodeAndMsg(mv, -1, "未定义导出格式");
         }
 
         ExcelGrid g;
@@ -132,24 +132,18 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             g = JsonUtils.fromJson(grid, ExcelGrid.class);
         } catch (Exception e) {
             logger.error("导出格式定义不正确", e);
-            mv.addObject("code", -1);
-            mv.addObject("message", "导出格式定义不正确");
-            return mv;
+            return addCodeAndMsg(mv, -1, "导出格式定义不正确");
         }
         String[] resc = request.getRequestURI().substring(request.getRequestURI().indexOf(webPorperties.getRestfulPrefix()) + webPorperties.getRestfulPrefix().length() + 1).split("/");
         if (resc.length != 3) {
-            mv.addObject("code", -1);
-            mv.addObject("message", "请求的路径不正确");
-            return mv;
+            return addCodeAndMsg(mv, -1, PATH_NOT_VALID);
         }
         String module = resc[1];
         String service = resc[2];
         RestfulResponse restfulResponse = exec(module, service, request);
 
         if (200 != restfulResponse.getCode()) {
-            mv.addObject("code", restfulResponse.getCode());
-            mv.addObject("message", restfulResponse.getMessage());
-            return mv;
+            return addCodeAndMsg(mv, restfulResponse.getCode(), restfulResponse.getMessage());
         } else {
             Object data = restfulResponse.getData();
             Iterable<?> excelData;
@@ -163,9 +157,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             } else if (data instanceof IEntity) {
                 excelData = CollectionUtils.ofArrayList(data);
             } else {
-                mv.addObject("code", -1);
-                mv.addObject("message", "请求的服务未返回数据列表，不能导出");
-                return mv;
+                return addCodeAndMsg(mv, -1, "请求的服务未返回数据列表，不能导出");
             }
             ModelExcelView mev = new ModelExcelView(g, excelData);
             mv.setView(mev);
@@ -244,14 +236,18 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
      */
     private int selectMethod(final List<ArgumentsDescriptor> argumentsDescriptors) {
         int selected = 0;
+        int paramLen = 0;
         for (int i = 1; i != argumentsDescriptors.size(); ++i) {
-            if (argumentsDescriptors.get(i).getRank() < argumentsDescriptors.get(selected).getRank()) {
+            if (argumentsDescriptors.get(i).getRank() < argumentsDescriptors.get(selected).getRank()
+                || argumentsDescriptors.get(i).getRank() == argumentsDescriptors.get(selected).getRank()
+                && argumentsDescriptors.get(i).getArgs().length > paramLen) {
                 selected = i;
+                paramLen = argumentsDescriptors.get(i).getArgs().length;
             }
         }
         final int i = selected;
         // 如果最低rank值的方法调用存在不止一个，无法确定调用分发
-        if (argumentsDescriptors.stream().filter(a -> a.getRank() == argumentsDescriptors.get(i).getRank()).count() > 1) {
+        if (argumentsDescriptors.stream().filter(a -> a.getRank() == argumentsDescriptors.get(i).getRank() && a.getArgs().length == argumentsDescriptors.get(i).getArgs().length).count() > 1) {
             selected = -1;
         }
         return selected;
@@ -324,7 +320,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                 return null;
             }
             List<MultipartFile> files = ((MultipartRequest) request).getFiles(parameterName);
-            return files.toArray(new MultipartFile[files.size()]);
+            return files.toArray(new MultipartFile[0]);
         }
 
         //方法参数为非文件类型时的处理，从requestBody，attribute，parameter中获取所有指定名称参数，优先级从前到后，找到为止
@@ -349,7 +345,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
 
         if (type.isArray() || Iterable.class.isAssignableFrom(type)) {
             // 参数为数组/集合类型，直接json转换
-            boolean isStr = null != actualType && actualType instanceof Class && CharSequence.class.isAssignableFrom((Class<?>) actualType)
+            boolean isStr = actualType instanceof Class && CharSequence.class.isAssignableFrom((Class<?>) actualType)
                 || null != cType && CharSequence.class.isAssignableFrom(cType);
             String json = assembleJson(values, isStr);
             try {
@@ -449,7 +445,9 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
         if (isAllowed || !needAuth) {
             if (descriptor.getRank() > 100) {
-                logger.error(String.format("索引为%s的参数不能为空", JsonUtils.toJson(descriptor.getNeededNulls())));
+                if (logger.isErrorEnabled()) {
+                    logger.error("索引为{}的参数不能为空", JsonUtils.toJson(descriptor.getNeededNulls()));
+                }
                 return RestfulResponse.error(ErrorCode.INVALID_PARAM);
             }
 
@@ -465,15 +463,15 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                 try {
                     Object bean = applicationContext.getBean(descriptor.getMethodDescriptor().getCls());
                     descriptor.getMethodDescriptor().setTarget(bean);
-                } catch (BeansException ignore) {
-                    logger.error("获取Service Bean失败", ignore);
+                } catch (BeansException e) {
+                    logger.error("获取Service Bean失败", e);
                     return RestfulResponse.error(new SimplifiedException("无法获取服务提供者"));
                 }
             }
 
             try {
                 Object result = descriptor.invoke();
-                if (null != result && result instanceof IEntity<?> && anno.fetchDepth() > -1) {
+                if (result instanceof IEntity<?> && anno.fetchDepth() > -1) {
                     result = EntityUtils.getDTO(result, anno.fetchDepth());
                 }
                 return RestfulResponse.ok(result);
@@ -498,6 +496,12 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         } else {
             return RestfulResponse.error(ErrorCode.ACCESS_DENINED);
         }
+    }
+
+    private ModelAndView addCodeAndMsg(ModelAndView mv, int code, String msg) {
+        mv.addObject("code", code);
+        mv.addObject("message", msg);
+        return mv;
     }
 
     /**

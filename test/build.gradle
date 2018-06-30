@@ -1,7 +1,7 @@
 buildscript {
     ext {
-        kotlin_version = '1.2.41'
-        springBootVersion = '2.0.1.RELEASE'
+        kotlin_version = '1.2.50'
+        springBootVersion = '2.0.3.RELEASE'
         junitJupiterVersion = '5.2.0'
     }
     repositories {
@@ -21,7 +21,7 @@ buildscript {
 }
 
 plugins {
-    id "org.jetbrains.kotlin.plugin.spring" version "1.2.30"
+    id "org.jetbrains.kotlin.plugin.spring" version "1.2.50"
 }
 
 allOpen {
@@ -66,14 +66,14 @@ dependencies {
     }
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: "$kotlin_version"
     compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlin_version
-    compile group: 'io.github.microutils', name: 'kotlin-logging', version: '1.5.3'
+    compile group: 'io.github.microutils', name: 'kotlin-logging', version: '1.5.4'
 
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
 //    compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.17.Final') {
 //        exclude(module: 'jboss-logging')
 //    }
-    compile group: 'com.alibaba', name: 'druid', version: '1.1.9'
+    compile group: 'com.alibaba', name: 'druid', version: '1.1.10'
 //    compile group: 'com.atomikos', name: 'transactions-hibernate4', version: '4.0.6'
     compile group: 'com.atomikos', name: 'transactions-jdbc', version: '4.0.6'
     compile group: 'com.atomikos', name: 'transactions', version: '4.0.6'
