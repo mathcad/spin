@@ -38,15 +38,17 @@ public abstract class ExcelUtils {
                 throw new SimplifiedException(ErrorCode.IO_FAIL, "输入流中不包含有效内容");
             }
             fileType = FileTypeUtils.detectFileType(trait);
+            ExcelReader reader;
             if (Objects.isNull(fileType)) {
                 throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
             } else if (fileType.equals(FileType.Document.XLS)) {
-                ExcelXlsReader xlsReader = new ExcelXlsReader();
-                xlsReader.process(bcis, rowReader);
+                reader = new ExcelXlsReader();
             } else if (fileType.equals(FileType.Document.XLSX)) {
-                ExcelXlsxReader xlsxReader = new ExcelXlsxReader();
-                xlsxReader.process(bcis, rowReader);
+                reader = new ExcelXlsxReader();
+            } else {
+                throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
             }
+            reader.process(bcis, rowReader);
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "输入流读取失败", e);
         }

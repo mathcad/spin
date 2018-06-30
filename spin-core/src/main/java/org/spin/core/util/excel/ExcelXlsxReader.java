@@ -38,7 +38,7 @@ import javax.xml.parsers.SAXParserFactory;
  * @author wangy QQ 837195190
  * <p>Created by thinkpad on 2018/5/5.</p>
  */
-public class ExcelXlsxReader extends DefaultHandler {
+public class ExcelXlsxReader extends DefaultHandler implements ExcelReader {
 
     /**
      * 单元格中的数据可能的数据类型
@@ -163,6 +163,7 @@ public class ExcelXlsxReader extends DefaultHandler {
         ALPHA_NUM.put('Z', 26);
     }
 
+    @Override
     public void process(InputStream is, FinalConsumer<ExcelRow> rowReader) {
         this.rowReader = rowReader;
         SAXParserFactory parserFactory = SAXParserFactory.newInstance();

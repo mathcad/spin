@@ -37,7 +37,7 @@ public abstract class ExcelUtils {
     }
 
     /**
-     * 读取xls文件内容
+     * 读取Excel文件内容
      *
      * @param is     输入流
      * @param reader Excel行处理器
@@ -65,7 +65,7 @@ public abstract class ExcelUtils {
     }
 
     /**
-     * 读取xls文件内容
+     * 读取Excel文件内容
      *
      * @param is     输入流
      * @param type   类型，xls或xlsx
@@ -118,7 +118,7 @@ public abstract class ExcelUtils {
     }
 
     /**
-     * 读取xls文件内容
+     * 读取Excel文件内容
      *
      * @param workbookFile Excel文件
      * @param reader       Excel行处理器
@@ -143,7 +143,7 @@ public abstract class ExcelUtils {
     }
 
     /**
-     * 读取xls文件内容
+     * 读取Excel文件内容
      *
      * @param workbookFilePath Excel文件路径
      * @param reader           Excel行处理器

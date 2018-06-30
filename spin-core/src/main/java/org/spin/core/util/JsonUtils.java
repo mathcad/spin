@@ -6,6 +6,7 @@ import com.google.gson.InstanceCreator;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
@@ -70,15 +71,19 @@ public abstract class JsonUtils {
         if (target == null)
             return EMPTY;
         Class<?> clazz = target.getClass();
-        if (ClassUtils.wrapperToPrimitive(clazz) != null && ClassUtils.wrapperToPrimitive(clazz).isPrimitive() || target instanceof CharSequence)
+        if (ClassUtils.wrapperToPrimitive(clazz) != null && ClassUtils.wrapperToPrimitive(clazz).isPrimitive() || target instanceof CharSequence) {
             return target.toString();
+        }
         GsonBuilder builder = baseBuilder(datePattern);
-        if (isSerializeNulls)
+        if (isSerializeNulls) {
             builder.serializeNulls();
-        if (version != null)
+        }
+        if (version != null) {
             builder.setVersion(version);
-        if (excludesFieldsWithoutExpose)
+        }
+        if (excludesFieldsWithoutExpose) {
             builder.excludeFieldsWithoutExposeAnnotation();
+        }
         String result;
         Gson gson = procGson(builder.create());
 
@@ -109,8 +114,9 @@ public abstract class JsonUtils {
             return EMPTY;
         }
         Class<?> clazz = target.getClass();
-        if (ClassUtils.wrapperToPrimitive(clazz) != null && ClassUtils.wrapperToPrimitive(clazz).isPrimitive() || target instanceof CharSequence)
+        if (ClassUtils.wrapperToPrimitive(clazz) != null && ClassUtils.wrapperToPrimitive(clazz).isPrimitive() || target instanceof CharSequence) {
             return target.toString();
+        }
         return defaultGson.toJson(target);
     }
 
@@ -318,7 +324,7 @@ public abstract class JsonUtils {
             Class<?> aClass = ClassUtils.getClass("com.google.gson.internal.bind.SpinReflectiveTypeAdapterFactory");
             Object[] factories = ClassUtils.getFieldValue(gson, "factories.list.elementData");
             for (int i = factories.length - 1; i != -1; --i) {
-                if (null != factories[i] && factories[i] instanceof ReflectiveTypeAdapterFactory) {
+                if (factories[i] instanceof ReflectiveTypeAdapterFactory) {
                     factories[i] = ConstructorUtils.invokeConstructor(aClass, factories[i]);
                     break;
                 }
