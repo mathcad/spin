@@ -142,7 +142,7 @@ public abstract class PackageUtils {
             if (null != jarFile) {
                 try {
                     jarFile.close();
-                } catch (IOException e) {
+                } catch (IOException ignore) {
                 }
             }
         }

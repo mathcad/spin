@@ -8,7 +8,7 @@ apply plugin: 'org.junit.platform.gradle.plugin'
 
 buildscript {
     ext {
-        kotlin_version = '1.2.50'
+        kotlin_version = '1.2.51'
         junitJupiterVersion = '5.2.0'
     }
     repositories {

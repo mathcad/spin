@@ -152,7 +152,7 @@ public abstract class NetUtils {
             final Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
             while (inetAddresses.hasMoreElements()) {
                 final InetAddress inetAddress = inetAddresses.nextElement();
-                if (inetAddress != null && inetAddress instanceof Inet4Address) {
+                if (inetAddress instanceof Inet4Address) {
                     ipSet.add(inetAddress.getHostAddress());
                 }
             }

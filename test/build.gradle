@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        kotlin_version = '1.2.50'
+        kotlin_version = '1.2.51'
         springBootVersion = '2.0.3.RELEASE'
         junitJupiterVersion = '5.2.0'
     }
@@ -21,7 +21,7 @@ buildscript {
 }
 
 plugins {
-    id "org.jetbrains.kotlin.plugin.spring" version "1.2.50"
+    id "org.jetbrains.kotlin.plugin.spring" version "1.2.51"
 }
 
 allOpen {

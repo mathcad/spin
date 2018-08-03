@@ -151,7 +151,7 @@ public abstract class EnumUtils {
      */
     public static <E extends Enum<E>, T> E getEnum(Class<E> enumCls, T value, String field) {
         String fieldName;
-        if (null != field && StringUtils.isNotEmpty(field)) {
+        if (StringUtils.isNotEmpty(field)) {
             fieldName = field;
         } else {
             fieldName = "value";

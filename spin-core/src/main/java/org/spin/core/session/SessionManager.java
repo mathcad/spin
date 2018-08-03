@@ -53,6 +53,22 @@ public abstract class SessionManager {
         return session;
     }
 
+    public static Session getCurrentSession(boolean requiredNew) {
+        String sessId = sessionIdContainer.get();
+        if (Objects.isNull(sessId)) {
+            return null;
+        }
+        Session session = ALL_SESSIONS.get(sessId);
+        if (Objects.isNull(session) && requiredNew) {
+            SimpleSession s = new SimpleSession();
+            s.setId(sessionIdContainer.get());
+//            s.setAttribute(USER_SESSION_KEY, sessionUserContainer.get());
+            ALL_SESSIONS.put(sessId, s);
+            session = s;
+        }
+        return session;
+    }
+
     /**
      * 得到Session中，当前登录用户
      *
