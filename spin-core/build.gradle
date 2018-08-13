@@ -21,6 +21,7 @@ ext {
     gsonVersion = '2.8.5'
     asmVersion = '6.2'
     httpclientVersion = '4.5.5'
+    httpasyncclientVersion = '4.1.4'
     commonsNetVersion = '3.6'
     pinyin4jVersion = '2.5.1'
     dom4jVersion = '1.6'
@@ -81,7 +82,7 @@ dependencies {
     testRuntime(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
-    testRuntime group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
+    testRuntime group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
     testRuntime group: 'dom4j', name: 'dom4j', version: dom4jVersion
 
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
@@ -91,7 +92,9 @@ dependencies {
     compile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
     compile group: 'org.ow2.asm', name: 'asm', version: asmVersion
 
-    compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
+//    compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
+    compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
+
     compileOnly group: 'commons-net', name: 'commons-net', version: commonsNetVersion
     compileOnly group: 'com.belerweb', name: 'pinyin4j', version: pinyin4jVersion
     compileOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
