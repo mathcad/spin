@@ -152,4 +152,33 @@ class HttpUtilsTest {
         System.out.println("Finish!");
     }
 
+    @Test
+    public void moreRequestByUtil() {
+        final String[] requests = new String[]{
+            "http://www.apache.org/",
+            "http://www.baidu.com/",
+            "http://www.oschina.net/"
+        };
+
+        final CountDownLatch latch = new CountDownLatch(requests.length);
+        for (final String request : requests) {
+
+            HttpUtils.getAsync(request, r -> {
+                latch.countDown();
+                System.out.println("test");
+            }, e -> {
+                latch.countDown();
+                e.printStackTrace();
+            });
+
+        }
+
+        try {
+            latch.await();
+            System.out.println("Shutting Down");
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+        System.out.println("Finish!");
+    }
 }

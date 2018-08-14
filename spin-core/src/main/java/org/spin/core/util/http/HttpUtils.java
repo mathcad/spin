@@ -2,15 +2,25 @@ package org.spin.core.util.http;
 
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.NoHttpResponseException;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -27,15 +37,21 @@ import org.spin.core.util.StringUtils;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.UnsupportedEncodingException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
+
 /**
  * 利用Apache HttpClient完成请求
+ * <p>支持异步请求与连接池</p>
  * <p>Created by xuweinan on 2018/4/9.</p>
  *
  * @author xuweinan
@@ -47,7 +63,60 @@ public abstract class HttpUtils {
     private static final int SOCKET_TIMEOUT = 10000;
     private static final int CONNECT_TIMEOUT = 10000;
 
+    private static int maxTotal;
+    private static int maxPerRoute;
+
+    private static CloseableHttpAsyncClient httpAsyncClient;
+    private static CloseableHttpClient httpClient;
+
+    /**
+     * 默认重试机制
+     */
+    private static HttpRequestRetryHandler defaultHttpRetryHandler = (exception, executionCount, context) -> {
+        if (executionCount >= 5) {// 如果已经重试了5次，就放弃
+            return false;
+        }
+        if (exception instanceof NoHttpResponseException) {// 如果服务器丢掉了连接，那么就重试
+            return true;
+        }
+        if (exception instanceof SSLHandshakeException) {// 不要重试SSL握手异常
+            return false;
+        }
+        if (exception instanceof InterruptedIOException) {// 超时
+            return false;
+        }
+        if (exception instanceof UnknownHostException) {// 目标服务器不可达
+            return false;
+        }
+        if (exception instanceof SSLException) {// SSL握手异常
+            return false;
+        }
+
+        HttpClientContext clientContext = HttpClientContext.adapt(context);
+        HttpRequest request = clientContext.getRequest();
+        // 如果请求是幂等的，就再次尝试
+        return !(request instanceof HttpEntityEnclosingRequest);
+    };
+
+    public static void init() {
+        init(200, 40);
+    }
+
+    public static void init(int maxTotal, int maxPerRoute) {
+        synchronized (HttpUtils.class) {
+            HttpUtils.maxTotal = maxTotal;
+            HttpUtils.maxPerRoute = maxPerRoute;
+            PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+            connectionManager.setMaxTotal(maxTotal);
+            connectionManager.setDefaultMaxPerRoute(maxPerRoute);
+            httpClient = HttpClients.custom().setRetryHandler(defaultHttpRetryHandler).setConnectionManager(connectionManager).build();
+            httpAsyncClient = HttpAsyncClients.custom().setMaxConnTotal(maxTotal).setMaxConnPerRoute(maxPerRoute).build();
+            httpAsyncClient.start();
+        }
+    }
+
     //region sync---------------------------------------------------------------------------------------------------------
+
     /**
      * get请求
      *
@@ -131,6 +200,7 @@ public abstract class HttpUtils {
     //endregion---------------------------------------------------------------------------------------------------------
 
     //region async---------------------------------------------------------------------------------------------------------
+
     /**
      * get请求
      *
@@ -392,7 +462,10 @@ public abstract class HttpUtils {
         }
 
         T res;
-        try (CloseableHttpClient httpclient = HttpClients.createDefault(); CloseableHttpResponse response = httpclient.execute(request)) {
+        if (null == httpClient) {
+            init();
+        }
+        try (CloseableHttpResponse response = httpClient.execute(request)) {
             int code = response.getStatusLine().getStatusCode();
             HttpEntity entity = response.getEntity();
             if (code != 200) {
@@ -458,9 +531,10 @@ public abstract class HttpUtils {
         }
 
         try {
-            final CloseableHttpAsyncClient asyncClient = HttpAsyncClients.createDefault();
-            asyncClient.start();
-            return asyncClient.execute(request, new FutureCallback<HttpResponse>() {
+            if (null == httpAsyncClient) {
+                init();
+            }
+            return httpAsyncClient.execute(request, new FutureCallback<HttpResponse>() {
                 @Override
                 public void completed(HttpResponse result) {
                     int code = result.getStatusLine().getStatusCode();
@@ -478,11 +552,6 @@ public abstract class HttpUtils {
                     } else {
                         logger.info("请求[{}]执行成功:\n{}", request.getURI(), entity);
                     }
-                    try {
-                        asyncClient.close();
-                    } catch (IOException ignore) {
-                        // do nothing
-                    }
                 }
 
                 @Override
@@ -492,11 +561,6 @@ public abstract class HttpUtils {
                     } else {
                         logger.error(String.format("请求[%s]执行成功", request.getURI()), ex);
                     }
-                    try {
-                        asyncClient.close();
-                    } catch (IOException ignore) {
-                        // do nothing
-                    }
                 }
 
                 @Override
@@ -505,11 +569,6 @@ public abstract class HttpUtils {
                         cancelledCallback.handle();
                     } else {
                         logger.error("请求[{}]被取消", request.getURI());
-                    }
-                    try {
-                        asyncClient.close();
-                    } catch (IOException ignore) {
-                        // do nothing
                     }
                 }
             });
