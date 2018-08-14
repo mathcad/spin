@@ -13,6 +13,7 @@ import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -45,6 +46,9 @@ public abstract class JsonUtils {
 
     private JsonUtils() {
     }
+
+    public static final TypeToken<Map<String, Object>> MAP_TYPE_TOKEN = new TypeToken<Map<String, Object>>() {
+    };
 
     /**
      * 获取一个默认的GSON实例
@@ -297,6 +301,10 @@ public abstract class JsonUtils {
         } catch (Exception ex) {
             throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
         }
+    }
+
+    public Map<String, Object> fromJsonToMap(String json) {
+        return fromJson(json, MAP_TYPE_TOKEN);
     }
 
     /**

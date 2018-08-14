@@ -34,7 +34,7 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://139.199.59.195:8081/repository/ne/") {
+            repository(url: "http://192.168.0.248:8081/nexus/content/repositories/releases/") {
                 authentication(userName: "admin", password: "admin123")
             }
             pom.version = "$project.version"

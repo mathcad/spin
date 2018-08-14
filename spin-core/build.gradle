@@ -19,8 +19,8 @@ ext {
     junitJupiterVersion = '5.2.0'
     slf4jVersion = '1.7.25'
     gsonVersion = '2.8.5'
-    asmVersion = '6.2'
-    httpclientVersion = '4.5.5'
+    asmVersion = '6.2.1'
+    httpclientVersion = '4.5.6'
     httpasyncclientVersion = '4.1.4'
     commonsNetVersion = '3.6'
     pinyin4jVersion = '2.5.1'
@@ -65,7 +65,7 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://139.199.59.195:8081/repository/ne/") {
+            repository(url: "http://192.168.0.248:8081/nexus/content/repositories/releases/") {
                 authentication(userName: "admin", password: "admin123")
             }
             pom.version = "$project.version"
@@ -82,7 +82,8 @@ dependencies {
     testRuntime(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
-    testRuntime group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
+    testCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
+    testRuntime group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
     testRuntime group: 'dom4j', name: 'dom4j', version: dom4jVersion
 
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion

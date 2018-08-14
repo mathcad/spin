@@ -29,8 +29,8 @@ class AESTest {
         SecretKey secretKey = AES.generateKey(key, AES.KeyLength.WEAK);
         byte[] data = JsonUtils.fromJson(dataJson, typeToken);
 //        System.out.println(HexUtils.encodeHexStringU(data));
-        String decrypt = AES.decrypt("ecb55d9d3501e902", data, Charset.forName("ascii"));
-        System.out.println(decrypt);
+//        String decrypt = AES.decrypt(AES.generateKey("ecb55d9d3501e902"), data);
+//        System.out.println(decrypt);
         assertTrue(true);
     }
 

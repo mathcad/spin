@@ -68,7 +68,7 @@ public abstract class StringUtils {
 
     public static final String EMPTY = "";
 
-    public static final int INDEX_NOT_FOUND = -1;
+    private static final int INDEX_NOT_FOUND = -1;
 
     private StringUtils() {
     }
@@ -3882,4 +3882,61 @@ public abstract class StringUtils {
     public static boolean isString(Object input) {
         return input instanceof CharSequence || input instanceof StringWriter;
     }
+
+    /**
+     * 从左侧截取指定长度的子串，如果字符串长度小于要截取的长度，返回原字符串
+     *
+     * @param input  字符串
+     * @param length 截取长度
+     * @return 截取后的字符串
+     */
+    public static String left(String input, int length) {
+        if (isEmpty(input) || input.length() < length) {
+            return input;
+        }
+
+        return input.substring(0, length);
+    }
+
+    /**
+     * 从右侧截取指定长度的子串，如果字符串长度小于要截取的长度，返回原字符串
+     *
+     * @param input  字符串
+     * @param length 截取长度
+     * @return 截取后的字符串
+     */
+    public static String right(String input, int length) {
+        if (isEmpty(input) || input.length() < length) {
+            return input;
+        }
+
+        return input.substring(input.length() - length);
+    }
+
+    /**
+     * 空安全的字符串截取操作
+     *
+     * @param input      字符串
+     * @param beginIndex 起点位置（包含）
+     * @param endIndex   终点位置（不包含）
+     * @return 截取后的字符串
+     */
+    public static String substring(String input, int beginIndex, int endIndex) {
+        if (beginIndex < 0) {
+            throw new StringIndexOutOfBoundsException(beginIndex);
+        }
+
+        int subLen = endIndex - beginIndex;
+        if (endIndex - beginIndex < 0) {
+            throw new StringIndexOutOfBoundsException(subLen);
+        }
+
+        if (isEmpty(input)) {
+            return input;
+        }
+
+        return ((beginIndex == 0) && (endIndex == input.length())) ? input
+            : new String(input.toCharArray(), beginIndex, subLen);
+    }
 }
+

@@ -6,11 +6,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.*;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -51,6 +47,7 @@ public abstract class HttpUtils {
     private static final int SOCKET_TIMEOUT = 10000;
     private static final int CONNECT_TIMEOUT = 10000;
 
+    //region sync---------------------------------------------------------------------------------------------------------
     /**
      * get请求
      *
@@ -81,19 +78,7 @@ public abstract class HttpUtils {
      * @return 请求结果
      */
     public static String get(String url, Map<String, String> headers, Map<String, String> params) {
-        HttpGet request = HttpMethod.GET.buildRequest(url, ub -> {
-            if (params != null) {
-                for (Map.Entry<String, String> e : params.entrySet()) {
-                    ub.setParameter(e.getKey(), e.getValue());
-                }
-            }
-        }, req -> {
-            if (null != headers) {
-                headers.forEach(req::setHeader);
-            }
-        });
-
-        return excuteRequest(request, HttpUtils::resolveEntityToStr);
+        return excuteRequest(buildGetRequest(url, headers, params), HttpUtils::resolveEntityToStr);
     }
 
     /**
@@ -116,7 +101,227 @@ public abstract class HttpUtils {
      * @return 请求结果
      */
     public static String post(String url, Map<String, String> headers, Map<String, String> params) {
-        HttpPost request = HttpMethod.POST.buildRequest(url, req -> {
+        return excuteRequest(buildPostRequest(url, headers, params), HttpUtils::resolveEntityToStr);
+    }
+
+    /**
+     * 使用post方式请求，传输json数据
+     *
+     * @param url     请求url
+     * @param jsonObj 参数对象
+     * @return 请求结果
+     */
+    public static String postJson(String url, Object jsonObj) {
+        return excuteRequest(buildPostJsonRequest(url, jsonObj), HttpUtils::resolveEntityToStr);
+    }
+
+    /**
+     * get方式下载文件
+     *
+     * @param url      url
+     * @param savePath 保存路径
+     * @return 下载结果
+     */
+    public static Map<String, String> download(String url, String savePath) {
+        HttpGet request = HttpMethod.GET.buildRequest(url);
+
+        return excuteRequest(request, httpEntity -> downloadProc(httpEntity, savePath));
+    }
+
+    //endregion---------------------------------------------------------------------------------------------------------
+
+    //region async---------------------------------------------------------------------------------------------------------
+    /**
+     * get请求
+     *
+     * @param url url
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> getAsync(String url, FinalConsumer<String> completedCallback) {
+        return getAsync(url, null, null, completedCallback, null);
+    }
+
+    /**
+     * get请求
+     *
+     * @param url    url
+     * @param params 请求参数
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> getAsync(String url, Map<String, String> params, FinalConsumer<String> completedCallback) {
+        return getAsync(url, null, params, completedCallback, null);
+    }
+
+    /**
+     * get请求
+     *
+     * @param url     url
+     * @param headers 请求头部
+     * @param params  请求参数map
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> getAsync(String url, Map<String, String> headers, Map<String, String> params, FinalConsumer<String> completedCallback) {
+        return excuteRequestAsync(buildGetRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, null, null);
+    }
+
+    /**
+     * post请求
+     *
+     * @param url    url
+     * @param params 请求参数
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> postAsync(String url, Map<String, String> params, FinalConsumer<String> completedCallback) {
+        return postAsync(url, null, params, completedCallback, null);
+    }
+
+    /**
+     * post请求
+     *
+     * @param url     url
+     * @param headers 请求头部
+     * @param params  请求参数
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> postAsync(String url, Map<String, String> headers, Map<String, String> params, FinalConsumer<String> completedCallback) {
+        return excuteRequestAsync(buildPostRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, null, null);
+    }
+
+    /**
+     * 使用post方式请求，传输json数据
+     *
+     * @param url     请求url
+     * @param jsonObj 参数对象
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> postJsonAsync(String url, Object jsonObj, FinalConsumer<String> completedCallback) {
+        return excuteRequestAsync(buildPostJsonRequest(url, jsonObj), HttpUtils::resolveEntityToStr, completedCallback, null, null);
+    }
+
+    /**
+     * get方式下载文件
+     *
+     * @param url      url
+     * @param savePath 保存路径
+     * @return 下载结果
+     */
+    public static Future<HttpResponse> downloadAsync(String url, String savePath, FinalConsumer<Map<String, String>> completedCallback) {
+        HttpGet request = HttpMethod.GET.buildRequest(url);
+
+        return excuteRequestAsync(request, httpEntity -> downloadProc(httpEntity, savePath), completedCallback, null, null);
+    }
+
+    //endregion---------------------------------------------------------------------------------------------------------
+
+    //region async---------------------------------------------------------------------------------------------------------
+
+    /**
+     * get请求
+     *
+     * @param url url
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> getAsync(String url, FinalConsumer<String> completedCallback,
+                                                FinalConsumer<Exception> failedCallback) {
+        return getAsync(url, null, null, completedCallback, failedCallback);
+    }
+
+    /**
+     * get请求
+     *
+     * @param url    url
+     * @param params 请求参数
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> getAsync(String url, Map<String, String> params, FinalConsumer<String> completedCallback,
+                                                FinalConsumer<Exception> failedCallback) {
+        return getAsync(url, null, params, completedCallback, failedCallback);
+    }
+
+    /**
+     * get请求
+     *
+     * @param url     url
+     * @param headers 请求头部
+     * @param params  请求参数map
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> getAsync(String url, Map<String, String> headers, Map<String, String> params, FinalConsumer<String> completedCallback,
+                                                FinalConsumer<Exception> failedCallback) {
+        return excuteRequestAsync(buildGetRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
+    }
+
+    /**
+     * post请求
+     *
+     * @param url    url
+     * @param params 请求参数
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> postAsync(String url, Map<String, String> params, FinalConsumer<String> completedCallback,
+                                                 FinalConsumer<Exception> failedCallback) {
+        return postAsync(url, null, params, completedCallback, failedCallback);
+    }
+
+    /**
+     * post请求
+     *
+     * @param url     url
+     * @param headers 请求头部
+     * @param params  请求参数
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> postAsync(String url, Map<String, String> headers, Map<String, String> params, FinalConsumer<String> completedCallback,
+                                                 FinalConsumer<Exception> failedCallback) {
+        return excuteRequestAsync(buildPostRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
+    }
+
+    /**
+     * 使用post方式请求，传输json数据
+     *
+     * @param url     请求url
+     * @param jsonObj 参数对象
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> postJsonAsync(String url, Object jsonObj, FinalConsumer<String> completedCallback,
+                                                     FinalConsumer<Exception> failedCallback) {
+        return excuteRequestAsync(buildPostJsonRequest(url, jsonObj), HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
+    }
+
+    /**
+     * get方式下载文件
+     *
+     * @param url      url
+     * @param savePath 保存路径
+     * @return 下载结果
+     */
+    public static Future<HttpResponse> downloadAsync(String url, String savePath, FinalConsumer<Map<String, String>> completedCallback,
+                                                     FinalConsumer<Exception> failedCallback) {
+        HttpGet request = HttpMethod.GET.buildRequest(url);
+
+        return excuteRequestAsync(request, httpEntity -> downloadProc(httpEntity, savePath), completedCallback, failedCallback, null);
+    }
+
+    //endregion---------------------------------------------------------------------------------------------------------
+
+    //region build request---------------------------------------------------------------------------------------------------------
+
+    public static HttpGet buildGetRequest(String url, Map<String, String> headers, Map<String, String> params) {
+        return HttpMethod.GET.buildRequest(url, ub -> {
+            if (params != null) {
+                for (Map.Entry<String, String> e : params.entrySet()) {
+                    ub.setParameter(e.getKey(), e.getValue());
+                }
+            }
+        }, req -> {
+            if (null != headers) {
+                headers.forEach(req::setHeader);
+            }
+        });
+    }
+
+    public static HttpPost buildPostRequest(String url, Map<String, String> headers, Map<String, String> params) {
+        return HttpMethod.POST.buildRequest(url, req -> {
             if (null != headers) {
                 headers.forEach(req::setHeader);
             }
@@ -131,21 +336,12 @@ public abstract class HttpUtils {
                 }
             }
         });
-
-        return excuteRequest(request, HttpUtils::resolveEntityToStr);
     }
 
-    /**
-     * 使用post方式请求，传输json数据
-     *
-     * @param url     请求url
-     * @param jsonObj 参数对象
-     * @return 请求结果
-     */
-    public static String postJson(String url, Object jsonObj) {
-        HttpPost request = HttpMethod.POST.buildRequest(url, req -> {
+    public static HttpPost buildPostJsonRequest(String url, Object jsonObj) {
+        return HttpMethod.POST.buildRequest(url, req -> {
             if (null != jsonObj) {
-                StringEntity stringEntity = null;
+                StringEntity stringEntity;
                 try {
                     stringEntity = new StringEntity(JsonUtils.toJson(jsonObj));
                 } catch (UnsupportedEncodingException e) {
@@ -156,38 +352,9 @@ public abstract class HttpUtils {
                 req.setEntity(stringEntity);
             }
         });
-
-        return excuteRequest(request, HttpUtils::resolveEntityToStr);
     }
 
-    /**
-     * get方式下载文件
-     *
-     * @param url      url
-     * @param savePath 保存路径
-     * @return 下载结果
-     */
-    public static Map<String, String> download(String url, String savePath) {
-        HttpGet request = HttpMethod.GET.buildRequest(url);
-
-        return excuteRequest(request, httpEntity -> {
-            Map<String, String> map = new HashMap<>();
-            String saveFile = savePath;
-            String contentType = httpEntity.getContentType().getValue();
-            String extention = contentType.substring(contentType.indexOf('/') + 1);
-            if (StringUtils.isNotBlank(savePath))
-                saveFile = savePath + "." + extention;
-            try (FileOutputStream fos = new FileOutputStream(saveFile)) {
-                byte[] bytes = EntityUtils.toByteArray(httpEntity);
-                fos.write(bytes);
-                map.put("extention", StringUtils.isBlank(extention) ? "" : "." + extention);
-                map.put("bytes", Integer.toString(bytes.length));
-            } catch (IOException e) {
-                throw new SimplifiedException("无法保存文件:[" + saveFile + "]", e);
-            }
-            return map;
-        });
-    }
+    //endregion-----------------------------------------------------------------------------------------------------
 
     /**
      * 执行自定义请求，并通过自定义方式转换请求结果
@@ -224,13 +391,10 @@ public abstract class HttpUtils {
             ((HttpRequestBase) request).setConfig(requestConfig);
         }
 
-        HttpEntity entity = null;
-        T res = null;
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-            CloseableHttpResponse response = httpclient.execute(request);
+        T res;
+        try (CloseableHttpClient httpclient = HttpClients.createDefault(); CloseableHttpResponse response = httpclient.execute(request)) {
             int code = response.getStatusLine().getStatusCode();
-            entity = response.getEntity();
-            response.close();
+            HttpEntity entity = response.getEntity();
             if (code != 200) {
                 throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "错误状态码:" + code);
             }
@@ -243,151 +407,6 @@ public abstract class HttpUtils {
                 + e.getMessage());
         }
         return res;
-    }
-
-    /**
-     * get请求
-     *
-     * @param url url
-     * @return 请求结果
-     */
-    public static Future<HttpResponse> getAsync(String url, FinalConsumer<String> completedCallback,
-                                                FinalConsumer<Exception> failedCallback) {
-        return getAsync(url, null, null, completedCallback, failedCallback);
-    }
-
-    /**
-     * get请求
-     *
-     * @param url    url
-     * @param params 请求参数
-     * @return 请求结果
-     */
-    public static Future<HttpResponse> getAsync(String url, Map<String, String> params, FinalConsumer<String> completedCallback,
-                                                FinalConsumer<Exception> failedCallback) {
-        return getAsync(url, null, params, completedCallback, failedCallback);
-    }
-
-    /**
-     * get请求
-     *
-     * @param url     url
-     * @param headers 请求头部
-     * @param params  请求参数map
-     * @return 请求结果
-     */
-    public static Future<HttpResponse> getAsync(String url, Map<String, String> headers, Map<String, String> params, FinalConsumer<String> completedCallback,
-                                                FinalConsumer<Exception> failedCallback) {
-        HttpGet request = HttpMethod.GET.buildRequest(url, ub -> {
-            if (params != null) {
-                for (Map.Entry<String, String> e : params.entrySet()) {
-                    ub.setParameter(e.getKey(), e.getValue());
-                }
-            }
-        }, req -> {
-            if (null != headers) {
-                headers.forEach(req::setHeader);
-            }
-        });
-
-        return excuteRequestAsync(request, HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
-    }
-
-    /**
-     * post请求
-     *
-     * @param url    url
-     * @param params 请求参数
-     * @return 请求结果
-     */
-    public static Future<HttpResponse> postAsync(String url, Map<String, String> params, FinalConsumer<String> completedCallback,
-                                                 FinalConsumer<Exception> failedCallback) {
-        return postAsync(url, null, params, completedCallback, failedCallback);
-    }
-
-    /**
-     * post请求
-     *
-     * @param url     url
-     * @param headers 请求头部
-     * @param params  请求参数
-     * @return 请求结果
-     */
-    public static Future<HttpResponse> postAsync(String url, Map<String, String> headers, Map<String, String> params, FinalConsumer<String> completedCallback,
-                                                 FinalConsumer<Exception> failedCallback) {
-        HttpPost request = HttpMethod.POST.buildRequest(url, req -> {
-            if (null != headers) {
-                headers.forEach(req::setHeader);
-            }
-            if (null != params) {
-                List<NameValuePair> nvps = params.entrySet().stream()
-                    .map(p -> new BasicNameValuePair(p.getKey(), p.getValue()))
-                    .collect(Collectors.toList());
-                try {
-                    req.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "生成请求报文体错误", e);
-                }
-            }
-        });
-
-        return excuteRequestAsync(request, HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
-    }
-
-    /**
-     * 使用post方式请求，传输json数据
-     *
-     * @param url     请求url
-     * @param jsonObj 参数对象
-     * @return 请求结果
-     */
-    public static Future<HttpResponse> postJsonAsync(String url, Object jsonObj, FinalConsumer<String> completedCallback,
-                                                     FinalConsumer<Exception> failedCallback) {
-        HttpPost request = HttpMethod.POST.buildRequest(url, req -> {
-            if (null != jsonObj) {
-                StringEntity stringEntity = null;
-                try {
-                    stringEntity = new StringEntity(JsonUtils.toJson(jsonObj));
-                } catch (UnsupportedEncodingException e) {
-                    throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "生成请求报文体错误", e);
-                }
-                stringEntity.setContentEncoding("UTF-8");
-                stringEntity.setContentType("application/json");
-                req.setEntity(stringEntity);
-            }
-        });
-
-        return excuteRequestAsync(request, HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
-    }
-
-    /**
-     * get方式下载文件
-     *
-     * @param url      url
-     * @param savePath 保存路径
-     * @return 下载结果
-     */
-    public static Future<HttpResponse> downloadAsync(String url, String savePath, FinalConsumer<Map<String, String>> completedCallback,
-                                                     FinalConsumer<Exception> failedCallback) {
-        HttpGet request = HttpMethod.GET.buildRequest(url);
-
-        return excuteRequestAsync(request, httpEntity -> {
-            Map<String, String> map = new HashMap<>();
-            String saveFile = savePath;
-            String contentType = httpEntity.getContentType().getValue();
-            String extention = contentType.substring(contentType.indexOf('/') + 1);
-            if (StringUtils.isNotBlank(savePath))
-                saveFile = savePath + "." + extention;
-            try (FileOutputStream fos = new FileOutputStream(saveFile)) {
-                byte[] bytes = EntityUtils.toByteArray(httpEntity);
-                fos.write(bytes);
-                map.put("extention", StringUtils.isBlank(extention) ? "" : "." + extention);
-                map.put("bytes", Integer.toString(bytes.length));
-            } catch (IOException e) {
-                throw new SimplifiedException("无法保存文件:[" + saveFile + "]", e);
-            }
-            return map;
-        }, completedCallback, failedCallback, null);
     }
 
     /**
@@ -407,6 +426,7 @@ public abstract class HttpUtils {
                                                               Handler cancelledCallback) {
         return excuteRequestAsync(request, null, entityProc, completedCallback, failedCallback, cancelledCallback);
     }
+
 
     /**
      * 异步执行自定义请求，并通过自定义方式转换请求结果
@@ -437,7 +457,8 @@ public abstract class HttpUtils {
             ((HttpRequestBase) request).setConfig(requestConfig);
         }
 
-        try (CloseableHttpAsyncClient asyncClient = HttpAsyncClients.createDefault()) {
+        try {
+            final CloseableHttpAsyncClient asyncClient = HttpAsyncClients.createDefault();
             asyncClient.start();
             return asyncClient.execute(request, new FutureCallback<HttpResponse>() {
                 @Override
@@ -457,6 +478,11 @@ public abstract class HttpUtils {
                     } else {
                         logger.info("请求[{}]执行成功:\n{}", request.getURI(), entity);
                     }
+                    try {
+                        asyncClient.close();
+                    } catch (IOException ignore) {
+                        // do nothing
+                    }
                 }
 
                 @Override
@@ -466,6 +492,11 @@ public abstract class HttpUtils {
                     } else {
                         logger.error(String.format("请求[%s]执行成功", request.getURI()), ex);
                     }
+                    try {
+                        asyncClient.close();
+                    } catch (IOException ignore) {
+                        // do nothing
+                    }
                 }
 
                 @Override
@@ -474,6 +505,11 @@ public abstract class HttpUtils {
                         cancelledCallback.handle();
                     } else {
                         logger.error("请求[{}]被取消", request.getURI());
+                    }
+                    try {
+                        asyncClient.close();
+                    } catch (IOException ignore) {
+                        // do nothing
                     }
                 }
             });
@@ -490,12 +526,30 @@ public abstract class HttpUtils {
         return url.toLowerCase().startsWith("http") ? url : SCHEMA + url;
     }
 
-    private static String resolveEntityToStr(HttpEntity entity) {
+    public static String resolveEntityToStr(HttpEntity entity) {
         try {
             return EntityUtils.toString(entity, getContentCharSet(entity));
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "转换请求结果发生错误", e);
         }
+    }
+
+    private static Map<String, String> downloadProc(HttpEntity entity, String savePath) {
+        Map<String, String> map = new HashMap<>();
+        String saveFile = savePath;
+        String contentType = entity.getContentType().getValue();
+        String extention = contentType.substring(contentType.indexOf('/') + 1);
+        if (StringUtils.isNotBlank(savePath))
+            saveFile = savePath + "." + extention;
+        try (FileOutputStream fos = new FileOutputStream(saveFile)) {
+            byte[] bytes = EntityUtils.toByteArray(entity);
+            fos.write(bytes);
+            map.put("extention", StringUtils.isBlank(extention) ? "" : "." + extention);
+            map.put("bytes", Integer.toString(bytes.length));
+        } catch (IOException e) {
+            throw new SimplifiedException("无法保存文件:[" + saveFile + "]", e);
+        }
+        return map;
     }
 
     private static String getContentCharSet(final HttpEntity entity) {
