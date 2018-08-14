@@ -55,7 +55,7 @@ import javax.net.ssl.SSLHandshakeException;
  * <p>Created by xuweinan on 2018/4/9.</p>
  *
  * @author xuweinan
- * @version V1.1
+ * @version V1.2
  */
 public abstract class HttpUtils {
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class);
