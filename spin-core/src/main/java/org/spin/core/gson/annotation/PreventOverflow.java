@@ -1,4 +1,4 @@
-package org.spin.enhance.gson.annotation;
+package org.spin.core.gson.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

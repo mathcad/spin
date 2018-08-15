@@ -16,8 +16,8 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
+import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.util.ClassUtils;
-import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

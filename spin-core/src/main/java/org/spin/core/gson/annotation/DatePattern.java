@@ -1,4 +1,4 @@
-package org.spin.enhance.gson.annotation;
+package org.spin.core.gson.annotation;
 
 import org.spin.core.util.JsonUtils;
 

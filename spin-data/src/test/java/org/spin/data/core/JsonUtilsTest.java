@@ -3,10 +3,12 @@ package org.spin.data.core;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.junit.jupiter.api.Test;
+import org.spin.core.gson.annotation.PreventOverflow;
 import org.spin.core.util.JsonUtils;
-import org.spin.enhance.gson.annotation.DatePattern;
+import org.spin.core.gson.annotation.DatePattern;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +46,7 @@ public class JsonUtilsTest {
         a.setCreateUserId(9007299254740992L);
         a.setXxx(LocalDateTime.now());
         a.setUpdateUserId(2L);
+        a.setExt(91241321817279489L);
         System.out.println(JsonUtils.toJson(a));
         String b = "{\"id\":81241321817279489,\"createUserId\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212'}";
         AbstractEntity c = JsonUtils.fromJson(b, E.class);
@@ -66,7 +69,8 @@ public class JsonUtilsTest {
     @Test
     public void testBug() {
         String a = "{\"rows\":[{\"id\":107875263349522433,\"name\":\"1\",\"type\":\"教育\",\"status\":5},{\"id\":107875650970320897,\"name\":\"\",\"status\":5},{\"id\":107946270970085377,\"name\":\"共生\",\"enroll_end\":\"三月 8, 2018\",\"actualArea\":100.0,\"actualCost\":600.00,\"type\":\"商业\",\"item\":\"办公\",\"status\":1,\"filePath\":\"/201803/09134517Qg0UJd0P.png\"}],\"total\":3,\"pageSize\":10000000}";
-        Page<Map<String, Object>> p = new Gson().fromJson(a, new TypeToken<Page<Map<String, Object>>>(){}.getType());
+        Page<Map<String, Object>> p = new Gson().fromJson(a, new TypeToken<Page<Map<String, Object>>>() {
+        }.getType());
         System.out.println(JsonUtils.toJson(p));
     }
 
@@ -82,6 +86,18 @@ public class JsonUtilsTest {
         p.setRows(r);
         System.out.println(JsonUtils.toJson(p));
     }
+
+    @Test
+    public void testJson() {
+        String a = "{date: '2016-08-31'}";
+        String b = "2016-08-31";
+        System.out.println(JsonUtils.fromJson(a, A.class).date);
+        System.out.println(JsonUtils.fromJson(b, LocalDate.class).toString());
+    }
+
+    public static class A {
+        LocalDate date;
+    }
 }
 
 class E extends AbstractEntity {
@@ -90,6 +106,8 @@ class E extends AbstractEntity {
     private LocalDateTime xxx;
     private Status status;
     private Type type;
+    @PreventOverflow
+    private Long ext;
 
     public LocalDateTime getXxx() {
         return xxx;
@@ -114,12 +132,21 @@ class E extends AbstractEntity {
     public void setType(Type type) {
         this.type = type;
     }
+
+    public Long getExt() {
+        return ext;
+    }
+
+    public void setExt(Long ext) {
+        this.ext = ext;
+    }
 }
 
 enum Status implements UserEnumColumn {
     A(1), B(2);
 
     private int value;
+
     Status(int value) {
         this.value = value;
     }
@@ -134,6 +161,7 @@ enum Type implements UserEnumColumn {
     C(1), D(2);
 
     private int value;
+
     Type(int value) {
         this.value = value;
     }

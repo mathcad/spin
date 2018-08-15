@@ -9,7 +9,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.enhance.gson.MatchableTypeAdapter;
+import org.spin.core.gson.MatchableTypeAdapter;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.IOException;

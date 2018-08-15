@@ -4,7 +4,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import org.hibernate.collection.internal.PersistentBag;
-import org.spin.enhance.gson.MatchableTypeAdapter;
+import org.spin.core.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

@@ -1,7 +1,7 @@
 package org.spin.data.core;
 
 import org.spin.data.util.EntityUtils;
-import org.spin.enhance.gson.annotation.PreventOverflow;
+import org.spin.core.gson.annotation.PreventOverflow;
 
 import javax.persistence.Column;
 import javax.persistence.Id;

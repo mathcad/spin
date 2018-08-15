@@ -1,4 +1,4 @@
-package org.spin.enhance.gson.adapter;
+package org.spin.core.gson.adapter;
 
 import com.google.gson.*;
 import com.google.gson.internal.LinkedTreeMap;

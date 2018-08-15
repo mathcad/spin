@@ -1,15 +1,15 @@
-package org.spin.enhance.gson.adapter;
+package org.spin.core.gson.adapter;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import org.spin.core.gson.DatePatternParser;
+import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.util.StringUtils;
-import org.spin.enhance.gson.DatePatternParser;
-import org.spin.enhance.gson.MatchableTypeAdapter;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -18,25 +18,25 @@ import java.time.format.DateTimeFormatter;
  *
  * @author xuweinan
  */
-public class LocalDateTypeAdapter extends MatchableTypeAdapter<LocalDate> {
+public class LocalTimeTypeAdapter extends MatchableTypeAdapter<LocalTime> {
     private DateTimeFormatter formater;
 
-    public LocalDateTypeAdapter(String datePattern) {
+    public LocalTimeTypeAdapter(String datePattern) {
         this.formater = DateTimeFormatter.ofPattern(datePattern);
     }
 
     @Override
-    public LocalDate read(JsonReader in, TypeToken<?> type, Field field) throws IOException {
+    public LocalTime read(JsonReader in, TypeToken<?> type, Field field) throws IOException {
         String tmp = in.nextString();
         if (StringUtils.isEmpty(tmp)) {
             return null;
         } else {
-            return LocalDate.parse(tmp, DatePatternParser.getReadPattern(formater, field));
+            return LocalTime.parse(tmp, DatePatternParser.getReadPattern(formater, field));
         }
     }
 
     @Override
-    public void write(JsonWriter out, LocalDate value, Field field) throws IOException {
+    public void write(JsonWriter out, LocalTime value, Field field) throws IOException {
         if (null == value) {
             out.nullValue();
         } else {
@@ -46,6 +46,6 @@ public class LocalDateTypeAdapter extends MatchableTypeAdapter<LocalDate> {
 
     @Override
     public boolean isMatch(TypeToken<?> type) {
-        return LocalDate.class.isAssignableFrom(type.getRawType());
+        return LocalTime.class.isAssignableFrom(type.getRawType());
     }
 }

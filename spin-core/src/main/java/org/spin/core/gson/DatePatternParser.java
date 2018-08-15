@@ -1,6 +1,6 @@
-package org.spin.enhance.gson;
+package org.spin.core.gson;
 
-import org.spin.enhance.gson.annotation.DatePattern;
+import org.spin.core.gson.annotation.DatePattern;
 import org.spin.core.util.StringUtils;
 
 import java.lang.reflect.Field;

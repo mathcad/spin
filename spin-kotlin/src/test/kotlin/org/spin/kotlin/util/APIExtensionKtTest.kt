@@ -8,7 +8,6 @@ internal class APIExtensionKtTest {
     @Test
     fun test1() {
         val o = O("a","b")
-        println(o)
         assertTrue(o.getPropertyValue("name") == "a")
     }
 }

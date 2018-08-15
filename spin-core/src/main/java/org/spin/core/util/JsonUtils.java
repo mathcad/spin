@@ -6,10 +6,10 @@ import com.google.gson.InstanceCreator;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
+import org.spin.core.gson.SpinTypeAdapterFactory;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Type;
@@ -329,7 +329,7 @@ public abstract class JsonUtils {
 
     private static Gson procGson(Gson gson) {
         try {
-            Class<?> aClass = ClassUtils.getClass("com.google.gson.internal.bind.SpinReflectiveTypeAdapterFactory");
+            Class<?> aClass = com.google.gson.internal.bind.SpinReflectiveTypeAdapterFactory.class;
             Object[] factories = ClassUtils.getFieldValue(gson, "factories.list.elementData");
             for (int i = factories.length - 1; i != -1; --i) {
                 if (factories[i] instanceof ReflectiveTypeAdapterFactory) {
@@ -351,8 +351,7 @@ public abstract class JsonUtils {
         patterns[2] = null != pattern && pattern.length > 2 ? pattern[2] : DEFAULT_LOCAL_TIME_PATTERN;
         try {
             @SuppressWarnings("unchecked")
-            Class<TypeAdapterFactory> factoryClass = (Class<TypeAdapterFactory>) ClassUtils.getClass("org.spin.enhance.gson.SpinTypeAdapterFactory");
-            TypeAdapterFactory factory = ConstructorUtils.invokeConstructor(factoryClass, patterns);
+            TypeAdapterFactory factory = new SpinTypeAdapterFactory(patterns[0], patterns[1], patterns[2]);
             builder.registerTypeAdapterFactory(factory);
             builder.setDateFormat(patterns[0]);
         } catch (Exception ignore) {
