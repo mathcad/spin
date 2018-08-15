@@ -17,11 +17,11 @@ buildscript {
 
 ext {
     junitJupiterVersion = '5.2.0'
-    hibernateVersion = '5.3.1.Final'
+    hibernateVersion = '5.3.5.Final'
     freemarkerVersion = '2.3.28'
-    beetlVersion = '2.8.4'
-    springVersion = '5.0.7.RELEASE'
-    springDataRedisVersion = '2.0.8.RELEASE'
+    beetlVersion = '2.8.7'
+    springVersion = '5.0.8.RELEASE'
+    springDataRedisVersion = '2.0.9.RELEASE'
 }
 
 junitPlatform {
@@ -58,7 +58,7 @@ dependencies {
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
 
 //    data
-    compile group: 'org.mathcat', name: 'spin-enhance', version: "$project.version"
+    compile group: 'org.mathcat', name: 'spin-core', version: "$project.version"
 
     compile group: 'org.springframework', name: 'spring-context', version: springVersion
     compile group: 'org.springframework', name: 'spring-orm', version: springVersion

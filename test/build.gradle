@@ -1,7 +1,7 @@
 buildscript {
     ext {
-        kotlin_version = '1.2.51'
-        springBootVersion = '2.0.3.RELEASE'
+        kotlin_version = '1.2.60'
+        springBootVersion = '2.0.4.RELEASE'
         junitJupiterVersion = '5.2.0'
     }
     repositories {
@@ -84,7 +84,7 @@ dependencies {
     compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.10.RELEASE'
     compile group: 'org.mathcat', name: 'spin-data', version: '2.1.10.RELEASE'
     compile group: 'org.mathcat', name: 'spin-wx', version: '2.1.10.RELEASE'
-    compile group: 'com.ibeetl', name: 'beetl', version: '2.8.4'
+    compile group: 'com.ibeetl', name: 'beetl', version: '2.8.7'
 
     compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
 }
