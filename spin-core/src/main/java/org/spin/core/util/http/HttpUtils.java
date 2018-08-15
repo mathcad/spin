@@ -315,7 +315,7 @@ public abstract class HttpUtils {
 
     // endregion
 
-    // region casync http method(without failedCallback)
+    // region async http method(without canceledCallback)
 
     /**
      * get请求
@@ -632,6 +632,7 @@ public abstract class HttpUtils {
     }
     // endregion
 
+    // region common method
     public static String fixUrl(String url) {
         return url.toLowerCase().startsWith("http") ? url : SCHEMA + url;
     }
@@ -682,4 +683,5 @@ public abstract class HttpUtils {
         }
         return charset;
     }
+    // endregion
 }
