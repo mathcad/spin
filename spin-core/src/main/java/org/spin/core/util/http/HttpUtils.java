@@ -1,20 +1,10 @@
 package org.spin.core.util.http;
 
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.NoHttpResponseException;
+import org.apache.http.*;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.*;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.StringEntity;
@@ -35,6 +25,8 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
 
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -45,9 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLHandshakeException;
 
 /**
  * 利用Apache HttpClient完成请求
@@ -98,6 +87,7 @@ public abstract class HttpUtils {
         return !(request instanceof HttpEntityEnclosingRequest);
     };
 
+    // region init and getter/setter
     public static void init() {
         init(200, 40);
     }
@@ -115,7 +105,25 @@ public abstract class HttpUtils {
         }
     }
 
-    //region sync---------------------------------------------------------------------------------------------------------
+    public static int getMaxTotal() {
+        return maxTotal;
+    }
+
+    public static int getMaxPerRoute() {
+        return maxPerRoute;
+    }
+
+    public static HttpRequestRetryHandler getDefaultHttpRetryHandler() {
+        return defaultHttpRetryHandler;
+    }
+
+    public static void setDefaultHttpRetryHandler(HttpRequestRetryHandler defaultHttpRetryHandler) {
+        HttpUtils.defaultHttpRetryHandler = defaultHttpRetryHandler;
+    }
+
+    // endregion
+
+    // region sync http method
 
     /**
      * get请求
@@ -147,7 +155,7 @@ public abstract class HttpUtils {
      * @return 请求结果
      */
     public static String get(String url, Map<String, String> headers, Map<String, String> params) {
-        return excuteRequest(buildGetRequest(url, headers, params), HttpUtils::resolveEntityToStr);
+        return executeRequest(buildGetRequest(url, headers, params), HttpUtils::resolveEntityToStr);
     }
 
     /**
@@ -170,7 +178,7 @@ public abstract class HttpUtils {
      * @return 请求结果
      */
     public static String post(String url, Map<String, String> headers, Map<String, String> params) {
-        return excuteRequest(buildPostRequest(url, headers, params), HttpUtils::resolveEntityToStr);
+        return executeRequest(buildPostRequest(url, headers, params), HttpUtils::resolveEntityToStr);
     }
 
     /**
@@ -181,7 +189,19 @@ public abstract class HttpUtils {
      * @return 请求结果
      */
     public static String postJson(String url, Object jsonObj) {
-        return excuteRequest(buildPostJsonRequest(url, jsonObj), HttpUtils::resolveEntityToStr);
+        return executeRequest(buildPostJsonRequest(url, null, jsonObj), HttpUtils::resolveEntityToStr);
+    }
+
+    /**
+     * 使用post方式请求，传输json数据
+     *
+     * @param url     请求url
+     * @param headers 请求头部
+     * @param jsonObj 参数对象
+     * @return 请求结果
+     */
+    public static String postJson(String url, Map<String, String> headers, Object jsonObj) {
+        return executeRequest(buildPostJsonRequest(url, headers, jsonObj), HttpUtils::resolveEntityToStr);
     }
 
     /**
@@ -194,12 +214,12 @@ public abstract class HttpUtils {
     public static Map<String, String> download(String url, String savePath) {
         HttpGet request = HttpMethod.GET.buildRequest(url);
 
-        return excuteRequest(request, httpEntity -> downloadProc(httpEntity, savePath));
+        return executeRequest(request, httpEntity -> downloadProc(httpEntity, savePath));
     }
 
-    //endregion---------------------------------------------------------------------------------------------------------
+    // endregion
 
-    //region async---------------------------------------------------------------------------------------------------------
+    // region async http method(without failedCallback and canceledCallback)
 
     /**
      * get请求
@@ -231,7 +251,7 @@ public abstract class HttpUtils {
      * @return 请求结果
      */
     public static Future<HttpResponse> getAsync(String url, Map<String, String> headers, Map<String, String> params, FinalConsumer<String> completedCallback) {
-        return excuteRequestAsync(buildGetRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, null, null);
+        return executeRequestAsync(buildGetRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, null, null);
     }
 
     /**
@@ -254,7 +274,7 @@ public abstract class HttpUtils {
      * @return 请求结果
      */
     public static Future<HttpResponse> postAsync(String url, Map<String, String> headers, Map<String, String> params, FinalConsumer<String> completedCallback) {
-        return excuteRequestAsync(buildPostRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, null, null);
+        return executeRequestAsync(buildPostRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, null, null);
     }
 
     /**
@@ -265,7 +285,19 @@ public abstract class HttpUtils {
      * @return 请求结果
      */
     public static Future<HttpResponse> postJsonAsync(String url, Object jsonObj, FinalConsumer<String> completedCallback) {
-        return excuteRequestAsync(buildPostJsonRequest(url, jsonObj), HttpUtils::resolveEntityToStr, completedCallback, null, null);
+        return executeRequestAsync(buildPostJsonRequest(url, null, jsonObj), HttpUtils::resolveEntityToStr, completedCallback, null, null);
+    }
+
+    /**
+     * 使用post方式请求，传输json数据
+     *
+     * @param url     请求url
+     * @param headers 请求头部
+     * @param jsonObj 参数对象
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> postJsonAsync(String url, Map<String, String> headers, Object jsonObj, FinalConsumer<String> completedCallback) {
+        return executeRequestAsync(buildPostJsonRequest(url, headers, jsonObj), HttpUtils::resolveEntityToStr, completedCallback, null, null);
     }
 
     /**
@@ -278,12 +310,12 @@ public abstract class HttpUtils {
     public static Future<HttpResponse> downloadAsync(String url, String savePath, FinalConsumer<Map<String, String>> completedCallback) {
         HttpGet request = HttpMethod.GET.buildRequest(url);
 
-        return excuteRequestAsync(request, httpEntity -> downloadProc(httpEntity, savePath), completedCallback, null, null);
+        return executeRequestAsync(request, httpEntity -> downloadProc(httpEntity, savePath), completedCallback, null, null);
     }
 
-    //endregion---------------------------------------------------------------------------------------------------------
+    // endregion
 
-    //region async---------------------------------------------------------------------------------------------------------
+    // region casync http method(without failedCallback)
 
     /**
      * get请求
@@ -318,7 +350,7 @@ public abstract class HttpUtils {
      */
     public static Future<HttpResponse> getAsync(String url, Map<String, String> headers, Map<String, String> params, FinalConsumer<String> completedCallback,
                                                 FinalConsumer<Exception> failedCallback) {
-        return excuteRequestAsync(buildGetRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
+        return executeRequestAsync(buildGetRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
     }
 
     /**
@@ -343,7 +375,7 @@ public abstract class HttpUtils {
      */
     public static Future<HttpResponse> postAsync(String url, Map<String, String> headers, Map<String, String> params, FinalConsumer<String> completedCallback,
                                                  FinalConsumer<Exception> failedCallback) {
-        return excuteRequestAsync(buildPostRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
+        return executeRequestAsync(buildPostRequest(url, headers, params), HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
     }
 
     /**
@@ -355,7 +387,20 @@ public abstract class HttpUtils {
      */
     public static Future<HttpResponse> postJsonAsync(String url, Object jsonObj, FinalConsumer<String> completedCallback,
                                                      FinalConsumer<Exception> failedCallback) {
-        return excuteRequestAsync(buildPostJsonRequest(url, jsonObj), HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
+        return executeRequestAsync(buildPostJsonRequest(url, null, jsonObj), HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
+    }
+
+    /**
+     * 使用post方式请求，传输json数据
+     *
+     * @param url     请求url
+     * @param headers 请求头部
+     * @param jsonObj 参数对象
+     * @return 请求结果
+     */
+    public static Future<HttpResponse> postJsonAsync(String url, Map<String, String> headers, Object jsonObj, FinalConsumer<String> completedCallback,
+                                                     FinalConsumer<Exception> failedCallback) {
+        return executeRequestAsync(buildPostJsonRequest(url, headers, jsonObj), HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
     }
 
     /**
@@ -369,12 +414,12 @@ public abstract class HttpUtils {
                                                      FinalConsumer<Exception> failedCallback) {
         HttpGet request = HttpMethod.GET.buildRequest(url);
 
-        return excuteRequestAsync(request, httpEntity -> downloadProc(httpEntity, savePath), completedCallback, failedCallback, null);
+        return executeRequestAsync(request, httpEntity -> downloadProc(httpEntity, savePath), completedCallback, failedCallback, null);
     }
 
-    //endregion---------------------------------------------------------------------------------------------------------
+    //endregion
 
-    //region build request---------------------------------------------------------------------------------------------------------
+    //region build request
 
     public static HttpGet buildGetRequest(String url, Map<String, String> headers, Map<String, String> params) {
         return HttpMethod.GET.buildRequest(url, ub -> {
@@ -408,8 +453,11 @@ public abstract class HttpUtils {
         });
     }
 
-    public static HttpPost buildPostJsonRequest(String url, Object jsonObj) {
+    public static HttpPost buildPostJsonRequest(String url, Map<String, String> headers, Object jsonObj) {
         return HttpMethod.POST.buildRequest(url, req -> {
+            if (null != headers) {
+                headers.forEach(req::setHeader);
+            }
             if (null != jsonObj) {
                 StringEntity stringEntity;
                 try {
@@ -424,7 +472,9 @@ public abstract class HttpUtils {
         });
     }
 
-    //endregion-----------------------------------------------------------------------------------------------------
+    //endregion
+
+    // region executer
 
     /**
      * 执行自定义请求，并通过自定义方式转换请求结果
@@ -434,8 +484,8 @@ public abstract class HttpUtils {
      * @param <T>        处理后的返回类型
      * @return 处理后的请求结果
      */
-    public static <T> T excuteRequest(HttpUriRequest request, EntityProcessor<T> entityProc) {
-        return excuteRequest(request, null, entityProc);
+    public static <T> T executeRequest(HttpUriRequest request, EntityProcessor<T> entityProc) {
+        return executeRequest(request, null, entityProc);
     }
 
     /**
@@ -447,7 +497,7 @@ public abstract class HttpUtils {
      * @param <T>        处理后的返回类型
      * @return 处理后的请求结果
      */
-    public static <T> T excuteRequest(HttpUriRequest request, FinalConsumer<RequestConfig.Builder> configProc, EntityProcessor<T> entityProc) {
+    public static <T> T executeRequest(HttpUriRequest request, FinalConsumer<RequestConfig.Builder> configProc, EntityProcessor<T> entityProc) {
         RequestConfig.Builder builder = RequestConfig.custom()
             .setSocketTimeout(SOCKET_TIMEOUT)
             .setConnectTimeout(CONNECT_TIMEOUT);
@@ -493,11 +543,11 @@ public abstract class HttpUtils {
      * @param <T>               处理后的返回类型
      * @return 包含请求结果的Future对象
      */
-    public static <T> Future<HttpResponse> excuteRequestAsync(HttpUriRequest request, EntityProcessor<T> entityProc,
-                                                              FinalConsumer<T> completedCallback,
-                                                              FinalConsumer<Exception> failedCallback,
-                                                              Handler cancelledCallback) {
-        return excuteRequestAsync(request, null, entityProc, completedCallback, failedCallback, cancelledCallback);
+    public static <T> Future<HttpResponse> executeRequestAsync(HttpUriRequest request, EntityProcessor<T> entityProc,
+                                                               FinalConsumer<T> completedCallback,
+                                                               FinalConsumer<Exception> failedCallback,
+                                                               Handler cancelledCallback) {
+        return executeRequestAsync(request, null, entityProc, completedCallback, failedCallback, cancelledCallback);
     }
 
 
@@ -513,10 +563,10 @@ public abstract class HttpUtils {
      * @param <T>               处理后的返回类型
      * @return 包含请求结果的Future对象
      */
-    public static <T> Future<HttpResponse> excuteRequestAsync(HttpUriRequest request, FinalConsumer<RequestConfig.Builder> configProc, EntityProcessor<T> entityProc,
-                                                              FinalConsumer<T> completedCallback,
-                                                              FinalConsumer<Exception> failedCallback,
-                                                              Handler cancelledCallback) {
+    public static <T> Future<HttpResponse> executeRequestAsync(HttpUriRequest request, FinalConsumer<RequestConfig.Builder> configProc, EntityProcessor<T> entityProc,
+                                                               FinalConsumer<T> completedCallback,
+                                                               FinalConsumer<Exception> failedCallback,
+                                                               Handler cancelledCallback) {
         RequestConfig.Builder builder = RequestConfig.custom()
             .setSocketTimeout(SOCKET_TIMEOUT)
             .setConnectTimeout(CONNECT_TIMEOUT);
@@ -580,6 +630,7 @@ public abstract class HttpUtils {
                 + e.getMessage());
         }
     }
+    // endregion
 
     public static String fixUrl(String url) {
         return url.toLowerCase().startsWith("http") ? url : SCHEMA + url;
