@@ -87,6 +87,8 @@ dependencies {
     testRuntime group: 'dom4j', name: 'dom4j', version: dom4jVersion
 
 //    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
+// https://mvnrepository.com/artifact/io.netty/netty-all
+    compile group: 'io.netty', name: 'netty-all', version: '4.1.28.Final'
 
 //    core
     compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
