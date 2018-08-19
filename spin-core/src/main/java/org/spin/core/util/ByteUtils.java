@@ -315,6 +315,32 @@ public abstract class ByteUtils {
             return source[pos];
         }
 
+        public void writeShort(short value, byte[] dest, int pos) {
+            if (endian.equals(Endian.BIG)) {
+                dest[pos] = (byte) (value >>> 8);
+                dest[pos + 1] = (byte) value;
+            } else {
+                dest[pos + 1] = (byte) (value >>> 8);
+                dest[pos] = (byte) value;
+            }
+        }
+
+        public short readShort(byte[] source, int pos) {
+            if (endian.equals(Endian.BIG)) {
+                return (short) ((source[pos] << 8) | (source[pos + 1] & 0x00ff));
+            } else {
+                return (short) ((source[pos + 1] << 8) | (source[pos] & 0x00ff));
+            }
+        }
+
+        public void writeChar(char value, byte[] dest, int pos) {
+            writeShort((short) value, dest, pos);
+        }
+
+        public char readChar(byte[] source, int pos) {
+            return (char) readShort(source, pos);
+        }
+
         public void writeInt(int value, byte[] dest, int pos) {
             if (endian.equals(Endian.BIG)) {
                 dest[pos] = (byte) (value >>> 24);
@@ -331,10 +357,84 @@ public abstract class ByteUtils {
 
         public int readInt(byte[] source, int pos) {
             if (endian.equals(Endian.BIG)) {
-                return (source[pos] << 24) | (source[pos + 1] << 16 & 0x00ff0000) | (source[pos + 2] << 8 & 0x0000ff00) | (source[pos + 3] & 0x000000ff);
+                return (source[pos] & 0xff) << 24 |
+                    (source[pos + 1] & 0xff) << 16 |
+                    (source[pos + 2] & 0xff) << 8 |
+                    source[pos + 3] & 0xff;
             } else {
-                return (source[pos + 3] << 24) | (source[pos + 2] << 16 & 0x00ff0000) | (source[pos + 1] << 8 & 0x0000ff00) | (source[pos] & 0x000000ff);
+                return (source[pos + 3] & 0xff) << 24 |
+                    (source[pos + 2] & 0xff) << 16 |
+                    (source[pos + 1] & 0xff) << 8 |
+                    source[pos] & 0xff;
             }
+        }
+
+        public void writeBoolean(boolean value, byte[] dest, int pos) {
+            writeByte((byte) (value ? 1 : 0), dest, pos);
+        }
+
+        public boolean readBoolean(byte[] source, int pos) {
+            return readByte(source, pos) != 0;
+        }
+
+        public void writeLong(long value, byte[] dest, int pos) {
+            if (endian.equals(Endian.BIG)) {
+                dest[pos] = (byte) (value >>> 56);
+                dest[pos + 1] = (byte) (value >>> 48);
+                dest[pos + 2] = (byte) (value >>> 40);
+                dest[pos + 3] = (byte) (value >>> 32);
+                dest[pos + 4] = (byte) (value >>> 24);
+                dest[pos + 5] = (byte) (value >>> 16);
+                dest[pos + 6] = (byte) (value >>> 8);
+                dest[pos + 7] = (byte) value;
+            } else {
+                dest[pos + 7] = (byte) (value >>> 56);
+                dest[pos + 6] = (byte) (value >>> 48);
+                dest[pos + 5] = (byte) (value >>> 40);
+                dest[pos + 4] = (byte) (value >>> 32);
+                dest[pos + 3] = (byte) (value >>> 24);
+                dest[pos + 2] = (byte) (value >>> 16);
+                dest[pos + 1] = (byte) (value >>> 8);
+                dest[pos] = (byte) value;
+            }
+        }
+
+        public long readLong(byte[] source, int pos) {
+            if (endian.equals(Endian.BIG)) {
+                return ((long) source[pos] & 0xff) << 56 |
+                    ((long) source[pos + 1] & 0xff) << 48 |
+                    ((long) source[pos + 2] & 0xff) << 40 |
+                    ((long) source[pos + 3] & 0xff) << 32 |
+                    ((long) source[pos + 4] & 0xff) << 24 |
+                    ((long) source[pos + 5] & 0xff) << 16 |
+                    ((long) source[pos + 6] & 0xff) << 8 |
+                    (long) source[pos + 7] & 0xff;
+            } else {
+                return ((long) source[pos + 7] & 0xff) << 56 |
+                    ((long) source[pos + 6] & 0xff) << 48 |
+                    ((long) source[pos + 5] & 0xff) << 40 |
+                    ((long) source[pos + 4] & 0xff) << 32 |
+                    ((long) source[pos + 3] & 0xff) << 24 |
+                    ((long) source[pos + 2] & 0xff) << 16 |
+                    ((long) source[pos + 1] & 0xff) << 8 |
+                    (long) source[pos] & 0xff;
+            }
+        }
+
+        public void writeFloat(float value, byte[] dest, int pos) {
+            writeInt(Float.floatToRawIntBits(value), dest, pos);
+        }
+
+        public float readFloat(byte[] source, int pos) {
+            return Float.intBitsToFloat(readInt(source, pos));
+        }
+
+        public void writeDouble(double value, byte[] dest, int pos) {
+            writeLong(Double.doubleToRawLongBits(value), dest, pos);
+        }
+
+        public double readDouble(byte[] source, int pos) {
+            return Double.longBitsToDouble(readLong(source, pos));
         }
     }
 

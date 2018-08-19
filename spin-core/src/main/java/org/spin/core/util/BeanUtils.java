@@ -174,4 +174,23 @@ public abstract class BeanUtils {
         }
         return treeSightMap;
     }
+
+    /**
+     * 通过getter或者setter方法的名称，获取field名称
+     *
+     * @param getterOrSetter getter/setter方法名称
+     * @return field名称
+     */
+    public static String toFieldName(String getterOrSetter) {
+        if (null == getterOrSetter || getterOrSetter.length() < 2) {
+            return getterOrSetter;
+        }
+        if (getterOrSetter.startsWith("get") || getterOrSetter.startsWith("set")) {
+            return StringUtils.uncapitalize(getterOrSetter.substring(3));
+        }
+        if (getterOrSetter.startsWith("is")) {
+            return StringUtils.uncapitalize(getterOrSetter.substring(2));
+        }
+        return getterOrSetter;
+    }
 }
