@@ -104,6 +104,5 @@ dependencies {
     compileOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
 
     // https://mvnrepository.com/artifact/com.baomidou/mybatis-plus
-    compile group: 'com.baomidou', name: 'mybatis-plus', version: '3.0-RC2'
-
+//    compile group: 'com.baomidou', name: 'mybatis-plus', version: '3.0-RC2'
 }

@@ -1,10 +1,9 @@
 package org.spin.core.util;
 
-import com.baomidou.mybatisplus.core.toolkit.LambdaUtils;
-import com.baomidou.mybatisplus.core.toolkit.support.Property;
 
 import org.junit.jupiter.api.Test;
 import org.spin.core.function.SerializedLambda;
+import org.spin.core.function.serializable.Function;
 import org.spin.core.session.Session;
 
 import java.io.ByteArrayInputStream;
@@ -63,24 +62,13 @@ class ByteUtilsTest {
         System.out.println(implMethodName);
     }
 
-    @Test
-    public void testLambda2() {
-
-        long s = System.currentTimeMillis();
-        com.baomidou.mybatisplus.core.toolkit.support.SerializedLambda resolve = LambdaUtils.resolve(Session::getAttributeKeys);
-        String implMethodName = resolve.getImplMethodName();
-        long e = System.currentTimeMillis();
-        System.out.println(e - s);
-        System.out.println(implMethodName);
-    }
-
-    public static <T> SerializedLambda resolve(Property<T, ?> func) {
+    public static <T> SerializedLambda resolve(Function<T, ?> func) {
         Class clazz = func.getClass();
         SerializedLambda lambda = convert(func);
         return lambda;
     }
 
-    public static SerializedLambda convert(Property lambda) {
+    public static SerializedLambda convert(Function lambda) {
         byte[] bytes = SerializeUtils.serialize(lambda);
         try (ObjectInputStream objIn = new ObjectInputStream(new ByteArrayInputStream(bytes)) {
             @Override
