@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 
@@ -48,6 +49,12 @@ public abstract class MapUtils {
     public static Map<String, String> ofMap(Properties properties) {
         properties.propertyNames();
         return StreamUtils.enumerationAsStream(properties.propertyNames()).map(Object::toString).collect(Collectors.toMap(n -> n, properties::getProperty));
+    }
+
+    public static <T extends Map<K, V>, K, V> MapBuilder<T, K, V> with(Supplier<T> mapSupplier) {
+        MapBuilder<T, K, V> builder = new MapBuilder<>();
+        builder.mapSupplier = mapSupplier;
+        return builder;
     }
 
     public static <K, V> Map<K, V> ofMap() {
@@ -529,6 +536,120 @@ public abstract class MapUtils {
      */
     public static boolean isEmpty(Map<?, ?> map) {
         return (map == null || map.isEmpty());
+    }
+
+    public static class MapBuilder<T extends Map<K, V>, K, V> {
+        @SuppressWarnings("unchecked")
+        private Supplier<T> mapSupplier = () -> (T) new HashMap<K, V>();
+
+        public T ofMap() {
+            return mapSupplier.get();
+        }
+
+        public T ofMap(K k1, V v1) {
+            T map = mapSupplier.get();
+            map.put(k1, v1);
+            return map;
+        }
+
+        public T ofMap(K k1, V v1, K k2, V v2) {
+            T map = mapSupplier.get();
+            map.put(k1, v1);
+            map.put(k2, v2);
+            return map;
+        }
+
+        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3) {
+            T map = mapSupplier.get();
+            map.put(k1, v1);
+            map.put(k2, v2);
+            map.put(k3, v3);
+            return map;
+        }
+
+        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4) {
+            T map = mapSupplier.get();
+            map.put(k1, v1);
+            map.put(k2, v2);
+            map.put(k3, v3);
+            map.put(k4, v4);
+            return map;
+        }
+
+        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5) {
+            T map = mapSupplier.get();
+            map.put(k1, v1);
+            map.put(k2, v2);
+            map.put(k3, v3);
+            map.put(k4, v4);
+            map.put(k5, v5);
+            return map;
+        }
+
+        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6) {
+            T map = mapSupplier.get();
+            map.put(k1, v1);
+            map.put(k2, v2);
+            map.put(k3, v3);
+            map.put(k4, v4);
+            map.put(k5, v5);
+            map.put(k6, v6);
+            return map;
+        }
+
+        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7) {
+            T map = mapSupplier.get();
+            map.put(k1, v1);
+            map.put(k2, v2);
+            map.put(k3, v3);
+            map.put(k4, v4);
+            map.put(k5, v5);
+            map.put(k6, v6);
+            map.put(k7, v7);
+            return map;
+        }
+
+        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8) {
+            T map = mapSupplier.get();
+            map.put(k1, v1);
+            map.put(k2, v2);
+            map.put(k3, v3);
+            map.put(k4, v4);
+            map.put(k5, v5);
+            map.put(k6, v6);
+            map.put(k7, v7);
+            map.put(k8, v8);
+            return map;
+        }
+
+        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8, K k9, V v9) {
+            T map = mapSupplier.get();
+            map.put(k1, v1);
+            map.put(k2, v2);
+            map.put(k3, v3);
+            map.put(k4, v4);
+            map.put(k5, v5);
+            map.put(k6, v6);
+            map.put(k7, v7);
+            map.put(k8, v8);
+            map.put(k9, v9);
+            return map;
+        }
+
+        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8, K k9, V v9, K k10, V v10) {
+            T map = mapSupplier.get();
+            map.put(k1, v1);
+            map.put(k2, v2);
+            map.put(k3, v3);
+            map.put(k4, v4);
+            map.put(k5, v5);
+            map.put(k6, v6);
+            map.put(k7, v7);
+            map.put(k8, v8);
+            map.put(k9, v9);
+            map.put(k10, v10);
+            return map;
+        }
     }
 
     /**

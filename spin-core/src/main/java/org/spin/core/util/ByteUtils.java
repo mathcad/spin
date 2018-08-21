@@ -300,7 +300,7 @@ public abstract class ByteUtils {
 
     public static class ByteConvertor {
 
-        private Endian endian = Endian.BIG;
+        private Endian endian;
 
         public ByteConvertor(Endian endian) {
             this.endian = endian;

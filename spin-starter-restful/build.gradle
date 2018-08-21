@@ -1,5 +1,5 @@
 description 'spin-web的starter'
-version '2.1.10.RELEASE'
+version '2.1.11.RELEASE'
 def artifactId = 'spin-starter-restful'
 
 apply plugin: 'org.junit.platform.gradle.plugin'

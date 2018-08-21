@@ -44,8 +44,8 @@ public abstract class ExcelUtils {
      */
     public static void readWorkBook(InputStream is, FinalConsumer<ExcelRow> reader) {
         byte[] trait = new byte[16];
-        FileType fileType = null;
-        BytesCombinedInputStream bcis = null;
+        FileType fileType;
+        BytesCombinedInputStream bcis;
         try {
             bcis = new BytesCombinedInputStream(is, 16);
             bcis.readCombinedBytes(trait);
@@ -90,8 +90,8 @@ public abstract class ExcelUtils {
             }
             ExcelRow rowData = new ExcelRow(sheetIndex, sheet.getSheetName(), -1, sheet.getRow(sheet.getLastRowNum()).getLastCellNum() * 3);
             // 循环行Row
-            Row row = null;
-            boolean hasValidCell = false;
+            Row row;
+            boolean hasValidCell;
             for (int rowNum = 0; rowNum <= sheet.getLastRowNum(); rowNum++) {
                 hasValidCell = false;
                 row = sheet.getRow(rowNum);
@@ -102,7 +102,7 @@ public abstract class ExcelUtils {
                 rowData.setRowIndex(rowNum);
 
                 Iterator<Cell> cells = row.cellIterator();
-                String cellValue = null;
+                String cellValue;
                 Cell cell;
                 while (cells.hasNext()) {
                     cell = cells.next();

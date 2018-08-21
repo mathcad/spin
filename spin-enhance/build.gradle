@@ -1,5 +1,5 @@
 description = '扩展模块'
-version = '2.1.10.RELEASE'
+version = '2.1.11.RELEASE'
 def artifactId = 'spin-enhance'
 
 apply plugin: 'org.junit.platform.gradle.plugin'

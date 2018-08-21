@@ -365,29 +365,29 @@ public abstract class CollectionUtils {
     }
 
     @SafeVarargs
-    public static <E> List<E> ofArrayList(E... elements) {
-        List<E> lst = new ArrayList<>(elements.length * 2);
+    public static <E> ArrayList<E> ofArrayList(E... elements) {
+        ArrayList<E> lst = new ArrayList<>(elements.length * 2);
         Collections.addAll(lst, elements);
         return lst;
     }
 
     @SafeVarargs
-    public static <E> List<E> ofLinkedList(E... elements) {
-        List<E> lst = new LinkedList<>();
+    public static <E> LinkedList<E> ofLinkedList(E... elements) {
+        LinkedList<E> lst = new LinkedList<>();
         Collections.addAll(lst, elements);
         return lst;
     }
 
     @SafeVarargs
-    public static <E> Set<E> ofHashSet(E... elements) {
-        Set<E> set = new HashSet<>();
+    public static <E> HashSet<E> ofHashSet(E... elements) {
+        HashSet<E> set = new HashSet<>();
         Collections.addAll(set, elements);
         return set;
     }
 
     @SafeVarargs
-    public static <E> Set<E> ofTreeSet(E... elements) {
-        Set<E> set = new TreeSet<>();
+    public static <E> TreeSet<E> ofTreeSet(E... elements) {
+        TreeSet<E> set = new TreeSet<>();
         Collections.addAll(set, elements);
         return set;
     }

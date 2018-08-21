@@ -1219,7 +1219,7 @@ public abstract class MethodUtils {
      * @return 类型中是否存在含有泛型参数的情况
      */
     public static boolean containsGenericArg(java.lang.reflect.Type... argTypes) {
-        boolean contains = false;
+        boolean contains;
         for (java.lang.reflect.Type type : argTypes) {
             if (type instanceof TypeVariable) {
                 // 泛型参数
@@ -1250,7 +1250,7 @@ public abstract class MethodUtils {
         boolean isNotStatic = !Modifier.isStatic(m.getModifiers());
         final String[] paramNames = new String[m.getParameterTypes().length];
         final String clsName = m.getDeclaringClass().getName().replace('.', '/') + ".class";
-        ClassReader cr = null;
+        ClassReader cr;
         try (InputStream is = m.getDeclaringClass().getClassLoader().getResourceAsStream(clsName)) {
             cr = new ClassReader(is);
         } catch (IOException e) {

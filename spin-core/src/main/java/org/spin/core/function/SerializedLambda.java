@@ -2,13 +2,10 @@ package org.spin.core.function;
 
 
 import org.spin.core.function.serializable.Function;
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.SerializeUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectStreamClass;
-import java.io.Serializable;
+import java.io.*;
 
 /**
  * 从java.lang.invoke.SerializedLambda复制过来，用来做一些特殊操作
@@ -42,7 +39,7 @@ public class SerializedLambda implements Serializable {
             Object o = objIn.readObject();
             return (SerializedLambda) o;
         } catch (ClassNotFoundException | IOException e) {
-            return null;
+            throw new SimplifiedException("SerializedLambda解析失败", e);
         }
     }
 

@@ -1,5 +1,5 @@
 description = '核心模块'
-version = '2.1.10.RELEASE'
+version = '2.1.11.RELEASE'
 def artifactId = 'spin-core'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
@@ -102,7 +102,4 @@ dependencies {
     }
     compileOnly group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
     compileOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
-
-    // https://mvnrepository.com/artifact/com.baomidou/mybatis-plus
-//    compile group: 'com.baomidou', name: 'mybatis-plus', version: '3.0-RC2'
 }

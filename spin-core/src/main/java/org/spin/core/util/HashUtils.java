@@ -237,7 +237,7 @@ public abstract class HashUtils {
         int oneEighth = bitsInUnsignedInt / 8;
         int highBits = 0xFFFFFFFF << (bitsInUnsignedInt - oneEighth);
         int hash = 0;
-        int test = 0;
+        int test;
 
         for (int i = 0; i < str.length(); i++) {
             hash = (hash << oneEighth) + str.charAt(i);
@@ -258,7 +258,7 @@ public abstract class HashUtils {
      */
     public static int elfHash(String str) {
         int hash = 0;
-        int x = 0;
+        int x;
 
         for (int i = 0; i < str.length(); i++) {
             hash = (hash << 4) + str.charAt(i);
@@ -360,7 +360,7 @@ public abstract class HashUtils {
      * @return Hash值
      */
     public static long tianlHash(String str) {
-        long hash = 0;
+        long hash;
 
         int iLength = str.length();
         if (iLength == 0) {

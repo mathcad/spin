@@ -207,14 +207,14 @@ public abstract class EnumUtils {
     public static Map<String, List<Map>> parseEnums(String basePkg) {
         List<String> clsList = PackageUtils.getClassName(basePkg);
         HashMap<String, List<Map>> enumsMap = new HashMap<>();
-        Method getValueMehod = null;
+        Method getValueMehod;
         try {
             getValueMehod = IntEvaluatable.class.getMethod("getValue");
         } catch (NoSuchMethodException ignore) {
             return null;
         }
         for (String clz : clsList) {
-            Class cls = null;
+            Class cls;
             try {
                 cls = Class.forName(clz);
             } catch (ClassNotFoundException e) {
@@ -225,7 +225,7 @@ public abstract class EnumUtils {
                 //取value值
                 for (Object o : cls.getEnumConstants()) {
                     String name = o.toString();
-                    int value = 0;
+                    int value;
                     try {
                         value = Integer.parseInt(getValueMehod.invoke(o).toString());
                     } catch (IllegalAccessException | InvocationTargetException e) {

@@ -2,6 +2,7 @@ package com.shipping.service.biz
 
 import com.shipping.domain.biz.Port
 import org.spin.data.extend.RepositoryContext
+import org.spin.data.query.CriteriaBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -33,6 +34,8 @@ class PortService {
      */
     @Transactional
     fun save(port: Port): Port {
+        CriteriaBuilder.forClass(Port::class.java).createAlias(Port::name, "portName")
+        val property1 = Port::name
         return repoCtx.save(port)
     }
 

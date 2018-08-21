@@ -40,7 +40,7 @@ public abstract class BeanUtils {
      */
     public static <T> T instantiateClass(String className) {
         Assert.notEmpty(className, "Class Name must not be null");
-        Class<T> clazz = null;
+        Class<T> clazz;
         try {
             //noinspection unchecked
             clazz = (Class<T>) ClassUtils.getClass(className);

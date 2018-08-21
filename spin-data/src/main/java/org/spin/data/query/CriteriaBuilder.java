@@ -4,11 +4,9 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.*;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.sql.JoinType;
+import org.spin.core.function.serializable.Function;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.ClassUtils;
-import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.ReflectionUtils;
-import org.spin.core.util.StringUtils;
+import org.spin.core.util.*;
 import org.spin.data.core.IEntity;
 import org.spin.data.core.PageRequest;
 import org.spin.data.util.EntityUtils;
@@ -93,6 +91,19 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     /**
+     * 增加查询字段
+     *
+     * @param fields 字段列表
+     * @return {@link CriteriaBuilder}
+     */
+    @SuppressWarnings("unchecked")
+    public CriteriaBuilder<T> addFields(Function<T, ?>... fields) {
+        Arrays.stream(fields).map(CriteriaBuilder::resolveLambda).filter(StringUtils::isNotEmpty).forEach(this.fields::add);
+        projected = false;
+        return this;
+    }
+
+    /**
      * 设置查询字段别名
      *
      * @param field 字段名
@@ -103,6 +114,17 @@ public class CriteriaBuilder<T extends IEntity<?>> {
         aliasMap.put(field, alias);
         projected = false;
         return this;
+    }
+
+    /**
+     * 设置查询字段别名
+     *
+     * @param field 字段名
+     * @param alias 别名
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> createAlias(Function<T, ?> field, String alias) {
+        return createAlias(resolveLambda(field), alias);
     }
 
     /**
@@ -119,8 +141,22 @@ public class CriteriaBuilder<T extends IEntity<?>> {
             for (int i = 0; i < params.length; i += 2) {
                 this.aliasMap.put(params[i], params[i + 1]);
             }
+            projected = false;
         }
-        projected = false;
+        return this;
+    }
+
+    /**
+     * 设置查询字段别名
+     *
+     * @param params 字段与别名的映射：field1, alias1, field2, alias2...
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> createAliases(Map<Function<T, ?>, String> params) {
+        if (null != params) {
+            params.forEach((key, value) -> aliasMap.put(resolveLambda(key), value));
+            projected = false;
+        }
         return this;
     }
 
@@ -185,6 +221,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     /**
+     * 快速eq条件
+     * <p>当value为null时会被忽略</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> eq(Function<T, ?> prop, Object value) {
+        if (null == value) {
+            return this;
+        }
+        return addCriterion(Restrictions.eq(resolveLambda(prop), value));
+    }
+
+    /**
      * 快速id equal条件
      * <p>当value为null时会被忽略</p>
      *
@@ -214,6 +265,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     /**
+     * 快速not eq条件
+     * <p>当value为null时会被忽略</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> notEq(Function<T, ?> prop, Object value) {
+        if (null == value) {
+            return this;
+        }
+        return addCriterion(Restrictions.ne(resolveLambda(prop), value));
+    }
+
+    /**
      * 快速is null条件
      *
      * @param prop 属性名
@@ -221,6 +287,16 @@ public class CriteriaBuilder<T extends IEntity<?>> {
      */
     public CriteriaBuilder<T> isNull(String prop) {
         return addCriterion(Restrictions.isNull(prop));
+    }
+
+    /**
+     * 快速is null条件
+     *
+     * @param prop 属性名
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> isNull(Function<T, ?> prop) {
+        return addCriterion(Restrictions.isNull(resolveLambda(prop)));
     }
 
     /**
@@ -239,6 +315,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     /**
+     * 快速eq或is null条件
+     * <p>当value为null时，等同于isNull条件</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> eqOrIsNull(Function<T, ?> prop, Object value) {
+        if (null == value) {
+            return addCriterion(Restrictions.isNull(resolveLambda(prop)));
+        }
+        return addCriterion(Restrictions.eqOrIsNull(resolveLambda(prop), value));
+    }
+
+    /**
      * 快速not null条件
      *
      * @param prop 属性名
@@ -246,6 +337,16 @@ public class CriteriaBuilder<T extends IEntity<?>> {
      */
     public CriteriaBuilder<T> notNull(String prop) {
         return addCriterion(Restrictions.isNotNull(prop));
+    }
+
+    /**
+     * 快速not null条件
+     *
+     * @param prop 属性名
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> notNull(Function<T, ?> prop) {
+        return addCriterion(Restrictions.isNotNull(resolveLambda(prop)));
     }
 
     /**
@@ -264,6 +365,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     /**
+     * like '*%' 模糊
+     * <p>当value为空时会被忽略</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> startWith(Function<T, ?> prop, String value) {
+        if (StringUtils.isEmpty(value)) {
+            return this;
+        }
+        return addCriterion(Restrictions.like(resolveLambda(prop), value, MatchMode.START));
+    }
+
+    /**
      * like '%*' 模糊
      * <p>当value为空时会被忽略</p>
      *
@@ -276,6 +392,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
             return this;
         }
         return addCriterion(Restrictions.like(prop, value, MatchMode.END));
+    }
+
+    /**
+     * like '%*' 模糊
+     * <p>当value为空时会被忽略</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> endWith(Function<T, ?> prop, String value) {
+        if (StringUtils.isEmpty(value)) {
+            return this;
+        }
+        return addCriterion(Restrictions.like(resolveLambda(prop), value, MatchMode.END));
     }
 
     /**
@@ -294,6 +425,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     /**
+     * like '%%' 全模糊
+     * <p>当value为空时会被忽略</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> like(Function<T, ?> prop, String value) {
+        if (StringUtils.isEmpty(value)) {
+            return this;
+        }
+        return addCriterion(Restrictions.like(resolveLambda(prop), value, MatchMode.ANYWHERE));
+    }
+
+    /**
      * 快速gt条件 &gt;
      * <p>当value为null时会被忽略</p>
      *
@@ -309,6 +455,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     /**
+     * 快速gt条件 &gt;
+     * <p>当value为null时会被忽略</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> gt(Function<T, ?> prop, Object value) {
+        if (null == value) {
+            return this;
+        }
+        return addCriterion(Restrictions.gt(resolveLambda(prop), value));
+    }
+
+    /**
      * 快速ge条件 &gt;=
      * <p>当value为null时会被忽略</p>
      *
@@ -321,6 +482,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
             return this;
         }
         return addCriterion(Restrictions.ge(prop, value));
+    }
+
+    /**
+     * 快速ge条件 &gt;=
+     * <p>当value为null时会被忽略</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> ge(Function<T, ?> prop, Object value) {
+        if (null == value) {
+            return this;
+        }
+        return addCriterion(Restrictions.ge(resolveLambda(prop), value));
     }
 
     /**
@@ -345,6 +521,27 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     /**
+     * 快速between条件
+     * <p>当low, high均为null时会被忽略，当low为空时等同于lt(high), 当high为空时等同于ge(low)</p>
+     *
+     * @param prop 属性名
+     * @param low  下限
+     * @param high 上限
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> between(Function<T, ?> prop, Object low, Object high) {
+        if (null == low && null == high) {
+            return this;
+        } else if (null == low) {
+            return addCriterion(Restrictions.lt(resolveLambda(prop), high));
+        } else if (null == high) {
+            return addCriterion(Restrictions.ge(resolveLambda(prop), low));
+        } else {
+            return addCriterion(Restrictions.between(resolveLambda(prop), low, high));
+        }
+    }
+
+    /**
      * 快速lt条件 &lt;
      * <p>当value为null时会被忽略</p>
      *
@@ -357,6 +554,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
             return this;
         }
         return addCriterion(Restrictions.lt(prop, value));
+    }
+
+    /**
+     * 快速lt条件 &lt;
+     * <p>当value为null时会被忽略</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> lt(Function<T, ?> prop, Object value) {
+        if (null == value) {
+            return this;
+        }
+        return addCriterion(Restrictions.lt(resolveLambda(prop), value));
     }
 
     /**
@@ -375,6 +587,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     /**
+     * 快速le条件 &lt;=
+     * <p>当value为null时会被忽略</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> le(Function<T, ?> prop, Object value) {
+        if (null == value) {
+            return this;
+        }
+        return addCriterion(Restrictions.le(resolveLambda(prop), value));
+    }
+
+    /**
      * 附加in查询
      * <p>当value为null时会被忽略</p>
      *
@@ -390,6 +617,21 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     /**
+     * 附加in查询
+     * <p>当value为null时会被忽略</p>
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> in(Function<T, ?> prop, Collection<?> value) {
+        if (null == value) {
+            return this;
+        }
+        return addCriterion(Restrictions.in(resolveLambda(prop), value));
+    }
+
+    /**
      * 附加in条件
      *
      * @param prop  属性名
@@ -398,6 +640,17 @@ public class CriteriaBuilder<T extends IEntity<?>> {
      */
     public CriteriaBuilder<T> in(String prop, Object... value) {
         return addCriterion(Restrictions.in(prop, value));
+    }
+
+    /**
+     * 附加in条件
+     *
+     * @param prop  属性名
+     * @param value 属性值
+     * @return {@link CriteriaBuilder}
+     */
+    public CriteriaBuilder<T> in(Function<T, ?> prop, Object... value) {
+        return addCriterion(Restrictions.in(resolveLambda(prop), value));
     }
 
     /**
@@ -599,5 +852,9 @@ public class CriteriaBuilder<T extends IEntity<?>> {
             deCriteria.setProjection(projectionList);
         }
         projected = true;
+    }
+
+    public static String resolveLambda(Function<?, ?> lambda) {
+        return BeanUtils.toFieldName(LambdaUtils.resolveLambda(lambda).getImplMethodName());
     }
 }

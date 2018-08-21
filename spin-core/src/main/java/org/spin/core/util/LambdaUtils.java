@@ -36,22 +36,7 @@ public abstract class LambdaUtils {
      * @return lambda信息
      */
     public static <T> SerializedLambda resolveLambda(Function<T, ?> lambda) {
-
-        Class clazz = lambda.getClass();
-        return Optional.ofNullable(FUNC_CACHE.get(clazz))
-            .map(WeakReference::get)
-            .orElseGet(() -> {
-                try {
-                    Method writeReplace = lambda.getClass().getDeclaredMethod("writeReplace", null);
-                    ReflectionUtils.makeAccessible(writeReplace);
-                    writeReplace.setAccessible(true);
-                    SerializedLambda lambdaInfo = (SerializedLambda) writeReplace.invoke(lambda);
-                    FUNC_CACHE.put(clazz, new WeakReference<>(lambdaInfo));
-                    return lambdaInfo;
-                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                    throw new SimplifiedException("SerializedLambda解析失败", e);
-                }
-            });
+        return resolveLambdaInternal(lambda);
     }
 
     /**
@@ -60,14 +45,18 @@ public abstract class LambdaUtils {
      * @param lambda 函数式接口
      * @return lambda信息
      */
-    public static <T, R> SerializedLambda resolveLambda(BiConsumer<T, R> lambda) {
+    public static <T, U> SerializedLambda resolveLambda(BiConsumer<T, U> lambda) {
+        return resolveLambdaInternal(lambda);
+    }
+
+    private static SerializedLambda resolveLambdaInternal(Object lambda) {
 
         Class clazz = lambda.getClass();
         return Optional.ofNullable(FUNC_CACHE.get(clazz))
             .map(WeakReference::get)
             .orElseGet(() -> {
                 try {
-                    Method writeReplace = lambda.getClass().getDeclaredMethod("writeReplace", null);
+                    Method writeReplace = lambda.getClass().getDeclaredMethod("writeReplace");
                     ReflectionUtils.makeAccessible(writeReplace);
                     writeReplace.setAccessible(true);
                     SerializedLambda lambdaInfo = (SerializedLambda) writeReplace.invoke(lambda);
