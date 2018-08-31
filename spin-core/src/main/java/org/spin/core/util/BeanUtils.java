@@ -195,7 +195,9 @@ public abstract class BeanUtils {
 
     /**
      * 获取对象指定属性的值
-     * <p>通过反射直接读取属性，不通过get方法(Map类型除外)</p>
+     * <p>通过反射直接读取属性，不通过get方法。需要获取List,数组或Map中的元素，field请使用#开头。如obj.#name.#1</p>
+     * <p>获取数组与List中的第n个元素：#n</p>
+     * <p>获取中Map中键为key对应的value：#key</p>
      *
      * @param target    对象实例
      * @param valuePath 属性名称，支持嵌套
@@ -210,8 +212,36 @@ public abstract class BeanUtils {
             if (i < valuePath.length() - 1 && null == o) {
                 throw new SimplifiedException(field + "属性为null");
             }
-            if (o instanceof Map) {
-                o = ((Map) o).get(field);
+            if (field.charAt(0) == '#' && o instanceof Map) {
+                o = ((Map) o).get(field.substring(1));
+            } else if (field.charAt(0) == '#' && o instanceof List) {
+                int idx;
+                String f = field;
+                try {
+                    f = field.substring(1);
+                    idx = Integer.valueOf(f);
+                } catch (Exception e) {
+                    throw new SimplifiedException(f + "索引不是有效的数字");
+                }
+                if (((List) o).size() < idx) {
+                    throw new SimplifiedException(f + "索引超出范围0-" + ((List) o).size());
+                }
+                o = ((List) o).get(idx);
+            } else if (field.charAt(0) == '#' && o.getClass().isArray()) {
+                int idx;
+                String f = field;
+                try {
+                    f = field.substring(1);
+                    idx = Integer.valueOf(f);
+                } catch (Exception e) {
+                    throw new SimplifiedException(f + "索引不是有效的数字");
+                }
+                @SuppressWarnings("ConstantConditions")
+                Object[] t = (Object[]) o;
+                if (t.length < idx) {
+                    throw new SimplifiedException(f + "索引超出范围0-" + t.length);
+                }
+                o = t[idx];
             } else {
                 Field f;
                 try {
