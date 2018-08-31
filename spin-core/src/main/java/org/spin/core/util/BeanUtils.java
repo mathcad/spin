@@ -9,7 +9,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Bean工具类
@@ -209,39 +214,45 @@ public abstract class BeanUtils {
         Object o = target;
         for (int i = 0; i < valuePaths.length; i++) {
             String field = valuePaths[i];
+            char mark = field.charAt(0);
+
             if (i < valuePath.length() - 1 && null == o) {
                 throw new SimplifiedException(field + "属性为null");
             }
-            if (field.charAt(0) == '#' && o instanceof Map) {
-                o = ((Map) o).get(field.substring(1));
-            } else if (field.charAt(0) == '#' && o instanceof List) {
-                int idx;
-                String f = field;
-                try {
-                    f = field.substring(1);
-                    idx = Integer.valueOf(f);
-                } catch (Exception e) {
-                    throw new SimplifiedException(f + "索引不是有效的数字");
+            if ('#' == mark) {
+                if (o instanceof Map) {
+                    o = ((Map) o).get(field.substring(1));
+                } else if (o instanceof List) {
+                    int idx;
+                    String f = field;
+                    try {
+                        f = field.substring(1);
+                        idx = Integer.valueOf(f);
+                    } catch (Exception e) {
+                        throw new SimplifiedException(f + "索引不是有效的数字");
+                    }
+                    if (((List) o).size() < idx) {
+                        throw new SimplifiedException(f + "索引超出范围0-" + ((List) o).size());
+                    }
+                    o = ((List) o).get(idx);
+                } else if (o.getClass().isArray()) {
+                    int idx;
+                    String f = field;
+                    try {
+                        f = field.substring(1);
+                        idx = Integer.valueOf(f);
+                    } catch (Exception e) {
+                        throw new SimplifiedException(f + "索引不是有效的数字");
+                    }
+                    @SuppressWarnings("ConstantConditions")
+                    Object[] t = (Object[]) o;
+                    if (t.length < idx) {
+                        throw new SimplifiedException(f + "索引超出范围0-" + t.length);
+                    }
+                    o = t[idx];
+                } else {
+                    throw new SimplifiedException(o.getClass().toString() + "中的属性名称[" + field + "]不合法");
                 }
-                if (((List) o).size() < idx) {
-                    throw new SimplifiedException(f + "索引超出范围0-" + ((List) o).size());
-                }
-                o = ((List) o).get(idx);
-            } else if (field.charAt(0) == '#' && o.getClass().isArray()) {
-                int idx;
-                String f = field;
-                try {
-                    f = field.substring(1);
-                    idx = Integer.valueOf(f);
-                } catch (Exception e) {
-                    throw new SimplifiedException(f + "索引不是有效的数字");
-                }
-                @SuppressWarnings("ConstantConditions")
-                Object[] t = (Object[]) o;
-                if (t.length < idx) {
-                    throw new SimplifiedException(f + "索引超出范围0-" + t.length);
-                }
-                o = t[idx];
             } else {
                 Field f;
                 try {

@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        kotlin_version = '1.2.60'
+        kotlinVersion = '1.2.61'
         springBootVersion = '2.0.4.RELEASE'
         junitJupiterVersion = '5.2.0'
     }
@@ -12,16 +12,17 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
         classpath 'org.springframework:springloaded:1.2.8.RELEASE'
         classpath 'org.junit.platform:junit-platform-gradle-plugin:1.2.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+//        classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlinVersion"
+//        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
     }
 }
 
 plugins {
-    id "org.jetbrains.kotlin.plugin.spring" version "1.2.51"
+    id "org.jetbrains.kotlin.plugin.spring" version "1.2.61"
+    id "org.springframework.boot" version "2.0.4.RELEASE"
 }
 
 allOpen {
@@ -33,10 +34,10 @@ allOpen {
 version = '1.0-SNAPSHOT'
 //def artifactId = 'shipping-mis'
 
-apply plugin: 'org.springframework.boot'
 apply plugin: 'org.junit.platform.gradle.plugin'
 apply plugin: 'kotlin'
-apply plugin: "kotlin-spring"
+//apply plugin: "org.jetbrains.kotlin.plugin.spring"
+//apply plugin: 'org.springframework.boot'
 
 junitPlatform {
     logManager = 'java.util.logging.LogManager'
@@ -59,13 +60,13 @@ compileTestKotlin {
 }
 
 dependencies {
-    testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
+    testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
     testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
         exclude(module: 'commons-logging')
     }
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: "$kotlin_version"
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlin_version
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: "$kotlinVersion"
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlinVersion
     compile group: 'io.github.microutils', name: 'kotlin-logging', version: '1.5.4'
 
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
