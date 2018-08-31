@@ -1,33 +1,20 @@
 package com.google.gson.internal.bind;
 
-import com.google.gson.FieldNamingStrategy;
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.TypeAdapter;
-import com.google.gson.TypeAdapterFactory;
+import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.internal.$Gson$Types;
-import com.google.gson.internal.ConstructorConstructor;
-import com.google.gson.internal.Excluder;
-import com.google.gson.internal.ObjectConstructor;
-import com.google.gson.internal.Primitives;
+import com.google.gson.internal.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import org.spin.core.gson.MatchableTypeAdapter;
-import org.spin.core.util.ClassUtils;
+import org.spin.core.util.BeanUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Type adapter that reflects over the fields and methods of a class.
@@ -51,10 +38,10 @@ public final class SpinReflectiveTypeAdapterFactory implements TypeAdapterFactor
     }
 
     public SpinReflectiveTypeAdapterFactory(ReflectiveTypeAdapterFactory typeAdapterFactory) {
-        this.constructorConstructor = ClassUtils.getFieldValue(typeAdapterFactory, "constructorConstructor");
-        this.fieldNamingPolicy = ClassUtils.getFieldValue(typeAdapterFactory, "fieldNamingPolicy");
-        this.excluder = ClassUtils.getFieldValue(typeAdapterFactory, "excluder");
-        this.jsonAdapterFactory = ClassUtils.getFieldValue(typeAdapterFactory, "jsonAdapterFactory");
+        this.constructorConstructor = BeanUtils.getFieldValue(typeAdapterFactory, "constructorConstructor");
+        this.fieldNamingPolicy = BeanUtils.getFieldValue(typeAdapterFactory, "fieldNamingPolicy");
+        this.excluder = BeanUtils.getFieldValue(typeAdapterFactory, "excluder");
+        this.jsonAdapterFactory = BeanUtils.getFieldValue(typeAdapterFactory, "jsonAdapterFactory");
     }
 
     public boolean excludeField(Field f, boolean serialize) {

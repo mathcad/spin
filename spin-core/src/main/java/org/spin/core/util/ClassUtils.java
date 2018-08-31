@@ -1,21 +1,12 @@
 package org.spin.core.util;
 
-import org.spin.core.Assert;
 import org.spin.core.throwable.NullArgumentException;
-import org.spin.core.throwable.SimplifiedException;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p>
- * Operates on classes without using reflection.
+ * 操作Class的工具类（不使用反射）.
  * </p>
  * <p>
  * This class handles invalid <code>null</code> inputs as best it can. Each
@@ -138,67 +129,6 @@ public abstract class ClassUtils {
      * </p>
      */
     private ClassUtils() {
-    }
-
-    /**
-     * 获取对象指定属性的值
-     * <p>通过反射直接读取属性，不通过get方法</p>
-     *
-     * @param target    对象实例
-     * @param valuePath 属性名称，支持嵌套
-     * @param <T>       属性类型参数
-     * @return 属性值
-     */
-    public static <T> T getFieldValue(Object target, String valuePath) {
-        String[] valuePaths = Assert.notEmpty(valuePath, "valuePath必须指定属性名称").split("\\.");
-        Object o = target;
-        for (String field : valuePaths) {
-            Field f;
-            try {
-                f = ReflectionUtils.findField(o.getClass(), field);
-                ReflectionUtils.makeAccessible(f);
-            } catch (Exception e) {
-                throw new SimplifiedException(o.getClass().toString() + "不存在" + field + "属性", e);
-            }
-            try {
-                o = ReflectionUtils.getField(f, o);
-            } catch (Exception e) {
-                throw new SimplifiedException(o.getClass().toString() + "获取属性" + field + "的值失败", e);
-            }
-        }
-        //noinspection unchecked
-        return (T) o;
-    }
-
-    /**
-     * 获取对象指定属性的值
-     *
-     * @param target 对象实例
-     * @param fields 取值的属性名称
-     * @return 属性map
-     */
-    public static Map<String, Object> getFieldValue(Object target, String... fields) {
-        return getFieldValue(target, Arrays.asList(fields));
-
-    }
-
-    /**
-     * 获取对象指定属性的值
-     *
-     * @param target 对象实例
-     * @param fields 取值的属性名称
-     * @return 属性map
-     */
-    public static Map<String, Object> getFieldValue(Object target, Collection<String> fields) {
-        Map<String, Object> result = new HashMap<>();
-        if (CollectionUtils.isEmpty(fields)) {
-            return new HashMap<>(0);
-        }
-        for (String field : fields) {
-            Object value = getFieldValue(target, field);
-            result.put(field, value);
-        }
-        return result;
     }
 
     // Short class name

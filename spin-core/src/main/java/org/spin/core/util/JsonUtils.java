@@ -330,7 +330,7 @@ public abstract class JsonUtils {
     private static Gson procGson(Gson gson) {
         try {
             Class<?> aClass = com.google.gson.internal.bind.SpinReflectiveTypeAdapterFactory.class;
-            Object[] factories = ClassUtils.getFieldValue(gson, "factories.list.elementData");
+            Object[] factories = BeanUtils.getFieldValue(gson, "factories.list.elementData");
             for (int i = factories.length - 1; i != -1; --i) {
                 if (factories[i] instanceof ReflectiveTypeAdapterFactory) {
                     factories[i] = ConstructorUtils.invokeConstructor(aClass, factories[i]);
