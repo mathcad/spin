@@ -2,6 +2,7 @@ package org.spin.core.gson.adapter;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import org.spin.core.gson.DatePatternParser;
 import org.spin.core.gson.MatchableTypeAdapter;
@@ -27,6 +28,10 @@ public class LocalDateTypeAdapter extends MatchableTypeAdapter<LocalDate> {
 
     @Override
     public LocalDate read(JsonReader in, TypeToken<?> type, Field field) throws IOException {
+        if (in.peek() == JsonToken.NULL) {
+            in.nextNull();
+            return null;
+        }
         String tmp = in.nextString();
         if (StringUtils.isEmpty(tmp)) {
             return null;
@@ -46,6 +51,6 @@ public class LocalDateTypeAdapter extends MatchableTypeAdapter<LocalDate> {
 
     @Override
     public boolean isMatch(TypeToken<?> type) {
-        return LocalDate.class.isAssignableFrom(type.getRawType());
+        return LocalDate.class == type.getRawType();
     }
 }

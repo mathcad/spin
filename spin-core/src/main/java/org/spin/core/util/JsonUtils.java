@@ -1,5 +1,6 @@
 package org.spin.core.util;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
@@ -9,6 +10,7 @@ import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
+import org.spin.core.function.FinalConsumer;
 import org.spin.core.gson.SpinTypeAdapterFactory;
 import org.spin.core.throwable.SimplifiedException;
 
@@ -39,9 +41,11 @@ public abstract class JsonUtils {
     private static final String DEFAULT_ERROR_MSG = "%s 无法转换为[%s]对象!";
 
     private static final Gson defaultGson;
+    private static final Gson defaultGsonWithUnderscore;
 
     static {
-        defaultGson = procGson(baseBuilder(CollectionUtils.ofArray(DEFAULT_DATE_PATTERN, DEFAULT_LOCAL_DATE_PATTERN, DEFAULT_LOCAL_TIME_PATTERN)).create());
+        defaultGson = buildGson(null);
+        defaultGsonWithUnderscore = buildGson(builder -> builder.setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES));
     }
 
     private JsonUtils() {
@@ -122,6 +126,27 @@ public abstract class JsonUtils {
             return target.toString();
         }
         return defaultGson.toJson(target);
+    }
+
+    /**
+     * 将给定的目标对象转换成 {@code JSON} 格式的字符串，采用驼峰到下划线的命名策略。
+     * <ul>
+     * <li>该方法不会转换 {@code null} 值字段；</li>
+     * <li>该方法转换时使用默认的 日期/时间 格式化模式 - {@code yyyy-MM-dd HH:mm:ss}；</li>
+     * </ul>
+     *
+     * @param target 要转换成 {@code JSON} 的目标对象。
+     * @return 目标对象的 {@code JSON} 格式的字符串。
+     */
+    public static String toJsonWithUnderscore(Object target) {
+        if (Objects.isNull(target)) {
+            return EMPTY;
+        }
+        Class<?> clazz = target.getClass();
+        if (ClassUtils.wrapperToPrimitive(clazz) != null && ClassUtils.wrapperToPrimitive(clazz).isPrimitive() || target instanceof CharSequence) {
+            return target.toString();
+        }
+        return defaultGsonWithUnderscore.toJson(target);
     }
 
     /**
@@ -303,6 +328,39 @@ public abstract class JsonUtils {
         }
     }
 
+    /**
+     * 将给定的 {@code JSON} 字符串转换成指定的类型对象。
+     *
+     * @param <T>   要转换的目标类型。
+     * @param json  给定的 {@code JSON} 字符串。
+     * @param token {@code TypeToken} 的类型指示类对象。
+     * @return 给定的 {@code JSON} 字符串表示的指定的类型对象。
+     */
+    public static <T> T fromJsonWithUnderscore(String json, TypeToken<T> token) {
+        try {
+            return defaultGsonWithUnderscore.fromJson(json, token.getType());
+        } catch (Exception ex) {
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, token.toString()), ex);
+        }
+    }
+
+    public static <T> T fromJsonWithUnderscore(String json, Type type) {
+        try {
+            return defaultGsonWithUnderscore.fromJson(json, type);
+        } catch (Exception ex) {
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, type.getTypeName()), ex);
+        }
+    }
+
+    public static <T> T fromJsonWithUnderscore(String json, Class<T> clazz) {
+        try {
+            return defaultGsonWithUnderscore.fromJson(json, clazz);
+        } catch (Exception ex) {
+            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
+        }
+    }
+
+
     public Map<String, Object> fromJsonToMap(String json) {
         return fromJson(json, MAP_TYPE_TOKEN);
     }
@@ -325,6 +383,20 @@ public abstract class JsonUtils {
         } catch (Exception ex) {
             throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
         }
+    }
+
+    /**
+     * 使用额外的自定义配置构建Gson对象
+     *
+     * @param builderConfigure GsonBuilder自定义配置
+     * @return Gson对象
+     */
+    public static Gson buildGson(FinalConsumer<GsonBuilder> builderConfigure) {
+        GsonBuilder gsonBuilder = baseBuilder(CollectionUtils.ofArray(DEFAULT_DATE_PATTERN, DEFAULT_LOCAL_DATE_PATTERN, DEFAULT_LOCAL_TIME_PATTERN));
+        if (null != builderConfigure) {
+            builderConfigure.accept(gsonBuilder);
+        }
+        return procGson(gsonBuilder.create());
     }
 
     private static Gson procGson(Gson gson) {

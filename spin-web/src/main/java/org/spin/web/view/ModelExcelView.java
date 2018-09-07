@@ -8,7 +8,7 @@ import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.core.Assert;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.ClassUtils;
+import org.spin.core.util.BeanUtils;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.core.util.file.FileType;
@@ -272,7 +272,7 @@ public class ModelExcelView extends AbstractView {
         if (rdata instanceof Map)
             o = ((Map) rdata).get(col.getDataIndex());
         else
-            o = ClassUtils.getFieldValue(rdata, col.getDataIndex());
+            o = BeanUtils.getFieldValue(rdata, col.getDataIndex());
         if (o == null)
             return;
 

@@ -49,8 +49,8 @@ import java.util.stream.Collectors;
 public abstract class HttpUtils {
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class);
     private static final String SCHEMA = "http://";
-    private static final int SOCKET_TIMEOUT = 10000;
-    private static final int CONNECT_TIMEOUT = 10000;
+    private static final int SOCKET_TIMEOUT = 60000;
+    private static final int CONNECT_TIMEOUT = 60000;
 
     private static int maxTotal;
     private static int maxPerRoute;

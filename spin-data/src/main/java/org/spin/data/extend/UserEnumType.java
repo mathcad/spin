@@ -12,9 +12,11 @@ import org.hibernate.usertype.LoggableUserType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.ClassUtils;
+import org.spin.core.util.BeanUtils;
 import org.spin.core.util.EnumUtils;
 
+import javax.persistence.Enumerated;
+import javax.persistence.MapKeyEnumerated;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.sql.PreparedStatement;
@@ -23,9 +25,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Objects;
 import java.util.Properties;
-
-import javax.persistence.Enumerated;
-import javax.persistence.MapKeyEnumerated;
 
 /**
  * 枚举映射
@@ -83,7 +82,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
                     + "using fallback determination [%s] : %s", enumClass.getName(), e.getMessage());
                 try {
                     Object value = rs.getObject(name);
-                    if (Number.class.isInstance(value)) {
+                    if (value instanceof Number) {
                         treatAsOrdinal();
                     } else {
                         throw new SimplifiedException("不支持字符型值枚举列");
@@ -201,9 +200,9 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     }
 
     private void treatAsOrdinal() {
-        if (!OrdinalEnumValueMapper.class.isInstance(this.enumValueMapper)) {
-            this.enumValueMapper = new ValueEnumValueMapper();
-            this.sqlType = this.enumValueMapper.getSqlType();
+        if (!(enumValueMapper instanceof OrdinalEnumValueMapper)) {
+            enumValueMapper = new ValueEnumValueMapper();
+            sqlType = enumValueMapper.getSqlType();
         }
     }
 
@@ -385,7 +384,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
         @Override
         public String toSQLString(Enum<?> value) {
-            return ClassUtils.getFieldValue(value, "value").toString();
+            return BeanUtils.getFieldValue(value, "value").toString();
         }
 
         @Override
@@ -396,7 +395,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
         @Override
         protected Object extractJdbcValue(Enum<?> value) {
-            return ClassUtils.getFieldValue(value, "value");
+            return BeanUtils.getFieldValue(value, "value");
         }
     }
 

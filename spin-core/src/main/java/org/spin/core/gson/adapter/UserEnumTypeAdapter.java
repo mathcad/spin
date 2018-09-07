@@ -2,6 +2,7 @@ package org.spin.core.gson.adapter;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.trait.IntEvaluatable;
@@ -18,6 +19,10 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
 
     @Override
     public E read(JsonReader in, TypeToken<?> type, Field field) throws IOException {
+        if (in.peek() == JsonToken.NULL) {
+            in.nextNull();
+            return null;
+        }
         String v = in.nextString();
         @SuppressWarnings("unchecked")
         Class<E> t = (Class<E>) type.getRawType();

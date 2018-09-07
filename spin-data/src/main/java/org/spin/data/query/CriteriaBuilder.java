@@ -6,7 +6,11 @@ import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.sql.JoinType;
 import org.spin.core.function.serializable.Function;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.*;
+import org.spin.core.util.BeanUtils;
+import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.LambdaUtils;
+import org.spin.core.util.ReflectionUtils;
+import org.spin.core.util.StringUtils;
 import org.spin.data.core.IEntity;
 import org.spin.data.core.PageRequest;
 import org.spin.data.util.EntityUtils;
@@ -747,22 +751,22 @@ public class CriteriaBuilder<T extends IEntity<?>> {
         List<Criterion> ts = new LinkedList<>();
         for (Criterion ct : cts) {
             if (ct instanceof NotExpression) {
-                Criterion t = ClassUtils.getFieldValue(ct, "criterion");
+                Criterion t = BeanUtils.getFieldValue(ct, "criterion");
                 ts.add(t);
             } else if (ct instanceof Junction) {
-                ts.addAll(ClassUtils.getFieldValue(ct, "conditions"));
+                ts.addAll(BeanUtils.getFieldValue(ct, "conditions"));
             } else if (ct instanceof LogicalExpression) {
-                Criterion lhs = ClassUtils.getFieldValue(ct, "lhs");
-                Criterion rhs = ClassUtils.getFieldValue(ct, "rhs");
+                Criterion lhs = BeanUtils.getFieldValue(ct, "lhs");
+                Criterion rhs = BeanUtils.getFieldValue(ct, "rhs");
                 ts.add(lhs);
                 ts.add(rhs);
             } else if (ct instanceof SubqueryExpression) {
-                List<CriteriaImpl.CriterionEntry> ces = ClassUtils.getFieldValue(ct, "criteriaImpl.criterionEntries");
+                List<CriteriaImpl.CriterionEntry> ces = BeanUtils.getFieldValue(ct, "criteriaImpl.criterionEntries");
                 for (CriteriaImpl.CriterionEntry ce : ces) {
                     ts.add(ce.getCriterion());
                 }
             } else {
-                String cond = ClassUtils.getFieldValue(ct, "propertyName");
+                String cond = BeanUtils.getFieldValue(ct, "propertyName");
                 if (StringUtils.isNotEmpty(cond)) {
                     int idx = cond.lastIndexOf('.');
                     while (idx > 0) {
@@ -777,7 +781,7 @@ public class CriteriaBuilder<T extends IEntity<?>> {
     }
 
     private void processCondJoin() {
-        List<CriteriaImpl.CriterionEntry> ces = ClassUtils.getFieldValue(deCriteria, "impl.criterionEntries");
+        List<CriteriaImpl.CriterionEntry> ces = BeanUtils.getFieldValue(deCriteria, "impl.criterionEntries");
         List<Criterion> cts = new ArrayList<>(ces.size());
         for (CriteriaImpl.CriterionEntry ce : ces) {
             cts.add(ce.getCriterion());

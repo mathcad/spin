@@ -26,23 +26,7 @@ public final class DatePatternParser {
             return defaultPattern;
         }
         String name = field.getDeclaringClass().getName() + "." + field.getName() + "-read";
-        DateTimeFormatter dateTimeFormatter = null;
-        if (FORMATS.containsKey(name)) {
-            dateTimeFormatter = FORMATS.get(name);
-        } else {
-            DatePattern dp = field.getAnnotation(DatePattern.class);
-            if (dp != null) {
-                if (StringUtils.isNotEmpty(dp.read())) {
-                    dateTimeFormatter = DateTimeFormatter.ofPattern(dp.read());
-                    FORMATS.put(name, dateTimeFormatter);
-                } else if (StringUtils.isNotEmpty(dp.write())) {
-                    dateTimeFormatter = DateTimeFormatter.ofPattern(dp.write());
-                    FORMATS.put(name, dateTimeFormatter);
-                } else {
-                    FORMATS.put(name, EMPTY);
-                }
-            }
-        }
+        DateTimeFormatter dateTimeFormatter = getFormatter(field, name);
         return EMPTY == dateTimeFormatter || null == dateTimeFormatter ? defaultPattern : dateTimeFormatter;
     }
 
@@ -51,7 +35,13 @@ public final class DatePatternParser {
             return defaultPattern;
         }
         String name = field.getDeclaringClass().getName() + "." + field.getName() + "-write";
+        DateTimeFormatter dateTimeFormatter = getFormatter(field, name);
+        return EMPTY == dateTimeFormatter || null == dateTimeFormatter ? defaultPattern : dateTimeFormatter;
+    }
+
+    private static DateTimeFormatter getFormatter(Field field, String name) {
         DateTimeFormatter dateTimeFormatter = null;
+
         if (FORMATS.containsKey(name)) {
             dateTimeFormatter = FORMATS.get(name);
         } else {
@@ -68,6 +58,7 @@ public final class DatePatternParser {
                 }
             }
         }
-        return EMPTY == dateTimeFormatter || null == dateTimeFormatter ? defaultPattern : dateTimeFormatter;
+
+        return dateTimeFormatter;
     }
 }

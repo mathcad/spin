@@ -18,6 +18,7 @@ import org.hibernate.query.Query;
 import org.spin.core.Assert;
 import org.spin.core.throwable.AssertFailException;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.BeanUtils;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.core.ARepository;
@@ -37,6 +38,7 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
+import javax.persistence.Entity;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -48,8 +50,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import javax.persistence.Entity;
 
 /**
  * 存储对象上下文
@@ -834,7 +834,7 @@ public class RepositoryContext {
         Session sess = DataSourceContext.getSession();
         // 总数查询
         Criteria ct = dc.getExecutableCriteria(sess);
-        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
+        List<CriteriaImpl.OrderEntry> orderEntries = BeanUtils.getFieldValue(ct, ORDER_ENTRIES);
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         return total > 0;
@@ -862,7 +862,7 @@ public class RepositoryContext {
         Session sess = DataSourceContext.getSession();
         Criteria ct = cb.buildDeCriteria(false).getExecutableCriteria(sess);
         ct.setCacheable(false);
-        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
+        List<CriteriaImpl.OrderEntry> orderEntries = BeanUtils.getFieldValue(ct, ORDER_ENTRIES);
         orderEntries.clear();
         return (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
     }
@@ -889,7 +889,7 @@ public class RepositoryContext {
         List<Map<String, Object>> list = ct.list();
         ct.setFirstResult(0);
         ct.setMaxResults(MAX_RECORDS);
-        List<CriteriaImpl.OrderEntry> orderEntries = ClassUtils.getFieldValue(ct, ORDER_ENTRIES);
+        List<CriteriaImpl.OrderEntry> orderEntries = BeanUtils.getFieldValue(ct, ORDER_ENTRIES);
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         List<T> res = EntityUtils.wrapperMapToBeanList(cb.getEnCls(), list);
