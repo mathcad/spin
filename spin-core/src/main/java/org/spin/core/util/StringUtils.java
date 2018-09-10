@@ -3780,9 +3780,9 @@ public abstract class StringUtils {
     }
 
     /**
-     * Converts all of the characters in this {@code String} to upper
+     * 将字符串 {@code String} 转换为大写
      *
-     * @return the {@code String}, converted to uppercase.
+     * @return the {@code String}, 大写形式的字符串.
      */
     public static String toUpperCase(final String input) {
         if (input == null || input.length() == 0) return input;
@@ -3948,6 +3948,32 @@ public abstract class StringUtils {
     }
 
     /**
+     * 将驼峰格式的字符串使用指定分隔符分割开
+     *
+     * @param input     输入字符串
+     * @param separator 分隔符
+     * @return 分割后的字符串
+     */
+    public static String separateCamelCase(String input, String separator) {
+        if (input == null || input.length() == 0) {
+            return input;
+        }
+
+        char[] chars = input.toCharArray();
+
+        StringBuilder sb = new StringBuilder(input.length() * 2 - 1);
+        for (int i = 0; i < chars.length; i++) {
+            char c = chars[i];
+            if (c > 64 && c < 91 && i != 0) {
+                sb.append(separator).append((char) (c ^ 32));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
      * 将驼峰格式的字符串转为下划线格式
      * <p>如：firstName将转换为first_name</p>
      *
@@ -3955,21 +3981,7 @@ public abstract class StringUtils {
      * @return 转换后的字符串
      */
     public static String underscore(String input) {
-        if (isBlank(input)) {
-            return input;
-        }
-
-        char[] chars = input.toCharArray();
-
-        StringBuilder sb = new StringBuilder(input.length() * 2);
-        for (char c : chars) {
-            if (c > 64 && c < 91) {
-                sb.append("_").append(lower(c));
-            } else {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
+        return separateCamelCase(input, "_");
     }
 
     /**
@@ -3985,11 +3997,11 @@ public abstract class StringUtils {
         }
 
         char[] chars = input.toCharArray();
-        StringBuilder sb = new StringBuilder(input.length() * 2);
+        StringBuilder sb = new StringBuilder(input.length());
         for (int i = 0; i < chars.length; i++) {
             char c = chars[i];
             if (c == '_' && i != chars.length - 1 && isLower(chars[i + 1])) {
-                sb.append(upper(chars[++i]));
+                sb.append((char) (chars[++i] ^ 32));
             } else {
                 sb.append(c);
             }

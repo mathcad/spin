@@ -2,10 +2,11 @@ package org.spin.data.core;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import org.junit.jupiter.api.Test;
+import org.spin.core.gson.annotation.DatePattern;
 import org.spin.core.gson.annotation.PreventOverflow;
 import org.spin.core.util.JsonUtils;
-import org.spin.core.gson.annotation.DatePattern;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -48,8 +49,8 @@ public class JsonUtilsTest {
         a.setUpdateUserId(2L);
         a.setExt(91241321817279489L);
         System.out.println(JsonUtils.toJson(a));
-        String b = "{\"id\":81241321817279489,\"createUserId\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212'}";
-        AbstractEntity c = JsonUtils.fromJson(b, E.class);
+        String b = "{\"id\":81241321817279489,\"create_user_id\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212'}";
+        AbstractEntity c = JsonUtils.fromJsonWithUnderscore(b, E.class);
         System.out.println(c);
     }
 
