@@ -1,10 +1,20 @@
 package org.spin.core.util.http;
 
-import org.apache.http.*;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.StringEntity;
@@ -49,8 +59,8 @@ import java.util.stream.Collectors;
 public abstract class HttpUtils {
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class);
     private static final String SCHEMA = "http://";
-    private static final int SOCKET_TIMEOUT = 60000;
-    private static final int CONNECT_TIMEOUT = 60000;
+    private static int socketTimeout = 60000;
+    private static int connectTimeout = 60000;
 
     private static int maxTotal;
     private static int maxPerRoute;
@@ -87,12 +97,11 @@ public abstract class HttpUtils {
         return !(request instanceof HttpEntityEnclosingRequest);
     };
 
-    // region init and getter/setter
-    public static void init() {
-        init(200, 40);
+    public static void initSync() {
+        initSync(200, 40);
     }
 
-    public static void init(int maxTotal, int maxPerRoute) {
+    public static void initSync(int maxTotal, int maxPerRoute) {
         synchronized (HttpUtils.class) {
             HttpUtils.maxTotal = maxTotal;
             HttpUtils.maxPerRoute = maxPerRoute;
@@ -100,9 +109,38 @@ public abstract class HttpUtils {
             connectionManager.setMaxTotal(maxTotal);
             connectionManager.setDefaultMaxPerRoute(maxPerRoute);
             httpClient = HttpClients.custom().setRetryHandler(defaultHttpRetryHandler).setConnectionManager(connectionManager).build();
+        }
+    }
+
+    public static void initAync() {
+        initAync(200, 40);
+    }
+
+    public static void initAync(int maxTotal, int maxPerRoute) {
+        synchronized (HttpUtils.class) {
+            HttpUtils.maxTotal = maxTotal;
+            HttpUtils.maxPerRoute = maxPerRoute;
             httpAsyncClient = HttpAsyncClients.custom().setMaxConnTotal(maxTotal).setMaxConnPerRoute(maxPerRoute).build();
             httpAsyncClient.start();
         }
+    }
+
+    // region init and getter/setter
+
+    public static int getSocketTimeout() {
+        return socketTimeout;
+    }
+
+    public static void setSocketTimeout(int socketTimeout) {
+        HttpUtils.socketTimeout = socketTimeout;
+    }
+
+    public static int getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public static void setConnectTimeout(int connectTimeout) {
+        HttpUtils.connectTimeout = connectTimeout;
     }
 
     public static int getMaxTotal() {
@@ -499,8 +537,8 @@ public abstract class HttpUtils {
      */
     public static <T> T executeRequest(HttpUriRequest request, FinalConsumer<RequestConfig.Builder> configProc, EntityProcessor<T> entityProc) {
         RequestConfig.Builder builder = RequestConfig.custom()
-            .setSocketTimeout(SOCKET_TIMEOUT)
-            .setConnectTimeout(CONNECT_TIMEOUT);
+            .setSocketTimeout(socketTimeout)
+            .setConnectTimeout(connectTimeout);
         if (null != configProc) {
             configProc.accept(builder);
         }
@@ -513,7 +551,7 @@ public abstract class HttpUtils {
 
         T res;
         if (null == httpClient) {
-            init();
+            initSync();
         }
         try (CloseableHttpResponse response = httpClient.execute(request)) {
             int code = response.getStatusLine().getStatusCode();
@@ -568,8 +606,8 @@ public abstract class HttpUtils {
                                                                FinalConsumer<Exception> failedCallback,
                                                                Handler cancelledCallback) {
         RequestConfig.Builder builder = RequestConfig.custom()
-            .setSocketTimeout(SOCKET_TIMEOUT)
-            .setConnectTimeout(CONNECT_TIMEOUT);
+            .setSocketTimeout(socketTimeout)
+            .setConnectTimeout(connectTimeout);
         if (null != configProc) {
             configProc.accept(builder);
         }
@@ -582,7 +620,7 @@ public abstract class HttpUtils {
 
         try {
             if (null == httpAsyncClient) {
-                init();
+                initAync();
             }
             return httpAsyncClient.execute(request, new FutureCallback<HttpResponse>() {
                 @Override

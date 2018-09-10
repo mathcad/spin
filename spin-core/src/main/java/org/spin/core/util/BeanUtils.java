@@ -5,16 +5,23 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.throwable.SimplifiedException;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Bean工具类
@@ -22,6 +29,7 @@ import java.util.Objects;
  */
 public abstract class BeanUtils {
     private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
+    private static final Map<String, Map<String, PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
 
     private BeanUtils() {
     }
@@ -302,5 +310,261 @@ public abstract class BeanUtils {
             result.put(field, value);
         }
         return result;
+    }
+
+    /**
+     * JavaBean转换为Map
+     *
+     * @param target            bean
+     * @param camelToUnderscore 是否将驼峰命名转换为下划线命名方式
+     * @return map
+     */
+    public static Map<String, String> toStringMap(Object target, boolean camelToUnderscore) {
+        // null值，直接返回
+        if (null == target) {
+            return null;
+        }
+
+        // 如果是Map，做适应性调整
+        if (target instanceof Map) {
+            Map<?, ?> m = (Map<?, ?>) target;
+            return m.entrySet().stream().filter(entry -> null != entry.getValue()).collect(Collectors.toMap(e -> camelToUnderscore ? StringUtils.underscore(e.getKey().toString()) : e.getKey().toString(), e -> StringUtils.toString(e.getValue())));
+        }
+
+        if (isJavaBean(target)) {
+            Collection<PropertyDescriptorWrapper> props = getBeanPropertyDes(target.getClass(), true, false).values();
+            Map<String, String> res = new HashMap<>(props.size());
+            for (PropertyDescriptorWrapper prop : props) {
+                try {
+                    Object value = prop.reader.invoke(target);
+                    if (null != value) {
+                        res.put(camelToUnderscore ? StringUtils.underscore(prop.getDescriptor().getName()) : prop.getDescriptor().getName(), StringUtils.toString(value));
+                    }
+                } catch (IllegalAccessException | InvocationTargetException ignore) {
+                    // 忽略访问失败的属性
+                }
+            }
+            return res;
+        }
+
+        throw new SimplifiedException(target.getClass().getName() + "不能转换为Map<String, String>");
+    }
+
+    /**
+     * JavaBean转换为Map
+     *
+     * @param target      bean
+     * @param recursively 是否递归处理所有属性
+     * @return map
+     */
+    public static Map<String, Object> toMap(Object target, boolean recursively) {
+        Object result = toMapInternal(target, recursively);
+        if (result instanceof Map || null == result) {
+            //noinspection unchecked
+            return (Map<String, Object>) result;
+        } else {
+            throw new SimplifiedException(target.getClass().getName() + "不能被转换为Map");
+        }
+    }
+
+
+    private static Object toMapInternal(Object target, boolean recursively) {
+        // null值，直接返回
+        if (null == target) {
+            return null;
+        }
+
+        // 如果是Map，做适应性调整
+        if (target instanceof Map) {
+            Map<?, ?> m = (Map<?, ?>) target;
+            if (recursively) {
+                return m.entrySet().stream().filter(entry -> null != entry.getValue()).collect(Collectors.toMap(e -> e.getKey().toString(), e -> BeanUtils.toMapInternal(e.getValue(), true)));
+            } else {
+                return m.entrySet().stream().filter(entry -> null != entry.getValue()).collect(Collectors.toMap(e -> e.getKey().toString(), Map.Entry::getValue));
+            }
+        }
+
+        // 如果是集合，将其元素转为Map后返回
+        if (CollectionUtils.isCollection(target)) {
+            List objects = CollectionUtils.asList(target);
+            for (int i = 0; i < objects.size(); i++) {
+                //noinspection unchecked
+                objects.set(i, toMapInternal(objects.get(i), recursively));
+            }
+            return objects;
+        }
+
+        // 如果是JavaBean，将其转换为Map
+        if (isJavaBean(target)) {
+            Collection<PropertyDescriptorWrapper> props = getBeanPropertyDes(target.getClass(), true, false).values();
+            Map<String, Object> res = new HashMap<>(props.size());
+            for (PropertyDescriptorWrapper prop : props) {
+                try {
+                    Object value = prop.reader.invoke(target);
+                    if (null != value) {
+                        res.put(prop.getDescriptor().getName(), toMapInternal(value, recursively));
+                    }
+                } catch (IllegalAccessException | InvocationTargetException ignore) {
+                    // 忽略访问失败的属性
+                }
+            }
+            return res;
+        } else {
+            // 否则原样返回
+            return target;
+        }
+
+    }
+
+    /**
+     * 判断一个对象是否是JavaBean
+     * <p>一个JavaBean，一定是一个自定义对象（非java自带的类，数组，集合，Map，枚举，字符序列)</p>
+     *
+     * @param target 对象
+     * @return 是否是JavaBean
+     */
+    public static boolean isJavaBean(Object target) {
+        return null != target && !target.getClass().isArray() && !target.getClass().getName().startsWith("java.") &&
+            !target.getClass().getName().startsWith("javax.") && !(target instanceof Map || target instanceof Collection ||
+            target instanceof Enum || target instanceof CharSequence);
+    }
+
+    /**
+     * 通过内省机制，获取一个JavaBean的所有属性(必须可写)
+     *
+     * @param type JavaBean类型
+     * @return 属性描述器数组
+     */
+    public static Map<String, PropertyDescriptorWrapper> getBeanPropertyDes(Class<?> type) {
+        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
+        if (null == props) {
+            PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
+            props = new HashMap<>();
+            Method writer;
+            for (PropertyDescriptor descriptor : propertyDescriptors) {
+                writer = descriptor.getWriteMethod();
+                if (writer != null)
+                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, descriptor.getReadMethod(), writer));
+            }
+            CLASS_PROPERTY_CACHE.put(type.getName(), props);
+        }
+        return props;
+    }
+
+    /**
+     * 通过内省机制，获取一个JavaBean的所有属性
+     *
+     * @param type     JavaBean类型
+     * @param readable 是否必须可读
+     * @param writable 是否必须可写
+     * @return 属性描述器数组
+     */
+    public static Map<String, PropertyDescriptorWrapper> getBeanPropertyDes(Class<?> type, boolean readable, boolean writable) {
+        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName() + readable + writable);
+        if (null == props) {
+            PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
+            props = new HashMap<>();
+            Method writer;
+            Method reader;
+            for (PropertyDescriptor descriptor : propertyDescriptors) {
+                writer = descriptor.getWriteMethod();
+                reader = descriptor.getReadMethod();
+                if (!("class".equals(descriptor.getName()) && Class.class == descriptor.getPropertyType()) && (!readable || reader != null) && (!writable || writer != null)) {
+                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, reader, writer));
+                }
+            }
+            CLASS_PROPERTY_CACHE.put(type.getName() + readable + writable, props);
+        }
+        return props;
+    }
+
+    /**
+     * 通过内省机制获取一个JavaBean的所有属性的getter方法
+     *
+     * @param c JavaBean类型
+     * @return getter方法集合
+     */
+    public static List<Method> resolveGetters(Class<?> c) {
+        Collection<PropertyDescriptorWrapper> ps;
+        List<Method> list = new ArrayList<>();
+        ps = getBeanPropertyDes(c, true, false).values();
+        for (PropertyDescriptorWrapper p : ps) {
+            if (p.reader != null) {
+                list.add(p.reader);
+            }
+        }
+        return list;
+    }
+
+    /**
+     * 通过内省机制，获取一个JavaBean的所有属性
+     *
+     * @param c JavaBean类型
+     * @return 属性描述器数组
+     */
+    private static PropertyDescriptor[] propertyDescriptors(Class<?> c) {
+        BeanInfo beanInfo;
+        try {
+            beanInfo = Introspector.getBeanInfo(c);
+        } catch (IntrospectionException e) {
+            throw new SimplifiedException("解析Bean属性异常", e);
+        }
+        return beanInfo.getPropertyDescriptors();
+    }
+
+    /**
+     * 属性描述器
+     */
+    public static class PropertyDescriptorWrapper {
+        public PropertyDescriptor descriptor;
+        public Class<?> protertyType;
+        public Method reader;
+        public Method writer;
+
+        public PropertyDescriptorWrapper(PropertyDescriptor descriptor, Method reader, Method writer) {
+            this.descriptor = descriptor;
+            this.protertyType = descriptor.getPropertyType();
+            this.reader = reader;
+            this.writer = writer;
+        }
+
+        public PropertyDescriptorWrapper(PropertyDescriptor descriptor) {
+            this.descriptor = descriptor;
+            this.protertyType = descriptor.getPropertyType();
+            this.reader = descriptor.getReadMethod();
+            this.writer = descriptor.getWriteMethod();
+        }
+
+        public PropertyDescriptor getDescriptor() {
+            return descriptor;
+        }
+
+        public void setDescriptor(PropertyDescriptor descriptor) {
+            this.descriptor = descriptor;
+        }
+
+        public Class<?> getProtertyType() {
+            return protertyType;
+        }
+
+        public void setProtertyType(Class<?> protertyType) {
+            this.protertyType = protertyType;
+        }
+
+        public Method getReader() {
+            return reader;
+        }
+
+        public void setReader(Method reader) {
+            this.reader = reader;
+        }
+
+        public Method getWriter() {
+            return writer;
+        }
+
+        public void setWriter(Method writer) {
+            this.writer = writer;
+        }
     }
 }

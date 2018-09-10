@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.SpinContext;
 import org.spin.core.throwable.CloneFailedException;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.BeanUtils;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.ObjectUtils;
@@ -21,14 +22,10 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
-import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +42,6 @@ import java.util.stream.Collectors;
  */
 public abstract class EntityUtils {
     private static final Logger logger = LoggerFactory.getLogger(EntityUtils.class);
-    private static final Map<String, Map<String, EntityUtils.PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
 
     private EntityUtils() {
     }
@@ -98,14 +93,14 @@ public abstract class EntityUtils {
                     f.set(target, getMethod.invoke(entity));
                 } else if (List.class.isAssignableFrom(f.getType())) {
                     Object d = getMethod.invoke(entity);
-                    if (d != null && d instanceof PersistentBag) {
+                    if (d instanceof PersistentBag) {
                         PersistentBag bag = (PersistentBag) d;
                         bag.clearDirty();
                         List list = (List) JsonUtils.fromJson("[]", f.getType());
                         //noinspection unchecked
                         bag.forEach(obj -> list.add(getDTO(obj, depth - 1)));
                         setMethod.invoke(target, list);
-                    } else if (d != null && d instanceof PersistentList) {
+                    } else if (d instanceof PersistentList) {
                         PersistentList bag = (PersistentList) d;
                         bag.clearDirty();
 
@@ -118,7 +113,7 @@ public abstract class EntityUtils {
                     }
                 } else if (Set.class.isAssignableFrom(f.getType())) {
                     Object d = getMethod.invoke(entity);
-                    if (d != null && d instanceof PersistentSet) {
+                    if (d instanceof PersistentSet) {
                         PersistentSet pSet = (PersistentSet) d;
                         pSet.clearDirty();
                         Set set = (Set) JsonUtils.fromJson("[]", f.getType());
@@ -287,25 +282,12 @@ public abstract class EntityUtils {
      * @return 转换后的对象
      * @throws IllegalAccessException    对象访问异常
      * @throws InstantiationException    对象初始化异常
-     * @throws IntrospectionException    内省异常
      * @throws InvocationTargetException 方法调用异常
      * @throws NoSuchMethodException     方法不存在
      */
-    public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException, NoSuchMethodException {
+    public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
         T bean = type.getDeclaredConstructor().newInstance();
-        Map<String, EntityUtils.PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
-        if (null == props) {
-            PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
-            props = new HashMap<>();
-            Method writer;
-            for (PropertyDescriptor descriptor : propertyDescriptors) {
-                writer = descriptor.getWriteMethod();
-                if (writer != null)
-                    props.put(descriptor.getName().toLowerCase(), new EntityUtils.PropertyDescriptorWrapper(descriptor, writer));
-            }
-            CLASS_PROPERTY_CACHE.put(type.getName(), props);
-            CLASS_PROPERTY_CACHE.put(type.getName(), props);
-        }
+        Map<String, BeanUtils.PropertyDescriptorWrapper> props = BeanUtils.getBeanPropertyDes(type);
         if (props.size() == 0)
             return bean;
         int off;
@@ -314,7 +296,7 @@ public abstract class EntityUtils {
         String p;
         String[] propName = new String[100];
         Object[] args = new Object[1];
-        Map<String, EntityUtils.PropertyDescriptorWrapper> workerProps;
+        Map<String, BeanUtils.PropertyDescriptorWrapper> workerProps;
         for (Map.Entry<String, Object> entry : values.entrySet()) {
             off = 0;
             depth = 0;
@@ -325,7 +307,7 @@ public abstract class EntityUtils {
             }
             propName[depth++] = (p.substring(off));
             if (depth == 1) {
-                EntityUtils.PropertyDescriptorWrapper prop = props.get(p);
+                BeanUtils.PropertyDescriptorWrapper prop = props.get(p);
                 if (null == prop)
                     continue;
                 args[0] = ObjectUtils.convert(prop.protertyType, entry.getValue());
@@ -335,9 +317,9 @@ public abstract class EntityUtils {
             int i = 0;
             Object worker = bean;
             Class<?> propType;
-            workerProps = getBeanPropertyDes(type);
+            workerProps = BeanUtils.getBeanPropertyDes(type);
             while (depth != i) {
-                EntityUtils.PropertyDescriptorWrapper prop = workerProps.get(propName[i]);
+                BeanUtils.PropertyDescriptorWrapper prop = workerProps.get(propName[i]);
                 if (null == prop) {
                     ++i;
                     continue;
@@ -350,7 +332,7 @@ public abstract class EntityUtils {
                         args[0] = ObjectUtils.convert(propType, ib);
                         prop.writer.invoke(worker, args);
                     }
-                    workerProps = getBeanPropertyDes(propType);
+                    workerProps = BeanUtils.getBeanPropertyDes(propType);
                     worker = ib;
                     ++i;
                     continue;
@@ -391,25 +373,12 @@ public abstract class EntityUtils {
      * @return 转换后的对象
      * @throws IllegalAccessException    对象访问异常
      * @throws InstantiationException    对象初始化异常
-     * @throws IntrospectionException    内省异常
      * @throws InvocationTargetException 方法调用异常
      */
     @Deprecated
-    public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values, String propPrefix) throws IllegalAccessException, InstantiationException, IntrospectionException, InvocationTargetException {
+    public static <T> T wrapperMapToBean(Class<T> type, Map<String, Object> values, String propPrefix) throws IllegalAccessException, InstantiationException, InvocationTargetException {
         T bean = type.newInstance();
-        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
-        if (null == props) {
-            PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
-            if (null == propertyDescriptors || 0 == propertyDescriptors.length)
-                return type.newInstance();
-            props = new HashMap<>();
-            for (PropertyDescriptor descriptor : propertyDescriptors) {
-                Method writer = descriptor.getWriteMethod();
-                if (writer != null)
-                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
-            }
-            CLASS_PROPERTY_CACHE.put(type.getName(), props);
-        }
+        Map<String, BeanUtils.PropertyDescriptorWrapper> props = BeanUtils.getBeanPropertyDes(type);
 
         for (Map.Entry<String, Object> entry : values.entrySet()) {
             if (StringUtils.isNotEmpty(propPrefix) && !entry.getKey().toLowerCase().startsWith(propPrefix))
@@ -419,7 +388,7 @@ public abstract class EntityUtils {
             if (index > 0) {
                 propName = propName.substring(0, index);
                 if (props.containsKey(propName)) {
-                    PropertyDescriptorWrapper prop = props.get(propName);
+                    BeanUtils.PropertyDescriptorWrapper prop = props.get(propName);
                     Object tmp = wrapperMapToBean(prop.protertyType, values, StringUtils.isEmpty(propPrefix) ? propName : propPrefix + "." + propName);
                     Object[] args = new Object[1];
                     args[0] = tmp;
@@ -427,7 +396,7 @@ public abstract class EntityUtils {
                 }
             } else {
                 if (props.containsKey(propName)) {
-                    PropertyDescriptorWrapper prop = props.get(propName);
+                    BeanUtils.PropertyDescriptorWrapper prop = props.get(propName);
                     Object[] args = new Object[1];
                     args[0] = ObjectUtils.convert(prop.protertyType, entry.getValue());
                     prop.writer.invoke(bean, args);
@@ -435,39 +404,6 @@ public abstract class EntityUtils {
             }
         }
         return bean;
-    }
-
-    public static Map<String, PropertyDescriptorWrapper> getBeanPropertyDes(Class<?> type) throws IntrospectionException {
-        Map<String, PropertyDescriptorWrapper> props = CLASS_PROPERTY_CACHE.get(type.getName());
-        if (null == props) {
-            PropertyDescriptor[] propertyDescriptors = propertyDescriptors(type);
-            props = new HashMap<>();
-            Method writer;
-            for (PropertyDescriptor descriptor : propertyDescriptors) {
-                writer = descriptor.getWriteMethod();
-                if (writer != null)
-                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, writer));
-            }
-            CLASS_PROPERTY_CACHE.put(type.getName(), props);
-        }
-        return props;
-    }
-
-    public static PropertyDescriptor[] propertyDescriptors(Class<?> c) throws IntrospectionException {
-        BeanInfo beanInfo = Introspector.getBeanInfo(c);
-        return beanInfo.getPropertyDescriptors();
-    }
-
-    public static List<Method> getterMethod(Class<?> c) throws IntrospectionException {
-        PropertyDescriptor[] ps;
-        List<Method> list = new ArrayList<>();
-        ps = propertyDescriptors(c);
-        for (PropertyDescriptor p : ps) {
-            if (p.getReadMethod() != null && p.getWriteMethod() != null) {
-                list.add(p.getReadMethod());
-            }
-        }
-        return list;
     }
 
     /**
@@ -479,19 +415,5 @@ public abstract class EntityUtils {
     private static boolean isDbColumn(Field field) {
         // 非静态，final，且没有通过Transient注解排除的普通成员变量
         return (0x18 & field.getModifiers()) == 0 && null == field.getAnnotation(Transient.class);
-    }
-
-    public static class PropertyDescriptorWrapper {
-        public PropertyDescriptor descriptor;
-        public Class<?> protertyType;
-        public Method reader;
-        public Method writer;
-
-        public PropertyDescriptorWrapper(PropertyDescriptor descriptor, Method writer) {
-            this.descriptor = descriptor;
-            this.protertyType = descriptor.getPropertyType();
-            this.reader = descriptor.getReadMethod();
-            this.writer = writer;
-        }
     }
 }

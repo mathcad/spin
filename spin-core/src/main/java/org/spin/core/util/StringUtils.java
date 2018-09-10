@@ -3150,7 +3150,7 @@ public abstract class StringUtils {
         if (collection == null) {
             return null;
         }
-        return collection.toArray(new String[collection.size()]);
+        return collection.toArray(new String[0]);
     }
 
     /**
@@ -3166,7 +3166,7 @@ public abstract class StringUtils {
             return null;
         }
         List<String> list = Collections.list(enumeration);
-        return list.toArray(new String[list.size()]);
+        return list.toArray(new String[0]);
     }
 
     /**
@@ -3780,18 +3780,6 @@ public abstract class StringUtils {
     }
 
     /**
-     * Converts the first character of string to upper case.
-     *
-     * @param input The string to convert.
-     * @return Returns the converted string.
-     */
-    public static String upperFirst(String input) {
-        if (input == null || input.length() == 0) return input;
-        char f = upper(input.charAt(0));
-        return f + input.substring(1);
-    }
-
-    /**
      * Converts all of the characters in this {@code String} to upper
      *
      * @return the {@code String}, converted to uppercase.
@@ -3837,6 +3825,26 @@ public abstract class StringUtils {
      */
     public static char lower(char c) {
         return c > 64 && c < 91 ? (char) (c ^ 32) : c;
+    }
+
+    /**
+     * 判断一个字符是否是大写字母
+     *
+     * @param c 输入字符
+     * @return 是否大写
+     */
+    public static boolean isUpper(char c) {
+        return c > 64 && c < 91;
+    }
+
+    /**
+     * 判断一个字符是否是小写字母
+     *
+     * @param c 输入字符
+     * @return 是否小写
+     */
+    public static boolean isLower(char c) {
+        return c > 96 && c < 123;
     }
 
     /**
@@ -3937,6 +3945,56 @@ public abstract class StringUtils {
 
         return ((beginIndex == 0) && (endIndex == input.length())) ? input
             : new String(input.toCharArray(), beginIndex, subLen);
+    }
+
+    /**
+     * 将驼峰格式的字符串转为下划线格式
+     * <p>如：firstName将转换为first_name</p>
+     *
+     * @param input 输入字符串
+     * @return 转换后的字符串
+     */
+    public static String underscore(String input) {
+        if (isBlank(input)) {
+            return input;
+        }
+
+        char[] chars = input.toCharArray();
+
+        StringBuilder sb = new StringBuilder(input.length() * 2);
+        for (char c : chars) {
+            if (c > 64 && c < 91) {
+                sb.append("_").append(lower(c));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 将下划线格式的字符串转为驼峰格式
+     * <p>如：first_name将转换为firstName</p>
+     *
+     * @param input 输入字符串
+     * @return 转换后的字符串
+     */
+    public static String camelCase(String input) {
+        if (isBlank(input)) {
+            return input;
+        }
+
+        char[] chars = input.toCharArray();
+        StringBuilder sb = new StringBuilder(input.length() * 2);
+        for (int i = 0; i < chars.length; i++) {
+            char c = chars[i];
+            if (c == '_' && i != chars.length - 1 && isLower(chars[i + 1])) {
+                sb.append(upper(chars[++i]));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }
 

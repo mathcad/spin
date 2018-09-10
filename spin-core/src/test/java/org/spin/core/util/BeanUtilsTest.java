@@ -1,6 +1,7 @@
 package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
+import org.spin.core.session.SimpleSession;
 
 import java.util.List;
 import java.util.Map;
@@ -32,5 +33,17 @@ class BeanUtilsTest {
         e = System.currentTimeMillis();
         System.out.println(e - s);
         assertEquals(5, no);
+    }
+
+    @Test
+    public void testToMap() {
+        SimpleSession simpleSession = new SimpleSession();
+        simpleSession.setAttribute("aaa", new SimpleSession());
+        Map<String, Object> stringObjectMap;
+        long s = System.currentTimeMillis();
+        stringObjectMap = BeanUtils.toMap(simpleSession, true);
+        long e = System.currentTimeMillis();
+        System.out.println(e - s);
+        System.out.println(JsonUtils.toJson(stringObjectMap));
     }
 }

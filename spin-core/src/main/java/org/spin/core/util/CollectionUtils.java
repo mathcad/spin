@@ -1,6 +1,7 @@
 package org.spin.core.util;
 
 import org.spin.core.Assert;
+import org.spin.core.throwable.SimplifiedException;
 
 import java.util.*;
 import java.util.function.BiPredicate;
@@ -403,6 +404,52 @@ public abstract class CollectionUtils {
     public static <E> Stream<E> parallelStream(Collection<E> collection, long parallelFactor) {
         Assert.notNull(collection, "collection must be non-null");
         return (collection.size() > parallelFactor ? collection.parallelStream() : collection.stream());
+    }
+
+
+    /**
+     * 判断一个对象是否是集合(List, Set, 数组, Tuple等)，如果是，将对象以List的形式返回
+     *
+     * @param target 对象
+     * @return 转换后的List
+     */
+    public static boolean isCollection(Object target) {
+
+        if (target instanceof Iterable) {
+            return true;
+        }
+
+        return target.getClass().isArray();
+    }
+
+    /**
+     * 判断一个对象是否是集合(List, Set, 数组, Tuple等)，如果是，将对象以List的形式返回
+     *
+     * @param target 对象
+     * @return 转换后的List
+     */
+    public static List<?> asList(Object target) {
+        if (null == target) {
+            return null;
+        }
+
+        if (target instanceof Collection) {
+            //noinspection unchecked
+            return new ArrayList<>((Collection) target);
+        }
+
+        if (target instanceof Iterable) {
+            List res = new LinkedList<>();
+            //noinspection unchecked
+            ((Iterable) target).forEach(res::add);
+            return res;
+        }
+
+        if (target.getClass().isArray()) {
+            return ofLinkedList((Object[]) target);
+        }
+
+        throw new SimplifiedException("目标对象不是集合类型:" + target.getClass().getName());
     }
 
     /**

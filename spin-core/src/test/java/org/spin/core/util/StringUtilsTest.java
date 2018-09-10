@@ -23,4 +23,16 @@ class StringUtilsTest {
         System.out.println(s1);
     }
 
+    @Test
+    public void testCameUnderscore() {
+        String test = "getFirstNameById";
+        String underscore = StringUtils.underscore(test);
+        System.out.println(underscore);
+        test = StringUtils.camelCase(underscore);
+        System.out.println(test);
+
+        test = StringUtils.camelCase("get__first_name_by_id__");
+        System.out.println(test);
+    }
+
 }
