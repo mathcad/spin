@@ -17,20 +17,20 @@ public abstract class PinyinUtils {
     /**
      * Description : 根据汉字获得此汉字的拼音
      */
-    public static String getPinYin(String hanzhis) {
-        return getPinYin(hanzhis, false);
+    public static String getPinYin(String chinese) {
+        return getPinYin(chinese, false);
     }
 
     /**
      * Description : 根据汉字获得此汉字的拼音首字母
      */
-    public static String getPinYinHeadChar(String hanzhis) {
-        return getPinYin(hanzhis, true);
+    public static String getPinYinHeadChar(String chinese) {
+        return getPinYin(chinese, true);
     }
 
-    private static String getPinYin(String hanzhis, boolean isHeadChar) {
-        int len = hanzhis.length();
-        char[] hanzhi = hanzhis.toCharArray();
+    private static String getPinYin(String chinese, boolean isHeadChar) {
+        int len = chinese.length();
+        char[] hanzi = chinese.toCharArray();
 
         // 设置输出格式
         HanyuPinyinOutputFormat formatParam = new HanyuPinyinOutputFormat();
@@ -40,7 +40,7 @@ public abstract class PinyinUtils {
         StringBuilder py = new StringBuilder();
         Pattern pattern = Pattern.compile("^[\u4e00-\u9fa5]{0,128}$");
         for (int i = 0; i < len; i++) {
-            char c = hanzhi[i];
+            char c = hanzi[i];
             Matcher matcher = pattern.matcher(String.valueOf(c));
             // 检查是否是汉字,如果不是汉字就不转换
             if (!matcher.matches()) {

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StringUtilsTest {
@@ -12,8 +13,8 @@ class StringUtilsTest {
     @Test
     public void testJoin() {
         String[] args = new String[]{"a", "b", "c", null, "e"};
-        System.out.println(StringUtils.join(args, ","));
-        assertTrue(true);
+        String join = StringUtils.join(args, ",");
+        assertEquals(join, "a,b,c,e");
     }
 
     @Test
@@ -27,12 +28,35 @@ class StringUtilsTest {
     public void testCameUnderscore() {
         String test = "getFirstNameById";
         String underscore = StringUtils.underscore(test);
-        System.out.println(underscore);
+        assertEquals("get_first_name_by_id", underscore);
+
         test = StringUtils.camelCase(underscore);
-        System.out.println(test);
+        assertEquals("getFirstNameById", test);
+
 
         test = StringUtils.camelCase("get__first_name_by_id__");
-        System.out.println(test);
+        assertEquals("get_FirstNameById__", test);
     }
 
+    @Test
+    public void testReverse() {
+        String test = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" +
+            "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" +
+            "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" +
+            "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" +
+            "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" +
+            "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz";
+        String reverse;
+        long s = System.currentTimeMillis();
+        reverse = StringUtils.reverse(test);
+        long e = System.currentTimeMillis();
+        System.out.println(reverse);
+        System.out.println(e -s);
+
+        s = System.currentTimeMillis();
+        reverse = new StringBuilder(test).reverse().toString();
+        e = System.currentTimeMillis();
+        System.out.println(reverse);
+        System.out.println(e -s);
+    }
 }

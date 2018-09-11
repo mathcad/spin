@@ -7,23 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static java.lang.Character.isLetterOrDigit;
@@ -3794,7 +3778,7 @@ public abstract class StringUtils {
     }
 
     /**
-     * Converts all of the characters in this {@code String} to lower
+     * 将字符串转换为小写形式 {@code String}
      *
      * @return the {@code String}, converted to lowercase.
      */
@@ -3854,6 +3838,20 @@ public abstract class StringUtils {
      * @return 编码后的字符串
      */
     public static String urlEncode(String input) {
+        try {
+            return URLEncoder.encode(input, "UTF-8");
+        } catch (UnsupportedEncodingException ignore) {
+            return input;
+        }
+    }
+
+    /**
+     * 对字符串进行URL解码
+     *
+     * @param input 输入字符串
+     * @return 解码后的字符串
+     */
+    public static String urlDecode(String input) {
         try {
             return URLEncoder.encode(input, "UTF-8");
         } catch (UnsupportedEncodingException ignore) {
@@ -3964,8 +3962,11 @@ public abstract class StringUtils {
         StringBuilder sb = new StringBuilder(input.length() * 2 - 1);
         for (int i = 0; i < chars.length; i++) {
             char c = chars[i];
-            if (c > 64 && c < 91 && i != 0) {
-                sb.append(separator).append((char) (c ^ 32));
+            if (c > 64 && c < 91) {
+                if (i != 0) {
+                    sb.append(separator);
+                }
+                sb.append((char) (c ^ 32));
             } else {
                 sb.append(c);
             }
@@ -3992,7 +3993,7 @@ public abstract class StringUtils {
      * @return 转换后的字符串
      */
     public static String camelCase(String input) {
-        if (isBlank(input)) {
+        if (input == null || input.length() == 0) {
             return input;
         }
 
@@ -4007,6 +4008,26 @@ public abstract class StringUtils {
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * 字符串反转
+     *
+     * @param input 输入字符串
+     * @return 反转后的字符串
+     */
+    public static String reverse(String input) {
+        if (input == null || input.length() == 0) {
+            return input;
+        }
+
+        int len = input.length() - 1;
+        char[] chars = input.toCharArray();
+        char[] newChars = new char[len + 1];
+        for (int i = len; i >= 0; --i) {
+            newChars[len - 1] = chars[i];
+        }
+        return new String(newChars);
     }
 }
 
