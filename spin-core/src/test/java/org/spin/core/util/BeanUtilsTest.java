@@ -52,6 +52,7 @@ class BeanUtilsTest {
         Ba a = new Ba();
         a.setName("xxx");
         a.setAddress("asdfasdfasdfasdf");
+        a.setNick("nick");
         a.setAge(10);
 
         Bb b = new Bb();
@@ -72,6 +73,7 @@ class BeanUtilsTest {
         private String name;
         private String address;
         private int age;
+        private String nick;
 
         public String getName() {
             return name;
@@ -95,6 +97,14 @@ class BeanUtilsTest {
 
         public void setAge(int age) {
             this.age = age;
+        }
+
+        public String getNick() {
+            return nick;
+        }
+
+        public void setNick(String nick) {
+            this.nick = nick;
         }
     }
 
