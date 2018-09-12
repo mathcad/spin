@@ -261,7 +261,7 @@ public class RSA {
      * @return 明文字符串
      */
     public static String decrypt(PrivateKey privateKey, String content) {
-        return StringUtils.toUtf8String(decrypt(privateKey, Base64.decode(content)));
+        return StringUtils.newStringUtf8(decrypt(privateKey, Base64.decode(content)));
     }
 
     /**

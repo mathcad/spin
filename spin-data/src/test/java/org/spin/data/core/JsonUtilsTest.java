@@ -1,6 +1,7 @@
 package org.spin.data.core;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ public class JsonUtilsTest {
         a.setUpdateUserId(2L);
         a.setExt(91241321817279489L);
         System.out.println(JsonUtils.toJson(a));
-        String b = "{\"id\":81241321817279489,\"create_user_id\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212'}";
+        String b = "{\"id\":81241321817279489,\"create_user_id\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212', first: 'Neptune'}";
         AbstractEntity c = JsonUtils.fromJsonWithUnderscore(b, E.class);
         System.out.println(c);
     }
@@ -110,6 +111,9 @@ class E extends AbstractEntity {
     @PreventOverflow
     private Long ext;
 
+    @SerializedName("first")
+    private String firstName;
+
     public LocalDateTime getXxx() {
         return xxx;
     }
@@ -140,6 +144,14 @@ class E extends AbstractEntity {
 
     public void setExt(Long ext) {
         this.ext = ext;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 }
 

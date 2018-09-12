@@ -3,6 +3,8 @@ package org.spin.core.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
+import org.spin.core.function.serializable.BiConsumer;
+import org.spin.core.function.serializable.Function;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.beans.BeanInfo;
@@ -351,6 +353,26 @@ public abstract class BeanUtils {
     }
 
     /**
+     * JavaBean转换为Map(字段名转换为下划线形式)
+     *
+     * @param target bean
+     * @return map
+     */
+    public static Map<String, String> toUnderscoreStringMap(Object target) {
+        return toStringMap(target, true);
+    }
+
+    /**
+     * JavaBean转换为Map
+     *
+     * @param target bean
+     * @return map
+     */
+    public static Map<String, String> toStringMap(Object target) {
+        return toStringMap(target, false);
+    }
+
+    /**
      * JavaBean转换为Map
      *
      * @param target      bean
@@ -565,6 +587,347 @@ public abstract class BeanUtils {
 
         public void setWriter(Method writer) {
             this.writer = writer;
+        }
+    }
+
+    /**
+     * 复制JavaBean的属性到另一个JavaBean中，直接反射字段值，不通过getter/setter
+     * <p>如果不指定字段列表，并且源对象是JavaBean，则会拷贝所有字段</p>
+     *
+     * @param src    源实体
+     * @param dest   目标实体
+     * @param fields 字段名列表
+     */
+    public static void copyTo(Object src, Object dest, String... fields) {
+        if (null == src || null == dest) {
+            return;
+        }
+        if ((null == fields || fields.length == 0) && isJavaBean(src)) {
+            fields = getBeanPropertyDes(src.getClass(), false, false).values().stream().map(p -> p.getDescriptor().getName()).toArray(String[]::new);
+        } else {
+            throw new SimplifiedException("非JavaBean请指定需要Copy的属性列表");
+        }
+        for (String field : fields) {
+            Field f1 = ReflectionUtils.findField(src.getClass(), field);
+            Field f2 = ReflectionUtils.findField(dest.getClass(), field);
+            if (f1 == null)
+                throw new SimplifiedException(field + "不存在于" + src.getClass().getSimpleName());
+            if (f2 == null)
+                throw new SimplifiedException(field + "不存在于" + dest.getClass().getSimpleName());
+            ReflectionUtils.makeAccessible(f1);
+            ReflectionUtils.makeAccessible(f2);
+            Object o1 = ReflectionUtils.getField(f1, src);
+            ReflectionUtils.setField(f2, dest, o1);
+        }
+    }
+
+    /**
+     * 复制JavaBean的属性到另一个JavaBean中，直接反射字段值，不通过getter/setter
+     *
+     * @param src     源对象
+     * @param dest    目标对象
+     * @param getters 属性getter列表
+     */
+    public static <T> void copyTo(T src, Object dest, Iterable<Function<T, ?>> getters) {
+        if (null == src || null == dest || null == getters)
+            return;
+        for (Function<T, ?> field : getters) {
+            String fieldName = toFieldName(LambdaUtils.resolveLambda(field).getImplMethodName());
+            Field f1 = ReflectionUtils.findField(src.getClass(), fieldName);
+            Field f2 = ReflectionUtils.findField(dest.getClass(), fieldName);
+            if (f1 == null) {
+                throw new SimplifiedException(field + "不存在于" + src.getClass().getSimpleName());
+            }
+            if (f2 == null) {
+                throw new SimplifiedException(field + "不存在于" + dest.getClass().getSimpleName());
+            }
+            ReflectionUtils.makeAccessible(f1);
+            ReflectionUtils.makeAccessible(f2);
+            Object o1 = ReflectionUtils.getField(f1, src);
+            ReflectionUtils.setField(f2, dest, o1);
+        }
+    }
+
+    public static <T, V, P> void copyTo(T src, V dest, Function<T, P> getter, BiConsumer<V, P> setter) {
+        if (null == src || null == dest || null == getter || null == setter)
+            return;
+        setter.accept(dest, getter.apply(src));
+    }
+
+    public static <T, V, P1, P2>
+    void copyTo(T src, V dest,
+                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
+                Function<T, P2> getter2, BiConsumer<V, P2> setter2
+    ) {
+        if (null == src || null == dest)
+            return;
+
+        if (null != getter1 && null != setter1) {
+            setter1.accept(dest, getter1.apply(src));
+        }
+
+        if (null != getter2 && null != setter2) {
+            setter2.accept(dest, getter2.apply(src));
+        }
+    }
+
+    public static <T, V, P1, P2, P3>
+    void copyTo(T src, V dest,
+                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
+                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
+                Function<T, P3> getter3, BiConsumer<V, P3> setter3
+    ) {
+        if (null == src || null == dest)
+            return;
+
+        if (null != getter1 && null != setter1) {
+            setter1.accept(dest, getter1.apply(src));
+        }
+
+        if (null != getter2 && null != setter2) {
+            setter2.accept(dest, getter2.apply(src));
+        }
+
+        if (null != getter3 && null != setter3) {
+            setter3.accept(dest, getter3.apply(src));
+        }
+    }
+
+
+    public static <T, V, P1, P2, P3, P4>
+    void copyTo(T src, V dest,
+                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
+                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
+                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
+                Function<T, P4> getter4, BiConsumer<V, P4> setter4
+    ) {
+        if (null == src || null == dest)
+            return;
+
+        if (null != getter1 && null != setter1) {
+            setter1.accept(dest, getter1.apply(src));
+        }
+
+        if (null != getter2 && null != setter2) {
+            setter2.accept(dest, getter2.apply(src));
+        }
+
+        if (null != getter3 && null != setter3) {
+            setter3.accept(dest, getter3.apply(src));
+        }
+
+        if (null != getter4 && null != setter4) {
+            setter4.accept(dest, getter4.apply(src));
+        }
+    }
+
+    public static <T, V, P1, P2, P3, P4, P5>
+    void copyTo(T src, V dest,
+                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
+                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
+                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
+                Function<T, P4> getter4, BiConsumer<V, P4> setter4,
+                Function<T, P5> getter5, BiConsumer<V, P5> setter5
+    ) {
+        if (null == src || null == dest)
+            return;
+
+        if (null != getter1 && null != setter1) {
+            setter1.accept(dest, getter1.apply(src));
+        }
+
+        if (null != getter2 && null != setter2) {
+            setter2.accept(dest, getter2.apply(src));
+        }
+
+        if (null != getter3 && null != setter3) {
+            setter3.accept(dest, getter3.apply(src));
+        }
+
+        if (null != getter4 && null != setter4) {
+            setter4.accept(dest, getter4.apply(src));
+        }
+
+        if (null != getter5 && null != setter5) {
+            setter5.accept(dest, getter5.apply(src));
+        }
+    }
+
+    public static <T, V, P1, P2, P3, P4, P5, P6>
+    void copyTo(T src, V dest,
+                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
+                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
+                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
+                Function<T, P4> getter4, BiConsumer<V, P4> setter4,
+                Function<T, P5> getter5, BiConsumer<V, P5> setter5,
+                Function<T, P6> getter6, BiConsumer<V, P6> setter6
+    ) {
+        if (null == src || null == dest)
+            return;
+
+        if (null != getter1 && null != setter1) {
+            setter1.accept(dest, getter1.apply(src));
+        }
+
+        if (null != getter2 && null != setter2) {
+            setter2.accept(dest, getter2.apply(src));
+        }
+
+        if (null != getter3 && null != setter3) {
+            setter3.accept(dest, getter3.apply(src));
+        }
+
+        if (null != getter4 && null != setter4) {
+            setter4.accept(dest, getter4.apply(src));
+        }
+
+        if (null != getter5 && null != setter5) {
+            setter5.accept(dest, getter5.apply(src));
+        }
+
+        if (null != getter6 && null != setter6) {
+            setter6.accept(dest, getter6.apply(src));
+        }
+    }
+
+    public static <T, V, P1, P2, P3, P4, P5, P6, P7>
+    void copyTo(T src, V dest,
+                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
+                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
+                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
+                Function<T, P4> getter4, BiConsumer<V, P4> setter4,
+                Function<T, P5> getter5, BiConsumer<V, P5> setter5,
+                Function<T, P6> getter6, BiConsumer<V, P6> setter6,
+                Function<T, P7> getter7, BiConsumer<V, P7> setter7
+    ) {
+        if (null == src || null == dest)
+            return;
+
+        if (null != getter1 && null != setter1) {
+            setter1.accept(dest, getter1.apply(src));
+        }
+
+        if (null != getter2 && null != setter2) {
+            setter2.accept(dest, getter2.apply(src));
+        }
+
+        if (null != getter3 && null != setter3) {
+            setter3.accept(dest, getter3.apply(src));
+        }
+
+        if (null != getter4 && null != setter4) {
+            setter4.accept(dest, getter4.apply(src));
+        }
+
+        if (null != getter5 && null != setter5) {
+            setter5.accept(dest, getter5.apply(src));
+        }
+
+        if (null != getter6 && null != setter6) {
+            setter6.accept(dest, getter6.apply(src));
+        }
+
+        if (null != getter7 && null != setter7) {
+            setter7.accept(dest, getter7.apply(src));
+        }
+    }
+
+    public static <T, V, P1, P2, P3, P4, P5, P6, P7, P8>
+    void copyTo(T src, V dest,
+                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
+                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
+                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
+                Function<T, P4> getter4, BiConsumer<V, P4> setter4,
+                Function<T, P5> getter5, BiConsumer<V, P5> setter5,
+                Function<T, P6> getter6, BiConsumer<V, P6> setter6,
+                Function<T, P7> getter7, BiConsumer<V, P7> setter7,
+                Function<T, P8> getter8, BiConsumer<V, P8> setter8
+    ) {
+        if (null == src || null == dest)
+            return;
+
+        if (null != getter1 && null != setter1) {
+            setter1.accept(dest, getter1.apply(src));
+        }
+
+        if (null != getter2 && null != setter2) {
+            setter2.accept(dest, getter2.apply(src));
+        }
+
+        if (null != getter3 && null != setter3) {
+            setter3.accept(dest, getter3.apply(src));
+        }
+
+        if (null != getter4 && null != setter4) {
+            setter4.accept(dest, getter4.apply(src));
+        }
+
+        if (null != getter5 && null != setter5) {
+            setter5.accept(dest, getter5.apply(src));
+        }
+
+        if (null != getter6 && null != setter6) {
+            setter6.accept(dest, getter6.apply(src));
+        }
+
+        if (null != getter7 && null != setter7) {
+            setter7.accept(dest, getter7.apply(src));
+        }
+
+        if (null != getter8 && null != setter8) {
+            setter8.accept(dest, getter8.apply(src));
+        }
+    }
+
+    public static <T, V, P1, P2, P3, P4, P5, P6, P7, P8, P9>
+    void copyTo(T src, V dest,
+                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
+                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
+                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
+                Function<T, P4> getter4, BiConsumer<V, P4> setter4,
+                Function<T, P5> getter5, BiConsumer<V, P5> setter5,
+                Function<T, P6> getter6, BiConsumer<V, P6> setter6,
+                Function<T, P7> getter7, BiConsumer<V, P7> setter7,
+                Function<T, P8> getter8, BiConsumer<V, P8> setter8,
+                Function<T, P9> getter9, BiConsumer<V, P9> setter9
+    ) {
+        if (null == src || null == dest)
+            return;
+
+        if (null != getter1 && null != setter1) {
+            setter1.accept(dest, getter1.apply(src));
+        }
+
+        if (null != getter2 && null != setter2) {
+            setter2.accept(dest, getter2.apply(src));
+        }
+
+        if (null != getter3 && null != setter3) {
+            setter3.accept(dest, getter3.apply(src));
+        }
+
+        if (null != getter4 && null != setter4) {
+            setter4.accept(dest, getter4.apply(src));
+        }
+
+        if (null != getter5 && null != setter5) {
+            setter5.accept(dest, getter5.apply(src));
+        }
+
+        if (null != getter6 && null != setter6) {
+            setter6.accept(dest, getter6.apply(src));
+        }
+
+        if (null != getter7 && null != setter7) {
+            setter7.accept(dest, getter7.apply(src));
+        }
+
+        if (null != getter8 && null != setter8) {
+            setter8.accept(dest, getter8.apply(src));
+        }
+
+        if (null != getter9 && null != setter9) {
+            setter9.accept(dest, getter9.apply(src));
         }
     }
 }

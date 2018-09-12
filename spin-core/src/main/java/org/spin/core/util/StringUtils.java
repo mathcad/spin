@@ -1,7 +1,5 @@
 package org.spin.core.util;
 
-import org.spin.core.throwable.SimplifiedException;
-
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -3063,56 +3061,6 @@ public abstract class StringUtils {
     }
 
     /**
-     * 将字节数组解析为指定编码的字符串
-     *
-     * @param strContent 字符串数据
-     * @return 字符串
-     */
-    public static String toString(byte[] strContent, String charset) {
-        if (null == strContent) {
-            return null;
-        }
-        if (null == charset) {
-            throw new SimplifiedException("字符集编码不存在");
-        }
-        try {
-            return new String(strContent, charset);
-        } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException("不支持[" + charset + "]字符集编码", e);
-        }
-    }
-
-    /**
-     * 将字节数组解析为指定编码字符串
-     *
-     * @param strContent 字符串数据
-     * @param charset    字符集
-     * @return 字符串
-     */
-    public static String toString(byte[] strContent, Charset charset) {
-        if (null == strContent) {
-            return null;
-        }
-        if (null == charset) {
-            throw new SimplifiedException("字符集编码不存在");
-        }
-        return new String(strContent, charset);
-    }
-
-    /**
-     * 将字节数组解析为UTF-8字符串
-     *
-     * @param strContent 字符串数据
-     * @return UTF-8字符串
-     */
-    public static String toUtf8String(byte[] strContent) {
-        if (null == strContent) {
-            return null;
-        }
-        return new String(strContent, StandardCharsets.UTF_8);
-    }
-
-    /**
      * null安全的toString方法
      *
      * @param param 对象
@@ -3640,33 +3588,22 @@ public abstract class StringUtils {
     }
 
     /**
-     * Constructs a new <code>String</code> by decoding the specified array of bytes using the given charset.
+     * 将字节数组解析为指定编码的字符串
      *
-     * @param bytes   The bytes to be decoded into characters
-     * @param charset The {@link Charset} to encode the <code>String</code>
-     * @return A new <code>String</code> decoded from the specified array of bytes using the given charset,
-     * or <code>null</code> if the input byte array was <code>null</code>.
-     * @throws NullPointerException Thrown if {@link StandardCharsets#UTF_8} is not initialized, which should never happen since it is
-     *                              required by the Java platform specification.
+     * @param bytes   字符串数据
+     * @param charset 字符集
+     * @return 解析后的字符串
      */
     private static String newString(final byte[] bytes, final Charset charset) {
         return bytes == null ? null : new String(bytes, charset);
     }
 
     /**
-     * Constructs a new <code>String</code> by decoding the specified array of bytes using the given charset.
-     * <p>
-     * This method catches {@link UnsupportedEncodingException} and re-throws it as {@link IllegalStateException}, which
-     * should never happen for a required charset name. Use this method when the encoding is required to be in the JRE.
-     * </p>
+     * 将字节数组解析为指定编码的字符串
      *
-     * @param bytes       The bytes to be decoded into characters, may be <code>null</code>
-     * @param charsetName The name of a required {@link Charset}
-     * @return A new <code>String</code> decoded from the specified array of bytes using the given charset,
-     * or <code>null</code> if the input byte array was <code>null</code>.
-     * @throws IllegalStateException Thrown when a {@link UnsupportedEncodingException} is caught, which should never happen for a
-     *                               required charset name.
-     * @see String#String(byte[], String)
+     * @param bytes       字符串数据
+     * @param charsetName 字符集名称
+     * @return 解析后的字符串
      */
     public static String newString(final byte[] bytes, final String charsetName) {
         if (bytes == null) {
@@ -3680,84 +3617,60 @@ public abstract class StringUtils {
     }
 
     /**
-     * Constructs a new <code>String</code> by decoding the specified array of bytes using the ISO-8859-1 charset.
+     * 将字节数组解析为ISO-8859-1字符串
      *
-     * @param bytes The bytes to be decoded into characters, may be <code>null</code>
-     * @return A new <code>String</code> decoded from the specified array of bytes using the ISO-8859-1 charset, or
-     * <code>null</code> if the input byte array was <code>null</code>.
-     * @throws NullPointerException Thrown if {@link StandardCharsets#ISO_8859_1} is not initialized, which should never happen since it is
-     *                              required by the Java platform specification.
-     * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
+     * @param bytes 字符串数据
+     * @return ISO-8859-1字符串
      */
     public static String newStringLatin1(final byte[] bytes) {
         return new String(bytes, StandardCharsets.ISO_8859_1);
     }
 
     /**
-     * Constructs a new <code>String</code> by decoding the specified array of bytes using the US-ASCII charset.
+     * 将字节数组解析为ASCII字符串
      *
-     * @param bytes The bytes to be decoded into characters
-     * @return A new <code>String</code> decoded from the specified array of bytes using the US-ASCII charset,
-     * or <code>null</code> if the input byte array was <code>null</code>.
-     * @throws NullPointerException Thrown if {@link StandardCharsets#US_ASCII} is not initialized, which should never happen since it is
-     *                              required by the Java platform specification.
-     * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
+     * @param bytes 字符串数据
+     * @return ASCII字符串
      */
     public static String newStringUsAscii(final byte[] bytes) {
         return new String(bytes, StandardCharsets.US_ASCII);
     }
 
     /**
-     * Constructs a new <code>String</code> by decoding the specified array of bytes using the UTF-16 charset.
+     * 将字节数组解析为Utf-16字符串
      *
-     * @param bytes The bytes to be decoded into characters
-     * @return A new <code>String</code> decoded from the specified array of bytes using the UTF-16 charset
-     * or <code>null</code> if the input byte array was <code>null</code>.
-     * @throws NullPointerException Thrown if {@link StandardCharsets#UTF_16} is not initialized, which should never happen since it is
-     *                              required by the Java platform specification.
-     * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
+     * @param bytes 字符串数据
+     * @return Utf-16字符串
      */
     public static String newStringUtf16(final byte[] bytes) {
         return new String(bytes, StandardCharsets.UTF_16);
     }
 
     /**
-     * Constructs a new <code>String</code> by decoding the specified array of bytes using the UTF-16BE charset.
+     * 将字节数组解析为Utf-16BE字符串
      *
-     * @param bytes The bytes to be decoded into characters
-     * @return A new <code>String</code> decoded from the specified array of bytes using the UTF-16BE charset,
-     * or <code>null</code> if the input byte array was <code>null</code>.
-     * @throws NullPointerException Thrown if {@link StandardCharsets#UTF_16BE} is not initialized, which should never happen since it is
-     *                              required by the Java platform specification.
-     * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
+     * @param bytes 字符串数据
+     * @return Utf-16BE字符串
      */
     public static String newStringUtf16Be(final byte[] bytes) {
         return new String(bytes, StandardCharsets.UTF_16BE);
     }
 
     /**
-     * Constructs a new <code>String</code> by decoding the specified array of bytes using the UTF-16LE charset.
+     * 将字节数组解析为Utf-16LE字符串
      *
-     * @param bytes The bytes to be decoded into characters
-     * @return A new <code>String</code> decoded from the specified array of bytes using the UTF-16LE charset,
-     * or <code>null</code> if the input byte array was <code>null</code>.
-     * @throws NullPointerException Thrown if {@link StandardCharsets#UTF_16LE} is not initialized, which should never happen since it is
-     *                              required by the Java platform specification.
-     * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
+     * @param bytes 字符串数据
+     * @return Utf-16LE字符串
      */
     public static String newStringUtf16Le(final byte[] bytes) {
         return new String(bytes, StandardCharsets.UTF_16LE);
     }
 
     /**
-     * Constructs a new <code>String</code> by decoding the specified array of bytes using the UTF-8 charset.
+     * 将字节数组解析为Utf-8字符串
      *
-     * @param bytes The bytes to be decoded into characters
-     * @return A new <code>String</code> decoded from the specified array of bytes using the UTF-8 charset,
-     * or <code>null</code> if the input byte array was <code>null</code>.
-     * @throws NullPointerException Thrown if {@link StandardCharsets#UTF_8} is not initialized, which should never happen since it is
-     *                              required by the Java platform specification.
-     * @since As of 1.7, throws {@link NullPointerException} instead of UnsupportedEncodingException
+     * @param bytes 字符串数据
+     * @return Utf-8字符串
      */
     public static String newStringUtf8(final byte[] bytes) {
         return newString(bytes, StandardCharsets.UTF_8);

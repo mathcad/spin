@@ -17,23 +17,21 @@ import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.core.IEntity;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
-import javax.persistence.Transient;
 
 /**
  * 实体工具类
@@ -162,53 +160,6 @@ public abstract class EntityUtils {
         return ReflectionUtils.invokeMethod(getMethod, en);
     }
 
-    /**
-     * copy实体的属性到另一个实体中
-     *
-     * @param src    源实体
-     * @param dest   目标实体
-     * @param fields 字段名列表
-     */
-    public static void copyTo(Object src, Object dest, String... fields) {
-        if (null == src || null == dest || null == fields)
-            return;
-        for (String field : fields) {
-            Field f1 = ReflectionUtils.findField(src.getClass(), field);
-            Field f2 = ReflectionUtils.findField(dest.getClass(), field);
-            if (f1 == null)
-                throw new SimplifiedException(field + "不存在于" + src.getClass().getSimpleName());
-            if (f2 == null)
-                throw new SimplifiedException(field + "不存在于" + dest.getClass().getSimpleName());
-            ReflectionUtils.makeAccessible(f1);
-            ReflectionUtils.makeAccessible(f2);
-            Object o1 = ReflectionUtils.getField(f1, src);
-            ReflectionUtils.setField(f2, dest, o1);
-        }
-    }
-
-    /**
-     * copy实体的属性到另一个实体中
-     *
-     * @param src    源实体
-     * @param dest   目标实体
-     * @param fields 字段名列表
-     */
-    public static void copyTo(Object src, Object dest, Collection<String> fields) {
-        if (null == src || null == dest || null == fields)
-            return;
-        for (String field : fields) {
-            Field f1 = ReflectionUtils.findField(src.getClass(), field);
-            Field f2 = ReflectionUtils.findField(dest.getClass(), field);
-            if (f1 == null)
-                throw new SimplifiedException(field + "不存在于" + src.getClass().getSimpleName());
-            if (f2 == null)
-                throw new SimplifiedException(field + "不存在于" + dest.getClass().getSimpleName());
-            ReflectionUtils.makeAccessible(f1);
-            ReflectionUtils.makeAccessible(f2);
-            Object o1 = ReflectionUtils.getField(f1, src);
-            ReflectionUtils.setField(f2, dest, o1);
-        }
-    }
 
     /**
      * 复制实体
@@ -222,8 +173,7 @@ public abstract class EntityUtils {
             @SuppressWarnings("unchecked")
             Class<T> clazz = (Class<T>) src.getClass();
             T target = clazz.getConstructor().newInstance();
-            Set<String> fields = Arrays.stream(clazz.getFields()).map(Field::getName).collect(Collectors.toSet());
-            copyTo(src, target, fields);
+            BeanUtils.copyTo(src, target);
             return target;
         } catch (Exception e) {
             throw new CloneFailedException("对象复制失败", e);

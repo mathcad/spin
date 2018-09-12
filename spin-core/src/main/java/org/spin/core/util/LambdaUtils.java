@@ -58,7 +58,6 @@ public abstract class LambdaUtils {
                 try {
                     Method writeReplace = lambda.getClass().getDeclaredMethod("writeReplace");
                     ReflectionUtils.makeAccessible(writeReplace);
-                    writeReplace.setAccessible(true);
                     SerializedLambda lambdaInfo = (SerializedLambda) writeReplace.invoke(lambda);
                     FUNC_CACHE.put(clazz, new WeakReference<>(lambdaInfo));
                     return lambdaInfo;

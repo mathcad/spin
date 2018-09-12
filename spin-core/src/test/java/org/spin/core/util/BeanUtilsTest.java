@@ -46,4 +46,85 @@ class BeanUtilsTest {
         System.out.println(e - s);
         System.out.println(JsonUtils.toJson(stringObjectMap));
     }
+
+    @Test
+    public void testCopy() {
+        Ba a = new Ba();
+        a.setName("xxx");
+        a.setAddress("asdfasdfasdfasdf");
+        a.setAge(10);
+
+        Bb b = new Bb();
+//        BeanUtils.copyTo(a, b, Ba::getName, Ba::getName, Ba::getAge);
+
+
+        BeanUtils.copyTo(a, b, Ba::getName, Bb::setName, Ba::getAddress, Bb::setAddress);
+        assertEquals(b.name, "xxx");
+        assertEquals(b.address, "asdfasdfasdfasdf");
+        b = new Bb();
+        BeanUtils.copyTo(a, b);
+        assertEquals(b.name, "xxx");
+        assertEquals(b.address, "asdfasdfasdfasdf");
+
+    }
+
+    public static class Ba {
+        private String name;
+        private String address;
+        private int age;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
+        }
+
+        public int getAge() {
+            return age;
+        }
+
+        public void setAge(int age) {
+            this.age = age;
+        }
+    }
+
+    public static class Bb {
+        private String name;
+        private String address;
+        private int age;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
+        }
+
+        public int getAge() {
+            return age;
+        }
+
+        public void setAge(int age) {
+            this.age = age;
+        }
+    }
 }
