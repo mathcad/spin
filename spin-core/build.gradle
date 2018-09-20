@@ -1,5 +1,5 @@
 description = '核心模块'
-version = '2.1.11.RELEASE'
+version = '2.1.15.RELEASE'
 def artifactId = 'spin-core'
 
 apply plugin: 'org.junit.platform.gradle.plugin'

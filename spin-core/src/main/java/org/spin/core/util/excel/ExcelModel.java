@@ -1,4 +1,4 @@
-package org.spin.web.view;
+package org.spin.core.util.excel;
 
 import java.io.Serializable;
 

@@ -1,8 +1,9 @@
-package org.spin.web.view;
+package org.spin.core.util.excel;
 
 import java.io.Serializable;
 
 /**
+ * Excel表格中一列的定义
  * Created by xuweinan on 2017/2/7.
  *
  * @author xuweinan
