@@ -16,7 +16,7 @@ buildscript {
 }
 
 ext {
-    junitJupiterVersion = '5.2.0'
+    junitJupiterVersion = '5.3.1'
 }
 
 junitPlatform {

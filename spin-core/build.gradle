@@ -16,7 +16,7 @@ buildscript {
 }
 
 ext {
-    junitJupiterVersion = '5.2.0'
+    junitJupiterVersion = '5.3.1'
     slf4jVersion = '1.7.25'
     gsonVersion = '2.8.5'
     asmVersion = '6.2.1'
@@ -25,8 +25,8 @@ ext {
     commonsNetVersion = '3.6'
     pinyin4jVersion = '2.5.1'
     dom4jVersion = '1.6'
-    poiVersion = '3.17'
-    bouncyVersion = '1.59'
+    poiVersion = '4.0.0'
+    bouncyVersion = '1.60'
 }
 
 junitPlatform {
@@ -90,6 +90,7 @@ dependencies {
     compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
     compile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
     compile group: 'org.ow2.asm', name: 'asm', version: asmVersion
+//    compile group: 'com.google.guava', name: 'guava', version: '26.0-jre'
 
 //    compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
     compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion

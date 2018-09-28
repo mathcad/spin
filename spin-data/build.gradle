@@ -16,12 +16,12 @@ buildscript {
 }
 
 ext {
-    junitJupiterVersion = '5.2.0'
-    hibernateVersion = '5.3.5.Final'
+    junitJupiterVersion = '5.3.1'
+    hibernateVersion = '5.3.6.Final'
     freemarkerVersion = '2.3.28'
-    beetlVersion = '2.8.7'
-    springVersion = '5.0.8.RELEASE'
-    springDataRedisVersion = '2.0.9.RELEASE'
+    beetlVersion = '2.9.3'
+    springVersion = '5.1.0.RELEASE'
+    springDataRedisVersion = '2.1.0.RELEASE'
 }
 
 junitPlatform {

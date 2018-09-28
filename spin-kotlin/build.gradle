@@ -9,7 +9,7 @@ apply plugin: 'org.junit.platform.gradle.plugin'
 buildscript {
     ext {
         kotlinVersion = '1.2.61'
-        junitJupiterVersion = '5.2.0'
+        junitJupiterVersion = '5.3.1'
     }
     repositories {
         mavenLocal()

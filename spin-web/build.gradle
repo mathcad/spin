@@ -16,11 +16,11 @@ buildscript {
 }
 
 ext {
-    junitJupiterVersion = '5.2.0'
-    springVersion = '5.0.8.RELEASE'
+    junitJupiterVersion = '5.3.1'
+    springVersion = '5.1.0.RELEASE'
     itextpdfVersion = '5.5.13'
-    hibernateVersion = '5.3.5.Final'
-    poiVersion = '3.17'
+    hibernateVersion = '5.3.6.Final'
+    poiVersion = '4.0.0'
 }
 
 junitPlatform {

@@ -1,8 +1,8 @@
 buildscript {
     ext {
         kotlinVersion = '1.2.61'
-        springBootVersion = '2.0.4.RELEASE'
-        junitJupiterVersion = '5.2.0'
+        springBootVersion = '2.0.5.RELEASE'
+        junitJupiterVersion = '5.3.1'
     }
     repositories {
         mavenLocal()
@@ -22,7 +22,7 @@ buildscript {
 
 plugins {
     id "org.jetbrains.kotlin.plugin.spring" version "1.2.61"
-    id "org.springframework.boot" version "2.0.4.RELEASE"
+    id "org.springframework.boot" version "2.0.5.RELEASE"
 }
 
 allOpen {
@@ -74,7 +74,7 @@ dependencies {
 //    compile(group: 'org.hibernate', name: 'hibernate-core', version: '5.2.17.Final') {
 //        exclude(module: 'jboss-logging')
 //    }
-    compile group: 'com.alibaba', name: 'druid', version: '1.1.10'
+    compile group: 'com.alibaba', name: 'druid', version: '1.1.11'
 //    compile group: 'com.atomikos', name: 'transactions-hibernate4', version: '4.0.6'
     compile group: 'com.atomikos', name: 'transactions-jdbc', version: '4.0.6'
     compile group: 'com.atomikos', name: 'transactions', version: '4.0.6'
@@ -85,7 +85,7 @@ dependencies {
     compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.10.RELEASE'
     compile group: 'org.mathcat', name: 'spin-data', version: '2.1.11.RELEASE'
     compile group: 'org.mathcat', name: 'spin-wx', version: '2.1.10.RELEASE'
-    compile group: 'com.ibeetl', name: 'beetl', version: '2.8.7'
+    compile group: 'com.ibeetl', name: 'beetl', version: '2.9.3'
 
     compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
 }
