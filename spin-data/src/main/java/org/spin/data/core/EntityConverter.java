@@ -1,7 +1,7 @@
 package org.spin.data.core;
 
 /**
- * 实体解析器接口
+ * 实体转换器接口
  * <p>Created by xuweinan on 2016/9/24.</p>
  *
  * @author xuweinan

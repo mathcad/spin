@@ -3,16 +3,11 @@ package org.spin.core.base;
 import org.spin.core.Assert;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.DAYS;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.*;
 
 /**
  * An object that measures elapsed time in nanoseconds. It is useful to measure elapsed time using
@@ -67,6 +62,8 @@ public final class Stopwatch {
     private boolean isRunning;
     private long elapsedNanos;
     private long startTick;
+    private long[] records = new long[100];
+    private int recordLen = 0;
 
     /**
      * 使用{@link System#nanoTime}作为时间源创建(但不启动)一个秒表实例
@@ -151,6 +148,24 @@ public final class Stopwatch {
     }
 
     /**
+     * {@code Stopwatch}计次
+     *
+     * @return 当前{@code Stopwatch}实例
+     * @throws IllegalStateException 如果当前{@code Stopwatch}实例已经处于停止状态时抛出
+     */
+    public Stopwatch record() {
+        long tick = ticker.read();
+        Assert.isTrue(isRunning, "This stopwatch is topped.");
+        if (recordLen == records.length) {
+            long[] tmp = new long[recordLen + 100];
+            System.arraycopy(records, 0, tmp, 0, recordLen);
+            records = tmp;
+        }
+        records[recordLen++] = elapsedNanos + tick - startTick;
+        return this;
+    }
+
+    /**
      * 重置当前{@code Stopwatch}实例，停止计时并将相关计时器归零
      *
      * @return 当前{@code Stopwatch}实例
@@ -158,11 +173,31 @@ public final class Stopwatch {
     public Stopwatch reset() {
         elapsedNanos = 0;
         isRunning = false;
+        recordLen = 0;
+        Arrays.fill(records, 0);
         return this;
     }
 
     private long elapsedNanos() {
         return isRunning ? ticker.read() - startTick + elapsedNanos : elapsedNanos;
+    }
+
+    private long elapsedRecordNanos(int recordIndex) {
+        return records[Assert.inclusiveBetween(1, recordLen, recordIndex, "不存在序号为" + recordIndex + "的计次数据") - 1];
+    }
+
+    public long elapsedRecord(TimeUnit desiredUnit, int recordIndex) {
+        return desiredUnit.convert(elapsedRecordNanos(recordIndex), NANOSECONDS);
+    }
+
+    /**
+     * Returns the current elapsed time shown on this stopwatch as a {@link Duration}. Unlike {@link
+     * #elapsed(TimeUnit)}, this method does not lose any precision due to rounding.
+     *
+     * @since 22.0
+     */
+    public Duration elapsedRecord(int recordIndex) {
+        return Duration.ofNanos(elapsedRecordNanos(recordIndex));
     }
 
     /**

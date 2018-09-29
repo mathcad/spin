@@ -20,7 +20,7 @@ public interface IEntity<PK extends Serializable> extends Serializable {
     void setId(PK id);
 
     @SuppressWarnings("unchecked")
-    default <E extends IEntity<PK>> E ref(PK id) {
+    default <E extends IEntity<PK>> E withId(PK id) {
         this.setId(id);
         return (E) this;
     }

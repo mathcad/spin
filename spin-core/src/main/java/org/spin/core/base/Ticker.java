@@ -12,9 +12,6 @@ package org.spin.core.base;
  * source-compatible</a> since 9.0)
  */
 public abstract class Ticker {
-    /**
-     * Constructor for use by subclasses.
-     */
     protected Ticker() {
     }
 

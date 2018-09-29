@@ -53,25 +53,7 @@ public final class Uninterruptibles {
      * uninterruptibly.
      */
     public static boolean awaitUninterruptibly(CountDownLatch latch, long timeout, TimeUnit unit) {
-        boolean interrupted = false;
-        try {
-            long remainingNanos = unit.toNanos(timeout);
-            long end = System.nanoTime() + remainingNanos;
-
-            while (true) {
-                try {
-                    // CountDownLatch treats negative timeouts just like zero.
-                    return latch.await(remainingNanos, NANOSECONDS);
-                } catch (InterruptedException e) {
-                    interrupted = true;
-                    remainingNanos = end - System.nanoTime();
-                }
-            }
-        } finally {
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
-        }
+        return awaitUninterruptibly(latch::await, timeout, unit);
     }
 
     /**
@@ -81,24 +63,7 @@ public final class Uninterruptibles {
      * @since 23.6
      */
     public static boolean awaitUninterruptibly(Condition condition, long timeout, TimeUnit unit) {
-        boolean interrupted = false;
-        try {
-            long remainingNanos = unit.toNanos(timeout);
-            long end = System.nanoTime() + remainingNanos;
-
-            while (true) {
-                try {
-                    return condition.await(remainingNanos, NANOSECONDS);
-                } catch (InterruptedException e) {
-                    interrupted = true;
-                    remainingNanos = end - System.nanoTime();
-                }
-            }
-        } finally {
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
-        }
+        return awaitUninterruptibly(condition::await, timeout, unit);
     }
 
     /**
@@ -334,5 +299,31 @@ public final class Uninterruptibles {
     // TODO(user): Add support for waitUninterruptibly.
 
     private Uninterruptibles() {
+    }
+
+    private static boolean awaitUninterruptibly(Latch latch, long timeout, TimeUnit unit) {
+        boolean interrupted = false;
+        try {
+            long remainingNanos = unit.toNanos(timeout);
+            long end = System.nanoTime() + remainingNanos;
+
+            while (true) {
+                try {
+                    return latch.await(remainingNanos, NANOSECONDS);
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                    remainingNanos = end - System.nanoTime();
+                }
+            }
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    @FunctionalInterface
+    private interface Latch {
+        boolean await(long time, TimeUnit unit) throws InterruptedException;
     }
 }
