@@ -85,6 +85,7 @@ dependencies {
     testCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
     testRuntime group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
     testRuntime group: 'dom4j', name: 'dom4j', version: dom4jVersion
+    testRuntime group: 'com.belerweb', name: 'pinyin4j', version: pinyin4jVersion
 
 //    core
     compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion

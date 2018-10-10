@@ -2,12 +2,22 @@ package org.spin.core.util.excel;
 
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.DateFormatConverter;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
+import org.spin.core.function.serializable.ExceptionalSupplier;
 import org.spin.core.io.BytesCombinedInputStream;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
@@ -29,7 +39,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /**
  * Excel工具类(基于SaxReader与事件驱动，支持大文件)
@@ -160,7 +169,7 @@ public abstract class ExcelUtils {
      * @param excelModel           ExceModel
      * @param outputStreamSupplier 输出流提供者
      */
-    public static void generateWorkBook(FileType fileType, ExcelModel excelModel, Supplier<OutputStream> outputStreamSupplier) {
+    public static void generateWorkBook(FileType fileType, ExcelModel excelModel, ExceptionalSupplier<OutputStream, IOException> outputStreamSupplier) {
         try (Workbook workbook = generateWorkbook(fileType, excelModel); OutputStream outputStream = outputStreamSupplier.get()) {
             workbook.write(outputStream);
             outputStream.flush();

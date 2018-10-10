@@ -5,24 +5,34 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
+import net.sourceforge.pinyin4j.multipinyin.MultiPinyinConfig;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class PinyinUtils {
 
+    static {
+        MultiPinyinConfig.multiPinyinPath = "D:\\user.txt";
+    }
     private PinyinUtils() {
     }
 
     /**
-     * Description : 根据汉字获得此汉字的拼音
+     * 根据汉字获得此汉字的拼音
+     *
+     * @param chinese 中文字符串
+     * @return 拼音字符串
      */
     public static String getPinYin(String chinese) {
         return getPinYin(chinese, false);
     }
 
     /**
-     * Description : 根据汉字获得此汉字的拼音首字母
+     * 根据汉字获得此汉字的拼音首字母
+     *
+     * @param chinese 中文字符串
+     * @return 每个字的拼音首字母字符串
      */
     public static String getPinYinHeadChar(String chinese) {
         return getPinYin(chinese, true);
