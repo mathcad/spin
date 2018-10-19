@@ -1,5 +1,5 @@
 description = '微信模块'
-version = '2.1.11.RELEASE'
+version = '2.1.15.RELEASE'
 def artifactId = 'spin-wx'
 
 apply plugin: 'org.junit.platform.gradle.plugin'

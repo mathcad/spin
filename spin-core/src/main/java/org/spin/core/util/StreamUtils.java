@@ -1,5 +1,6 @@
 package org.spin.core.util;
 
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -15,6 +16,13 @@ import java.util.stream.StreamSupport;
  */
 public interface StreamUtils {
 
+    /**
+     * 将enumeration转换为流
+     *
+     * @param e   可枚举对象
+     * @param <T> 对象类型
+     * @return 流
+     */
     static <T> Stream<T> enumerationAsStream(Enumeration<T> e) {
         return StreamSupport.stream(
             new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED) {

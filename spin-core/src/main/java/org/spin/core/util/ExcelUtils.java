@@ -161,7 +161,7 @@ public abstract class ExcelUtils {
      */
     private static String getCellValue(Cell cell) {
         String result;
-        switch (cell.getCellTypeEnum()) {
+        switch (cell.getCellType()) {
             case STRING:
                 result = cell.getStringCellValue();
                 break;

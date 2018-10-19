@@ -17,9 +17,12 @@ import org.springframework.transaction.jta.JtaTransactionManager;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Bean后处理器
@@ -30,20 +33,38 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) {
-        Class<?> cls = bean.getClass();
+
+        // 处理JTA事务管理器
         if (bean instanceof JtaTransactionManager) {
             SpringJtaPlatformAdapter.setJtaTransactionManager((JtaTransactionManager) bean);
         }
-        Arrays.stream(cls.getInterfaces()).filter(i -> Objects.nonNull(i.getAnnotation(RestfulInterface.class))).findFirst().ifPresent(i -> {
-            RestfulInterface anno = i.getAnnotation(RestfulInterface.class);
-            final String module = StringUtils.isEmpty(anno.value()) ? beanName : anno.value();
-            ReflectionUtils.doWithMethods(i.getClass(), method -> processRestMethod(bean, module, method));
-        });
-        Optional.ofNullable(cls.getAnnotation(RestfulService.class)).ifPresent(anno -> {
-            final String module = StringUtils.isEmpty(anno.value()) ? beanName : anno.value();
-            ReflectionUtils.doWithMethods(bean.getClass(), method -> processRestMethod(bean, module, method));
-        });
+
+        // 处理Rest服务Bean
+        processRestService(bean, beanName);
+
         return bean;
+    }
+
+    /**
+     * 处理Rest服务Bean
+     *
+     * @param bean     bean对象
+     * @param beanName bean名称
+     */
+    private void processRestService(Object bean, String beanName) {
+        Class<?> beanClass = bean.getClass();
+
+        RestfulService annoService = Optional.ofNullable(beanClass.getAnnotation(RestfulService.class)).orElse(null);
+        if (null != annoService) {
+            String value = annoService.value();
+            ReflectionUtils.doWithMethods(beanClass, method -> processRestMethod(bean, StringUtils.isEmpty(value) ? beanName : value, method));
+        }
+
+        Arrays.stream(beanClass.getInterfaces()).filter(i -> Objects.nonNull(i.getAnnotation(RestfulInterface.class))).forEach(i -> {
+            RestfulInterface annotation = i.getAnnotation(RestfulInterface.class);
+            String value = annotation.value();
+            ReflectionUtils.doWithMethods(i, method -> processRestMethod(bean, StringUtils.isEmpty(value) ? beanName : value, method));
+        });
     }
 
     private void processRestMethod(final Object bean, final String module, final Method method) {

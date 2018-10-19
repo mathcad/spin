@@ -6,6 +6,7 @@ import org.spin.core.util.JsonUtils;
 import org.spin.data.cache.RedisCache;
 import org.spin.web.converter.JsonHttpMessageConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -38,6 +39,7 @@ import java.util.Collection;
 public class SpinAutoConfiguration {
 
     @Bean
+    @ConditionalOnClass(name = "org.springframework.data.redis.core.RedisTemplate")
     @ConditionalOnBean(RedisConnectionFactory.class)
     public RedisCache<?> redisCache(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();

@@ -1,13 +1,14 @@
 description 'spin-web的starter'
-version '2.1.11.RELEASE'
+version '2.1.15.RELEASE'
 def artifactId = 'spin-starter-restful'
 
 apply plugin: 'org.junit.platform.gradle.plugin'
 
 buildscript {
     ext {
-        springBootVersion = '2.0.5.RELEASE'
+        springBootVersion = '2.0.6.RELEASE'
         junitJupiterVersion = '5.3.1'
+        springDataRedisVersion = '2.1.1.RELEASE'
     }
     repositories {
         mavenLocal()
@@ -54,14 +55,16 @@ dependencies {
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 
-    compile group: 'org.mathcat', name: 'spin-web', version: '2.1.10.RELEASE'
-    compileOnly group: 'org.mathcat', name: 'spin-data', version: '2.1.10.RELEASE'
-    compileOnly group: 'org.mathcat', name: 'spin-wx', version: '2.1.10.RELEASE'
+    compile group: 'org.mathcat', name: 'spin-web', version: "$project.version"
+    compileOnly group: 'org.mathcat', name: 'spin-data', version: "$project.version"
+    compileOnly group: 'org.mathcat', name: 'spin-wx', version: "$project.version"
 
     compile group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springBootVersion
     compile group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
     compile group: 'org.glassfish', name: 'javax.annotation', version: '10.0-b28'
+
+    compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
     compileOnly group: 'com.atomikos', name: 'transactions-jdbc', version: '4.0.6'
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 }

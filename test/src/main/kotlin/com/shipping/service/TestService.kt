@@ -92,7 +92,7 @@ class TestService {
         DataSourceContext.switchSchema("dev_db2")
         println(DataSourceContext.getCurrentSchema())
         val u2 = User().apply {
-            realName = "mathcat"
+            realName = "spin"
             userName = "admin"
             password = "123"
             mobile = "13111112222"

@@ -20,8 +20,8 @@ ext {
     hibernateVersion = '5.3.6.Final'
     freemarkerVersion = '2.3.28'
     beetlVersion = '2.9.3'
-    springVersion = '5.1.0.RELEASE'
-    springDataRedisVersion = '2.1.0.RELEASE'
+    springVersion = '5.1.1.RELEASE'
+    springDataRedisVersion = '2.1.1.RELEASE'
 }
 
 junitPlatform {
@@ -63,10 +63,10 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-context', version: springVersion
     compile group: 'org.springframework', name: 'spring-orm', version: springVersion
     compile group: 'org.springframework', name: 'spring-oxm', version: springVersion
-    compile group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
     compile group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
     compile group: 'javax.transaction', name: 'javax.transaction-api', version: '1.2'
 
+    compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
     compileOnly group: 'org.freemarker', name: 'freemarker', version: freemarkerVersion
     compileOnly group: 'com.ibeetl', name: 'beetl', version: beetlVersion
 }

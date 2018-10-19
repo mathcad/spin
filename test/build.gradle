@@ -1,7 +1,7 @@
 buildscript {
     ext {
-        kotlinVersion = '1.2.61'
-        springBootVersion = '2.0.5.RELEASE'
+        kotlinVersion = '1.2.71'
+        springBootVersion = '2.0.6.RELEASE'
         junitJupiterVersion = '5.3.1'
     }
     repositories {
@@ -21,8 +21,8 @@ buildscript {
 }
 
 plugins {
-    id "org.jetbrains.kotlin.plugin.spring" version "1.2.61"
-    id "org.springframework.boot" version "2.0.5.RELEASE"
+    id "org.jetbrains.kotlin.plugin.spring" version "1.2.71"
+    id "org.springframework.boot" version "2.0.6.RELEASE"
 }
 
 allOpen {
@@ -82,9 +82,9 @@ dependencies {
 //    compile group: 'com.atomikos', name: 'transactions-api', version: '4.0.6'
 
 //    compile(project(":spin-starter-restful"))
-    compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.10.RELEASE'
-    compile group: 'org.mathcat', name: 'spin-data', version: '2.1.11.RELEASE'
-    compile group: 'org.mathcat', name: 'spin-wx', version: '2.1.10.RELEASE'
+    compile group: 'org.mathcat', name: 'spin-starter-restful', version: '2.1.15.RELEASE'
+    compile group: 'org.mathcat', name: 'spin-data', version: '2.1.15.RELEASE'
+    compile group: 'org.mathcat', name: 'spin-wx', version: '2.1.15.RELEASE'
     compile group: 'com.ibeetl', name: 'beetl', version: '2.9.3'
 
     compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'

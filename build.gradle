@@ -81,6 +81,11 @@ task cleanAll(group: 'build') doLast {
         print("delete build")
         println(f.deleteDir() ? " success" : "failure")
     }
+    f = file('out')
+    if (f.exists()) {
+        print("delete out")
+        println(f.deleteDir() ? " success" : "failure")
+    }
     allprojects.each { p ->
         f = file(p.name + "/out")
         if (f.exists()) {

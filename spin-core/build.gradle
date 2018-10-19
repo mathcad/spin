@@ -23,7 +23,6 @@ ext {
     httpclientVersion = '4.5.6'
     httpasyncclientVersion = '4.1.4'
     commonsNetVersion = '3.6'
-    pinyin4jVersion = '2.5.1'
     dom4jVersion = '1.6'
     poiVersion = '4.0.0'
     bouncyVersion = '1.60'
@@ -85,7 +84,6 @@ dependencies {
     testCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
     testRuntime group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
     testRuntime group: 'dom4j', name: 'dom4j', version: dom4jVersion
-    testRuntime group: 'com.belerweb', name: 'pinyin4j', version: pinyin4jVersion
 
 //    core
     compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
@@ -97,7 +95,6 @@ dependencies {
     compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
 
     compileOnly group: 'commons-net', name: 'commons-net', version: commonsNetVersion
-    compileOnly group: 'com.belerweb', name: 'pinyin4j', version: pinyin4jVersion
     compileOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
     compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')

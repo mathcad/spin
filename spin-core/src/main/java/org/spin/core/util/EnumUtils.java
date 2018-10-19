@@ -184,18 +184,18 @@ public abstract class EnumUtils {
     }
 
     /**
-     * 从Map中获取int类型的Value再转换为实体Enum
+     * 从Map中获取指定key的Value再转换为实体Enum
      *
      * @param enumCls 枚举类型
-     * @param map     包含int值的map
+     * @param map     map
      * @param key     键
      * @return 枚举常量
      */
     public static <E extends Enum<E>> Enum getByValue(Class<E> enumCls, Map<?, Object> map, String key) {
-        Integer v = MapUtils.getIntValue(map, key);
+        Object v = MapUtils.getObjectValue(map, key);
         if (null == v)
             return null;
-        return getEnum(enumCls, v);
+        return getEnum(enumCls, v, key);
     }
 
     /**

@@ -19,6 +19,8 @@ import org.spin.core.util.DateUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.ObjectUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.core.util.excel.ExcelGrid;
+import org.spin.core.util.excel.ExcelModel;
 import org.spin.data.core.IEntity;
 import org.spin.data.core.Page;
 import org.spin.data.query.QueryParam;
@@ -27,8 +29,6 @@ import org.spin.web.RestfulResponse;
 import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.Payload;
 import org.spin.web.annotation.RestfulMethod;
-import org.spin.web.view.ExcelGrid;
-import org.spin.web.view.ExcelModel;
 import org.spin.web.view.ModelExcelView;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -159,7 +159,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
             } else {
                 return addCodeAndMsg(mv, -1, "请求的服务未返回数据列表，不能导出");
             }
-            ModelExcelView mev = new ModelExcelView(g, excelData);
+            ModelExcelView mev = new ModelExcelView(new ExcelModel(g, excelData));
             mv.setView(mev);
             return mv;
         }
