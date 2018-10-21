@@ -20,6 +20,6 @@ class MapUtilsTest {
     public void testMapBuild() {
         HashMap<String, String> a = MapUtils.with(HashMap<String, String>::new).ofMap("a", "1");
         System.out.println(a);
-        assertTrue(a.containsKey(a));
+        assertTrue(a.containsKey("a"));
     }
 }

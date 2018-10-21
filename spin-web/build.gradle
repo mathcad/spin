@@ -1,19 +1,10 @@
-description = '基于spring mvc的web模块'
-version = '2.1.15.RELEASE'
-def artifactId = 'spin-web'
-
-apply plugin: 'org.junit.platform.gradle.plugin'
-
-buildscript {
-    repositories {
-        mavenLocal()
-        maven { url = 'http://maven.aliyun.com/nexus/content/groups/public/' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.2.0'
-    }
+plugins {
+    id 'java-library'
 }
+
+description = '基于spring mvc的web模块'
+version = '2.1.16.RELEASE'
+def artifactId = 'spin-web'
 
 ext {
     junitJupiterVersion = '5.3.1'
@@ -22,8 +13,8 @@ ext {
     hibernateVersion = '5.3.6.Final'
 }
 
-junitPlatform {
-    logManager = 'java.util.logging.LogManager'
+test {
+    useJUnitPlatform()
 }
 
 install {
@@ -48,20 +39,19 @@ uploadArchives {
 }
 
 dependencies {
-    testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
-//    testCompile group: 'org.springframework', name: 'spring-test', version: springVersion
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
 
 //    web
-    compile group: 'org.mathcat', name: 'spin-core', version: "$project.version"
-    compileOnly group: 'org.mathcat', name: 'spin-data', version: "$project.version"
+    api group: 'org.mathcat', name: 'spin-core', version: "$project.version"
+    implementation group: 'org.mathcat', name: 'spin-data', version: "$project.version"
 
-    compile group: 'org.springframework', name: 'spring-context-support', version: springVersion
-    compile group: 'org.springframework', name: 'spring-webmvc', version: springVersion
-    compile group: 'org.springframework', name: 'spring-aspects', version: springVersion
+    api group: 'org.springframework', name: 'spring-context-support', version: springVersion
+    api group: 'org.springframework', name: 'spring-webmvc', version: springVersion
+    api group: 'org.springframework', name: 'spring-aspects', version: springVersion
 
-    compileOnly group: 'com.itextpdf', name: 'itextpdf', version: itextpdfVersion
-    compileOnly group: 'org.springframework', name: 'spring-orm', version: springVersion
-    compileOnly group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
-    compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+    implementation group: 'com.itextpdf', name: 'itextpdf', version: itextpdfVersion
+    implementation group: 'org.springframework', name: 'spring-orm', version: springVersion
+    implementation group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
+    implementation group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 }

@@ -93,7 +93,7 @@ public class ExcelXlsReader implements ExcelReader, HSSFListener {
      */
     @Override
     public void processRecord(Record record) {
-        String value = null;
+        String value;
         switch (record.getSid()) {
             case ColumnInfoRecord.sid:
                 int colNum = ((ColumnInfoRecord) record).getLastColumn() + 1;

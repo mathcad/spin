@@ -1,19 +1,10 @@
-description = '核心模块'
-version = '2.1.15.RELEASE'
-def artifactId = 'spin-core'
-
-apply plugin: 'org.junit.platform.gradle.plugin'
-
-buildscript {
-    repositories {
-        mavenLocal()
-        maven { url = 'http://maven.aliyun.com/nexus/content/groups/public/' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.2.0'
-    }
+plugins {
+    id 'java-library'
 }
+
+description = '核心模块'
+version = '2.1.16.RELEASE'
+def artifactId = 'spin-core'
 
 ext {
     junitJupiterVersion = '5.3.1'
@@ -28,30 +19,9 @@ ext {
     bouncyVersion = '1.60'
 }
 
-junitPlatform {
-    // platformVersion '1.0.1'
-//    filters {
-//        engines {
-//            // include 'junit-jupiter', 'junit-vintage'
-//            // exclude 'custom-engine'
-//        }
-//        tags {
-//            // include 'fast'
-//            exclude 'slow'
-//        }
-//        // includeClassNamePattern '.*Test'
-//    }
-    // enableStandardTestTask true
-    // reportsDir file('build/test-results/junit-platform') // this is the default
-    logManager = 'java.util.logging.LogManager'
+test {
+    useJUnitPlatform()
 }
-
-// 关闭java8 javadoc检查
-//if (JavaVersion.current().isJava8Compatible()) {
-//    tasks.withType(Javadoc) {
-//        options.addStringOption('Xdoclint:none', '-quiet')
-//    }
-//}
 
 install {
     repositories.mavenInstaller {
@@ -75,30 +45,30 @@ uploadArchives {
 }
 
 dependencies {
-    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
-    testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
-    testRuntime group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
-    testRuntime(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
+
+    testRuntimeOnly group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
+    testRuntimeOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
-    testCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
-    testRuntime group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
-    testRuntime group: 'dom4j', name: 'dom4j', version: dom4jVersion
+    testImplementation group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
+    testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
 
 //    core
-    compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
-    compile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
-    compile group: 'org.ow2.asm', name: 'asm', version: asmVersion
+    api group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    api group: 'com.google.code.gson', name: 'gson', version: gsonVersion
+    api group: 'org.ow2.asm', name: 'asm', version: asmVersion
 //    compile group: 'com.google.guava', name: 'guava', version: '26.0-jre'
 
 //    compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
-    compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
+    implementation group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
 
-    compileOnly group: 'commons-net', name: 'commons-net', version: commonsNetVersion
-    compileOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
-    compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
+    implementation group: 'commons-net', name: 'commons-net', version: commonsNetVersion
+    implementation group: 'dom4j', name: 'dom4j', version: dom4jVersion
+    implementation(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
-    compileOnly group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
-    compileOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
+    implementation group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
+    implementation group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
 }

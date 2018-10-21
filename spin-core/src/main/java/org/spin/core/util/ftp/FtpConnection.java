@@ -49,7 +49,7 @@ public class FtpConnection implements AutoCloseable {
     private String userName;
     private String password;
     private String host;
-    private int port = 21;
+    private int port;
 
     private Charset serverCharset = Charset.forName("GBK");
 
@@ -199,13 +199,11 @@ public class FtpConnection implements AutoCloseable {
         dirs.add(remotePath);
         String path;
         FTPFile[] ftpFiles;
-        FTPFile f;
         while (!dirs.isEmpty()) {
             path = dirs.poll();
             try {
                 ftpFiles = client.listFiles(path, filter);
-                for (int i = 0; i < ftpFiles.length; i++) {
-                    f = ftpFiles[i];
+                for (FTPFile f : ftpFiles) {
                     if (!".".equals(f.getName()) && "..".equals(f.getName())) {
                         if (f.isDirectory()) {
                             dirs.add(path + "/" + f.getName());

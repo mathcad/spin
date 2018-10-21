@@ -1,26 +1,17 @@
-description = '微信模块'
-version = '2.1.15.RELEASE'
-def artifactId = 'spin-wx'
-
-apply plugin: 'org.junit.platform.gradle.plugin'
-
-buildscript {
-    repositories {
-        mavenLocal()
-        maven { url = 'http://maven.aliyun.com/nexus/content/groups/public/' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.2.0'
-    }
+plugins {
+    id 'java-library'
 }
+
+description = '微信模块'
+version = '2.1.16.RELEASE'
+def artifactId = 'spin-wx'
 
 ext {
     junitJupiterVersion = '5.3.1'
 }
 
-junitPlatform {
-    logManager = 'java.util.logging.LogManager'
+test {
+    useJUnitPlatform()
 }
 
 install {
@@ -45,8 +36,8 @@ uploadArchives {
 }
 
 dependencies {
-    testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
 
-    compile group: 'org.mathcat', name: 'spin-core', version: "$project.version"
+    api group: 'org.mathcat', name: 'spin-core', version: "$project.version"
 }

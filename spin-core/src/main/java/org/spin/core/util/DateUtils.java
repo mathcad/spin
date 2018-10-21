@@ -711,41 +711,46 @@ public abstract class DateUtils {
     public static String prettyDuration(Date start, Date end) {
         Assert.notNull(start);
         Assert.notNull(end);
-        long duration = (end.getTime() - start.getTime()) / 1000L;
-        boolean backward = duration < 0;
+        long duration = end.getTime() - start.getTime();
+        return prettyDuration(duration);
+    }
+
+    public static String prettyDuration(long durationMillis) {
+        long seconds = durationMillis / 1000;
+        boolean backward = seconds < 0;
         String suffix = backward ? "后" : "前";
-        duration = Math.abs(duration);
-        if (duration < 5) {
+        seconds = Math.abs(seconds);
+        if (seconds < 5) {
             return backward ? "即将" : "刚刚";
         }
-        if (duration < 60) {
-            return duration + "秒" + suffix;
+        if (seconds < 60) {
+            return seconds + "秒" + suffix;
         }
-        duration /= 60;
-        if (duration < 29) {
-            return duration + "分钟" + suffix;
+        seconds /= 60;
+        if (seconds < 29) {
+            return seconds + "分钟" + suffix;
         }
-        if (duration < 31) {
+        if (seconds < 31) {
             return "半小时" + suffix;
         }
-        if (duration < 60) {
-            return duration + "分钟" + suffix;
+        if (seconds < 60) {
+            return seconds + "分钟" + suffix;
         }
-        long m = duration % 60;
-        duration /= 60;
-        if (duration < 24) {
-            return (28 < m && m < 32 && duration < 10 ? duration + "个半小时" : duration + "小时" + m + "分钟") + suffix;
+        long m = seconds % 60;
+        seconds /= 60;
+        if (seconds < 24) {
+            return (28 < m && m < 32 && seconds < 10 ? seconds + "个半小时" : seconds + "小时" + m + "分钟") + suffix;
         }
-        duration /= 24;
-        if (duration < 30) {
-            if (duration % 7 == 0) {
-                return duration / 7 + "周" + suffix;
+        seconds /= 24;
+        if (seconds < 30) {
+            if (seconds % 7 == 0) {
+                return seconds / 7 + "周" + suffix;
             }
-            return duration + "天" + suffix;
+            return seconds + "天" + suffix;
         }
-        if (duration < 365) {
-            return duration / 30 + "月" + suffix;
+        if (seconds < 365) {
+            return seconds / 30 + "月" + suffix;
         }
-        return duration / 365 + "年" + suffix;
+        return seconds / 365 + "年" + suffix;
     }
 }
