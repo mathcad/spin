@@ -52,7 +52,8 @@ public class ErrorCode implements Serializable {
     public static final ErrorCode TOKEN_INVALID = new ErrorCode(602, "无效的Token");
     public static final ErrorCode SECRET_EXPIRED = new ErrorCode(651, "密钥已过期");
     public static final ErrorCode SECRET_INVALID = new ErrorCode(653, "无效的密钥");
-    public static final ErrorCode SESSION_INVALID = new ErrorCode(700, "会话已失效");
+    public static final ErrorCode SESSION_INVALID = new ErrorCode(700, "会话已经失效");
+    public static final ErrorCode SESSION_EXPIRED = new ErrorCode(702, "会话已经过期");
 
     private final int code;
     private final String desc;

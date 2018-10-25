@@ -59,6 +59,9 @@ dependencies {
     api group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
     api group: 'com.google.code.gson', name: 'gson', version: gsonVersion
     api group: 'org.ow2.asm', name: 'asm', version: asmVersion
+    // https://mvnrepository.com/artifact/org.apache.shiro/shiro-core
+    api group: 'org.apache.shiro', name: 'shiro-core', version: '1.4.0'
+
 //    compile group: 'com.google.guava', name: 'guava', version: '26.0-jre'
 
 //    compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion

@@ -264,6 +264,30 @@ public abstract class DateUtils {
     }
 
     /**
+     * 增加毫秒
+     *
+     * @param date   日期
+     * @param millis 毫秒数
+     * @param <T>    日期类型参数
+     * @return 结果时间
+     */
+    public static <T extends Temporal> T addMillis(T date, long millis) {
+        //noinspection unchecked
+        return null == date ? null : (T) date.plus(millis, ChronoUnit.MILLIS);
+    }
+
+    /**
+     * 增加毫秒
+     *
+     * @param date   日期
+     * @param millis 毫秒数
+     * @return 结果时间
+     */
+    public static Date addMillis(Date date, int millis) {
+        return null == date ? null : new Date(date.getTime() + millis);
+    }
+
+    /**
      * 增加秒
      *
      * @param date    日期
@@ -683,7 +707,7 @@ public abstract class DateUtils {
      * @return 是否过期
      */
     public static boolean isTimeOut(LocalDateTime time, Long expiredIn) {
-        return LocalDateTime.now().compareTo(time.plus(expiredIn, ChronoUnit.MILLIS)) > 0;
+        return LocalDateTime.now().isAfter(time.plus(expiredIn, ChronoUnit.MILLIS));
     }
 
     /**

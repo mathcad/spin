@@ -8,10 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 全局Session管理器
@@ -65,12 +63,12 @@ public abstract class SessionManager {
         if (Objects.isNull(sessId)) {
             return null;
         }
-        Session session = ALL_SESSIONS.get(sessId);
+        Session session = sessionDao.get(sessId);
         if (Objects.isNull(session) && requiredNew) {
             SimpleSession s = new SimpleSession();
-            s.setId(SESSION_ID_CONTAINER.get());
+            s.setId(sessId);
 //            s.setAttribute(USER_SESSION_KEY, sessionUserContainer.get());
-            ALL_SESSIONS.put(sessId, s);
+            sessionDao.save(s);
             session = s;
         }
         return session;
@@ -107,6 +105,7 @@ public abstract class SessionManager {
         Session sess = getCurrentSession();
         Assert.notNull(sess, "未能获取Session");
         sess.setAttribute(key, value);
+        sessionDao.save(sess);
     }
 
     /**
@@ -121,6 +120,7 @@ public abstract class SessionManager {
             return null;
         Object r = sess.getAttribute(key);
         sess.removeAttribute(key);
+        sessionDao.save(sess);
         return r;
     }
 
@@ -132,6 +132,7 @@ public abstract class SessionManager {
         if (sess != null && sess.getAttributeKeys() != null) {
             sess.getAttributeKeys().forEach(sess::removeAttribute);
         }
+        sessionDao.save(sess);
     }
 
     /**
@@ -144,6 +145,7 @@ public abstract class SessionManager {
         List<String> a = attr == null ? new ArrayList<>() : Arrays.asList(attr);
         Optional.ofNullable(sess).filter(s -> s.getAttributeKeys() != null)
             .ifPresent(s -> s.getAttributeKeys().stream().filter(k -> !a.contains(k.toString())).forEach(s::removeAttribute));
+        sessionDao.save(sess);
     }
 
     /**
@@ -156,6 +158,7 @@ public abstract class SessionManager {
         if (Objects.nonNull(sess)) {
             sessionUser.setSessionId(getCurrentSessionId());
             sess.setAttribute(USER_SESSION_KEY, sessionUser);
+            sessionDao.save(sess);
         }
     }
 
@@ -164,13 +167,14 @@ public abstract class SessionManager {
      */
     public static void logout() {
         if (Objects.nonNull(SESSION_ID_CONTAINER.get())) {
-            ALL_SESSIONS.remove(SESSION_ID_CONTAINER.get());
+            sessionDao.delete(SESSION_ID_CONTAINER.get());
             SESSION_ID_CONTAINER.set(null);
         }
     }
 
     public static void setSessionUser(Session session, SessionUser sessionUser) {
         session.setAttribute(USER_SESSION_KEY, sessionUser);
+        sessionDao.save(session);
     }
 
     public static String getCurrentSessionId() {
@@ -188,10 +192,11 @@ public abstract class SessionManager {
      * @param newSessionId 新SessionId
      */
     public static void extendSession(String oldSessionId, String newSessionId) {
-        Session session = ALL_SESSIONS.get(oldSessionId);
+        Session session = sessionDao.get(oldSessionId);
         if (Objects.nonNull(session)) {
-            ALL_SESSIONS.put(newSessionId, session);
-            ALL_SESSIONS.remove(oldSessionId);
+            session.setId(newSessionId);
+            sessionDao.save(session);
+            sessionDao.delete(oldSessionId);
         }
         setCurrentSessionId(newSessionId);
         SessionUser user = getCurrentUser();
@@ -207,7 +212,7 @@ public abstract class SessionManager {
      * @return session是否存在
      */
     public static boolean containsSession(String sessionId) {
-        return ALL_SESSIONS.containsKey(sessionId);
+        return sessionDao.contains(sessionId);
     }
 
     /**
@@ -216,7 +221,7 @@ public abstract class SessionManager {
      * @param sessionId session id
      */
     public static void removeSession(String sessionId) {
-        ALL_SESSIONS.remove(sessionId);
+        sessionDao.delete(sessionId);
     }
 
     /**
@@ -225,7 +230,7 @@ public abstract class SessionManager {
      * @param sessionIds session id集合
      */
     public static void removeSessions(Collection<String> sessionIds) {
-        sessionIds.forEach(ALL_SESSIONS::remove);
+        sessionIds.forEach(sessionDao::delete);
     }
 }
 

@@ -33,6 +33,14 @@ public interface SessionDao {
     void delete(Serializable sessionId);
 
     /**
+     * 判断指定ID的session是否存在
+     *
+     * @param sessionId id
+     * @return 是否存在
+     */
+    boolean contains(Serializable sessionId);
+
+    /**
      * 返回当前有效的session数量
      *
      * @return 存活的session数量

@@ -20,11 +20,15 @@ package org.spin.core.session;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.ErrorCode;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.DateUtils;
 import org.spin.core.util.MapUtils;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.text.DateFormat;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,7 +42,7 @@ public class SimpleSession implements Session, Serializable {
 
     private static final long serialVersionUID = -7125642695178165650L;
 
-    private transient static final Logger log = LoggerFactory.getLogger(SimpleSession.class);
+    private transient static final Logger logger = LoggerFactory.getLogger(SimpleSession.class);
 
     protected static final long MILLIS_PER_SECOND = 1000;
     protected static final long MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND;
@@ -78,7 +82,7 @@ public class SimpleSession implements Session, Serializable {
     private transient LocalDateTime lastAccessTime;
     private transient boolean expired;
     private transient String host;
-    private transient Map<Object, Object> attributes;
+    private transient Map<Serializable, Serializable> attributes;
 
     public SimpleSession() {
         this.startTimestamp = LocalDateTime.now();
@@ -159,11 +163,11 @@ public class SimpleSession implements Session, Serializable {
         this.host = host;
     }
 
-    public Map<Object, Object> getAttributes() {
+    public Map<Serializable, Serializable> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(Map<Object, Object> attributes) {
+    public void setAttributes(Map<Serializable, Serializable> attributes) {
         this.attributes = attributes;
     }
 
@@ -171,6 +175,7 @@ public class SimpleSession implements Session, Serializable {
         this.lastAccessTime = LocalDateTime.now();
     }
 
+    @Override
     public void stop() {
         if (this.stopTimestamp == null) {
             this.stopTimestamp = LocalDateTime.now();
@@ -186,8 +191,8 @@ public class SimpleSession implements Session, Serializable {
         this.expired = true;
     }
 
-    private Map<Object, Object> getAttributesLazy() {
-        Map<Object, Object> attributes = getAttributes();
+    private Map<Serializable, Serializable> getAttributesLazy() {
+        Map<Serializable, Serializable> attributes = getAttributes();
         if (attributes == null) {
             attributes = new HashMap<>();
             setAttributes(attributes);
@@ -195,23 +200,23 @@ public class SimpleSession implements Session, Serializable {
         return attributes;
     }
 
-    public Collection<Object> getAttributeKeys() {
-        Map<Object, Object> attributes = getAttributes();
+    public Collection<Serializable> getAttributeKeys() {
+        Map<Serializable, Serializable> attributes = getAttributes();
         if (attributes == null) {
             return Collections.emptySet();
         }
         return attributes.keySet();
     }
 
-    public Object getAttribute(Object key) {
-        Map<Object, Object> attributes = getAttributes();
+    public Serializable getAttribute(Serializable key) {
+        Map<Serializable, Serializable> attributes = getAttributes();
         if (attributes == null) {
             return null;
         }
         return attributes.get(key);
     }
 
-    public void setAttribute(Object key, Object value) {
+    public void setAttribute(Serializable key, Serializable value) {
         if (value == null) {
             removeAttribute(key);
         } else {
@@ -219,8 +224,8 @@ public class SimpleSession implements Session, Serializable {
         }
     }
 
-    public Object removeAttribute(Object key) {
-        Map<Object, Object> attributes = getAttributes();
+    public Serializable removeAttribute(Serializable key) {
+        Map<Serializable, Serializable> attributes = getAttributes();
         if (attributes == null) {
             return null;
         } else {
@@ -230,12 +235,78 @@ public class SimpleSession implements Session, Serializable {
 
     @Override
     public boolean isValid() {
-        return true;
+        return !isStopped() && !isTimedOut();
+    }
+
+    public boolean isExpired() {
+        return expired;
     }
 
     @Override
     public void validate() {
-        // do nothing
+        //check for stopped:
+        if (isStopped()) {
+            //timestamp is set, so the session is considered stopped:
+            if (logger.isTraceEnabled()) {
+                String msg = "Session with id [" + getId() + "] has been " +
+                    "explicitly stopped.  No further interaction under this session is " +
+                    "allowed.";
+                logger.trace(msg);
+            }
+            throw new SimplifiedException(ErrorCode.SESSION_INVALID, "Id 为[" + getId() + "] 的Session已经被强制终止");
+        }
+
+        //check for expiration
+        if (isTimedOut()) {
+            expire();
+            Serializable sessionId = getId();
+            if (logger.isTraceEnabled()) {
+                LocalDateTime lastAccessTime = getLastAccessTime();
+                long timeout = getTimeout();
+
+
+                DateFormat df = DateFormat.getInstance();
+                String msg = "Session with id [" + sessionId + "] has expired. " +
+                    "Last access time: " + df.format(lastAccessTime) +
+                    ".  Current time: " + df.format(LocalDateTime.now()) +
+                    ".  Session timeout is set to " + timeout / MILLIS_PER_SECOND + " seconds (" +
+                    timeout / MILLIS_PER_MINUTE + " minutes)";
+                logger.trace(msg);
+            }
+            throw new SimplifiedException(ErrorCode.SESSION_EXPIRED, "Id 为[" + sessionId + "] 的Session已经过期");
+        }
+    }
+
+    protected boolean isTimedOut() {
+
+        if (isExpired()) {
+            return true;
+        }
+
+        long timeout = getTimeout();
+
+        if (timeout >= 0L) {
+
+            LocalDateTime lastAccessTime = getLastAccessTime();
+
+            if (lastAccessTime == null) {
+                String msg = "session.lastAccessTime for session with id [" +
+                    getId() + "] is null.  This value must be set at " +
+                    "least once, preferably at least upon instantiation.  Please check the " +
+                    getClass().getName() + " implementation and ensure " +
+                    "this value will be set (perhaps in the constructor?)";
+                throw new IllegalStateException(msg);
+            }
+
+            return DateUtils.isTimeOut(lastAccessTime, timeout);
+        } else {
+            if (logger.isTraceEnabled()) {
+                logger.trace("No timeout for session with id [" + getId() +
+                    "].  Session is not considered expired.");
+            }
+        }
+
+        return false;
     }
 
     /**
