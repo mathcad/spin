@@ -25,43 +25,50 @@ public abstract class SessionManager {
     /**
      * 当前线程SessionId
      */
-    private static final ThreadLocal<String> sessionIdContainer = new ThreadLocal<>();
+    private static final ThreadLocal<String> SESSION_ID_CONTAINER = new ThreadLocal<>();
 
-    /**
-     * Session容器
-     */
-    private static final Map<String, Session> ALL_SESSIONS = new ConcurrentHashMap<>();
+    private static SessionDao sessionDao;
 
     public static final String USER_SESSION_KEY = "user_session";
 
     private SessionManager() {
     }
 
+    /**
+     * 获取当前线程绑定的用户Session，如果不存在，返回null
+     *
+     * @return 当前线程上的Session
+     */
     public static Session getCurrentSession() {
-        String sessId = sessionIdContainer.get();
+        String sessId = SESSION_ID_CONTAINER.get();
         if (Objects.isNull(sessId)) {
             return null;
         }
-        Session session = ALL_SESSIONS.get(sessId);
+        Session session = sessionDao.get(sessId);
         if (Objects.isNull(session)) {
             SimpleSession s = new SimpleSession();
-            s.setId(sessionIdContainer.get());
+            s.setId(sessId);
 //            s.setAttribute(USER_SESSION_KEY, sessionUserContainer.get());
-            ALL_SESSIONS.put(sessId, s);
+            sessionDao.save(s);
             session = s;
         }
         return session;
     }
 
+    /**
+     * 获取当前线程绑定的用户Session，如果不存在，返回null
+     *
+     * @return 当前线程上的Session
+     */
     public static Session getCurrentSession(boolean requiredNew) {
-        String sessId = sessionIdContainer.get();
+        String sessId = SESSION_ID_CONTAINER.get();
         if (Objects.isNull(sessId)) {
             return null;
         }
         Session session = ALL_SESSIONS.get(sessId);
         if (Objects.isNull(session) && requiredNew) {
             SimpleSession s = new SimpleSession();
-            s.setId(sessionIdContainer.get());
+            s.setId(SESSION_ID_CONTAINER.get());
 //            s.setAttribute(USER_SESSION_KEY, sessionUserContainer.get());
             ALL_SESSIONS.put(sessId, s);
             session = s;
@@ -156,9 +163,9 @@ public abstract class SessionManager {
      * 登出session
      */
     public static void logout() {
-        if (Objects.nonNull(sessionIdContainer.get())) {
-            ALL_SESSIONS.remove(sessionIdContainer.get());
-            sessionIdContainer.set(null);
+        if (Objects.nonNull(SESSION_ID_CONTAINER.get())) {
+            ALL_SESSIONS.remove(SESSION_ID_CONTAINER.get());
+            SESSION_ID_CONTAINER.set(null);
         }
     }
 
@@ -167,11 +174,11 @@ public abstract class SessionManager {
     }
 
     public static String getCurrentSessionId() {
-        return sessionIdContainer.get();
+        return SESSION_ID_CONTAINER.get();
     }
 
     public static void setCurrentSessionId(String sessionId) {
-        sessionIdContainer.set(sessionId);
+        SESSION_ID_CONTAINER.set(sessionId);
     }
 
     /**

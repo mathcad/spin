@@ -3,12 +3,11 @@ package com.shipping.service
 import com.shipping.domain.enums.OrganizationTypeE
 import com.shipping.domain.sys.Function
 import mu.KLogging
-import org.slf4j.LoggerFactory
 import org.spin.data.extend.RepositoryContext
+import org.spin.data.rs.MapRowMapper
 import org.spin.web.annotation.RestfulMethod
 import org.spin.web.annotation.RestfulService
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.*
 import javax.transaction.Transactional
 
 /**
@@ -31,8 +30,10 @@ class FunctionService {
             OrganizationTypeE.GROUP
             repoCtx.get(Function::class.java, func.parent!!.id)
             repoCtx.save(func, true)
-            repoCtx.doReturningWork("SELECT * FROM sys_function") {
+            val list: List<Map<String, Any?>> = repoCtx.doReturningWork("SELECT * FROM sys_function") {
+                MapRowMapper().extractData(it)
             }
+            list
         }
     }
 }

@@ -34,12 +34,7 @@ class FileService {
     @Transactional
     fun saveFiles(uploadResults: Collection<FileOperator.UploadResult>): List<File> =
         uploadResults.map {
-            File(guid = UUID.randomUUID().toString(),
-                originName = it.originName,
-                fileName = it.storeName.substring(it.storeName.lastIndexOf('/') + 1),
-                filePath = it.storeName,
-                extension = it.extention,
-                size = it.size)
+           saveFile(it)
         }
 
 }
