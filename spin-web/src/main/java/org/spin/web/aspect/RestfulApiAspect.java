@@ -8,12 +8,12 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
-import org.spin.core.session.SessionUser;
 import org.spin.core.SpinContext;
 import org.spin.core.auth.Authenticator;
+import org.spin.core.session.SessionManager;
+import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.StringUtils;
-import org.spin.core.session.SessionManager;
 import org.spin.web.RestfulResponse;
 import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.RestfulApi;
@@ -38,8 +38,15 @@ import java.util.List;
 public class RestfulApiAspect implements Ordered {
     private static final Logger logger = LoggerFactory.getLogger(RestfulApiAspect.class);
 
+    /**
+     * 用户身份验证器
+     */
+    private final Authenticator authenticator;
+
     @Autowired(required = false)
-    private Authenticator authenticator;
+    public RestfulApiAspect(Authenticator authenticator) {
+        this.authenticator = authenticator;
+    }
 
     @Pointcut("execution(org.spin.web.RestfulResponse *.*(..)) && @annotation(org.spin.web.annotation.RestfulApi)")
     private void restfulMethod() {
@@ -49,6 +56,8 @@ public class RestfulApiAspect implements Ordered {
     public Object restfulAround(ProceedingJoinPoint joinPoint) {
         boolean isAllowed = false;
         Method apiMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
+        boolean isRestfulRes = apiMethod.getReturnType() == RestfulResponse.class;
+
         RestfulApi anno = apiMethod.getAnnotation(RestfulApi.class);
         boolean needAuth = anno.auth();
         if (needAuth) {
@@ -67,6 +76,7 @@ public class RestfulApiAspect implements Ordered {
                 for (int idx = 0; idx < annotations.length; ++idx) {
                     for (int j = 0; j < annotations[idx].length; ++j) {
                         if (annotations[idx][j] instanceof Needed) {
+
                             nonNullArgs.add(idx);
                         }
                     }
@@ -76,13 +86,19 @@ public class RestfulApiAspect implements Ordered {
             Object[] args = joinPoint.getArgs();
             for (Integer i : nonNullArgs) {
                 if (null == args[i]) {
-                    return RestfulResponse.error(ErrorCode.INVALID_PARAM);
+                    String msg = "第" + i + "个参数不允许为空";
+                    if (isRestfulRes) {
+                        logger.error(msg);
+                        return RestfulResponse.error(ErrorCode.INVALID_PARAM);
+                    } else {
+                        throw new SimplifiedException(ErrorCode.INVALID_PARAM, "第" + i + "个参数不允许为空");
+                    }
                 }
             }
 
             if (SpinContext.DEV_MODE && logger.isTraceEnabled()) {
                 Parameter[] parameters = apiMethod.getParameters();
-                logger.trace("Invoke method: {}", apiMethod.getName());
+                logger.debug("Invoke method: {}", apiMethod.getName());
                 for (int idx = 0; idx != parameters.length; ++idx) {
                     logger.trace("Parameter info: index[{}] name[{}], value[{}]", idx, parameters[idx].getName(), args[idx]);
                 }
@@ -107,8 +123,9 @@ public class RestfulApiAspect implements Ordered {
                 }
                 return response;
             }
-        } else
+        } else {
             return RestfulResponse.error(ErrorCode.ACCESS_DENINED);
+        }
     }
 
     @Override

@@ -44,7 +44,6 @@ dependencies {
 
 //    web
     api group: 'org.mathcat', name: 'spin-core', version: "$project.version"
-    implementation group: 'org.mathcat', name: 'spin-data', version: "$project.version"
 
     api group: 'org.springframework', name: 'spring-context-support', version: springVersion
     api group: 'org.springframework', name: 'spring-webmvc', version: springVersion

@@ -4,7 +4,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.spin.data.core.DataSourceContext;
+import org.spin.core.util.ClassUtils;
+import org.spin.core.util.MethodUtils;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.orm.hibernate5.SessionFactoryUtils;
 import org.springframework.orm.hibernate5.SessionHolder;
@@ -16,18 +17,29 @@ import org.springframework.web.context.request.async.WebAsyncUtils;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 public class OpenSessionInViewFilter extends OncePerRequestFilter {
 
     public static final String DEFAULT_SESSION_FACTORY_BEAN_NAME = "sessionFactory";
+    private static Class<?> dataSourceContextClass;
 
     private String sessionFactoryBeanName = DEFAULT_SESSION_FACTORY_BEAN_NAME;
 
+
+    static {
+        try {
+            dataSourceContextClass = ClassUtils.getClass("org.spin.data.core.DataSourceContext");
+        } catch (ClassNotFoundException e) {
+            // do nothing
+        }
+    }
 
     /**
      * Set the bean name of the SessionFactory to fetch from Spring's
@@ -102,8 +114,14 @@ public class OpenSessionInViewFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             if (!participate) {
-                // 切换回默认Schema
-                DataSourceContext.restoreSchema();
+                if (null != dataSourceContextClass) {
+                    // 切换回默认Schema
+                    try {
+                        MethodUtils.invokeStaticMethod(dataSourceContextClass, "restoreSchema", null);
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignore) {
+                        // do nothing
+                    }
+                }
                 SessionHolder sessionHolder =
                     (SessionHolder) TransactionSynchronizationManager.unbindResource(sessionFactory);
                 if (!isAsyncStarted(request)) {

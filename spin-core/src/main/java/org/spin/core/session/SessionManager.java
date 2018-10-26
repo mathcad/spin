@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -104,7 +105,7 @@ public abstract class SessionManager {
     public static void setSessionAttr(String key, Object value) {
         Session sess = getCurrentSession();
         Assert.notNull(sess, "未能获取Session");
-        sess.setAttribute(key, value);
+        sess.setAttribute(key, (Serializable) value);
         sessionDao.save(sess);
     }
 
