@@ -11,7 +11,7 @@ import java.util.Collection;
  *
  * @author xuweinan
  */
-public interface Session extends Serializable {
+public interface Session {
 
     /**
      * 获取Session的Id

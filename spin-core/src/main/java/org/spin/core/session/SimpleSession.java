@@ -59,30 +59,13 @@ public class SimpleSession implements Session, Serializable {
     private static final int HOST_BIT_MASK = 1 << bitIndexCounter++;
     private static final int ATTRIBUTES_BIT_MASK = 1 << bitIndexCounter++;
 
-    // ==============================================================
-    // NOTICE:
-    //
-    // The following fields are marked as transient to avoid double-serialization.
-    // They are in fact serialized (even though 'transient' usually indicates otherwise),
-    // but they are serialized explicitly via the writeObject and readObject implementations
-    // in this class.
-    //
-    // If we didn't declare them as transient, the out.defaultWriteObject(); call in writeObject would
-    // serialize all non-transient fields as well, effectively doubly serializing the fields (also
-    // doubling the serialization size).
-    //
-    // This finding, with discussion, was covered here:
-    //
-    // http://mail-archives.apache.org/mod_mbox/shiro-user/201109.mbox/%3C4E81BCBD.8060909@metaphysis.net%3E
-    //
-    // ==============================================================
-    private transient Serializable id;
-    private transient LocalDateTime startTimestamp;
-    private transient LocalDateTime stopTimestamp;
-    private transient LocalDateTime lastAccessTime;
-    private transient boolean expired;
-    private transient String host;
-    private transient Map<Serializable, Serializable> attributes;
+    private Serializable id;
+    private LocalDateTime startTimestamp;
+    private LocalDateTime stopTimestamp;
+    private LocalDateTime lastAccessTime;
+    private boolean expired;
+    private String host;
+    private Map<Serializable, Serializable> attributes;
 
     public SimpleSession() {
         this.startTimestamp = LocalDateTime.now();

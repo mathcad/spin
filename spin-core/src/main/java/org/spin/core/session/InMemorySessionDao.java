@@ -19,6 +19,10 @@ public class InMemorySessionDao implements SessionDao {
      */
     private final Map<Serializable, Session> allSessions = new ConcurrentHashMap<>();
 
+    public InMemorySessionDao() {
+        SessionManager.setSessionDao(this);
+    }
+
     @Override
     public void save(Session session) {
         if (null != session) {
@@ -45,7 +49,7 @@ public class InMemorySessionDao implements SessionDao {
 
     @Override
     public Long validCount() {
-        return null;
+        return allSessions.values().stream().filter(Session::isValid).count();
     }
 
 }

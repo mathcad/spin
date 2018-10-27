@@ -233,6 +233,10 @@ public abstract class SessionManager {
     public static void removeSessions(Collection<String> sessionIds) {
         sessionIds.forEach(sessionDao::delete);
     }
+
+    public static void setSessionDao(SessionDao sessionDao) {
+        SessionManager.sessionDao = sessionDao;
+    }
 }
 
 

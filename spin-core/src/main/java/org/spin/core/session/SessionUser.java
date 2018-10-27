@@ -6,14 +6,15 @@ import java.time.LocalDateTime;
 /**
  * 在线用户接口
  * <p>
- * 用户实体应实现此接口<br>
- * 登录成功后，应通过<br>
- * {@link SessionManager#setCurrentUser(SessionUser)}<br>
+ * 用户实体应实现此接口,并且保证可以被正确地序列化<br>
+ * 登录成功后，应通过
+ * {@link SessionManager#setCurrentUser(SessionUser)}
  * 将用户实体存入session
  * </p>
  *
  * @author xuweinan
  * @version V1.0
+ * @see Serializable
  */
 public interface SessionUser extends Serializable {
     Long getId();
