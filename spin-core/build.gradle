@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.1.16.RELEASE'
+version = '2.1.17.RELEASE'
 def artifactId = 'spin-core'
 
 ext {
@@ -34,8 +34,8 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://192.168.0.248:8081/nexus/content/repositories/releases/") {
-                authentication(userName: "admin", password: "admin123")
+            repository(url: "http://60.169.170.69:9527/repository/maven-releases/") {
+                authentication(userName: "admin", password: "1238524565")
             }
             pom.version = "$project.version"
             pom.artifactId = "$artifactId"
@@ -65,13 +65,13 @@ dependencies {
 //    compile group: 'com.google.guava', name: 'guava', version: '26.0-jre'
 
 //    compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: httpclientVersion
-    implementation group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
+    compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
 
-    implementation group: 'commons-net', name: 'commons-net', version: commonsNetVersion
-    implementation group: 'dom4j', name: 'dom4j', version: dom4jVersion
-    implementation(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
+    compileOnly group: 'commons-net', name: 'commons-net', version: commonsNetVersion
+    compileOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
+    compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
-    implementation group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
-    implementation group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
+    compileOnly group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
+    compileOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
 }

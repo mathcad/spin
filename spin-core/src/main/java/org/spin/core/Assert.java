@@ -480,6 +480,23 @@ public abstract class Assert {
         return validIndex(array, index, DEFAULT_VALID_INDEX_ARRAY_EX_MESSAGE, index);
     }
 
+    /**
+     * 验证数组中没有null元素
+     *
+     * @param array 待判断数组
+     * @param <T>   数组元素类型
+     * @return 原数组
+     */
+    public static <T> T[] doesNotContainsNull(final T[] array) {
+        Assert.notNull(array);
+        for (int i = 0; i < array.length; i++) {
+            if (null == array[i]) {
+                throw new AssertFailException(String.format(DEFAULT_NO_NULL_ELEMENTS_ARRAY_EX_MESSAGE, i));
+            }
+        }
+        return array;
+    }
+
     // validIndex collection
     //---------------------------------------------------------------------------------
 
@@ -528,6 +545,26 @@ public abstract class Assert {
      */
     public static <T extends Collection<?>> T validIndex(final T collection, final int index) {
         return validIndex(collection, index, DEFAULT_VALID_INDEX_COLLECTION_EX_MESSAGE, index);
+    }
+
+    /**
+     * 验证集合中没有null元素
+     *
+     * @param collection 待判断集合
+     * @param <T>        集合类型
+     * @return 原集合
+     */
+    public static <T extends Collection<?>> T doesNotContainsNull(final T collection) {
+        Assert.notNull(collection);
+
+        int i = 0;
+        for (Object o : collection) {
+            if (null == o) {
+                throw new AssertFailException(String.format(DEFAULT_NO_NULL_ELEMENTS_COLLECTION_EX_MESSAGE, i));
+            }
+            ++i;
+        }
+        return collection;
     }
 
     // validIndex string

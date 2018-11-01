@@ -3,6 +3,7 @@ package org.spin.core.util;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,12 +52,18 @@ class StringUtilsTest {
         reverse = StringUtils.reverse(test);
         long e = System.currentTimeMillis();
         System.out.println(reverse);
-        System.out.println(e -s);
+        System.out.println(e - s);
 
         s = System.currentTimeMillis();
         reverse = new StringBuilder(test).reverse().toString();
         e = System.currentTimeMillis();
         System.out.println(reverse);
-        System.out.println(e -s);
+        System.out.println(e - s);
+    }
+
+    @Test
+    public void testRender() {
+        String tmpl = "aasdfa\\${123sdf${a}${b}${dfsdfsd}";
+        System.out.println(StringUtils.renderParameterMap(tmpl, MapUtils.ofMap("a", "--", "b", "++++")));
     }
 }

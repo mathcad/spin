@@ -1,5 +1,7 @@
 package org.spin.core.util;
 
+import org.spin.core.throwable.SimplifiedException;
+
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -2948,6 +2950,62 @@ public abstract class StringUtils {
             rslt = rslt.replace("{" + i + "}", strVal);
         }
         return rslt.replaceAll("\\$\\{.+}", "");
+    }
+
+    /**
+     * 通过模板参数填充字符串模板
+     *
+     * @param tplt   模板
+     * @param params 模板参数
+     * @return 填充后的字符串
+     */
+    public static String renderParameter(String tplt, Object... params) {
+        return renderParameterMap(tplt, MapUtils.ofMap(params));
+    }
+
+    /**
+     * 通过模板参数填充字符串模板
+     *
+     * @param tplt   模板
+     * @param params 模板参数
+     * @return 填充后的字符串
+     */
+    public static String renderParameterMap(String tplt, Map<String, ?> params) {
+        if (isBlank(tplt)) {
+            return tplt;
+        }
+        char[] chars = tplt.toCharArray();
+
+        StringBuilder result = new StringBuilder(tplt.length() * 2);
+        StringBuilder paramName = new StringBuilder(255);
+        char cur;
+        boolean inParam = false;
+        for (int i = 0; i < chars.length; i++) {
+            cur = chars[i];
+            if (inParam) {
+                if (i == chars.length - 1 && cur != '}') {
+                    throw new SimplifiedException("模板变量没有正确结束:" + paramName);
+                }
+                if (cur == '}' && (i < 3 || chars[i - 1] != '\\')) {
+                    inParam = false;
+                    if (paramName.length() < 1) {
+                        throw new SimplifiedException("空参数无法填充, 位置: " + i);
+                    }
+                    result.append(StringUtils.toStringEmpty(params.get(paramName.toString())));
+                    paramName.setLength(0);
+                } else {
+                    paramName.append(cur);
+                }
+            } else {
+                if (cur == '$' && chars[i + 1] == '{' && (i == 0 || chars[i - 1] != '\\')) {
+                    inParam = true;
+                    ++i;
+                } else {
+                    result.append(cur);
+                }
+            }
+        }
+        return result.toString();
     }
 
     /**
