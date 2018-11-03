@@ -1,15 +1,12 @@
 package org.spin.core.gson;
 
-import com.google.gson.Gson;
-import com.google.gson.TypeAdapter;
-import com.google.gson.TypeAdapterFactory;
-import com.google.gson.reflect.TypeToken;
 import org.spin.core.gson.adapter.DateTypeAdapter;
 import org.spin.core.gson.adapter.LocalDateTimeTypeAdapter;
 import org.spin.core.gson.adapter.LocalDateTypeAdapter;
 import org.spin.core.gson.adapter.LocalTimeTypeAdapter;
 import org.spin.core.gson.adapter.LongTypeAdapter;
 import org.spin.core.gson.adapter.UserEnumTypeAdapter;
+import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.ConstructorUtils;
 

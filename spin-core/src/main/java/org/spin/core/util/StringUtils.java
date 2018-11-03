@@ -2959,18 +2959,19 @@ public abstract class StringUtils {
      * @param params 模板参数
      * @return 填充后的字符串
      */
-    public static String renderParameter(String tplt, Object... params) {
-        return renderParameterMap(tplt, MapUtils.ofMap(params));
+    public static String render(String tplt, String... params) {
+        return render(tplt, MapUtils.ofMap(params));
     }
 
     /**
      * 通过模板参数填充字符串模板
+     * <p>模板变量定义格式为${paramName}，参照{@link BeanUtils#getFieldValue(Object, String)}</p>
      *
-     * @param tplt   模板
-     * @param params 模板参数
+     * @param tplt 模板
+     * @param obj  模板参数
      * @return 填充后的字符串
      */
-    public static String renderParameterMap(String tplt, Map<String, ?> params) {
+    public static String render(String tplt, Object obj) {
         if (isBlank(tplt)) {
             return tplt;
         }
@@ -2991,7 +2992,7 @@ public abstract class StringUtils {
                     if (paramName.length() < 1) {
                         throw new SimplifiedException("空参数无法填充, 位置: " + i);
                     }
-                    result.append(StringUtils.toStringEmpty(params.get(paramName.toString())));
+                    result.append(toStringEmpty(BeanUtils.getFieldValue(obj, paramName.toString())));
                     paramName.setLength(0);
                 } else {
                     paramName.append(cur);

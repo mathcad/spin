@@ -1,7 +1,14 @@
 package org.spin.core.gson.adapter;
 
-import com.google.gson.*;
-import com.google.gson.internal.LinkedTreeMap;
+import org.spin.core.gson.JsonDeserializationContext;
+import org.spin.core.gson.JsonDeserializer;
+import org.spin.core.gson.JsonElement;
+import org.spin.core.gson.JsonNull;
+import org.spin.core.gson.JsonObject;
+import org.spin.core.gson.JsonPrimitive;
+import org.spin.core.gson.JsonSerializationContext;
+import org.spin.core.gson.JsonSerializer;
+import org.spin.core.gson.internal.LinkedTreeMap;
 
 import java.lang.reflect.Type;
 import java.util.Map;

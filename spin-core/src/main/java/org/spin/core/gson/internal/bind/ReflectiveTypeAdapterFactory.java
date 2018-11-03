@@ -1,24 +1,22 @@
-package com.google.gson.internal.bind;
+package org.spin.core.gson.internal.bind;
 
-import com.google.gson.FieldNamingStrategy;
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.TypeAdapter;
-import com.google.gson.TypeAdapterFactory;
-import com.google.gson.annotations.JsonAdapter;
-import com.google.gson.annotations.SerializedName;
-import com.google.gson.internal.$Gson$Types;
-import com.google.gson.internal.ConstructorConstructor;
-import com.google.gson.internal.Excluder;
-import com.google.gson.internal.ObjectConstructor;
-import com.google.gson.internal.Primitives;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
-
+import org.spin.core.gson.FieldNamingStrategy;
+import org.spin.core.gson.Gson;
+import org.spin.core.gson.JsonSyntaxException;
 import org.spin.core.gson.MatchableTypeAdapter;
-import org.spin.core.util.BeanUtils;
+import org.spin.core.gson.TypeAdapter;
+import org.spin.core.gson.TypeAdapterFactory;
+import org.spin.core.gson.annotation.JsonAdapter;
+import org.spin.core.gson.annotation.SerializedName;
+import org.spin.core.gson.internal.$Gson$Types;
+import org.spin.core.gson.internal.ConstructorConstructor;
+import org.spin.core.gson.internal.Excluder;
+import org.spin.core.gson.internal.ObjectConstructor;
+import org.spin.core.gson.internal.Primitives;
+import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.gson.stream.JsonReader;
+import org.spin.core.gson.stream.JsonToken;
+import org.spin.core.gson.stream.JsonWriter;
 import org.spin.core.util.CollectionUtils;
 
 import java.io.IOException;
@@ -37,26 +35,19 @@ import java.util.Map;
  *
  * @author xuweinan
  */
-public final class SpinReflectiveTypeAdapterFactory implements TypeAdapterFactory {
+public final class ReflectiveTypeAdapterFactory implements TypeAdapterFactory {
     private final ConstructorConstructor constructorConstructor;
     private final FieldNamingStrategy fieldNamingPolicy;
     private final Excluder excluder;
     private final JsonAdapterAnnotationTypeAdapterFactory jsonAdapterFactory;
 
-    public SpinReflectiveTypeAdapterFactory(ConstructorConstructor constructorConstructor,
-                                            FieldNamingStrategy fieldNamingPolicy, Excluder excluder,
-                                            JsonAdapterAnnotationTypeAdapterFactory jsonAdapterFactory) {
+    public ReflectiveTypeAdapterFactory(ConstructorConstructor constructorConstructor,
+                                        FieldNamingStrategy fieldNamingPolicy, Excluder excluder,
+                                        JsonAdapterAnnotationTypeAdapterFactory jsonAdapterFactory) {
         this.constructorConstructor = constructorConstructor;
         this.fieldNamingPolicy = fieldNamingPolicy;
         this.excluder = excluder;
         this.jsonAdapterFactory = jsonAdapterFactory;
-    }
-
-    public SpinReflectiveTypeAdapterFactory(ReflectiveTypeAdapterFactory typeAdapterFactory) {
-        this.constructorConstructor = BeanUtils.getFieldValue(typeAdapterFactory, "constructorConstructor");
-        this.fieldNamingPolicy = BeanUtils.getFieldValue(typeAdapterFactory, "fieldNamingPolicy");
-        this.excluder = BeanUtils.getFieldValue(typeAdapterFactory, "excluder");
-        this.jsonAdapterFactory = BeanUtils.getFieldValue(typeAdapterFactory, "jsonAdapterFactory");
     }
 
     public boolean excludeField(Field f, boolean serialize) {

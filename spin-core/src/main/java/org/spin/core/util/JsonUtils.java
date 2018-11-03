@@ -1,17 +1,16 @@
 package org.spin.core.util;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.InstanceCreator;
-import com.google.gson.TypeAdapterFactory;
-import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
-import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
+import org.spin.core.gson.FieldNamingPolicy;
+import org.spin.core.gson.Gson;
+import org.spin.core.gson.GsonBuilder;
+import org.spin.core.gson.InstanceCreator;
 import org.spin.core.gson.SpinTypeAdapterFactory;
+import org.spin.core.gson.TypeAdapterFactory;
+import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.Type;
@@ -93,7 +92,7 @@ public abstract class JsonUtils {
             builder.excludeFieldsWithoutExposeAnnotation();
         }
         String result;
-        Gson gson = procGson(builder.create());
+        Gson gson = builder.create();
 
         try {
             if (targetType != null) {
@@ -290,7 +289,7 @@ public abstract class JsonUtils {
             return null;
         }
         try {
-            return procGson(baseBuilder(datePattern).create()).fromJson(json, token.getType());
+            return baseBuilder(datePattern).create().fromJson(json, token.getType());
         } catch (Exception ex) {
             throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, token.toString()), ex);
         }
@@ -379,7 +378,7 @@ public abstract class JsonUtils {
             return null;
         }
         try {
-            return procGson(baseBuilder(datePattern).create()).fromJson(json, clazz);
+            return baseBuilder(datePattern).create().fromJson(json, clazz);
         } catch (Exception ex) {
             throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
         }
@@ -396,24 +395,27 @@ public abstract class JsonUtils {
         if (null != builderConfigure) {
             builderConfigure.accept(gsonBuilder);
         }
-        return procGson(gsonBuilder.create());
+        return gsonBuilder.create();
     }
 
-    private static Gson procGson(Gson gson) {
-        try {
-            Class<?> aClass = com.google.gson.internal.bind.SpinReflectiveTypeAdapterFactory.class;
-            Object[] factories = BeanUtils.getFieldValue(gson, "factories.list.elementData");
-            for (int i = factories.length - 1; i != -1; --i) {
-                if (factories[i] instanceof ReflectiveTypeAdapterFactory) {
-                    factories[i] = ConstructorUtils.invokeConstructor(aClass, factories[i]);
-                    break;
-                }
-            }
-            return gson;
-        } catch (Exception ignore) {
-            return gson;
-        }
-    }
+//    private static Gson procGson(Gson gson) {
+//        try {
+//            Class<?> aClass = ReflectiveTypeAdapterFactory.class;
+//            Object[] factories = BeanUtils.getFieldValue(gson, "factories.list.elementData");
+//            if (null == factories) {
+//                return gson;
+//            }
+//            for (int i = factories.length - 1; i != -1; --i) {
+//                if (factories[i] instanceof ReflectiveTypeAdapterFactory) {
+//                    factories[i] = ConstructorUtils.invokeConstructor(aClass, factories[i]);
+//                    break;
+//                }
+//            }
+//            return gson;
+//        } catch (Exception ignore) {
+//            return gson;
+//        }
+//    }
 
     private static GsonBuilder baseBuilder(String[] pattern) {
         GsonBuilder builder = new GsonBuilder();

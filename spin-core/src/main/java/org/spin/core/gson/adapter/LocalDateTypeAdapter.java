@@ -1,9 +1,9 @@
 package org.spin.core.gson.adapter;
 
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
+import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.gson.stream.JsonReader;
+import org.spin.core.gson.stream.JsonToken;
+import org.spin.core.gson.stream.JsonWriter;
 import org.spin.core.gson.DatePatternParser;
 import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.util.StringUtils;

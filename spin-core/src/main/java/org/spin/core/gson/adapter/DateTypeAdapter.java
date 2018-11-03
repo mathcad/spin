@@ -1,12 +1,12 @@
 package org.spin.core.gson.adapter;
 
-import com.google.gson.internal.JavaVersion;
-import com.google.gson.internal.PreJava9DateFormatProvider;
-import com.google.gson.internal.bind.util.ISO8601Utils;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
+import org.spin.core.gson.internal.JavaVersion;
+import org.spin.core.gson.internal.PreJava9DateFormatProvider;
+import org.spin.core.gson.internal.bind.util.ISO8601Utils;
+import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.gson.stream.JsonReader;
+import org.spin.core.gson.stream.JsonToken;
+import org.spin.core.gson.stream.JsonWriter;
 import org.spin.core.ErrorCode;
 import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.throwable.SimplifiedException;

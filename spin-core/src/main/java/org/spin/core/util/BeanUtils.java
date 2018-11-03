@@ -222,6 +222,9 @@ public abstract class BeanUtils {
      */
     public static <T> T getFieldValue(Object target, String valuePath) {
         String[] valuePaths = Assert.notEmpty(valuePath, "valuePath必须指定属性名称").split("\\.");
+        if (null == target) {
+            return null;
+        }
         Object o = target;
         for (int i = 0; i < valuePaths.length; i++) {
             String field = valuePaths[i];

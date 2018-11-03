@@ -1,11 +1,9 @@
 package org.spin.core.security;
 
-import com.google.gson.reflect.TypeToken;
+import org.spin.core.gson.reflect.TypeToken;
 
 import org.junit.jupiter.api.Test;
 import org.spin.core.util.JsonUtils;
-
-import java.nio.charset.Charset;
 
 import javax.crypto.SecretKey;
 

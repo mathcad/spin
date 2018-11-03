@@ -1,7 +1,5 @@
 package org.spin.core.gson;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
 import org.spin.core.SpinContext;
 
 import java.lang.reflect.Field;

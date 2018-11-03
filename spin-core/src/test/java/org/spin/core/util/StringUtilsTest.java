@@ -63,7 +63,7 @@ class StringUtilsTest {
 
     @Test
     public void testRender() {
-        String tmpl = "aasdfa\\${123sdf${a}${b}${dfsdfsd}";
-        System.out.println(StringUtils.renderParameterMap(tmpl, MapUtils.ofMap("a", "--", "b", "++++")));
+        String tmpl = "aasdfa\\${123sdf${#a}${#b}${#dfsdfsd}";
+        System.out.println(StringUtils.render(tmpl, MapUtils.ofMap("a", "--", "b", "++++")));
     }
 }
