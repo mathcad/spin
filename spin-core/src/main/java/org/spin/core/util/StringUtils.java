@@ -7,7 +7,23 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import static java.lang.Character.isLetterOrDigit;
@@ -2562,7 +2578,7 @@ public abstract class StringUtils {
      * Delete all occurrences of the given substring.
      *
      * @param inString the original {@code String}
-     * @param pattern  the pattern to delete all occurrences of
+     * @param pattern  the pattern to setNull all occurrences of
      * @return the resulting {@code String}
      */
     public static String delete(String inString, String pattern) {
@@ -2573,8 +2589,8 @@ public abstract class StringUtils {
      * Delete any character in a given {@code String}.
      *
      * @param inString      the original {@code String}
-     * @param charsToDelete a set of characters to delete.
-     *                      E.g. "az\n" will delete 'a's, 'z's and new lines.
+     * @param charsToDelete a set of characters to setNull.
+     *                      E.g. "az\n" will setNull 'a's, 'z's and new lines.
      * @return the resulting {@code String}
      */
     public static String deleteAny(String inString, String charsToDelete) {
@@ -2602,7 +2618,7 @@ public abstract class StringUtils {
      * StringUtils.deleteWhitespace("   ab  c  ") = "abc"
      * </pre>
      *
-     * @param str the String to delete whitespace from, may be null
+     * @param str the String to setNull whitespace from, may be null
      * @return the String without whitespaces, <code>null</code> if null String input
      */
     public static String deleteWhitespace(String str) {
@@ -3360,8 +3376,8 @@ public abstract class StringUtils {
      * @param str           the input {@code String}
      * @param delimiter     the delimiter between elements (this is a single delimiter,
      *                      rather than a bunch individual delimiter characters)
-     * @param charsToDelete a set of characters to delete; useful for deleting unwanted
-     *                      line breaks: e.g. "\r\n\f" will delete all new lines and line feeds in a {@code String}
+     * @param charsToDelete a set of characters to setNull; useful for deleting unwanted
+     *                      line breaks: e.g. "\r\n\f" will setNull all new lines and line feeds in a {@code String}
      * @return an array of the tokens in the list
      * @see #tokenizeToStringArray
      */

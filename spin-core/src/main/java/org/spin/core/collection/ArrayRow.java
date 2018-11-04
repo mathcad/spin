@@ -135,11 +135,6 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
     }
 
     @Override
-    public E delete(int index) {
-        return set(index, null);
-    }
-
-    @Override
     public void clear() {
         // clear to let GC do its work
         RowBeforeUpdateEvent beforeEvent = new RowBeforeUpdateEvent(this);
@@ -153,6 +148,10 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
             elementData[i] = null;
         }
         notifyModified(afterEvent);
+    }
+
+    public void delete() {
+        notifyDeleted(rownum);
     }
 
     @Override
@@ -174,6 +173,7 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
         }
     }
 
+    @Override
     public void setUpdateLestener(RowUpdateListener listener) {
         this.observer = listener;
     }
@@ -187,6 +187,12 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
     private void notifyModified(RowAfterUpdateEvent event) {
         if (null != observer) {
             observer.afterUpdate(event);
+        }
+    }
+
+    private void notifyDeleted(int rownum) {
+        if (null != observer) {
+            observer.onDelete(rownum);
         }
     }
 

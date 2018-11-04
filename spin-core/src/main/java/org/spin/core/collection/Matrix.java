@@ -7,9 +7,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -20,24 +21,37 @@ import java.util.stream.Collectors;
  */
 public class Matrix<T> implements RowUpdateListener {
 
+    /**
+     * 数据容器
+     */
     private final List<Row<T>> rows = new ArrayList<>();
 
-    private final Map<Integer, MultiValueMap<T, Integer>> index = new ConcurrentHashMap<>();
+    /**
+     * 索引（列编号-[值-行编号集合]）
+     */
+    private final Map<Integer, MultiDiffValueMap<T, Integer>> index = new HashMap<>();
+
+    /**
+     * 列名-列编号的映射
+     */
     private final Map<String, Integer> matrixHeader = new HashMap<>();
 
+    /**
+     * 列总数
+     */
     private int columnNumber;
 
     /**
      * 构造IndexedTable实例
      *
      * @param columnNumber 列数
-     * @param indexColumns 需要建索引的列，从第2列开始；第一列为默认的主键。列编号从0开始
+     * @param indexColumns 需要建索引的列，列编号从0开始
      */
     public Matrix(int columnNumber, int... indexColumns) {
         this.columnNumber = columnNumber;
         if (null != indexColumns && indexColumns.length > 0) {
             for (int i : indexColumns) {
-                index.put(i, new HashMultiValueMap<>());
+                index.put(i, new HashMultiDiffValueMap<>());
             }
         }
     }
@@ -45,36 +59,50 @@ public class Matrix<T> implements RowUpdateListener {
     /**
      * 查找
      *
-     * @param column 列
-     * @param key    搜索键
-     * @return 返回所有满足key的行的第column列的集合
+     * @param column     列编号
+     * @param key        搜索的值
+     * @param projection 投影列编号
+     * @return 返回所有第column列的值为key的行的第projection列的集合
      */
-    public List<T> findValues(int column, T key) {
-        return findRows(column, key).stream().map(r -> r.get(column)).collect(Collectors.toList());
-    }
-
-    public List<T> findValues(String columnHeader, T key) {
-        Integer column = matrixHeader.get(columnHeader);
-        if (null == column)
-            return null;
-        return findValues(column, key);
+    public Set<T> findValues(int column, T key, int projection) {
+        rangeCheck(projection);
+        return findRows(column, key).stream().map(r -> r.get(projection)).collect(Collectors.toSet());
     }
 
     /**
      * 查找
      *
-     * @param column 列
-     * @param key    搜索键
-     * @return 返回所有满足key的行的集合
+     * @param columnHeader  列标题
+     * @param key           搜索的值
+     * @param projectHeader 投影列标题
+     * @return 返回所有columnHeader列的值为key的行的projection列的集合
+     */
+    public Set<T> findValues(String columnHeader, T key, String projectHeader) {
+        Integer column = matrixHeader.get(columnHeader);
+        Integer projection = matrixHeader.get(projectHeader);
+        if (null == column || null == projection)
+            return null;
+        return findValues(column, key, projection);
+    }
+
+    /**
+     * 查找
+     *
+     * @param column 列编号
+     * @param key    列值
+     * @return 返回所有第column列的值为key的行的集合
      */
     public List<Row<T>> findRows(int column, T key) {
         rangeCheck(column);
         List<Row<T>> result = new ArrayList<>();
 
-        MultiValueMap<T, Integer> indexMap = index.get(column);
+        MultiDiffValueMap<T, Integer> indexMap = index.get(column);
         if (null != indexMap) {
             // 索引查找
-            List<Integer> rowIndexes = indexMap.get(key);
+            Set<Integer> rowIndexes = indexMap.get(key);
+            if (null == rowIndexes) {
+                return null;
+            }
             for (Integer rowIndex : rowIndexes) {
                 result.add(rows.get(rowIndex));
             }
@@ -88,9 +116,9 @@ public class Matrix<T> implements RowUpdateListener {
     /**
      * 查找
      *
-     * @param columnHeader 列名
-     * @param key          搜索键
-     * @return 返回所有满足key的行的集合
+     * @param columnHeader 列标题
+     * @param key          列值
+     * @return 返回所有columnHeader列的值为key的行的集合
      */
     public List<Row<T>> findRows(String columnHeader, T key) {
         Integer column = matrixHeader.get(columnHeader);
@@ -100,62 +128,92 @@ public class Matrix<T> implements RowUpdateListener {
     }
 
     /**
-     * 通过主键查找。第一列为主键
-     * <p>主键允许重复</p>
-     *
-     * @param pk 主键
-     */
-    public List<Row<T>> findByPrimaryKey(T pk) {
-        return findRows(0, pk);
-    }
-
-    /**
      * 向表中插入一条记录
+     *
+     * @param values 行数据
+     * @return 当前Matrix对象
      */
     @SafeVarargs
     public final Matrix<T> insert(T... values) {
         if (null == values || values.length != columnNumber) {
             throw new IllegalArgumentException("插入数据的列数与定义不一致 需要" + columnNumber + "列");
         }
+
         ArrayRow<T> row = new ArrayRow<>(Arrays.asList(values));
         row.setUpdateLestener(this);
-        synchronized (this.rows) {
-            // 插入数据
-            rows.add(row);
-            row.setRownum(rows.size() - 1);
-        }
+        // 插入数据
+        rows.add(row);
+        row.setRownum(rows.size() - 1);
         // 构建索引
         buildIndex(row);
         return this;
     }
 
+    /**
+     * 更新第column列为key的所有行
+     * <p>更新所有满足条件的行的所有列，所以values必须提供所有列的新值</p>
+     *
+     * @param column 列编号
+     * @param key    列值
+     * @param values 新的行数据
+     * @return 当前Matrix对象
+     */
     @SafeVarargs
     public final Matrix<T> update(int column, T key, T... values) {
         Assert.isTrue(null != values && values.length == columnNumber, "更新数据的列数与定义不符 需要" + columnNumber + "列");
         // 更新操作
         List<Row<T>> row = findRows(column, key);
-        synchronized (this.rows) {
-            row.forEach(r -> {
-                for (int i = 0; i != columnNumber; ++i)
-                    r.set(i, values[i]);
-            });
+        for (Row<T> r : row) {
+            for (int i = 0; i != columnNumber; ++i)
+                r.set(i, values[i]);
         }
         return this;
     }
 
-    public final Matrix<T> update(int column, T key, int updateColumn, T values) {
+    /**
+     * 更新第column列为key的所有行，将这些行的第updateColumn列的值为value
+     *
+     * @param column       列编号
+     * @param key          列值
+     * @param updateColumn 更新的列编号
+     * @param value        更新的列值
+     * @return 当前Matrix对象
+     */
+    public final Matrix<T> update(int column, T key, int updateColumn, T value) {
         rangeCheck(column);
         rangeCheck(updateColumn);
-        // TODO 更新操作
+
+        List<Row<T>> row = findRows(column, key);
+        for (Row<T> r : row) {
+            r.set(updateColumn, value);
+        }
         return this;
     }
 
+    /**
+     * 更新columnHeader列为key的所有行
+     * <p>更新所有满足条件的行的所有列，所以values必须提供所有列的新值</p>
+     *
+     * @param columnHeader 列标题
+     * @param key          列值
+     * @param values       新的行数据
+     * @return 当前Matrix对象
+     */
     @SafeVarargs
     public final Matrix<T> update(String columnHeader, T key, T... values) {
         Integer column = matrixHeader.get(columnHeader);
         return update(Assert.notNull(column, "指定的列名不存在"), key, values);
     }
 
+    /**
+     * 更新columnHeader列为key的所有行，将这些行的updateColumnHeader列的值为value
+     *
+     * @param columnHeader       列标题
+     * @param key                列值
+     * @param updateColumnHeader 更新的列标题
+     * @param value              更新的列值
+     * @return 当前Matrix对象
+     */
     public final Matrix<T> update(String columnHeader, T key, String updateColumnHeader, T value) {
         Integer column = matrixHeader.get(columnHeader);
         Integer updateColumn = matrixHeader.get(updateColumnHeader);
@@ -163,22 +221,24 @@ public class Matrix<T> implements RowUpdateListener {
     }
 
     /**
-     * 从表中删除记录
+     * 删除所有第column列的值为key的行
      *
      * @param column 列编号，从0开始
-     * @param key    索引
+     * @param key    列值
      */
     public ArrayRow<T> delete(int column, T key) {
         rangeCheck(column);
-        // TODO 删除操作
+        Set<Integer> rownums = findRows(column, key).stream().map(Row::rownum).collect(Collectors.toSet());
+        rows.removeIf(next -> rownums.contains(next.rownum()));
+        deleteRowIndex(rownums);
         return null;
     }
 
     /**
-     * 从表中删除记录
+     * 删除记录
      *
-     * @param columnHeader 列名
-     * @param key          索引
+     * @param columnHeader 列编号
+     * @param key          列值
      */
     public ArrayRow<T> delete(String columnHeader, T key) {
         Integer column = matrixHeader.get(columnHeader);
@@ -199,18 +259,23 @@ public class Matrix<T> implements RowUpdateListener {
 
     public final Matrix<T> createIndex(String columnHeader) {
         Integer column = matrixHeader.get(columnHeader);
-        return createIndex(Assert.notNull(column, "指定的列名不存在"));
+        return createIndex(Assert.notNull(column, "指定的列标题不存在"));
     }
 
     @Override
     public void beforeUpdate(RowBeforeUpdateEvent event) {
         // 数据更新前，删除对应索引
-        event.getUpdateCols().forEach(c -> {
-            MultiValueMap<T, Integer> indexMap = index.get(c);
+        for (Integer c : event.getUpdateCols()) {
+            MultiDiffValueMap<T, Integer> indexMap = index.get(c);
             //noinspection unchecked
             Row<T> row = (Row<T>) event.getSource();
-            indexMap.remove(row.get(c), c);
-        });
+            Set<Integer> rownums = indexMap.get(row.get(c));
+            if (rownums.size() == 1) {
+                indexMap.remove(row.get(c));
+            } else {
+                rownums.remove(row.rownum());
+            }
+        }
     }
 
     @Override
@@ -220,8 +285,13 @@ public class Matrix<T> implements RowUpdateListener {
         buildIndex((Row<T>) event.getSource(), event.getUpdatedCols());
     }
 
+    @Override
+    public void onDelete(int rownum) {
+        deleteRowIndex(rownum);
+    }
+
     private void rangeCheck(int column) {
-        Assert.isTrue(column < columnNumber && column >= 0, "列索引超出范围");
+        Assert.isTrue(column < columnNumber && column >= 0, "列编号超出范围");
     }
 
     /**
@@ -229,7 +299,7 @@ public class Matrix<T> implements RowUpdateListener {
      */
     private void buildIndex(int... cols) {
         for (int indexCol : cols) {
-            MultiValueMap<T, Integer> indexMap = index.get(indexCol);
+            MultiDiffValueMap<T, Integer> indexMap = index.get(indexCol);
             if (null != indexMap) {
                 indexMap.clear();
                 for (Row<T> row : rows) {
@@ -243,8 +313,8 @@ public class Matrix<T> implements RowUpdateListener {
      * 构建索引
      */
     private void buildIndex(Row<T> row) {
-        for (Map.Entry<Integer, MultiValueMap<T, Integer>> indexEntry : this.index.entrySet()) {
-            MultiValueMap<T, Integer> indexMap = indexEntry.getValue();
+        for (Map.Entry<Integer, MultiDiffValueMap<T, Integer>> indexEntry : index.entrySet()) {
+            MultiDiffValueMap<T, Integer> indexMap = indexEntry.getValue();
             int indexCol = indexEntry.getKey();
             indexMap.add(row.get(indexCol), row.rownum());
         }
@@ -255,7 +325,7 @@ public class Matrix<T> implements RowUpdateListener {
      */
     private void buildIndex(Row<T> row, int... cols) {
         for (int indexCol : cols) {
-            MultiValueMap<T, Integer> indexMap = index.get(indexCol);
+            MultiDiffValueMap<T, Integer> indexMap = index.get(indexCol);
             if (null != indexMap) {
                 indexMap.add(row.get(indexCol), row.rownum());
             }
@@ -267,9 +337,39 @@ public class Matrix<T> implements RowUpdateListener {
      */
     private void buildIndex(Row<T> row, Collection<Integer> cols) {
         for (int indexCol : cols) {
-            MultiValueMap<T, Integer> indexMap = index.get(indexCol);
+            MultiDiffValueMap<T, Integer> indexMap = index.get(indexCol);
             if (null != indexMap) {
                 indexMap.add(row.get(indexCol), row.rownum());
+            }
+        }
+    }
+
+    private void deleteRowIndex(Set<Integer> rownums) {
+        for (MultiDiffValueMap<T, Integer> index : index.values()) {
+            Iterator<Map.Entry<T, Set<Integer>>> iterator = index.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<T, Set<Integer>> next = iterator.next();
+
+                next.getValue().removeIf(rownums::contains);
+                if (next.getValue().isEmpty()) {
+                    iterator.remove();
+                }
+            }
+        }
+    }
+
+    private void deleteRowIndex(Integer rownum) {
+        for (MultiDiffValueMap<T, Integer> index : index.values()) {
+            Iterator<Map.Entry<T, Set<Integer>>> iterator = index.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<T, Set<Integer>> next = iterator.next();
+
+                next.getValue().removeIf(rownum::equals);
+                if (next.getValue().isEmpty()) {
+                    iterator.remove();
+                }
             }
         }
     }

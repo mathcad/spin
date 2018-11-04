@@ -46,4 +46,18 @@ public interface SessionDao {
      * @return 存活的session数量
      */
     Long validCount();
+
+    /**
+     * 返回当前Session中存储的session数量
+     *
+     * @return session数量
+     */
+    int sessionCount();
+
+    /**
+     * 清除过期的Token
+     */
+    default void clearExpiredSession() {
+
+    }
 }

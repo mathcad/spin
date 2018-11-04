@@ -1,7 +1,8 @@
 package org.spin.core.collection;
 
+import org.spin.core.util.CollectionUtils;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EventObject;
 import java.util.List;
 
@@ -34,9 +35,8 @@ public class RowBeforeUpdateEvent extends EventObject {
         this.updateCols = updatedCols;
     }
 
-    public void setUpdateCols(int... cols) {
-        //noinspection unchecked
-        this.updateCols = new ArrayList(Arrays.asList(cols));
+    public void setUpdateCols(Integer... cols) {
+        this.updateCols = CollectionUtils.ofArrayList(cols);
     }
 
     public void addUpdateCols(int col) {

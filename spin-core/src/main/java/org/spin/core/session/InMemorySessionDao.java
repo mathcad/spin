@@ -17,7 +17,7 @@ public class InMemorySessionDao implements SessionDao {
     /**
      * Session容器
      */
-    private final Map<Serializable, Session> allSessions = new ConcurrentHashMap<>();
+    private final Map<Serializable, Session> allSessions = new ConcurrentHashMap<>(256);
 
     public InMemorySessionDao() {
         SessionManager.setSessionDao(this);
@@ -50,6 +50,16 @@ public class InMemorySessionDao implements SessionDao {
     @Override
     public Long validCount() {
         return allSessions.values().stream().filter(Session::isValid).count();
+    }
+
+    @Override
+    public int sessionCount() {
+        return allSessions.size();
+    }
+
+    @Override
+    public void clearExpiredSession() {
+
     }
 
 }

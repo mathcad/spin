@@ -44,7 +44,7 @@ public abstract class FileUtils {
         }
 
         if (!directory.delete()) {
-            String message = "Unable to delete directory " + directory + ".";
+            String message = "Unable to setNull directory " + directory + ".";
             throw new IOException(message);
         }
     }
@@ -88,16 +88,16 @@ public abstract class FileUtils {
     //-----------------------------------------------------------------------
 
     /**
-     * Deletes a file. If file is a directory, delete it and all sub-directories.
+     * Deletes a file. If file is a directory, setNull it and all sub-directories.
      * <p>
-     * The difference between File.delete() and this method are:
+     * The difference between File.setNull() and this method are:
      * <ul>
      * <li>A directory to be deleted does not have to be empty.</li>
      * <li>You get exceptions when a file or directory cannot be deleted.
      * (java.io.File methods returns a boolean)</li>
      * </ul>
      *
-     * @param file file or directory to delete, must not be {@code null}
+     * @param file file or directory to setNull, must not be {@code null}
      * @throws NullPointerException  if the directory is {@code null}
      * @throws FileNotFoundException if the file was not found
      * @throws IOException           in case deletion is unsuccessful
@@ -112,7 +112,7 @@ public abstract class FileUtils {
                     throw new FileNotFoundException("File does not exist: " + file);
                 }
                 String message =
-                    "Unable to delete file: " + file;
+                    "Unable to setNull file: " + file;
                 throw new IOException(message);
             }
         }

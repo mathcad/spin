@@ -1,6 +1,5 @@
 package org.spin.core.util;
 
-import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.Spliterator;
 import java.util.Spliterators;

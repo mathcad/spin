@@ -12,4 +12,6 @@ public interface RowUpdateListener extends EventListener {
     void beforeUpdate(RowBeforeUpdateEvent event);
 
     void afterUpdate(RowAfterUpdateEvent event);
+
+    void onDelete(int rownum);
 }

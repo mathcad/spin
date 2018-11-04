@@ -110,7 +110,9 @@ public interface Row<E> {
      * @throws IndexOutOfBoundsException     if the index is out of range
      *                                       (<tt>index &lt; 0 || index &gt;= size()</tt>)
      */
-    E delete(int index);
+    default E setNull(int index) {
+        return set(index, null);
+    }
 
     /**
      * Removes all of the elements from this list (optional operation).
@@ -121,5 +123,12 @@ public interface Row<E> {
      */
     void clear();
 
+    /**
+     * Remove this row from
+     */
+    void delete();
+
     void forEach(Consumer<? super E> action);
+
+    void setUpdateLestener(RowUpdateListener listener);
 }
