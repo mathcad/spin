@@ -3,7 +3,7 @@ package org.spin.enhance.ip;
 /**
  * configuration exception
  */
-public class DbMakerConfigException extends Exception {
+public class DbMakerConfigException extends RuntimeException {
     private static final long serialVersionUID = 4495714680349884838L;
 
     public DbMakerConfigException(String info) {

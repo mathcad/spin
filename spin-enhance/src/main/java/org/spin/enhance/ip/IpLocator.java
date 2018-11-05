@@ -1,7 +1,14 @@
 package org.spin.enhance.ip;
 
+import org.spin.core.function.serializable.ExceptionalSupplier;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.SystemUtils;
+
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 
@@ -43,22 +50,46 @@ public class IpLocator {
      */
     private byte[] dbBinStr = null;
 
+    private final Object mutexLock = new Object();
+
     public IpLocator(DbConfig dbConfig, String dbFile) throws FileNotFoundException {
         this.dbConfig = dbConfig;
         raf = new RandomAccessFile(dbFile, "r");
     }
 
+    public IpLocator(DbConfig dbConfig, ExceptionalSupplier<InputStream, IOException> dbFile) throws FileNotFoundException {
+        String path = SystemUtils.getJavaIoTmpDir().getAbsolutePath() + "/ip.db";
+        try (OutputStream os = new FileOutputStream(path); InputStream is = dbFile.get()) {
+            byte[] tmp = new byte[2048];
+            while (is.read(tmp) != -1) {
+                os.write(tmp);
+            }
+        } catch (IOException e) {
+            throw new SimplifiedException("读取数据库文件失败", e);
+        }
+        this.dbConfig = dbConfig;
+        raf = new RandomAccessFile(path, "r");
+    }
+
+    public IpLocator() throws FileNotFoundException {
+        this(new DbConfig(), () -> IpLocator.class.getClassLoader().getResourceAsStream("ipdb/ip.db"));
+    }
+
     public DataBlock memorySearch(long ip) throws IOException {
         int blen = IndexBlock.getIndexBlockLength();
         if (dbBinStr == null) {
-            dbBinStr = new byte[(int) raf.length()];
-            raf.seek(0L);
-            raf.readFully(dbBinStr, 0, dbBinStr.length);
+            synchronized (mutexLock) {
+                if (dbBinStr == null) {
+                    dbBinStr = new byte[(int) raf.length()];
+                    raf.seek(0L);
+                    raf.readFully(dbBinStr, 0, dbBinStr.length);
 
-            //initialize the global vars
-            firstIndexPtr = Util.getIntLong(dbBinStr, 0);
-            lastIndexPtr = Util.getIntLong(dbBinStr, 4);
-            totalIndexBlocks = (int) ((lastIndexPtr - firstIndexPtr) / blen) + 1;
+                    //initialize the global vars
+                    firstIndexPtr = Util.getIntLong(dbBinStr, 0);
+                    lastIndexPtr = Util.getIntLong(dbBinStr, 4);
+                    totalIndexBlocks = (int) ((lastIndexPtr - firstIndexPtr) / blen) + 1;
+                }
+            }
         }
 
         //search the index blocks to define the data
