@@ -112,10 +112,13 @@ public abstract class PackageUtils {
                 if (null != jarEntry && !jarEntry.isDirectory()) {
                     String fileName = SystemUtils.getJavaIoTmpDir() + SystemUtils.FILE_SEPARATOR + RandomStringUtils.randomAlphanumeric(16) + ".jar";
                     try (OutputStream os = new FileOutputStream(fileName); InputStream is = jarFile.getInputStream(jarEntry)) {
-                        byte[] tmp = new byte[2048];
-                        while (is.read(tmp) != -1) {
-                            os.write(tmp);
+                        byte[] tmp = new byte[4096];
+                        int len = 0;
+                        do {
+                            os.write(tmp, 0, len);
+                            len = is.read(tmp);
                         }
+                        while (len != -1);
                         jarFile.close();
                         jarFile = new JarFile(fileName);
                     }

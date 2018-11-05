@@ -2,8 +2,6 @@ package org.spin.enhance.ip;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-
 /**
  * TITLE
  * <p>DESCRIPTION</p>
@@ -14,9 +12,9 @@ import java.io.IOException;
 class IpLocatorTest {
 
     @Test
-    public void test() throws DbMakerConfigException, IOException {
+    public void test() throws DbMakerConfigException {
         MemoryIpLocator locator = new MemoryIpLocator();
-        DataBlock dataBlock = locator.memorySearch("61.191.211.19");
+        DataBlock dataBlock = locator.search("61.191.211.19");
         System.out.println(dataBlock.getRegion());
     }
 

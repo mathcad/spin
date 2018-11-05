@@ -10,7 +10,7 @@ import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 
 /**
- * ip db searcher class (Not thread safe)
+ * 内存中的IP搜索，线程安全
  */
 public class MemoryIpLocator {
 
@@ -27,10 +27,33 @@ public class MemoryIpLocator {
 
 
     public MemoryIpLocator(DbConfig dbConfig, String dbFile) {
+        init(dbConfig, dbFile);
+    }
+
+    public MemoryIpLocator(DbConfig dbConfig, ExceptionalSupplier<InputStream, IOException> dbFile) {
         this.dbConfig = dbConfig;
-        RandomAccessFile raf;
-        try {
-            raf = new RandomAccessFile(dbFile, "r");
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream(); InputStream is = dbFile.get()) {
+            byte[] tmp = new byte[4096];
+            int len = 0;
+            do {
+                os.write(tmp, 0, len);
+                len = is.read(tmp);
+            }
+            while (len != -1);
+
+            dbBinStr = os.toByteArray();
+        } catch (IOException e) {
+            throw new SimplifiedException("读取数据库文件失败", e);
+        }
+    }
+
+    public MemoryIpLocator() {
+        this(new DbConfig(), () -> MemoryIpLocator.class.getClassLoader().getResourceAsStream("ipdb/ip.db"));
+    }
+
+    private void init(DbConfig dbConfig, String dbFile) {
+        this.dbConfig = dbConfig;
+        try (RandomAccessFile raf = new RandomAccessFile(dbFile, "r")) {
             dbBinStr = new byte[(int) raf.length()];
             raf.seek(0L);
             raf.readFully(dbBinStr, 0, dbBinStr.length);
@@ -39,24 +62,7 @@ public class MemoryIpLocator {
         }
     }
 
-    public MemoryIpLocator(DbConfig dbConfig, ExceptionalSupplier<InputStream, IOException> dbFile) {
-        try (ByteArrayOutputStream os = new ByteArrayOutputStream(); InputStream is = dbFile.get()) {
-            byte[] tmp = new byte[2048];
-            while (is.read(tmp) != -1) {
-                os.write(tmp);
-            }
-            dbBinStr = os.toByteArray();
-        } catch (IOException e) {
-            throw new SimplifiedException("读取数据库文件失败", e);
-        }
-        this.dbConfig = dbConfig;
-    }
-
-    public MemoryIpLocator() {
-        this(new DbConfig(), () -> MemoryIpLocator.class.getClassLoader().getResourceAsStream("ipdb/ip.db"));
-    }
-
-    public DataBlock memorySearch(long ip) throws IOException {
+    public DataBlock search(long ip) {
         int blen = IndexBlock.getIndexBlockLength();
 
         long firstIndexPtr = Util.getIntLong(dbBinStr, 0);
@@ -95,11 +101,11 @@ public class MemoryIpLocator {
         return new DataBlock(city_id, region, dataPtr);
     }
 
-    public DataBlock memorySearch(String ip) throws IOException {
-        return memorySearch(Util.ip2long(ip));
+    public DataBlock search(String ip) {
+        return search(Util.ip2long(ip));
     }
 
-    public DataBlock getByIndexPtr(int ptr) throws IOException {
+    public DataBlock getByIndexPtr(int ptr) {
         byte[] buffer = new byte[12];
         System.arraycopy(dbBinStr, ptr, buffer, 0, 12);
         //long startIp = Util.getIntLong(buffer, 0);
