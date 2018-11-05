@@ -226,12 +226,11 @@ public class Matrix<T> implements RowUpdateListener {
      * @param column 列编号，从0开始
      * @param key    列值
      */
-    public ArrayRow<T> delete(int column, T key) {
+    public boolean delete(int column, T key) {
         rangeCheck(column);
         Set<Integer> rownums = findRows(column, key).stream().map(Row::rownum).collect(Collectors.toSet());
-        rows.removeIf(next -> rownums.contains(next.rownum()));
         deleteRowIndex(rownums);
-        return null;
+        return rows.removeIf(next -> rownums.contains(next.rownum()));
     }
 
     /**
@@ -240,7 +239,7 @@ public class Matrix<T> implements RowUpdateListener {
      * @param columnHeader 列编号
      * @param key          列值
      */
-    public ArrayRow<T> delete(String columnHeader, T key) {
+    public boolean delete(String columnHeader, T key) {
         Integer column = matrixHeader.get(columnHeader);
         return delete(Assert.notNull(column, "指定的列名不存在"), key);
     }
