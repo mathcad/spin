@@ -12,7 +12,7 @@ public class DataBlock {
     /**
      * region address
      */
-    private String region;
+    private Region region;
 
     /**
      * region ptr in the db file
@@ -21,7 +21,7 @@ public class DataBlock {
 
     public DataBlock(int cityId, String region, int dataPtr) {
         this.cityId = cityId;
-        this.region = region;
+        this.region = new Region(region);
         this.dataPtr = dataPtr;
     }
 
@@ -38,11 +38,11 @@ public class DataBlock {
         return this;
     }
 
-    public String getRegion() {
+    public Region getRegion() {
         return region;
     }
 
-    public DataBlock setRegion(String region) {
+    public DataBlock setRegion(Region region) {
         this.region = region;
         return this;
     }
