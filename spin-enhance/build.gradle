@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '扩展模块'
-version = '2.1.22.RELEASE'
+version = '2.1.23.RELEASE'
 def artifactId = 'spin-enhance'
 
 

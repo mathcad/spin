@@ -1,30 +1,24 @@
 package org.spin.core.util;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.Random;
 
-import javax.imageio.ImageIO;
-
 /**
- * TITLE
+ * 验证码工具类
  * <p>DESCRIPTION</p>
  * <p>Created by xuweinan on 2018/11/7.</p>
  *
  * @author xuweinan
  */
 public class CaptchaUtils {
-    //使用到Algerian字体，系统里没有的话需要安装字体，字体只显示大写，去掉了1,0,i,o几个容易混淆的字符
     public static final String VERIFY_CODES = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
     private static Random random = new Random();
 
@@ -33,7 +27,7 @@ public class CaptchaUtils {
      * 使用系统默认字符源生成验证码
      *
      * @param verifySize 验证码长度
-     * @return
+     * @return 验证码
      */
     public static String generateVerifyCode(int verifySize) {
         return generateVerifyCode(verifySize, VERIFY_CODES);
@@ -44,7 +38,7 @@ public class CaptchaUtils {
      *
      * @param verifySize 验证码长度
      * @param sources    验证码字符源
-     * @return
+     * @return 验证码
      */
     public static String generateVerifyCode(int verifySize, String sources) {
         if (sources == null || sources.length() == 0) {
@@ -62,12 +56,12 @@ public class CaptchaUtils {
     /**
      * 生成随机验证码文件,并返回验证码值
      *
-     * @param w
-     * @param h
-     * @param outputFile
-     * @param verifySize
-     * @return
-     * @throws IOException
+     * @param w          验证码宽度
+     * @param h          验证码高度
+     * @param outputFile 输出文件
+     * @param verifySize 需要生成的验证码长度
+     * @return 验证码
+     * @throws IOException IO异常
      */
     public static String outputVerifyImage(int w, int h, File outputFile, int verifySize) throws IOException {
         String verifyCode = generateVerifyCode(verifySize);
@@ -78,12 +72,12 @@ public class CaptchaUtils {
     /**
      * 输出随机验证码图片流,并返回验证码值
      *
-     * @param w
-     * @param h
-     * @param os
-     * @param verifySize
-     * @return
-     * @throws IOException
+     * @param w          验证码宽度
+     * @param h          验证码高度
+     * @param os         输出流
+     * @param verifySize 需要生成的验证码长度
+     * @return 验证码
+     * @throws IOException IO异常
      */
     public static String outputVerifyImage(int w, int h, OutputStream os, int verifySize) throws IOException {
         String verifyCode = generateVerifyCode(verifySize);
@@ -94,11 +88,11 @@ public class CaptchaUtils {
     /**
      * 生成指定验证码图像文件
      *
-     * @param w
-     * @param h
-     * @param outputFile
-     * @param code
-     * @throws IOException
+     * @param w          验证码宽度
+     * @param h          验证码高度
+     * @param outputFile 输出文件
+     * @param code       验证码
+     * @throws IOException IO异常
      */
     public static void outputImage(int w, int h, File outputFile, String code) throws IOException {
         if (outputFile == null) {
@@ -108,24 +102,20 @@ public class CaptchaUtils {
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        try {
-            outputFile.createNewFile();
-            FileOutputStream fos = new FileOutputStream(outputFile);
+        outputFile.createNewFile();
+        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             outputImage(w, h, fos, code);
-            fos.close();
-        } catch (IOException e) {
-            throw e;
         }
     }
 
     /**
      * 输出指定验证码图片流
      *
-     * @param w
-     * @param h
-     * @param os
-     * @param code
-     * @throws IOException
+     * @param w    验证码宽度
+     * @param h    验证码高度
+     * @param os   输出流
+     * @param code 验证码
+     * @throws IOException IO异常
      */
     public static void outputImage(int w, int h, OutputStream os, String code) throws IOException {
         int verifySize = code.length();
@@ -133,16 +123,16 @@ public class CaptchaUtils {
         Random rand = new Random();
         Graphics2D g2 = image.createGraphics();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        Color[] colors = new Color[5];
-        Color[] colorSpaces = new Color[]{Color.WHITE, Color.CYAN,
-            Color.GRAY, Color.LIGHT_GRAY, Color.MAGENTA, Color.ORANGE,
-            Color.PINK, Color.YELLOW};
-        float[] fractions = new float[colors.length];
-        for (int i = 0; i < colors.length; i++) {
-            colors[i] = colorSpaces[rand.nextInt(colorSpaces.length)];
-            fractions[i] = rand.nextFloat();
-        }
-        Arrays.sort(fractions);
+//        Color[] colors = new Color[5];
+//        Color[] colorSpaces = new Color[]{Color.WHITE, Color.CYAN,
+//            Color.GRAY, Color.LIGHT_GRAY, Color.MAGENTA, Color.ORANGE,
+//            Color.PINK, Color.YELLOW};
+//        float[] fractions = new float[colors.length];
+//        for (int i = 0; i < colors.length; i++) {
+//            colors[i] = colorSpaces[rand.nextInt(colorSpaces.length)];
+//            fractions[i] = rand.nextFloat();
+//        }
+//        Arrays.sort(fractions);
 
         g2.setColor(Color.GRAY);// 设置边框色
         g2.fillRect(0, 0, w, h);
@@ -175,15 +165,20 @@ public class CaptchaUtils {
         shear(g2, w, h, c);// 使图片扭曲
 
         g2.setColor(getRandColor(100, 160));
-        int fontSize = h - 4;
-        Font font = new Font("Algerian", Font.ITALIC, fontSize);
-        g2.setFont(font);
+        float fontSize = h - 4;
+
+        try (InputStream aixing = CaptchaUtils.class.getClassLoader().getResourceAsStream("fonts/ALGER.TTF")) {
+            Font dynamicFont = Font.createFont(Font.TRUETYPE_FONT, aixing);
+            Font dynamicFontPt = dynamicFont.deriveFont(Font.ITALIC).deriveFont(fontSize);
+            g2.setFont(dynamicFontPt);
+        } catch (FontFormatException ignore) {
+        }
         char[] chars = code.toCharArray();
         for (int i = 0; i < verifySize; i++) {
             AffineTransform affine = new AffineTransform();
             affine.setToRotation(Math.PI / 4 * rand.nextDouble() * (rand.nextBoolean() ? 1 : -1), (w / verifySize) * i + fontSize / 2, h / 2);
             g2.setTransform(affine);
-            g2.drawChars(chars, i, 1, ((w - 10) / verifySize) * i + 5, h / 2 + fontSize / 2 - 10);
+            g2.drawChars(chars, i, 1, ((w - 10) / verifySize) * i + 5, (int) (h / 2 + fontSize / 2 - 10));
         }
 
         g2.dispose();
@@ -268,15 +263,5 @@ public class CaptchaUtils {
 
         }
 
-    }
-
-    public static void main(String[] args) throws IOException {
-        File dir = new File("F:/verifies");
-        int w = 200, h = 80;
-        for (int i = 0; i < 50; i++) {
-            String verifyCode = generateVerifyCode(4);
-            File file = new File(dir, verifyCode + ".jpg");
-            outputImage(w, h, file, verifyCode);
-        }
     }
 }
