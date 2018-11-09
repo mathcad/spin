@@ -29,8 +29,8 @@ public class CaptchaUtils {
      * @param verifySize 验证码长度
      * @return 验证码
      */
-    public static String generateVerifyCode(int verifySize) {
-        return generateVerifyCode(verifySize, VERIFY_CODES);
+    public static String generateCaptcha(int verifySize) {
+        return generateCaptcha(verifySize, VERIFY_CODES);
     }
 
     /**
@@ -40,7 +40,7 @@ public class CaptchaUtils {
      * @param sources    验证码字符源
      * @return 验证码
      */
-    public static String generateVerifyCode(int verifySize, String sources) {
+    public static String generateCaptcha(int verifySize, String sources) {
         if (sources == null || sources.length() == 0) {
             sources = VERIFY_CODES;
         }
@@ -63,9 +63,9 @@ public class CaptchaUtils {
      * @return 验证码
      * @throws IOException IO异常
      */
-    public static String outputVerifyImage(int w, int h, File outputFile, int verifySize) throws IOException {
-        String verifyCode = generateVerifyCode(verifySize);
-        outputImage(w, h, outputFile, verifyCode);
+    public static String writeCaptchaImage(int w, int h, File outputFile, int verifySize) throws IOException {
+        String verifyCode = generateCaptcha(verifySize);
+        writeImage(w, h, outputFile, verifyCode);
         return verifyCode;
     }
 
@@ -79,9 +79,9 @@ public class CaptchaUtils {
      * @return 验证码
      * @throws IOException IO异常
      */
-    public static String outputVerifyImage(int w, int h, OutputStream os, int verifySize) throws IOException {
-        String verifyCode = generateVerifyCode(verifySize);
-        outputImage(w, h, os, verifyCode);
+    public static String writeCaptchaImage(int w, int h, OutputStream os, int verifySize) throws IOException {
+        String verifyCode = generateCaptcha(verifySize);
+        writeImage(w, h, os, verifyCode);
         return verifyCode;
     }
 
@@ -94,7 +94,7 @@ public class CaptchaUtils {
      * @param code       验证码
      * @throws IOException IO异常
      */
-    public static void outputImage(int w, int h, File outputFile, String code) throws IOException {
+    public static void writeImage(int w, int h, File outputFile, String code) throws IOException {
         if (outputFile == null) {
             return;
         }
@@ -104,7 +104,7 @@ public class CaptchaUtils {
         }
         outputFile.createNewFile();
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-            outputImage(w, h, fos, code);
+            writeImage(w, h, fos, code);
         }
     }
 
@@ -117,7 +117,7 @@ public class CaptchaUtils {
      * @param code 验证码
      * @throws IOException IO异常
      */
-    public static void outputImage(int w, int h, OutputStream os, String code) throws IOException {
+    public static void writeImage(int w, int h, OutputStream os, String code) throws IOException {
         int verifySize = code.length();
         BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
         Random rand = new Random();

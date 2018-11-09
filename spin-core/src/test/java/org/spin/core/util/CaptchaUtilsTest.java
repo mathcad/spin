@@ -17,9 +17,9 @@ class CaptchaUtilsTest {
         File dir = new File("D:/verifies");
         int w = 150, h = 50;
         for (int i = 0; i < 50; i++) {
-            String verifyCode = CaptchaUtils.generateVerifyCode(4);
+            String verifyCode = CaptchaUtils.generateCaptcha(4);
             File file = new File(dir, verifyCode + ".jpg");
-            CaptchaUtils.outputImage(w, h, file, verifyCode);
+            CaptchaUtils.writeImage(w, h, file, verifyCode);
         }
     }
 }
