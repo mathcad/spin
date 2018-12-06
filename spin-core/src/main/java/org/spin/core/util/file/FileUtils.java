@@ -29,6 +29,51 @@ public abstract class FileUtils {
     }
 
     /**
+     * 创建指定文件的父文件夹结构
+     *
+     * @param file 待创建父文件夹的文件，不能为{@code null}
+     * @throws NullPointerException 当文件为{@code null}时抛出
+     * @throws IOException          无法创建文件夹结构时抛出
+     */
+    public static void forceMkdirParent(final File file) throws IOException {
+        final File parent = file.getParentFile();
+        if (parent == null) {
+            return;
+        }
+        forceMkdir(parent);
+    }
+
+    /**
+     * 创建文件夹, 包括其所有父级(如果不存在的话). 如果一个同名文件已经存在, 但不是文件夹的话，将会抛出IOException
+     *
+     * @param directory 待创建的目录，不能为 {@code null}
+     * @throws NullPointerException 当directory为 {@code null}时抛出
+     * @throws IOException          无法创建文件夹时抛出
+     */
+    public static void forceMkdir(final File directory) throws IOException {
+        if (directory.exists()) {
+            if (!directory.isDirectory()) {
+                final String message =
+                    "File "
+                        + directory
+                        + " exists and is "
+                        + "not a directory. Unable to create directory.";
+                throw new IOException(message);
+            }
+        } else {
+            if (!directory.mkdirs()) {
+                // Double-check that some other thread or process hasn't made
+                // the directory in the background
+                if (!directory.isDirectory()) {
+                    final String message =
+                        "Unable to create directory " + directory;
+                    throw new IOException(message);
+                }
+            }
+        }
+    }
+
+    /**
      * 删除文件夹
      *
      * @param directory 待删除文件夹
@@ -50,10 +95,10 @@ public abstract class FileUtils {
     }
 
     /**
-     * Cleans a directory without deleting it.
+     * 清空指定目录下的所有文件
      *
-     * @param directory directory to clean
-     * @throws IOException in case cleaning is unsuccessful
+     * @param directory 需要清理的目录
+     * @throws IOException IO 异常时抛出
      */
     public static void cleanDirectory(File directory) throws IOException {
         if (!directory.exists()) {
@@ -217,12 +262,12 @@ public abstract class FileUtils {
     /**
      * 列出当前目录下所有文件(非递归算法)
      *
-     * @param path      目录
-     * @param travelSub 是否遍历子目录
-     * @param filter    文件过滤器
+     * @param path    目录
+     * @param recurse 是否遍历子目录
+     * @param filter  文件过滤器
      * @return 所有文件的完整文件名列表
      */
-    public static List<String> listFiles(String path, boolean travelSub, Predicate<File> filter) {
+    public static List<String> listFiles(String path, boolean recurse, Predicate<File> filter) {
         List<String> allFileNames = new ArrayList<>();
         File file = null;
         Deque<File> directories = new LinkedList<>();
@@ -238,7 +283,7 @@ public abstract class FileUtils {
             if (childFiles != null && childFiles.length != 0) {
                 for (int i = 0; i < childFiles.length; i++) {
                     file = childFiles[i];
-                    if (file.isDirectory() && travelSub) {
+                    if (file.isDirectory() && recurse) {
                         directories.push(file);
                     } else if (filter.test(file)) {
                         allFileNames.add(file.getPath());
@@ -251,7 +296,7 @@ public abstract class FileUtils {
 
     public static List<String> listFilesFromJarOrZip(String filePath, Predicate<String> filter) {
         List<String> fileNames = new ArrayList<>();
-        try (ZipFile file = new ZipFile(filePath)){
+        try (ZipFile file = new ZipFile(filePath)) {
             StreamUtils.enumerationAsStream(file.entries()).map(ZipEntry::getName).filter(filter).forEach(fileNames::add);
         } catch (IOException e) {
             logger.error(e.getMessage());
