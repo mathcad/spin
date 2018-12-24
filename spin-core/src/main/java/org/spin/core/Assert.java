@@ -382,19 +382,16 @@ public abstract class Assert {
     //---------------------------------------------------------------------------------
 
     /**
-     * <p>Assert that the specified argument character sequence is
-     * neither {@code null} nor a length of zero (no characters);
-     * otherwise throwing an exception with the specified message.
+     * <p>断言指定的字符串一定非空（不为null且长度大于0）
      * </p>
      * <pre>Assert.notEmpty(myString, "The string must not be empty");</pre>
      *
-     * @param <T>     the character sequence type
-     * @param chars   the character sequence to check, validated not null by this method
-     * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
-     * @param values  the optional values for the formatted exception message, null array not recommended
-     * @return the validated character sequence (never {@code null} method for chaining)
-     * @throws AssertFailException if the character sequence is {@code null}
-     * @throws AssertFailException if the character sequence is empty
+     * @param <T>     字符串类型
+     * @param chars   待检查的字符串
+     * @param message {@link String#format(String, Object...)} 检查失败时的信息
+     * @param values  填充失败信息的参数
+     * @return 检查通过时返回原字符串
+     * @throws AssertFailException 当字符串为{@code null} 或长度为0时抛出
      */
     public static <T extends CharSequence> T notEmpty(final T chars, final String message, final Object... values) {
         if (chars == null) {

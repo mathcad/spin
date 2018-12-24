@@ -1,9 +1,7 @@
 package org.spin.core.collection.math;
 
-import java.math.BigDecimal;
-
 /**
- * N维欧氏空间中的直线。
+ * 空间中的直线。
  * <p>Created by xuweinan on 2018/3/20.</p>
  *
  * @author xuweinan
@@ -11,12 +9,12 @@ import java.math.BigDecimal;
 public class Line {
 
     /**
-     * 参考点
+     * 参考起点
      */
-    Point point;
+    Point pointStart;
 
     /**
-     * 斜率
+     * 参考终点
      */
-    BigDecimal k;
+    Point pointEnd;
 }

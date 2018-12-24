@@ -73,9 +73,11 @@ public class RateLimiterTest {
         int i = 0;
         while (i < 201) {
             stopwatch.record();
-            System.out.println(stopwatch.elapsedRecord(i + 1).toNanos());
+            System.out.println(stopwatch.elapsedRecord(i + 1).toMillis());
             ++i;
         }
+        stopwatch.stop();
+        stopwatch.elapsed();
 
     }
 }

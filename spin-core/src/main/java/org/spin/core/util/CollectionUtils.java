@@ -29,6 +29,26 @@ public abstract class CollectionUtils {
     }
 
     /**
+     * 判断数组是否为空或{@code null}
+     *
+     * @param array 待检查数组
+     * @return 是否为空
+     */
+    public static <T> boolean isEmpty(T[] array) {
+        return (array == null || array.length == 0);
+    }
+
+    /**
+     * 判断Map是否为空或{@code null}
+     *
+     * @param map 待检查Map
+     * @return 是否为空
+     */
+    public static boolean isEmpty(Map<?, ?> map) {
+        return (map == null || map.isEmpty());
+    }
+
+    /**
      * 将数组中的元素合并到集合中
      *
      * @param array      待合并的数组 (可以为 {@code null})
