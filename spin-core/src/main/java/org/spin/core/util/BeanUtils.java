@@ -15,14 +15,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -237,33 +230,33 @@ public abstract class BeanUtils {
                 if (o instanceof Map) {
                     o = ((Map) o).get(field.substring(1));
                 } else if (o instanceof List) {
-                    int idx;
-                    String f = field;
-                    try {
-                        f = field.substring(1);
-                        idx = Integer.valueOf(f);
-                    } catch (Exception e) {
-                        throw new SimplifiedException(f + "索引不是有效的数字");
-                    }
-                    if (((List) o).size() < idx) {
-                        throw new SimplifiedException(f + "索引超出范围0-" + ((List) o).size());
+                    int idx = decodeIdx(field);
+                    if (((List) o).size() <= idx) {
+                        throw new SimplifiedException(idx + " 索引超出范围0-" + ((List) o).size());
                     }
                     o = ((List) o).get(idx);
                 } else if (o.getClass().isArray()) {
-                    int idx;
-                    String f = field;
-                    try {
-                        f = field.substring(1);
-                        idx = Integer.valueOf(f);
-                    } catch (Exception e) {
-                        throw new SimplifiedException(f + "索引不是有效的数字");
-                    }
+                    int idx = decodeIdx(field);
                     @SuppressWarnings("ConstantConditions")
                     Object[] t = (Object[]) o;
-                    if (t.length < idx) {
-                        throw new SimplifiedException(f + "索引超出范围0-" + t.length);
+                    if (t.length <= idx) {
+                        throw new SimplifiedException(idx + " 索引超出范围0-" + t.length);
                     }
                     o = t[idx];
+                } else if (o instanceof Collection) {
+                    Collection<?> t = (Collection<?>) o;
+                    int idx = decodeIdx(field);
+                    if (t.size() <= idx) {
+                        throw new SimplifiedException(idx + " 索引超出范围0-" + t.size());
+                    }
+                    int k = 0;
+                    for (Object obj : t) {
+                        if (k == idx) {
+                            o = obj;
+                            break;
+                        }
+                        ++k;
+                    }
                 } else {
                     throw new SimplifiedException(o.getClass().toString() + "中的属性名称[" + field + "]不合法");
                 }
@@ -285,6 +278,117 @@ public abstract class BeanUtils {
         }
         //noinspection unchecked
         return (T) o;
+    }
+
+//    public static <T> T setFieldValue(T target, String valuePath, Object value) {
+//        String[] valuePaths = Assert.notEmpty(valuePath, "valuePath必须指定属性名称").split("\\.");
+//        if (null == target) {
+//            return null;
+//        }
+//        Object o = target;
+//        for (int i = 0; i < valuePaths.length; i++) {
+//            String field = valuePaths[i];
+//            char mark = field.charAt(0);
+//            if (o == null) {
+//                throw new SimplifiedException(field + "属性为null");
+//            }
+//            if ('#' == mark) {
+//                if (o instanceof Map) {
+//                    if (i == valuePaths.length - 1) {
+//                        ((Map) o).put(field.substring(1), value);
+//                    } else {
+//                        o = ((Map) o).get(field.substring(1));
+//                    }
+//                } else if (o instanceof List) {
+//                    int idx = decodeIdx(field);
+//                    if (((List) o).size() <= idx) {
+//                        throw new SimplifiedException(idx + " 索引超出范围0-" + ((List) o).size());
+//                    }
+//                    if (i == valuePaths.length - 1) {
+//                        ((List) o).set(idx, value);
+//                    } else {
+//                        o = ((List) o).get(idx);
+//                    }
+//                } else if (o.getClass().isArray()) {
+//                    int idx = decodeIdx(field);
+//                    @SuppressWarnings("ConstantConditions")
+//                    Object[] t = (Object[]) o;
+//                    if (t.length <= idx) {
+//                        throw new SimplifiedException(idx + " 索引超出范围0-" + t.length);
+//                    }
+//                    if (i == valuePaths.length - 1) {
+//                        t[idx] = o;
+//                    } else {
+//                        o = t[idx];
+//                    }
+//                } else if (o instanceof Collection) {
+//                    Collection<?> t = (Collection<?>) o;
+//                    int idx = decodeIdx(field);
+//                    if (t.size() <= idx) {
+//                        throw new SimplifiedException(idx + " 索引超出范围0-" + t.size());
+//                    }
+//                    int k = 0;
+//                    for (Object obj : t) {
+//                        if (k == idx) {
+//                            o = obj;
+//                            break;
+//                        }
+//                        ++k;
+//                    }
+//                } else {
+//                    throw new SimplifiedException(o.getClass().toString() + "中的属性名称[" + field + "]不合法");
+//                }
+//            } else {
+//                if (i == valuePaths.length - 1) {
+//                    setFieldValueInternal(target, field, value);
+//                } else {
+//                    o = getFieldValueInternal(o, field);
+//                }
+//            }
+//        }
+//        return target;
+//    }
+
+//    private static Object getFieldValueInternal(Object target, String field) {
+//        Field f;
+//        try {
+//            f = ReflectionUtils.findField(target.getClass(), field);
+//            ReflectionUtils.makeAccessible(f);
+//        } catch (Exception e) {
+//            throw new SimplifiedException(target.getClass().toString() + "不存在" + field + "属性", e);
+//        }
+//
+//        try {
+//            return ReflectionUtils.getField(f, target);
+//        } catch (Exception e) {
+//            throw new SimplifiedException(target.getClass().toString() + "获取属性" + field + "的值失败", e);
+//        }
+//    }
+//
+//    private static void setFieldValueInternal(Object target, String field, Object value) {
+//        Field f;
+//        try {
+//            f = ReflectionUtils.findField(target.getClass(), field);
+//            ReflectionUtils.makeAccessible(f);
+//        } catch (Exception e) {
+//            throw new SimplifiedException(target.getClass().toString() + "不存在" + field + "属性", e);
+//        }
+//
+//        try {
+//            ReflectionUtils.setField(f, target, value);
+//        } catch (Exception e) {
+//            throw new SimplifiedException(target.getClass().toString() + "获取属性" + field + "的值失败", e);
+//        }
+//    }
+
+    private static int decodeIdx(String field) {
+        String f = field;
+        try {
+            f = f.substring(1);
+            return Integer.valueOf(f);
+        } catch (Exception e) {
+            throw new SimplifiedException("索引[" + f + "]不是有效的数字");
+        }
     }
 
     /**

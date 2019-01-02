@@ -66,4 +66,19 @@ class StringUtilsTest {
         String tmpl = "aasdfa\\${123sdf${#a}${#b}${#dfsdfsd}";
         System.out.println(StringUtils.render(tmpl, MapUtils.ofMap("a", "--", "b", "++++")));
     }
+
+    @Test
+    public void testEncode() {
+        String tmp = "aaaaa这是第一段中文bbbbb这是第2段中文。，l";
+        System.out.println(StringUtils.urlEncodeChinese(tmp));
+
+        System.out.println(StringUtils.urlDecode(StringUtils.urlEncodeChinese(tmp)));
+    }
+
+    @Test
+    public void testTrim() {
+        String tmp = "   aaa   ";
+        System.out.println(StringUtils.trimWhitespace(tmp));
+    }
+
 }

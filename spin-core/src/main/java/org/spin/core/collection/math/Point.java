@@ -1,7 +1,7 @@
 package org.spin.core.collection.math;
 
 import org.spin.core.Assert;
-import org.spin.core.util.NumericUtils;
+import org.spin.core.util.MathUtils;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -40,7 +40,7 @@ public class Point {
             ++i;
         }
         this.scale = scale;
-        this.d = NumericUtils.sqrt(sum, scale * 2);
+        this.d = MathUtils.sqrt(sum, scale * 2);
     }
 
     /**
@@ -61,7 +61,7 @@ public class Point {
             sum = sum.add(coord.pow(2));
         }
         this.scale = scale;
-        this.d = NumericUtils.sqrt(sum, scale * 2);
+        this.d = MathUtils.sqrt(sum, scale * 2);
     }
 
     /**
@@ -109,7 +109,7 @@ public class Point {
         for (int i = shorter.length; i != coords.length; ++i) {
             sum = sum.add(coords[i].pow(2));
         }
-        return NumericUtils.sqrt(sum, scale);
+        return MathUtils.sqrt(sum, scale);
     }
 
     /**

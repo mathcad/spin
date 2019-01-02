@@ -7,23 +7,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.TimeZone;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Character.isLetterOrDigit;
@@ -65,6 +50,7 @@ public abstract class StringUtils {
 
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("^\\d+(\\.\\d+)?$");
     private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d+$");
+    private static final Pattern CONTAINS_CHINESE_PATTERN = Pattern.compile("([\u4e00-\u9fa5\ufe30-\uffa0]+)");
 
     public static final String EMPTY = "";
 
@@ -345,14 +331,20 @@ public abstract class StringUtils {
         if (isEmpty(str)) {
             return str;
         }
-        StringBuilder sb = new StringBuilder(str);
-        while (sb.length() > 0 && isWhitespace(sb.charAt(0))) {
-            sb.deleteCharAt(0);
+        int s = 0, e = str.length();
+        while (s < str.length()) {
+            if (!isWhitespace(str.charAt(s))) {
+                break;
+            }
+            ++s;
         }
-        while (sb.length() > 0 && isWhitespace(sb.charAt(sb.length() - 1))) {
-            sb.deleteCharAt(sb.length() - 1);
+        while (e > s) {
+            if (!isWhitespace(str.charAt(e - 1))) {
+                break;
+            }
+            --e;
         }
-        return sb.toString();
+        return str.substring(s, e);
     }
 
     /**
@@ -3211,27 +3203,14 @@ public abstract class StringUtils {
         return toStringArray(set);
     }
 
-    /**
-     * Split a {@code String} at the first occurrence of the delimiter.
-     * Does not include the delimiter in the result.
-     *
-     * @param toSplit   the string to split
-     * @param delimiter to split the string up with
-     * @return a two element array with index 0 being before the delimiter, and
-     * index 1 being after the delimiter (neither element includes the delimiter);
-     * or {@code null} if the delimiter wasn't found in the given input {@code String}
-     */
-    public static String[] split(String toSplit, String delimiter) {
-        if (isEmpty(toSplit) || isEmpty(delimiter)) {
+    public static String[] split(String toSplit, String regex) {
+        if (isEmpty(toSplit)) {
             return null;
         }
-        int offset = toSplit.indexOf(delimiter);
-        if (offset < 0) {
-            return null;
+        if (isEmpty(regex)) {
+            return CollectionUtils.ofArray(toSplit);
         }
-        String beforeDelimiter = toSplit.substring(0, offset);
-        String afterDelimiter = toSplit.substring(offset + delimiter.length());
-        return new String[]{beforeDelimiter, afterDelimiter};
+        return toSplit.split(regex);
     }
 
     /**
@@ -3831,6 +3810,22 @@ public abstract class StringUtils {
         } catch (UnsupportedEncodingException ignore) {
             return input;
         }
+    }
+
+    /**
+     * 对字符串中的中文进行URL编码
+     *
+     * @param input 输入字符串
+     * @return 编码后的字符串
+     */
+    public static String urlEncodeChinese(String input) {
+        StringBuffer sb = new StringBuffer(input.length() * 2);
+        Matcher matcher = CONTAINS_CHINESE_PATTERN.matcher(input);
+        while (matcher.find()) {
+            matcher.appendReplacement(sb, urlEncode(matcher.group(1)));
+        }
+
+        return sb.toString();
     }
 
     /**

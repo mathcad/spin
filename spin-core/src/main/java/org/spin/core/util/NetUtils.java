@@ -37,7 +37,7 @@ public abstract class NetUtils {
     public static String longToIpv4(long longIP) {
         // 直接右移24位
         // 将高8位置0，然后右移16位
-        return String.valueOf(longIP >>> 24) +
+        return (longIP >>> 24) +
             "." +
             ((longIP & 0x00FFFFFF) >>> 16) +
             "." +
@@ -108,7 +108,7 @@ public abstract class NetUtils {
      * @return 是否为内网IP
      */
     public static boolean isInnerIP(String ipAddress) {
-        boolean isInnerIp = false;
+        boolean isInnerIp;
         long ipNum = NetUtils.ipv4ToLong(ipAddress);
 
         long aBegin = ipv4ToLong("10.0.0.0");
@@ -134,7 +134,7 @@ public abstract class NetUtils {
      * @return IP地址列表 {@link LinkedHashSet}
      */
     public static Set<String> localIpv4s() {
-        Enumeration<NetworkInterface> networkInterfaces = null;
+        Enumeration<NetworkInterface> networkInterfaces;
         try {
             networkInterfaces = NetworkInterface.getNetworkInterfaces();
         } catch (SocketException e) {
@@ -212,8 +212,8 @@ public abstract class NetUtils {
             host = LOCAL_IP;
         }
 
-        String destHost = null;
-        int port = 0;
+        String destHost;
+        int port;
         int index = host.indexOf(':');
         if (index != -1) {
             // host:port形式
@@ -248,7 +248,7 @@ public abstract class NetUtils {
      * @since 3.0.1
      */
     public static List<NetworkInterface> getNetworkInterfaces() {
-        Enumeration<NetworkInterface> networkInterfaces = null;
+        Enumeration<NetworkInterface> networkInterfaces;
         try {
             networkInterfaces = NetworkInterface.getNetworkInterfaces();
         } catch (SocketException e) {

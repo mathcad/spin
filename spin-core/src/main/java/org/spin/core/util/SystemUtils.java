@@ -1568,7 +1568,7 @@ public abstract class SystemUtils {
      * @return true if matches, or false if not or can't determine
      */
     static boolean isOSMatch(final String osName, final String osVersion, final String osNamePrefix, final String osVersionPrefix) {
-        return osName != null && osVersion != null && isOSNameMatch(osName, osNamePrefix) && isOSVersionMatch(osVersion, osVersionPrefix);
+        return osVersion != null && isOSNameMatch(osName, osNamePrefix) && isOSVersionMatch(osVersion, osVersionPrefix);
     }
 
     /**
