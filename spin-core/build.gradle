@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.1.24.RELEASE'
+version = '2.1.25.RELEASE'
 def artifactId = 'spin-core'
 
 ext {
@@ -34,8 +34,8 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://60.169.170.69:9527/repository/maven-releases/") {
-                authentication(userName: "admin", password: "1238524565")
+            repository(url: "http://192.168.0.248:8081/nexus/content/repositories/releases/") {
+                authentication(userName: "admin", password: "admin123")
             }
             pom.version = "$project.version"
             pom.artifactId = "$artifactId"

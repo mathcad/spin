@@ -178,6 +178,18 @@ public abstract class MapUtils {
     }
 
     /**
+     * 从map中获取指定的字符串属性
+     *
+     * @param map        map对象
+     * @param key        属性键
+     * @param defaultVal 默认值
+     * @return 获取的结果
+     */
+    public static String getStringValue(Map<?, ?> map, Object key, String defaultVal) {
+        return Objects.isNull(map) ? defaultVal : ObjectUtils.toString(map.get(key), defaultVal);
+    }
+
+    /**
      * 从map中获取指定的Long属性
      *
      * @param map map对象
@@ -185,9 +197,21 @@ public abstract class MapUtils {
      * @return 获取的结果
      */
     public static Long getLongValue(Map<?, ?> map, Object key) {
+        return getLongValue(map, key, null);
+    }
+
+    /**
+     * 从map中获取指定的Long属性
+     *
+     * @param map        map对象
+     * @param key        属性键
+     * @param defaultVal 默认值
+     * @return 获取的结果
+     */
+    public static Long getLongValue(Map<?, ?> map, Object key, Long defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
-            return null;
+            return defaultVal;
         }
         if (val instanceof Long) {
             return (Long) val;
@@ -196,12 +220,12 @@ public abstract class MapUtils {
                 return Long.valueOf(val.toString());
             } catch (Exception e) {
                 logger.error("数值格式不正确", e);
-                return null;
+                return defaultVal;
             }
         } else if (val instanceof Number) {
             return ((Number) val).longValue();
         } else {
-            return null;
+            return defaultVal;
         }
     }
 
@@ -213,9 +237,21 @@ public abstract class MapUtils {
      * @return 获取的结果
      */
     public static Integer getIntValue(Map<?, ?> map, Object key) {
+        return getIntValue(map, key, null);
+    }
+
+    /**
+     * 从map中获取指定的Integer属性
+     *
+     * @param map        map对象
+     * @param key        属性键
+     * @param defaultVal 默认值
+     * @return 获取的结果
+     */
+    public static Integer getIntValue(Map<?, ?> map, Object key, Integer defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
-            return null;
+            return defaultVal;
         }
         if (val instanceof Integer) {
             return (Integer) val;
@@ -224,12 +260,12 @@ public abstract class MapUtils {
                 return Integer.valueOf(val.toString());
             } catch (Exception e) {
                 logger.error("数值格式不正确", e);
-                return null;
+                return defaultVal;
             }
         } else if (val instanceof Number) {
             return ((Number) val).intValue();
         } else {
-            return null;
+            return defaultVal;
         }
     }
 
@@ -241,9 +277,21 @@ public abstract class MapUtils {
      * @return 获取的结果
      */
     public static Double getDoubleValue(Map<?, ?> map, Object key) {
+        return getDoubleValue(map, key, null);
+    }
+
+    /**
+     * 从map中获取指定的Double属性
+     *
+     * @param map        map对象
+     * @param key        属性键
+     * @param defaultVal 默认值
+     * @return 获取的结果
+     */
+    public static Double getDoubleValue(Map<?, ?> map, Object key, Double defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
-            return null;
+            return defaultVal;
         }
         if (val instanceof Double) {
             return (Double) val;
@@ -252,12 +300,12 @@ public abstract class MapUtils {
                 return Double.valueOf(val.toString());
             } catch (Exception e) {
                 logger.error("数值格式不正确", e);
-                return null;
+                return defaultVal;
             }
         } else if (val instanceof Number) {
             return ((Number) val).doubleValue();
         } else {
-            return null;
+            return defaultVal;
         }
     }
 
@@ -269,9 +317,21 @@ public abstract class MapUtils {
      * @return 获取的结果
      */
     public static Float getFloatValue(Map<?, ?> map, Object key) {
+        return getFloatValue(map, key, null);
+    }
+
+    /**
+     * 从map中获取指定的Float属性
+     *
+     * @param map        map对象
+     * @param key        属性键
+     * @param defaultVal 默认值
+     * @return 获取的结果
+     */
+    public static Float getFloatValue(Map<?, ?> map, Object key, Float defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
-            return null;
+            return defaultVal;
         }
         if (val instanceof Float) {
             return (Float) val;
@@ -280,12 +340,12 @@ public abstract class MapUtils {
                 return Float.valueOf(val.toString());
             } catch (Exception e) {
                 logger.error("数值格式不正确", e);
-                return null;
+                return defaultVal;
             }
         } else if (val instanceof Number) {
             return ((Number) val).floatValue();
         } else {
-            return null;
+            return defaultVal;
         }
     }
 
@@ -297,14 +357,26 @@ public abstract class MapUtils {
      * @return 获取的结果
      */
     public static BigDecimal getBigDecimalValue(Map<?, ?> map, Object key) {
+        return getBigDecimalValue(map, key, null);
+    }
+
+    /**
+     * 从map中获取指定的BigDecimal属性
+     *
+     * @param map        map对象
+     * @param key        属性键
+     * @param defaultVal 默认值
+     * @return 获取的结果
+     */
+    public static BigDecimal getBigDecimalValue(Map<?, ?> map, Object key, BigDecimal defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
-            return null;
+            return defaultVal;
         }
         if (val instanceof Number || val instanceof CharSequence) {
             return new BigDecimal(val.toString());
         } else {
-            return null;
+            return defaultVal;
         }
     }
 
@@ -316,23 +388,35 @@ public abstract class MapUtils {
      * @return Date
      */
     public static Date getDateValue(Map<?, ?> map, Object key) {
+        return getDateValue(map, key, null);
+    }
+
+    /**
+     * 从map中获取指定的时间值属性
+     *
+     * @param map        map对象
+     * @param key        属性键
+     * @param defaultVal 默认值
+     * @return Date
+     */
+    public static Date getDateValue(Map<?, ?> map, Object key, Date defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
-            return null;
+            return defaultVal;
         }
         if (val instanceof Date) {
-            return (Date) ((Date) val).clone();
+            return (Date) val;
         } else if (val instanceof CharSequence) {
             try {
                 return DateUtils.toDate(val.toString());
             } catch (Exception e) {
                 logger.error("日期格式不正确", e);
-                return null;
+                return defaultVal;
             }
         } else if (val instanceof TemporalAccessor) {
             return DateUtils.toDate(DateUtils.formatDateForMillSec((TemporalAccessor) val), "yyyy-MM-dd HH:mm:ss SSS");
         } else {
-            return null;
+            return defaultVal;
         }
     }
 
@@ -344,9 +428,21 @@ public abstract class MapUtils {
      * @return LocalDateTime
      */
     public static LocalDateTime getLocalDateTimeValue(Map<?, ?> map, Object key) {
+        return getLocalDateTimeValue(map, key, null);
+    }
+
+    /**
+     * 从map中获取指定的时间值属性
+     *
+     * @param map        map对象
+     * @param key        属性键
+     * @param defaultVal 默认值
+     * @return LocalDateTime
+     */
+    public static LocalDateTime getLocalDateTimeValue(Map<?, ?> map, Object key, LocalDateTime defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
-            return null;
+            return defaultVal;
         }
         if (val instanceof LocalDateTime) {
             return (LocalDateTime) val;
@@ -355,14 +451,14 @@ public abstract class MapUtils {
                 return DateUtils.toLocalDateTime(val.toString());
             } catch (Exception e) {
                 logger.error("日期格式不正确", e);
-                return null;
+                return defaultVal;
             }
         } else if (val instanceof Date) {
             return DateUtils.toLocalDateTime((Date) val);
         } else if (val instanceof TemporalAccessor) {
             return DateUtils.toLocalDateTime(DateUtils.formatDateForMillSec((TemporalAccessor) val), "yyyy-MM-dd HH:mm:ss SSS");
         } else {
-            return null;
+            return defaultVal;
         }
     }
 
@@ -375,9 +471,22 @@ public abstract class MapUtils {
      * @return 获取的结果
      */
     public static <T> T getObjectValue(Map<?, ?> map, Object key) {
+        return getObjectValue(map, key, null);
+    }
+
+    /**
+     * 从map中获取指定类型的属性
+     *
+     * @param map        map对象
+     * @param key        属性键
+     * @param defaultVal 默认值
+     * @param <T>        类型参数
+     * @return 获取的结果
+     */
+    public static <T> T getObjectValue(Map<?, ?> map, Object key, T defaultVal) {
         try {
             //noinspection unchecked
-            return (T) (Objects.isNull(map) ? null : map.get(key));
+            return (T) (Objects.isNull(map) ? defaultVal : map.get(key));
         } catch (Exception e) {
             throw new SimplifiedException("对象类型不匹配");
         }

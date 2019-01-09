@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -498,11 +499,7 @@ public abstract class HttpUtils {
             }
             if (null != jsonObj) {
                 StringEntity stringEntity;
-                try {
-                    stringEntity = new StringEntity(JsonUtils.toJson(jsonObj));
-                } catch (UnsupportedEncodingException e) {
-                    throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "生成请求报文体错误", e);
-                }
+                stringEntity = new StringEntity(JsonUtils.toJson(jsonObj), StandardCharsets.UTF_8);
                 stringEntity.setContentEncoding("UTF-8");
                 stringEntity.setContentType("application/json");
                 req.setEntity(stringEntity);
