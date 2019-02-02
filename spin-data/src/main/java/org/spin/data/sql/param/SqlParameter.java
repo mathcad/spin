@@ -1,6 +1,6 @@
 package org.spin.data.sql.param;
 
-import org.spin.data.sql.JdbcUtils;
+import org.spin.data.sql.JdbcType;
 
 /**
  * SQL命名参数
@@ -32,7 +32,7 @@ public class SqlParameter {
     /**
      * 参数类型
      */
-    private int sqlType = JdbcUtils.TYPE_UNKNOWN;
+    private JdbcType sqlType = JdbcType.UNKNOWN;
 
     // Used for types that are user-named like: STRUCT, DISTINCT, JAVA_OBJECT, named array types
     private String typeName;
@@ -63,11 +63,11 @@ public class SqlParameter {
         return this.endIndex;
     }
 
-    public int getSqlType() {
+    public JdbcType getSqlType() {
         return sqlType;
     }
 
-    public void setSqlType(int sqlType) {
+    public void setSqlType(JdbcType sqlType) {
         this.sqlType = sqlType;
     }
 

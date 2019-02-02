@@ -3,6 +3,7 @@ package org.spin.data.sql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.util.DateUtils;
+import org.spin.core.util.NumericUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.sql.param.SqlParameter;
 
@@ -30,11 +31,8 @@ import java.util.Map;
 public abstract class JdbcUtils {
     private static final Logger logger = LoggerFactory.getLogger(JdbcUtils.class);
 
-    public static final int TYPE_UNKNOWN = -100;
-
     private JdbcUtils() {
     }
-
 
     /**
      * Return whether the given JDBC driver supports JDBC 2.0 batch updates.
@@ -66,14 +64,14 @@ public abstract class JdbcUtils {
     }
 
     public static void setParameterValues(PreparedStatement ps, List<SqlParameter> parameters, Map<String, ?> model) throws SQLException {
-        for (int i = 0; i < parameters.size(); i++) {
-            setParameterValue(ps, parameters.get(i).getParamIndex(), model.get(parameters.get(i).getParameterName()));
+        for (SqlParameter parameter : parameters) {
+            setParameterValue(ps, parameter.getParamIndex(), model.get(parameter.getParameterName()));
         }
     }
 
     public static void setParameterValue(PreparedStatement ps, int paramIndex, Object inValue) throws SQLException {
         String typeNameToUse = null;
-        int sqlTypeToUse = -100;
+        JdbcType sqlTypeToUse = JdbcType.UNKNOWN;
 
         // override type info?
         if (inValue instanceof SqlParameter) {
@@ -82,7 +80,7 @@ public abstract class JdbcUtils {
                 logger.debug("Overriding type info with runtime info from SqlParameterValue: column index " + paramIndex +
                     ", SQL type " + parameterValue.getSqlType() + ", type name " + parameterValue.getTypeName());
             }
-            if (parameterValue.getSqlType() != TYPE_UNKNOWN) {
+            if (parameterValue.getSqlType() != JdbcType.UNKNOWN) {
                 sqlTypeToUse = parameterValue.getSqlType();
             }
             if (parameterValue.getTypeName() != null) {
@@ -94,20 +92,20 @@ public abstract class JdbcUtils {
             logger.trace("Setting SQL statement parameter value: column index " + paramIndex +
                 ", parameter value [" + inValue +
                 "], value class [" + (inValue != null ? inValue.getClass().getName() : "null") +
-                "], SQL type " + (sqlTypeToUse == TYPE_UNKNOWN ? "unknown" : Integer.toString(sqlTypeToUse)));
+                "], SQL type " + sqlTypeToUse);
         }
 
         if (inValue == null) {
             setNull(ps, paramIndex, sqlTypeToUse, typeNameToUse);
         } else {
-            setValue(ps, paramIndex, sqlTypeToUse, typeNameToUse, null, inValue);
+            setValue(ps, paramIndex, sqlTypeToUse, null, inValue);
         }
     }
 
-    private static void setNull(PreparedStatement ps, int paramIndex, int sqlType, String typeName)
+    private static void setNull(PreparedStatement ps, int paramIndex, JdbcType sqlType, String typeName)
         throws SQLException {
 
-        if (sqlType == TYPE_UNKNOWN || sqlType == Types.OTHER) {
+        if (sqlType == JdbcType.UNKNOWN || sqlType == JdbcType.OTHER) {
             boolean useSetObject = false;
             Integer sqlTypeToUse = null;
             try {
@@ -140,37 +138,39 @@ public abstract class JdbcUtils {
                 ps.setNull(paramIndex, sqlTypeToUse);
             }
         } else if (typeName != null) {
-            ps.setNull(paramIndex, sqlType, typeName);
+            ps.setNull(paramIndex, sqlType.code, typeName);
         } else {
-            ps.setNull(paramIndex, sqlType);
+            ps.setNull(paramIndex, sqlType.code);
         }
     }
 
-    private static void setValue(PreparedStatement ps, int paramIndex, int sqlType, String typeName, Integer scale, Object inValue) throws SQLException {
+    private static void setValue(PreparedStatement ps, int paramIndex, JdbcType sqlType, Integer scale, Object inValue) throws SQLException {
         switch (sqlType) {
-            case Types.VARCHAR:
-            case Types.LONGVARCHAR:
+            case VARCHAR:
+            case LONGVARCHAR:
                 ps.setString(paramIndex, inValue.toString());
                 break;
-            case Types.NVARCHAR:
-            case Types.LONGNVARCHAR:
-                ps.setString(paramIndex, inValue.toString());
+            case NCHAR:
+            case NVARCHAR:
+            case LONGNVARCHAR:
+                ps.setNString(paramIndex, inValue.toString());
                 break;
-            case Types.CLOB:
-            case Types.NCLOB:
+            case CLOB:
+            case NCLOB:
                 if (StringUtils.isString(inValue)) {
+                    // 字符串
                     String strVal = inValue.toString();
                     if (strVal.length() > 4000) {
                         // Necessary for older Oracle drivers, in particular when running against an Oracle 10 database.
                         // Should also work fine against other drivers/databases since it uses standard JDBC 4.0 API.
-                        if (sqlType == Types.NCLOB) {
+                        if (sqlType == JdbcType.NCLOB) {
                             ps.setNClob(paramIndex, new StringReader(strVal), strVal.length());
                         } else {
                             ps.setClob(paramIndex, new StringReader(strVal), strVal.length());
                         }
                     } else {
                         // Fallback: setString or setNString binding
-                        if (sqlType == Types.NCLOB) {
+                        if (sqlType == JdbcType.NCLOB) {
                             ps.setNString(paramIndex, strVal);
                         } else {
                             ps.setString(paramIndex, strVal);
@@ -178,10 +178,29 @@ public abstract class JdbcUtils {
                     }
                 }
                 break;
-            case Types.DECIMAL:
-            case Types.NUMERIC:
+            case DECIMAL:
+                if (inValue instanceof BigDecimal) {
+                    // BigDecimal类型
+                    ps.setBigDecimal(paramIndex, (BigDecimal) inValue);
+                } else if (NumericUtils.isNum(inValue)) {
+                    // 各种形式的数字
+                    ps.setBigDecimal(paramIndex, new BigDecimal(inValue.toString()));
+                } else {
+                    ps.setObject(paramIndex, inValue, sqlType.code);
+                }
+                break;
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
+            case FLOAT:
+            case REAL:
+            case DOUBLE:
+            case NUMERIC:
                 if (inValue instanceof BigDecimal) {
                     ps.setBigDecimal(paramIndex, (BigDecimal) inValue);
+                } else if (inValue instanceof Short) {
+                    ps.setShort(paramIndex, (short) inValue);
                 } else if (inValue instanceof Integer) {
                     ps.setInt(paramIndex, (int) inValue);
                 } else if (inValue instanceof Long) {
@@ -195,21 +214,30 @@ public abstract class JdbcUtils {
                 } else if (StringUtils.isString(inValue)) {
                     ps.setBigDecimal(paramIndex, new BigDecimal(inValue.toString()));
                 } else if (scale != null) {
-                    ps.setObject(paramIndex, inValue, sqlType, scale);
+                    ps.setObject(paramIndex, inValue, sqlType.code, scale);
+                } else if (NumericUtils.isNum(inValue)) {
+                    // 各种形式的数字
+                    ps.setBigDecimal(paramIndex, new BigDecimal(inValue.toString()));
                 } else {
-                    ps.setObject(paramIndex, inValue, sqlType);
+                    ps.setObject(paramIndex, inValue, sqlType.code);
                 }
                 break;
-            case Types.BOOLEAN:
+            case BOOLEAN:
                 if (inValue instanceof Boolean) {
+                    // bool值
                     ps.setBoolean(paramIndex, (Boolean) inValue);
                 } else if (StringUtils.isString(inValue)) {
+                    // 字符串bool值
                     ps.setBoolean(paramIndex, Boolean.parseBoolean(inValue.toString()));
+                } else if (inValue instanceof Number) {
+                    // 数值(非0为真)
+                    ps.setBoolean(paramIndex, ((Number) inValue).doubleValue() != 0);
                 } else {
+                    // 其他，交给jdbc驱动处理(可能会抛出异常)
                     ps.setObject(paramIndex, inValue, Types.BOOLEAN);
                 }
                 break;
-            case Types.DATE:
+            case DATE:
                 if (inValue instanceof java.util.Date) {
                     if (inValue instanceof java.sql.Date) {
                         ps.setDate(paramIndex, (java.sql.Date) inValue);
@@ -231,7 +259,7 @@ public abstract class JdbcUtils {
                     ps.setObject(paramIndex, inValue, Types.DATE);
                 }
                 break;
-            case Types.TIME:
+            case TIME:
                 if (inValue instanceof java.util.Date) {
                     if (inValue instanceof java.sql.Time) {
                         ps.setTime(paramIndex, (java.sql.Time) inValue);
@@ -253,7 +281,7 @@ public abstract class JdbcUtils {
                     ps.setObject(paramIndex, inValue, Types.TIME);
                 }
                 break;
-            case Types.TIMESTAMP:
+            case TIMESTAMP:
                 if (inValue instanceof java.util.Date) {
                     if (inValue instanceof java.sql.Timestamp) {
                         ps.setTimestamp(paramIndex, (java.sql.Timestamp) inValue);
@@ -276,7 +304,7 @@ public abstract class JdbcUtils {
                 }
                 break;
             default:
-                if (sqlType == TYPE_UNKNOWN || (sqlType == Types.OTHER && "Oracle".equals(ps.getConnection().getMetaData().getDatabaseProductName()))) {
+                if (sqlType == JdbcType.UNKNOWN || (sqlType == JdbcType.OTHER && "Oracle".equals(ps.getConnection().getMetaData().getDatabaseProductName()))) {
                     if (StringUtils.isString(inValue)) {
                         ps.setString(paramIndex, inValue.toString());
                     } else if (inValue instanceof Boolean) {
@@ -319,7 +347,7 @@ public abstract class JdbcUtils {
                     }
                 } else {
                     // Fall back to generic setObject call with SQL type specified.
-                    ps.setObject(paramIndex, inValue, sqlType);
+                    ps.setObject(paramIndex, inValue, sqlType.code);
                 }
         }
     }

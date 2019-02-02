@@ -294,6 +294,6 @@ fun invokeTopMethodByMethodName(otherCallableReference: CallableReference, metho
             }
         }
     }
-    throw IllegalArgumentException("Can't find the method named :$methodName with args ${methodArgs.toList().toString()} in the same file with ${otherCallableReference.name}")
+    throw IllegalArgumentException("Can't find the method named :$methodName with args ${methodArgs.toList()} in the same file with ${otherCallableReference.name}")
 
 }

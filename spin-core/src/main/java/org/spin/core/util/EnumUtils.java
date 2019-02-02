@@ -191,11 +191,11 @@ public abstract class EnumUtils {
      * @param key     键
      * @return 枚举常量
      */
-    public static <E extends Enum<E>> Enum getByValue(Class<E> enumCls, Map<?, Object> map, String key) {
+    public static <E extends Enum<E>, K, V> Enum getByValue(Class<E> enumCls, Map<K, V> map, K key) {
         Object v = MapUtils.getObjectValue(map, key);
         if (null == v)
             return null;
-        return getEnum(enumCls, v, key);
+        return getEnum(enumCls, v, key.toString());
     }
 
     /**

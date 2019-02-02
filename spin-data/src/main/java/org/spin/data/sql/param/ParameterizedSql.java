@@ -117,7 +117,7 @@ public class ParameterizedSql implements Serializable {
                     actualSqlStr.append("::");
                     continue;
                 }
-                String parameter = null;
+                String parameter;
                 if (j < statement.length && c == ':' && statement[j] == '{') {
                     // :{x}形式的命名参数
                     while (j < statement.length && '}' != statement[j]) {

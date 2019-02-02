@@ -96,7 +96,7 @@ public class Base64 {
         int fewerThan24bits = lengthDataBits % TWENTYFOURBITGROUP;
         int numberTriplets = lengthDataBits / TWENTYFOURBITGROUP;
         int numberQuartet = fewerThan24bits != 0 ? numberTriplets + 1 : numberTriplets;
-        char encodedData[] = new char[numberQuartet * 4];
+        char[] encodedData = new char[numberQuartet * 4];
 
         byte k, l, b1, b2, b3;
 
@@ -191,9 +191,9 @@ public class Base64 {
             return new byte[0];
         }
 
-        byte decodedData[] = null;
-        byte b1 = 0, b2 = 0, b3 = 0, b4 = 0;
-        char d1 = 0, d2 = 0, d3 = 0, d4 = 0;
+        byte[] decodedData;
+        byte b1, b2, b3, b4;
+        char d1, d2, d3, d4;
 
         int i = 0;
         int encodedIndex = 0;

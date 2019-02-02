@@ -248,7 +248,7 @@ public abstract class FileUtils {
         if (File.separatorChar == '\\') {
             return false;
         }
-        File fileInCanonicalDir = null;
+        File fileInCanonicalDir;
         if (file.getParent() == null) {
             fileInCanonicalDir = file;
         } else {
@@ -269,7 +269,7 @@ public abstract class FileUtils {
      */
     public static List<String> listFiles(String path, boolean recurse, Predicate<File> filter) {
         List<String> allFileNames = new ArrayList<>();
-        File file = null;
+        File file;
         Deque<File> directories = new LinkedList<>();
         file = new File(path);
         if (!file.exists() || !file.isDirectory()) {

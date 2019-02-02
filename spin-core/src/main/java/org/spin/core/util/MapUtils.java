@@ -173,7 +173,7 @@ public abstract class MapUtils {
      * @param key 属性键
      * @return 获取的结果
      */
-    public static String getStringValue(Map<?, ?> map, Object key) {
+    public static <K, V> String getStringValue(Map<K, V> map, K key) {
         return Objects.isNull(map) ? null : ObjectUtils.toString(map.get(key), null);
     }
 
@@ -185,7 +185,7 @@ public abstract class MapUtils {
      * @param defaultVal 默认值
      * @return 获取的结果
      */
-    public static String getStringValue(Map<?, ?> map, Object key, String defaultVal) {
+    public static <K, V> String getStringValue(Map<K, V> map, K key, String defaultVal) {
         return Objects.isNull(map) ? defaultVal : ObjectUtils.toString(map.get(key), defaultVal);
     }
 
@@ -196,7 +196,7 @@ public abstract class MapUtils {
      * @param key 属性键
      * @return 获取的结果
      */
-    public static Long getLongValue(Map<?, ?> map, Object key) {
+    public static <K, V> Long getLongValue(Map<K, V> map, K key) {
         return getLongValue(map, key, null);
     }
 
@@ -208,7 +208,7 @@ public abstract class MapUtils {
      * @param defaultVal 默认值
      * @return 获取的结果
      */
-    public static Long getLongValue(Map<?, ?> map, Object key, Long defaultVal) {
+    public static <K, V> Long getLongValue(Map<K, V> map, K key, Long defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
             return defaultVal;
@@ -236,7 +236,7 @@ public abstract class MapUtils {
      * @param key 属性键
      * @return 获取的结果
      */
-    public static Integer getIntValue(Map<?, ?> map, Object key) {
+    public static <K, V> Integer getIntValue(Map<K, V> map, K key) {
         return getIntValue(map, key, null);
     }
 
@@ -248,7 +248,7 @@ public abstract class MapUtils {
      * @param defaultVal 默认值
      * @return 获取的结果
      */
-    public static Integer getIntValue(Map<?, ?> map, Object key, Integer defaultVal) {
+    public static <K, V> Integer getIntValue(Map<K, V> map, K key, Integer defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
             return defaultVal;
@@ -276,7 +276,7 @@ public abstract class MapUtils {
      * @param key 属性键
      * @return 获取的结果
      */
-    public static Double getDoubleValue(Map<?, ?> map, Object key) {
+    public static <K, V> Double getDoubleValue(Map<K, V> map, K key) {
         return getDoubleValue(map, key, null);
     }
 
@@ -288,7 +288,7 @@ public abstract class MapUtils {
      * @param defaultVal 默认值
      * @return 获取的结果
      */
-    public static Double getDoubleValue(Map<?, ?> map, Object key, Double defaultVal) {
+    public static <K, V> Double getDoubleValue(Map<K, V> map, K key, Double defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
             return defaultVal;
@@ -316,7 +316,7 @@ public abstract class MapUtils {
      * @param key 属性键
      * @return 获取的结果
      */
-    public static Float getFloatValue(Map<?, ?> map, Object key) {
+    public static <K, V> Float getFloatValue(Map<K, V> map, K key) {
         return getFloatValue(map, key, null);
     }
 
@@ -328,7 +328,7 @@ public abstract class MapUtils {
      * @param defaultVal 默认值
      * @return 获取的结果
      */
-    public static Float getFloatValue(Map<?, ?> map, Object key, Float defaultVal) {
+    public static <K, V> Float getFloatValue(Map<K, V> map, K key, Float defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
             return defaultVal;
@@ -356,7 +356,7 @@ public abstract class MapUtils {
      * @param key 属性键
      * @return 获取的结果
      */
-    public static BigDecimal getBigDecimalValue(Map<?, ?> map, Object key) {
+    public static <K, V> BigDecimal getBigDecimalValue(Map<K, V> map, K key) {
         return getBigDecimalValue(map, key, null);
     }
 
@@ -368,7 +368,7 @@ public abstract class MapUtils {
      * @param defaultVal 默认值
      * @return 获取的结果
      */
-    public static BigDecimal getBigDecimalValue(Map<?, ?> map, Object key, BigDecimal defaultVal) {
+    public static <K, V> BigDecimal getBigDecimalValue(Map<K, V> map, K key, BigDecimal defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
             return defaultVal;
@@ -387,7 +387,7 @@ public abstract class MapUtils {
      * @param key 属性键
      * @return Date
      */
-    public static Date getDateValue(Map<?, ?> map, Object key) {
+    public static <K, V> Date getDateValue(Map<K, V> map, K key) {
         return getDateValue(map, key, null);
     }
 
@@ -399,7 +399,7 @@ public abstract class MapUtils {
      * @param defaultVal 默认值
      * @return Date
      */
-    public static Date getDateValue(Map<?, ?> map, Object key, Date defaultVal) {
+    public static <K, V> Date getDateValue(Map<K, V> map, K key, Date defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
             return defaultVal;
@@ -427,7 +427,7 @@ public abstract class MapUtils {
      * @param key 属性键
      * @return LocalDateTime
      */
-    public static LocalDateTime getLocalDateTimeValue(Map<?, ?> map, Object key) {
+    public static <K, V> LocalDateTime getLocalDateTimeValue(Map<K, V> map, K key) {
         return getLocalDateTimeValue(map, key, null);
     }
 
@@ -439,7 +439,7 @@ public abstract class MapUtils {
      * @param defaultVal 默认值
      * @return LocalDateTime
      */
-    public static LocalDateTime getLocalDateTimeValue(Map<?, ?> map, Object key, LocalDateTime defaultVal) {
+    public static <K, V> LocalDateTime getLocalDateTimeValue(Map<K, V> map, K key, LocalDateTime defaultVal) {
         Object val = Objects.isNull(map) ? null : map.get(key);
         if (Objects.isNull(val)) {
             return defaultVal;
@@ -470,7 +470,7 @@ public abstract class MapUtils {
      * @param <T> 类型参数
      * @return 获取的结果
      */
-    public static <T> T getObjectValue(Map<?, ?> map, Object key) {
+    public static <T, K, V> T getObjectValue(Map<K, V> map, K key) {
         return getObjectValue(map, key, null);
     }
 
@@ -483,7 +483,7 @@ public abstract class MapUtils {
      * @param <T>        类型参数
      * @return 获取的结果
      */
-    public static <T> T getObjectValue(Map<?, ?> map, Object key, T defaultVal) {
+    public static <T, K, V> T getObjectValue(Map<K, V> map, K key, T defaultVal) {
         try {
             //noinspection unchecked
             return (T) (Objects.isNull(map) ? defaultVal : map.get(key));
@@ -501,12 +501,13 @@ public abstract class MapUtils {
      * @param keys 指定的字段
      * @return 判断结果
      */
-    public static boolean equalsWith(Map<?, ?> map1, Map<?, ?> map2, Object... keys) {
+    @SafeVarargs
+    public static <K, V1, V2> boolean equalsWith(Map<K, V1> map1, Map<K, V2> map2, K... keys) {
         if (null == keys || 0 == keys.length) {
             return false;
         }
         boolean eq = true;
-        for (Object key : keys) {
+        for (K key : keys) {
             eq = eq && ObjectUtils.nullSafeEquals(map1.get(key), map2.get(key));
         }
         return eq;
@@ -531,51 +532,6 @@ public abstract class MapUtils {
         });
 
         return objSet;
-    }
-
-    /**
-     * 统计某数值列的汇总
-     *
-     * @param list 列表
-     * @param key  统计字段
-     * @return 统计结果
-     */
-    public static BigDecimal sumList(List<Map<?, ?>> list, Object key) {
-        return list.stream().map(m -> getBigDecimalValue(m, key)).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    /**
-     * 统计某数值列最大值
-     *
-     * @param list 列表
-     * @param key  统计字段
-     * @return 统计结果
-     */
-    public static BigDecimal maxList(List<Map<?, ?>> list, Object key) {
-        return list.stream().map(m -> getBigDecimalValue(m, key)).filter(Objects::nonNull).max(BigDecimal::compareTo).orElse(null);
-    }
-
-    /**
-     * 统计某数值列最小值
-     *
-     * @param list 列表
-     * @param key  统计字段
-     * @return 统计结果
-     */
-    public static BigDecimal minList(List<Map<?, ?>> list, Object key) {
-        return list.stream().map(m -> getBigDecimalValue(m, key)).filter(Objects::nonNull).min(BigDecimal::compareTo).orElse(null);
-    }
-
-    /**
-     * 统计某数值列平均值
-     *
-     * @param list 列表
-     * @param key  统计字段
-     * @return 统计结果
-     */
-    public static BigDecimal avgList(List<Map<?, ?>> list, Object key) {
-        BigDecimal total = sumList(list, key);
-        return total.divide(new BigDecimal(list.size()), BigDecimal.ROUND_HALF_UP);
     }
 
     /**

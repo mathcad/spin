@@ -17,6 +17,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -251,7 +252,7 @@ public abstract class HttpUtils {
      * @return 下载结果
      */
     public static Map<String, String> download(String url, String savePath) {
-        HttpGet request = HttpMethod.GET.buildRequest(url);
+        HttpGet request = HttpMethod.GET.withUrl(url);
 
         return executeRequest(request, httpEntity -> downloadProc(httpEntity, savePath));
     }
@@ -347,7 +348,7 @@ public abstract class HttpUtils {
      * @return 下载结果
      */
     public static Future<HttpResponse> downloadAsync(String url, String savePath, FinalConsumer<Map<String, String>> completedCallback) {
-        HttpGet request = HttpMethod.GET.buildRequest(url);
+        HttpGet request = HttpMethod.GET.withUrl(url);
 
         return executeRequestAsync(request, httpEntity -> downloadProc(httpEntity, savePath), completedCallback, null, null);
     }
@@ -451,7 +452,7 @@ public abstract class HttpUtils {
      */
     public static Future<HttpResponse> downloadAsync(String url, String savePath, FinalConsumer<Map<String, String>> completedCallback,
                                                      FinalConsumer<Exception> failedCallback) {
-        HttpGet request = HttpMethod.GET.buildRequest(url);
+        HttpGet request = HttpMethod.GET.withUrl(url);
 
         return executeRequestAsync(request, httpEntity -> downloadProc(httpEntity, savePath), completedCallback, failedCallback, null);
     }
@@ -461,7 +462,7 @@ public abstract class HttpUtils {
     //region build request
 
     public static HttpGet buildGetRequest(String url, Map<String, String> headers, Map<String, String> params) {
-        return HttpMethod.GET.buildRequest(url, ub -> {
+        return HttpMethod.GET.withUrl(url, ub -> {
             if (params != null) {
                 for (Map.Entry<String, String> e : params.entrySet()) {
                     ub.setParameter(e.getKey(), e.getValue());
@@ -475,7 +476,7 @@ public abstract class HttpUtils {
     }
 
     public static HttpPost buildPostRequest(String url, Map<String, String> headers, Map<String, String> params) {
-        return HttpMethod.POST.buildRequest(url, req -> {
+        return HttpMethod.POST.withUrl(url, req -> {
             if (null != headers) {
                 headers.forEach(req::setHeader);
             }
@@ -493,7 +494,7 @@ public abstract class HttpUtils {
     }
 
     public static HttpPost buildPostJsonRequest(String url, Map<String, String> headers, Object jsonObj) {
-        return HttpMethod.POST.buildRequest(url, req -> {
+        return HttpMethod.POST.withUrl(url, req -> {
             if (null != headers) {
                 headers.forEach(req::setHeader);
             }
@@ -501,7 +502,7 @@ public abstract class HttpUtils {
                 StringEntity stringEntity;
                 stringEntity = new StringEntity(JsonUtils.toJson(jsonObj), StandardCharsets.UTF_8);
                 stringEntity.setContentEncoding("UTF-8");
-                stringEntity.setContentType("application/json");
+                stringEntity.setContentType(ContentType.APPLICATION_JSON.getMimeType());
                 req.setEntity(stringEntity);
             }
         });
@@ -533,18 +534,7 @@ public abstract class HttpUtils {
      * @return 处理后的请求结果
      */
     public static <T> T executeRequest(HttpUriRequest request, FinalConsumer<RequestConfig.Builder> configProc, EntityProcessor<T> entityProc) {
-        RequestConfig.Builder builder = RequestConfig.custom()
-            .setSocketTimeout(socketTimeout)
-            .setConnectTimeout(connectTimeout);
-        if (null != configProc) {
-            configProc.accept(builder);
-        }
-
-        RequestConfig requestConfig = builder.build();
-
-        if (request instanceof HttpRequestBase && null == ((HttpRequestBase) request).getConfig()) {
-            ((HttpRequestBase) request).setConfig(requestConfig);
-        }
+        configRequest(request, configProc);
 
         T res;
         if (null == httpClient) {
@@ -557,6 +547,7 @@ public abstract class HttpUtils {
                 throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "错误状态码:" + code);
             }
             res = Assert.notNull(entityProc, "请求结果处理器不能为空").process(entity);
+            EntityUtils.consume(response.getEntity());
         } catch (Exception e) {
             logger.error("远程连接到" + request.getURI() + "，发生错误:", e);
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
@@ -602,18 +593,7 @@ public abstract class HttpUtils {
                                                                FinalConsumer<T> completedCallback,
                                                                FinalConsumer<Exception> failedCallback,
                                                                Handler cancelledCallback) {
-        RequestConfig.Builder builder = RequestConfig.custom()
-            .setSocketTimeout(socketTimeout)
-            .setConnectTimeout(connectTimeout);
-        if (null != configProc) {
-            configProc.accept(builder);
-        }
-
-        RequestConfig requestConfig = builder.build();
-
-        if (request instanceof HttpRequestBase && null == ((HttpRequestBase) request).getConfig()) {
-            ((HttpRequestBase) request).setConfig(requestConfig);
-        }
+        configRequest(request, configProc);
 
         try {
             if (null == httpAsyncClient) {
@@ -680,7 +660,21 @@ public abstract class HttpUtils {
         }
     }
 
-    private static Map<String, String> downloadProc(HttpEntity entity, String savePath) {
+    private static void configRequest(HttpUriRequest request, FinalConsumer<RequestConfig.Builder> configProc) {
+        if (request instanceof HttpRequestBase && null == ((HttpRequestBase) request).getConfig()) {
+            RequestConfig.Builder builder = RequestConfig.custom()
+                .setSocketTimeout(socketTimeout)
+                .setConnectTimeout(connectTimeout);
+            if (null != configProc) {
+                configProc.accept(builder);
+            }
+
+            RequestConfig requestConfig = builder.build();
+            ((HttpRequestBase) request).setConfig(requestConfig);
+        }
+    }
+
+    public static Map<String, String> downloadProc(HttpEntity entity, String savePath) {
         Map<String, String> map = new HashMap<>();
         String saveFile = savePath;
         String contentType = entity.getContentType().getValue();

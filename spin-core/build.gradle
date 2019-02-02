@@ -3,19 +3,18 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.1.25.RELEASE'
+version = '2.1.26-SNAPSHOT'
 def artifactId = 'spin-core'
 
 ext {
-    junitJupiterVersion = '5.3.1'
+    junitJupiterVersion = '5.3.2'
     slf4jVersion = '1.7.25'
-    gsonVersion = '2.8.5'
-    asmVersion = '6.2.1'
-    httpclientVersion = '4.5.6'
+    asmVersion = '7.0'
+    httpclientVersion = '4.5.7'
     httpasyncclientVersion = '4.1.4'
     commonsNetVersion = '3.6'
     dom4jVersion = '1.6'
-    poiVersion = '4.0.0'
+    poiVersion = '4.0.1'
     bouncyVersion = '1.60'
 }
 
@@ -53,6 +52,7 @@ dependencies {
         exclude(module: 'ant')
     }
     testImplementation group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
+    testImplementation group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
     testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
 
 //    core
@@ -61,6 +61,7 @@ dependencies {
 //    api group: 'org.apache.shiro', name: 'shiro-core', version: '1.4.0'
 
     compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
+    compile group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
     compileOnly group: 'commons-net', name: 'commons-net', version: commonsNetVersion
     compileOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
     compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {

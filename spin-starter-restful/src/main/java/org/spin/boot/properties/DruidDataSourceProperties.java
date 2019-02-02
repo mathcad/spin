@@ -1,7 +1,6 @@
 package org.spin.boot.properties;
 
 
-import org.spin.core.security.AES;
 import org.spin.core.util.NumericUtils;
 import org.spin.data.extend.DataSourceConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -22,7 +21,7 @@ public class DruidDataSourceProperties implements DataSourceConfig {
     private String password;
     private Boolean testWhileIdle = true;
     private Boolean testOnBorrow;
-    private String validationQuery = "SELECT 1";
+    private String validationQuery;
     private Boolean useGlobalDataSourceStat;
     private String filters;
     private Long timeBetweenLogStatsMillis;
@@ -46,14 +45,15 @@ public class DruidDataSourceProperties implements DataSourceConfig {
     private Integer removeAbandonedTimeout = 120;
     private String servletPath = "/druid/*";
     private boolean openSessionInView = false;
-    private Properties connectionProperties = new Properties() {
-        private static final long serialVersionUID = -8638010368833820798L;
-
-        {
-            put("druid.stat.mergeSql", "true");
-            put("druid.stat.slowSqlMillis", "5000");
-        }
-    };
+    private String connectionProperties;
+//        new Properties() {
+//        private static final long serialVersionUID = -8638010368833820798L;
+//
+//        {
+//            put("druid.stat.mergeSql", "true");
+//            put("druid.stat.slowSqlMillis", "5000");
+//        }
+//    };
 
     @Override
     public Properties toProperties() {
@@ -85,6 +85,7 @@ public class DruidDataSourceProperties implements DataSourceConfig {
         notNullAdd(properties, null, "timeBetweenEvictionRunsMillis", timeBetweenEvictionRunsMillis);
         notNullAdd(properties, null, "poolPreparedStatements", poolPreparedStatements);
         notNullAdd(properties, null, "maxPoolPreparedStatementPerConnectionSize", maxPoolPreparedStatementPerConnectionSize);
+        notNullAdd(properties, null, "connectionProperties", connectionProperties);
         return properties;
     }
 
@@ -125,7 +126,7 @@ public class DruidDataSourceProperties implements DataSourceConfig {
     }
 
     public void setPassword(String password) {
-        this.password = AES.decrypt("c4b2a7d36f9a2e61", password);
+        this.password = password;
     }
 
     @Override
@@ -314,11 +315,11 @@ public class DruidDataSourceProperties implements DataSourceConfig {
         this.maxPoolPreparedStatementPerConnectionSize = maxPoolPreparedStatementPerConnectionSize;
     }
 
-    public Properties getConnectionProperties() {
+    public String getConnectionProperties() {
         return connectionProperties;
     }
 
-    public void setConnectionProperties(Properties connectionProperties) {
+    public void setConnectionProperties(String connectionProperties) {
         this.connectionProperties = connectionProperties;
     }
 

@@ -18,6 +18,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -84,9 +85,9 @@ public class SpinAutoConfiguration {
     }
 
     @Bean
-    public MultipartConfigElement multipartConfigElement(SpinWebPorperties webPorperties) {
+    public MultipartConfigElement multipartConfigElement(SpinWebPorperties webProperties) {
         MultipartConfigFactory factory = new MultipartConfigFactory();
-        factory.setMaxFileSize(webPorperties.getMaxUploadSize() * 1024 * 1024);
+        factory.setMaxFileSize(DataSize.ofBytes(webProperties.getMaxUploadSize() * 1024 * 1024));
         return factory.createMultipartConfig();
     }
 }

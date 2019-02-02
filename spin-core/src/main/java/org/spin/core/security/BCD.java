@@ -34,7 +34,8 @@ public class BCD {
      */
     public static String encode(byte[] bytes) {
 
-        char temp[] = new char[bytes.length * 2], val;
+        char[] temp = new char[bytes.length * 2];
+        char val;
 
         for (int i = 0; i < bytes.length; i++) {
             val = (char) (((bytes[i] & 0xf0) >> 4) & 0x0f);

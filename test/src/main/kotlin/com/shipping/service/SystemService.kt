@@ -48,7 +48,7 @@ class SystemService {
             val parent = FixedVector<MutableList<MenuDto>>(1)
 
             while (currDept <= maxDept) {
-                group[currDept++]!!.forEach { d ->
+                group.getValue(currDept++).forEach { d ->
                     parent.put(result)
                     d.idPath.split(",").map { it.toLong() }.forEach {
                         val p = parent.get().firstOrNull { m -> it == m.id }
@@ -68,15 +68,15 @@ class SystemService {
 //            val allRegion = repoCtx.findAll(Region::class.java).map { ::RegionDto.call() }.groupBy { it.level!! }
             val allRegion = repoCtx.findAll(Region::class.java).map { RegionDto() }.groupBy { it.level!! }
 
-            val cities = allRegion[2]!!.map { it.value!! to it }.toMap()
-            var work = allRegion[3]!!.groupBy { it.parent }
+            val cities = allRegion.getValue(2).map { it.value!! to it }.toMap()
+            var work = allRegion.getValue(3).groupBy { it.parent }
             work.forEach { p, rs -> cities[p]!!.children = rs }
 
-            val pronvinces = allRegion[1]!!.map { it.value!! to it }.toMap()
-            work = allRegion[2]!!.groupBy { it.parent }
+            val pronvinces = allRegion.getValue(1).map { it.value!! to it }.toMap()
+            work = allRegion.getValue(2).groupBy { it.parent }
             work.forEach { p, rs -> pronvinces[p]?.children = rs }
 
-            return allRegion[1]!!
+            return allRegion.getValue(1)
         }
 
     private fun wraperFuncToMap(func: Function): Map<String, Any?> {

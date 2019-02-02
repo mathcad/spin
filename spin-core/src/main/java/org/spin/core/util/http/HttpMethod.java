@@ -45,7 +45,7 @@ public final class HttpMethod<T extends HttpRequestBase> {
      * @param uri uri地址
      * @return 请求对象
      */
-    public final T buildRequest(String uri) {
+    public final T withUrl(String uri) {
         URI u;
         try {
             URIBuilder uriBuilder = new URIBuilder(HttpUtils.fixUrl(uri));
@@ -53,7 +53,7 @@ public final class HttpMethod<T extends HttpRequestBase> {
         } catch (URISyntaxException e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "url格式错误: " + uri + e.getMessage());
         }
-        return buildRequest(u);
+        return withUrl(u);
     }
 
     /**
@@ -62,7 +62,7 @@ public final class HttpMethod<T extends HttpRequestBase> {
      * @param uri uri地址
      * @return 请求对象
      */
-    public final T buildRequest(URI uri) {
+    public final T withUrl(URI uri) {
         return requestSuppiler.apply(uri);
     }
 
@@ -73,8 +73,8 @@ public final class HttpMethod<T extends HttpRequestBase> {
      * @param requestProc request后处理
      * @return 请求对象
      */
-    public final T buildRequest(String uri, FinalConsumer<T> requestProc) {
-        return buildRequest(uri, null, requestProc);
+    public final T withUrl(String uri, FinalConsumer<T> requestProc) {
+        return withUrl(uri, null, requestProc);
     }
 
     /**
@@ -85,7 +85,7 @@ public final class HttpMethod<T extends HttpRequestBase> {
      * @param requestProc request后处理
      * @return 请求对象
      */
-    public final T buildRequest(String uri, FinalConsumer<URIBuilder> uriProc, FinalConsumer<T> requestProc) {
+    public final T withUrl(String uri, FinalConsumer<URIBuilder> uriProc, FinalConsumer<T> requestProc) {
         URI u;
         try {
             URIBuilder uriBuilder = new URIBuilder(HttpUtils.fixUrl(uri));
@@ -96,7 +96,7 @@ public final class HttpMethod<T extends HttpRequestBase> {
         } catch (URISyntaxException e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "url格式错误: " + uri + e.getMessage());
         }
-        return buildRequest(u, requestProc);
+        return withUrl(u, requestProc);
     }
 
     /**
@@ -106,7 +106,7 @@ public final class HttpMethod<T extends HttpRequestBase> {
      * @param requestProc request后处理
      * @return 请求对象
      */
-    public final T buildRequest(URI uri, FinalConsumer<T> requestProc) {
+    public final T withUrl(URI uri, FinalConsumer<T> requestProc) {
         T request = requestSuppiler.apply(uri);
         if (null != requestProc) {
             requestProc.accept(request);

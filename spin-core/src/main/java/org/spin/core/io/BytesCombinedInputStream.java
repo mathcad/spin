@@ -16,11 +16,11 @@ import java.io.InputStream;
  */
 public class BytesCombinedInputStream extends InputStream implements AutoCloseable {
 
-    private final byte bytesBuf[];
+    private final byte[] bytesBuf;
 
     private int pos = 0;
 
-    private int count = 0;
+    private int count;
 
     private InputStream source;
 
@@ -58,7 +58,10 @@ public class BytesCombinedInputStream extends InputStream implements AutoCloseab
     }
 
     @Override
-    public int read(byte b[], int off, int len) throws IOException {
+    public int read(byte[] b, int off, int len) throws IOException {
+        if (null == b) {
+            return -1;
+        }
         if (pos < count) {
             int diff = count - pos;
             System.arraycopy(bytesBuf, pos, b, off, diff);
@@ -74,7 +77,7 @@ public class BytesCombinedInputStream extends InputStream implements AutoCloseab
     }
 
     @Override
-    public int read(byte b[]) throws IOException {
+    public int read(byte[] b) throws IOException {
         return read(b, 0, b.length);
     }
 

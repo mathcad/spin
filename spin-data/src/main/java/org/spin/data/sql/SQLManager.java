@@ -44,9 +44,9 @@ import java.util.regex.Pattern;
 public class SQLManager {
     private static final Logger logger = LoggerFactory.getLogger(SQLManager.class);
     private static final String COUNT_SQL = "SELECT COUNT(1) FROM (%s) OUT_ALIAS";
-    private static final String WRAPPE_ERROR = "Entity wrappe error";
+    private static final String WRAPPER_ERROR = "Entity wrapper error";
     private static final String QUERY_ERROR = "执行查询出错";
-    private static final String SQL_LOG = "sqlId: %s%nsqlText: %s";
+    private static final String SQL_LOG = "sqlId: %s\nsqlText: %s";
     private static final int DEFAULT_CACHE_LIMIT = 256;
     private static final RowMapper<Map<String, Object>> DEFAULT_ROW_MAPPER = new MapRowMapper();
 
@@ -153,14 +153,7 @@ public class SQLManager {
      */
     public <T> T findOne(Connection connection, String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
         ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
-        return executeQueryForOneRow(connection, parsedSql, paramMap, ((rs, rowIdx) -> {
-            Map<String, Object> map = DEFAULT_ROW_MAPPER.apply(rs, rowIdx);
-            try {
-                return EntityUtils.wrapperMapToBean(entityClazz, map);
-            } catch (Exception e) {
-                throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.MAPPING_ERROR, WRAPPE_ERROR);
-            }
-        }));
+        return executeQueryForOneRow(connection, parsedSql, paramMap, (rs, rowIdx) -> rsToEntity(rs, rowIdx, entityClazz));
     }
 
     /**
@@ -202,20 +195,7 @@ public class SQLManager {
         ParameterizedSql parsedPageSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getPagedSQL(sqlId, paramMap, pageRequest)));
 
         List<Map<String, Object>> res = executeQuery(connection, parsedPageSql, paramMap, DEFAULT_ROW_MAPPER);
-        Long total = -1L;
-        String totalSqlTxt = String.format(COUNT_SQL, parsedSql.getActualSql().getSql());
-        try (PreparedStatement ps = connection.prepareStatement(totalSqlTxt)) {
-            JdbcUtils.setParameterValues(ps, parsedSql.getNamedParameters(), paramMap);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    total = rs.getLong(1);
-                } else {
-                    throw new SimplifiedException(QUERY_ERROR);
-                }
-            }
-        } catch (SQLException e) {
-            throw new SimplifiedException(QUERY_ERROR, e);
-        }
+        long total = total(connection, parsedSql, paramMap);
         return new Page<>(res, total, pageRequest.getPageSize());
     }
 
@@ -246,14 +226,7 @@ public class SQLManager {
     public <T> List<T> list(Connection connection, String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
         ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
 
-        return executeQuery(connection, parsedSql, paramMap, ((rs, rowIdx) -> {
-            Map<String, Object> map = DEFAULT_ROW_MAPPER.apply(rs, rowIdx);
-            try {
-                return EntityUtils.wrapperMapToBean(entityClazz, map);
-            } catch (Exception e) {
-                throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.MAPPING_ERROR, WRAPPE_ERROR);
-            }
-        }));
+        return executeQuery(connection, parsedSql, paramMap, (rs, rowIdx) -> rsToEntity(rs, rowIdx, entityClazz));
     }
 
     /**
@@ -279,20 +252,7 @@ public class SQLManager {
                 throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.MAPPING_ERROR, "转换实体出现错误");
             }
         }));
-        Long total = -1L;
-        String totalSqlTxt = String.format(COUNT_SQL, parsedSql.getActualSql().getSql());
-        try (PreparedStatement ps = connection.prepareStatement(totalSqlTxt)) {
-            JdbcUtils.setParameterValues(ps, parsedSql.getNamedParameters(), paramMap);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    total = rs.getLong(1);
-                } else {
-                    throw new SimplifiedException(QUERY_ERROR);
-                }
-            }
-        } catch (SQLException e) {
-            throw new SimplifiedException(QUERY_ERROR, e);
-        }
+        long total = total(connection, parsedSql, paramMap);
         return new Page<>(res, total, pageRequest.getPageSize());
     }
 
@@ -342,7 +302,6 @@ public class SQLManager {
      * @param paramMaps  命名参数
      * @return 受影响行数
      */
-    @SuppressWarnings({"unchecked"})
     public int[] executeBatch(Connection connection, String sqlId, List<Map<String, ?>> paramMaps) {
         ParameterizedSql parsedSql = getParsedSql(getCurrentSqlLoader().getSQL(sqlId, null));
 
@@ -351,8 +310,8 @@ public class SQLManager {
         }
         try (PreparedStatement ps = connection.prepareStatement(parsedSql.getActualSql().getSql())) {
             if (JdbcUtils.supportsBatchUpdates(connection)) {
-                for (int i = 0; i < paramMaps.size(); i++) {
-                    JdbcUtils.setParameterValues(ps, parsedSql.getNamedParameters(), paramMaps.get(i));
+                for (Map<String, ?> paramMap : paramMaps) {
+                    JdbcUtils.setParameterValues(ps, parsedSql.getNamedParameters(), paramMap);
                     ps.addBatch();
                 }
                 return ps.executeBatch();
@@ -490,5 +449,30 @@ public class SQLManager {
             sql = sql.substring(0, sortStart);
         }
         return sql;
+    }
+
+    private <T> T rsToEntity(ResultSet rs, int rowIdx, Class<T> entityClazz) throws SQLException {
+        Map<String, Object> map = DEFAULT_ROW_MAPPER.apply(rs, rowIdx);
+        try {
+            return EntityUtils.wrapperMapToBean(entityClazz, map);
+        } catch (Exception e) {
+            throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.MAPPING_ERROR, WRAPPER_ERROR);
+        }
+    }
+
+    private long total(Connection connection, ParameterizedSql parsedSql, Map<String, ?> paramMap) {
+        String totalSqlTxt = String.format(COUNT_SQL, parsedSql.getActualSql().getSql());
+        try (PreparedStatement ps = connection.prepareStatement(totalSqlTxt)) {
+            JdbcUtils.setParameterValues(ps, parsedSql.getNamedParameters(), paramMap);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                } else {
+                    throw new SimplifiedException(QUERY_ERROR);
+                }
+            }
+        } catch (SQLException e) {
+            throw new SimplifiedException(QUERY_ERROR, e);
+        }
     }
 }

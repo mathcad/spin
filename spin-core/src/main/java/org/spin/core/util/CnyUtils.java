@@ -157,7 +157,7 @@ public abstract class CnyUtils {
         }
 
         if (decimal.length() > 0) {
-            decimal = "点" + Character.toString(decimal.charAt(0)) + (decimal.length() > 2 ? decimal.charAt(2) : "");
+            decimal = "点" + decimal.charAt(0) + (decimal.length() > 2 ? decimal.charAt(2) : "");
         }
         return new BigDecimal(NumericUtils.analysisNumber(integer + decimal)).setScale(2, RoundingMode.HALF_UP);
     }

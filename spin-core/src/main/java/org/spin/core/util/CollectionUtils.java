@@ -407,7 +407,7 @@ public abstract class CollectionUtils {
     }
 
     @SafeVarargs
-    public static <E> TreeSet<E> ofTreeSet(E... elements) {
+    public static <E extends Comparable> TreeSet<E> ofTreeSet(E... elements) {
         TreeSet<E> set = new TreeSet<>();
         Collections.addAll(set, elements);
         return set;

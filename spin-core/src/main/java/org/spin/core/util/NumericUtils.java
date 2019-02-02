@@ -1,5 +1,6 @@
 package org.spin.core.util;
 
+import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.math.BigDecimal;
@@ -147,16 +148,19 @@ public abstract class NumericUtils {
      * @param value 原始值
      * @return 转换后的BigDecimal数值
      */
-    public static BigDecimal toBigDeciaml(Number value) {
+    public static BigDecimal toBigDeciaml(Object value) {
         if (null == value) {
             return BigDecimal.ZERO;
         }
 
         if (value instanceof BigDecimal) {
             return (BigDecimal) value;
-        }
+        } else if (value instanceof CharSequence || value instanceof Number) {
 
-        return new BigDecimal(value.toString());
+            return new BigDecimal(value.toString());
+        } else {
+            throw new SimplifiedException(ErrorCode.INVALID_PARAM, "参数不是合法的数值");
+        }
     }
 
     /**

@@ -7,10 +7,10 @@ version = '2.1.16.RELEASE'
 def artifactId = 'spin-web'
 
 ext {
-    junitJupiterVersion = '5.3.1'
-    springVersion = '5.1.1.RELEASE'
+    junitJupiterVersion = '5.3.2'
+    springVersion = '5.1.4.RELEASE'
     itextpdfVersion = '5.5.13'
-    hibernateVersion = '5.3.6.Final'
+    hibernateVersion = '5.4.1.Final'
 }
 
 test {
