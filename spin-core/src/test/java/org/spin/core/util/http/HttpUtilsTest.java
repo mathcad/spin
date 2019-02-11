@@ -18,8 +18,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 /**
  * TITLE
  * <p>DESCRIPTION</p>
@@ -30,29 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class HttpUtilsTest {
 
-    @Test
-    public void httpGetRequest() {
-        String url = "http://www.baidu.com";
-        String res = HttpUtils.get(url, MapUtils.ofMap("User-Agent", "Mozilla/5.0 (Linux; U; Android 4.2.1; zh-cn; GT-S5660 Build/GINGERBREAD) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1 MicroMessenger/4.5.255"));
-        System.out.println(res);
-        assertTrue(true);
-    }
-
-    @Test
-    public void httpGetRequestAsync() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        String url = "http://www.apache.org/";
-        Future<HttpResponse> future = HttpUtils.getAsync(url,
-            r -> {
-                System.out.println(r);
-                latch.countDown();
-            }
-        );
-        System.out.println(future.isDone());
-        latch.await();
-        System.out.println(future.isDone());
-        assertTrue(true);
-    }
 
     @Test
     public void oneReuest() {
@@ -158,44 +133,14 @@ class HttpUtilsTest {
     }
 
     @Test
-    public void moreRequestByUtil() {
-        final String[] requests = new String[]{
-            "http://www.apache.org/",
-            "http://www.baidu.com/",
-            "http://www.oschina.net/"
-        };
-
-        final CountDownLatch latch = new CountDownLatch(requests.length);
-        for (final String request : requests) {
-
-            HttpUtils.getAsync(request, r -> {
-                latch.countDown();
-                System.out.println("test");
-            }, e -> {
-                latch.countDown();
-                e.printStackTrace();
-            });
-
-        }
-
-        try {
-            latch.await();
-            System.out.println("Shutting Down");
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
-        System.out.println("Finish!");
-    }
-
-
-    @Test
     public void test1() {
-        String url = "http://192.168.12.54:9200/mall_goods/_analyze";
-        Map<String, Object> param = MapUtils.ofMap("field", "ware_name", "text", "华为");
-        Map<String, String> head = MapUtils.ofMap("Content-Type", "application/json");
-        String s = HttpUtils.postJson(url, head, param);
+        String url = "http://47.107.186.158:9200/mall_goods/_analyze";
+        Map<String, Object> param = MapUtils.ofMap("field", "ware_name", "text", "华为手机");
+        String s = Http.GET.withUrl(url)
+            .withHead("Authorization", "Basic bWFsbDoxMjM0NTY=")
+            .withJsonBody(param)
+            .execute();
         System.out.println(s);
-
     }
 
 

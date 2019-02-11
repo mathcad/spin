@@ -5,22 +5,22 @@ import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import java.net.URI;
 
 /**
- * 可以带RequestBody的Get请求
+ * 可以带RequestBody的Head请求
  * <p>DESCRIPTION</p>
  * <p>Created by xuweinan on 2019/1/31</p>
  *
  * @author xuweinan
  * @version 1.0
  */
-public class HttpGet extends HttpEntityEnclosingRequestBase {
+public class HttpHead extends HttpEntityEnclosingRequestBase {
 
-    public final static String METHOD_NAME = "GET";
+    public final static String METHOD_NAME = "HEAD";
 
-    public HttpGet() {
+    public HttpHead() {
         super();
     }
 
-    public HttpGet(final URI uri) {
+    public HttpHead(final URI uri) {
         super();
         setURI(uri);
     }
@@ -28,7 +28,7 @@ public class HttpGet extends HttpEntityEnclosingRequestBase {
     /**
      * @throws IllegalArgumentException if the uri is invalid.
      */
-    public HttpGet(final String uri) {
+    public HttpHead(final String uri) {
         super();
         setURI(URI.create(uri));
     }

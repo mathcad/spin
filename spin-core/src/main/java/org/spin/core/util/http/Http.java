@@ -1,12 +1,11 @@
 package org.spin.core.util.http;
 
-import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.utils.URIBuilder;
 import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
@@ -22,6 +21,9 @@ import java.util.function.Function;
  * @param <T> 请求类型
  */
 public final class Http<T extends HttpRequestBase> {
+
+    private Function<URI, T> requestSuppiler;
+
     public static final Http<HttpGet> GET = new Http<>(HttpGet::new);
     public static final Http<HttpPost> POST = new Http<>(HttpPost::new);
     public static final Http<HttpDelete> DELETE = new Http<>(HttpDelete::new);
@@ -31,7 +33,59 @@ public final class Http<T extends HttpRequestBase> {
     public static final Http<HttpTrace> TRACE = new Http<>(HttpTrace::new);
     public static final Http<HttpPatch> PATCH = new Http<>(HttpPatch::new);
 
-    private Function<URI, T> requestSuppiler;
+    private static final String SCHEMA = "http://";
+
+    public static void initSync() {
+        HttpExecutor.initSync(200, 40);
+    }
+
+    public static void initSync(int maxTotal, int maxPerRoute) {
+        HttpExecutor.initSync(maxTotal, maxPerRoute);
+    }
+
+    public static void initAync() {
+        HttpExecutor.initAync(200, 40);
+    }
+
+    public static void initAync(int maxTotal, int maxPerRoute) {
+        HttpExecutor.initAync(maxTotal, maxPerRoute);
+    }
+
+    // region init and getter/setter
+
+    public static int getSocketTimeout() {
+        return HttpExecutor.getSocketTimeout();
+    }
+
+    public static void setSocketTimeout(int socketTimeout) {
+        HttpExecutor.setSocketTimeout(socketTimeout);
+    }
+
+    public static int getConnectTimeout() {
+        return HttpExecutor.getConnectTimeout();
+    }
+
+    public static void setConnectTimeout(int connectTimeout) {
+        HttpExecutor.setConnectTimeout(connectTimeout);
+    }
+
+    public static int getMaxTotal() {
+        return HttpExecutor.getMaxTotal();
+    }
+
+    public static int getMaxPerRoute() {
+        return HttpExecutor.getMaxPerRoute();
+    }
+
+    public static HttpRequestRetryHandler getDefaultHttpRetryHandler() {
+        return HttpExecutor.getDefaultHttpRetryHandler();
+    }
+
+    public static void setDefaultHttpRetryHandler(HttpRequestRetryHandler defaultHttpRetryHandler) {
+        HttpExecutor.setDefaultHttpRetryHandler(defaultHttpRetryHandler);
+    }
+
+    // endregion
 
     private Http(Function<URI, T> requestSuppiler) {
         this.requestSuppiler = requestSuppiler;
@@ -46,7 +100,7 @@ public final class Http<T extends HttpRequestBase> {
     public final Request<T> withUrl(String uri) {
         URI u;
         try {
-            URIBuilder uriBuilder = new URIBuilder(HttpUtils.fixUrl(uri));
+            URIBuilder uriBuilder = new URIBuilder(fixUrl(uri));
             u = uriBuilder.build();
         } catch (URISyntaxException e) {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "url格式错误: " + uri + e.getMessage());
@@ -75,7 +129,7 @@ public final class Http<T extends HttpRequestBase> {
     public final Request<T> withUrl(String uri, FinalConsumer<URIBuilder> uriProc) {
         URI u;
         try {
-            URIBuilder uriBuilder = new URIBuilder(HttpUtils.fixUrl(uri));
+            URIBuilder uriBuilder = new URIBuilder(fixUrl(uri));
             if (null != uriProc) {
                 uriProc.accept(uriBuilder);
             }
@@ -84,5 +138,9 @@ public final class Http<T extends HttpRequestBase> {
             throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "url格式错误: " + uri + e.getMessage());
         }
         return withUrl(u);
+    }
+
+    private String fixUrl(String url) {
+        return url.toLowerCase().startsWith("http") ? url : SCHEMA + url;
     }
 }

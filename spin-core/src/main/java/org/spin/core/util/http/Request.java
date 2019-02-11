@@ -18,12 +18,16 @@ import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.Handler;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.DateUtils;
 import org.spin.core.util.JsonUtils;
+import org.spin.core.util.StringUtils;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.temporal.TemporalAccessor;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -44,6 +48,9 @@ public class Request<T extends HttpRequestBase> {
 
     private T request;
 
+    private Map<String, String> formData = new HashMap<>();
+    private Map<String, File> multiPartFormData = new HashMap<>();
+    private volatile boolean formBuilt = true;
 
     Request(T request) {
         Assert.notNull(request, "请求不能为空");
@@ -59,8 +66,8 @@ public class Request<T extends HttpRequestBase> {
 
     public Request<T> configRequest(FinalConsumer<RequestConfig.Builder> configProc) {
         RequestConfig.Builder builder = RequestConfig.custom()
-            .setSocketTimeout(HttpUtils.getSocketTimeout())
-            .setConnectTimeout(HttpUtils.getConnectTimeout());
+            .setSocketTimeout(HttpExecutor.getSocketTimeout())
+            .setConnectTimeout(HttpExecutor.getConnectTimeout());
         if (null != configProc) {
             configProc.accept(builder);
         }
@@ -79,53 +86,68 @@ public class Request<T extends HttpRequestBase> {
         return this;
     }
 
-    public Request<T> withForm(Map<String, String> formData) {
-        if (!CollectionUtils.isEmpty(formData)) {
-            if (request instanceof HttpEntityEnclosingRequestBase) {
-                List<NameValuePair> nvps = formData.entrySet().stream()
-                    .map(p -> new BasicNameValuePair(p.getKey(), p.getValue()))
-                    .collect(Collectors.toList());
-                try {
-                    ((HttpEntityEnclosingRequestBase) request).setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "生成请求报文体错误", e);
+    public Request<T> withHead(String... headers) {
+        if (null != headers) {
+            if (headers.length % 2 != 0) {
+                throw new SimplifiedException(ErrorCode.INVALID_PARAM, "键值对必须为偶数个");
+            }
+            for (int i = 0; i < headers.length; ) {
+                String k = headers[i++];
+                String v = headers[i++];
+                if (StringUtils.isNotEmpty(k) && StringUtils.isNotEmpty(v)) {
+                    request.setHeader(k, v);
                 }
-            } else {
-                throw new UnsupportedOperationException("当前请求不支持传递表单参数");
             }
         }
         return this;
     }
 
-    public Request<T> withMultipartForm(Map<String, Object> formData) {
+    public Request<T> withForm(Map<String, Object> formData) {
         if (!CollectionUtils.isEmpty(formData)) {
-            if (request instanceof HttpEntityEnclosingRequestBase) {
-                MultipartEntityBuilder reqEntity = MultipartEntityBuilder.create().setCharset(StandardCharsets.UTF_8);
-
-                boolean hasFile = false;
-                for (Map.Entry<String, Object> entry : formData.entrySet()) {
-                    String key = entry.getKey();
-                    Object value = entry.getValue();
-                    if (value instanceof CharSequence || value instanceof Number) {
-                        StringBody formItem = new StringBody(value.toString(), TEXT_PLAIN_UTF8);
-                        reqEntity.addPart(key, formItem);
-                    } else if (value instanceof File) {
-                        FileBody fileItem = new FileBody((File) value);
-                        reqEntity.addPart(key, fileItem);
-                        hasFile = true;
-                    }
+            for (Map.Entry<String, Object> entry : formData.entrySet()) {
+                String k = entry.getKey();
+                Object v = entry.getValue();
+                if (null == v) {
+                    continue;
                 }
-
-                if (hasFile) {
-                    reqEntity.setContentType(ContentType.MULTIPART_FORM_DATA);
+                if (v instanceof CharSequence || v instanceof Number) {
+                    formData.put(k, v.toString());
+                } else if (v instanceof File) {
+                    multiPartFormData.put(k, (File) v);
+                } else if (v instanceof Date) {
+                    formData.put(k, DateUtils.formatDateForSecond((Date) v));
+                } else if (v instanceof TemporalAccessor) {
+                    formData.put(k, DateUtils.formatDateForSecond((TemporalAccessor) v));
                 } else {
-                    reqEntity.setContentType(ContentType.APPLICATION_FORM_URLENCODED);
+                    throw new SimplifiedException(ErrorCode.INVALID_PARAM, "不支持的参数类型: " + k);
                 }
-
-                ((HttpEntityEnclosingRequestBase) request).setEntity(reqEntity.build());
-            } else {
-                throw new UnsupportedOperationException("当前请求不支持传递表单参数");
             }
+            formBuilt = false;
+        }
+        return this;
+    }
+
+    public Request<T> withForm(String... formData) {
+        if (null != formData) {
+            if (formData.length % 2 != 0) {
+                throw new SimplifiedException(ErrorCode.INVALID_PARAM, "键值对必须为偶数个");
+            }
+            formBuilt = false;
+            for (int i = 0; i < formData.length; ) {
+                String k = formData[i++];
+                String v = formData[i++];
+                if (StringUtils.isNotEmpty(k) && StringUtils.isNotEmpty(v)) {
+                    this.formData.put(k, v);
+                }
+            }
+        }
+        return this;
+    }
+
+    public Request<T> withForm(String paramName, File param) {
+        if (StringUtils.isNotEmpty(paramName) && null != param) {
+            multiPartFormData.put(paramName, param);
+            formBuilt = false;
         }
         return this;
     }
@@ -181,7 +203,8 @@ public class Request<T extends HttpRequestBase> {
      * @return 请求结果
      */
     public String execute() {
-        return HttpUtils.executeRequest(request, null, HttpUtils::resolveEntityToStr);
+        buildForm();
+        return HttpExecutor.executeRequest(request, HttpExecutor::toStringProc);
     }
 
     /**
@@ -192,7 +215,8 @@ public class Request<T extends HttpRequestBase> {
      * @return 处理后的请求结果
      */
     public <E> E execute(EntityProcessor<E> entityProc) {
-        return HttpUtils.executeRequest(request, null, entityProc);
+        buildForm();
+        return HttpExecutor.executeRequest(request, entityProc);
     }
 
 
@@ -210,8 +234,8 @@ public class Request<T extends HttpRequestBase> {
                                                  FinalConsumer<E> completedCallback,
                                                  FinalConsumer<Exception> failedCallback,
                                                  Handler cancelledCallback) {
-
-        return HttpUtils.executeRequestAsync(request, null, entityProc, completedCallback, failedCallback, cancelledCallback);
+        buildForm();
+        return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, cancelledCallback);
     }
 
     /**
@@ -226,7 +250,8 @@ public class Request<T extends HttpRequestBase> {
     public <E> Future<HttpResponse> executeAsync(EntityProcessor<E> entityProc,
                                                  FinalConsumer<E> completedCallback,
                                                  FinalConsumer<Exception> failedCallback) {
-        return HttpUtils.executeRequestAsync(request, null, entityProc, completedCallback, failedCallback, null);
+        buildForm();
+        return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, null);
     }
 
     /**
@@ -240,7 +265,8 @@ public class Request<T extends HttpRequestBase> {
     public Future<HttpResponse> executeAsync(FinalConsumer<String> completedCallback,
                                              FinalConsumer<Exception> failedCallback,
                                              Handler cancelledCallback) {
-        return HttpUtils.executeRequestAsync(request, null, HttpUtils::resolveEntityToStr, completedCallback, failedCallback, cancelledCallback);
+        buildForm();
+        return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, cancelledCallback);
     }
 
     /**
@@ -252,25 +278,68 @@ public class Request<T extends HttpRequestBase> {
      */
     public Future<HttpResponse> executeAsync(FinalConsumer<String> completedCallback,
                                              FinalConsumer<Exception> failedCallback) {
-        return HttpUtils.executeRequestAsync(request, null, HttpUtils::resolveEntityToStr, completedCallback, failedCallback, null);
+        buildForm();
+        return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, null);
     }
 
     public Map<String, String> download(String savePath) {
-        return HttpUtils.executeRequest(request, null, httpEntity -> HttpUtils.downloadProc(httpEntity, savePath));
+        buildForm();
+        return HttpExecutor.executeRequest(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath));
     }
 
     public Future<HttpResponse> downloadAsync(String savePath) {
-        return HttpUtils.executeRequestAsync(request, null, httpEntity -> HttpUtils.downloadProc(httpEntity, savePath), null, null, null);
+        buildForm();
+        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), null, null, null);
     }
 
     public Future<HttpResponse> downloadAsync(String savePath,
                                               FinalConsumer<Map<String, String>> completedCallback) {
-        return HttpUtils.executeRequestAsync(request, null, httpEntity -> HttpUtils.downloadProc(httpEntity, savePath), completedCallback, null, null);
+        buildForm();
+        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, null, null);
     }
 
     public Future<HttpResponse> downloadAsync(String savePath,
                                               FinalConsumer<Map<String, String>> completedCallback,
                                               FinalConsumer<Exception> failedCallback) {
-        return HttpUtils.executeRequestAsync(request, null, httpEntity -> HttpUtils.downloadProc(httpEntity, savePath), completedCallback, failedCallback, null);
+        buildForm();
+        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, failedCallback, null);
+    }
+
+    private void buildForm() {
+        if (formBuilt) {
+            return;
+        }
+        if (multiPartFormData.isEmpty()) {
+            if (!formData.isEmpty()) {
+                if (request instanceof HttpEntityEnclosingRequestBase) {
+                    List<NameValuePair> nvps = formData.entrySet().stream()
+                        .map(p -> new BasicNameValuePair(p.getKey(), p.getValue()))
+                        .collect(Collectors.toList());
+                    ((HttpEntityEnclosingRequestBase) request).setEntity(new UrlEncodedFormEntity(nvps, StandardCharsets.UTF_8));
+                } else {
+                    throw new UnsupportedOperationException("当前请求不支持传递表单参数");
+                }
+            }
+        } else {
+            if (request instanceof HttpEntityEnclosingRequestBase) {
+                MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create().setCharset(StandardCharsets.UTF_8);
+
+                for (Map.Entry<String, String> entry : formData.entrySet()) {
+                    StringBody formItem = new StringBody(entry.getValue(), TEXT_PLAIN_UTF8);
+                    entityBuilder.addPart(entry.getKey(), formItem);
+                }
+
+                for (Map.Entry<String, File> fileEntry : multiPartFormData.entrySet()) {
+                    FileBody fileItem = new FileBody(fileEntry.getValue());
+                    entityBuilder.addPart(fileEntry.getKey(), fileItem);
+                }
+
+                entityBuilder.setContentType(ContentType.MULTIPART_FORM_DATA);
+                ((HttpEntityEnclosingRequestBase) request).setEntity(entityBuilder.build());
+            } else {
+                throw new UnsupportedOperationException("当前请求不支持传递表单参数");
+            }
+        }
+        formBuilt = true;
     }
 }
