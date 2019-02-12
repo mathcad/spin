@@ -53,6 +53,7 @@ dependencies {
     }
     testImplementation group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
     testImplementation group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
+    testImplementation group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
     testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
 
 //    core

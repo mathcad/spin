@@ -16,7 +16,9 @@ import java.security.SecureRandom;
  *
  * @author xuweinan
  * @version 1.0
+ * @deprecated DES算法已经不建议使用
  */
+@Deprecated
 public class DES {
     private static final String DES_ALGORITHM = "DES/ECB/PKCS5Padding";
 

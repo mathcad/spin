@@ -62,7 +62,7 @@ public abstract class IOUtils {
         StringBuilder out = new StringBuilder();
         InputStreamReader reader = new InputStreamReader(in, charset);
         char[] buffer = new char[BUFFER_SIZE];
-        int bytesRead = -1;
+        int bytesRead;
         while ((bytesRead = reader.read(buffer)) != -1) {
             out.append(buffer, 0, bytesRead);
         }
@@ -118,7 +118,7 @@ public abstract class IOUtils {
 
         int byteCount = 0;
         byte[] buffer = new byte[BUFFER_SIZE];
-        int bytesRead = -1;
+        int bytesRead;
         while ((bytesRead = in.read(buffer)) != -1) {
             out.write(buffer, 0, bytesRead);
             byteCount += bytesRead;
@@ -179,7 +179,7 @@ public abstract class IOUtils {
     public static int drain(InputStream in) throws IOException {
         Assert.notNull(in, "No InputStream specified");
         byte[] buffer = new byte[BUFFER_SIZE];
-        int bytesRead = -1;
+        int bytesRead;
         int byteCount = 0;
         while ((bytesRead = in.read(buffer)) != -1) {
             byteCount += bytesRead;

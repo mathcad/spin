@@ -32,8 +32,6 @@ import javax.net.ssl.SSLHandshakeException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -210,7 +208,7 @@ public abstract class HttpExecutor {
                     int code = result.getStatusLine().getStatusCode();
                     HttpEntity entity = result.getEntity();
                     if (code != 200) {
-                        failed(new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "错误状态码:" + code));
+                        failed(new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity)));
                     }
                     if (null != completedCallback) {
                         try {
@@ -229,7 +227,7 @@ public abstract class HttpExecutor {
                     if (null != failedCallback) {
                         failedCallback.accept(ex);
                     } else {
-                        logger.error(String.format("请求[%s]执行成功", request.getURI()), ex);
+                        logger.error(String.format("请求[%s]执行失败", request.getURI()), ex);
                     }
                 }
 

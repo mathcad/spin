@@ -3,37 +3,24 @@ package org.spin.core.security;
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.ClassUtils;
 import org.spin.core.util.SerializeUtils;
 import org.spin.core.util.StringUtils;
-
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.Provider;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPrivateKeySpec;
-import java.security.spec.RSAPublicKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPrivateKeySpec;
+import java.security.spec.RSAPublicKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 
 /**
@@ -43,14 +30,12 @@ import javax.crypto.NoSuchPaddingException;
  * @author xuweinan
  * @version 1.0
  */
-public class RSA {
+public class RSA extends ProviderDetector {
     private static final int KEY_SIZE = 1024;
     private static final String SIGN_ALGORITHMS = "SHA1WithRSA";
     private static final String RSA_ALGORITHMS = "RSA";
     private static final String KEY_INVALIE = "密钥不合法";
     private static final String NO_SUCH_ALGORITHM = "加密算法不存在";
-    private static boolean hasBouncyProvider = true;
-    private static Constructor<Provider> providerConstructor;
 
     private RSA() {
     }
@@ -149,25 +134,8 @@ public class RSA {
      */
     public static byte[] encrypt(PublicKey pk, byte[] data) {
         Cipher cipher;
-        Provider provider = null;
-        if (hasBouncyProvider) {
-            try {
-                if (null == providerConstructor) {
-                    //noinspection unchecked
-                    providerConstructor = (Constructor<Provider>) ClassUtils.getClass("org.bouncycastle.jce.provider.BouncyCastleProvider").getDeclaredConstructor();
-                }
-                provider = providerConstructor.newInstance();
-            } catch (Exception ignore) {
-                // no bouncyCastle provider
-                hasBouncyProvider = false;
-            }
-        }
         try {
-            if (null != provider) {
-                cipher = Cipher.getInstance(RSA_ALGORITHMS, provider);
-            } else {
-                cipher = Cipher.getInstance(RSA_ALGORITHMS);
-            }
+            cipher = Cipher.getInstance(RSA_ALGORITHMS);
             cipher.init(Cipher.ENCRYPT_MODE, pk);
             return cipher.doFinal(data);
         } catch (NoSuchAlgorithmException e) {
@@ -211,25 +179,8 @@ public class RSA {
      */
     public static byte[] decrypt(PrivateKey pk, byte[] raw) {
         Cipher cipher;
-        Provider provider = null;
-        if (hasBouncyProvider) {
-            try {
-                if (null == providerConstructor) {
-                    //noinspection unchecked
-                    providerConstructor = (Constructor<Provider>) ClassUtils.getClass("org.bouncycastle.jce.provider.BouncyCastleProvider").getDeclaredConstructor();
-                }
-                provider = providerConstructor.newInstance();
-            } catch (Exception ignore) {
-                // no bouncyCastle provider
-                hasBouncyProvider = false;
-            }
-        }
         try {
-            if (null != provider) {
-                cipher = Cipher.getInstance(RSA_ALGORITHMS, provider);
-            } else {
-                cipher = Cipher.getInstance(RSA_ALGORITHMS);
-            }
+            cipher = Cipher.getInstance(RSA_ALGORITHMS);
             cipher.init(Cipher.DECRYPT_MODE, pk);
             return cipher.doFinal(raw);
         } catch (NoSuchAlgorithmException e) {

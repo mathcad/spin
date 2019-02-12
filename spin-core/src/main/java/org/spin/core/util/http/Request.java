@@ -34,7 +34,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
- * TITLE
+ * Http请求的封装
  * <p>DESCRIPTION</p>
  * <p>Created by xuweinan on 2019/1/31</p>
  *
@@ -57,6 +57,12 @@ public class Request<T extends HttpRequestBase> {
         this.request = request;
     }
 
+    /**
+     * 自定义请求
+     *
+     * @param requestProc 请求配置逻辑
+     * @return 当前请求本身
+     */
     public Request<T> customRequest(FinalConsumer<T> requestProc) {
         if (null != requestProc) {
             requestProc.accept(request);
@@ -64,6 +70,12 @@ public class Request<T extends HttpRequestBase> {
         return this;
     }
 
+    /**
+     * 自定义请求
+     *
+     * @param configProc 请求配置逻辑
+     * @return 当前请求本身
+     */
     public Request<T> configRequest(FinalConsumer<RequestConfig.Builder> configProc) {
         RequestConfig.Builder builder = RequestConfig.custom()
             .setSocketTimeout(HttpExecutor.getSocketTimeout())
@@ -77,6 +89,15 @@ public class Request<T extends HttpRequestBase> {
         return this;
     }
 
+    /**
+     * 添加请求头部信息
+     * <pre>
+     *     再次设置相同的请求头，会覆盖之前的设置
+     * </pre>
+     *
+     * @param headers 头部信息
+     * @return 当前请求本身
+     */
     public Request<T> withHead(Map<String, String> headers) {
         if (null != headers) {
             for (Map.Entry<String, String> entry : headers.entrySet()) {
@@ -86,6 +107,15 @@ public class Request<T extends HttpRequestBase> {
         return this;
     }
 
+    /**
+     * 添加请求头部信息
+     * <pre>
+     *     再次设置相同的请求头，会覆盖之前的设置
+     * </pre>
+     *
+     * @param headers 头部信息
+     * @return 当前请求本身
+     */
     public Request<T> withHead(String... headers) {
         if (null != headers) {
             if (headers.length % 2 != 0) {
@@ -102,6 +132,16 @@ public class Request<T extends HttpRequestBase> {
         return this;
     }
 
+    /**
+     * 添加请求form表单信息
+     * <pre>
+     *     1.再次设置相同的表单项，会覆盖之前的表单项
+     *     2.表单项的值只允许字符串、数字，日期，与文件(会自动转为Multipart form)
+     * </pre>
+     *
+     * @param formData form表单
+     * @return 当前请求本身
+     */
     public Request<T> withForm(Map<String, Object> formData) {
         if (!CollectionUtils.isEmpty(formData)) {
             for (Map.Entry<String, Object> entry : formData.entrySet()) {
@@ -127,6 +167,15 @@ public class Request<T extends HttpRequestBase> {
         return this;
     }
 
+    /**
+     * 添加请求form表单信息
+     * <pre>
+     *     再次设置相同的表单项，会覆盖之前的表单项
+     * </pre>
+     *
+     * @param formData form表单
+     * @return 当前请求本身
+     */
     public Request<T> withForm(String... formData) {
         if (null != formData) {
             if (formData.length % 2 != 0) {
@@ -144,6 +193,16 @@ public class Request<T extends HttpRequestBase> {
         return this;
     }
 
+    /**
+     * 添加请求multipart form表单信息
+     * <pre>
+     *     再次设置相同的表单项，会覆盖之前的表单项
+     * </pre>
+     *
+     * @param paramName 表单项名称
+     * @param param     表单项文件内容
+     * @return 当前请求本身
+     */
     public Request<T> withForm(String paramName, File param) {
         if (StringUtils.isNotEmpty(paramName) && null != param) {
             multiPartFormData.put(paramName, param);
@@ -152,6 +211,15 @@ public class Request<T extends HttpRequestBase> {
         return this;
     }
 
+    /**
+     * 设置JSON请求体
+     * <pre>
+     *     会取消之前设置的其他任何请求体(包括表单等)，并设置请求对应的ContentType
+     * </pre>
+     *
+     * @param jsonObj 任意对象
+     * @return 当前请求本身
+     */
     public Request<T> withJsonBody(Object jsonObj) {
         if (null != jsonObj) {
             if (request instanceof HttpEntityEnclosingRequestBase) {
@@ -161,27 +229,47 @@ public class Request<T extends HttpRequestBase> {
                 stringEntity.setContentType(ContentType.APPLICATION_JSON.getMimeType());
                 ((HttpEntityEnclosingRequestBase) request).setEntity(stringEntity);
             } else {
-                throw new UnsupportedOperationException("当前请求不支持传递表单参数");
+                throw new UnsupportedOperationException("当前请求不支持传递JSON请求体");
             }
         }
         return this;
     }
 
-    public Request<T> withXmlBody(Object jsonObj) {
-        if (null != jsonObj) {
+    /**
+     * 设置XML请求体
+     * <pre>
+     *     会取消之前设置的其他任何请求体(包括表单等)，并设置请求对应的ContentType
+     * </pre>
+     *
+     * @param xmlBody xml内容
+     * @return 当前请求本身
+     */
+    public Request<T> withXmlBody(String xmlBody) {
+        if (null != xmlBody) {
             if (request instanceof HttpEntityEnclosingRequestBase) {
                 StringEntity stringEntity;
-                stringEntity = new StringEntity(JsonUtils.toJson(jsonObj), StandardCharsets.UTF_8);
+                stringEntity = new StringEntity(xmlBody, StandardCharsets.UTF_8);
                 stringEntity.setContentEncoding(StandardCharsets.UTF_8.toString());
                 stringEntity.setContentType(ContentType.APPLICATION_XML.getMimeType());
                 ((HttpEntityEnclosingRequestBase) request).setEntity(stringEntity);
             } else {
-                throw new UnsupportedOperationException("当前请求不支持传递表单参数");
+                throw new UnsupportedOperationException("当前请求不支持传递XML请求体");
             }
         }
         return this;
     }
 
+    /**
+     * 设置请求体
+     * <pre>
+     *     会取消之前设置的其他任何请求体(包括表单等)，并设置请求对应的ContentType
+     * </pre>
+     *
+     * @param body        请求体
+     * @param charset     字符集
+     * @param contentType content-type
+     * @return 当前请求本身
+     */
     public Request<T> withBody(String body, Charset charset, ContentType contentType) {
         if (null != body) {
             if (request instanceof HttpEntityEnclosingRequestBase) {
@@ -282,22 +370,49 @@ public class Request<T extends HttpRequestBase> {
         return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, null);
     }
 
+    /**
+     * 下载文件
+     *
+     * @param savePath 文件保存路径
+     * @return 下载的文件信息(扩展名与大小)
+     */
     public Map<String, String> download(String savePath) {
         buildForm();
         return HttpExecutor.executeRequest(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath));
     }
 
+    /**
+     * 异步下载文件
+     *
+     * @param savePath 文件保存路径
+     * @return 包含请求结果的Future对象
+     */
     public Future<HttpResponse> downloadAsync(String savePath) {
         buildForm();
         return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), null, null, null);
     }
 
+    /**
+     * 异步下载文件
+     *
+     * @param savePath          文件保存路径
+     * @param completedCallback 文件下载完成后的回调
+     * @return 包含请求结果的Future对象
+     */
     public Future<HttpResponse> downloadAsync(String savePath,
                                               FinalConsumer<Map<String, String>> completedCallback) {
         buildForm();
         return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, null, null);
     }
 
+    /**
+     * 异步下载文件
+     *
+     * @param savePath          文件保存路径
+     * @param completedCallback 文件下载完成后的回调
+     * @param failedCallback    文件下载失败后的回调
+     * @return 包含请求结果的Future对象
+     */
     public Future<HttpResponse> downloadAsync(String savePath,
                                               FinalConsumer<Map<String, String>> completedCallback,
                                               FinalConsumer<Exception> failedCallback) {
@@ -305,6 +420,9 @@ public class Request<T extends HttpRequestBase> {
         return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, failedCallback, null);
     }
 
+    /**
+     * 根据用户指定的参数构造请求体的表单对象
+     */
     private void buildForm() {
         if (formBuilt) {
             return;
