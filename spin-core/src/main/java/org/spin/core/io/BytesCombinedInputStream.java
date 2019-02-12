@@ -16,7 +16,7 @@ import java.io.InputStream;
  */
 public class BytesCombinedInputStream extends InputStream implements AutoCloseable {
 
-    private final byte[] bytesBuf;
+    private byte[] bytesBuf;
 
     private int pos = 0;
 
@@ -102,6 +102,7 @@ public class BytesCombinedInputStream extends InputStream implements AutoCloseab
 
     @Override
     public void close() throws IOException {
+        bytesBuf = null;
         source.close();
     }
 
