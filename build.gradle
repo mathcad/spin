@@ -97,6 +97,10 @@ task cleanAll(group: 'build') doLast {
             print("delete " + p.name + "/build")
             println(f.deleteDir() ? " success" : "failure")
         }
-
+        f = file(p.name + "/bin")
+        if (f.exists()) {
+            print("delete " + p.name + "/bin")
+            println(f.deleteDir() ? " success" : "failure")
+        }
     }
 }
