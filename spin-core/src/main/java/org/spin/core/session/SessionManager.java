@@ -39,17 +39,17 @@ public abstract class SessionManager {
      * @return 当前线程上的Session
      */
     public static Session getCurrentSession() {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return null;
+        }
         String sessId = SESSION_ID_CONTAINER.get();
         if (Objects.isNull(sessId)) {
             return null;
         }
         Session session = sessionDao.get(sessId);
         if (Objects.isNull(session)) {
-            SimpleSession s = new SimpleSession();
-            s.setId(sessId);
-//            s.setAttribute(USER_SESSION_KEY, sessionUserContainer.get());
-            sessionDao.save(s);
-            session = s;
+            session = sessionDao.createSession(sessId);
         }
         return session;
     }
@@ -60,17 +60,17 @@ public abstract class SessionManager {
      * @return 当前线程上的Session
      */
     public static Session getCurrentSession(boolean requiredNew) {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return null;
+        }
         String sessId = SESSION_ID_CONTAINER.get();
         if (Objects.isNull(sessId)) {
             return null;
         }
         Session session = sessionDao.get(sessId);
         if (Objects.isNull(session) && requiredNew) {
-            SimpleSession s = new SimpleSession();
-            s.setId(sessId);
-//            s.setAttribute(USER_SESSION_KEY, sessionUserContainer.get());
-            sessionDao.save(s);
-            session = s;
+            session = sessionDao.createSession(sessId);
         }
         return session;
     }
@@ -81,6 +81,10 @@ public abstract class SessionManager {
      * @return 当前登录用户
      */
     public static SessionUser getCurrentUser() {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return null;
+        }
         Session sess = getCurrentSession();
         return sess == null ? null : (SessionUser) sess.getAttribute(USER_SESSION_KEY);
     }
@@ -92,6 +96,10 @@ public abstract class SessionManager {
      * @return 属性值
      */
     public static Object getSessionAttr(String key) {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return null;
+        }
         Session sess = getCurrentSession();
         return sess == null ? null : sess.getAttribute(key);
     }
@@ -103,10 +111,14 @@ public abstract class SessionManager {
      * @param value 属性值
      */
     public static void setSessionAttr(String key, Object value) {
-        Session sess = getCurrentSession();
-        Assert.notNull(sess, "未能获取Session");
-        sess.setAttribute(key, (Serializable) value);
-        sessionDao.save(sess);
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return;
+        }
+        Session session = getCurrentSession();
+        Assert.notNull(session, "未能获取Session");
+        session.setAttribute(key, (Serializable) value);
+        sessionDao.save(session);
     }
 
     /**
@@ -116,12 +128,16 @@ public abstract class SessionManager {
      * @return 删除的属性值
      */
     public static Object removeSessionAttr(String key) {
-        Session sess = getCurrentSession();
-        if (sess == null)
+        // 未启用Session管理
+        if (null == sessionDao) {
             return null;
-        Object r = sess.getAttribute(key);
-        sess.removeAttribute(key);
-        sessionDao.save(sess);
+        }
+        Session session = getCurrentSession();
+        if (session == null)
+            return null;
+        Object r = session.getAttribute(key);
+        session.removeAttribute(key);
+        sessionDao.save(session);
         return r;
     }
 
@@ -129,24 +145,32 @@ public abstract class SessionManager {
      * 移除所有属性
      */
     public static void removeAllSessionAttr() {
-        Session sess = getCurrentSession();
-        if (sess != null && sess.getAttributeKeys() != null) {
-            sess.getAttributeKeys().forEach(sess::removeAttribute);
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return;
         }
-        sessionDao.save(sess);
+        Session session = getCurrentSession();
+        if (session != null && session.getAttributeKeys() != null) {
+            session.getAttributeKeys().forEach(session::removeAttribute);
+        }
+        sessionDao.save(session);
     }
 
     /**
-     * 移除所有属性，除attr 以外
+     * 移除所有属性，除attr以外
      *
      * @param attr 保留的属性
      */
     public static void removeAllSessionAttrExc(String... attr) {
-        Session sess = getCurrentSession();
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return;
+        }
+        Session session = getCurrentSession();
         List<String> a = attr == null ? new ArrayList<>() : Arrays.asList(attr);
-        Optional.ofNullable(sess).filter(s -> s.getAttributeKeys() != null)
+        Optional.ofNullable(session).filter(s -> s.getAttributeKeys() != null)
             .ifPresent(s -> s.getAttributeKeys().stream().filter(k -> !a.contains(k.toString())).forEach(s::removeAttribute));
-        sessionDao.save(sess);
+        sessionDao.save(session);
     }
 
     /**
@@ -155,11 +179,15 @@ public abstract class SessionManager {
      * @param sessionUser 账户
      */
     public static void setCurrentUser(SessionUser sessionUser) {
-        Session sess = getCurrentSession();
-        if (Objects.nonNull(sess)) {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return;
+        }
+        Session session = getCurrentSession();
+        if (Objects.nonNull(session)) {
             sessionUser.setSessionId(getCurrentSessionId());
-            sess.setAttribute(USER_SESSION_KEY, sessionUser);
-            sessionDao.save(sess);
+            session.setAttribute(USER_SESSION_KEY, sessionUser);
+            sessionDao.save(session);
         }
     }
 
@@ -167,6 +195,10 @@ public abstract class SessionManager {
      * 登出session
      */
     public static void logout() {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return;
+        }
         if (Objects.nonNull(SESSION_ID_CONTAINER.get())) {
             sessionDao.delete(SESSION_ID_CONTAINER.get());
             SESSION_ID_CONTAINER.set(null);
@@ -174,15 +206,27 @@ public abstract class SessionManager {
     }
 
     public static void setSessionUser(Session session, SessionUser sessionUser) {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return;
+        }
         session.setAttribute(USER_SESSION_KEY, sessionUser);
         sessionDao.save(session);
     }
 
     public static String getCurrentSessionId() {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return null;
+        }
         return SESSION_ID_CONTAINER.get();
     }
 
     public static void setCurrentSessionId(String sessionId) {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return;
+        }
         SESSION_ID_CONTAINER.set(sessionId);
     }
 
@@ -193,6 +237,10 @@ public abstract class SessionManager {
      * @param newSessionId 新SessionId
      */
     public static void extendSession(String oldSessionId, String newSessionId) {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return;
+        }
         Session session = sessionDao.get(oldSessionId);
         if (Objects.nonNull(session)) {
             session.setId(newSessionId);
@@ -213,6 +261,10 @@ public abstract class SessionManager {
      * @return session是否存在
      */
     public static boolean containsSession(String sessionId) {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return false;
+        }
         return sessionDao.contains(sessionId);
     }
 
@@ -222,6 +274,10 @@ public abstract class SessionManager {
      * @param sessionId session id
      */
     public static void removeSession(String sessionId) {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return;
+        }
         sessionDao.delete(sessionId);
     }
 
@@ -231,11 +287,24 @@ public abstract class SessionManager {
      * @param sessionIds session id集合
      */
     public static void removeSessions(Collection<String> sessionIds) {
+        // 未启用Session管理
+        if (null == sessionDao) {
+            return;
+        }
         sessionIds.forEach(sessionDao::delete);
     }
 
     public static void setSessionDao(SessionDao sessionDao) {
         SessionManager.sessionDao = sessionDao;
+    }
+
+    /**
+     * 是否启用Session管理
+     *
+     * @return 是否启用
+     */
+    public static boolean isSessionManagerEnabled() {
+        return null != sessionDao;
     }
 }
 

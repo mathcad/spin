@@ -35,6 +35,13 @@ public final class Http<T extends HttpRequestBase> {
 
     private static final String SCHEMA = "http://";
 
+
+    private Http(Function<URI, T> requestSuppiler) {
+        this.requestSuppiler = requestSuppiler;
+    }
+
+    // region init and getter/setter
+
     public static void initSync() {
         HttpExecutor.initSync(200, 40);
     }
@@ -50,8 +57,6 @@ public final class Http<T extends HttpRequestBase> {
     public static void initAync(int maxTotal, int maxPerRoute) {
         HttpExecutor.initAync(maxTotal, maxPerRoute);
     }
-
-    // region init and getter/setter
 
     public static int getSocketTimeout() {
         return HttpExecutor.getSocketTimeout();
@@ -87,9 +92,7 @@ public final class Http<T extends HttpRequestBase> {
 
     // endregion
 
-    private Http(Function<URI, T> requestSuppiler) {
-        this.requestSuppiler = requestSuppiler;
-    }
+    // region build
 
     /**
      * 从指定uri字符串构造请求
@@ -139,6 +142,8 @@ public final class Http<T extends HttpRequestBase> {
         }
         return withUrl(u);
     }
+
+    // endregion
 
     private String fixUrl(String url) {
         return url.toLowerCase().startsWith("http") ? url : SCHEMA + url;

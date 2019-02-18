@@ -37,6 +37,7 @@ import java.util.Map;
 
 
 /**
+ * 简单的session实现，用于内存中
  */
 public class SimpleSession implements Session, Serializable {
 

@@ -11,6 +11,14 @@ import java.io.Serializable;
 public interface SessionDao {
 
     /**
+     * 创建新的session
+     *
+     * @param sessionId session id
+     * @return session对象
+     */
+    Session createSession(Serializable sessionId);
+
+    /**
      * 存储session
      *
      * @param session session对象
@@ -55,7 +63,7 @@ public interface SessionDao {
     int sessionCount();
 
     /**
-     * 清除过期的Token
+     * 清除过期的Session
      */
     default void clearExpiredSession() {
 

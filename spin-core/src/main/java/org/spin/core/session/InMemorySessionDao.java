@@ -24,6 +24,14 @@ public class InMemorySessionDao implements SessionDao {
     }
 
     @Override
+    public Session createSession(Serializable sessionId) {
+        SimpleSession session = new SimpleSession();
+        session.setId(sessionId);
+        allSessions.put(session.getId(), session);
+        return session;
+    }
+
+    @Override
     public void save(Session session) {
         if (null != session) {
             allSessions.put(session.getId(), session);

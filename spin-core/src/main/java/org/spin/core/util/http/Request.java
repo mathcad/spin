@@ -57,6 +57,8 @@ public class Request<T extends HttpRequestBase> {
         this.request = request;
     }
 
+    // region config request
+
     /**
      * 自定义请求
      *
@@ -285,6 +287,10 @@ public class Request<T extends HttpRequestBase> {
         return this;
     }
 
+    // endregion
+
+    // region execute
+
     /**
      * 执行自定义请求，并返回响应字符串
      *
@@ -419,6 +425,8 @@ public class Request<T extends HttpRequestBase> {
         buildForm();
         return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, failedCallback, null);
     }
+
+    // endregion
 
     /**
      * 根据用户指定的参数构造请求体的表单对象

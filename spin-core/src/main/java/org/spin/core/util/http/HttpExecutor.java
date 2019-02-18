@@ -27,8 +27,6 @@ import org.spin.core.function.Handler;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.StringUtils;
 
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLHandshakeException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -36,6 +34,9 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
+
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
 
 /**
  * 利用Apache HttpClient完成请求
@@ -85,6 +86,8 @@ public abstract class HttpExecutor {
         return !(request instanceof HttpEntityEnclosingRequest);
     };
 
+    // region init and getter/setter
+
     public static void initSync() {
         initSync(200, 40);
     }
@@ -112,8 +115,6 @@ public abstract class HttpExecutor {
             httpAsyncClient.start();
         }
     }
-
-    // region init and getter/setter
 
     public static int getSocketTimeout() {
         return socketTimeout;
