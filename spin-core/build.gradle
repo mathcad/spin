@@ -62,7 +62,7 @@ dependencies {
 //    api group: 'org.apache.shiro', name: 'shiro-core', version: '1.4.0'
 
     compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
-    compile group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
+    compileOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
     compileOnly group: 'commons-net', name: 'commons-net', version: commonsNetVersion
     compileOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
     compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {

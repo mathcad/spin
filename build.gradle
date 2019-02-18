@@ -50,12 +50,12 @@ subprojects {
     }
 
     task sourceJar(type: Jar) {
-        classifier = 'sources'
+        archiveClassifier.set('sources')
         from sourceSets.main.allJava
     }
 
     task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
+        archiveClassifier.set('javadoc')
         from javadoc.destinationDir
     }
 
@@ -75,32 +75,82 @@ subprojects {
     }
 }
 
-task cleanAll(group: 'build') doLast {
+task cleanBuild(group: 'build') doLast {
     File f = file('build')
     if (f.exists()) {
         print("delete build")
-        println(f.deleteDir() ? " success" : "failure")
+        println(f.deleteDir() ? " success" : " failure")
     }
     f = file('out')
     if (f.exists()) {
         print("delete out")
-        println(f.deleteDir() ? " success" : "failure")
+        println(f.deleteDir() ? " success" : " failure")
+    }
+    f = file('target')
+    if (f.exists()) {
+        print("delete target")
+        println(f.deleteDir() ? " success" : " failure")
+    }
+    f = file("bin")
+    if (f.exists()) {
+        print("delete bin")
+        println(f.deleteDir() ? " success" : " failure")
     }
     allprojects.each { p ->
-        f = file(p.name + "/out")
-        if (f.exists()) {
-            print("delete " + p.name + "/out")
-            println(f.deleteDir() ? " success" : "failure")
-        }
         f = file(p.name + "/build")
         if (f.exists()) {
             print("delete " + p.name + "/build")
-            println(f.deleteDir() ? " success" : "failure")
+            println(f.deleteDir() ? " success" : " failure")
+        }
+        f = file(p.name + "/out")
+        if (f.exists()) {
+            print("delete " + p.name + "/out")
+            println(f.deleteDir() ? " success" : " failure")
+        }
+        f = file(p.name + "/target")
+        if (f.exists()) {
+            print("delete " + p.name + "/target")
+            println(f.deleteDir() ? " success" : " failure")
         }
         f = file(p.name + "/bin")
         if (f.exists()) {
             print("delete " + p.name + "/bin")
-            println(f.deleteDir() ? " success" : "failure")
+            println(f.deleteDir() ? " success" : " failure")
+        }
+    }
+}
+
+task cleanEclipse(group: 'build') doLast {
+    File f = file('.settings')
+    if (f.exists()) {
+        print("delete .settings")
+        println(f.deleteDir() ? " success" : " failure")
+    }
+    f = file('.classpath')
+    if (f.exists()) {
+        print("delete .classpath")
+        println(f.delete() ? " success" : " failure")
+    }
+    f = file('.project')
+    if (f.exists()) {
+        print("delete .project")
+        println(f.delete() ? " success" : " failure")
+    }
+    allprojects.each { p ->
+        f = file(p.name + "/.settings")
+        if (f.exists()) {
+            print("delete " + p.name + "/.settings")
+            println(f.deleteDir() ? " success" : " failure")
+        }
+        f = file(p.name + "/.classpath")
+        if (f.exists()) {
+            print("delete " + p.name + "/.classpath")
+            println(f.delete() ? " success" : " failure")
+        }
+        f = file(p.name + "/.project")
+        if (f.exists()) {
+            print("delete " + p.name + "/.project")
+            println(f.delete() ? " success" : " failure")
         }
     }
 }
