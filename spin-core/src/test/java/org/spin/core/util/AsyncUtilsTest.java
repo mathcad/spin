@@ -31,7 +31,7 @@ class AsyncUtilsTest {
         BACK_STATIS_WORKER.start();
     }
 
-//    @Test
+    @Test
     void runAsync() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(13);
 

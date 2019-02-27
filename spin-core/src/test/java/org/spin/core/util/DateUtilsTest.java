@@ -86,6 +86,11 @@ public class DateUtilsTest {
         System.out.println(DateUtils.toLocalDateTime("2018-03-12T01:11:16.912Asia/Shanghai"));
     }
 
+    @Test
+    public void testSame() {
+        System.out.println(DateUtils.isSameDay(LocalDate.now(), DateUtils.toLocalDateTime("2019-02-25 00:12:47")));
+    }
+
     public static class A {
         LocalDate date;
     }

@@ -33,7 +33,7 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://192.168.0.248:8081/nexus/content/repositories/releases/") {
+            repository(url: "http://192.168.0.248:8081/nexus/content/repositories/snapshots/") {
                 authentication(userName: "admin", password: "admin123")
             }
             pom.version = "$project.version"
@@ -68,6 +68,7 @@ dependencies {
     compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
+    compileOnly group: 'com.google.guava', name: 'guava', version: '27.0.1-jre'
     compileOnly group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
     compileOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
 }

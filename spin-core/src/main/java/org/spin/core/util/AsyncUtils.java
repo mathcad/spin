@@ -38,6 +38,9 @@ public abstract class AsyncUtils {
             new ThreadPoolExecutor.CallerRunsPolicy()));
     }
 
+    private AsyncUtils() {
+    }
+
     /**
      * 初始化一个指定名称的线程池
      *
@@ -74,8 +77,9 @@ public abstract class AsyncUtils {
         Assert.notEmpty(name, "线程池名称不能为空");
         Assert.notTrue(COMMON_POOL_NAME.equals(name), "公共线程池不允许用户创建");
         if (POOL_EXECUTOR_MAP.containsKey(name)) {
-            ThreadPoolWrapper poolWrapper = POOL_EXECUTOR_MAP.remove(name);
-            poolWrapper.executor.shutdown();
+//            ThreadPoolWrapper poolWrapper = POOL_EXECUTOR_MAP.remove(name);
+//            poolWrapper.executor.shutdown();
+            throw new SimplifiedException("线程池已经存在: " + name);
         }
 
         ThreadPoolWrapper poolWrapper = new ThreadPoolWrapper(name, corePoolSize, maxPoolSize, keepAliveTimeInMs,
@@ -179,6 +183,51 @@ public abstract class AsyncUtils {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
         final long task = poolWrapper.info.submitTask();
         return poolWrapper.executor.submit(() -> {
+            poolWrapper.info.runTask(task);
+            try {
+                callable.handle();
+            } catch (Exception e) {
+                poolWrapper.info.completeTask(task, false);
+                exceptionHandler.accept(e);
+                return;
+            }
+            poolWrapper.info.completeTask(task, true);
+        });
+    }
+
+    /**
+     * 提交任务到指定线程池
+     *
+     * @param name     线程池名称
+     * @param callable 任务
+     */
+    public static void execute(String name, Runnable callable) {
+        ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
+        final long task = poolWrapper.info.submitTask();
+        poolWrapper.executor.execute(() -> {
+            poolWrapper.info.runTask(task);
+            try {
+                callable.run();
+            } catch (Exception e) {
+                poolWrapper.info.completeTask(task, false);
+                logger.error("任务执行异常[" + Thread.currentThread().getName() + "]", e);
+                throw new SimplifiedException("任务执行异常[" + Thread.currentThread().getName() + "]", e);
+            }
+            poolWrapper.info.completeTask(task, true);
+        });
+    }
+
+    /**
+     * 提交任务到指定线程池
+     *
+     * @param name             线程池名称
+     * @param callable         任务
+     * @param exceptionHandler 异常处理逻辑
+     */
+    public static void execute(String name, ExceptionalHandler callable, FinalConsumer<Exception> exceptionHandler) {
+        ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
+        final long task = poolWrapper.info.submitTask();
+        poolWrapper.executor.execute(() -> {
             poolWrapper.info.runTask(task);
             try {
                 callable.handle();

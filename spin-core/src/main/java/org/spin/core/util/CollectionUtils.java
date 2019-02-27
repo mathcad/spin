@@ -4,6 +4,7 @@ import org.spin.core.Assert;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -93,7 +94,7 @@ public abstract class CollectionUtils {
         return parallelStream(collection, PARALLEL_FACTORY).filter(predicate).findFirst().orElse(null);
     }
 
-    public static <T extends Collection<E>, E, P> E detectWith(T collection, BiPredicate<E, P> predicate, P value) {
+    public static <T extends Collection<E>, E, P> E detectWith(T collection, BiPredicate<E, P> predicate, P value ) {
         if (null == collection || collection.isEmpty()) {
             return null;
         }
@@ -392,6 +393,62 @@ public abstract class CollectionUtils {
         return lst;
     }
 
+    public static ArrayList<Byte> ofByteList(byte... elements) {
+        ArrayList<Byte> lst = new ArrayList<>(elements.length * 2);
+        for (byte element : elements) {
+            lst.add(element);
+        }
+        return lst;
+    }
+
+    public static ArrayList<Character> ofCharList(char... elements) {
+        ArrayList<Character> lst = new ArrayList<>(elements.length * 2);
+        for (char element : elements) {
+            lst.add(element);
+        }
+        return lst;
+    }
+
+    public static ArrayList<Short> ofShortList(short... elements) {
+        ArrayList<Short> lst = new ArrayList<>(elements.length * 2);
+        for (short element : elements) {
+            lst.add(element);
+        }
+        return lst;
+    }
+
+    public static ArrayList<Integer> ofIntList(int... elements) {
+        ArrayList<Integer> lst = new ArrayList<>(elements.length * 2);
+        for (int element : elements) {
+            lst.add(element);
+        }
+        return lst;
+    }
+
+    public static ArrayList<Long> ofLongList(long... elements) {
+        ArrayList<Long> lst = new ArrayList<>(elements.length * 2);
+        for (long element : elements) {
+            lst.add(element);
+        }
+        return lst;
+    }
+
+    public static ArrayList<Float> ofFloatList(float... elements) {
+        ArrayList<Float> lst = new ArrayList<>(elements.length * 2);
+        for (float element : elements) {
+            lst.add(element);
+        }
+        return lst;
+    }
+
+    public static ArrayList<Double> ofDoubleList(double... elements) {
+        ArrayList<Double> lst = new ArrayList<>(elements.length * 2);
+        for (double element : elements) {
+            lst.add(element);
+        }
+        return lst;
+    }
+
     @SafeVarargs
     public static <E> LinkedList<E> ofLinkedList(E... elements) {
         LinkedList<E> lst = new LinkedList<>();
@@ -412,6 +469,13 @@ public abstract class CollectionUtils {
         Collections.addAll(set, elements);
         return set;
     }
+
+//    public static List<Integer> asIntList(int... elements) {
+//        if (elements.length == 0) {
+//            return Collections.emptyList();
+//        }
+//        return new IntArrayAsList(elements);
+//    }
 
     /**
      * 将集合转换为stream。当元素个数超过阈值时，将转为并行流
@@ -470,6 +534,34 @@ public abstract class CollectionUtils {
         }
 
         throw new SimplifiedException("目标对象不是集合类型:" + target.getClass().getName());
+    }
+
+
+    public static <T> void forEach(Iterable<T> collection, BiConsumer<Integer, T> consumer) {
+        if (null == collection || null == consumer) {
+            return;
+        }
+
+        int i = 0;
+        for (T t : collection) {
+            consumer.accept(i, t);
+            ++i;
+        }
+    }
+
+
+    public static <T> void forEach(Iterable<T> collection, BiConsumer<Integer, T> consumer, Predicate<T> filter) {
+        if (null == collection || null == consumer) {
+            return;
+        }
+
+        int i = 0;
+        for (T t : collection) {
+            if (null == filter || filter.test(t)) {
+                consumer.accept(i, t);
+            }
+            ++i;
+        }
     }
 
     /**

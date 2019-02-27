@@ -2,7 +2,9 @@ package org.spin.core;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
+import org.spin.core.security.Base64;
 import org.spin.core.util.BooleanExt;
+import org.spin.core.util.StringUtils;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,6 +27,11 @@ public class BooleanExtTest {
         assertTrue(res.equals(1L));
 
         BooleanExt.of(true).yes(() -> System.out.println("true")).otherwise(() -> System.out.println("false"));
+    }
+
+    @Test
+    public void testB() {
+        System.out.println("Basic " + Base64.encode(StringUtils.getBytesUtf8("elastic:Beta#elastic")));
     }
 
 }

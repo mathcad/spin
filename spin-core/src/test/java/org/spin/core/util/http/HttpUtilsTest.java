@@ -2,14 +2,13 @@ package org.spin.core.util.http;
 
 import org.apache.http.HttpEntity;
 import org.junit.jupiter.api.Test;
+import org.spin.core.util.AsyncUtils;
 import org.spin.core.util.MapUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * TITLE
@@ -32,9 +31,6 @@ class HttpUtilsTest {
         System.out.println(s);
     }
 
-
-    private ExecutorService executorService = Executors.newFixedThreadPool(10);
-
     @Test
     public void testM() throws InterruptedException {
         String url = "http://www.baidu.com";
@@ -51,7 +47,7 @@ class HttpUtilsTest {
         List<Long> times = new ArrayList<>(10);
 
         for (int i = 0; i != 10; ++i) {
-            executorService.submit(() -> {
+            AsyncUtils.runAsync(() -> {
                 long si = System.currentTimeMillis();
                 Http.GET.withUrl(url).execute();
                 long ei = System.currentTimeMillis();
@@ -65,7 +61,7 @@ class HttpUtilsTest {
         times.clear();
         CountDownLatch latch2 = new CountDownLatch(10);
         for (int i = 0; i != 10; ++i) {
-            executorService.submit(() -> {
+            AsyncUtils.runAsync(() -> {
                 long si = System.currentTimeMillis();
                 Http.GET.withUrl(url).execute();
                 long ei = System.currentTimeMillis();

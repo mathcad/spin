@@ -143,7 +143,7 @@ public abstract class NumericUtils {
     }
 
     /**
-     * 将任意数字转换为指定精度的BigDecimal,如果为null，则返回BigDecimal.ZERO
+     * 将任意数字转换为对应精度的BigDecimal,如果为null，则返回BigDecimal.ZERO
      *
      * @param value 原始值
      * @return 转换后的BigDecimal数值
@@ -156,8 +156,11 @@ public abstract class NumericUtils {
         if (value instanceof BigDecimal) {
             return (BigDecimal) value;
         } else if (value instanceof CharSequence || value instanceof Number) {
-
-            return new BigDecimal(value.toString());
+            try {
+                return new BigDecimal(value.toString());
+            } catch (Exception e) {
+                throw new SimplifiedException(ErrorCode.INVALID_PARAM, "参数不是合法的数值", e);
+            }
         } else {
             throw new SimplifiedException(ErrorCode.INVALID_PARAM, "参数不是合法的数值");
         }
@@ -185,6 +188,54 @@ public abstract class NumericUtils {
             bigDecimal = bigDecimal.setScale(scale, RoundingMode.HALF_UP);
         }
         return bigDecimal;
+    }
+
+    public static BigDecimal up(Object value, int scale) {
+        return scale(value, scale, RoundingMode.UP);
+    }
+
+    public static BigDecimal down(Object value, int scale) {
+        return scale(value, scale, RoundingMode.DOWN);
+    }
+
+    public static BigDecimal ceiling(Object value, int scale) {
+        return scale(value, scale, RoundingMode.CEILING);
+    }
+
+    public static BigDecimal floor(Object value, int scale) {
+        return scale(value, scale, RoundingMode.FLOOR);
+    }
+
+    public static BigDecimal halfUp(Object value, int scale) {
+        return scale(value, scale, RoundingMode.HALF_UP);
+    }
+
+    public static BigDecimal halfDown(Object value, int scale) {
+        return scale(value, scale, RoundingMode.HALF_DOWN);
+    }
+
+    public static BigDecimal halfEven(Object value, int scale) {
+        return scale(value, scale, RoundingMode.HALF_EVEN);
+    }
+
+    public static BigDecimal scale(Object value, int scale, RoundingMode roundingMode) {
+        if (null == value) {
+            return BigDecimal.ZERO.setScale(scale, roundingMode);
+        }
+
+        if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).setScale(scale, roundingMode);
+        }
+
+        if (value instanceof CharSequence || value instanceof Number) {
+            try {
+                return new BigDecimal(value.toString()).setScale(scale, roundingMode);
+            } catch (Exception e) {
+                throw new SimplifiedException(ErrorCode.INVALID_PARAM, "参数不是合法的数值", e);
+            }
+        } else {
+            throw new SimplifiedException(ErrorCode.INVALID_PARAM, "参数不是合法的数值");
+        }
     }
 
     /**

@@ -8,6 +8,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
 
@@ -1252,7 +1253,7 @@ public abstract class MethodUtils {
         final String clsName = m.getDeclaringClass().getName().replace('.', '/') + ".class";
         ClassReader cr;
         try (InputStream is = m.getDeclaringClass().getClassLoader().getResourceAsStream(clsName)) {
-            cr = new ClassReader(is);
+            cr = new ClassReader(Assert.notNull(is, "未找到指定的类: " + clsName));
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, e);
         }

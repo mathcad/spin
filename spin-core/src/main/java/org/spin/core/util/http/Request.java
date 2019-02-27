@@ -46,7 +46,8 @@ public class Request<T extends HttpRequestBase> {
     public static final ContentType TEXT_PLAIN_UTF8 = ContentType.create(
         "text/plain", StandardCharsets.UTF_8);
 
-    private T request;
+    private final T request;
+    private final RequestConfig.Builder configBuilder;
 
     private Map<String, String> formData = new HashMap<>();
     private Map<String, File> multiPartFormData = new HashMap<>();
@@ -55,6 +56,9 @@ public class Request<T extends HttpRequestBase> {
     Request(T request) {
         Assert.notNull(request, "请求不能为空");
         this.request = request;
+        this.configBuilder = RequestConfig.custom()
+            .setSocketTimeout(HttpExecutor.getSocketTimeout())
+            .setConnectTimeout(HttpExecutor.getConnectTimeout());
     }
 
     // region config request
@@ -79,15 +83,31 @@ public class Request<T extends HttpRequestBase> {
      * @return 当前请求本身
      */
     public Request<T> configRequest(FinalConsumer<RequestConfig.Builder> configProc) {
-        RequestConfig.Builder builder = RequestConfig.custom()
-            .setSocketTimeout(HttpExecutor.getSocketTimeout())
-            .setConnectTimeout(HttpExecutor.getConnectTimeout());
         if (null != configProc) {
-            configProc.accept(builder);
+            configProc.accept(this.configBuilder);
         }
+        return this;
+    }
 
-        RequestConfig requestConfig = builder.build();
-        request.setConfig(requestConfig);
+    /**
+     * 配置请求传输超时
+     *
+     * @param socketTimeout 请求传输超时
+     * @return 当前请求本身
+     */
+    public Request<T> timeout(int socketTimeout) {
+        configBuilder.setSocketTimeout(socketTimeout);
+        return this;
+    }
+
+    /**
+     * 配置请求连接超时
+     *
+     * @param connectTimeout 请求连接超时
+     * @return 当前请求本身
+     */
+    public Request<T> connTimeout(int connectTimeout) {
+        configBuilder.setConnectTimeout(connectTimeout);
         return this;
     }
 
@@ -298,6 +318,7 @@ public class Request<T extends HttpRequestBase> {
      */
     public String execute() {
         buildForm();
+        request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequest(request, HttpExecutor::toStringProc);
     }
 
@@ -310,6 +331,7 @@ public class Request<T extends HttpRequestBase> {
      */
     public <E> E execute(EntityProcessor<E> entityProc) {
         buildForm();
+        request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequest(request, entityProc);
     }
 
@@ -329,6 +351,7 @@ public class Request<T extends HttpRequestBase> {
                                                  FinalConsumer<Exception> failedCallback,
                                                  Handler cancelledCallback) {
         buildForm();
+        request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, cancelledCallback);
     }
 
@@ -345,6 +368,7 @@ public class Request<T extends HttpRequestBase> {
                                                  FinalConsumer<E> completedCallback,
                                                  FinalConsumer<Exception> failedCallback) {
         buildForm();
+        request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, null);
     }
 
@@ -360,6 +384,7 @@ public class Request<T extends HttpRequestBase> {
                                              FinalConsumer<Exception> failedCallback,
                                              Handler cancelledCallback) {
         buildForm();
+        request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, cancelledCallback);
     }
 
@@ -373,6 +398,7 @@ public class Request<T extends HttpRequestBase> {
     public Future<HttpResponse> executeAsync(FinalConsumer<String> completedCallback,
                                              FinalConsumer<Exception> failedCallback) {
         buildForm();
+        request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, null);
     }
 
@@ -384,6 +410,7 @@ public class Request<T extends HttpRequestBase> {
      */
     public Map<String, String> download(String savePath) {
         buildForm();
+        request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequest(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath));
     }
 
@@ -395,6 +422,7 @@ public class Request<T extends HttpRequestBase> {
      */
     public Future<HttpResponse> downloadAsync(String savePath) {
         buildForm();
+        request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), null, null, null);
     }
 
@@ -408,6 +436,7 @@ public class Request<T extends HttpRequestBase> {
     public Future<HttpResponse> downloadAsync(String savePath,
                                               FinalConsumer<Map<String, String>> completedCallback) {
         buildForm();
+        request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, null, null);
     }
 
@@ -423,6 +452,7 @@ public class Request<T extends HttpRequestBase> {
                                               FinalConsumer<Map<String, String>> completedCallback,
                                               FinalConsumer<Exception> failedCallback) {
         buildForm();
+        request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, failedCallback, null);
     }
 
