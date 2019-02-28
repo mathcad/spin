@@ -31,7 +31,11 @@ public class BooleanExtTest {
 
     @Test
     public void testB() {
-        System.out.println("Basic " + Base64.encode(StringUtils.getBytesUtf8("elastic:Beta#elastic")));
+        System.out.println("Basic " + Base64.encode(StringUtils.getBytesUtf8("omall:123456")));
+
+
+        System.out.println(StringUtils.newStringUtf8(Base64.decode("bWFsbDoxMjM0NTY=")));
+        System.out.println(StringUtils.newStringUtf8(Base64.decode("ZWxhc3RpYzpCb25hZGUjZWxhc3RpYw==")));
     }
 
 }

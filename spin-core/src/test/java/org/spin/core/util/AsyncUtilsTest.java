@@ -18,6 +18,7 @@ class AsyncUtilsTest {
 
     static {
         BACK_STATIS_WORKER = new Thread(() -> {
+            AsyncUtils.initThreadPool("test", 20);
             while (true) {
                 System.out.println(AsyncUtils.statistic().get(0).toString());
                 try {
@@ -34,11 +35,11 @@ class AsyncUtilsTest {
     @Test
     void runAsync() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(13);
-
-        AsyncUtils.runAsync(() -> t(1, countDownLatch));
-        AsyncUtils.runAsync(() -> t(2, countDownLatch));
-        AsyncUtils.runAsync(() -> t(3, countDownLatch));
-        AsyncUtils.runAsync(() -> t(4, countDownLatch));
+        Thread.sleep(10L);
+        AsyncUtils.submit("test", () -> t(1, countDownLatch));
+        AsyncUtils.submit("test", () -> t(2, countDownLatch));
+        AsyncUtils.submit("test", () -> t(3, countDownLatch));
+        AsyncUtils.submit("test", () -> t(4, countDownLatch));
         AsyncUtils.runAsync(() -> t(5, countDownLatch));
         AsyncUtils.runAsync(() -> t(6, countDownLatch));
         AsyncUtils.runAsync(() -> t(7, countDownLatch));

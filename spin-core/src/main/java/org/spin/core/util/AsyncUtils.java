@@ -7,6 +7,7 @@ import org.spin.core.function.ExceptionalHandler;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.throwable.SimplifiedException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,11 +32,14 @@ public abstract class AsyncUtils {
 
     private static final Map<String, ThreadPoolWrapper> POOL_EXECUTOR_MAP = new ConcurrentHashMap<>();
 
+    private static long poolTimeout = 1000L;
+
     static {
         POOL_EXECUTOR_MAP.put(COMMON_POOL_NAME, new ThreadPoolWrapper(COMMON_POOL_NAME, 10, 200, 30L,
             TimeUnit.SECONDS,
             5,
             new ThreadPoolExecutor.CallerRunsPolicy()));
+        POOL_EXECUTOR_MAP.get(COMMON_POOL_NAME).init();
     }
 
     private AsyncUtils() {
@@ -76,18 +80,17 @@ public abstract class AsyncUtils {
     public static void initThreadPool(String name, int corePoolSize, int maxPoolSize, long keepAliveTimeInMs, int queueSize, RejectedExecutionHandler rejectedExecutionHandler) {
         Assert.notEmpty(name, "线程池名称不能为空");
         Assert.notTrue(COMMON_POOL_NAME.equals(name), "公共线程池不允许用户创建");
-        if (POOL_EXECUTOR_MAP.containsKey(name)) {
-//            ThreadPoolWrapper poolWrapper = POOL_EXECUTOR_MAP.remove(name);
-//            poolWrapper.executor.shutdown();
-            throw new SimplifiedException("线程池已经存在: " + name);
-        }
 
         ThreadPoolWrapper poolWrapper = new ThreadPoolWrapper(name, corePoolSize, maxPoolSize, keepAliveTimeInMs,
             TimeUnit.MILLISECONDS,
             queueSize,
             rejectedExecutionHandler);
 
+        if (POOL_EXECUTOR_MAP.containsKey(name)) {
+            throw new SimplifiedException("线程池已经存在: " + name);
+        }
         POOL_EXECUTOR_MAP.put(name, poolWrapper);
+        POOL_EXECUTOR_MAP.get(name).init();
     }
 
     /**
@@ -132,6 +135,7 @@ public abstract class AsyncUtils {
      */
     public static <V> Future<V> submit(String name, Callable<V> callable) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
+        checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
         return poolWrapper.executor.submit(() -> {
             poolWrapper.info.runTask(task);
@@ -157,6 +161,7 @@ public abstract class AsyncUtils {
      */
     public static Future<?> submit(String name, ExceptionalHandler callable) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
+        checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
         return poolWrapper.executor.submit(() -> {
             poolWrapper.info.runTask(task);
@@ -181,6 +186,7 @@ public abstract class AsyncUtils {
      */
     public static Future<?> submit(String name, ExceptionalHandler callable, FinalConsumer<Exception> exceptionHandler) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
+        checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
         return poolWrapper.executor.submit(() -> {
             poolWrapper.info.runTask(task);
@@ -203,6 +209,7 @@ public abstract class AsyncUtils {
      */
     public static void execute(String name, Runnable callable) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
+        checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
         poolWrapper.executor.execute(() -> {
             poolWrapper.info.runTask(task);
@@ -226,6 +233,7 @@ public abstract class AsyncUtils {
      */
     public static void execute(String name, ExceptionalHandler callable, FinalConsumer<Exception> exceptionHandler) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
+        checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
         poolWrapper.executor.execute(() -> {
             poolWrapper.info.runTask(task);
@@ -247,7 +255,7 @@ public abstract class AsyncUtils {
      */
     public static void shutdown(String name) {
         Assert.notTrue(COMMON_POOL_NAME.equals(name), "公共线程池不允许用户关闭");
-        Assert.notNull(POOL_EXECUTOR_MAP.remove(name), "指定的线程池不存在: " + name).executor.shutdown();
+        Assert.notNull(POOL_EXECUTOR_MAP.remove(name), "指定的线程池不存在: " + name).shutdown();
     }
 
     /**
@@ -258,7 +266,7 @@ public abstract class AsyncUtils {
      */
     public static List<Runnable> shutdownNow(String name) {
         Assert.notTrue(COMMON_POOL_NAME.equals(name), "公共线程池不允许用户关闭");
-        return Assert.notNull(POOL_EXECUTOR_MAP.remove(name), "指定的线程池不存在: " + name).executor.shutdownNow();
+        return Assert.notNull(POOL_EXECUTOR_MAP.remove(name), "指定的线程池不存在: " + name).shutdownNow();
     }
 
     /**
@@ -289,9 +297,31 @@ public abstract class AsyncUtils {
         };
     }
 
+    private static void checkReady(ThreadPoolWrapper poolWrapper) {
+        long wait = System.currentTimeMillis();
+        while (poolWrapper.status != ThreadPoolState.READY) {
+            long w = System.currentTimeMillis() - wait;
+            if (w > poolTimeout) {
+                throw new SimplifiedException("动作超时，线程池尚未就绪");
+            }
+            Thread.yield();
+        }
+    }
+
     public static class ThreadPoolWrapper {
-        private final ThreadPoolExecutor executor;
-        private final ThreadPoolInfo info;
+        private ThreadPoolExecutor executor;
+        private ThreadPoolInfo info;
+        private volatile ThreadPoolState status = ThreadPoolState.NEW;
+
+        private final String name;
+        private final int corePoolSize;
+        private final int maxPoolSize;
+        private final long keepAliveTimeInMs;
+        private final TimeUnit timeUnit;
+        private final int queueSize;
+        private final RejectedExecutionHandler rejectedExecutionHandler;
+
+        private final Object lock = new Object();
 
         /**
          * 线程池构造方法
@@ -305,13 +335,16 @@ public abstract class AsyncUtils {
          */
         public ThreadPoolWrapper(String name, int corePoolSize, int maxPoolSize, long keepAliveTimeInMs, TimeUnit timeUnit, int queueSize, RejectedExecutionHandler rejectedExecutionHandler) {
             int qs = queueSize >= 0 ? queueSize : Integer.MAX_VALUE;
-            executor = new ThreadPoolExecutor(corePoolSize, maxPoolSize, keepAliveTimeInMs,
-                timeUnit,
-                qs == 0 ? new SynchronousQueue<>() : new LinkedBlockingQueue<>(qs),
-                buildFactory(name, null, null, (thread, throwable) -> {
-                }),
-                rejectedExecutionHandler);
-            info = new ThreadPoolInfo(name, corePoolSize, maxPoolSize, qs);
+
+            this.name = name;
+            this.corePoolSize = corePoolSize;
+            this.maxPoolSize = maxPoolSize;
+            this.keepAliveTimeInMs = keepAliveTimeInMs;
+            this.timeUnit = timeUnit;
+            this.queueSize = qs;
+            this.rejectedExecutionHandler = rejectedExecutionHandler;
+
+
         }
 
         public ThreadPoolExecutor getExecutor() {
@@ -321,6 +354,75 @@ public abstract class AsyncUtils {
         public ThreadPoolInfo getInfo() {
             return info;
         }
+
+        private void init() {
+            if (ThreadPoolState.NEW == status) {
+                synchronized (lock) {
+                    if (ThreadPoolState.NEW == status) {
+                        status = ThreadPoolState.PREPARING;
+                        this.executor = new ThreadPoolExecutor(corePoolSize, maxPoolSize, keepAliveTimeInMs,
+                            timeUnit,
+                            queueSize == 0 ? new SynchronousQueue<>() : new LinkedBlockingQueue<>(queueSize),
+                            buildFactory(name, null, null, (thread, throwable) -> {
+                            }),
+                            rejectedExecutionHandler);
+                        this.info = new ThreadPoolInfo(name, corePoolSize, maxPoolSize, queueSize);
+                        status = ThreadPoolState.READY;
+                    }
+                }
+            }
+        }
+
+        private void shutdown() {
+            if (null == executor || executor.isShutdown()) {
+                return;
+            }
+            if (ThreadPoolState.READY == status) {
+                synchronized (lock) {
+                    if (ThreadPoolState.READY == status) {
+                        status = ThreadPoolState.STOPPING;
+                        executor.shutdown();
+                    }
+                }
+            }
+        }
+
+        private List<Runnable> shutdownNow() {
+            if (null == executor || executor.isShutdown()) {
+                return Collections.emptyList();
+            }
+            if (ThreadPoolState.READY == status) {
+                synchronized (lock) {
+                    if (ThreadPoolState.READY == status) {
+                        status = ThreadPoolState.STOPPING;
+                        return executor.shutdownNow();
+                    }
+                }
+            }
+            return Collections.emptyList();
+        }
+    }
+
+    public enum ThreadPoolState {
+        /**
+         * 新建
+         */
+        NEW,
+
+        /**
+         * 正在初始化
+         */
+        PREPARING,
+
+        /**
+         * 就绪
+         */
+        READY,
+
+        /**
+         * 正在停止
+         */
+        STOPPING
     }
 
     public static class ThreadPoolInfo {
