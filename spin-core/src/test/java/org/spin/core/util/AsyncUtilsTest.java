@@ -50,7 +50,6 @@ class AsyncUtilsTest {
         AsyncUtils.runAsync(() -> t(12, countDownLatch));
         AsyncUtils.runAsync(() -> t(13, countDownLatch));
         countDownLatch.await();
-        Thread.sleep(2000L);
     }
 
     public void t(int i, CountDownLatch countDownLatch) throws InterruptedException {

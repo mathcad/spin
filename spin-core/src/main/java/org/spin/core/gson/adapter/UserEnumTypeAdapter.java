@@ -1,11 +1,12 @@
 package org.spin.core.gson.adapter;
 
+import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.gson.stream.JsonReader;
 import org.spin.core.gson.stream.JsonToken;
 import org.spin.core.gson.stream.JsonWriter;
-import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.trait.IntEvaluatable;
+import org.spin.core.trait.IntegerEvaluatable;
 import org.spin.core.util.EnumUtils;
 
 import java.io.IOException;
@@ -39,13 +40,13 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
         if (null == value) {
             out.nullValue();
         } else {
-            out.value(((IntEvaluatable) value).getValue());
+            out.value((value instanceof IntEvaluatable) ? ((IntEvaluatable) value).getValue() : ((IntegerEvaluatable) value).getValue());
         }
     }
 
     @Override
     public boolean isMatch(TypeToken<?> type) {
-        boolean matchIntf = IntEvaluatable.class.isAssignableFrom(type.getRawType());
+        boolean matchIntf = IntEvaluatable.class.isAssignableFrom(type.getRawType()) || IntegerEvaluatable.class.isAssignableFrom(type.getRawType());
         return Enum.class.isAssignableFrom(type.getRawType()) && matchIntf;
     }
 }

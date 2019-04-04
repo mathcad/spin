@@ -1,16 +1,16 @@
 package org.spin.wx;
 
-import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
+import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.DigestUtils;
 import org.spin.core.util.HexUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.RandomStringUtils;
-import org.spin.core.util.http.HttpUtils;
+import org.spin.core.util.http.Http;
 import org.spin.wx.base.TmplMsgEntity;
 import org.spin.wx.base.WxUrl;
 import org.spin.wx.base.WxUserInfo;
@@ -88,7 +88,7 @@ public class WxHelper {
     public static String getTmplId(String code, String... configName) {
         AccessToken accessToken = WxTokenManager.getToken(extractConfigName(configName));
         try {
-            String res = HttpUtils.post(WxUrl.TMPL_ID.getUrl(accessToken.getToken()), MapUtils.ofMap("template_id_short", code));
+            String res = Http.POST.withUrl(WxUrl.TMPL_ID.getUrl(accessToken.getToken())).withForm(MapUtils.ofMap("template_id_short", code)).execute();
             Map<String, String> resMap = JsonUtils.fromJson(res, type);
             if (null != resMap && "0".equals(resMap.get("errcode"))) {
                 return resMap.get("template_id");
@@ -109,7 +109,7 @@ public class WxHelper {
      */
     public static String postTmplMsg(TmplMsgEntity msg, String... configName) {
         AccessToken accessToken = WxTokenManager.getToken(extractConfigName(configName));
-        String res = HttpUtils.postJson(WxUrl.POST_TMPL_MSG.getUrl(accessToken.getToken()), msg);
+        String res = Http.POST.withUrl(WxUrl.POST_TMPL_MSG.getUrl(accessToken.getToken())).withJsonBody(msg).execute();
         Map<String, String> resMap = JsonUtils.fromJson(res, type);
         if (null != resMap && "0".equals(resMap.get("errcode"))) {
             return resMap.get("msgid");
@@ -128,7 +128,7 @@ public class WxHelper {
     public static WxUserInfo getUserInfo(String accessToken, String openId) {
         String tmp;
         try {
-            tmp = HttpUtils.get(WxUrl.USER_INFO.getUrl(accessToken, openId));
+            tmp = Http.GET.withUrl(WxUrl.USER_INFO.getUrl(accessToken, openId)).execute();
         } catch (Exception e) {
             throw new SimplifiedException("获取用户信息失败");
         }

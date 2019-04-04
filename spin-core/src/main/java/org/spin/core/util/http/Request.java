@@ -173,13 +173,13 @@ public class Request<T extends HttpRequestBase> {
                     continue;
                 }
                 if (v instanceof CharSequence || v instanceof Number) {
-                    formData.put(k, v.toString());
+                    this.formData.put(k, v.toString());
                 } else if (v instanceof File) {
-                    multiPartFormData.put(k, (File) v);
+                    this.multiPartFormData.put(k, (File) v);
                 } else if (v instanceof Date) {
-                    formData.put(k, DateUtils.formatDateForSecond((Date) v));
+                    this.formData.put(k, DateUtils.formatDateForSecond((Date) v));
                 } else if (v instanceof TemporalAccessor) {
-                    formData.put(k, DateUtils.formatDateForSecond((TemporalAccessor) v));
+                    this.formData.put(k, DateUtils.formatDateForSecond((TemporalAccessor) v));
                 } else {
                     throw new SimplifiedException(ErrorCode.INVALID_PARAM, "不支持的参数类型: " + k);
                 }

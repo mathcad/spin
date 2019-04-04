@@ -83,4 +83,19 @@ class HttpUtilsTest {
 
         a.toString();
     }
+
+    @Test
+    public void testPost() {
+        String url = "https://bizapi.jd.com/oauth2/access_token";
+
+        Map<String, Object> param = MapUtils.ofMap("grant_type", "access_token",
+            "client_id", "kJwCFVY8YLCom0bx0fPz",
+            "username", "vop物流对接",
+            "password", "9610f5b09b5262719c0decee0c6fb7e0",
+            "timestamp", "2019-03-18 10:32:17",
+            "sign", "4FCA330AF497D64387CCE88C921E5DBE");
+
+        String res = Http.POST.withUrl(url).withForm(param).execute();
+        System.out.println(res);
+    }
 }

@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.StringUtils;
-import org.spin.core.util.http.HttpUtils;
+import org.spin.core.util.http.Http;
 import org.spin.wx.base.WxConfigInfo;
 import org.spin.wx.base.WxUrl;
 
@@ -91,7 +91,7 @@ public class WxTokenManager {
                         if (null == token || StringUtils.isEmpty(token.getToken()) || System.currentTimeMillis() > token.getExpiredSince()) {
                             String result;
                             try {
-                                result = HttpUtils.get(WxUrl.ACCESS_TOKEN.getUrl(appId, appSecret));
+                                result = Http.GET.withUrl(WxUrl.ACCESS_TOKEN.getUrl(appId, appSecret)).execute();
                             } catch (Exception e) {
                                 throw new SimplifiedException("获取access_token失败", e);
                             }
@@ -111,9 +111,9 @@ public class WxTokenManager {
                             String result;
                             try {
                                 if (StringUtils.isNotEmpty(code)) {
-                                    result = HttpUtils.get(WxUrl.OAUTH_TOKEN.getUrl(appId, appSecret, code));
+                                    result = Http.GET.withUrl(WxUrl.OAUTH_TOKEN.getUrl(appId, appSecret, code)).execute();
                                 } else if (null != token && StringUtils.isNotEmpty(token.getRefreshToken()) && System.currentTimeMillis() < (token.getExpiredSince() + 2160000000L)) {
-                                    result = HttpUtils.get(WxUrl.REFRESH_TOKEN.getUrl(appId, token.getRefreshToken()));
+                                    result = Http.GET.withUrl(WxUrl.REFRESH_TOKEN.getUrl(appId, token.getRefreshToken())).execute();
                                 } else {
                                     throw new SimplifiedException("获取网页授权access_token失败, 缺少code参数");
                                 }
@@ -157,7 +157,7 @@ public class WxTokenManager {
                     String result;
                     try {
                         String token = getToken(configName).getToken();
-                        result = HttpUtils.get(WxUrl.API_TICKET.getUrl(token));
+                        result = Http.GET.withUrl(WxUrl.API_TICKET.getUrl(token)).execute();
                     } catch (Exception e) {
                         throw new SimplifiedException("获取access_token失败", e);
                     }

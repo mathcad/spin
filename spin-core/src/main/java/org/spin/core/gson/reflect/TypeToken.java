@@ -133,7 +133,7 @@ public class TypeToken<T> {
             return rawType.isAssignableFrom($Gson$Types.getRawType(from));
         } else if (type instanceof ParameterizedType) {
             return isAssignableFrom(from, (ParameterizedType) type,
-                new HashMap<String, Type>());
+                new HashMap<>());
         } else if (type instanceof GenericArrayType) {
             return rawType.isAssignableFrom($Gson$Types.getRawType(from))
                 && isAssignableFrom(from, (GenericArrayType) type);
@@ -172,7 +172,7 @@ public class TypeToken<T> {
                 t = classType;
             }
             return isAssignableFrom(t, (ParameterizedType) toGenericComponentType,
-                new HashMap<String, Type>());
+                new HashMap<>());
         }
         // No generic defined on "to"; therefore, return true and let other
         // checks determine assignability
@@ -222,14 +222,14 @@ public class TypeToken<T> {
         }
 
         for (Type itype : clazz.getGenericInterfaces()) {
-            if (isAssignableFrom(itype, to, new HashMap<String, Type>(typeVarMap))) {
+            if (isAssignableFrom(itype, to, new HashMap<>(typeVarMap))) {
                 return true;
             }
         }
 
         // Interfaces didn't work, try the superclass.
         Type sType = clazz.getGenericSuperclass();
-        return isAssignableFrom(sType, to, new HashMap<String, Type>(typeVarMap));
+        return isAssignableFrom(sType, to, new HashMap<>(typeVarMap));
     }
 
     /**
@@ -297,14 +297,14 @@ public class TypeToken<T> {
      * Gets type literal for the given {@code Type} instance.
      */
     public static TypeToken<?> get(Type type) {
-        return new TypeToken<Object>(type);
+        return new TypeToken<>(type);
     }
 
     /**
      * Gets type literal for the given {@code Class} instance.
      */
     public static <T> TypeToken<T> get(Class<T> type) {
-        return new TypeToken<T>(type);
+        return new TypeToken<>(type);
     }
 
     /**
@@ -312,13 +312,13 @@ public class TypeToken<T> {
      * {@code rawType}.
      */
     public static TypeToken<?> getParameterized(Type rawType, Type... typeArguments) {
-        return new TypeToken<Object>($Gson$Types.newParameterizedTypeWithOwner(null, rawType, typeArguments));
+        return new TypeToken<>($Gson$Types.newParameterizedTypeWithOwner(null, rawType, typeArguments));
     }
 
     /**
      * Gets type literal for the array type whose elements are all instances of {@code componentType}.
      */
     public static TypeToken<?> getArray(Type componentType) {
-        return new TypeToken<Object>($Gson$Types.arrayOf(componentType));
+        return new TypeToken<>($Gson$Types.arrayOf(componentType));
     }
 }

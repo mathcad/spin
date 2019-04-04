@@ -1,6 +1,7 @@
 package org.spin.core.security;
 
 import org.junit.jupiter.api.Test;
+import org.spin.core.util.StringUtils;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -16,7 +17,7 @@ class AESTest {
 
     @Test
     public void testAes() {
-        AES aes = AES.newInstance(AES.Mode.ECB, AES.Padding.PKCS7Padding).withKey(key, AES.KeyLength.STRONG);
+        AES aes = AES.newInstance(AES.Mode.CBC, AES.Padding.PKCS7Padding).withIv(StringUtils.getBytesUtf8(key)).withKey(key, AES.KeyLength.STRONG);
         String encrypt = aes.encrypt("message你1");
         System.out.println(encrypt);
         System.out.println(aes.decrypt(encrypt));

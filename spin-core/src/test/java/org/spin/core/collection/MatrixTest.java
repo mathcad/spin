@@ -2,10 +2,17 @@ package org.spin.core.collection;
 
 import org.junit.jupiter.api.Test;
 import org.spin.core.auth.KeyInfo;
+import org.spin.core.util.JsonUtils;
+import org.spin.core.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -71,4 +78,16 @@ public class MatrixTest {
         matrix.findRows("token", "token3");
     }
 
+    public static void main(String[] args) {
+        String[] src = {"XXXL","M", "s", "xxxs","xs", "xl"};
+
+        Map<String, List<String>> collect = Arrays.stream(src).map(String::toUpperCase).collect(Collectors.groupingBy(i -> i.substring(i.length() - 1)));
+
+        List<String> res = new ArrayList<>(src.length);
+        collect.get("S").stream().sorted((a, b) -> b.length() - a.length()).forEach(res::add);
+        collect.get("M").stream().sorted(Comparator.comparingInt(String::length)).forEach(res::add);
+        collect.get("L").stream().sorted(Comparator.comparingInt(String::length)).forEach(res::add);
+
+        System.out.println(JsonUtils.toJson(res));
+    }
 }

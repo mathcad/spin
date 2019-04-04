@@ -3,6 +3,7 @@ package org.spin.core.util;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,5 +39,15 @@ public class NumericUtilsTest {
         assertFalse(StringUtils.isNumeric("123..1212"));
         assertFalse(StringUtils.isNumeric(".1231212"));
         assertFalse(StringUtils.isNumeric("1231212."));
+    }
+
+    public BigDecimal logistic(int x) {
+        double v = 8D * (1D / (1D + Math.exp(x / -90D)) - 0.5D);
+        return BigDecimal.valueOf(v).setScale(5, RoundingMode.HALF_UP);
+    }
+
+    @Test
+    public void test() {
+        System.out.println(logistic(46));
     }
 }

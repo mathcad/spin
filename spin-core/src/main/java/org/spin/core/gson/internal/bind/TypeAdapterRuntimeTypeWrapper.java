@@ -16,6 +16,7 @@
 package org.spin.core.gson.internal.bind;
 
 import org.spin.core.gson.Gson;
+import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.gson.TypeAdapter;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.gson.stream.JsonReader;
@@ -29,16 +30,22 @@ final class TypeAdapterRuntimeTypeWrapper<T> extends TypeAdapter<T> {
     private final Gson context;
     private final TypeAdapter<T> delegate;
     private final Type type;
+    private final TypeToken typeToken;
 
     TypeAdapterRuntimeTypeWrapper(Gson context, TypeAdapter<T> delegate, Type type) {
         this.context = context;
         this.delegate = delegate;
         this.type = type;
+        this.typeToken = TypeToken.get(type);
     }
 
     @Override
     public T read(JsonReader in) throws IOException {
-        return delegate.read(in);
+        if (delegate instanceof MatchableTypeAdapter) {
+            return ((MatchableTypeAdapter<T>) delegate).read(in, typeToken, null);
+        } else {
+            return delegate.read(in);
+        }
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})

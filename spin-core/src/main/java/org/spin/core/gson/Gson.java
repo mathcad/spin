@@ -16,6 +16,20 @@
 
 package org.spin.core.gson;
 
+import org.spin.core.gson.annotation.Expose;
+import org.spin.core.gson.annotation.Since;
+import org.spin.core.gson.internal.ConstructorConstructor;
+import org.spin.core.gson.internal.Excluder;
+import org.spin.core.gson.internal.GsonBuildConfig;
+import org.spin.core.gson.internal.Primitives;
+import org.spin.core.gson.internal.Streams;
+import org.spin.core.gson.internal.bind.*;
+import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.gson.stream.JsonReader;
+import org.spin.core.gson.stream.JsonToken;
+import org.spin.core.gson.stream.JsonWriter;
+import org.spin.core.gson.stream.MalformedJsonException;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.Reader;
@@ -34,31 +48,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
-
-import org.spin.core.gson.internal.ConstructorConstructor;
-import org.spin.core.gson.internal.Excluder;
-import org.spin.core.gson.internal.GsonBuildConfig;
-import org.spin.core.gson.internal.Primitives;
-import org.spin.core.gson.internal.Streams;
-import org.spin.core.gson.annotation.Expose;
-import org.spin.core.gson.annotation.Since;
-import org.spin.core.gson.internal.bind.ArrayTypeAdapter;
-import org.spin.core.gson.internal.bind.CollectionTypeAdapterFactory;
-import org.spin.core.gson.internal.bind.DateTypeAdapter;
-import org.spin.core.gson.internal.bind.JsonAdapterAnnotationTypeAdapterFactory;
-import org.spin.core.gson.internal.bind.JsonTreeReader;
-import org.spin.core.gson.internal.bind.JsonTreeWriter;
-import org.spin.core.gson.internal.bind.MapTypeAdapterFactory;
-import org.spin.core.gson.internal.bind.ObjectTypeAdapter;
-import org.spin.core.gson.internal.bind.ReflectiveTypeAdapterFactory;
-import org.spin.core.gson.internal.bind.SqlDateTypeAdapter;
-import org.spin.core.gson.internal.bind.TimeTypeAdapter;
-import org.spin.core.gson.internal.bind.TypeAdapters;
-import org.spin.core.gson.reflect.TypeToken;
-import org.spin.core.gson.stream.JsonReader;
-import org.spin.core.gson.stream.JsonToken;
-import org.spin.core.gson.stream.JsonWriter;
-import org.spin.core.gson.stream.MalformedJsonException;
 
 /**
  * This is the main class for using Gson. Gson is typically used by first constructing a
@@ -422,7 +411,7 @@ public final class Gson {
 
             @Override
             public AtomicLongArray read(JsonReader in) throws IOException {
-                List<Long> list = new ArrayList<Long>();
+                List<Long> list = new ArrayList<>();
                 in.beginArray();
                 while (in.hasNext()) {
                     long value = longAdapter.read(in).longValue();
@@ -455,7 +444,7 @@ public final class Gson {
         Map<TypeToken<?>, FutureTypeAdapter<?>> threadCalls = calls.get();
         boolean requiresThreadLocalCleanup = false;
         if (threadCalls == null) {
-            threadCalls = new HashMap<TypeToken<?>, FutureTypeAdapter<?>>();
+            threadCalls = new HashMap<>();
             calls.set(threadCalls);
             requiresThreadLocalCleanup = true;
         }
@@ -467,7 +456,7 @@ public final class Gson {
         }
 
         try {
-            FutureTypeAdapter<T> call = new FutureTypeAdapter<T>();
+            FutureTypeAdapter<T> call = new FutureTypeAdapter<>();
             threadCalls.put(type, call);
 
             for (TypeAdapterFactory factory : factories) {
@@ -534,7 +523,7 @@ public final class Gson {
      *
      * @param skipPast The type adapter factory that needs to be skipped while searching for
      *                 a matching type adapter. In most cases, you should just pass <i>this</i> (the type adapter
-     *                 factory from where {@link #getDelegateAdapter} method is being invoked).
+     *                 factory from where getDelegateAdapter method is being invoked).
      * @param type     Type for which the delegate adapter is being searched for.
      * @since 2.2
      */
@@ -603,8 +592,8 @@ public final class Gson {
      *                  this type by using the {@link TypeToken} class. For example,
      *                  to get the type for {@code Collection<Foo>}, you should use:
      *                  <pre>
-     *                                   Type typeOfSrc = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
-     *                                   </pre>
+     *                                                                                                       Type typeOfSrc = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
+     *                                                                                                       </pre>
      * @return Json representation of {@code src}
      * @since 1.4
      */
@@ -645,8 +634,8 @@ public final class Gson {
      *                  this type by using the {@link TypeToken} class. For example,
      *                  to get the type for {@code Collection<Foo>}, you should use:
      *                  <pre>
-     *                                   Type typeOfSrc = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
-     *                                   </pre>
+     *                                                                                                       Type typeOfSrc = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
+     *                                                                                                       </pre>
      * @return Json representation of {@code src}
      */
     public String toJson(Object src, Type typeOfSrc) {
@@ -687,8 +676,8 @@ public final class Gson {
      *                  this type by using the {@link TypeToken} class. For example,
      *                  to get the type for {@code Collection<Foo>}, you should use:
      *                  <pre>
-     *                                   Type typeOfSrc = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
-     *                                   </pre>
+     *                                                                                                       Type typeOfSrc = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
+     *                                                                                                       </pre>
      * @param writer    Writer to which the Json representation of src needs to be written.
      * @throws JsonIOException if there was a problem writing to the writer
      * @since 1.2
@@ -844,20 +833,18 @@ public final class Gson {
      *                {@link TypeToken} class. For example, to get the type for
      *                {@code Collection<Foo>}, you should use:
      *                <pre>
-     *                               Type typeOfT = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
-     *                               </pre>
+     *                                                                                           Type typeOfT = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
+     *                                                                                           </pre>
      * @return an object of type T from the string. Returns {@code null} if {@code json} is {@code null}.
      * @throws JsonParseException  if json is not a valid representation for an object of type typeOfT
      * @throws JsonSyntaxException if json is not a valid representation for an object of type
      */
-    @SuppressWarnings("unchecked")
     public <T> T fromJson(String json, Type typeOfT) throws JsonSyntaxException {
         if (json == null) {
             return null;
         }
         StringReader reader = new StringReader(json);
-        T target = (T) fromJson(reader, typeOfT);
-        return target;
+        return fromJson(reader, typeOfT);
     }
 
     /**
@@ -897,17 +884,16 @@ public final class Gson {
      *                {@link TypeToken} class. For example, to get the type for
      *                {@code Collection<Foo>}, you should use:
      *                <pre>
-     *                               Type typeOfT = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
-     *                               </pre>
+     *                                                                                           Type typeOfT = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
+     *                                                                                           </pre>
      * @return an object of type T from the json. Returns {@code null} if {@code json} is at EOF.
      * @throws JsonIOException     if there was a problem reading from the Reader
      * @throws JsonSyntaxException if json is not a valid representation for an object of type
      * @since 1.2
      */
-    @SuppressWarnings("unchecked")
     public <T> T fromJson(Reader json, Type typeOfT) throws JsonIOException, JsonSyntaxException {
         JsonReader jsonReader = newJsonReader(json);
-        T object = (T) fromJson(jsonReader, typeOfT);
+        T object = fromJson(jsonReader, typeOfT);
         assertFullConsumption(object, jsonReader);
         return object;
     }
@@ -942,8 +928,10 @@ public final class Gson {
             isEmpty = false;
             TypeToken<T> typeToken = (TypeToken<T>) TypeToken.get(typeOfT);
             TypeAdapter<T> typeAdapter = getAdapter(typeToken);
-            T object = typeAdapter.read(reader);
-            return object;
+            if (typeAdapter instanceof MatchableTypeAdapter) {
+                return ((MatchableTypeAdapter<T>) typeAdapter).read(reader, typeToken, null);
+            }
+            return typeAdapter.read(reader);
         } catch (EOFException e) {
             /*
              * For compatibility with JSON 1.5 and earlier, we return null for empty
@@ -953,12 +941,10 @@ public final class Gson {
                 return null;
             }
             throw new JsonSyntaxException(e);
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException | IOException e) {
             throw new JsonSyntaxException(e);
-        } catch (IOException e) {
-            // TODO(inder): Figure out whether it is indeed right to rethrow this as JsonSyntaxException
-            throw new JsonSyntaxException(e);
-        } catch (AssertionError e) {
+        } // TODO(inder): Figure out whether it is indeed right to rethrow this as JsonSyntaxException
+        catch (AssertionError e) {
             throw new AssertionError("AssertionError (GSON " + GsonBuildConfig.VERSION + "): " + e.getMessage(), e);
         } finally {
             reader.setLenient(oldLenient);
@@ -999,8 +985,8 @@ public final class Gson {
      *                {@link TypeToken} class. For example, to get the type for
      *                {@code Collection<Foo>}, you should use:
      *                <pre>
-     *                               Type typeOfT = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
-     *                               </pre>
+     *                                                                                           Type typeOfT = new TypeToken&lt;Collection&lt;Foo&gt;&gt;(){}.getType();
+     *                                                                                           </pre>
      * @return an object of type T from the json. Returns {@code null} if {@code json} is {@code null}.
      * @throws JsonSyntaxException if json is not a valid representation for an object of type typeOfT
      * @since 1.3
@@ -1042,11 +1028,10 @@ public final class Gson {
 
     @Override
     public String toString() {
-        return new StringBuilder("{serializeNulls:")
-            .append(serializeNulls)
-            .append(",factories:").append(factories)
-            .append(",instanceCreators:").append(constructorConstructor)
-            .append("}")
-            .toString();
+        return "{serializeNulls:" +
+            serializeNulls +
+            ",factories:" + factories +
+            ",instanceCreators:" + constructorConstructor +
+            "}";
     }
 }

@@ -1,6 +1,7 @@
 rootProject.name = 'spin'
 include 'spin-core'
 include 'spin-data'
+include 'spin-data-spring-boot-starter'
 include 'spin-enhance'
 include 'spin-kotlin'
 include 'spin-web'

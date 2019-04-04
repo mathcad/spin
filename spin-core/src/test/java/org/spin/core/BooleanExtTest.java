@@ -6,6 +6,8 @@ import org.spin.core.security.Base64;
 import org.spin.core.util.BooleanExt;
 import org.spin.core.util.StringUtils;
 
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -38,4 +40,59 @@ public class BooleanExtTest {
         System.out.println(StringUtils.newStringUtf8(Base64.decode("ZWxhc3RpYzpCb25hZGUjZWxhc3RpYw==")));
     }
 
+    public static void main(String[] args) {
+
+        int[] s = {41, 6, 25, 14};
+
+        int cnt = 1000000;
+        System.out.println(Arrays.toString(split(s)));
+        System.out.println(Arrays.toString(split2(s)));
+        long a1 = System.currentTimeMillis();
+        while (cnt-- != 0) {
+            split(s);
+        }
+        long a2 = System.currentTimeMillis();
+        System.out.println(a2 - a1);
+        cnt = 1000000;
+        a1 = System.currentTimeMillis();
+        while (cnt-- != 0) {
+            split2(s);
+        }
+        a2 = System.currentTimeMillis();
+        System.out.println(a2 - a1);
+    }
+
+    private static int[] split(int... s) {
+        int num;
+        int[] mark = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        int size = 0;
+        int pos;
+
+        for (int i : s) {
+            num = i < 0 ? -i : i;
+            while (num > 10) {
+                pos = num % 10;
+                if (mark[pos] != 0) {
+                    size++;
+                }
+                mark[num % 10] = 1;
+                num = num / 10;
+            }
+            ++size;
+            mark[num] = 1;
+        }
+
+        int[] res = new int[size];
+        for (int i = 0; i < mark.length; i++) {
+            if (mark[i] > 0) {
+                res[--size] = i;
+            }
+        }
+        return res;
+    }
+
+    private static Object[] split2(int[] s) {
+        return StringUtils.join(s, '\0').chars()
+            .distinct().sorted().skip(1).mapToObj(a -> String.valueOf((char) a)).toArray();
+    }
 }
