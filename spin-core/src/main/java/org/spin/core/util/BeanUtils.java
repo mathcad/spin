@@ -3,6 +3,7 @@ package org.spin.core.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
+import org.spin.core.collection.Tuple;
 import org.spin.core.function.serializable.BiConsumer;
 import org.spin.core.function.serializable.Function;
 import org.spin.core.throwable.SimplifiedException;
@@ -15,7 +16,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -256,6 +264,29 @@ public abstract class BeanUtils {
                             break;
                         }
                         ++k;
+                    }
+                } else if (o instanceof Tuple) {
+                    Tuple<?> t = (Tuple<?>) o;
+                    int idx = decodeIdx(field);
+
+                    if (t.size() <= idx) {
+                        throw new SimplifiedException(idx + " 索引超出范围0-" + t.size());
+                    }
+                    o = t.get(idx);
+                } else if (o instanceof Iterable) {
+                    Iterable<?> t = (Iterable<?>) o;
+                    int idx = decodeIdx(field);
+
+                    int k = 0;
+                    for (Object obj : t) {
+                        if (k == idx) {
+                            o = obj;
+                            break;
+                        }
+                        ++k;
+                    }
+                    if (k <= idx) {
+                        throw new SimplifiedException(idx + " 索引超出范围0-" + k);
                     }
                 } else {
                     throw new SimplifiedException(o.getClass().toString() + "中的属性名称[" + field + "]不合法");

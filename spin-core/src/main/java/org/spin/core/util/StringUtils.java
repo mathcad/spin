@@ -7,7 +7,24 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -2967,7 +2984,7 @@ public abstract class StringUtils {
      * @param params 模板参数
      * @return 填充后的字符串
      */
-    public static String render(String tplt, String... params) {
+    public static String render(String tplt, CharSequence... params) {
         return render(tplt, MapUtils.ofMap(params));
     }
 
@@ -2985,6 +3002,7 @@ public abstract class StringUtils {
         }
         char[] chars = tplt.toCharArray();
 
+        boolean isContainer = obj instanceof Map || obj instanceof Iterable || obj.getClass().isArray();
         StringBuilder result = new StringBuilder(tplt.length() * 2);
         StringBuilder paramName = new StringBuilder(255);
         char cur;
@@ -3000,7 +3018,19 @@ public abstract class StringUtils {
                     if (paramName.length() < 1) {
                         throw new SimplifiedException("空参数无法填充, 位置: " + i);
                     }
-                    result.append(toStringEmpty(BeanUtils.getFieldValue(obj, paramName.toString())));
+                    if (isContainer) {
+                        if (paramName.charAt(0) == '#') {
+                            if (paramName.length() < 2) {
+                                throw new SimplifiedException("空参数无法填充, 位置: " + i);
+                            }
+                            result.append(toStringEmpty(BeanUtils.getFieldValue(obj, paramName.substring(1))));
+                        } else {
+                            result.append(toStringEmpty(BeanUtils.getFieldValue(obj, "#" + paramName.toString())));
+                        }
+
+                    } else {
+                        result.append(toStringEmpty(BeanUtils.getFieldValue(obj, paramName.toString())));
+                    }
                     paramName.setLength(0);
                 } else {
                     paramName.append(cur);
