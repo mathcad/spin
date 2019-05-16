@@ -1,11 +1,12 @@
 package org.spin.core;
 
-import org.spin.core.util.RandomStringUtils;
+import org.spin.core.util.excel.ExcelUtils;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 
 /**
  * <p>Created by xuweinan on 2017/6/23.</p>
@@ -14,18 +15,19 @@ import java.util.concurrent.Future;
  */
 public class CallableAndFuture {
     public static void main(String[] args) {
-        ExecutorService threadPool = Executors.newSingleThreadExecutor();
-        Future<String> future2 = threadPool.submit(() -> RandomStringUtils.randomAlphanumeric(8));
-        Future<String> future1 = threadPool.submit(() -> {
-            Thread.sleep(5000);
-            return RandomStringUtils.randomAlphanumeric(8);
-        });
-        try {
-            System.out.println(future2.get());
-            System.out.println(future1.get());
-        } catch (InterruptedException | ExecutionException e) {
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+//        try (InputStream fis = loader.getResourceAsStream("ExcelDemo.xls")) {
+//            ExcelUtils.readWorkBook(fis, (row -> System.out.println(row.getSheetIndex() + row.getSheetName() + row.getRowIndex() + Arrays.toString(row.getRow()))));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        try (InputStream fis = new FileInputStream(new File("C:\\Users\\Mathcat\\Desktop\\充值订单明细-20190510114722.xlsx"))) {
+            ExcelUtils.readWorkBook(fis, (row -> System.out.println(row.getSheetIndex() + row.getSheetName() + row.getRowIndex() + Arrays.toString(row.getRow()))));
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        threadPool.shutdown();
     }
+
+
 }

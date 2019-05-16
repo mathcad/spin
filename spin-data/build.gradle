@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '数据访问模块'
-version = '2.1.16.RELEASE'
+version = '2.1.29.RELEASE'
 def artifactId = 'spin-data'
 
 ext {
