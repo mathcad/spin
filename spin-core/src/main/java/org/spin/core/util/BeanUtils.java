@@ -579,15 +579,23 @@ public abstract class BeanUtils {
 
     /**
      * 判断一个对象是否是JavaBean
-     * <p>一个JavaBean，一定是一个自定义对象（非java自带的类，数组，集合，Map，枚举，字符序列)</p>
+     * <p>一个JavaBean，一定是一个自定义对象（非java自带的类，数组，集合，Map，枚举，字符序列，流，异常)</p>
      *
      * @param target 对象
      * @return 是否是JavaBean
      */
     public static boolean isJavaBean(Object target) {
-        return null != target && !target.getClass().isArray() && !target.getClass().getName().startsWith("java.") &&
-            !target.getClass().getName().startsWith("javax.") && !(target instanceof Map || target instanceof Collection ||
-            target instanceof Enum || target instanceof CharSequence);
+        return !(null == target || target.getClass().isArray()
+            || target.getClass().getName().startsWith("java.")
+            || target.getClass().getName().startsWith("javax.")
+            || target instanceof Map
+            || target instanceof Iterable
+            || target instanceof Enum
+            || target instanceof CharSequence
+            || target instanceof Throwable
+            || target instanceof AutoCloseable
+            || target instanceof Readable
+        );
     }
 
     /**
@@ -613,7 +621,7 @@ public abstract class BeanUtils {
     }
 
     /**
-     * 通过内省机制，获取一个JavaBean的所有属性
+     * 通过内省机制，获取一个JavaBean的所有属性(属性：一个类的成员变量，并且Getter与Setter至少存在一个)
      *
      * @param type     JavaBean类型
      * @param readable 是否必须可读
@@ -741,23 +749,17 @@ public abstract class BeanUtils {
         if (null == src || null == dest) {
             return;
         }
-        if ((null == fields || fields.length == 0) && isJavaBean(src)) {
-            Set<String> srcFields = getBeanPropertyDes(src.getClass(), false, false).values().stream().map(p -> p.getDescriptor().getName()).collect(Collectors.toSet());
-            fields = getBeanPropertyDes(dest.getClass(), false, false).values().stream().map(p -> p.getDescriptor().getName()).filter(srcFields::contains).toArray(String[]::new);
-        } else {
-            throw new SimplifiedException("非JavaBean请指定需要Copy的属性列表");
+        if ((null == fields || fields.length == 0)) {
+            if (isJavaBean(src)) {
+                Set<String> srcFields = getBeanPropertyDes(src.getClass(), false, false).values().stream().map(p -> p.getDescriptor().getName()).collect(Collectors.toSet());
+                fields = getBeanPropertyDes(dest.getClass(), false, false).values().stream().map(p -> p.getDescriptor().getName()).filter(srcFields::contains).toArray(String[]::new);
+            } else {
+                throw new SimplifiedException("非JavaBean请指定需要Copy的属性列表");
+            }
         }
+
         for (String field : fields) {
-            Field f1 = ReflectionUtils.findField(src.getClass(), field);
-            Field f2 = ReflectionUtils.findField(dest.getClass(), field);
-            if (f1 == null)
-                throw new SimplifiedException(field + "不存在于" + src.getClass().getSimpleName());
-            if (f2 == null)
-                throw new SimplifiedException(field + "不存在于" + dest.getClass().getSimpleName());
-            ReflectionUtils.makeAccessible(f1);
-            ReflectionUtils.makeAccessible(f2);
-            Object o1 = ReflectionUtils.getField(f1, src);
-            ReflectionUtils.setField(f2, dest, o1);
+            copyPropertie(src, dest, field);
         }
     }
 
@@ -771,21 +773,42 @@ public abstract class BeanUtils {
     public static <T> void copyTo(T src, Object dest, Iterable<Function<T, ?>> getters) {
         if (null == src || null == dest || null == getters)
             return;
+
         for (Function<T, ?> field : getters) {
-            String fieldName = toFieldName(LambdaUtils.resolveLambda(field).getImplMethodName());
-            Field f1 = ReflectionUtils.findField(src.getClass(), fieldName);
-            Field f2 = ReflectionUtils.findField(dest.getClass(), fieldName);
-            if (f1 == null) {
-                throw new SimplifiedException(field + "不存在于" + src.getClass().getSimpleName());
-            }
-            if (f2 == null) {
-                throw new SimplifiedException(field + "不存在于" + dest.getClass().getSimpleName());
-            }
-            ReflectionUtils.makeAccessible(f1);
-            ReflectionUtils.makeAccessible(f2);
-            Object o1 = ReflectionUtils.getField(f1, src);
-            ReflectionUtils.setField(f2, dest, o1);
+            copyPropertie(src, dest, toFieldName(LambdaUtils.resolveLambda(field).getImplMethodName()));
         }
+    }
+
+    /**
+     * 复制JavaBean的属性到另一个JavaBean中，直接反射字段值，不通过getter/setter
+     *
+     * @param src     源对象
+     * @param dest    目标对象
+     * @param getters 属性getter列表
+     */
+    @SafeVarargs
+    public static <T> void copyTo(T src, Object dest, Function<T, ?>... getters) {
+        if (null == src || null == dest || null == getters)
+            return;
+
+        for (Function<T, ?> field : getters) {
+            copyPropertie(src, dest, toFieldName(LambdaUtils.resolveLambda(field).getImplMethodName()));
+        }
+    }
+
+    private static void copyPropertie(Object src, Object dest, String fieldName) {
+        Field f1 = ReflectionUtils.findField(src.getClass(), fieldName);
+        Field f2 = ReflectionUtils.findField(dest.getClass(), fieldName);
+        if (f1 == null) {
+            throw new SimplifiedException(fieldName + "不存在于" + src.getClass().getSimpleName());
+        }
+        if (f2 == null) {
+            throw new SimplifiedException(fieldName + "不存在于" + dest.getClass().getSimpleName());
+        }
+        ReflectionUtils.makeAccessible(f1);
+        ReflectionUtils.makeAccessible(f2);
+        Object o1 = ReflectionUtils.getField(f1, src);
+        ReflectionUtils.setField(f2, dest, o1);
     }
 
     public static <T, V, P> void copyTo(T src, V dest, Function<T, P> getter, BiConsumer<V, P> setter) {

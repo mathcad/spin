@@ -1,5 +1,8 @@
 package org.spin.core;
 
+import org.spin.core.gson.internal.$Gson$Preconditions;
+import org.spin.core.gson.internal.$Gson$Types;
+
 import java.lang.reflect.MalformedParameterizedTypeException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -14,7 +17,14 @@ public class ParameterizedTypeImpl implements ParameterizedType {
     private final Type ownerType;
 
     private ParameterizedTypeImpl(Class<?> rawType, Type[] actualTypeArguments, Type ownerType) {
-        this.actualTypeArguments = actualTypeArguments;
+        this.actualTypeArguments = actualTypeArguments.clone();
+        for (int t = 0, length = this.actualTypeArguments.length; t < length; t++) {
+            $Gson$Preconditions.checkNotNull(this.actualTypeArguments[t]);
+            if ((this.actualTypeArguments[t] instanceof Class<?>) && ((Class<?>) this.actualTypeArguments[t]).isPrimitive()) {
+                throw new IllegalArgumentException("泛型参数不允许存在基本类型");
+            }
+            this.actualTypeArguments[t] = $Gson$Types.canonicalize(this.actualTypeArguments[t]);
+        }
         this.rawType = rawType;
         this.ownerType = ownerType != null ? ownerType : rawType.getDeclaringClass();
         this.validateConstructorArguments();

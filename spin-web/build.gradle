@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '基于spring mvc的web模块'
-version = '2.1.16.RELEASE'
+version = '2.1.26.SNAPSHOT'
 def artifactId = 'spin-web'
 
 ext {

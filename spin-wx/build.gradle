@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '微信模块'
-version = '2.1.16.RELEASE'
+version = '2.1.26-SNAPSHOT'
 def artifactId = 'spin-wx'
 
 ext {
@@ -25,7 +25,7 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://139.199.59.195:8081/repository/ne/") {
+            repository(url: "http://192.168.0.248:8081/nexus/content/repositories/snapshots/") {
                 authentication(userName: "admin", password: "admin123")
             }
             pom.version = "$project.version"

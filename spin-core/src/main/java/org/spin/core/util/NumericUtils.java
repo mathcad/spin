@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 public abstract class NumericUtils {
     private static final String UNKNOW_NUM = "无法识别的数字格式";
     private static Pattern numPattern = Pattern.compile("^([-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]+)[^-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]{0,2}$");
-    private static Pattern pureNum = Pattern.compile("^-?\\d+$|^\\d+\\.\\d+$");
+    private static Pattern pureNum = Pattern.compile("^-?\\d+(\\.\\d+)?$");
     private static String[] scales = {"亿", "万", "千", "仟", "百", "佰", "十", "拾"};
     private static Map<String, Long> numMap = new HashMap<>();
 
@@ -344,7 +344,7 @@ public abstract class NumericUtils {
         if (object instanceof Number) {
             return true;
         } else if (object instanceof CharSequence) {
-            return pureNum.matcher(object.toString()).matches();
+            return StringUtils.isNumeric(object.toString());
         } else {
             return false;
         }

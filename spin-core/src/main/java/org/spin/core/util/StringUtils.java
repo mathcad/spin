@@ -65,8 +65,8 @@ public abstract class StringUtils {
 
     private static final char EXTENSION_SEPARATOR = '.';
 
-    private static final Pattern NUMERIC_PATTERN = Pattern.compile("^\\d+(\\.\\d+)?$");
-    private static final Pattern INTEGER_PATTERN = Pattern.compile("^\\d+$");
+    private static final Pattern NUMERIC_PATTERN = Pattern.compile("^-?\\d+(\\.\\d+)?$");
+    private static final Pattern INTEGER_PATTERN = Pattern.compile("^-?\\d+$");
     private static final Pattern CONTAINS_CHINESE_PATTERN = Pattern.compile("([\u4e00-\u9fa5\ufe30-\uffa0]+)");
 
     public static final String EMPTY = "";

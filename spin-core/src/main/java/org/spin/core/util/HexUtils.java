@@ -2,9 +2,8 @@ package org.spin.core.util;
 
 import org.spin.core.throwable.DecoderException;
 import org.spin.core.throwable.EncoderException;
-import org.spin.core.throwable.SimplifiedException;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 
 /**
  * 16进制工具类(线程安全)
@@ -158,12 +157,8 @@ public abstract class HexUtils {
      * @throws DecoderException Thrown if an odd number of characters is supplied to this function
      * @see #decodeHex(char[])
      */
-    public static byte[] decode(final byte[] array, String charset) throws DecoderException {
-        try {
-            return decodeHex(new String(array, charset).toCharArray());
-        } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException("不支持的字符编码" + charset);
-        }
+    public static byte[] decode(final byte[] array, Charset charset) throws DecoderException {
+        return decodeHex(new String(array, charset).toCharArray());
     }
 
     /**
@@ -197,12 +192,8 @@ public abstract class HexUtils {
      * @see #encodeHex(byte[])
      * @since 1.7 No longer throws IllegalStateException if the charsetName is invalid.
      */
-    public static byte[] encode(final byte[] array, String charset) {
-        try {
-            return encodeHexStringL(array).getBytes(charset);
-        } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException("不支持的字符编码" + charset);
-        }
+    public static byte[] encode(final byte[] array, Charset charset) {
+        return encodeHexStringL(array).getBytes(charset);
     }
 
     /**
@@ -216,15 +207,13 @@ public abstract class HexUtils {
      * @throws EncoderException Thrown if the given object is not a String or byte[]
      * @see #encodeHex(byte[])
      */
-    public static Object encode(final Object object, String charset) throws EncoderException {
+    public static Object encode(final Object object, Charset charset) throws EncoderException {
         try {
             final byte[] byteArray = object instanceof String ?
                 ((String) object).getBytes(charset) : (byte[]) object;
             return encodeHex(byteArray);
         } catch (final ClassCastException e) {
             throw new EncoderException(e.getMessage(), e);
-        } catch (UnsupportedEncodingException e) {
-            throw new SimplifiedException("不支持的字符编码" + charset);
         }
     }
 }
