@@ -15,6 +15,7 @@
  */
 package org.spin.core.gson.internal.bind;
 
+import org.spin.core.ParameterizedTypeImpl;
 import org.spin.core.gson.Gson;
 import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.gson.TypeAdapter;
@@ -23,6 +24,7 @@ import org.spin.core.gson.stream.JsonReader;
 import org.spin.core.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 
@@ -83,6 +85,8 @@ final class TypeAdapterRuntimeTypeWrapper<T> extends TypeAdapter<T> {
         if (value != null
             && (type == Object.class || type instanceof TypeVariable<?> || type instanceof Class<?>)) {
             type = value.getClass();
+        } else if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType() instanceof Class && value != null) {
+            type = ParameterizedTypeImpl.make(value.getClass(), ((ParameterizedType) type).getActualTypeArguments(), ((ParameterizedType) type).getOwnerType());
         }
         return type;
     }

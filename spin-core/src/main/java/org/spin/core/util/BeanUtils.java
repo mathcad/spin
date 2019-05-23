@@ -779,38 +779,6 @@ public abstract class BeanUtils {
         }
     }
 
-    /**
-     * 复制JavaBean的属性到另一个JavaBean中，直接反射字段值，不通过getter/setter
-     *
-     * @param src     源对象
-     * @param dest    目标对象
-     * @param getters 属性getter列表
-     */
-    @SafeVarargs
-    public static <T> void copyTo(T src, Object dest, Function<T, ?>... getters) {
-        if (null == src || null == dest || null == getters)
-            return;
-
-        for (Function<T, ?> field : getters) {
-            copyPropertie(src, dest, toFieldName(LambdaUtils.resolveLambda(field).getImplMethodName()));
-        }
-    }
-
-    private static void copyPropertie(Object src, Object dest, String fieldName) {
-        Field f1 = ReflectionUtils.findField(src.getClass(), fieldName);
-        Field f2 = ReflectionUtils.findField(dest.getClass(), fieldName);
-        if (f1 == null) {
-            throw new SimplifiedException(fieldName + "不存在于" + src.getClass().getSimpleName());
-        }
-        if (f2 == null) {
-            throw new SimplifiedException(fieldName + "不存在于" + dest.getClass().getSimpleName());
-        }
-        ReflectionUtils.makeAccessible(f1);
-        ReflectionUtils.makeAccessible(f2);
-        Object o1 = ReflectionUtils.getField(f1, src);
-        ReflectionUtils.setField(f2, dest, o1);
-    }
-
     public static <T, V, P> void copyTo(T src, V dest, Function<T, P> getter, BiConsumer<V, P> setter) {
         if (null == src || null == dest || null == getter || null == setter)
             return;
@@ -1092,5 +1060,20 @@ public abstract class BeanUtils {
         if (null != getter9 && null != setter9) {
             setter9.accept(dest, getter9.apply(src));
         }
+    }
+
+    private static void copyPropertie(Object src, Object dest, String fieldName) {
+        Field f1 = ReflectionUtils.findField(src.getClass(), fieldName);
+        Field f2 = ReflectionUtils.findField(dest.getClass(), fieldName);
+        if (f1 == null) {
+            throw new SimplifiedException(fieldName + "不存在于" + src.getClass().getSimpleName());
+        }
+        if (f2 == null) {
+            throw new SimplifiedException(fieldName + "不存在于" + dest.getClass().getSimpleName());
+        }
+        ReflectionUtils.makeAccessible(f1);
+        ReflectionUtils.makeAccessible(f2);
+        Object o1 = ReflectionUtils.getField(f1, src);
+        ReflectionUtils.setField(f2, dest, o1);
     }
 }

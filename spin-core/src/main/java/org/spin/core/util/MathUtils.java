@@ -23,6 +23,14 @@ import java.util.stream.Collectors;
  */
 public class MathUtils {
 
+    /**
+     * 平方根运算
+     *
+     * @param number       运算数
+     * @param scale        精度
+     * @param roundingMode 舍入规则
+     * @return 平方根
+     */
     public static BigDecimal sqrt(BigDecimal number, int scale, int roundingMode) {
         if (number.compareTo(BigDecimal.ZERO) < 0)
             throw new ArithmeticException("sqrt with negative");
@@ -86,10 +94,23 @@ public class MathUtils {
         return new BigDecimal(sb.toString()).setScale(scale, roundingMode);
     }
 
+    /**
+     * 平方根运算（四舍五入）
+     *
+     * @param number 运算数
+     * @param scale  精度
+     * @return 平方根
+     */
     public static BigDecimal sqrt(BigDecimal number, int scale) {
         return sqrt(number, scale, BigDecimal.ROUND_HALF_UP);
     }
 
+    /**
+     * 平方根运算（精度比原始值多两位，最多50位；四舍五入）
+     *
+     * @param number 运算数
+     * @return 平方根
+     */
     public static BigDecimal sqrt(BigDecimal number) {
         int scale = number.scale() * 2;
         if (scale < 50)
@@ -97,6 +118,12 @@ public class MathUtils {
         return sqrt(number, scale, BigDecimal.ROUND_HALF_UP);
     }
 
+    /**
+     * 加法运算
+     *
+     * @param values 数值
+     * @return 和
+     */
     public static BigDecimal add(Number... values) {
         BigDecimal res = BigDecimal.ZERO;
         for (Number value : values) {
@@ -105,6 +132,12 @@ public class MathUtils {
         return res;
     }
 
+    /**
+     * 乘法运算
+     *
+     * @param values 数值
+     * @return 积
+     */
     public static BigDecimal multiply(Number... values) {
         BigDecimal res = BigDecimal.ONE;
         for (Number value : values) {
@@ -113,10 +146,24 @@ public class MathUtils {
         return res;
     }
 
+    /**
+     * 减法运算
+     *
+     * @param value1 被减数
+     * @param value2 减数
+     * @return 差
+     */
     public static BigDecimal subtract(Number value1, Number value2) {
         return NumericUtils.toBigDeciaml(value1).subtract(NumericUtils.toBigDeciaml(value2));
     }
 
+    /**
+     * 除法运算
+     *
+     * @param value1 被除数
+     * @param value2 除数
+     * @return 商
+     */
     public static BigDecimal divide(Number value1, Number value2) {
         BigDecimal v2 = NumericUtils.toBigDeciaml(value2);
         if (v2.compareTo(BigDecimal.ZERO) == 0) {

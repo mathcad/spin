@@ -147,14 +147,13 @@ public abstract class HexUtils {
     }
 
     /**
-     * Converts an array of character bytes representing hexadecimal values into an array of bytes of those same values.
-     * The returned array will be half the length of the passed array, as it takes two characters to represent any given
-     * byte. An exception is thrown if the passed char array has an odd number of elements.
+     * 将字节数组按指定编码解释为字符串后，将该字符串表示的16进制数值转换为等值字节数组。
+     * 如果参数数组的长度为奇数，则抛出异常
      *
-     * @param array   An array of character bytes containing hexadecimal digits
-     * @param charset charset
-     * @return A byte array containing binary data decoded from the supplied byte array (representing characters).
-     * @throws DecoderException Thrown if an odd number of characters is supplied to this function
+     * @param array   表示16进制数据的字符串指定编码下的字节数组
+     * @param charset 字符集编码
+     * @return 由参数数组转换得到字节数组
+     * @throws DecoderException 如果字符数组含有非法字符或长度为奇数，抛出异常
      * @see #decodeHex(char[])
      */
     public static byte[] decode(final byte[] array, Charset charset) throws DecoderException {

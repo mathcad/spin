@@ -4,6 +4,7 @@ import org.spin.core.throwable.SimplifiedException;
 
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -3866,7 +3867,7 @@ public abstract class StringUtils {
      */
     public static String urlDecode(String input) {
         try {
-            return URLEncoder.encode(input, "UTF-8");
+            return URLDecoder.decode(input, "UTF-8");
         } catch (UnsupportedEncodingException ignore) {
             return input;
         }
