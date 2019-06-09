@@ -2,7 +2,6 @@ package org.spin.boot.datasource.property;
 
 
 import org.spin.data.extend.DataSourceConfig;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Properties;
 
@@ -11,7 +10,6 @@ import java.util.Properties;
  *
  * @author xuweinan
  */
-@ConfigurationProperties(prefix = "spring.datasource.druid")
 public class DruidDataSourceProperties implements DataSourceConfig {
 
     private String name;

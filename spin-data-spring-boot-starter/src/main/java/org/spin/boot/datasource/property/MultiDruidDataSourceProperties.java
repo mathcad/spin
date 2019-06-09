@@ -16,23 +16,23 @@ import java.util.Objects;
  *
  * @author xuweinan
  */
-@ConfigurationProperties(prefix = "spring.datasources")
+@ConfigurationProperties(prefix = "spring.datasource")
 public class MultiDruidDataSourceProperties implements MultiDataSourceConfig<DruidDataSourceProperties> {
     private String primaryDataSource;
-    private boolean enableJtaTransaction;
-    private Map<String, DruidDataSourceProperties> druid;
+    private Map<String, DruidDataSourceProperties> druids;
+    private DruidDataSourceProperties druid;
 
     @PostConstruct
     public void init() {
-        if (Objects.isNull(druid)) {
-            druid = new HashMap<>();
+        if (Objects.isNull(druids)) {
+            druids = new HashMap<>();
             return;
         }
-        if (druid.size() == 1) {
-            primaryDataSource = druid.keySet().iterator().next();
+        if (druids.size() == 1) {
+            primaryDataSource = druids.keySet().iterator().next();
         }
 
-        druid.forEach((key, value) -> {
+        druids.forEach((key, value) -> {
             if (StringUtils.isEmpty(value.getUrl())
                 || StringUtils.isEmpty(value.getUsername())
                 || StringUtils.isEmpty(value.getPassword())) {
@@ -56,42 +56,49 @@ public class MultiDruidDataSourceProperties implements MultiDataSourceConfig<Dru
         this.primaryDataSource = primaryDataSource;
     }
 
-
-    @Override
-    public boolean isEnableJtaTransaction() {
-        return enableJtaTransaction;
-    }
-
-    @Override
-    public void setEnableJtaTransaction(boolean enableJtaTransaction) {
-        this.enableJtaTransaction = enableJtaTransaction;
-    }
-
     @Override
     public Map<String, DruidDataSourceProperties> getDataSources() {
-        return druid;
+        return druids;
     }
 
     @Override
     public void setDataSources(Map<String, DruidDataSourceProperties> dataSources) {
-        this.druid = dataSources;
+        this.druids = dataSources;
     }
 
     @Override
     public DruidDataSourceProperties getDataSourceConfig(String name) {
-        return druid.get(name);
+        return druids.get(name);
     }
 
     @Override
     public DruidDataSourceProperties getPrimaryDataSourceConfig() {
-        return druid.get(primaryDataSource);
+        return druids.get(primaryDataSource);
     }
 
-    public Map<String, DruidDataSourceProperties> getDruid() {
+    public Map<String, DruidDataSourceProperties> getDruids() {
+        return druids;
+    }
+
+    public void setDruids(Map<String, DruidDataSourceProperties> druids) {
+        this.druids = druids;
+    }
+
+    public DruidDataSourceProperties getDruid() {
         return druid;
     }
 
-    public void setDruid(Map<String, DruidDataSourceProperties> druid) {
+    public void setDruid(DruidDataSourceProperties druid) {
         this.druid = druid;
+    }
+
+    @Override
+    public DruidDataSourceProperties getSingleton() {
+        return druid;
+    }
+
+    @Override
+    public void setSingleton(DruidDataSourceProperties singleton) {
+        this.druid = singleton;
     }
 }

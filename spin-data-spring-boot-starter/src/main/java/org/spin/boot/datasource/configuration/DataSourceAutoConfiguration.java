@@ -43,7 +43,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
 import javax.sql.DataSource;
-import javax.transaction.SystemException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -74,44 +73,46 @@ import java.util.Properties;
 public class DataSourceAutoConfiguration {
 
     private SpinDataProperties dataProperties;
-    private DataSourceConfig dsConfig;
-    private MultiDataSourceConfig<? extends DataSourceConfig> dsConfigs;
+    private MultiDataSourceConfig dsConfigs;
     private DataSourceBuilder dataSourceBuilder;
     private ApplicationContext applicationContext;
 
     @Autowired
-    public DataSourceAutoConfiguration(SpinDataProperties dataProperties, DataSourceConfig dsConfig, MultiDataSourceConfig<? extends DataSourceConfig> dsConfigs, DataSourceBuilder dataSourceBuilder, ApplicationContext applicationContext) {
+    public DataSourceAutoConfiguration(SpinDataProperties dataProperties, MultiDataSourceConfig dsConfigs, DataSourceBuilder dataSourceBuilder, ApplicationContext applicationContext) {
         this.dataProperties = dataProperties;
-        this.dsConfig = dsConfig;
         this.dsConfigs = dsConfigs;
         this.dataSourceBuilder = dataSourceBuilder;
         this.applicationContext = applicationContext;
     }
 
     @Bean
+    @SuppressWarnings("unchecked")
     public TransactionModel transactionModel() {
-        if (StringUtils.isNotBlank(dsConfig.getUrl()) && (null == dsConfigs.getDataSources() || dsConfigs.getDataSources().isEmpty())) {
-            if (StringUtils.isBlank(dsConfig.getName())) {
-                dsConfig.setName("main");
+        if ((null != dsConfigs.getSingleton() && StringUtils.isNotBlank(dsConfigs.getSingleton().getUrl()))
+            && (null == dsConfigs.getDataSources() || dsConfigs.getDataSources().isEmpty())) {
+            if (StringUtils.isBlank(dsConfigs.getSingleton().getName())) {
+                dsConfigs.getSingleton().setName("main");
             }
             return new Singleton();
         }
 
-        if (StringUtils.isBlank(dsConfig.getUrl()) && (null != dsConfigs.getDataSources() && dsConfigs.getDataSources().size() == 1)) {
-            String name = dsConfigs.getDataSources().keySet().iterator().next();
-            dsConfig = dsConfigs.getDataSources().get(name);
-            dsConfig.setName(name);
+        if ((null == dsConfigs.getSingleton() || StringUtils.isBlank(dsConfigs.getSingleton().getUrl()))
+            && (null != dsConfigs.getDataSources() && dsConfigs.getDataSources().size() == 1)) {
+            String name = dsConfigs.getDataSources().keySet().iterator().next().toString();
+            dsConfigs.setSingleton((DataSourceConfig) dsConfigs.getDataSources().get(name));
+            dsConfigs.getSingleton().setName(name);
             return new Singleton();
         }
 
-        if (StringUtils.isBlank(dsConfig.getUrl()) && (null != dsConfigs.getDataSources() && dsConfigs.getDataSources().size() > 1)) {
+        if ((null == dsConfigs.getSingleton() || StringUtils.isBlank(dsConfigs.getSingleton().getUrl()))
+            && (null != dsConfigs.getDataSources() && dsConfigs.getDataSources().size() > 1)) {
             if (StringUtils.isBlank(dsConfigs.getPrimaryDataSource())) {
                 throw new SimplifiedException("多数据源配置中未指定主数据源");
             }
             if (!dsConfigs.getDataSources().containsKey(dsConfigs.getPrimaryDataSource())) {
                 throw new SimplifiedException("配置的主数据源不存在: " + dsConfigs.getPrimaryDataSource());
             }
-            dsConfigs.getDataSources().forEach((n, d) -> d.setName(n));
+            dsConfigs.getDataSources().forEach((n, d) -> ((DataSourceConfig) d).setName(n.toString()));
             return new Multipal();
         }
 
@@ -127,31 +128,31 @@ public class DataSourceAutoConfiguration {
         if (model instanceof Multipal) {
             dsConfigs.getDataSources().forEach((name, config) -> {
                 // DataSource
-                DataSource dataSourceBean = dataSourceBuilder.buildAtomikosDataSource(acf, config);
+                DataSource dataSourceBean = dataSourceBuilder.buildAtomikosDataSource(acf, (DataSourceConfig) config);
 
                 // SessionFactory
-                sfDefinitionBuilder(acf, name, dataSourceBean, defaultProperties);
+                sfDefinitionBuilder(acf, name.toString(), dataSourceBean, defaultProperties);
 
                 // OpenSessionInViewFilter
                 try {
                     Class.forName("org.springframework.boot.web.servlet.FilterRegistrationBean");
-                    if (config.isOpenSessionInView()) {
-                        osivDefinitionBuilder(acf, name);
+                    if (((DataSourceConfig) config).isOpenSessionInView()) {
+                        osivDefinitionBuilder(acf, name.toString());
                     }
                 } catch (ClassNotFoundException ignore) {
                     // do nothing
                 }
             });
         } else {
-            DataSource druidDataSource = dataSourceBuilder.buildSingletonDatasource(acf, this.dsConfig);
+            DataSource druidDataSource = dataSourceBuilder.buildSingletonDatasource(acf, dsConfigs.getSingleton());
             // SessionFactory
-            sfDefinitionBuilder(acf, dsConfig.getName(), druidDataSource, defaultProperties);
+            sfDefinitionBuilder(acf, dsConfigs.getSingleton().getName(), druidDataSource, defaultProperties);
 
             // OpenSessionInViewFilter
             try {
                 Class.forName("org.springframework.boot.web.servlet.FilterRegistrationBean");
-                if (dsConfig.isOpenSessionInView()) {
-                    osivDefinitionBuilder(acf, dsConfig.getName());
+                if (dsConfigs.getSingleton().isOpenSessionInView()) {
+                    osivDefinitionBuilder(acf, dsConfigs.getSingleton().getName());
                 }
             } catch (ClassNotFoundException ignore) {
                 // do nothing
@@ -172,7 +173,7 @@ public class DataSourceAutoConfiguration {
         if (model instanceof Multipal) {
             return new SQLManager(dsConfigs, dataProperties.getSqlLoader(), dataProperties.getSqlUri(), dataProperties.getResolverObj());
         } else {
-            return new SQLManager(dsConfig, dataProperties.getSqlLoader(), dataProperties.getSqlUri(), dataProperties.getResolverObj());
+            return new SQLManager(dsConfigs.getSingleton(), dataProperties.getSqlLoader(), dataProperties.getSqlUri(), dataProperties.getResolverObj());
         }
     }
 
@@ -240,8 +241,8 @@ public class DataSourceAutoConfiguration {
         return () -> {
             if (transactionModel instanceof Singleton) {
                 BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(HibernateTransactionManager.class);
-                bdb.addConstructorArgReference(dsConfig.getName() + "SessionFactory");
-                String beanName = dsConfig.getName() + "TransactionManager";
+                bdb.addConstructorArgReference(dsConfigs.getSingleton().getName() + "SessionFactory");
+                String beanName = dsConfigs.getSingleton().getName() + "TransactionManager";
                 acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
                 applicationContext.getBean(PlatformTransactionManager.class);
             } else {

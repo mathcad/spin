@@ -25,20 +25,6 @@ public interface MultiDataSourceConfig<T extends DataSourceConfig> {
     void setPrimaryDataSource(String primaryDataSource);
 
     /**
-     * 是否开启JTA事务
-     *
-     * @return 是否开启JTA事务
-     */
-    boolean isEnableJtaTransaction();
-
-    /**
-     * 是否开启JTA事务
-     *
-     * @param enableJtaTransaction 是否开启JTA事务
-     */
-    void setEnableJtaTransaction(boolean enableJtaTransaction);
-
-    /**
      * 获取所有数据源配置
      *
      * @return 数据源配置Map
@@ -66,4 +52,18 @@ public interface MultiDataSourceConfig<T extends DataSourceConfig> {
      * @return 主数据源配置
      */
     T getPrimaryDataSourceConfig();
+
+    /**
+     * 获取单数据源配置
+     *
+     * @return 单数据源配置
+     */
+    T getSingleton();
+
+    /**
+     * 设置单数据源配置
+     *
+     * @param singleton 单数据源配置
+     */
+    void setSingleton(T singleton);
 }

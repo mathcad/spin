@@ -35,7 +35,7 @@ import java.util.Properties;
  * @version 1.0
  */
 @AutoConfigureBefore(value = {DataSourceAutoConfiguration.class})
-@EnableConfigurationProperties({DruidDataSourceProperties.class, MultiDruidDataSourceProperties.class})
+@EnableConfigurationProperties({MultiDruidDataSourceProperties.class})
 public class DruidDataSourceBuilder implements DataSourceBuilder<DruidDataSource, DruidDataSourceProperties> {
 
     @Override
