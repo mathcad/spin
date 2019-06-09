@@ -1,15 +1,15 @@
 package org.spin.data.gson.adapter;
 
-import com.google.gson.Gson;
-import com.google.gson.TypeAdapter;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.gson.Gson;
 import org.spin.core.gson.MatchableTypeAdapter;
+import org.spin.core.gson.TypeAdapter;
+import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.gson.stream.JsonReader;
+import org.spin.core.gson.stream.JsonWriter;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.IOException;

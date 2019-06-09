@@ -2,17 +2,17 @@ plugins {
     id 'java-library'
 }
 
-description = '数据访问模块'
-version = '2.1.29.RELEASE'
+description = '数据访问模块, 基于Hibernate的实现'
+version = '2.1.33-SNAPSHOT'
 def artifactId = 'spin-data'
 
 ext {
-    junitJupiterVersion = '5.3.2'
-    hibernateVersion = '5.4.1.Final'
+    junitJupiterVersion = '5.4.2'
+    hibernateVersion = '5.4.3.Final'
     freemarkerVersion = '2.3.28'
-    beetlVersion = '2.9.8'
-    springVersion = '5.1.4.RELEASE'
-    springDataRedisVersion = '2.1.4.RELEASE'
+    beetlVersion = '2.9.10'
+    springVersion = '5.1.7.RELEASE'
+    springDataRedisVersion = '2.1.8.RELEASE'
 }
 
 test {
@@ -47,15 +47,14 @@ dependencies {
     testRuntimeOnly group: 'org.freemarker', name: 'freemarker', version: freemarkerVersion
 
 //    data
-    api group: 'org.mathcat', name: 'spin-core', version: "$project.version"
+    api(project(":spin-data-core"))
 
     api group: 'org.springframework', name: 'spring-context', version: springVersion
     api group: 'org.springframework', name: 'spring-orm', version: springVersion
     api group: 'org.springframework', name: 'spring-oxm', version: springVersion
     api group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
-    api group: 'javax.transaction', name: 'javax.transaction-api', version: '1.2'
 
-    implementation group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
-    implementation group: 'org.freemarker', name: 'freemarker', version: freemarkerVersion
-    implementation group: 'com.ibeetl', name: 'beetl', version: beetlVersion
+    compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
+    compileOnly group: 'org.freemarker', name: 'freemarker', version: freemarkerVersion
+    compileOnly group: 'com.ibeetl', name: 'beetl', version: beetlVersion
 }

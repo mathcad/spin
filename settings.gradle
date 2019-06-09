@@ -8,4 +8,5 @@ include 'spin-web'
 include 'spin-wx'
 include 'spin-starter-restful'
 include 'test'
+include 'spin-data-core'
 

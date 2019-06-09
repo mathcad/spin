@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.Test
+import org.spin.core.security.AES
 import org.spin.core.util.MapUtils
 import org.spin.data.sql.dbtype.MySQLDatabaseType
 import org.spin.data.sql.loader.ArchiveMdLoader
@@ -28,5 +29,11 @@ class SqlLoaderTest {
         val ends = System.currentTimeMillis()
         println(ends - starts)
         println(s.sql)
+    }
+
+    @Test
+    fun testDbPasswd() {
+        println(AES.newInstance().withKey("c4b2a7d36f9a2e61").encrypt("admin"))
+        println(AES.newInstance().withKey("c4b2a7d36f9a2e61").decrypt("Dx1rlLOAicWyJ+8tlWKFTg=="))
     }
 }

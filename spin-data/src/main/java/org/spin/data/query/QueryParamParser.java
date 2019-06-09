@@ -1,13 +1,12 @@
 package org.spin.data.query;
 
-import com.google.gson.Gson;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.MatchMode;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
+import org.spin.core.gson.Gson;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.EnumUtils;

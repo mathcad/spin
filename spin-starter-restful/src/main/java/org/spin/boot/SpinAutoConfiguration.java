@@ -19,10 +19,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.util.unit.DataSize;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CharacterEncodingFilter;
-import org.springframework.web.filter.CorsFilter;
 
 import javax.servlet.MultipartConfigElement;
 import java.util.ArrayList;
@@ -39,18 +36,21 @@ import java.util.Collection;
 @ComponentScan("org.spin")
 public class SpinAutoConfiguration {
 
-    @Bean
-    @ConditionalOnClass(name = "org.springframework.data.redis.core.RedisTemplate")
-    @ConditionalOnBean(RedisConnectionFactory.class)
-    public RedisCache<?> redisCache(RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory);
-        template.afterPropertiesSet();
+    @Configuration
+    @ConditionalOnClass(name = "org.springframework.data.redis.connection.RedisConnectionFactory")
+    static class RedisCacheConfiguration {
+        @Bean
+        @ConditionalOnBean(RedisConnectionFactory.class)
+        public RedisCache<?> redisCache(RedisConnectionFactory redisConnectionFactory) {
+            RedisTemplate<String, Object> template = new RedisTemplate<>();
+            template.setConnectionFactory(redisConnectionFactory);
+            template.afterPropertiesSet();
 
-        RedisCache<Object> redisCache = new RedisCache<>();
-        redisCache.setRedisTemplate(template);
-        redisCache.setRedisSerializer(new JdkSerializationRedisSerializer());
-        return redisCache;
+            RedisCache<Object> redisCache = new RedisCache<>();
+            redisCache.setRedisTemplate(template);
+            redisCache.setRedisSerializer(new JdkSerializationRedisSerializer());
+            return redisCache;
+        }
     }
 
     @Bean
@@ -62,17 +62,6 @@ public class SpinAutoConfiguration {
         registration.setName("encodingFilter");
         registration.setOrder(1);
         return registration;
-    }
-
-    @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.addAllowedOrigin("*");
-        corsConfiguration.addAllowedHeader("*");
-        corsConfiguration.addAllowedMethod("*");
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfiguration);
-        return new CorsFilter(source);
     }
 
     @Bean

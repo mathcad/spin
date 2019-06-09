@@ -70,11 +70,11 @@ class SystemService {
 
             val cities = allRegion.getValue(2).map { it.value!! to it }.toMap()
             var work = allRegion.getValue(3).groupBy { it.parent }
-            work.forEach { p, rs -> cities[p]!!.children = rs }
+            work.forEach { (p, rs) -> cities[p]!!.children = rs }
 
             val pronvinces = allRegion.getValue(1).map { it.value!! to it }.toMap()
             work = allRegion.getValue(2).groupBy { it.parent }
-            work.forEach { p, rs -> pronvinces[p]?.children = rs }
+            work.forEach { (p, rs) -> pronvinces[p]?.children = rs }
 
             return allRegion.getValue(1)
         }

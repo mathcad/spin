@@ -212,10 +212,12 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.updateTime = updateTime;
     }
 
+    @Override
     public int getVersion() {
         return version;
     }
 
+    @Override
     public void setVersion(int version) {
         this.version = version;
     }
@@ -228,10 +230,12 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.orderNo = orderNo;
     }
 
+    @Override
     public boolean isValid() {
         return valid;
     }
 
+    @Override
     public void setValid(boolean valid) {
         this.valid = valid;
     }

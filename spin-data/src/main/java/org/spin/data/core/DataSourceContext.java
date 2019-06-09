@@ -14,6 +14,8 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.data.extend.RepositoryContext;
 
+import javax.persistence.TransactionRequiredException;
+import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -22,9 +24,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.persistence.TransactionRequiredException;
-import javax.sql.DataSource;
 
 /**
  * 数据源上下文
@@ -135,6 +134,11 @@ public final class DataSourceContext {
         Session sess = peekThreadSession();
         if (sess == null) {
             sess = DataSourceContext.getCurrentSessionFactory().getCurrentSession();
+        }
+        if (null == sess) {
+            logger.warn("当前线程没有绑定数据库会话，请检查是否开启了openSessionInView." +
+                " 如果确认不开启，请使用openSession手动开启会话，并在恰当的时机手动关闭");
+            throw new SimplifiedException("当前线程没有绑定数据库会话");
         }
         return sess;
     }

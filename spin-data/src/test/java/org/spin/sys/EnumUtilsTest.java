@@ -1,10 +1,10 @@
 package org.spin.sys;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import org.hibernate.internal.SessionImpl;
 import org.junit.jupiter.api.Test;
 import org.spin.core.SpinContext;
+import org.spin.core.gson.Gson;
+import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.data.query.QueryParam;

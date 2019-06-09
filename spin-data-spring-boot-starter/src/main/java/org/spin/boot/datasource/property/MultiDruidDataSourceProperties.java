@@ -16,15 +16,17 @@ import java.util.Objects;
  *
  * @author xuweinan
  */
-@ConfigurationProperties(prefix = "spin.datasource")
+@ConfigurationProperties(prefix = "spring.datasources")
 public class MultiDruidDataSourceProperties implements MultiDataSourceConfig<DruidDataSourceProperties> {
     private String primaryDataSource;
+    private boolean enableJtaTransaction;
     private Map<String, DruidDataSourceProperties> druid;
 
     @PostConstruct
     public void init() {
         if (Objects.isNull(druid)) {
             druid = new HashMap<>();
+            return;
         }
         if (druid.size() == 1) {
             primaryDataSource = druid.keySet().iterator().next();
@@ -52,6 +54,17 @@ public class MultiDruidDataSourceProperties implements MultiDataSourceConfig<Dru
     @Override
     public void setPrimaryDataSource(String primaryDataSource) {
         this.primaryDataSource = primaryDataSource;
+    }
+
+
+    @Override
+    public boolean isEnableJtaTransaction() {
+        return enableJtaTransaction;
+    }
+
+    @Override
+    public void setEnableJtaTransaction(boolean enableJtaTransaction) {
+        this.enableJtaTransaction = enableJtaTransaction;
     }
 
     @Override

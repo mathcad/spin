@@ -7,7 +7,7 @@ import org.spin.core.SpinContext;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.RandomStringUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.core.util.http.HttpUtils;
+import org.spin.core.util.http.Http;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -121,7 +121,7 @@ public class FileOperator {
         if (!uploadDir.exists() && !uploadDir.mkdirs() || uploadDir.exists() && !uploadDir.isDirectory()) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "创建文件夹失败");
         }
-        Map<String, String> downloadRs = HttpUtils.download(url, SpinContext.FILE_UPLOAD_DIR + storeName);
+        Map<String, String> downloadRs = Http.GET.withUrl(url).download(SpinContext.FILE_UPLOAD_DIR + storeName);
         rs.setOriginName("");
         rs.setFullName(SpinContext.FILE_UPLOAD_DIR + storeName + downloadRs.get("extention"));
         rs.setStoreName(storeName + downloadRs.get("extention"));

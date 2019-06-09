@@ -1,12 +1,13 @@
 package org.spin.data.core;
 
-import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
-import com.google.gson.reflect.TypeToken;
 
 import org.junit.jupiter.api.Test;
+import org.spin.core.gson.Gson;
 import org.spin.core.gson.annotation.DatePattern;
 import org.spin.core.gson.annotation.PreventOverflow;
+import org.spin.core.gson.annotation.SerializedName;
+import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.trait.IntEvaluatable;
 import org.spin.core.util.JsonUtils;
 
 import java.sql.Timestamp;
@@ -155,7 +156,7 @@ class E extends AbstractEntity {
     }
 }
 
-enum Status implements UserEnumColumn {
+enum Status implements IntEvaluatable {
     A(1), B(2);
 
     private int value;
@@ -170,7 +171,7 @@ enum Status implements UserEnumColumn {
     }
 }
 
-enum Type implements UserEnumColumn {
+enum Type implements IntEvaluatable {
     C(1), D(2);
 
     private int value;

@@ -1,3 +1,15 @@
+plugins {
+    id "org.sonarqube" version "2.7.1"
+}
+
+sonarqube {
+    properties {
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.host.url", "http://192.168.12.151:9000/"
+        property "sonar.login", "7d1627a0615b8406bcf02a459c42df204bdc04eb"
+    }
+}
+
 allprojects {
     group 'org.mathcat'
 }
@@ -32,6 +44,7 @@ subprojects {
 
     repositories {
         mavenLocal()
+        maven { url = "http://192.168.12.151:8081/repository/mathcat/" }
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
         mavenCentral()
     }

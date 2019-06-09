@@ -15,11 +15,12 @@ import java.util.Objects;
  *
  * @author xuweinan
  */
-@ConfigurationProperties(prefix = "spin.data")
+@ConfigurationProperties(prefix = "spring.data")
 public class SpinDataProperties {
 
     private PhysicalNamingStrategy namingStrategyObj;
     private String namingStrategy;
+    private boolean enableJtaTransaction = false;
 
     private TemplateResolver resolverObj;
     private String resolver;
@@ -56,6 +57,14 @@ public class SpinDataProperties {
 
     public void setNamingStrategy(String namingStrategy) {
         this.namingStrategy = namingStrategy;
+    }
+
+    public boolean isEnableJtaTransaction() {
+        return enableJtaTransaction;
+    }
+
+    public void setEnableJtaTransaction(boolean enableJtaTransaction) {
+        this.enableJtaTransaction = enableJtaTransaction;
     }
 
     public TemplateResolver getResolverObj() {

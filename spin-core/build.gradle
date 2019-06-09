@@ -7,15 +7,15 @@ version = '2.1.33-SNAPSHOT'
 def artifactId = 'spin-core'
 
 ext {
-    junitJupiterVersion = '5.3.2'
-    slf4jVersion = '1.7.25'
-    asmVersion = '7.0'
-    httpclientVersion = '4.5.7'
+    junitJupiterVersion = '5.4.2'
+    slf4jVersion = '1.7.26'
+    asmVersion = '7.1'
+    httpclientVersion = '4.5.8'
     httpasyncclientVersion = '4.1.4'
     commonsNetVersion = '3.6'
     dom4jVersion = '1.6'
-    poiVersion = '4.0.1'
-    bouncyVersion = '1.60'
+    poiVersion = '4.1.0'
+    bouncyVersion = '1.61'
 }
 
 test {

@@ -1,14 +1,13 @@
 buildscript {
     ext {
-        junitJupiterVersion = '5.3.2'
-        springBootVersion = '2.1.2.RELEASE'
-        springVersion = '5.1.4.RELEASE'
+        junitJupiterVersion = '5.4.2'
+        springBootVersion = '2.1.5.RELEASE'
+        springVersion = '5.1.7.RELEASE'
     }
     repositories {
         mavenLocal()
         maven { url = 'http://maven.aliyun.com/nexus/content/groups/public/' }
         maven { url = 'https://repo.spring.io/libs-release' }
-        maven { url = 'https://repo.spring.io/libs-milestone' }
         mavenCentral()
     }
     dependencies {
@@ -22,7 +21,7 @@ plugins {
 }
 
 description 'spin-data的starter'
-version '1.0.0'
+version '2.1.33-SNAPSHOT'
 def artifactId = 'spin-data-spring-boot-starter'
 
 compileJava.dependsOn(processResources)
@@ -56,15 +55,14 @@ dependencies {
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
 
-    implementation group: 'org.mathcat', name: 'spin-data', version: '2.1.16.RELEASE'
-
     api group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     api group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springBootVersion
     api group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
     api group: 'org.springframework', name: 'spring-webmvc', version: springVersion
-
     api group: 'org.glassfish', name: 'javax.annotation', version: '10.0-b28'
 
-    implementation group: 'com.atomikos', name: 'transactions-jdbc', version: '4.0.6'
-    implementation group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+    compileOnly group: 'org.mathcat', name: 'spin-data', version: "$project.version"
+    compileOnly group: 'com.atomikos', name: 'transactions-jdbc', version: '5.0.0'
+    compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+    compileOnly group: 'com.alibaba', name: 'druid', version: '1.1.17'
 }

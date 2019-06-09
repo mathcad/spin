@@ -1,9 +1,9 @@
 package org.spin.web.converter;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonParseException;
-import com.google.gson.reflect.TypeToken;
+import org.spin.core.gson.Gson;
+import org.spin.core.gson.JsonIOException;
+import org.spin.core.gson.JsonParseException;
+import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.JsonUtils;
 import org.springframework.http.HttpHeaders;

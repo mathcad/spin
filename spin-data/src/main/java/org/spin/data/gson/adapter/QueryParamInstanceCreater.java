@@ -1,6 +1,6 @@
 package org.spin.data.gson.adapter;
 
-import com.google.gson.InstanceCreator;
+import org.spin.core.gson.InstanceCreator;
 import org.spin.data.query.QueryParam;
 
 import java.lang.reflect.Type;

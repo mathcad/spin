@@ -1,0 +1,128 @@
+{
+  "properties": [
+    {
+      "name": "spring.datasource.druid",
+      "type": "org.spin.boot.datasource.property.DruidDataSourceProperties",
+      "description": "Druid数据源配置."
+    },
+    {
+      "name": "spring.datasource.name",
+      "type": "java.lang.String",
+      "description": "Druid数据源名称."
+    },
+    {
+      "name": "spring.datasource.druid.driverClassName",
+      "type": "java.lang.String",
+      "description": "JDBC驱动类."
+    },
+    {
+      "name": "spring.datasource.druid.url",
+      "type": "java.lang.String",
+      "description": "JDBC连接字符串."
+    },
+    {
+      "name": "spring.datasource.druid.username",
+      "type": "java.lang.String",
+      "description": "数据库用户名."
+    },
+    {
+      "name": "spring.datasource.druid.password",
+      "type": "java.lang.String",
+      "description": "数据库密码."
+    },
+    {
+      "name": "spring.datasource.testWhileIdle",
+      "type": "java.lang.Boolean",
+      "description": "空间时检测连接."
+    },
+    {
+      "name": "spring.datasource.testOnBorrow",
+      "type": "java.lang.Boolean",
+      "description": "获取时检测连接."
+    },
+    {
+      "name": "spring.datasource.useGlobalDataSourceStat",
+      "type": "java.lang.Boolean",
+      "description": "是否使用全局统计检测."
+    },
+    {
+      "name": "spring.datasource.filters",
+      "type": "java.lang.String",
+      "description": "过滤器."
+    },
+    {
+      "name": "spring.datasource.timeBetweenLogStatsMillis",
+      "type": "java.lang.Long",
+      "description": "状态统计间隔，不能同时开启全局统计."
+    },
+    {
+      "name": "spring.datasource.maxSize",
+      "type": "java.lang.Integer",
+      "description": "最大连接数."
+    },
+    {
+      "name": "spring.datasource.clearFiltersEnable",
+      "type": "java.lang.Boolean",
+      "description": "是否允许清除过滤器状态."
+    },
+    {
+      "name": "spring.datasource.resetStatEnable",
+      "type": "java.lang.Boolean",
+      "description": "是否允许重置统计结果."
+    },
+    {
+      "name": "spring.datasource.notFullTimeoutRetryCount",
+      "type": "java.lang.Integer",
+      "description": "连接池未满时的超时重试次数."
+    },
+    {
+      "name": "spring.datasource.maxWaitThreadCount",
+      "type": "java.lang.Integer",
+      "description": "最大等待线程数."
+    },{
+      "name": "spring.datasource.failFast",
+      "type": "java.lang.Boolean",
+      "description": "快速失败."
+    },
+    {
+      "name": "spring.datasource.druid.maxActive",
+      "type": "java.lang.String",
+      "description": "数据源最大连接数."
+    },
+    {
+      "name": "spring.datasource.druid.minIdle",
+      "type": "java.lang.String",
+      "description": "数据源最小空闲连接数."
+    },
+    {
+      "name": "spring.datasource.druid.initialSize",
+      "type": "java.lang.String",
+      "description": "数据源初始连接数."
+    },
+    {
+      "name": "spring.datasource.druid.maxWait",
+      "type": "java.lang.String",
+      "description": "连接最长等待时间."
+    },
+    {
+      "name": "spring.datasource.druid.validationQuery",
+      "type": "java.lang.String",
+      "description": "连接有效性验证SQL."
+    },
+    {
+      "name": "spring.datasource.druid.removeAbandoned",
+      "type": "java.lang.String",
+      "description": "Description for spin.datasource.druid.removeAbandoned."
+    },
+    {
+      "name": "spring.datasource.druid.removeAbandonedTimeout",
+      "type": "java.lang.String",
+      "description": "Description for spin.datasource.druid.removeAbandonedTimeout."
+    },
+    {
+      "name": "spring.datasource.druid.openSessionInView",
+      "type": "java.lang.String",
+      "description": "Description for spin.datasource.druid.openSessionInView."
+    }
+  ]
+}

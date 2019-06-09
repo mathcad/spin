@@ -1,0 +1,50 @@
+plugins {
+    id 'java-library'
+}
+
+description = '数据访问模块核心依赖,脱离于具体的DAO层实现，只定义必须的接口与通用工具'
+version = '2.1.33-SNAPSHOT'
+def artifactId = 'spin-data-core'
+
+ext {
+    junitJupiterVersion = '5.4.2'
+    springVersion = '5.1.7.RELEASE'
+    springDataRedisVersion = '2.1.8.RELEASE'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+install {
+    repositories.mavenInstaller {
+        pom.version = "$project.version"
+        pom.artifactId = "$artifactId"
+        pom.groupId = "$project.group"
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "http://139.199.59.195:8081/repository/ne/") {
+                authentication(userName: "admin", password: "admin123")
+            }
+            pom.version = "$project.version"
+            pom.artifactId = "$artifactId"
+            pom.groupId = "$project.group"
+        }
+    }
+}
+
+dependencies {
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
+
+//    data
+    api group: 'org.springframework', name: 'spring-tx', version: springVersion
+    api group: 'org.mathcat', name: 'spin-core', version: "$project.version"
+    api group: 'javax.transaction', name: 'javax.transaction-api', version: '1.2'
+
+    compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
+}

@@ -1,8 +1,8 @@
 package org.spin.data.sql;
 
 import org.junit.jupiter.api.Test;
+import org.spin.core.trait.IntEvaluatable;
 import org.spin.core.util.MapUtils;
-import org.spin.data.core.UserEnumColumn;
 import org.spin.data.sql.resolver.BeetlResolver;
 import org.spin.data.sql.resolver.TemplateResolver;
 
@@ -38,7 +38,7 @@ public class BeetlTest {
         System.out.println(resolver.resolve("1", template, MapUtils.ofMap("value", 3, "flag", true), null));
     }
 
-    public enum Type implements UserEnumColumn {
+    public enum Type implements IntEvaluatable {
         C(1), D(2);
 
         private int value;

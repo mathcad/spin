@@ -1,10 +1,10 @@
 package org.spin.data.gson.adapter;
 
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 import org.hibernate.collection.internal.PersistentBag;
 import org.spin.core.gson.MatchableTypeAdapter;
+import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.gson.stream.JsonReader;
+import org.spin.core.gson.stream.JsonWriter;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

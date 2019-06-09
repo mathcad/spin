@@ -3,11 +3,11 @@ plugins {
 }
 
 description = '微信模块'
-version = '2.1.26-SNAPSHOT'
+version = '2.1.33-SNAPSHOT'
 def artifactId = 'spin-wx'
 
 ext {
-    junitJupiterVersion = '5.3.2'
+    junitJupiterVersion = '5.4.2'
 }
 
 test {

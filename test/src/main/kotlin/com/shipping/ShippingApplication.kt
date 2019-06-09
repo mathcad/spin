@@ -1,20 +1,18 @@
 package com.shipping
 
 import com.shipping.internal.InfoCache
-import org.spin.boot.annotation.EnableIdGenerator
 import org.spin.boot.annotation.EnableSecretManager
-import org.spin.boot.properties.DruidDataSourceProperties
+import org.spin.boot.datasource.annotation.EnableDataSource
+import org.spin.boot.datasource.annotation.EnableIdGenerator
+import org.spin.boot.datasource.option.DataSourceType
 import org.spin.core.SpinContext
 import org.spin.core.security.RSA
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.core.env.Environment
-import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
@@ -25,12 +23,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
  *
  * @author xuweinan
  */
-@SpringBootApplication(scanBasePackages = ["com.shipping"])
-@EnableAspectJAutoProxy(proxyTargetClass = true)
-@EnableTransactionManagement(proxyTargetClass = true)
-@EnableConfigurationProperties(DruidDataSourceProperties::class)
-@EnableSecretManager
 @EnableIdGenerator
+@EnableDataSource(DataSourceType.DRUID)
+@EnableSecretManager
+@SpringBootApplication
 class ShippingApplication : WebMvcConfigurer {
 
     @Autowired

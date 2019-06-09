@@ -1,0 +1,125 @@
+{
+  "groups": [
+    {
+      "name": "swagger2",
+      "type": "org.spin.common.config.properties.Swagger2Properties",
+      "sourceType": "org.spin.common.config.properties.Swagger2Properties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.auth.strict",
+      "type": "java.lang.Boolean",
+      "description": "是否开启WEB AUTH严格模式, 默认为true"
+    },
+    {
+      "name": "swagger2.base-package",
+      "type": "java.lang.String",
+      "description": "Swagger2的扫描包配置 (多个包用 \",\"隔开)",
+      "sourceType": "org.spin.common.config.properties.Swagger2Properties"
+    },
+    {
+      "name": "swagger2.enable",
+      "type": "java.lang.Boolean",
+      "description": "是否开启Swagger2",
+      "sourceType": "org.spin.common.config.properties.Swagger2Properties"
+    },
+    {
+      "name": "swagger2.title",
+      "type": "java.lang.String",
+      "description": "Swagger2的文档标题",
+      "sourceType": "org.spin.common.config.properties.Swagger2Properties"
+    },
+    {
+      "name": "swagger2.contact-name",
+      "type": "java.lang.String",
+      "description": "项目联系人",
+      "sourceType": "org.spin.common.config.properties.Swagger2Properties"
+    },
+    {
+      "name": "swagger2.contact-url",
+      "type": "java.lang.String",
+      "description": "项目首页",
+      "sourceType": "org.spin.common.config.properties.Swagger2Properties"
+    },
+    {
+      "name": "swagger2.contact-email",
+      "type": "java.lang.String",
+      "description": "项目联系邮箱",
+      "sourceType": "org.spin.common.config.properties.Swagger2Properties"
+    },
+    {
+      "name": "swagger2.version",
+      "type": "java.lang.String",
+      "description": "项目版本",
+      "sourceType": "org.spin.common.config.properties.Swagger2Properties"
+    },
+    {
+      "name": "swagger2.description",
+      "type": "java.lang.String",
+      "description": "项目描述",
+      "sourceType": "org.spin.common.config.properties.Swagger2Properties"
+    },
+    {
+      "name": "swagger2.service-url",
+      "type": "java.lang.String",
+      "description": "服务URL",
+      "sourceType": "org.spin.common.config.properties.Swagger2Properties"
+    },
+    {
+      "name": "app.id",
+      "type": "java.lang.String",
+      "description": "Apollo应用ID"
+    },
+    {
+      "name": "apollo.bootstrap.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用Apollo"
+    },
+    {
+      "name": "apollo.bootstrap.namespaces",
+      "type": "java.lang.String",
+      "description": "Apollo的命名空间，多个用\",\"隔开"
+    },
+    {
+      "name": "apollo.bootstrap.eagerLoad.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否提前加载Apollo"
+    },
+    {
+      "name": "apollo.meta",
+      "type": "java.lang.String",
+      "description": "默认注册中心地址"
+    },
+    {
+      "name": "dev.meta",
+      "type": "java.lang.String",
+      "description": "开发环境注册中心地址"
+    },
+    {
+      "name": "fat.meta",
+      "type": "java.lang.String",
+      "description": "测试环境注册中心地址"
+    },
+    {
+      "name": "uat.meta",
+      "type": "java.lang.String",
+      "description": "演示环境注册中心地址"
+    },
+    {
+      "name": "pro.meta",
+      "type": "java.lang.String",
+      "description": "生产环境注册中心地址"
+    },
+    {
+      "name": "feign.sentinel.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Feign客户端是否启用Sentinel"
+    },
+    {
+      "name": "spring.redis.nodes",
+      "type": "java.lang.String",
+      "description": "redis单机与集群无缝切换注解"
+    }
+  ]
+}

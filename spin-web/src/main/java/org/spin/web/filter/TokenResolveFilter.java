@@ -35,7 +35,7 @@ public class TokenResolveFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        String token = request.getParameter("token");
+        String token = request.getParameter("Authorization");
         if (StringUtils.isNotBlank(token)) {
             try {
                 secretManager.bindCurrentSession(token);
