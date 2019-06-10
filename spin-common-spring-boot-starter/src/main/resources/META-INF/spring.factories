@@ -5,7 +5,4 @@ org.spin.common.config.MybatisPlusAutoConfiguration,\
 org.spin.common.config.Swagger2AutoConfiguration, \
 org.spin.common.config.WebMvcAutoConfiguration, \
 org.spin.common.config.FeignAutoConfiguration, \
-org.spin.common.config.RedisExtendsAutoConfiguration,\
-org.spin.common.log.LogGeneral,\
-org.spin.common.redis.RedisAloneClusterConfig,\
-org.spin.common.redis.RedisUtil
+org.spin.common.config.RedisExtendsAutoConfiguration

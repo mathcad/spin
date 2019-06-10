@@ -38,11 +38,6 @@ public class ZookeeperDistributedLock implements DistributedLock {
     private static final String LOCK_NAME = "lock-";
 
     /**
-     * 最大重试次数
-     */
-    private static final int MAX_RETRY_COUNT = 10;
-
-    /**
      * 当前线程上的锁实例
      */
     private ThreadLocal<Map<String, String>> currentLock = ThreadLocal.withInitial(HashMap::new);
@@ -58,7 +53,8 @@ public class ZookeeperDistributedLock implements DistributedLock {
 
     @Override
     public boolean lock(String key, long expire, int retryTimes, long sleepMillis) {
-        return internalLock(key, expire, retryTimes);
+        currentLock.get().put(key, attemptLock(key, expire, retryTimes));
+        return currentLock.get().get(key) != null;
     }
 
     @Override
@@ -70,6 +66,57 @@ public class ZookeeperDistributedLock implements DistributedLock {
         return true;
     }
 
+    /**
+     * 尝试获取锁
+     *
+     * @param key           锁的key
+     * @param timeoutMillis 超时时间
+     * @return 锁实例id
+     */
+    private String attemptLock(String key, long timeoutMillis, int retryTimes) {
+        final long startMillis = System.currentTimeMillis();
+        final Long millisToWait = timeoutMillis > 0 ? timeoutMillis : null;
+
+        String lockNode = null;
+        boolean hasTheLock = false;
+        boolean isDone = false;
+
+        //网络闪断需要重试一试
+        while (!isDone) {
+            isDone = true;
+
+            try {
+                //createLockNode用于在locker（basePath持久节点）下创建客户端要获取锁的[临时]顺序节点
+                lockNode = createLockNode(key);
+
+                /*
+                 * 该方法用于判断自己是否获取到了锁，即自己创建的顺序节点在locker的所有子节点中是否最小
+                 * 如果没有获取到锁，则等待其它客户端锁的释放，并且稍后重试直到获取到锁或者超时
+                 */
+                hasTheLock = waitToLock(key, lockNode, startMillis, millisToWait);
+
+            } catch (ZkNoNodeException e) {
+                if (retryTimes-- > -1) {
+                    isDone = false;
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        if (hasTheLock) {
+            return lockNode;
+        }
+
+        return null;
+    }
+
+    /**
+     * 在指定的key下创建自增的lock实例节点
+     *
+     * @param key 锁的key
+     * @return 锁实例
+     */
     private String createLockNode(String key) {
         String path = ROOT_PATH + "/" + key;
         if (!client.exists(path)) {
@@ -88,14 +135,13 @@ public class ZookeeperDistributedLock implements DistributedLock {
      * @param millisToWait 等待时间
      * @return 是否获得锁
      */
-    private boolean waitToLock(String key, String lockNode, long startMillis, Long millisToWait, int retryTimes) {
+    private boolean waitToLock(String key, String lockNode, long startMillis, Long millisToWait) {
 
         boolean haveTheLock = false;
         boolean needRelease = false;
 
-        int retryCnt = retryTimes > 0 ? retryTimes : 0;
         try {
-            while (!haveTheLock && retryCnt-- > -1) {
+            while (!haveTheLock) {
                 //该方法实现获取locker节点下的所有顺序节点，并且从小到大排序
                 List<String> children = getSortedChildren(key);
                 String sequenceNodeName = lockNode.substring(ROOT_PATH.length() + key.length() + 2);
@@ -176,20 +222,6 @@ public class ZookeeperDistributedLock implements DistributedLock {
         return haveTheLock;
     }
 
-
-    private long getLockNodeNumber(String str) {
-        String num = str.substring(str.lastIndexOf('/') + 6);
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < num.length(); i++) {
-            if (num.charAt(i) != '0') {
-                sb.append(num.charAt(i));
-            }
-        }
-
-        return Long.parseLong(sb.toString());
-    }
-
-
     /**
      * 获取指定键下排好序的锁等待列表
      *
@@ -199,10 +231,9 @@ public class ZookeeperDistributedLock implements DistributedLock {
     private List<String> getSortedChildren(String key) {
         String path = ROOT_PATH + "/" + key;
         try {
-            List<String> children = client.getChildren(path);
-            children.sort(Comparator.comparing(this::getLockNodeNumber));
-            return children;
-
+            List<String> allNodes = client.getChildren(path);
+            allNodes.sort(Comparator.comparing(this::getLockNodeNumber));
+            return allNodes;
         } catch (ZkNoNodeException e) {
             logger.debug("指定的锁[{}]不存在，即将创建", key);
             client.createPersistent(path, true);
@@ -211,54 +242,20 @@ public class ZookeeperDistributedLock implements DistributedLock {
     }
 
     /**
-     * 尝试获取锁
+     * 从锁实例名称中获取编号
      *
-     * @param key           锁的key
-     * @param timeoutMillis 超时时间
-     * @return 锁实例id
+     * @param nodePath 锁实例全名
+     * @return 编号
      */
-    private String attemptLock(String key, long timeoutMillis, int retryTimes) {
-        final long startMillis = System.currentTimeMillis();
-        final Long millisToWait = timeoutMillis > 0 ? timeoutMillis : null;
-
-        String lockNode = null;
-        boolean hasTheLock = false;
-        boolean isDone = false;
-        int retryCount = 0;
-
-        //网络闪断需要重试一试
-        while (!isDone) {
-            isDone = true;
-
-            try {
-                //createLockNode用于在locker（basePath持久节点）下创建客户端要获取锁的[临时]顺序节点
-                lockNode = createLockNode(key);
-
-                /*
-                 * 该方法用于判断自己是否获取到了锁，即自己创建的顺序节点在locker的所有子节点中是否最小
-                 * 如果没有获取到锁，则等待其它客户端锁的释放，并且稍后重试直到获取到锁或者超时
-                 */
-                hasTheLock = waitToLock(key, lockNode, startMillis, millisToWait, retryTimes);
-
-            } catch (ZkNoNodeException e) {
-                if (retryCount++ < MAX_RETRY_COUNT) {
-                    isDone = false;
-                } else {
-                    throw e;
-                }
+    private long getLockNodeNumber(String nodePath) {
+        String num = nodePath.substring(nodePath.lastIndexOf('/') + 6);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < num.length(); i++) {
+            if (num.charAt(i) != '0') {
+                sb.append(num.charAt(i));
             }
         }
 
-        if (hasTheLock) {
-            return lockNode;
-        }
-
-        return null;
-    }
-
-    private boolean internalLock(String key, long timeoutMillis, int retryTimes) {
-        //如果ourLockPath不为空则认为获取到了锁，具体实现细节见attemptLock的实现
-        currentLock.get().put(key, attemptLock(key, timeoutMillis, retryTimes));
-        return currentLock.get().get(key) != null;
+        return Long.parseLong(sb.toString());
     }
 }
