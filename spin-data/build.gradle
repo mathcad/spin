@@ -52,7 +52,9 @@ dependencies {
     api group: 'org.springframework', name: 'spring-context', version: springVersion
     api group: 'org.springframework', name: 'spring-orm', version: springVersion
     api group: 'org.springframework', name: 'spring-oxm', version: springVersion
+    api group: 'org.springframework', name: 'spring-tx', version: springVersion
     api group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
+    api group: 'javax.transaction', name: 'javax.transaction-api', version: '1.2'
 
     compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
     compileOnly group: 'org.freemarker', name: 'freemarker', version: freemarkerVersion

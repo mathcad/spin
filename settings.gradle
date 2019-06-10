@@ -1,4 +1,5 @@
 rootProject.name = 'spin'
+include 'spin-common-spring-boot-starter'
 include 'spin-core'
 include 'spin-data'
 include 'spin-data-spring-boot-starter'
