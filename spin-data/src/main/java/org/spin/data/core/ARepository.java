@@ -396,9 +396,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public void logicDelete(T entity) {
         Assert.notNull(entity, "The entity to be deleted is null");
         if (entity instanceof AbstractEntity) {
-            ((AbstractEntity) entity).setValid(false);
+            entity.setValid(false);
             merge(entity);
-            evict(entity);
         }
     }
 
@@ -412,9 +411,8 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         T entity = get(Assert.notNull(k, ID_MUST_NOT_BE_NULL));
         Assert.notNull(entity, "Entity not found, or was deleted: [" + this.entityClazz.getSimpleName() + "|" + k + "]");
         if (entity instanceof AbstractEntity) {
-            ((AbstractEntity) entity).setValid(false);
+            entity.setValid(false);
             merge(entity);
-            evict(entity);
         }
     }
 
@@ -1174,6 +1172,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         }
     }
 
+    @SuppressWarnings("CastCanBeRemovedNarrowingVariableType")
     private CriteriaBuilder<T> compileCondition(QueryParam qp) {
         Assert.notNull(qp, "查询条件参数不能为null");
         CriteriaBuilder<?> cb;

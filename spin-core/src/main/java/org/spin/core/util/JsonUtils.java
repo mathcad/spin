@@ -423,14 +423,9 @@ public abstract class JsonUtils {
         patterns[0] = null != pattern && pattern.length > 0 ? pattern[0] : DEFAULT_DATE_PATTERN;
         patterns[1] = null != pattern && pattern.length > 1 ? pattern[1] : DEFAULT_LOCAL_DATE_PATTERN;
         patterns[2] = null != pattern && pattern.length > 2 ? pattern[2] : DEFAULT_LOCAL_TIME_PATTERN;
-        try {
-            @SuppressWarnings("unchecked")
-            TypeAdapterFactory factory = new SpinTypeAdapterFactory(patterns[0], patterns[1], patterns[2]);
-            builder.registerTypeAdapterFactory(factory);
-            builder.setDateFormat(patterns[0]);
-        } catch (Exception ignore) {
-            logger.info("Spin Enhance package not imported");
-        }
+        TypeAdapterFactory factory = new SpinTypeAdapterFactory(patterns[0], patterns[1], patterns[2]);
+        builder.registerTypeAdapterFactory(factory);
+        builder.setDateFormat(patterns[0]);
         try {
             Class<?> queryParamCls = ClassUtils.getClass("org.spin.data.query.QueryParam");
             @SuppressWarnings("unchecked")

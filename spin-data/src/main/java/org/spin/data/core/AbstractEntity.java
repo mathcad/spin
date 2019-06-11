@@ -1,7 +1,7 @@
 package org.spin.data.core;
 
-import org.spin.data.util.EntityUtils;
 import org.spin.core.gson.annotation.PreventOverflow;
+import org.spin.data.util.EntityUtils;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -36,13 +36,13 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      */
     @Column
     @PreventOverflow
-    private Long createUserId;
+    private long createUserId = 0L;
 
     /**
      * 记录创建者用户名
      */
     @Column(length = 32)
-    private String createUserName;
+    private String createUserName = "";
 
     /**
      * 创建时间，禁止更改
@@ -55,13 +55,13 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      */
     @Column
     @PreventOverflow
-    private Long updateUserId;
+    private Long updateUserId = 0L;
 
     /**
      * 记录更新者用户名
      */
     @Column(length = 32)
-    private String updateUserName;
+    private String updateUserName = "";
 
     /**
      * 最后更新时间
@@ -73,7 +73,7 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * 版本号用于并发控制
      */
     @Version
-    private int version;
+    private int version = 0;
 
     /**
      * 排序号
