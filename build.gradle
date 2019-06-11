@@ -44,7 +44,7 @@ subprojects {
 
     repositories {
         mavenLocal()
-        maven { url = "http://192.168.12.151:8081/repository/mathcat/" }
+        maven { url = "http://60.169.170.69:8081/repository/mathcat/" }
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
         mavenCentral()
     }
