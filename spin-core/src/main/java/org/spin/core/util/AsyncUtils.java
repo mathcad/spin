@@ -11,7 +11,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAccumulator;
 import java.util.stream.Collectors;
@@ -476,12 +485,12 @@ public abstract class AsyncUtils {
         /**
          * 线程池所有任务累计执行时间
          */
-        private LongAccumulator accrueExecTime = new LongAccumulator((x, y) -> x + y, 0L);
+        private LongAccumulator accrueExecTime = new LongAccumulator(Long::sum, 0L);
 
         /**
          * 线程池所有任务累计等待时间
          */
-        private LongAccumulator accrueWaitTime = new LongAccumulator((x, y) -> x + y, 0L);
+        private LongAccumulator accrueWaitTime = new LongAccumulator(Long::sum, 0L);
 
         /**
          * 线程池单个任务最大执行时间
