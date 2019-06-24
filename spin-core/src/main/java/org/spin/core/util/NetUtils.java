@@ -4,6 +4,7 @@ import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
@@ -309,6 +310,40 @@ public abstract class NetUtils {
     // ----------------------------------------------------------------------------------------- Private method start
 
     /**
+     * 获取本地网络信息
+     *
+     * @return 网络信息
+     */
+    public static List<NetAddress> getNetworkInfo() {
+        return getNetworkInterfaces().stream().filter(it -> {
+            try {
+                return !it.isLoopback();
+            } catch (SocketException e) {
+                return false;
+            }
+        }).flatMap(it -> it.getInterfaceAddresses().stream()).map(it -> {
+            byte[] address = it.getAddress().getAddress();
+            byte[] segment = new byte[address.length];
+            int bytes = it.getNetworkPrefixLength() / 8;
+            int bits = it.getNetworkPrefixLength() % 8;
+            for (int i = 0; i < address.length; i++) {
+                if (i < bytes) {
+                    segment[i] = address[i];
+                } else if (i == bytes) {
+                    segment[i] = (byte) (address[i] >>> (8 - bits));
+                } else {
+                    segment[i] = 0;
+                }
+            }
+            try {
+                return new NetAddress(InetAddress.getByAddress(segment), it.getNetworkPrefixLength());
+            } catch (UnknownHostException e) {
+                throw new SimplifiedException(e);
+            }
+        }).collect(Collectors.toList());
+    }
+
+    /**
      * 指定IP的long是否在指定范围内
      *
      * @param userIp 用户IP
@@ -320,4 +355,38 @@ public abstract class NetUtils {
         return (userIp >= begin) && (userIp <= end);
     }
     // ----------------------------------------------------------------------------------------- Private method end
+
+    public static class NetAddress {
+        private InetAddress address;
+        private short netMask;
+
+        public NetAddress(InetAddress address, short netMask) {
+            this.address = address;
+            this.netMask = netMask;
+        }
+
+        public InetAddress getAddress() {
+            return address;
+        }
+
+        public void setAddress(InetAddress address) {
+            this.address = address;
+        }
+
+        public short getNetMask() {
+            return netMask;
+        }
+
+        public void setNetMask(short netMask) {
+            this.netMask = netMask;
+        }
+
+        public boolean isIpV4() {
+            return address instanceof Inet4Address;
+        }
+
+        public boolean isIpV6() {
+            return address instanceof Inet6Address;
+        }
+    }
 }
