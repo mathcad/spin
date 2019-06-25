@@ -3,12 +3,12 @@ package org.spin.common.feign;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.common.throwable.BizException;
 import org.spin.common.web.RestfulResponse;
 import org.spin.core.ErrorCode;
-import org.spin.core.ParameterizedTypeImpl;
 import org.spin.core.gson.internal.$Gson$Types;
-import org.spin.core.util.CollectionUtils;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.http.HttpHeaders;
@@ -34,6 +34,7 @@ import static org.spin.common.feign.FeignUtils.getHttpHeaders;
  * @author xuweinan
  */
 public class RestfulHandledDecoder implements Decoder {
+    private static final Logger logger = LoggerFactory.getLogger(RestfulHandledDecoder.class);
 
     private ObjectFactory<HttpMessageConverters> messageConverters;
 
@@ -59,6 +60,8 @@ public class RestfulHandledDecoder implements Decoder {
             Object data = extractor.extractData(new FeignResponseAdapter(response));
             if (data instanceof RestfulResponse) {
                 if (((RestfulResponse) data).getStatus() != ErrorCode.OK.getCode()) {
+                    logger.error("Path: {}", ((RestfulResponse) data).getPath());
+                    logger.error("Error Message: {}", ((RestfulResponse) data).getError());
                     throw new BizException(new ErrorCode(((RestfulResponse) data).getStatus(), ""), ((RestfulResponse) data).getMessage());
                 }
                 if (wrapped) {

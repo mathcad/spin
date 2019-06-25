@@ -1,5 +1,7 @@
 package org.spin.common.web.annotation;
 
+import org.spin.common.web.ScopeType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -35,4 +37,17 @@ public @interface Auth {
      * @return 所需权限列表
      */
     String[] permissions() default {};
+
+    /**
+     * 接口可见范围
+     * <pre>
+     *     OPEN        公开调用
+     *     INTERNAL    内部调用，意味着该接口仅能由服务间相互调用，不允许由网关分发。
+     *     OPEN_UNAUTH 公开调用，且内部调用时不验证用户权限(无论是否指定auth)
+     * </pre>
+     *
+     * @return 是否仅内部调用
+     * @see ScopeType
+     */
+    ScopeType scope() default ScopeType.OPEN;
 }

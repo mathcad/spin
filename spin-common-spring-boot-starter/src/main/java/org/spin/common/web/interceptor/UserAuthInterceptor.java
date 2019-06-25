@@ -2,9 +2,11 @@ package org.spin.common.web.interceptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.common.internal.NetworkUtils;
 import org.spin.common.util.PermissionUtils;
 import org.spin.common.vo.CurrentUser;
 import org.spin.common.web.RestfulResponse;
+import org.spin.common.web.ScopeType;
 import org.spin.common.web.annotation.Auth;
 import org.spin.core.ErrorCode;
 import org.spin.core.util.JsonUtils;
@@ -51,6 +53,12 @@ public class UserAuthInterceptor implements HandlerInterceptor {
             return false;
         }
 
+        String referer = StringUtils.toStringEmpty(request.getHeader(HttpHeaders.REFERER));
+        boolean internal = internalRequest(request);
+        if (authAnno.scope() == ScopeType.INTERNAL && (referer.endsWith("GATEWAY") || !internal)) {
+            responseWrite(response, ErrorCode.ACCESS_DENINED, "该接口仅允许内部调用: " + request.getRequestURI());
+            return false;
+        }
         // 用户信息
         Enumeration<String> enumeration = request.getHeaders(HttpHeaders.FROM);
         CurrentUser currentUser = null;
@@ -62,6 +70,9 @@ public class UserAuthInterceptor implements HandlerInterceptor {
         }
 
         boolean auth = authAnno.value();
+        if (auth && authAnno.scope() == ScopeType.OPEN_UNAUTH) {
+            auth = !internal;
+        }
 
         ErrorCode errorCode = null;
         if (null == currentUser) {
@@ -113,6 +124,16 @@ public class UserAuthInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         // do nothing
+    }
+
+    /**
+     * 判断请求是否来自内部
+     *
+     * @param request 请求
+     * @return 是否来自内部
+     */
+    private boolean internalRequest(HttpServletRequest request) {
+        return NetworkUtils.inSameVlan(request.getRemoteHost()) || NetworkUtils.inSameVlan(request.getRemoteAddr());
     }
 
     private void responseWrite(HttpServletResponse response, ErrorCode errorCode, String... message) {

@@ -1,5 +1,6 @@
 package org.spin.common.web.annotation;
 
+import org.spin.common.web.ScopeType;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -45,6 +46,20 @@ public @interface HeadApi {
      */
     @AliasFor(annotation = Auth.class, attribute = "permissions")
     String[] permissions() default {};
+
+    /**
+     * 接口可见范围
+     * <pre>
+     *     OPEN        公开调用
+     *     INTERNAL    内部调用，意味着该接口仅能由服务间相互调用，不允许由网关分发。
+     *     OPEN_UNAUTH 公开调用，且内部调用时不验证用户权限(无论是否指定auth)
+     * </pre>
+     *
+     * @return 是否仅内部调用
+     * @see ScopeType
+     */
+    @AliasFor(annotation = Auth.class, attribute = "scope")
+    ScopeType scope() default ScopeType.OPEN;
 
     /**
      * RequestMapping的名称

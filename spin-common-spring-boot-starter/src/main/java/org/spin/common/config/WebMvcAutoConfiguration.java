@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * <p>Created by wangy on 2019/3/13.</p>
  */
 @Configuration
-@ComponentScan(basePackages = {"org.spin.common.web.handler", "org.spin.common.service", "org.spin.common.config"})
+@ComponentScan(basePackages = {"org.spin.common.web.handler", "org.spin.common.service"})
 public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
     private static final JsonParser jsonParser = new JsonParser();
@@ -94,7 +94,7 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new UserAuthInterceptor()).addPathPatterns("/**")
-            .excludePathPatterns("/swagger-ui.html/**", "/webjars/**", "/swagger-resources/**", "/v2/api-docs", "/error");
+            .excludePathPatterns("/swagger-ui.html/**", "/webjars/**", "/swagger-resources/**", "/v2/api-docs", "/error", "/job/executor/**");
     }
 
     @Bean
