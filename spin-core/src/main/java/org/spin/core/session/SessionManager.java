@@ -17,7 +17,10 @@ import java.util.Optional;
  *
  * @author xuweinan
  * @version V1.0
+ * @version 1.0
+ * @deprecated 不建议再使用，有Session请自行选择相关框架
  */
+@Deprecated
 public abstract class SessionManager {
     private static final Logger logger = LoggerFactory.getLogger(SessionManager.class);
 

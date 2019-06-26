@@ -71,4 +71,10 @@ public class TokenInfo implements Serializable {
     public int hashCode() {
         return Objects.hash(identifier, token);
     }
+
+
+    @Override
+    public String toString() {
+        return identifier + '|' + token + '|' + sourceKey + '|' + generateTime;
+    }
 }

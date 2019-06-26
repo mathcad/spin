@@ -10,7 +10,10 @@ import java.util.Collection;
  * <p>Created by xuweinan on 2017/10/17.</p>
  *
  * @author xuweinan
+ * @version 1.0
+ * @deprecated 不建议再使用，有Session请自行选择相关框架
  */
+@Deprecated
 public interface Session {
 
     /**

@@ -11,6 +11,7 @@ import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.throwable.SimplifiedException;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.function.Function;
@@ -35,7 +36,6 @@ public final class Http<T extends HttpRequestBase> {
 
     private static final String SCHEMA = "http://";
 
-
     private Http(Function<URI, T> requestSuppiler) {
         this.requestSuppiler = requestSuppiler;
     }
@@ -43,11 +43,15 @@ public final class Http<T extends HttpRequestBase> {
     // region init and getter/setter
 
     public static void initSync() {
-        HttpExecutor.initSync(200, 40);
+        HttpExecutor.initSync(200, 40, null, null, null);
     }
 
-    public static void initSync(int maxTotal, int maxPerRoute) {
-        HttpExecutor.initSync(maxTotal, maxPerRoute);
+    public static void initSync(InputStream certsInput, String password, String algorithm) {
+        HttpExecutor.initSync(200, 40, certsInput, password, algorithm);
+    }
+
+    public static void initSync(int maxTotal, int maxPerRoute, InputStream certsInput, String password, String algorithm) {
+        HttpExecutor.initSync(maxTotal, maxPerRoute, certsInput, password, algorithm);
     }
 
     public static void initAync() {

@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.1.35-SNAPSHOT'
+version = '2.1.36-SNAPSHOT'
 def artifactId = 'spin-core'
 
 ext {

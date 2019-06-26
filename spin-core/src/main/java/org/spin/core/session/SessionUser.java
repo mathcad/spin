@@ -13,9 +13,11 @@ import java.time.LocalDateTime;
  * </p>
  *
  * @author xuweinan
- * @version V1.0
+ * @version 1.0
  * @see Serializable
+ * @deprecated 不建议再使用，有Session请自行选择相关框架
  */
+@Deprecated
 public interface SessionUser extends Serializable {
     Long getId();
 

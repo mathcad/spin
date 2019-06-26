@@ -38,7 +38,11 @@ import java.util.Map;
 
 /**
  * 简单的session实现，用于内存中
+ *
+ * @version 1.0
+ * @deprecated 不建议再使用，有Session请自行选择相关框架
  */
+@Deprecated
 public class SimpleSession implements Session, Serializable {
 
     private static final long serialVersionUID = -7125642695178165650L;

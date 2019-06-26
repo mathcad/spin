@@ -4,11 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.security.RSA;
-import org.spin.core.session.SessionManager;
-import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.DateUtils;
-import org.spin.core.util.StringUtils;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -51,8 +48,6 @@ public class SecretManager {
      */
     public void clearTokenKeyCache() {
         logger.info("Clear expired token and key...");
-        secretDao.collectExpiredToken(tokenExpiredIn).forEach(t -> SessionManager.removeSession(t.getToken()));
-        secretDao.collectExpiredKey(keyExpiredIn).forEach(k -> secretDao.getTokenByKey(k.getKey()).forEach(t -> SessionManager.removeSession(t.getToken())));
         secretDao.clearExpiredToken(tokenExpiredIn);
         secretDao.clearExpiredKey(keyExpiredIn);
         logger.info("Expired token and key was removed successful...");
@@ -72,29 +67,10 @@ public class SecretManager {
         Long generateTime = tokenInfo.getGenerateTime();
         // token过期，移除相关session并抛出异常，否则返回token对应的UserId
         if (DateUtils.isTimeOut(generateTime, tokenExpiredIn)) {
-            SessionManager.removeSession(tokenStr);
             throw new SimplifiedException(ErrorCode.TOKEN_EXPIRED);
         } else {
             return tokenInfo;
         }
-    }
-
-    /**
-     * 向当前线程绑定session
-     *
-     * @param tokenStr token字符串
-     */
-    public void bindCurrentSession(String tokenStr) {
-        // 解析token
-        getTokenInfo(tokenStr);
-
-        // 设置SessionId
-        SessionManager.setCurrentSessionId(tokenStr);
-
-        // 设置CurrentUser
-        SessionUser user = (SessionUser) SessionManager.getCurrentSession().getAttribute(SessionManager.USER_SESSION_KEY);
-        user.setSessionId(tokenStr);
-        SessionManager.setCurrentUser(user);
     }
 
     /**
@@ -161,7 +137,6 @@ public class SecretManager {
         KeyInfo keyInfo = getKeyInfo(keyStr);
         // 生成新token
         String newToken = UUID.randomUUID().toString();
-        SessionManager.extendSession(oldToken, newToken);
         invalidTokenByTokenStr(oldToken);
         return secretDao.saveToken(keyInfo.getIdentifier(), newToken, keyStr);
     }
@@ -193,7 +168,7 @@ public class SecretManager {
      * @param identifier 用户标识
      */
     public void invalidToken(String identifier) {
-        secretDao.removeToken(identifier).forEach(t -> SessionManager.removeSession(t.getToken()));
+        secretDao.removeToken(identifier);
     }
 
     /**
@@ -203,7 +178,6 @@ public class SecretManager {
      */
     public void invalidTokenByTokenStr(String tokenStr) {
         secretDao.removeTokenByTokenStr(tokenStr);
-        SessionManager.removeSession(tokenStr);
     }
 
     /**
@@ -212,7 +186,7 @@ public class SecretManager {
      * @param identifier 用户标识
      */
     public void invalidKey(String identifier) {
-        secretDao.removeToken(identifier).forEach(t -> SessionManager.removeSession(t.getToken()));
+        secretDao.removeToken(identifier);
         secretDao.removeKey(identifier);
     }
 
@@ -222,20 +196,8 @@ public class SecretManager {
      * @param keyStr 密钥字符串
      */
     public void invalidKeyByKeyStr(String keyStr) {
-        secretDao.getTokenByKey(keyStr).forEach(t -> SessionManager.removeSession(t.getToken()));
+        secretDao.getTokenByKey(keyStr);
         secretDao.removeKeyByKey(keyStr);
-    }
-
-    /**
-     * 当前用户登出
-     */
-    public void logout() {
-        String tokenStr = SessionManager.getCurrentSessionId();
-        SessionManager.logout();
-        if (StringUtils.isNotEmpty(tokenStr)) {
-            TokenInfo tokenInfo = getTokenInfo(tokenStr);
-            invalidKeyByKeyStr(tokenInfo.getSourceKey());
-        }
     }
 
     public Long getTokenExpiredIn() {

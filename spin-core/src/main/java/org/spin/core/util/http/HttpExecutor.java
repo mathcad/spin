@@ -12,11 +12,16 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,16 +32,20 @@ import org.spin.core.function.Handler;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.StringUtils;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.UnknownHostException;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
-
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLHandshakeException;
 
 /**
  * 利用Apache HttpClient完成请求
@@ -89,17 +98,51 @@ public abstract class HttpExecutor {
     // region init and getter/setter
 
     public static void initSync() {
-        initSync(200, 40);
+        initSync(200, 40, null, null, null);
     }
 
-    public static void initSync(int maxTotal, int maxPerRoute) {
+    public static void initSync(InputStream certsInput, String password, String algorithm) {
+        initSync(200, 40, certsInput, password, algorithm);
+    }
+
+    public static void initSync(int maxTotal, int maxPerRoute, InputStream certsInput, String password, String algorithm) {
         synchronized (HttpExecutor.class) {
             HttpExecutor.maxTotal = maxTotal;
             HttpExecutor.maxPerRoute = maxPerRoute;
-            PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+
+            SSLConnectionSocketFactory sslConnectionSocketFactory = null;
+            if (null != certsInput && StringUtils.isNotEmpty(algorithm)) {
+                try {
+                    KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+                    KeyStore keyStore = KeyStore.getInstance(algorithm);
+                    keyStore.load(certsInput, StringUtils.trimToEmpty(password).toCharArray());
+
+                    keyManagerFactory.init(keyStore, StringUtils.trimToEmpty(password).toCharArray());
+
+                    SSLContext sslcontext = SSLContexts.custom()
+                        .setProtocol("TLS")
+                        .loadTrustMaterial((chain, authType) -> true)
+                        .build();
+                    sslcontext.init(keyManagerFactory.getKeyManagers(), null, new SecureRandom());
+
+
+                    sslConnectionSocketFactory = new SSLConnectionSocketFactory(
+                        sslcontext.getSocketFactory(),
+                        SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+
+                } catch (Exception e) {
+                    throw new SimplifiedException(e);
+                }
+            }
+            PoolingHttpClientConnectionManager connectionManager = null == sslConnectionSocketFactory ? new PoolingHttpClientConnectionManager() : new PoolingHttpClientConnectionManager(
+                RegistryBuilder.<ConnectionSocketFactory>create()
+                    .register("http", PlainConnectionSocketFactory.getSocketFactory())
+                    .register("https", sslConnectionSocketFactory)
+                    .build());
             connectionManager.setMaxTotal(maxTotal);
             connectionManager.setDefaultMaxPerRoute(maxPerRoute);
-            httpClient = HttpClients.custom().setRetryHandler(defaultHttpRetryHandler).setConnectionManager(connectionManager).build();
+            httpClient = HttpClients.custom().setRetryHandler(defaultHttpRetryHandler).setConnectionManager(connectionManager)
+                .build();
         }
     }
 

@@ -77,4 +77,9 @@ public class KeyInfo implements Serializable {
     public int hashCode() {
         return Objects.hash(key);
     }
+
+    @Override
+    public String toString() {
+        return identifier + "|" + key + "|" + secret + "|" + secretType + "|" + generateTime;
+    }
 }

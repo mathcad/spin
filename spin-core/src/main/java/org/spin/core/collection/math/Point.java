@@ -25,7 +25,7 @@ public class Point {
      *
      * @param coords 坐标序列
      */
-    public Point(Collection<Number> coords) {
+    public Point(Collection<? extends Number> coords) {
         this.coords = new BigDecimal[Assert.notNull(coords, "坐标序列不能为空").size()];
         int scale = 0;
         BigDecimal sum = BigDecimal.ZERO;
@@ -125,7 +125,7 @@ public class Point {
      * 指定维上的投影分量
      *
      * @param axis 维度
-     * @return 指定维上的投影分量
+     * @return 指定维上的投影分量（维数从1开始）
      */
     public BigDecimal projection(int axis) {
         return coords[Assert.inclusiveBetween(1, dimension(), axis, "指定的坐标轴超出维数") - 1];
