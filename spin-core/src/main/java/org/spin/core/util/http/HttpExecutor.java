@@ -92,7 +92,8 @@ public abstract class HttpExecutor {
     private static volatile byte[] certificate;
     private static volatile String password;
     private static volatile String algorithm;
-    private static volatile boolean needReload = true;
+    private static volatile boolean needReloadSync = true;
+    private static volatile boolean needReloadAsync = true;
 
     /**
      * 默认重试机制
@@ -179,7 +180,8 @@ public abstract class HttpExecutor {
 
         public void finishConfigure() {
             if (changed) {
-                needReload = true;
+                needReloadSync = true;
+                needReloadAsync = true;
             }
             reset();
         }
@@ -387,10 +389,10 @@ public abstract class HttpExecutor {
     }
 
     private static void initSync() {
-        if (needReload) {
+        if (needReloadSync) {
             synchronized (HttpExecutor.class) {
-                if (needReload) {
-                    needReload = false;
+                if (needReloadSync) {
+                    needReloadSync = false;
                     SSLConnectionSocketFactory sslConnectionSocketFactory = null;
                     if (null != certificate && StringUtils.isNotEmpty(algorithm)) {
                         try (InputStream certInput = new ByteArrayInputStream(certificate)) {
@@ -417,10 +419,10 @@ public abstract class HttpExecutor {
     }
 
     private static void initAync() {
-        if (needReload) {
+        if (needReloadAsync) {
             synchronized (HttpExecutor.class) {
-                if (needReload) {
-                    needReload = false;
+                if (needReloadAsync) {
+                    needReloadAsync = false;
                     if (null != certificate && StringUtils.isNotEmpty(algorithm)) {
                         try (InputStream certInput = new ByteArrayInputStream(certificate)) {
                             SSLContext sslContext = buildSSLContext(certInput, password, algorithm);
