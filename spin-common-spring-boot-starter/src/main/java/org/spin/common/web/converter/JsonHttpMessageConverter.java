@@ -179,8 +179,8 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
         throws IOException {
 
         Charset charset = getCharset(outputMessage.getHeaders());
-        OutputStreamWriter writer = new OutputStreamWriter(outputMessage.getBody(), charset);
-        try {
+
+        try (OutputStreamWriter writer = new OutputStreamWriter(outputMessage.getBody(), charset)) {
             if (this.jsonPrefix != null) {
                 writer.append(this.jsonPrefix);
             }
@@ -192,7 +192,6 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
             } else {
                 this.gson.toJson(t, writer);
             }
-            writer.close();
         } catch (JsonIOException ex) {
             throw new HttpMessageNotWritableException("Could not write JSON: " + ex.getMessage(), ex);
         }

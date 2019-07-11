@@ -11,16 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAccumulator;
 import java.util.stream.Collectors;
@@ -372,7 +363,7 @@ public abstract class AsyncUtils {
                         this.executor = new ThreadPoolExecutor(corePoolSize, maxPoolSize, keepAliveTimeInMs,
                             timeUnit,
                             queueSize == 0 ? new SynchronousQueue<>() : new LinkedBlockingQueue<>(queueSize),
-                            buildFactory(name, null, null, (thread, throwable) -> {
+                            buildFactory(name, COMMON_POOL_NAME.equals(name) ? true : null, null, (thread, throwable) -> {
                             }),
                             rejectedExecutionHandler);
                         this.info = new ThreadPoolInfo(name, corePoolSize, maxPoolSize, queueSize);

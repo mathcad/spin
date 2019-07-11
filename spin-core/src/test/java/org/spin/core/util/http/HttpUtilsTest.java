@@ -1,6 +1,7 @@
 package org.spin.core.util.http;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 import org.spin.core.util.AsyncUtils;
 import org.spin.core.util.MapUtils;
@@ -24,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * TITLE
@@ -118,16 +121,22 @@ class HttpUtilsTest {
      *
      */
     @Test
-    public void testHttps() throws FileNotFoundException {
+    public void testHttps() throws FileNotFoundException, ExecutionException, InterruptedException {
         try (InputStream certInput = new FileInputStream(new File("C:\\Users\\Mathcat\\Desktop\\apiclient_cert.p12"))) {
-            Http.initSync(certInput, "1530112491", "PKCS12");
+//            Http.initSync(certInput, "1530112491", "PKCS12");
+            Http.configure().withCertificate(certInput, "1530112491", "PKCS12").finishConfigure();
         } catch (IOException e) {
         }
-        String execute = Http.POST.withUrl("https://api.mch.weixin.qq.com/secapi/pay/refund").withXmlBody("<xml><refundFee>10</refundFee><nonce_str>1561452473</nonce_str><out_trade_no>20190621135913442141</out_trade_no><totalFee>10</totalFee><outTradeNo>20190621135913442141</outTradeNo><appid>wxfa3f617e8c84dc09</appid><total_fee>10</total_fee><refund_fee>10</refund_fee><sign>2F118B65923E01D425C2E26E3601A444</sign><mch_id>1530112491</mch_id></xml>").execute();
+        String execute = Http.POST.withUrl("https://api.mch.weixin.qq.com/secapi/pay/refund").timeout(60000).connTimeout(2000).withXmlBody("<xml><refundFee>10</refundFee><nonce_str>1561452473</nonce_str><out_trade_no>20190621135913442141</out_trade_no><totalFee>10</totalFee><outTradeNo>20190621135913442141</outTradeNo><appid>wxfa3f617e8c84dc09</appid><total_fee>10</total_fee><refund_fee>10</refund_fee><sign>2F118B65923E01D425C2E26E3601A444</sign><mch_id>1530112491</mch_id></xml>").execute();
+        System.out.println(execute);
+        Future<HttpResponse> future = Http.POST.withUrl("https://api.mch.weixin.qq.com/secapi/pay/refund").withXmlBody("<xml><refundFee>10</refundFee><nonce_str>1561452473</nonce_str><out_trade_no>20190621135913442141</out_trade_no><totalFee>10</totalFee><outTradeNo>20190621135913442141</outTradeNo><appid>wxfa3f617e8c84dc09</appid><total_fee>10</total_fee><refund_fee>10</refund_fee><sign>2F118B65923E01D425C2E26E3601A444</sign><mch_id>1530112491</mch_id></xml>")
+            .executeAsync(System.out::println, Throwable::printStackTrace);
+        future.get();
 
-        System.out.println(execute);
-        execute = Http.GET.withUrl("https://cn.bing.com/search?q=httpclient+%E5%A4%9A%E4%B8%AA%E8%AF%81%E4%B9%A6&qs=n&form=QBLH&sp=-1&pq=httpclient+%E5%A4%9A%E4%B8%AAvg&sc=0-15&sk=&cvid=06539FD6052F4DFEABAE2CDD0BB60938").execute();
-        System.out.println(execute);
+//        execute = Http.GET.withUrl("https://cn.bing.com/search?q=httpclient+%E5%A4%9A%E4%B8%AA%E8%AF%81%E4%B9%A6&qs=n&form=QBLH&sp=-1&pq=httpclient+%E5%A4%9A%E4%B8%AAvg&sc=0-15&sk=&cvid=06539FD6052F4DFEABAE2CDD0BB60938").execute();
+        Http.GET.withUrl("https://cn.bing.com/search?q=httpclient+%E5%A4%9A%E4%B8%AA%E8%AF%81%E4%B9%A6&qs=n&form=QBLH&sp=-1&pq=httpclient+%E5%A4%9A%E4%B8%AAvg&sc=0-15&sk=&cvid=06539FD6052F4DFEABAE2CDD0BB60938")
+            .executeAsync(System.out::println, Throwable::printStackTrace);
+//        System.out.println(execute);
     }
 
     @Test

@@ -15,12 +15,21 @@ import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.util.PublicSuffixMatcherLoader;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
+import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+import org.apache.http.nio.conn.NoopIOSessionStrategy;
+import org.apache.http.nio.conn.SchemeIOSessionStrategy;
+import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
+import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -30,22 +39,31 @@ import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.Handler;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.IOUtils;
 import org.spin.core.util.StringUtils;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.UnknownHostException;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * 利用Apache HttpClient完成请求
@@ -57,14 +75,24 @@ import java.util.concurrent.Future;
  */
 public abstract class HttpExecutor {
     private static final Logger logger = LoggerFactory.getLogger(HttpExecutor.class);
+    private static final ThreadFactory THREAD_FACTORY = Executors.defaultThreadFactory();
+    private static final HttpInitializer INITIALIZER = new HttpInitializer();
+    private static final int DEFAULT_MAX_TOTAL = 200;
+    private static final int DEFAULT_MAX_PER_ROUTE = 40;
+
     private static int socketTimeout = 60000;
     private static int connectTimeout = 60000;
 
-    private static int maxTotal;
-    private static int maxPerRoute;
+    private static int maxTotal = DEFAULT_MAX_TOTAL;
+    private static int maxPerRoute = DEFAULT_MAX_PER_ROUTE;
 
     private static CloseableHttpAsyncClient httpAsyncClient;
     private static CloseableHttpClient httpClient;
+
+    private static volatile byte[] certificate;
+    private static volatile String password;
+    private static volatile String algorithm;
+    private static volatile boolean needReload = true;
 
     /**
      * 默认重试机制
@@ -95,67 +123,84 @@ public abstract class HttpExecutor {
         return !(request instanceof HttpEntityEnclosingRequest);
     };
 
-    // region init and getter/setter
 
-    public static void initSync() {
-        initSync(200, 40, null, null, null);
-    }
+    public static class HttpInitializer {
 
-    public static void initSync(InputStream certsInput, String password, String algorithm) {
-        initSync(200, 40, certsInput, password, algorithm);
-    }
+        private volatile Thread currentThread;
+        private boolean changed = false;
 
-    public static void initSync(int maxTotal, int maxPerRoute, InputStream certsInput, String password, String algorithm) {
-        synchronized (HttpExecutor.class) {
+        public HttpInitializer withSocketTimeout(int socketTimeout) {
+            checkThread();
+            changed = changed || HttpExecutor.socketTimeout != socketTimeout;
+            HttpExecutor.socketTimeout = socketTimeout;
+            return this;
+        }
+
+        public HttpInitializer withConnectTimeout(int connectTimeout) {
+            checkThread();
+            changed = changed || HttpExecutor.connectTimeout != connectTimeout;
+            HttpExecutor.connectTimeout = connectTimeout;
+            return this;
+        }
+
+        public HttpInitializer withMaxTotal(int maxTotal) {
+            checkThread();
+            changed = changed || HttpExecutor.maxTotal != maxTotal;
             HttpExecutor.maxTotal = maxTotal;
+            return this;
+        }
+
+        public HttpInitializer withMaxPerRoute(int maxPerRoute) {
+            checkThread();
+            changed = changed || HttpExecutor.maxPerRoute != maxPerRoute;
             HttpExecutor.maxPerRoute = maxPerRoute;
+            return this;
+        }
 
-            SSLConnectionSocketFactory sslConnectionSocketFactory = null;
-            if (null != certsInput && StringUtils.isNotEmpty(algorithm)) {
-                try {
-                    KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
-                    KeyStore keyStore = KeyStore.getInstance(algorithm);
-                    keyStore.load(certsInput, StringUtils.trimToEmpty(password).toCharArray());
-
-                    keyManagerFactory.init(keyStore, StringUtils.trimToEmpty(password).toCharArray());
-
-                    SSLContext sslcontext = SSLContexts.custom()
-                        .setProtocol("TLS")
-                        .loadTrustMaterial((chain, authType) -> true)
-                        .build();
-                    sslcontext.init(keyManagerFactory.getKeyManagers(), null, new SecureRandom());
-
-
-                    sslConnectionSocketFactory = new SSLConnectionSocketFactory(
-                        sslcontext.getSocketFactory(),
-                        SSLConnectionSocketFactory.getDefaultHostnameVerifier());
-
-                } catch (Exception e) {
-                    throw new SimplifiedException(e);
-                }
+        public HttpInitializer withCertificate(InputStream certsInput, String password, String algorithm) {
+            checkThread();
+            changed = true;
+            try {
+                HttpExecutor.certificate = IOUtils.copyToByteArray(certsInput);
+            } catch (IOException e) {
+                throw new SimplifiedException("读取证书内容失败");
             }
-            PoolingHttpClientConnectionManager connectionManager = null == sslConnectionSocketFactory ? new PoolingHttpClientConnectionManager() : new PoolingHttpClientConnectionManager(
-                RegistryBuilder.<ConnectionSocketFactory>create()
-                    .register("http", PlainConnectionSocketFactory.getSocketFactory())
-                    .register("https", sslConnectionSocketFactory)
-                    .build());
-            connectionManager.setMaxTotal(maxTotal);
-            connectionManager.setDefaultMaxPerRoute(maxPerRoute);
-            httpClient = HttpClients.custom().setRetryHandler(defaultHttpRetryHandler).setConnectionManager(connectionManager)
-                .build();
+            HttpExecutor.password = password;
+            HttpExecutor.algorithm = algorithm;
+            return this;
+        }
+
+        public HttpInitializer withRetryHandler(HttpRequestRetryHandler retryHandler) {
+            checkThread();
+            changed = changed || HttpExecutor.defaultHttpRetryHandler != retryHandler;
+            HttpExecutor.defaultHttpRetryHandler = retryHandler;
+            return this;
+        }
+
+        public void finishConfigure() {
+            if (changed) {
+                needReload = true;
+            }
+            reset();
+        }
+
+        private void checkThread() {
+            Assert.isTrue(currentThread == Thread.currentThread(), "HttpExecutor禁止跨线程配置");
+        }
+
+        private void reset() {
+            currentThread = null;
+            changed = false;
         }
     }
 
-    public static void initAync() {
-        initAync(200, 40);
-    }
+    // region init and getter/setter
 
-    public static void initAync(int maxTotal, int maxPerRoute) {
-        synchronized (HttpExecutor.class) {
-            HttpExecutor.maxTotal = maxTotal;
-            HttpExecutor.maxPerRoute = maxPerRoute;
-            httpAsyncClient = HttpAsyncClients.custom().setMaxConnTotal(maxTotal).setMaxConnPerRoute(maxPerRoute).build();
-            httpAsyncClient.start();
+    public static HttpInitializer configure() {
+        synchronized (INITIALIZER) {
+            Assert.isTrue(INITIALIZER.currentThread == null, "同时只能有一个客户端配置HttpExecutor");
+            INITIALIZER.currentThread = Thread.currentThread();
+            return INITIALIZER;
         }
     }
 
@@ -163,32 +208,20 @@ public abstract class HttpExecutor {
         return socketTimeout;
     }
 
-    public static void setSocketTimeout(int socketTimeout) {
-        HttpExecutor.socketTimeout = socketTimeout;
-    }
-
     public static int getConnectTimeout() {
         return connectTimeout;
     }
 
-    public static void setConnectTimeout(int connectTimeout) {
-        HttpExecutor.connectTimeout = connectTimeout;
-    }
-
-    public static int getMaxTotal() {
+    public static int getDefaultMaxTotal() {
         return maxTotal;
     }
 
-    public static int getMaxPerRoute() {
+    public static int getDefaultMaxPerRoute() {
         return maxPerRoute;
     }
 
     public static HttpRequestRetryHandler getDefaultHttpRetryHandler() {
         return defaultHttpRetryHandler;
-    }
-
-    public static void setDefaultHttpRetryHandler(HttpRequestRetryHandler defaultHttpRetryHandler) {
-        HttpExecutor.defaultHttpRetryHandler = defaultHttpRetryHandler;
     }
 
     // endregion
@@ -205,9 +238,7 @@ public abstract class HttpExecutor {
      */
     public static <T> T executeRequest(HttpUriRequest request, EntityProcessor<T> entityProc) {
         T res;
-        if (null == httpClient) {
-            initSync();
-        }
+        initSync();
         try (CloseableHttpResponse response = httpClient.execute(request)) {
             int code = response.getStatusLine().getStatusCode();
             HttpEntity entity = response.getEntity();
@@ -243,9 +274,7 @@ public abstract class HttpExecutor {
                                                                FinalConsumer<Exception> failedCallback,
                                                                Handler cancelledCallback) {
         try {
-            if (null == httpAsyncClient) {
-                initAync();
-            }
+            initAync();
             return httpAsyncClient.execute(request, new FutureCallback<HttpResponse>() {
                 @Override
                 public void completed(HttpResponse result) {
@@ -340,6 +369,83 @@ public abstract class HttpExecutor {
             charset = "UTF-8";
         }
         return charset;
+    }
+
+    private static SSLContext buildSSLContext(InputStream certsInput, String password, String algorithm) throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, UnrecoverableKeyException, KeyManagementException {
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+        KeyStore keyStore = KeyStore.getInstance(algorithm);
+        keyStore.load(certsInput, StringUtils.trimToEmpty(password).toCharArray());
+
+        keyManagerFactory.init(keyStore, StringUtils.trimToEmpty(password).toCharArray());
+
+        SSLContext sslContext = SSLContexts.custom()
+            .setProtocol("TLS")
+            .loadTrustMaterial((chain, authType) -> true)
+            .build();
+        sslContext.init(keyManagerFactory.getKeyManagers(), null, new SecureRandom());
+        return sslContext;
+    }
+
+    private static void initSync() {
+        if (needReload) {
+            synchronized (HttpExecutor.class) {
+                if (needReload) {
+                    needReload = false;
+                    SSLConnectionSocketFactory sslConnectionSocketFactory = null;
+                    if (null != certificate && StringUtils.isNotEmpty(algorithm)) {
+                        try (InputStream certInput = new ByteArrayInputStream(certificate)) {
+                            SSLContext sslContext = buildSSLContext(certInput, password, algorithm);
+                            sslConnectionSocketFactory = new SSLConnectionSocketFactory(
+                                sslContext.getSocketFactory(),
+                                SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+                        } catch (Exception e) {
+                            throw new SimplifiedException(e);
+                        }
+                    }
+                    PoolingHttpClientConnectionManager connectionManager = null == sslConnectionSocketFactory ? new PoolingHttpClientConnectionManager() : new PoolingHttpClientConnectionManager(
+                        RegistryBuilder.<ConnectionSocketFactory>create()
+                            .register("http", PlainConnectionSocketFactory.getSocketFactory())
+                            .register("https", sslConnectionSocketFactory)
+                            .build());
+                    connectionManager.setMaxTotal(maxTotal);
+                    connectionManager.setDefaultMaxPerRoute(maxPerRoute);
+                    httpClient = HttpClients.custom().setRetryHandler(defaultHttpRetryHandler).setConnectionManager(connectionManager)
+                        .build();
+                }
+            }
+        }
+    }
+
+    private static void initAync() {
+        if (needReload) {
+            synchronized (HttpExecutor.class) {
+                if (needReload) {
+                    needReload = false;
+                    if (null != certificate && StringUtils.isNotEmpty(algorithm)) {
+                        try (InputStream certInput = new ByteArrayInputStream(certificate)) {
+                            SSLContext sslContext = buildSSLContext(certInput, password, algorithm);
+                            SchemeIOSessionStrategy sslStrategy = new SSLIOSessionStrategy(sslContext,
+                                new DefaultHostnameVerifier(PublicSuffixMatcherLoader.getDefault()));
+                            final ConnectingIOReactor ioreactor = new DefaultConnectingIOReactor(IOReactorConfig.DEFAULT, THREAD_FACTORY);
+                            final PoolingNHttpClientConnectionManager poolingmgr = new PoolingNHttpClientConnectionManager(
+                                ioreactor,
+                                RegistryBuilder.<SchemeIOSessionStrategy>create()
+                                    .register("http", NoopIOSessionStrategy.INSTANCE)
+                                    .register("https", sslStrategy)
+                                    .build());
+                            httpAsyncClient = HttpAsyncClients.custom().setConnectionManager(poolingmgr).setMaxConnTotal(maxTotal).setMaxConnPerRoute(maxPerRoute).build();
+                            httpAsyncClient.start();
+                            return;
+                        } catch (Exception e) {
+                            throw new SimplifiedException("构建SSL安全上下文失败", e);
+                        }
+                    }
+
+                    httpAsyncClient = HttpAsyncClients.custom().setMaxConnTotal(maxTotal).setMaxConnPerRoute(maxPerRoute).build();
+                    httpAsyncClient.start();
+                }
+            }
+        }
     }
     // endregion
 }

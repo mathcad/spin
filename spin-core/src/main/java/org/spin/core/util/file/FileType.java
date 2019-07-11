@@ -93,7 +93,7 @@ public abstract class FileType {
      */
     public static final class Document extends FileType {
         public static final Document XLS = new Document(".xls", "application/vnd.ms-excel", "D0CF11E0");
-        public static final Document XLSX = new Document(".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "504B030414");
+        public static final Document XLSX = new Document(".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "504B0304");
 
         public Document(String extension, String contentType, String trait) {
             super(extension, contentType, trait);
