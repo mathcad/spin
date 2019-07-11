@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.2.0-SNAPSHOT'
+version = '2.2.1-SNAPSHOT'
 def artifactId = 'spin-core'
 
 ext {
@@ -51,9 +51,9 @@ dependencies {
     testRuntimeOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
-    testImplementation group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
-    testImplementation group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
-    testImplementation group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
+    testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
+    testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
+    testRuntimeOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
     testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
 
 //    core
