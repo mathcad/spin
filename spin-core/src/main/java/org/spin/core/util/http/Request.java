@@ -120,10 +120,10 @@ public class Request<T extends HttpRequestBase> {
      * @param headers 头部信息
      * @return 当前请求本身
      */
-    public Request<T> withHead(Map<String, String> headers) {
+    public <E> Request<T> withHead(Map<String, E> headers) {
         if (null != headers) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                request.setHeader(entry.getKey(), entry.getValue());
+            for (Map.Entry<String, E> entry : headers.entrySet()) {
+                request.setHeader(entry.getKey(), StringUtils.toString(entry.getValue()));
             }
         }
         return this;
@@ -164,9 +164,9 @@ public class Request<T extends HttpRequestBase> {
      * @param formData form表单
      * @return 当前请求本身
      */
-    public Request<T> withForm(Map<String, Object> formData) {
+    public <E> Request<T> withForm(Map<String, E> formData) {
         if (!CollectionUtils.isEmpty(formData)) {
-            for (Map.Entry<String, Object> entry : formData.entrySet()) {
+            for (Map.Entry<String, E> entry : formData.entrySet()) {
                 String k = entry.getKey();
                 Object v = entry.getValue();
                 if (null == v) {

@@ -3,7 +3,6 @@ package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,5 +51,15 @@ public class CollectionUtilsTest {
         assertTrue(mary.size() == 15);
         String bird = CollectionUtils.detectWith(people, String::equals, "Bird");
         assertEquals("Bird", bird);
+    }
+
+    @Test
+    public void divide() {
+        System.out.println(JsonUtils.toJson(CollectionUtils.divide(CollectionUtils.ofArrayList(1, 2, 3, 4, 5), 100)));
+        CollectionUtils.divide(CollectionUtils.ofArrayList(1, 2, 3, 4, 5), 2, it -> {
+            System.out.println(JsonUtils.toJson(it));
+        });
+
+        System.out.println(StringUtils.join(CollectionUtils.ofArrayList(1, 2, 3, 4, 5),","));
     }
 }

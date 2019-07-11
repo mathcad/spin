@@ -1,6 +1,7 @@
 package org.spin.core.util;
 
 import org.spin.core.Assert;
+import org.spin.core.function.FinalConsumer;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.util.*;
@@ -87,6 +88,14 @@ public abstract class CollectionUtils {
         return JsonUtils.fromJson("[]", (Class<T>) collection.getClass());
     }
 
+    public static <E, C extends Iterable<E>> E first(C collection) {
+        Iterator<E> iterator;
+        if (collection != null && (iterator = collection.iterator()).hasNext()) {
+            return iterator.next();
+        }
+        return null;
+    }
+
     public static <T extends Collection<E>, E> E detect(T collection, Predicate<E> predicate) {
         if (null == collection || collection.isEmpty()) {
             return null;
@@ -94,7 +103,7 @@ public abstract class CollectionUtils {
         return parallelStream(collection, PARALLEL_FACTORY).filter(predicate).findFirst().orElse(null);
     }
 
-    public static <T extends Collection<E>, E, P> E detectWith(T collection, BiPredicate<E, P> predicate, P value ) {
+    public static <T extends Collection<E>, E, P> E detectWith(T collection, BiPredicate<E, P> predicate, P value) {
         if (null == collection || collection.isEmpty()) {
             return null;
         }
@@ -562,6 +571,32 @@ public abstract class CollectionUtils {
             }
             ++i;
         }
+    }
+
+    public static <T> List<List<T>> divide(List<T> list, int batchSize) {
+        Assert.isTrue(batchSize > 0, "分组容量必须大于0");
+        if (null == list) {
+            return null;
+        }
+        List<List<T>> res = new ArrayList<>(list.size() / batchSize + 1);
+        int i = batchSize;
+        for (; i < list.size(); i += batchSize) {
+            res.add(list.subList(i - batchSize, i));
+        }
+        res.add(list.subList(i - batchSize, list.size()));
+        return res;
+    }
+
+    public static <T> void divide(List<T> list, int batchSize, FinalConsumer<List<T>> consumer) {
+        Assert.isTrue(batchSize > 0, "分组容量必须大于0");
+        if (null == list) {
+            return;
+        }
+        int i = batchSize;
+        for (; i < list.size(); i += batchSize) {
+            consumer.accept(list.subList(i - batchSize, i));
+        }
+        consumer.accept(list.subList(i - batchSize, list.size()));
     }
 
     /**

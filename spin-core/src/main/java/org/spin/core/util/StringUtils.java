@@ -8,24 +8,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -2298,7 +2281,7 @@ public abstract class StringUtils {
      * @return the joined String, {@code null} if null iterator input
      * @since 2.0
      */
-    public static String join(final Iterator<?> iterator, final char separator) {
+    public static <E> String join(final Iterator<E> iterator, final char separator) {
 
         // handle null, zero and one elements before building a buffer
         if (iterator == null) {
@@ -2342,7 +2325,7 @@ public abstract class StringUtils {
      * @param separator the separator character to use, null treated as ""
      * @return the joined String, {@code null} if null iterator input
      */
-    public static String join(final Iterator<?> iterator, final String separator) {
+    public static <E> String join(final Iterator<E> iterator, final String separator) {
 
         // handle null, zero and one elements before building a buffer
         if (iterator == null) {
@@ -2386,7 +2369,7 @@ public abstract class StringUtils {
      * @return the joined String, {@code null} if null iterator input
      * @since 2.3
      */
-    public static String join(final Iterable<?> iterable, final char separator) {
+    public static <E, C extends Iterable<E>> String join(final C iterable, final char separator) {
         if (iterable == null) {
             return null;
         }
@@ -2407,7 +2390,7 @@ public abstract class StringUtils {
      * @return the joined String, {@code null} if null iterator input
      * @since 2.3
      */
-    public static String join(final Iterable<?> iterable, final String separator) {
+    public static <E, C extends Iterable<E>> String join(final C iterable, final String separator) {
         if (iterable == null) {
             return null;
         }
