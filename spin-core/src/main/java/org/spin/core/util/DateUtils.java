@@ -2,7 +2,7 @@ package org.spin.core.util;
 
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.sql.Timestamp;
 import java.text.ParseException;
@@ -158,7 +158,7 @@ public abstract class DateUtils {
         try {
             return sdf.parse(matcher == null ? date : matcher.group(0));
         } catch (ParseException e) {
-            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
         }
     }
 
@@ -180,7 +180,7 @@ public abstract class DateUtils {
         try {
             return sdf.parse(date);
         } catch (ParseException e) {
-            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
         }
     }
 
@@ -194,7 +194,7 @@ public abstract class DateUtils {
         try {
             return null == date ? null : millSecSdf.get().parse(millSecDtf.format(date));
         } catch (ParseException e) {
-            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "时间转换失败", e);
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "时间转换失败", e);
         }
     }
 
@@ -230,7 +230,7 @@ public abstract class DateUtils {
         try {
             return LocalDateTime.parse(date, dtf);
         } catch (DateTimeParseException e) {
-            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
         }
     }
 
@@ -674,7 +674,7 @@ public abstract class DateUtils {
                     return Long.parseLong(period);
             }
         } catch (Exception ignore) {
-            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, "时间段字符串格式不正确");
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "时间段字符串格式不正确");
         }
     }
 

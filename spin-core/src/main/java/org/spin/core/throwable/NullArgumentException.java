@@ -14,7 +14,7 @@ import org.spin.core.ErrorCode;
  * }
  * </pre>
  */
-public class NullArgumentException extends SimplifiedException {
+public class NullArgumentException extends SpinException {
 
     private static final long serialVersionUID = 1174360235354917591L;
 

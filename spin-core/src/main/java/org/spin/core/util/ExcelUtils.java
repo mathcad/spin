@@ -10,7 +10,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.io.BytesCombinedInputStream;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.excel.ExcelRow;
 import org.spin.core.util.file.FileType;
 import org.spin.core.util.file.FileTypeUtils;
@@ -51,16 +51,16 @@ public abstract class ExcelUtils {
             bcis.readCombinedBytes(trait);
             fileType = FileTypeUtils.detectFileType(trait);
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "输入流读取失败", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "输入流读取失败", e);
         }
         if (Objects.isNull(fileType)) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
+            throw new SpinException(ErrorCode.IO_FAIL, "不支持的文件类型");
         } else if (fileType.equals(FileType.Document.XLS)) {
             readWorkBook(bcis, Type.XLS, reader);
         } else if (fileType.equals(FileType.Document.XLSX)) {
             readWorkBook(bcis, Type.XLSX, reader);
         } else {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
+            throw new SpinException(ErrorCode.IO_FAIL, "不支持的文件类型");
         }
     }
 
@@ -80,7 +80,7 @@ public abstract class ExcelUtils {
                 workbook = new XSSFWorkbook(is);
             }
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "读取文件失败", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "读取文件失败", e);
         }
         // 循环工作表Sheet
         for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
@@ -130,15 +130,15 @@ public abstract class ExcelUtils {
         } else if (workbookFile.getName().toLowerCase().endsWith("xlsx")) {
             type = Type.XLSX;
         } else {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
+            throw new SpinException(ErrorCode.IO_FAIL, "不支持的文件类型");
         }
 
         try (InputStream is = new FileInputStream(workbookFile)) {
             readWorkBook(is, type, reader);
         } catch (FileNotFoundException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "读取的文件不存在", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "读取的文件不存在", e);
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "读取文件失败", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "读取文件失败", e);
         }
     }
 

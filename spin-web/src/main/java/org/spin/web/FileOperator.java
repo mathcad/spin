@@ -31,12 +31,6 @@ import java.util.zip.ZipOutputStream;
  */
 public class FileOperator {
     private static final Logger logger = LoggerFactory.getLogger(FileOperator.class);
-    private static final String FULLNAME = "fullName";
-    private static final String STORENAME = "storeName";
-    private static final String SIZE = "size";
-    private static final String SUFFIX = "suffix";
-    private static final String CONTENTTYPE = "contentType";
-    private static final String CREATETIME = "createTime";
     private static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("/yyyyMM/ddHHmmss");
 
     private FileOperator() {
@@ -56,6 +50,9 @@ public class FileOperator {
         if (null != baseDir && baseDir.length > 0 && StringUtils.isNotBlank(baseDir[0]))
             bDir = baseDir[0];
         String fileName = file.getOriginalFilename();
+        if (null == fileName) {
+            fileName = file.getName();
+        }
         String extention = compress ? ".zip" : (fileName.contains(".") ? fileName.substring(fileName.lastIndexOf('.')).toLowerCase() : "");
         String storeName = generateFileName();
         String path = storeName.substring(0, storeName.lastIndexOf('/') + 1);

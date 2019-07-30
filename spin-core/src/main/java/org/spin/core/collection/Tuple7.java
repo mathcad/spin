@@ -1,6 +1,6 @@
 package org.spin.core.collection;
 
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.ObjectUtils;
 
@@ -67,7 +67,7 @@ public class Tuple7<A, B, C, D, E, F, G> implements Tuple<Tuple7<G, F, E, D, C, 
             case 6:
                 return (E1) c7;
             default:
-                throw new SimplifiedException("索引超出范围[0, 6]，实际:" + pos);
+                throw new IndexOutOfBoundsException("索引超出范围[0, 6]，实际:" + pos);
         }
     }
 

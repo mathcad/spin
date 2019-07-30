@@ -2,7 +2,7 @@ package org.spin.core.util.file;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.StreamUtils;
 
 import java.io.File;
@@ -300,7 +300,7 @@ public abstract class FileUtils {
             StreamUtils.enumerationAsStream(file.entries()).map(ZipEntry::getName).filter(filter).forEach(fileNames::add);
         } catch (IOException e) {
             logger.error(e.getMessage());
-            throw new SimplifiedException("Read jar file" + filePath + "error", e);
+            throw new SpinException("Read jar file" + filePath + "error", e);
         }
         return fileNames;
     }

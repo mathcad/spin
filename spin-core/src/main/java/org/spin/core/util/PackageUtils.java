@@ -2,7 +2,7 @@ package org.spin.core.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.file.FileUtils;
 
 import java.io.FileOutputStream;
@@ -140,7 +140,7 @@ public abstract class PackageUtils {
             }
         } catch (IOException e) {
             logger.error(e.getMessage());
-            throw new SimplifiedException("Read jar file" + jarFilePath + "error", e);
+            throw new SpinException("Read jar file" + jarFilePath + "error", e);
         } finally {
             if (null != jarFile) {
                 try {

@@ -11,7 +11,7 @@ import org.spin.core.gson.InstanceCreator;
 import org.spin.core.gson.SpinTypeAdapterFactory;
 import org.spin.core.gson.TypeAdapterFactory;
 import org.spin.core.gson.reflect.TypeToken;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.lang.reflect.Type;
 import java.util.Map;
@@ -101,7 +101,7 @@ public abstract class JsonUtils {
                 result = gson.toJson(target);
             }
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, "目标对象 " + target.getClass().getName() + " 转换 JSON 字符串时，发生异常！", ex);
+            throw new SpinException(ErrorCode.SERIALIZE_EXCEPTION, "目标对象 " + target.getClass().getName() + " 转换 JSON 字符串时，发生异常！", ex);
         }
         return result;
     }
@@ -291,7 +291,7 @@ public abstract class JsonUtils {
         try {
             return baseBuilder(datePattern).create().fromJson(json, token.getType());
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, token.toString()), ex);
+            throw new SpinException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, token.toString()), ex);
         }
     }
 
@@ -307,7 +307,7 @@ public abstract class JsonUtils {
         try {
             return defaultGson.fromJson(json, token.getType());
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, token.toString()), ex);
+            throw new SpinException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, token.toString()), ex);
         }
     }
 
@@ -315,7 +315,7 @@ public abstract class JsonUtils {
         try {
             return defaultGson.fromJson(json, type);
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, type.getTypeName()), ex);
+            throw new SpinException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, type.getTypeName()), ex);
         }
     }
 
@@ -323,7 +323,7 @@ public abstract class JsonUtils {
         try {
             return defaultGson.fromJson(json, clazz);
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
+            throw new SpinException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
         }
     }
 
@@ -339,7 +339,7 @@ public abstract class JsonUtils {
         try {
             return defaultGsonWithUnderscore.fromJson(json, token.getType());
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, token.toString()), ex);
+            throw new SpinException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, token.toString()), ex);
         }
     }
 
@@ -347,7 +347,7 @@ public abstract class JsonUtils {
         try {
             return defaultGsonWithUnderscore.fromJson(json, type);
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, type.getTypeName()), ex);
+            throw new SpinException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, type.getTypeName()), ex);
         }
     }
 
@@ -355,7 +355,7 @@ public abstract class JsonUtils {
         try {
             return defaultGsonWithUnderscore.fromJson(json, clazz);
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
+            throw new SpinException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
         }
     }
 
@@ -380,7 +380,7 @@ public abstract class JsonUtils {
         try {
             return baseBuilder(datePattern).create().fromJson(json, clazz);
         } catch (Exception ex) {
-            throw new SimplifiedException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
+            throw new SpinException(ErrorCode.SERIALIZE_EXCEPTION, String.format(DEFAULT_ERROR_MSG, json, clazz.getTypeName()), ex);
         }
     }
 

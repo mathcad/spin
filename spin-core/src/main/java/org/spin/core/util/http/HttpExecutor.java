@@ -19,7 +19,7 @@ import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.Handler;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.IOUtils;
 import org.spin.core.util.StringUtils;
 
@@ -129,7 +129,7 @@ public abstract class HttpExecutor {
             try {
                 HttpExecutor.certificate = IOUtils.copyToByteArray(certsInput);
             } catch (IOException e) {
-                throw new SimplifiedException("读取证书内容失败");
+                throw new SpinException("读取证书内容失败");
             }
             HttpExecutor.password = password;
             HttpExecutor.algorithm = algorithm;
@@ -210,13 +210,13 @@ public abstract class HttpExecutor {
             int code = response.getStatusLine().getStatusCode();
             HttpEntity entity = response.getEntity();
             if (code != 200) {
-                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity));
+                throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity));
             }
             res = Assert.notNull(entityProc, "请求结果处理器不能为空").process(entity);
             EntityUtils.consume(response.getEntity());
         } catch (Exception e) {
             logger.error("远程连接到" + request.getURI() + "，发生错误:", e);
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
+            throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
                 + request.getURI()
                 + "，发生错误: "
                 + e.getMessage());
@@ -248,7 +248,7 @@ public abstract class HttpExecutor {
                     int code = result.getStatusLine().getStatusCode();
                     HttpEntity entity = result.getEntity();
                     if (code != 200) {
-                        failed(new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity)));
+                        failed(new SpinException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity)));
                     }
                     if (null != completedCallback) {
                         try {
@@ -282,7 +282,7 @@ public abstract class HttpExecutor {
             });
         } catch (Exception e) {
             logger.error("远程连接到" + request.getURI() + "，发生错误:", e);
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
+            throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
                 + request.getURI()
                 + "，发生错误: "
                 + e.getMessage());
@@ -295,7 +295,7 @@ public abstract class HttpExecutor {
         try {
             return EntityUtils.toString(entity, getContentCharSet(entity));
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "转换请求结果发生错误", e);
+            throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "转换请求结果发生错误", e);
         }
     }
 
@@ -312,7 +312,7 @@ public abstract class HttpExecutor {
             map.put("extention", StringUtils.isBlank(extention) ? "" : "." + extention);
             map.put("bytes", Integer.toString(bytes.length));
         } catch (IOException e) {
-            throw new SimplifiedException("无法保存文件:[" + saveFile + "]", e);
+            throw new SpinException("无法保存文件:[" + saveFile + "]", e);
         }
         return map;
     }
@@ -339,22 +339,38 @@ public abstract class HttpExecutor {
     }
 
     private static void initSync() {
+        if (INITIALIZER.currentThread != null) {
+            throw new SpinException("Http客户端尚未配置完成，请先完成配置再使用");
+        }
         if (needReloadSync) {
             synchronized (HttpExecutor.class) {
                 if (needReloadSync) {
-                    needReloadSync = false;
-                    HttpExecutorSyncHolder.initSync(maxTotal, maxPerRoute, defaultHttpRetryHandler, certificate, password, algorithm);
+                    try {
+                        HttpExecutorSyncHolder.initSync(maxTotal, maxPerRoute, defaultHttpRetryHandler, certificate, password, algorithm);
+                        needReloadSync = false;
+                    } catch (Exception e) {
+                        logger.error("Http客户端初始化失败", e);
+                        needReloadSync = true;
+                    }
                 }
             }
         }
     }
 
     private static void initAync() {
+        if (INITIALIZER.currentThread != null) {
+            throw new SpinException("Http异步客户端尚未配置完成，请先完成配置再使用");
+        }
         if (needReloadAsync) {
             synchronized (HttpExecutor.class) {
                 if (needReloadAsync) {
-                    needReloadAsync = false;
-                    HttpExecutorAsyncHolder.initAsync(maxTotal, maxPerRoute, certificate, password, algorithm);
+                    try {
+                        HttpExecutorAsyncHolder.initAsync(maxTotal, maxPerRoute, certificate, password, algorithm);
+                        needReloadAsync = false;
+                    } catch (Exception e) {
+                        logger.error("Http异步客户端初始化失败", e);
+                        needReloadSync = true;
+                    }
                 }
             }
         }

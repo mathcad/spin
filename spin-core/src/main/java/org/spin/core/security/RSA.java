@@ -2,7 +2,7 @@ package org.spin.core.security;
 
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.SerializeUtils;
 import org.spin.core.util.StringUtils;
 
@@ -50,7 +50,7 @@ public class RSA extends ProviderDetector {
         try {
             keyPairGen = KeyPairGenerator.getInstance(RSA_ALGORITHMS);
         } catch (NoSuchAlgorithmException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL);
         }
         keyPairGen.initialize(KEY_SIZE, new SecureRandom());
         return keyPairGen.generateKeyPair();
@@ -93,7 +93,7 @@ public class RSA extends ProviderDetector {
         try {
             return Assert.notNull(keyFactory).generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(key)));
         } catch (InvalidKeySpecException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
     }
 
@@ -108,7 +108,7 @@ public class RSA extends ProviderDetector {
         try {
             return Assert.notNull(keyFactory).generatePublic(new X509EncodedKeySpec(Base64.decode(key)));
         } catch (InvalidKeySpecException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
     }
 
@@ -139,11 +139,11 @@ public class RSA extends ProviderDetector {
             cipher.init(Cipher.ENCRYPT_MODE, pk);
             return cipher.doFinal(data);
         } catch (NoSuchAlgorithmException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         } catch (NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
         } catch (InvalidKeyException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
     }
 
@@ -184,11 +184,11 @@ public class RSA extends ProviderDetector {
             cipher.init(Cipher.DECRYPT_MODE, pk);
             return cipher.doFinal(raw);
         } catch (NoSuchAlgorithmException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         } catch (BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
         } catch (InvalidKeyException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
     }
 
@@ -232,11 +232,11 @@ public class RSA extends ProviderDetector {
             byte[] signed = signature.sign();
             return Base64.encode(signed);
         } catch (NoSuchAlgorithmException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "签名算法不存在: " + SIGN_ALGORITHMS, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "签名算法不存在: " + SIGN_ALGORITHMS, e);
         } catch (SignatureException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "签名失败", e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "签名失败", e);
         } catch (InvalidKeyException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
 
     }
@@ -258,11 +258,11 @@ public class RSA extends ProviderDetector {
             signature.update(getBytes(content));
             return signature.verify(Base64.decode(sign));
         } catch (NoSuchAlgorithmException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "签名算法不存在: " + SIGN_ALGORITHMS, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "签名算法不存在: " + SIGN_ALGORITHMS, e);
         } catch (SignatureException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "签名校验失败", e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "签名校验失败", e);
         } catch (InvalidKeyException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
     }
 
@@ -275,7 +275,7 @@ public class RSA extends ProviderDetector {
         try {
             keyFactory = KeyFactory.getInstance(RSA_ALGORITHMS);
         } catch (NoSuchAlgorithmException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         }
         return keyFactory;
     }

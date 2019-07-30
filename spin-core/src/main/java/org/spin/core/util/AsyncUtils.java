@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.function.ExceptionalHandler;
 import org.spin.core.function.FinalConsumer;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.util.Collections;
 import java.util.List;
@@ -87,7 +87,7 @@ public abstract class AsyncUtils {
             rejectedExecutionHandler);
 
         if (POOL_EXECUTOR_MAP.containsKey(name)) {
-            throw new SimplifiedException("线程池已经存在: " + name);
+            throw new SpinException("线程池已经存在: " + name);
         }
         POOL_EXECUTOR_MAP.put(name, poolWrapper);
         POOL_EXECUTOR_MAP.get(name).init();
@@ -145,7 +145,7 @@ public abstract class AsyncUtils {
             } catch (Exception e) {
                 poolWrapper.info.completeTask(task, false);
                 logger.error("任务执行异常[" + Thread.currentThread().getName() + "]", e);
-                throw new SimplifiedException("任务执行异常[" + Thread.currentThread().getName() + "]", e);
+                throw new SpinException("任务执行异常[" + Thread.currentThread().getName() + "]", e);
             }
             poolWrapper.info.completeTask(task, true);
             return res;
@@ -218,7 +218,7 @@ public abstract class AsyncUtils {
             } catch (Exception e) {
                 poolWrapper.info.completeTask(task, false);
                 logger.error("任务执行异常[" + Thread.currentThread().getName() + "]", e);
-                throw new SimplifiedException("任务执行异常[" + Thread.currentThread().getName() + "]", e);
+                throw new SpinException("任务执行异常[" + Thread.currentThread().getName() + "]", e);
             }
             poolWrapper.info.completeTask(task, true);
         });
@@ -302,7 +302,7 @@ public abstract class AsyncUtils {
         while (poolWrapper.status != ThreadPoolState.READY) {
             long w = System.currentTimeMillis() - wait;
             if (w > poolTimeout) {
-                throw new SimplifiedException("动作超时，线程池尚未就绪");
+                throw new SpinException("动作超时，线程池尚未就绪");
             }
             Thread.yield();
         }

@@ -9,7 +9,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -81,7 +81,7 @@ public final class Http<T extends HttpRequestBase> {
             URIBuilder uriBuilder = new URIBuilder(fixUrl(uri));
             u = uriBuilder.build();
         } catch (URISyntaxException e) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "url格式错误: " + uri + e.getMessage());
+            throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "url格式错误: " + uri + e.getMessage());
         }
         return withUrl(u);
     }
@@ -113,7 +113,7 @@ public final class Http<T extends HttpRequestBase> {
             }
             u = uriBuilder.build();
         } catch (URISyntaxException e) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "url格式错误: " + uri + e.getMessage());
+            throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "url格式错误: " + uri + e.getMessage());
         }
         return withUrl(u);
     }

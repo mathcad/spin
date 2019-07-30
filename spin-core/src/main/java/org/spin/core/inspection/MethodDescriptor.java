@@ -1,7 +1,7 @@
 package org.spin.core.inspection;
 
 import org.spin.core.Assert;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.MethodUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -60,7 +60,7 @@ public class MethodDescriptor {
             this.paramNames = MethodUtils.getMethodParamNames(method);
             this.hashCode = methodName.length() + (paramTypes.length + 1) * 1000;
         } catch (NoSuchMethodException e) {
-            throw new SimplifiedException("方法不存在", e);
+            throw new SpinException("方法不存在", e);
         }
     }
 

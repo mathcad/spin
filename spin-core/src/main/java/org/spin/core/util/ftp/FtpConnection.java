@@ -8,7 +8,7 @@ import org.apache.commons.net.ftp.FTPSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.StringUtils;
 
 import java.io.File;
@@ -64,7 +64,7 @@ public class FtpConnection implements AutoCloseable {
     public static FtpConnection ofUrl(String url, String protocal) {
         Matcher matcher = PROTOCAL_PATTERN.matcher(url);
         if (!matcher.matches()) {
-            throw new SimplifiedException("FTP连接URL格式错误");
+            throw new SpinException("FTP连接URL格式错误");
         }
 
         String token = matcher.group(2);
@@ -181,7 +181,7 @@ public class FtpConnection implements AutoCloseable {
             return Arrays.stream(client.listFiles(remotePath, filter)).map(f -> f.isDirectory() ? f.getName() + "/" : f.getName())
                 .filter(n -> !"./".equals(n) && !"../".equals(n)).collect(Collectors.toList());
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "无法列出远程目录下的文件", e);
+            throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "无法列出远程目录下的文件", e);
         }
     }
 
@@ -215,7 +215,7 @@ public class FtpConnection implements AutoCloseable {
                 }
 
             } catch (IOException e) {
-                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "无法列出远程目录下的文件", e);
+                throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "无法列出远程目录下的文件", e);
             }
         }
         return fileNames;
@@ -474,7 +474,7 @@ public class FtpConnection implements AutoCloseable {
             try {
                 client.connect(host);
             } catch (IOException e) {
-                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP连接失败: " + host + ":" + port);
+                throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "FTP连接失败: " + host + ":" + port);
             }
         }
         if (StringUtils.isNotEmpty(userName)) {
@@ -484,12 +484,12 @@ public class FtpConnection implements AutoCloseable {
                     try {
                         client.disconnect();
                     } catch (IOException e) {
-                        throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP访问被拒绝，断开连接失败");
+                        throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "FTP访问被拒绝，断开连接失败");
                     }
-                    throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP登录失败: " + host + ":" + port + " [" + replyString + "]");
+                    throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "FTP登录失败: " + host + ":" + port + " [" + replyString + "]");
                 }
             } catch (IOException e) {
-                throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "FTP登录失败: " + host + ":" + port, e);
+                throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "FTP登录失败: " + host + ":" + port, e);
 
             }
         }
@@ -507,10 +507,10 @@ public class FtpConnection implements AutoCloseable {
         client.enterLocalPassiveMode();
         try {
             if (!client.setFileType(FTPClient.BINARY_FILE_TYPE)) {
-                throw new SimplifiedException("无法设置FileType到BIN模式");
+                throw new SpinException("无法设置FileType到BIN模式");
             }
         } catch (IOException e) {
-            throw new SimplifiedException("无法设置FileType到BIN模式", e);
+            throw new SpinException("无法设置FileType到BIN模式", e);
         }
     }
 }

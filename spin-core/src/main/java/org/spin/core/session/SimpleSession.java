@@ -21,7 +21,7 @@ package org.spin.core.session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.MapUtils;
 
@@ -241,7 +241,7 @@ public class SimpleSession implements Session, Serializable {
                     "allowed.";
                 logger.trace(msg);
             }
-            throw new SimplifiedException(ErrorCode.SESSION_INVALID, "Id 为[" + getId() + "] 的Session已经被强制终止");
+            throw new SpinException(ErrorCode.SESSION_INVALID, "Id 为[" + getId() + "] 的Session已经被强制终止");
         }
 
         //check for expiration
@@ -261,7 +261,7 @@ public class SimpleSession implements Session, Serializable {
                     timeout / MILLIS_PER_MINUTE + " minutes)";
                 logger.trace(msg);
             }
-            throw new SimplifiedException(ErrorCode.SESSION_EXPIRED, "Id 为[" + sessionId + "] 的Session已经过期");
+            throw new SpinException(ErrorCode.SESSION_EXPIRED, "Id 为[" + sessionId + "] 的Session已经过期");
         }
     }
 

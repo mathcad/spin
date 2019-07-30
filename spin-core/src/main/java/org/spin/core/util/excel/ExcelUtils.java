@@ -2,16 +2,7 @@ package org.spin.core.util.excel;
 
 import org.apache.poi.hssf.usermodel.HSSFRichTextString;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.DateFormatConverter;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -19,7 +10,7 @@ import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.serializable.ExceptionalSupplier;
 import org.spin.core.io.BytesCombinedInputStream;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.MapUtils;
@@ -113,22 +104,22 @@ public abstract class ExcelUtils {
             bcis = new BytesCombinedInputStream(is, TRAIT_LEN);
             read = bcis.readCombinedBytes(trait);
             if (read < TRAIT_LEN) {
-                throw new SimplifiedException(ErrorCode.IO_FAIL, "输入流中不包含有效内容");
+                throw new SpinException(ErrorCode.IO_FAIL, "输入流中不包含有效内容");
             }
             fileType = FileTypeUtils.detectFileType(trait);
             ExcelReader reader;
             if (Objects.isNull(fileType)) {
-                throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
+                throw new SpinException(ErrorCode.IO_FAIL, "不支持的文件类型");
             } else if (fileType.equals(FileType.Document.XLS)) {
                 reader = new ExcelXlsReader();
             } else if (fileType.equals(FileType.Document.XLSX)) {
                 reader = new ExcelXlsxReader();
             } else {
-                throw new SimplifiedException(ErrorCode.IO_FAIL, "不支持的文件类型");
+                throw new SpinException(ErrorCode.IO_FAIL, "不支持的文件类型");
             }
             reader.process(bcis, rowReader);
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "输入流读取失败", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "输入流读取失败", e);
         }
     }
 
@@ -140,9 +131,9 @@ public abstract class ExcelUtils {
         try (InputStream is = new FileInputStream(file)) {
             readWorkBook(is, rowReader);
         } catch (FileNotFoundException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "读取的文件不存在", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "读取的文件不存在", e);
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "读取文件失败", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "读取文件失败", e);
         }
     }
 
@@ -158,7 +149,7 @@ public abstract class ExcelUtils {
             workbook.write(outputStream);
             outputStream.flush();
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "Excel写出workbook失败", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "Excel写出workbook失败", e);
         }
     }
 
@@ -174,7 +165,7 @@ public abstract class ExcelUtils {
             workbook.write(outputStream);
             outputStream.flush();
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "Excel写出workbook失败", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "Excel写出workbook失败", e);
         }
     }
 
@@ -262,7 +253,7 @@ public abstract class ExcelUtils {
             return workbook;
 
         } catch (Exception e) {
-            throw new SimplifiedException("生成Excel文件[" + grid.getFileName() + "]出错", e);
+            throw new SpinException("生成Excel文件[" + grid.getFileName() + "]出错", e);
         }
     }
 
@@ -287,7 +278,7 @@ public abstract class ExcelUtils {
             case ".xlsx":
                 return new XSSFWorkbook();
             default:
-                throw new SimplifiedException("不支持的文件类型: " + fileType.getExtension());
+                throw new SpinException("不支持的文件类型: " + fileType.getExtension());
         }
     }
 
@@ -428,7 +419,7 @@ public abstract class ExcelUtils {
         if (StringUtils.isEmpty(dataType)) {
             return null;
         }
-        String format = BeanUtils.getFieldValue(DATA_TYPE_FORMAT.get(), "#" + dataType);
+        String format = BeanUtils.getFieldValue(DATA_TYPE_FORMAT.get(), dataType);
         return StringUtils.isEmpty(format) ? DEFAULT_DATA_TYPE_FORMAT.get(dataType) : format;
     }
 }

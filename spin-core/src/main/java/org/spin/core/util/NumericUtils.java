@@ -1,7 +1,7 @@
 package org.spin.core.util;
 
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -159,10 +159,10 @@ public abstract class NumericUtils {
             try {
                 return new BigDecimal(value.toString());
             } catch (Exception e) {
-                throw new SimplifiedException(ErrorCode.INVALID_PARAM, "参数不是合法的数值", e);
+                throw new SpinException(ErrorCode.INVALID_PARAM, "参数不是合法的数值", e);
             }
         } else {
-            throw new SimplifiedException(ErrorCode.INVALID_PARAM, "参数不是合法的数值");
+            throw new SpinException(ErrorCode.INVALID_PARAM, "参数不是合法的数值");
         }
     }
 
@@ -231,10 +231,10 @@ public abstract class NumericUtils {
             try {
                 return new BigDecimal(value.toString()).setScale(scale, roundingMode);
             } catch (Exception e) {
-                throw new SimplifiedException(ErrorCode.INVALID_PARAM, "参数不是合法的数值", e);
+                throw new SpinException(ErrorCode.INVALID_PARAM, "参数不是合法的数值", e);
             }
         } else {
-            throw new SimplifiedException(ErrorCode.INVALID_PARAM, "参数不是合法的数值");
+            throw new SpinException(ErrorCode.INVALID_PARAM, "参数不是合法的数值");
         }
     }
 
@@ -287,12 +287,12 @@ public abstract class NumericUtils {
     public static String analysisNumber(String str) {
         Matcher matcher = numPattern.matcher(str.trim());
         if (!matcher.matches())
-            throw new SimplifiedException("无法识别的数字格式，个数字不能包括“负-0123456789零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.”以外的字符");
+            throw new SpinException("无法识别的数字格式，个数字不能包括“负-0123456789零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.”以外的字符");
         String tmp = matcher.group(1);
         // 本身是合法数字直接return
         if (pureNum.matcher(tmp).matches()) {
             if (tmp.charAt(tmp.length() - 1) == '.')
-                throw new SimplifiedException("无法识别的数字格式，数字不能以.结尾");
+                throw new SpinException("无法识别的数字格式，数字不能以.结尾");
             return tmp;
         }
 
@@ -303,7 +303,7 @@ public abstract class NumericUtils {
             tmp = tmp.substring(1);
             for (char c : tmp.toCharArray()) {
                 if (c == '负' || c == '-')
-                    throw new SimplifiedException("无法识别的数字格式，符号位只能出现在数字起始部位");
+                    throw new SpinException("无法识别的数字格式，符号位只能出现在数字起始部位");
             }
         }
 
@@ -326,7 +326,7 @@ public abstract class NumericUtils {
             resD = new StringBuilder();
             for (int i = 0; i != d.length(); ++i) {
                 if (!numMap.containsKey(String.valueOf(d.charAt(i))))
-                    throw new SimplifiedException("无法识别的数字格式，小数部分不正确");
+                    throw new SpinException("无法识别的数字格式，小数部分不正确");
                 resD.append(numMap.get(String.valueOf(d.charAt(i))));
             }
         }
@@ -363,7 +363,7 @@ public abstract class NumericUtils {
                 case "亿":
                     parts = tmp.split(scale);
                     if (parts.length > 2)
-                        throw new SimplifiedException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOW_NUM);
                     h = decodeNum(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 100000000L;
@@ -371,7 +371,7 @@ public abstract class NumericUtils {
                 case "万":
                     parts = tmp.split(scale);
                     if (parts.length > 2)
-                        throw new SimplifiedException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOW_NUM);
                     h = decodeNum(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 10000L;
@@ -380,7 +380,7 @@ public abstract class NumericUtils {
                 case "仟":
                     parts = tmp.split(scale);
                     if (parts.length > 2)
-                        throw new SimplifiedException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOW_NUM);
                     h = parts[0].length() > 1 ? Long.parseLong(parts[0]) : numMap.get(parts[0]);
 
                     tmp = parts.length > 1 ? parts[1] : null;
@@ -390,7 +390,7 @@ public abstract class NumericUtils {
                 case "佰":
                     parts = tmp.split(scale);
                     if (parts.length > 2)
-                        throw new SimplifiedException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOW_NUM);
                     h = parts[0].length() > 1L ? Long.parseLong(parts[0]) : numMap.get(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 100L;
@@ -399,14 +399,14 @@ public abstract class NumericUtils {
                 case "拾":
                     parts = tmp.split(scale);
                     if (parts.length > 2)
-                        throw new SimplifiedException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOW_NUM);
                     h = tmp.startsWith("十") ? 1L : (parts[0].length() > 1 ? Long.parseLong(parts[0]) : numMap.get(parts[0]));
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 10L;
                     break;
                 default:
                     if (!numMap.containsKey(tmp))
-                        throw new SimplifiedException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOW_NUM);
                     resN += numMap.get(tmp);
                     tmp = null;
             }

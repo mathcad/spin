@@ -1,7 +1,7 @@
 package org.spin.core.security;
 
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -33,7 +33,7 @@ public class DES {
             secureRandom = SecureRandom.getInstance("SHA1PRNG");
             secureRandom.setSeed(keySeed.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.KEY_FAIL, e);
+            throw new SpinException(ErrorCode.KEY_FAIL, e);
         }
         keyGenerator.init(56, secureRandom);
         return keyGenerator.generateKey();
@@ -43,7 +43,7 @@ public class DES {
         try {
             return Base64.encode(encrypt(key, plainText.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, e);
         }
     }
 
@@ -51,7 +51,7 @@ public class DES {
         try {
             return new String(decrypt(key, Base64.decode(cipherText)), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.DEENCRYPT_FAIL, e);
+            throw new SpinException(ErrorCode.DEENCRYPT_FAIL, e);
         }
     }
 
@@ -61,7 +61,7 @@ public class DES {
             cipher.init(1, key);
             return cipher.doFinal(bytes);
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, e);
         }
     }
 
@@ -71,7 +71,7 @@ public class DES {
             cipher.init(2, key);
             return cipher.doFinal(bytes);
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.DEENCRYPT_FAIL, e);
+            throw new SpinException(ErrorCode.DEENCRYPT_FAIL, e);
         }
     }
 }

@@ -2,7 +2,7 @@ package org.spin.core.util;
 
 import org.spin.core.ErrorCode;
 import org.spin.core.function.serializable.Function;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -167,7 +167,7 @@ public class MathUtils {
     public static BigDecimal divide(Number value1, Number value2) {
         BigDecimal v2 = NumericUtils.toBigDeciaml(value2);
         if (v2.compareTo(BigDecimal.ZERO) == 0) {
-            throw new SimplifiedException(ErrorCode.INVALID_PARAM, "除数不能为0");
+            throw new SpinException(ErrorCode.INVALID_PARAM, "除数不能为0");
         }
         return NumericUtils.toBigDeciaml(value1).subtract(NumericUtils.toBigDeciaml(value2));
     }

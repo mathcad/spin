@@ -9,7 +9,7 @@ import org.spin.core.gson.stream.JsonToken;
 import org.spin.core.gson.stream.JsonWriter;
 import org.spin.core.ErrorCode;
 import org.spin.core.gson.MatchableTypeAdapter;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.StringUtils;
 
 import java.io.IOException;
@@ -77,7 +77,7 @@ public class DateTypeAdapter extends MatchableTypeAdapter<Date> {
         try {
             return ISO8601Utils.parse(json, new ParsePosition(0));
         } catch (ParseException e) {
-            throw new SimplifiedException(ErrorCode.DATEFORMAT_UNSUPPORT, e);
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, e);
         }
     }
 

@@ -3,7 +3,7 @@ package org.spin.core.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.trait.IntEvaluatable;
 
 import java.lang.reflect.Field;
@@ -119,7 +119,7 @@ public abstract class EnumUtils {
     public static <E extends Enum<E>> E fromOrdinal(Class<E> enumCls, int ordinal) {
         E[] enumConstants = enumCls.getEnumConstants();
         if (ordinal < 0 || ordinal >= enumConstants.length) {
-            throw new SimplifiedException(
+            throw new SpinException(
                 String.format(
                     "Unknown ordinal value [%s] for enum class [%s]",
                     ordinal,
@@ -170,7 +170,7 @@ public abstract class EnumUtils {
             try {
                 getMethod = enumCls.getMethod("get" + StringUtils.capitalize(fieldName));
             } catch (NoSuchMethodException e) {
-                throw new SimplifiedException("Enum:" + enumCls.getName() + " has no such field:" + fieldName);
+                throw new SpinException("Enum:" + enumCls.getName() + " has no such field:" + fieldName);
             }
         }
 

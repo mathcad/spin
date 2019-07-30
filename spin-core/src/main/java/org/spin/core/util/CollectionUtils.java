@@ -2,7 +2,7 @@ package org.spin.core.util;
 
 import org.spin.core.Assert;
 import org.spin.core.function.FinalConsumer;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -542,7 +542,7 @@ public abstract class CollectionUtils {
             return ofLinkedList((Object[]) target);
         }
 
-        throw new SimplifiedException("目标对象不是集合类型:" + target.getClass().getName());
+        throw new SpinException("目标对象不是集合类型:" + target.getClass().getName());
     }
 
 

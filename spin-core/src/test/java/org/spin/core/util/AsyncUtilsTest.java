@@ -1,7 +1,7 @@
 package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -57,7 +57,7 @@ class AsyncUtilsTest {
         Thread.sleep(5000L);
         countDownLatch.countDown();
         if (i > 6) {
-            throw new SimplifiedException("aaa");
+            throw new SpinException("aaa");
         }
     }
 }

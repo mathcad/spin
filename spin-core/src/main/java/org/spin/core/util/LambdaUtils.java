@@ -2,7 +2,7 @@ package org.spin.core.util;
 
 import org.spin.core.function.serializable.BiConsumer;
 import org.spin.core.function.serializable.Function;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.lang.invoke.SerializedLambda;
 import java.lang.ref.WeakReference;
@@ -62,7 +62,7 @@ public abstract class LambdaUtils {
                     FUNC_CACHE.put(clazz, new WeakReference<>(lambdaInfo));
                     return lambdaInfo;
                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                    throw new SimplifiedException("SerializedLambda解析失败", e);
+                    throw new SpinException("SerializedLambda解析失败", e);
                 }
             });
     }

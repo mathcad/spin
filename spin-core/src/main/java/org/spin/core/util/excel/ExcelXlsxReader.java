@@ -4,7 +4,10 @@ import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.ss.usermodel.BuiltinFormats;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.ExcelNumberFormat;
 import org.apache.poi.ss.usermodel.RichTextString;
 import org.apache.poi.xssf.eventusermodel.XSSFReader;
 import org.apache.poi.xssf.model.SharedStringsTable;
@@ -13,7 +16,7 @@ import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.NumericUtils;
 import org.spin.core.util.StringUtils;
@@ -177,13 +180,13 @@ public class ExcelXlsxReader extends DefaultHandler implements ExcelReader {
             sst = xssfReader.getSharedStringsTable();
             sheets = (XSSFReader.SheetIterator) xssfReader.getSheetsData();
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "文件读取异常", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "文件读取异常", e);
         } catch (OpenXML4JException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "XML解析异常", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "XML解析异常", e);
         } catch (SAXException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "SAX解析异常", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "SAX解析异常", e);
         } catch (ParserConfigurationException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "SAX解析器创建异常", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "SAX解析器创建异常", e);
         }
 
         while (sheets.hasNext()) {
@@ -194,9 +197,9 @@ public class ExcelXlsxReader extends DefaultHandler implements ExcelReader {
                 InputSource sheetSource = new InputSource(sheet);
                 parser.parse(sheetSource, this);
             } catch (IOException e) {
-                throw new SimplifiedException(ErrorCode.IO_FAIL, "文件读取异常", e);
+                throw new SpinException(ErrorCode.IO_FAIL, "文件读取异常", e);
             } catch (SAXException e) {
-                throw new SimplifiedException(ErrorCode.IO_FAIL, "SAX解析异常", e);
+                throw new SpinException(ErrorCode.IO_FAIL, "SAX解析异常", e);
             }
         }
     }
@@ -289,7 +292,7 @@ public class ExcelXlsxReader extends DefaultHandler implements ExcelReader {
             formatIndex = style.getDataFormat();
             formatString = style.getDataFormatString();
 
-            if (Arrays.binarySearch(DATE_INT, formatIndex) >= 0) {
+            if (Arrays.binarySearch(DATE_INT, formatIndex) >= 0 && isMightBeDateFormatted(style)) {
                 nextDataType = CellDataType.DATE;
                 formatString = "yyyy-MM-dd hh:mm:ss";
             }
@@ -367,5 +370,25 @@ public class ExcelXlsxReader extends DefaultHandler implements ExcelReader {
             curCol = idx;
             rowData.setRowIndex(Integer.parseInt(colName.substring(col.length())) - 1);
         }
+    }
+
+    private static boolean isMightBeDateFormatted(CellStyle style) {
+        if (style == null) return false;
+        boolean bDate;
+
+        ExcelNumberFormat nf = ExcelNumberFormat.from(style);
+        bDate = DateUtil.isADateFormat(nf);
+        return bDate;
+    }
+
+    public static boolean isCellDateFormatted(double cellValue, CellStyle style) {
+        if (style == null) return false;
+        boolean bDate = false;
+
+        if (DateUtil.isValidExcelDate(cellValue)) {
+            ExcelNumberFormat nf = ExcelNumberFormat.from(style);
+            bDate = DateUtil.isADateFormat(nf);
+        }
+        return bDate;
     }
 }

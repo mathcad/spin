@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -1255,7 +1255,7 @@ public abstract class MethodUtils {
         try (InputStream is = m.getDeclaringClass().getClassLoader().getResourceAsStream(clsName)) {
             cr = new ClassReader(Assert.notNull(is, "未找到指定的类: " + clsName));
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, e);
+            throw new SpinException(ErrorCode.IO_FAIL, e);
         }
 
         try {
@@ -1291,7 +1291,7 @@ public abstract class MethodUtils {
                 }
             }, 0);
         } catch (Exception e) {
-            throw new SimplifiedException("解析方法参数名称失败", e);
+            throw new SpinException("解析方法参数名称失败", e);
         }
         return paramNames;
     }

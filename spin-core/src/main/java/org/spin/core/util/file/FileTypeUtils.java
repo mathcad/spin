@@ -1,7 +1,7 @@
 package org.spin.core.util.file;
 
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.HexUtils;
 import org.spin.core.util.file.FileType.Document;
 import org.spin.core.util.file.FileType.Image;
@@ -85,13 +85,13 @@ public abstract class FileTypeUtils {
         try (FileInputStream fis = new FileInputStream(file)) {
             int total = fis.read(trait, 0, TRAIT_LEN);
             if (total == -1)
-                throw new SimplifiedException(ErrorCode.IO_FAIL, "END OF FILE");
+                throw new SpinException(ErrorCode.IO_FAIL, "END OF FILE");
             else if (total == 0)
                 return FileType.Text.PLAIN;
             else
                 return detectFileType(trait);
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "流读取错误");
+            throw new SpinException(ErrorCode.IO_FAIL, "流读取错误");
         }
     }
 

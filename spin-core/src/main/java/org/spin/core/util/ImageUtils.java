@@ -1,7 +1,7 @@
 package org.spin.core.util;
 
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.file.FileType;
 
 import javax.imageio.ImageIO;
@@ -36,7 +36,7 @@ public abstract class ImageUtils {
             g.dispose();
             ImageIO.write(result, FileType.Image.JPEG.getFormat(), new File(destImg));
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "写入文件失败", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "写入文件失败", e);
         }
     }
 
@@ -45,7 +45,7 @@ public abstract class ImageUtils {
             BufferedImage src = ImageIO.read(new File(srcImg)); // 读入文件
             return scale(src, scale);
         } catch (IOException e) {
-            throw new SimplifiedException(ErrorCode.IO_FAIL, "读取文件失败", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "读取文件失败", e);
         }
     }
 

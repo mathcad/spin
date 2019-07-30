@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.security.RSA;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.DateUtils;
 
 import java.security.PrivateKey;
@@ -63,11 +63,11 @@ public class SecretManager {
         TokenInfo tokenInfo = secretDao.getTokenInfoByToken(tokenStr);
         // token不存在
         if (tokenInfo == null)
-            throw new SimplifiedException(ErrorCode.TOKEN_INVALID);
+            throw new SpinException(ErrorCode.TOKEN_INVALID);
         Long generateTime = tokenInfo.getGenerateTime();
         // token过期，移除相关session并抛出异常，否则返回token对应的UserId
         if (DateUtils.isTimeOut(generateTime, tokenExpiredIn)) {
-            throw new SimplifiedException(ErrorCode.TOKEN_EXPIRED);
+            throw new SpinException(ErrorCode.TOKEN_EXPIRED);
         } else {
             return tokenInfo;
         }
@@ -83,18 +83,18 @@ public class SecretManager {
                 String[] info = RSA.decrypt(rsaPrikey, keyStr).split(SEPARATOR);
                 keyInfo = new KeyInfo(info[0], keyStr, info[1], info[2], Long.parseLong(info[3]));
                 if (DateUtils.isTimeOut(keyInfo.getGenerateTime(), keyExpiredIn)) {
-                    throw new SimplifiedException(ErrorCode.SECRET_EXPIRED);
+                    throw new SpinException(ErrorCode.SECRET_EXPIRED);
                 } else {
                     return secretDao.saveKey(keyInfo);
                 }
             } catch (Exception e) {
                 logger.debug("Extract info from key Error: {}", keyStr, e);
-                throw new SimplifiedException(ErrorCode.SECRET_INVALID);
+                throw new SpinException(ErrorCode.SECRET_INVALID);
             }
         } else {
             if (DateUtils.isTimeOut(keyInfo.getGenerateTime(), keyExpiredIn)) {
                 secretDao.removeKey(keyInfo);
-                throw new SimplifiedException(ErrorCode.SECRET_EXPIRED);
+                throw new SpinException(ErrorCode.SECRET_EXPIRED);
             } else {
                 return keyInfo;
             }
@@ -157,7 +157,7 @@ public class SecretManager {
         try {
             key = RSA.encrypt(rsaPubkey, ecodeStr);
         } catch (Exception ignore) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL);
         }
         return secretDao.saveKey(userId, key, secret, secretType, generateTime);
     }

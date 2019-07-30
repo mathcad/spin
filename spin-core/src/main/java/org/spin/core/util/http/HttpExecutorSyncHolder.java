@@ -9,7 +9,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.StringUtils;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -34,7 +34,7 @@ import java.security.cert.CertificateException;
  * @version 1.0
  */
 class HttpExecutorSyncHolder {
-    private static CloseableHttpClient httpClient;
+    private static volatile CloseableHttpClient httpClient;
 
     static CloseableHttpClient getClient() {
         return httpClient;
@@ -49,7 +49,7 @@ class HttpExecutorSyncHolder {
                     sslContext.getSocketFactory(),
                     SSLConnectionSocketFactory.getDefaultHostnameVerifier());
             } catch (Exception e) {
-                throw new SimplifiedException(e);
+                throw new SpinException(e);
             }
         }
         PoolingHttpClientConnectionManager connectionManager = null == sslConnectionSocketFactory ? new PoolingHttpClientConnectionManager() : new PoolingHttpClientConnectionManager(

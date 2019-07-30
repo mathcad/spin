@@ -16,7 +16,7 @@ import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.Handler;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.JsonUtils;
@@ -141,7 +141,7 @@ public class Request<T extends HttpRequestBase> {
     public Request<T> withHead(String... headers) {
         if (null != headers) {
             if (headers.length % 2 != 0) {
-                throw new SimplifiedException(ErrorCode.INVALID_PARAM, "键值对必须为偶数个");
+                throw new SpinException(ErrorCode.INVALID_PARAM, "键值对必须为偶数个");
             }
             for (int i = 0; i < headers.length; ) {
                 String k = headers[i++];
@@ -181,7 +181,7 @@ public class Request<T extends HttpRequestBase> {
                 } else if (v instanceof TemporalAccessor) {
                     this.formData.put(k, DateUtils.formatDateForSecond((TemporalAccessor) v));
                 } else {
-                    throw new SimplifiedException(ErrorCode.INVALID_PARAM, "不支持的参数类型: " + k);
+                    throw new SpinException(ErrorCode.INVALID_PARAM, "不支持的参数类型: " + k);
                 }
             }
             formBuilt = false;
@@ -201,7 +201,7 @@ public class Request<T extends HttpRequestBase> {
     public Request<T> withForm(String... formData) {
         if (null != formData) {
             if (formData.length % 2 != 0) {
-                throw new SimplifiedException(ErrorCode.INVALID_PARAM, "键值对必须为偶数个");
+                throw new SpinException(ErrorCode.INVALID_PARAM, "键值对必须为偶数个");
             }
             formBuilt = false;
             for (int i = 0; i < formData.length; ) {

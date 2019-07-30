@@ -7,7 +7,7 @@ package org.spin.core.throwable;
  *
  * @version $DistributedId: EncoderException.java 1619948 2014-08-22 22:53:55Z ggregory $
  */
-public class EncoderException extends Exception {
+public class EncoderException extends SpinException {
 
     /**
      * Declares the Serial Version Uid.

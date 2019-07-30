@@ -24,15 +24,17 @@ class BeanUtilsTest {
             MapUtils.ofMap("detail", "bbbb", "no", 5));
         Map<String, Object> map = MapUtils.ofMap("id", 1, "parent", MapUtils.ofMap("name", "Zoe", "address", maps));
         long s = System.currentTimeMillis();
-        int no = BeanUtils.getFieldValue(map, "#parent.#address.#0.#no");
+        Integer no = BeanUtils.getFieldValue(map, "parent.address[0].no");
         long e = System.currentTimeMillis();
         System.out.println(e - s);
         assertEquals(255, no);
         s = System.currentTimeMillis();
-        no = BeanUtils.getFieldValue(map, "#parent.#address.elementData.#1.#no");
+        no = BeanUtils.getFieldValue(map, "parent.address.elementData[1].no");
         e = System.currentTimeMillis();
         System.out.println(e - s);
         assertEquals(5, no);
+        Class size = BeanUtils.getFieldValue(map, "parent.#class");
+        System.out.println(size.getName());
     }
 
     @Test

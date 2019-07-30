@@ -1,6 +1,6 @@
 package org.spin.core.util;
 
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 /**
  * 异常工具类
@@ -12,7 +12,7 @@ import org.spin.core.throwable.SimplifiedException;
  */
 public abstract class ExceptionUtils {
     public ExceptionUtils() {
-        throw new SimplifiedException("工具类禁止实例化");
+        throw new SpinException("工具类禁止实例化");
     }
 
     /**

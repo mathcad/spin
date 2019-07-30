@@ -6,7 +6,7 @@ import org.spin.core.Assert;
 import org.spin.core.collection.Tuple;
 import org.spin.core.function.serializable.BiConsumer;
 import org.spin.core.function.serializable.Function;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,9 +62,9 @@ public abstract class BeanUtils {
             //noinspection unchecked
             clazz = (Class<T>) ClassUtils.getClass(className);
         } catch (ClassNotFoundException e) {
-            throw new SimplifiedException("未找到类:" + className);
+            throw new SpinException("未找到类:" + className);
         } catch (Exception e) {
-            throw new SimplifiedException("类型不匹配" + className);
+            throw new SpinException("类型不匹配" + className);
         }
         return instantiateClass(clazz);
     }
@@ -77,12 +78,12 @@ public abstract class BeanUtils {
      */
     public static <T> T instantiateClass(Class<T> clazz) {
         if (Assert.notNull(clazz, "Class must not be null").isInterface()) {
-            throw new SimplifiedException(clazz.getName() + " is an interface");
+            throw new SpinException(clazz.getName() + " is an interface");
         }
         try {
             return instantiateClass(clazz.getDeclaredConstructor());
         } catch (NoSuchMethodException ex) {
-            throw new SimplifiedException("No default constructor found", ex);
+            throw new SpinException("No default constructor found", ex);
         }
     }
 
@@ -100,13 +101,13 @@ public abstract class BeanUtils {
             ReflectionUtils.makeAccessible(ctor);
             return ctor.newInstance(args);
         } catch (InstantiationException ex) {
-            throw new SimplifiedException("Is " + ctor.getName() + " an abstract class?", ex);
+            throw new SpinException("Is " + ctor.getName() + " an abstract class?", ex);
         } catch (IllegalAccessException ex) {
-            throw new SimplifiedException("Is the constructor " + ctor.getName() + " accessible?", ex);
+            throw new SpinException("Is the constructor " + ctor.getName() + " accessible?", ex);
         } catch (IllegalArgumentException ex) {
-            throw new SimplifiedException("Illegal arguments for constructor " + ctor.getName(), ex);
+            throw new SpinException("Illegal arguments for constructor " + ctor.getName(), ex);
         } catch (InvocationTargetException ex) {
-            throw new SimplifiedException("Constructor " + ctor.getName() + " threw exception", ex.getTargetException());
+            throw new SpinException("Constructor " + ctor.getName() + " threw exception", ex.getTargetException());
         }
     }
 
@@ -131,9 +132,9 @@ public abstract class BeanUtils {
             } catch (NoSuchMethodException e) {
                 logger.info("不存在属性[" + key + "]的set方法");
             } catch (IllegalAccessException e) {
-                throw new SimplifiedException("属性[" + key + "]的set方法不允许访问");
+                throw new SpinException("属性[" + key + "]的set方法不允许访问");
             } catch (InvocationTargetException e) {
-                throw new SimplifiedException("设置属性[" + key + "]失败", e);
+                throw new SpinException("设置属性[" + key + "]失败", e);
             }
         });
     }
@@ -212,9 +213,12 @@ public abstract class BeanUtils {
 
     /**
      * 获取对象指定属性的值
-     * <p>通过反射直接读取属性，不通过get方法。需要获取List,数组或Map中的元素，field请使用#开头。如obj.#name.#1</p>
-     * <p>获取数组与List中的第n个元素：#n</p>
-     * <p>获取中Map中键为key对应的value：#key</p>
+     * <p>通过反射直接读取属性, 如果字段不存在, 则会查找get方法.
+     * 数组, {@link Iterable}, {@link Tuple}等可迭代类型通过"[idx]"索引位置访问，Map中的元素可以直接访问，如果需要访问{@link Map}对象中的成员变量,
+     * 需要在变量名前加"#", 如map.#size</p>
+     * <p>获取数组与List等可迭代类型中的第n个元素：list[n], 高维数组(嵌套集合): list[x][y][z]</p>
+     * <p>获取中Map中键为key对应的value：map.key</p>
+     * <p>获取中Map中名称为size的成员变量的值：map.#size</p>
      *
      * @param target    对象实例
      * @param valuePath 属性名称，支持嵌套
@@ -229,33 +233,99 @@ public abstract class BeanUtils {
         Object o = target;
         for (int i = 0; i < valuePaths.length; i++) {
             String field = valuePaths[i];
-            char mark = field.charAt(0);
-
-            if (i < valuePath.length() - 1 && null == o) {
-                throw new SimplifiedException(field + "属性为null");
+            List<Integer> seqs = new LinkedList<>();
+            if (field.indexOf('[') != -1) {
+                final StringBuilder f = new StringBuilder(field.length());
+                final StringBuilder seq = new StringBuilder(field.length());
+                boolean inPos = false;
+                for (char c : field.toCharArray()) {
+                    switch (c) {
+                        case '[':
+                            if (inPos) {
+                                throw new SpinException("索引表达式未正确结束: " + field);
+                            }
+                            inPos = true;
+                            break;
+                        case ']':
+                            if (!inPos) {
+                                throw new SpinException("索引表达式未正确开始: " + field);
+                            }
+                            try {
+                                seqs.add(Integer.parseInt(seq.toString()));
+                            } catch (NumberFormatException ignore) {
+                                throw new SpinException("索引必须是合法的数字: " + field);
+                            }
+                            seq.setLength(0);
+                            inPos = false;
+                            break;
+                        case '-':
+                            if (inPos) {
+                                throw new SpinException("索引不能为负数: " + field);
+                            }
+                        default:
+                            if (inPos) {
+                                seq.append(c);
+                            } else {
+                                f.append(c);
+                            }
+                            break;
+                    }
+                }
+                field = f.toString();
+                if (i != 0 && f.length() == 0) {
+                    throw new SpinException("表达式不合法，未指定索引的对象" + field);
+                }
             }
-            if ('#' == mark) {
-                if (o instanceof Map) {
-                    o = ((Map) o).get(field.substring(1));
-                } else if (o instanceof List) {
-                    int idx = decodeIdx(field);
+
+            if (field.length() > 0) {
+                char mark = field.charAt(0);
+
+                if (i < valuePath.length() - 1 && null == o) {
+                    throw new SpinException(field + "属性为null");
+                }
+                if ('#' != mark && o instanceof Map) {
+                    o = ((Map) o).get(field);
+                } else {
+                    Field f;
+                    if (mark == '#') {
+                        field = field.substring(1);
+                    }
+                    try {
+                        f = ReflectionUtils.findField(o.getClass(), field);
+                        ReflectionUtils.makeAccessible(f);
+                        o = ReflectionUtils.getField(f, o);
+                    } catch (Exception e) {
+                        String getterName = "get" + StringUtils.capitalize(field);
+                        try {
+                            o = MethodUtils.invokeMethod(o, getterName, null);
+                        } catch (Exception ex) {
+                            throw new SpinException(o.getClass().toString() + "不存在" + field + "属性", ex);
+                        }
+                    }
+                }
+            }
+
+            for (Integer idx : seqs) {
+                if (null == o) {
+                    throw new SpinException(field + "属性为null");
+                }
+
+                if (o instanceof List) {
                     if (((List) o).size() <= idx) {
-                        throw new SimplifiedException(idx + " 索引超出范围0-" + ((List) o).size());
+                        throw new SpinException(idx + " 索引超出范围0-" + ((List) o).size());
                     }
                     o = ((List) o).get(idx);
                 } else if (o.getClass().isArray()) {
-                    int idx = decodeIdx(field);
                     @SuppressWarnings("ConstantConditions")
                     Object[] t = (Object[]) o;
                     if (t.length <= idx) {
-                        throw new SimplifiedException(idx + " 索引超出范围0-" + t.length);
+                        throw new SpinException(idx + " 索引超出范围0-" + t.length);
                     }
                     o = t[idx];
                 } else if (o instanceof Collection) {
                     Collection<?> t = (Collection<?>) o;
-                    int idx = decodeIdx(field);
                     if (t.size() <= idx) {
-                        throw new SimplifiedException(idx + " 索引超出范围0-" + t.size());
+                        throw new SpinException(idx + " 索引超出范围0-" + t.size());
                     }
                     int k = 0;
                     for (Object obj : t) {
@@ -267,15 +337,13 @@ public abstract class BeanUtils {
                     }
                 } else if (o instanceof Tuple) {
                     Tuple<?> t = (Tuple<?>) o;
-                    int idx = decodeIdx(field);
 
                     if (t.size() <= idx) {
-                        throw new SimplifiedException(idx + " 索引超出范围0-" + t.size());
+                        throw new SpinException(idx + " 索引超出范围0-" + t.size());
                     }
                     o = t.get(idx);
                 } else if (o instanceof Iterable) {
                     Iterable<?> t = (Iterable<?>) o;
-                    int idx = decodeIdx(field);
 
                     int k = 0;
                     for (Object obj : t) {
@@ -286,24 +354,10 @@ public abstract class BeanUtils {
                         ++k;
                     }
                     if (k <= idx) {
-                        throw new SimplifiedException(idx + " 索引超出范围0-" + k);
+                        throw new SpinException(idx + " 索引超出范围0-" + k);
                     }
                 } else {
-                    throw new SimplifiedException(o.getClass().toString() + "中的属性名称[" + field + "]不合法");
-                }
-            } else {
-                Field f;
-                try {
-                    f = ReflectionUtils.findField(o.getClass(), field);
-                    ReflectionUtils.makeAccessible(f);
-                } catch (Exception e) {
-                    throw new SimplifiedException(o.getClass().toString() + "不存在" + field + "属性", e);
-                }
-
-                try {
-                    o = ReflectionUtils.getField(f, o);
-                } catch (Exception e) {
-                    throw new SimplifiedException(o.getClass().toString() + "获取属性" + field + "的值失败", e);
+                    throw new SpinException(o.getClass().toString() + "不支持索引方式访问");
                 }
             }
         }
@@ -321,7 +375,7 @@ public abstract class BeanUtils {
 //            String field = valuePaths[i];
 //            char mark = field.charAt(0);
 //            if (o == null) {
-//                throw new SimplifiedException(field + "属性为null");
+//                throw new SpinException(field + "属性为null");
 //            }
 //            if ('#' == mark) {
 //                if (o instanceof Map) {
@@ -333,7 +387,7 @@ public abstract class BeanUtils {
 //                } else if (o instanceof List) {
 //                    int idx = decodeIdx(field);
 //                    if (((List) o).size() <= idx) {
-//                        throw new SimplifiedException(idx + " 索引超出范围0-" + ((List) o).size());
+//                        throw new SpinException(idx + " 索引超出范围0-" + ((List) o).size());
 //                    }
 //                    if (i == valuePaths.length - 1) {
 //                        ((List) o).set(idx, value);
@@ -345,7 +399,7 @@ public abstract class BeanUtils {
 //                    @SuppressWarnings("ConstantConditions")
 //                    Object[] t = (Object[]) o;
 //                    if (t.length <= idx) {
-//                        throw new SimplifiedException(idx + " 索引超出范围0-" + t.length);
+//                        throw new SpinException(idx + " 索引超出范围0-" + t.length);
 //                    }
 //                    if (i == valuePaths.length - 1) {
 //                        t[idx] = o;
@@ -356,7 +410,7 @@ public abstract class BeanUtils {
 //                    Collection<?> t = (Collection<?>) o;
 //                    int idx = decodeIdx(field);
 //                    if (t.size() <= idx) {
-//                        throw new SimplifiedException(idx + " 索引超出范围0-" + t.size());
+//                        throw new SpinException(idx + " 索引超出范围0-" + t.size());
 //                    }
 //                    int k = 0;
 //                    for (Object obj : t) {
@@ -367,7 +421,7 @@ public abstract class BeanUtils {
 //                        ++k;
 //                    }
 //                } else {
-//                    throw new SimplifiedException(o.getClass().toString() + "中的属性名称[" + field + "]不合法");
+//                    throw new SpinException(o.getClass().toString() + "中的属性名称[" + field + "]不合法");
 //                }
 //            } else {
 //                if (i == valuePaths.length - 1) {
@@ -386,13 +440,13 @@ public abstract class BeanUtils {
 //            f = ReflectionUtils.findField(target.getClass(), field);
 //            ReflectionUtils.makeAccessible(f);
 //        } catch (Exception e) {
-//            throw new SimplifiedException(target.getClass().toString() + "不存在" + field + "属性", e);
+//            throw new SpinException(target.getClass().toString() + "不存在" + field + "属性", e);
 //        }
 //
 //        try {
 //            return ReflectionUtils.getField(f, target);
 //        } catch (Exception e) {
-//            throw new SimplifiedException(target.getClass().toString() + "获取属性" + field + "的值失败", e);
+//            throw new SpinException(target.getClass().toString() + "获取属性" + field + "的值失败", e);
 //        }
 //    }
 //
@@ -402,25 +456,15 @@ public abstract class BeanUtils {
 //            f = ReflectionUtils.findField(target.getClass(), field);
 //            ReflectionUtils.makeAccessible(f);
 //        } catch (Exception e) {
-//            throw new SimplifiedException(target.getClass().toString() + "不存在" + field + "属性", e);
+//            throw new SpinException(target.getClass().toString() + "不存在" + field + "属性", e);
 //        }
 //
 //        try {
 //            ReflectionUtils.setField(f, target, value);
 //        } catch (Exception e) {
-//            throw new SimplifiedException(target.getClass().toString() + "获取属性" + field + "的值失败", e);
+//            throw new SpinException(target.getClass().toString() + "获取属性" + field + "的值失败", e);
 //        }
 //    }
-
-    private static int decodeIdx(String field) {
-        String f = field;
-        try {
-            f = f.substring(1);
-            return Integer.valueOf(f);
-        } catch (Exception e) {
-            throw new SimplifiedException("索引[" + f + "]不是有效的数字");
-        }
-    }
 
     /**
      * 获取对象指定属性的值
@@ -488,7 +532,7 @@ public abstract class BeanUtils {
             return res;
         }
 
-        throw new SimplifiedException(target.getClass().getName() + "不能转换为Map<String, String>");
+        throw new SpinException(target.getClass().getName() + "不能转换为Map<String, String>");
     }
 
     /**
@@ -524,7 +568,7 @@ public abstract class BeanUtils {
             //noinspection unchecked
             return (Map<String, Object>) result;
         } else {
-            throw new SimplifiedException(target.getClass().getName() + "不能被转换为Map");
+            throw new SpinException(target.getClass().getName() + "不能被转换为Map");
         }
     }
 
@@ -676,7 +720,7 @@ public abstract class BeanUtils {
         try {
             beanInfo = Introspector.getBeanInfo(c);
         } catch (IntrospectionException e) {
-            throw new SimplifiedException("解析Bean属性异常", e);
+            throw new SpinException("解析Bean属性异常", e);
         }
         return beanInfo.getPropertyDescriptors();
     }
@@ -754,7 +798,7 @@ public abstract class BeanUtils {
                 Set<String> srcFields = getBeanPropertyDes(src.getClass(), false, false).values().stream().map(p -> p.getDescriptor().getName()).collect(Collectors.toSet());
                 fields = getBeanPropertyDes(dest.getClass(), false, false).values().stream().map(p -> p.getDescriptor().getName()).filter(srcFields::contains).toArray(String[]::new);
             } else {
-                throw new SimplifiedException("非JavaBean请指定需要Copy的属性列表");
+                throw new SpinException("非JavaBean请指定需要Copy的属性列表");
             }
         }
 
@@ -1066,10 +1110,10 @@ public abstract class BeanUtils {
         Field f1 = ReflectionUtils.findField(src.getClass(), fieldName);
         Field f2 = ReflectionUtils.findField(dest.getClass(), fieldName);
         if (f1 == null) {
-            throw new SimplifiedException(fieldName + "不存在于" + src.getClass().getSimpleName());
+            throw new SpinException(fieldName + "不存在于" + src.getClass().getSimpleName());
         }
         if (f2 == null) {
-            throw new SimplifiedException(fieldName + "不存在于" + dest.getClass().getSimpleName());
+            throw new SpinException(fieldName + "不存在于" + dest.getClass().getSimpleName());
         }
         ReflectionUtils.makeAccessible(f1);
         ReflectionUtils.makeAccessible(f2);

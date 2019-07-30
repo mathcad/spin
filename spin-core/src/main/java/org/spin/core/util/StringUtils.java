@@ -1,6 +1,6 @@
 package org.spin.core.util;
 
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
@@ -2986,7 +2986,6 @@ public abstract class StringUtils {
         }
         char[] chars = tplt.toCharArray();
 
-        boolean isContainer = obj instanceof Map || obj instanceof Iterable || obj.getClass().isArray();
         StringBuilder result = new StringBuilder(tplt.length() * 2);
         StringBuilder paramName = new StringBuilder(255);
         char cur;
@@ -2995,26 +2994,14 @@ public abstract class StringUtils {
             cur = chars[i];
             if (inParam) {
                 if (i == chars.length - 1 && cur != '}') {
-                    throw new SimplifiedException("模板变量没有正确结束:" + paramName);
+                    throw new SpinException("模板变量没有正确结束:" + paramName);
                 }
                 if (cur == '}' && (i < 3 || chars[i - 1] != '\\')) {
                     inParam = false;
                     if (paramName.length() < 1) {
-                        throw new SimplifiedException("空参数无法填充, 位置: " + i);
+                        throw new SpinException("空参数无法填充, 位置: " + i);
                     }
-                    if (isContainer) {
-                        if (paramName.charAt(0) == '#') {
-                            if (paramName.length() < 2) {
-                                throw new SimplifiedException("空参数无法填充, 位置: " + i);
-                            }
-                            result.append(toStringEmpty(BeanUtils.getFieldValue(obj, paramName.substring(1))));
-                        } else {
-                            result.append(toStringEmpty(BeanUtils.getFieldValue(obj, "#" + paramName.toString())));
-                        }
-
-                    } else {
-                        result.append(toStringEmpty(BeanUtils.getFieldValue(obj, paramName.toString())));
-                    }
+                    result.append(toStringEmpty(BeanUtils.getFieldValue(obj, paramName.toString())));
                     paramName.setLength(0);
                 } else {
                     paramName.append(cur);

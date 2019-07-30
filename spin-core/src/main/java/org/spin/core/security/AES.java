@@ -2,7 +2,7 @@ package org.spin.core.security;
 
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.trait.IntEvaluatable;
 
 import javax.crypto.BadPaddingException;
@@ -175,7 +175,7 @@ public class AES extends ProviderDetector {
             enCipher = Cipher.getInstance(cipherAlgorithm);
             deCipher = Cipher.getInstance(cipherAlgorithm);
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "AES密码构造失败", e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "AES密码构造失败", e);
         }
     }
 
@@ -204,7 +204,7 @@ public class AES extends ProviderDetector {
             secureRandom = SecureRandom.getInstance("SHA1PRNG");
             secureRandom.setSeed(keySeed.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.KEY_FAIL, e);
+            throw new SpinException(ErrorCode.KEY_FAIL, e);
         }
         kg.init(keySize.getValue(), secureRandom);
         //获取密匙对象
@@ -327,7 +327,7 @@ public class AES extends ProviderDetector {
         try {
             return enCipher.doFinal(data);
         } catch (IllegalBlockSizeException | BadPaddingException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
         }
     }
 
@@ -362,7 +362,7 @@ public class AES extends ProviderDetector {
         try {
             return deCipher.doFinal(data);
         } catch (IllegalBlockSizeException | BadPaddingException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
         }
     }
 
@@ -384,7 +384,7 @@ public class AES extends ProviderDetector {
                 deCipher.init(Cipher.DECRYPT_MODE, secretKey);
             }
         } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
-            throw new SimplifiedException(ErrorCode.ENCRYPT_FAIL, "AES密码初始化失败", e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "AES密码初始化失败", e);
         }
     }
 }

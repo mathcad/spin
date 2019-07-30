@@ -77,6 +77,6 @@ public class ErrorCode implements Serializable {
 
     @Override
     public String toString() {
-        return "Exception Type[" + code + "-" + desc + ']';
+        return "ERROR CODE[" + code + "-" + desc + ']';
     }
 }

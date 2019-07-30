@@ -7,7 +7,7 @@ import org.spin.core.ErrorCode;
  *
  * @author xuweinan
  */
-public class AssertFailException extends SimplifiedException {
+public class AssertFailException extends SpinException {
     private static final long serialVersionUID = 1174360235354917591L;
 
     public AssertFailException() {

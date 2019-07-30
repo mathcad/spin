@@ -155,7 +155,7 @@ public abstract class ReflectionUtils {
     public static Object getField(Field field, Object target) {
         try {
             return field.get(target);
-        } catch (IllegalAccessException ex) {
+        } catch (Exception ex) {
             handleReflectionException(ex);
             throw new IllegalStateException(
                 "Unexpected reflection exception - " + ex.getClass().getName() + ": " + ex.getMessage());

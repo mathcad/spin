@@ -1,7 +1,7 @@
 package org.spin.core.auth;
 
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.StringUtils;
 
 import java.util.HashSet;
@@ -73,7 +73,7 @@ public class InMemorySecretDao implements SecretDao {
     public Set<TokenInfo> getTokenByKey(String keyStr) {
         String identifier = getIdentifierByKey(keyStr);
         if (StringUtils.isEmpty(identifier)) {
-            throw new SimplifiedException(ErrorCode.SECRET_INVALID);
+            throw new SpinException(ErrorCode.SECRET_INVALID);
         }
         return userTokenCache.get(identifier).stream().filter(t -> t.getSourceKey().equals(keyStr)).collect(Collectors.toSet());
     }
@@ -179,7 +179,7 @@ public class InMemorySecretDao implements SecretDao {
     public KeyInfo removeKeyByKey(String keyStr) {
         KeyInfo keyInfo = getKeyInfoByKey(keyStr);
         if (null == keyInfo) {
-            throw new SimplifiedException(ErrorCode.SECRET_INVALID);
+            throw new SpinException(ErrorCode.SECRET_INVALID);
         }
         return removeKey(keyInfo);
     }
@@ -240,7 +240,7 @@ public class InMemorySecretDao implements SecretDao {
 
     private void checkKeyStr(String keyStr) {
         if (invalidKeyCache.containsKey(keyStr)) {
-            throw new SimplifiedException(ErrorCode.SECRET_INVALID);
+            throw new SpinException(ErrorCode.SECRET_INVALID);
         }
     }
 

@@ -1,9 +1,7 @@
 package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
-import org.spin.core.throwable.SimplifiedException;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.spin.core.throwable.SpinException;
 
 /**
  * TITLE
@@ -17,7 +15,7 @@ class ExceptionUtilsTest {
 
     @Test
     void getCause() {
-        RuntimeException runtimeException = new RuntimeException(new SimplifiedException(new IllegalAccessException("aaa")));
+        RuntimeException runtimeException = new RuntimeException(new SpinException(new IllegalAccessException("aaa")));
 
         IllegalAccessException cause = ExceptionUtils.getCause(runtimeException, IllegalAccessException.class);
         System.out.println(cause);

@@ -1,7 +1,7 @@
 package org.spin.core.util;
 
 import org.spin.core.collection.FixedVector;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -44,7 +44,7 @@ public interface SerializeUtils {
         try (ObjectOutputStream oos = os instanceof ObjectOutputStream ? (ObjectOutputStream) os : new ObjectOutputStream(os)) {
             oos.writeObject(object);
         } catch (IOException e) {
-            throw new SimplifiedException("对象流写入失败", e);
+            throw new SpinException("对象流写入失败", e);
         }
     }
 
@@ -61,7 +61,7 @@ public interface SerializeUtils {
             oos.writeObject(object);
             proc.accept(os);
         } catch (IOException e) {
-            throw new SimplifiedException("对象流写入失败", e);
+            throw new SpinException("对象流写入失败", e);
         }
     }
 
@@ -101,11 +101,11 @@ public interface SerializeUtils {
             //noinspection unchecked
             return (T) o;
         } catch (IOException e) {
-            throw new SimplifiedException("对象流读取失败", e);
+            throw new SpinException("对象流读取失败", e);
         } catch (ClassNotFoundException e) {
-            throw new SimplifiedException("序列化对象的类型不存在", e);
+            throw new SpinException("序列化对象的类型不存在", e);
         } catch (ClassCastException e) {
-            throw new SimplifiedException("对象类型不匹配", e);
+            throw new SpinException("对象类型不匹配", e);
         }
     }
 }

@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.collection.MultiValueMap;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -488,7 +488,7 @@ public abstract class MapUtils {
             //noinspection unchecked
             return (T) (Objects.isNull(map) ? defaultVal : map.get(key));
         } catch (Exception e) {
-            throw new SimplifiedException("对象类型不匹配");
+            throw new SpinException("对象类型不匹配");
         }
     }
 

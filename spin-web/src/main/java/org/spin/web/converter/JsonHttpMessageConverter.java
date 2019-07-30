@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractGenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
@@ -43,7 +44,14 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
      * Construct a new {@code JsonHttpMessageConverter}.
      */
     public JsonHttpMessageConverter() {
-        super(MediaType.APPLICATION_JSON, new MediaType("application", "*+json"));
+        super(MediaType.APPLICATION_JSON,
+            MediaType.APPLICATION_JSON_UTF8,
+            MediaType.APPLICATION_PROBLEM_JSON,
+            MediaType.APPLICATION_PROBLEM_JSON_UTF8,
+            MediaType.APPLICATION_OCTET_STREAM,
+            MediaType.TEXT_PLAIN,
+            MediaType.TEXT_EVENT_STREAM,
+            new MediaType("application", "*+json"));
         this.setDefaultCharset(StandardCharsets.UTF_8);
     }
 
@@ -96,12 +104,12 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
 
     @Override
-    public boolean canRead(Class<?> clazz, MediaType mediaType) {
+    public boolean canRead(@NonNull Class<?> clazz, MediaType mediaType) {
         return canRead(mediaType);
     }
 
     @Override
-    public boolean canWrite(Class<?> clazz, MediaType mediaType) {
+    public boolean canWrite(@NonNull Class<?> clazz, MediaType mediaType) {
         return canWrite(mediaType);
     }
 
@@ -146,7 +154,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
      * @param type the type for which to return the TypeToken
      * @return the type token
      */
-    protected TypeToken<?> getTypeToken(Type type) {
+    protected TypeToken getTypeToken(Type type) {
         return TypeToken.get(type);
     }
 
@@ -167,24 +175,23 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     }
 
     @Override
-    protected void writeInternal(Object o, Type type, HttpOutputMessage outputMessage)
+    protected void writeInternal(Object t, Type type, HttpOutputMessage outputMessage)
         throws IOException {
 
         Charset charset = getCharset(outputMessage.getHeaders());
-        OutputStreamWriter writer = new OutputStreamWriter(outputMessage.getBody(), charset);
-        try {
+
+        try (OutputStreamWriter writer = new OutputStreamWriter(outputMessage.getBody(), charset)) {
             if (this.jsonPrefix != null) {
                 writer.append(this.jsonPrefix);
             }
             // 基本类型或String，不作处理直接写出
-            if (null != ClassUtils.wrapperToPrimitive(o.getClass()) || ClassUtils.isAssignable(o.getClass(), CharSequence.class)) {
-                writer.write(o.toString());
+            if (null != ClassUtils.wrapperToPrimitive(t.getClass()) || ClassUtils.isAssignable(t.getClass(), CharSequence.class)) {
+                writer.write(t.toString());
             } else if (type != null) {
-                this.gson.toJson(o, type, writer);
+                this.gson.toJson(t, type, writer);
             } else {
-                this.gson.toJson(o, writer);
+                this.gson.toJson(t, writer);
             }
-            writer.close();
         } catch (JsonIOException ex) {
             throw new HttpMessageNotWritableException("Could not write JSON: " + ex.getMessage(), ex);
         }

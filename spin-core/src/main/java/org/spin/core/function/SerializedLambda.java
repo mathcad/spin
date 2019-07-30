@@ -2,7 +2,7 @@ package org.spin.core.function;
 
 
 import org.spin.core.function.serializable.Function;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.SerializeUtils;
 
 import java.io.*;
@@ -39,7 +39,7 @@ public class SerializedLambda implements Serializable {
             Object o = objIn.readObject();
             return (SerializedLambda) o;
         } catch (ClassNotFoundException | IOException e) {
-            throw new SimplifiedException("SerializedLambda解析失败", e);
+            throw new SpinException("SerializedLambda解析失败", e);
         }
     }
 

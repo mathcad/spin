@@ -1,7 +1,7 @@
 package org.spin.core.util;
 
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -23,7 +23,12 @@ import java.util.stream.Collectors;
  * 网络相关工具类
  */
 public abstract class NetUtils {
-    public static final String LOCAL_IP = "127.0.0.1";
+    public static final String LOCAL_IP_V4 = "127.0.0.1";
+    public static final String LOCAL_IPV6 = "0:0:0:0:0:0:0:1";
+    public static final String PRIVATE_IPV6 = "FEC0::/48";
+
+    public static final String IPV6_COMPATIBLE_IPV4 = "0:0:0:0";
+    public static final String IPV6_MAP_IPV4 = "0:0:0:FFFF";
     public static final Pattern ipv4 = Pattern.compile("\\b((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\.((?!\\d\\d\\d)\\d+|1\\d\\d|2[0-4]\\d|25[0-5])\\b");
 
     private NetUtils() {
@@ -82,7 +87,7 @@ public abstract class NetUtils {
             return false;
         }
         try {
-            new Socket(LOCAL_IP, port).close();
+            new Socket(LOCAL_IP_V4, port).close();
             // socket链接正常，说明这个端口正在使用
             return false;
         } catch (Exception e) {
@@ -109,6 +114,10 @@ public abstract class NetUtils {
      * @return 是否为内网IP
      */
     public static boolean isInnerIP(String ipAddress) {
+        if (LOCAL_IP_V4.equals(ipAddress)) {
+            return true;
+        }
+
         boolean isInnerIp;
         long ipNum = NetUtils.ipv4ToLong(ipAddress);
 
@@ -124,7 +133,7 @@ public abstract class NetUtils {
         long cBegin = ipv4ToLong("192.168.0.0");
         long cEnd = ipv4ToLong("192.168.255.255");
 
-        isInnerIp = isInner(ipNum, aBegin, aEnd) || isInner(ipNum, a2Begin, a2End) || isInner(ipNum, bBegin, bEnd) || isInner(ipNum, cBegin, cEnd) || ipAddress.equals(LOCAL_IP);
+        isInnerIp = isInner(ipNum, aBegin, aEnd) || isInner(ipNum, a2Begin, a2End) || isInner(ipNum, bBegin, bEnd) || isInner(ipNum, cBegin, cEnd) || ipAddress.equals(LOCAL_IP_V4);
         return isInnerIp;
     }
 
@@ -139,11 +148,11 @@ public abstract class NetUtils {
         try {
             networkInterfaces = NetworkInterface.getNetworkInterfaces();
         } catch (SocketException e) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, e);
+            throw new SpinException(ErrorCode.NETWORK_EXCEPTION, e);
         }
 
         if (networkInterfaces == null) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION, "Get network interface error!");
+            throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "Get network interface error!");
         }
 
         final LinkedHashSet<String> ipSet = new LinkedHashSet<>();
@@ -174,7 +183,7 @@ public abstract class NetUtils {
             URL absoluteUrl = new URL(absoluteBasePath);
             return new URL(absoluteUrl, relativePath).toString();
         } catch (Exception e) {
-            throw new SimplifiedException(ErrorCode.NETWORK_EXCEPTION,
+            throw new SpinException(ErrorCode.NETWORK_EXCEPTION,
                 StringUtils.plainFormat("To absolute url [{}] base [{}] error!", relativePath, absoluteBasePath));
         }
     }
@@ -210,7 +219,7 @@ public abstract class NetUtils {
      */
     public static InetSocketAddress buildInetSocketAddress(String host, int defaultPort) {
         if (StringUtils.isBlank(host)) {
-            host = LOCAL_IP;
+            host = LOCAL_IP_V4;
         }
 
         String destHost;
@@ -253,7 +262,7 @@ public abstract class NetUtils {
         try {
             networkInterfaces = NetworkInterface.getNetworkInterfaces();
         } catch (SocketException e) {
-            throw new SimplifiedException("获取本机网卡异常", e);
+            throw new SpinException("获取本机网卡异常", e);
         }
 
         return StreamUtils.enumerationAsStream(networkInterfaces).collect(Collectors.toList());
@@ -338,7 +347,7 @@ public abstract class NetUtils {
             try {
                 return new NetAddress(InetAddress.getByAddress(segment), it.getNetworkPrefixLength());
             } catch (UnknownHostException e) {
-                throw new SimplifiedException(e);
+                throw new SpinException(e);
             }
         }).collect(Collectors.toList());
     }

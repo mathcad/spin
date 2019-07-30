@@ -1,6 +1,6 @@
 package org.spin.core.concurrent;
 
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +56,7 @@ public class PulseRateLimiter extends RateLimiter {
                 this.timeWindow = timeWindow * 86_400_000L;
                 break;
             default:
-                throw new SimplifiedException("不支持的时间单位" + timeUnit.name());
+                throw new SpinException("不支持的时间单位" + timeUnit.name());
         }
     }
 

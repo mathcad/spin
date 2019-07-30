@@ -1,6 +1,6 @@
 package org.spin.core.collection;
 
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.ObjectUtils;
 
@@ -79,7 +79,7 @@ public class Tuple10<A, B, C, D, E, F, G, H, I, J> implements Tuple<Tuple10<J, I
             case 9:
                 return (E1) c10;
             default:
-                throw new SimplifiedException("索引超出范围[0, 9]，实际:" + pos);
+                throw new IndexOutOfBoundsException("索引超出范围[0, 9]，实际:" + pos);
         }
     }
 

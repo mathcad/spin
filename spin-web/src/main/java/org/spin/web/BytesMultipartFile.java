@@ -1,7 +1,12 @@
 package org.spin.web;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
@@ -21,16 +26,32 @@ import java.io.Serializable;
  */
 public class BytesMultipartFile implements MultipartFile, Serializable {
     private static final long serialVersionUID = 3858250164636170128L;
+    private static final int FILE_LIMIT = 1024 * 1024;
+    private static final Logger logger = LoggerFactory.getLogger(BytesMultipartFile.class);
+
     private final byte[] fileContent;
-    private final long size;
-    private final String fileName;
+    private final String name;
+    private final String originalFilename;
     private final String contentType;
 
-    public BytesMultipartFile(byte[] fileContent) {
+    public BytesMultipartFile(byte[] fileContent, String name) {
+        this(fileContent, name, null, "");
+    }
+
+    public BytesMultipartFile(byte[] fileContent, String name, String originalFilename) {
+        this(fileContent, name, originalFilename, "");
+    }
+
+    public BytesMultipartFile(byte[] fileContent, String name, String originalFilename, String contentType) {
+        Assert.notNull(fileContent, "文件内容不能为空");
+        if (fileContent.length > FILE_LIMIT) {
+            logger.warn("BytesMultipartFile文件过大，存在内存泄露风险 [name:{}, size: {}]", name, fileContent.length);
+        }
+        Assert.notEmpty(name, "文件参数名称不能为空");
         this.fileContent = fileContent;
-        this.size = fileContent.length;
-        this.fileName = "";
-        this.contentType = "";
+        this.name = name;
+        this.originalFilename = originalFilename;
+        this.contentType = contentType;
     }
 
     public BytesMultipartFile(MultipartFile file) {
@@ -39,38 +60,24 @@ public class BytesMultipartFile implements MultipartFile, Serializable {
         } catch (IOException e) {
             throw new SimplifiedException(ErrorCode.IO_FAIL, "文件读取错误");
         }
-        this.size = fileContent.length;
-        this.fileName = file.getName();
+        this.name = file.getName();
+        this.originalFilename = file.getOriginalFilename();
         this.contentType = file.getContentType();
     }
 
+    @NonNull
     @Override
     public String getName() {
-        return fileName;
+        return name;
     }
 
+    @Nullable
     @Override
     public String getOriginalFilename() {
-        String filename = this.getName();
-        if (filename == null) {
-            // Should never happen.
-            return "";
-        }
-        // Check for Unix-style path
-        int unixSep = filename.lastIndexOf('/');
-        // Check for Windows-style path
-        int winSep = filename.lastIndexOf('\\');
-        // Cut off at latest possible point
-        int pos = (winSep > unixSep ? winSep : unixSep);
-        if (pos != -1) {
-            // Any sort of path separator found...
-            return filename.substring(pos + 1);
-        } else {
-            // A plain name
-            return filename;
-        }
+        return originalFilename;
     }
 
+    @Nullable
     @Override
     public String getContentType() {
         return contentType;
@@ -86,18 +93,20 @@ public class BytesMultipartFile implements MultipartFile, Serializable {
         return fileContent.length;
     }
 
+    @NonNull
     @Override
     public byte[] getBytes() {
         return fileContent;
     }
 
+    @NonNull
     @Override
     public InputStream getInputStream() {
         return new ByteArrayInputStream(fileContent);
     }
 
     @Override
-    public void transferTo(File dest) throws IOException {
+    public void transferTo(@NonNull File dest) throws IOException {
         try (OutputStream os = new FileOutputStream(dest)) {
             os.write(fileContent);
         }

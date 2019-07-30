@@ -10,7 +10,7 @@ import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.nio.conn.NoopIOSessionStrategy;
 import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.StringUtils;
 
 import javax.net.ssl.SSLContext;
@@ -29,7 +29,7 @@ import java.util.concurrent.ThreadFactory;
  */
 class HttpExecutorAsyncHolder {
     private static final ThreadFactory THREAD_FACTORY = Executors.defaultThreadFactory();
-    private static CloseableHttpAsyncClient httpAsyncClient;
+    private static volatile CloseableHttpAsyncClient httpAsyncClient;
 
     static CloseableHttpAsyncClient getClient() {
         return httpAsyncClient;
@@ -52,7 +52,7 @@ class HttpExecutorAsyncHolder {
                 httpAsyncClient.start();
                 return;
             } catch (Exception e) {
-                throw new SimplifiedException("构建SSL安全上下文失败", e);
+                throw new SpinException("构建SSL安全上下文失败", e);
             }
         }
 
