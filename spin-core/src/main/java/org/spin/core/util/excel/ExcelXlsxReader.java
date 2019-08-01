@@ -226,10 +226,10 @@ public class ExcelXlsxReader extends DefaultHandler implements ExcelReader {
     public void endElement(String uri, String localName, String name) {
         // 根据SST的索引值的到单元格的真正要存储的字符串
         // 这时characters()方法可能会被调用多次
-        if (nextIsString && StringUtils.isNotEmpty(lastContents) && StringUtils.isNumeric(lastContents)) {
-            int idx = Integer.parseInt(lastContents);
-            lastContents = sst.getItemAt(idx).toString();
-        }
+//        if (nextIsString && StringUtils.isNotEmpty(lastContents) && StringUtils.isNumeric(lastContents)) {
+//            int idx = Integer.parseInt(lastContents);
+//            lastContents = sst.getItemAt(idx).toString();
+//        }
 
         // t元素也包含字符串
         if (isTElement) {
@@ -331,7 +331,7 @@ public class ExcelXlsxReader extends DefaultHandler implements ExcelReader {
                 try {
                     int idx = Integer.parseInt(value);
                     RichTextString rtss = sst.getItemAt(idx);
-                    thisStr = rtss.toString();
+                    thisStr = rtss.getString();
                 } catch (NumberFormatException ex) {
                     thisStr = value;
                 }

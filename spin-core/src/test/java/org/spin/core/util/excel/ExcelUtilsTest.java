@@ -25,8 +25,8 @@ class ExcelUtilsTest {
 //            e.printStackTrace();
 //        }
 
-        try (InputStream fis = new FileInputStream(new File("C:\\Users\\Mathcat\\Desktop\\商品上传(1).xlsx"))) {
-            ExcelUtils.readWorkBook(fis, (row -> System.out.println(row.getSheetIndex() + row.getSheetName() + row.getRowIndex() + Arrays.toString(row.getRow()))));
+        try (InputStream fis = new FileInputStream(new File("C:\\Users\\Mathcat\\Desktop\\goods(1).xlsx"))) {
+            ExcelUtils.readWorkBook(fis, (row -> System.out.println(row.getSheetIndex() + "-" + row.getSheetName() + "-" + row.getRowIndex() + "-" + Arrays.toString(row.getRow()))));
         } catch (IOException e) {
             e.printStackTrace();
         }
