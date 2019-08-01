@@ -31,7 +31,7 @@ public class PulseRateLimiter extends RateLimiter {
         super(stopwatch);
         cur = new AtomicInteger(0);
         this.rate = rate;
-        size = rate < 100 ? 100 : rate;
+        size = Math.max(rate, 100);
         threshold = (int) (size * 0.75);
         worker = new long[size];
         swap = new long[size];
