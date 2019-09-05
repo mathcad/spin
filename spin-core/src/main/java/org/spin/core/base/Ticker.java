@@ -17,12 +17,15 @@ public abstract class Ticker {
 
     /**
      * Returns the number of nanoseconds elapsed since this ticker's fixed point of reference.
+     *
+     * @return the number of nanoseconds elapsed since this ticker's fixed point of reference
      */
     public abstract long read();
 
     /**
      * A ticker that reads the current time using {@link System#nanoTime}.
      *
+     * @return System ticker
      * @since 10.0
      */
     public static Ticker systemTicker() {

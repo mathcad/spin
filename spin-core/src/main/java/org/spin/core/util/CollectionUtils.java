@@ -34,6 +34,7 @@ public abstract class CollectionUtils {
      * 判断数组是否为空或{@code null}
      *
      * @param array 待检查数组
+     * @param <T>   数组的类型参数
      * @return 是否为空
      */
     public static <T> boolean isEmpty(T[] array) {

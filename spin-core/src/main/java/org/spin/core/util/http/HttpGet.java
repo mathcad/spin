@@ -25,9 +25,6 @@ public class HttpGet extends HttpEntityEnclosingRequestBase {
         setURI(uri);
     }
 
-    /**
-     * @throws IllegalArgumentException if the uri is invalid.
-     */
     public HttpGet(final String uri) {
         super();
         setURI(URI.create(uri));

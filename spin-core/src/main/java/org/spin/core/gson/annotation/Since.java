@@ -59,7 +59,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.TYPE})
 public @interface Since {
     /**
-     * the value indicating a version number since this member
+     * @return the value indicating a version number since this member
      * or type has been present.
      */
     double value();

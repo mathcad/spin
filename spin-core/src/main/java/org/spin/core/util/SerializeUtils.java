@@ -54,6 +54,7 @@ public interface SerializeUtils {
      * @param object 对象
      * @param output 输出流提供者
      * @param proc   自定义处理逻辑
+     * @param <T>    输出流类型参数
      */
     static <T extends OutputStream> void serialize(Object object, Supplier<T> output, Consumer<T> proc) {
         T os = output.get();

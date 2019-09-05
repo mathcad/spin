@@ -163,19 +163,16 @@ class SpinFeignClientsRegistrar
         }
     }
 
-    private void registerFeignClients(AnnotationMetadata metadata,
-                                      BeanDefinitionRegistry registry) {
+    private void registerFeignClients(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
         ClassPathScanningCandidateComponentProvider scanner = getScanner();
         scanner.setResourceLoader(this.resourceLoader);
 
         Set<String> basePackages;
 
-        Map<String, Object> attrs = metadata
-            .getAnnotationAttributes(EnableSpinFeignClients.class.getName());
-        AnnotationTypeFilter annotationTypeFilter = new AnnotationTypeFilter(
-            FeignClient.class);
-        final Class<?>[] clients = attrs == null ? null
-            : (Class<?>[]) attrs.get("clients");
+        Map<String, Object> attrs = metadata.getAnnotationAttributes(EnableSpinFeignClients.class.getName());
+        AnnotationTypeFilter annotationTypeFilter = new AnnotationTypeFilter(FeignClient.class);
+        final Class<?>[] clients = attrs == null ? null : (Class<?>[]) attrs.get("clients");
+
         if (clients == null || clients.length == 0) {
             scanner.addIncludeFilter(annotationTypeFilter);
             basePackages = getBasePackages(metadata);
@@ -193,28 +190,25 @@ class SpinFeignClientsRegistrar
                     return clientClasses.contains(cleaned);
                 }
             };
-            scanner.addIncludeFilter(
-                new AllTypeFilter(Arrays.asList(filter, annotationTypeFilter)));
+            scanner.addIncludeFilter(new AllTypeFilter(Arrays.asList(filter, annotationTypeFilter)));
         }
 
         for (String basePackage : basePackages) {
-            Set<BeanDefinition> candidateComponents = scanner
-                .findCandidateComponents(basePackage);
+            Set<BeanDefinition> candidateComponents = scanner.findCandidateComponents(basePackage);
             for (BeanDefinition candidateComponent : candidateComponents) {
                 if (candidateComponent instanceof AnnotatedBeanDefinition) {
                     // verify annotated class is an interface
                     AnnotatedBeanDefinition beanDefinition = (AnnotatedBeanDefinition) candidateComponent;
                     AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
-                    Assert.isTrue(annotationMetadata.isInterface(),
-                        "@FeignClient can only be specified on an interface");
+                    Assert.isTrue(annotationMetadata.isInterface(), "@FeignClient can only be specified on an interface");
 
-                    Map<String, Object> attributes = annotationMetadata
-                        .getAnnotationAttributes(
-                            FeignClient.class.getCanonicalName());
+                    Map<String, Object> attributes = annotationMetadata.getAnnotationAttributes(FeignClient.class.getCanonicalName());
 
+                    if (null == attributes) {
+                        continue;
+                    }
                     String name = getClientName(attributes);
-                    registerClientConfiguration(registry, name,
-                        attributes.get("configuration"));
+                    registerClientConfiguration(registry, name, attributes.get("configuration"));
 
                     registerFeignClient(registry, annotationMetadata, attributes);
                 }
@@ -222,11 +216,9 @@ class SpinFeignClientsRegistrar
         }
     }
 
-    private void registerFeignClient(BeanDefinitionRegistry registry,
-                                     AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
+    private void registerFeignClient(BeanDefinitionRegistry registry, AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
         String className = annotationMetadata.getClassName();
-        BeanDefinitionBuilder definition = BeanDefinitionBuilder
-            .genericBeanDefinition(FeignClientFactoryBean.class);
+        BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(FeignClientFactoryBean.class);
         validate(attributes);
         String name = getName(attributes);
         String defUrl = StringUtils.trimToEmpty(resolver.getProperty(StringUtils.toUpperCase(name)));
@@ -308,7 +300,7 @@ class SpinFeignClientsRegistrar
         return getPath(path);
     }
 
-    protected ClassPathScanningCandidateComponentProvider getScanner() {
+    private ClassPathScanningCandidateComponentProvider getScanner() {
         return new ClassPathScanningCandidateComponentProvider(false, this.environment) {
             @Override
             protected boolean isCandidateComponent(
@@ -324,11 +316,13 @@ class SpinFeignClientsRegistrar
         };
     }
 
-    protected Set<String> getBasePackages(AnnotationMetadata importingClassMetadata) {
-        Map<String, Object> attributes = importingClassMetadata
-            .getAnnotationAttributes(EnableSpinFeignClients.class.getCanonicalName());
+    private Set<String> getBasePackages(AnnotationMetadata importingClassMetadata) {
+        Map<String, Object> attributes = importingClassMetadata.getAnnotationAttributes(EnableSpinFeignClients.class.getCanonicalName());
 
         Set<String> basePackages = new HashSet<>();
+        if (null == attributes) {
+            return basePackages;
+        }
         for (String pkg : (String[]) attributes.get("value")) {
             if (StringUtils.isNotBlank(pkg)) {
                 basePackages.add(pkg);
@@ -344,8 +338,7 @@ class SpinFeignClientsRegistrar
         }
 
         if (basePackages.isEmpty()) {
-            basePackages.add(
-                ClassUtils.getPackageName(importingClassMetadata.getClassName()));
+            basePackages.add(ClassUtils.getPackageName(importingClassMetadata.getClassName()));
         }
         return basePackages;
     }
@@ -379,12 +372,10 @@ class SpinFeignClientsRegistrar
             return value;
         }
 
-        throw new IllegalStateException("Either 'name' or 'value' must be provided in @"
-            + FeignClient.class.getSimpleName());
+        throw new IllegalStateException("Either 'name' or 'value' must be provided in @" + FeignClient.class.getSimpleName());
     }
 
-    private void registerClientConfiguration(BeanDefinitionRegistry registry, Object name,
-                                             Object configuration) {
+    private void registerClientConfiguration(BeanDefinitionRegistry registry, Object name, Object configuration) {
         BeanDefinitionBuilder builder = BeanDefinitionBuilder
             .genericBeanDefinition(FeignClientSpecification.class);
         builder.addConstructorArgValue(name);

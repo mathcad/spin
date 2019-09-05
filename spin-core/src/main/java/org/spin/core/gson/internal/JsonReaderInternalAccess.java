@@ -28,6 +28,9 @@ public abstract class JsonReaderInternalAccess {
 
     /**
      * Changes the type of the current property name token to a string value.
+     *
+     * @param reader json reader
+     * @throws IOException IO Exception
      */
     public abstract void promoteNameToValue(JsonReader reader) throws IOException;
 }

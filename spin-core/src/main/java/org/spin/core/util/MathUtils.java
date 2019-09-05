@@ -181,6 +181,8 @@ public class MathUtils {
      *
      * @param list       列表
      * @param propGetter 统计字段的getter
+     * @param <T>        集合元素类型参数
+     * @param <P>        getter属性的类型参数
      * @return 统计结果
      */
     public static <T, P> BigDecimal sum(Collection<T> list, Function<T, P> propGetter) {
@@ -195,6 +197,8 @@ public class MathUtils {
      *
      * @param list 列表
      * @param key  统计字段
+     * @param <K>  map的key类型
+     * @param <V>  map的值类型
      * @return 统计结果
      */
     public static <K, V> BigDecimal sum(Collection<Map<K, V>> list, K key) {
@@ -209,6 +213,8 @@ public class MathUtils {
      *
      * @param list       列表
      * @param propGetter 统计字段的getter
+     * @param <T>        集合元素类型参数
+     * @param <P>        getter属性的类型参数
      * @return 统计结果
      */
     public static <T, P> BigDecimal max(Collection<T> list, Function<T, P> propGetter) {
@@ -223,6 +229,8 @@ public class MathUtils {
      *
      * @param list 列表
      * @param key  统计字段
+     * @param <K>  map的key类型
+     * @param <V>  map的值类型
      * @return 统计结果
      */
     public static <K, V> BigDecimal max(Collection<Map<K, V>> list, K key) {
@@ -237,6 +245,8 @@ public class MathUtils {
      *
      * @param list       列表
      * @param propGetter 统计字段的getter
+     * @param <T>        集合元素类型参数
+     * @param <P>        getter属性的类型参数
      * @return 统计结果
      */
     public static <T, P> BigDecimal min(Collection<T> list, Function<T, P> propGetter) {
@@ -251,6 +261,8 @@ public class MathUtils {
      *
      * @param list 列表
      * @param key  统计字段
+     * @param <K>  map的key类型
+     * @param <V>  map的值类型
      * @return 统计结果
      */
     public static <K, V> BigDecimal min(Collection<Map<K, V>> list, K key) {
@@ -265,6 +277,8 @@ public class MathUtils {
      *
      * @param list       列表
      * @param propGetter 统计字段的getter
+     * @param <T>        集合元素类型参数
+     * @param <P>        getter属性的类型参数
      * @return 统计结果
      */
     public static <T, P> BigDecimal mean(Collection<T> list, Function<T, P> propGetter) {
@@ -280,6 +294,8 @@ public class MathUtils {
      *
      * @param list 列表
      * @param key  统计字段
+     * @param <K>  map的key类型
+     * @param <V>  map的值类型
      * @return 统计结果
      */
     public static <K, V> BigDecimal mean(Collection<Map<K, V>> list, K key) {
@@ -295,6 +311,8 @@ public class MathUtils {
      *
      * @param list       列表
      * @param propGetter 统计字段的getter
+     * @param <T>        集合元素类型参数
+     * @param <P>        getter属性的类型参数
      * @return 统计结果
      */
     public static <T, P> BigDecimal geometricMean(Collection<T> list, Function<T, P> propGetter) {
@@ -313,6 +331,8 @@ public class MathUtils {
      *
      * @param list 列表
      * @param key  统计字段
+     * @param <K>  map的key类型
+     * @param <V>  map的值类型
      * @return 统计结果
      */
     public static <K, V> BigDecimal geometricMean(Collection<Map<K, V>> list, K key) {
@@ -332,6 +352,8 @@ public class MathUtils {
      *
      * @param list       列表
      * @param propGetter 统计字段的getter
+     * @param <T>        集合元素类型参数
+     * @param <P>        getter属性的类型参数
      * @return 统计结果
      */
     public static <T, P> BigDecimal quadraticMean(Collection<T> list, Function<T, P> propGetter) {
@@ -351,6 +373,8 @@ public class MathUtils {
      *
      * @param list 列表
      * @param key  统计字段
+     * @param <K>  map的key类型
+     * @param <V>  map的值类型
      * @return 统计结果
      */
     public static <K, V> BigDecimal quadraticMean(Collection<Map<K, V>> list, K key) {
@@ -371,6 +395,8 @@ public class MathUtils {
      *
      * @param list       列表
      * @param propGetter 统计字段的getter
+     * @param <T>        集合元素类型参数
+     * @param <P>        getter属性的类型参数
      * @return 统计结果
      */
     public static <T, P> BigDecimal variance(Collection<T> list, Function<T, P> propGetter) {
@@ -396,6 +422,8 @@ public class MathUtils {
      *
      * @param list 列表
      * @param key  统计字段
+     * @param <K>  map的key类型
+     * @param <V>  map的值类型
      * @return 统计结果
      */
     public static <K, V> BigDecimal variance(Collection<Map<K, V>> list, K key) {
@@ -421,6 +449,8 @@ public class MathUtils {
      *
      * @param list       列表
      * @param propGetter 统计字段的getter
+     * @param <T>        集合元素类型参数
+     * @param <P>        getter属性的类型参数
      * @return 统计结果
      */
     public static <T, P> BigDecimal unbiasedVariance(Collection<T> list, Function<T, P> propGetter) {
@@ -446,6 +476,8 @@ public class MathUtils {
      *
      * @param list 列表
      * @param key  统计字段
+     * @param <K>  map的key类型
+     * @param <V>  map的值类型
      * @return 统计结果
      */
     public static <K, V> BigDecimal unbiasedVariance(Collection<Map<K, V>> list, K key) {

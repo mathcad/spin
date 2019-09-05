@@ -95,14 +95,18 @@ public final class TreeTypeAdapter<T> extends TypeAdapter<T> {
     }
 
     /**
-     * Returns a new factory that will match each type against {@code exactType}.
+     * @param exactType   type
+     * @param typeAdapter type adapter
+     * @return a new factory that will match each type against {@code exactType}.
      */
     public static TypeAdapterFactory newFactory(TypeToken<?> exactType, Object typeAdapter) {
         return new SingleTypeFactory(typeAdapter, exactType, false, null);
     }
 
     /**
-     * Returns a new factory that will match each type and its raw type against
+     * @param exactType   type
+     * @param typeAdapter type adapter
+     * @return a new factory that will match each type and its raw type against
      * {@code exactType}.
      */
     public static TypeAdapterFactory newFactoryWithMatchRawType(
@@ -113,7 +117,9 @@ public final class TreeTypeAdapter<T> extends TypeAdapter<T> {
     }
 
     /**
-     * Returns a new factory that will match each type's raw type for assignability
+     * @param hierarchyType type
+     * @param typeAdapter   type adapter
+     * @return a new factory that will match each type's raw type for assignability
      * to {@code hierarchyType}.
      */
     public static TypeAdapterFactory newTypeHierarchyFactory(

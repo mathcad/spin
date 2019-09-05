@@ -27,7 +27,7 @@ package org.spin.core.gson.internal;
 public interface ObjectConstructor<T> {
 
     /**
-     * Returns a new instance.
+     * @return a new instance.
      */
     T construct();
 }

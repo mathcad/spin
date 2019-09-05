@@ -40,6 +40,9 @@ public final class Streams {
 
     /**
      * Takes a reader in any state and returns the next value as a JsonElement.
+     *
+     * @param reader json reader
+     * @return json element
      */
     public static JsonElement parse(JsonReader reader) throws JsonParseException {
         boolean isEmpty = true;
@@ -68,6 +71,10 @@ public final class Streams {
 
     /**
      * Writes the JSON element to the writer, recursively.
+     *
+     * @param element element to write
+     * @param writer  json writer
+     * @throws IOException IO exception
      */
     public static void write(JsonElement element, JsonWriter writer) throws IOException {
         TypeAdapters.JSON_ELEMENT.write(writer, element);

@@ -135,9 +135,7 @@ class FeignClientFactoryBean
         }
     }
 
-    private void configureUsingProperties(
-        FeignClientProperties.FeignClientConfiguration config,
-        Feign.Builder builder) {
+    private void configureUsingProperties(FeignClientProperties.FeignClientConfiguration config, Feign.Builder builder) {
         if (config == null) {
             return;
         }

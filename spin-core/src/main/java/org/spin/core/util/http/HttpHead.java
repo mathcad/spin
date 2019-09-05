@@ -25,9 +25,6 @@ public class HttpHead extends HttpEntityEnclosingRequestBase {
         setURI(uri);
     }
 
-    /**
-     * @throws IllegalArgumentException if the uri is invalid.
-     */
     public HttpHead(final String uri) {
         super();
         setURI(URI.create(uri));

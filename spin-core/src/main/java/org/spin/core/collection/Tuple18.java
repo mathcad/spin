@@ -1,6 +1,5 @@
 package org.spin.core.collection;
 
-import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.ObjectUtils;
 
@@ -16,7 +15,7 @@ import java.util.function.Consumer;
 public class Tuple18<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R> implements
     Tuple<Tuple18<R, Q, P, O, N, M, L, K, J, I, H, G, F, E, D, C, B, A>> {
     private static final long serialVersionUID = -6658600811140078645L;
-    
+
     public final A c1;
     public final B c2;
     public final C c3;

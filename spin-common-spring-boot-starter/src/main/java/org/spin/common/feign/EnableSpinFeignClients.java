@@ -38,21 +38,19 @@ import java.lang.annotation.*;
 public @interface EnableSpinFeignClients {
 
     /**
-     * Alias for the {@link #basePackages()} attribute. Allows for more concise annotation
-     * declarations e.g.: {@code @ComponentScan("org.my.pkg")} instead of
-     * {@code @ComponentScan(basePackages="org.my.pkg")}.
+     * 与{@link #basePackages()}属性相同. 用来简化配置, 如: {@code @EnableSpinFeignClients(basePackages="org.my.pkg")}可以简单的写成
+     * {@code @EnableSpinFeignClients("org.my.pkg")}.
      *
      * @return the array of 'basePackages'.
      */
     String[] value() default {};
 
     /**
-     * Base packages to scan for annotated components.
-     * <p>
-     * {@link #value()} is an alias for (and mutually exclusive with) this attribute.
+     * 用来指定需要扫描的包。只有指定包会被Feign上下文扫描
      * <p>
      * Use {@link #basePackageClasses()} for a type-safe alternative to String-based
      * package names.
+     * </p>
      *
      * @return the array of 'basePackages'.
      */

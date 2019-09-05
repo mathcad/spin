@@ -165,6 +165,11 @@ public interface TypeAdapterFactory {
     /**
      * Returns a type adapter for {@code type}, or null if this factory doesn't
      * support {@code type}.
+     *
+     * @param gson gson instance
+     * @param type type
+     * @param <T>  target type
+     * @return TypeAdapter
      */
     <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type);
 }

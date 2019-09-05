@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.common.internal.NetworkUtils;
 import org.spin.common.util.PermissionUtils;
 import org.spin.common.vo.CurrentUser;
+import org.spin.common.web.InternalWhiteList;
 import org.spin.common.web.RestfulResponse;
 import org.spin.common.web.ScopeType;
 import org.spin.common.web.annotation.Auth;
@@ -53,9 +54,8 @@ public class UserAuthInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        String referer = StringUtils.toStringEmpty(request.getHeader(HttpHeaders.REFERER));
         boolean internal = internalRequest(request);
-        if (authAnno.scope() == ScopeType.INTERNAL && (referer.endsWith("GATEWAY") || !internal)) {
+        if (authAnno.scope() == ScopeType.INTERNAL && !internal) {
             responseWrite(response, ErrorCode.ACCESS_DENINED, "该接口仅允许内部调用: " + request.getRequestURI());
             return false;
         }
@@ -128,12 +128,19 @@ public class UserAuthInterceptor implements HandlerInterceptor {
 
     /**
      * 判断请求是否来自内部
+     * <pre>
+     *     内部的定义:
+     *     1. 不允许来源于网关
+     *     2. 在白名单中，或者属于同一子网(不允许跨VLAN)
+     * </pre>
      *
      * @param request 请求
      * @return 是否来自内部
      */
     private boolean internalRequest(HttpServletRequest request) {
-        return NetworkUtils.inSameVlan(request.getRemoteHost()) || NetworkUtils.inSameVlan(request.getRemoteAddr());
+        return !StringUtils.toStringEmpty(request.getHeader(HttpHeaders.REFERER)).endsWith("GATEWAY")
+            && (InternalWhiteList.containsOne(request.getRemoteAddr(), request.getRemoteHost())
+            || NetworkUtils.inSameVlan(request.getRemoteHost()) || NetworkUtils.inSameVlan(request.getRemoteAddr()));
     }
 
     private void responseWrite(HttpServletResponse response, ErrorCode errorCode, String... message) {
@@ -141,7 +148,8 @@ public class UserAuthInterceptor implements HandlerInterceptor {
             response.setCharacterEncoding("UTF-8");
             response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
             response.setHeader("Encoded", "1");
-            response.getWriter().write(JsonUtils.toJson(RestfulResponse.error(errorCode, ((null == message || message.length == 0 || StringUtils.isEmpty(message[0])) ? errorCode.getDesc() : message[0]))));
+            response.getWriter().write(JsonUtils.toJson(RestfulResponse
+                .error(errorCode, ((null == message || message.length == 0 || StringUtils.isEmpty(message[0])) ? errorCode.getDesc() : message[0]))));
         } catch (IOException e) {
             logger.error(e.getMessage());
         }

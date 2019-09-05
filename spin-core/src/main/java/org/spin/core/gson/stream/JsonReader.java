@@ -297,6 +297,8 @@ public class JsonReader implements Closeable {
 
     /**
      * Creates a new instance that reads a JSON-encoded stream from {@code in}.
+     *
+     * @param in reader
      */
     public JsonReader(Reader in) {
         if (in == null) {
@@ -333,6 +335,8 @@ public class JsonReader implements Closeable {
      * {@code :}.
      * <li>Name/value pairs separated by {@code ;} instead of {@code ,}.
      * </ul>
+     *
+     * @param lenient lenient
      */
     public final void setLenient(boolean lenient) {
         this.lenient = lenient;
@@ -340,6 +344,8 @@ public class JsonReader implements Closeable {
 
     /**
      * Returns true if this parser is liberal in what it accepts.
+     *
+     * @return is lenient
      */
     public final boolean isLenient() {
         return lenient;
@@ -348,6 +354,8 @@ public class JsonReader implements Closeable {
     /**
      * Consumes the next token from the JSON stream and asserts that it is the
      * beginning of a new array.
+     *
+     * @throws IOException IO Exception
      */
     public void beginArray() throws IOException {
         int p = peeked;
@@ -366,6 +374,8 @@ public class JsonReader implements Closeable {
     /**
      * Consumes the next token from the JSON stream and asserts that it is the
      * end of the current array.
+     *
+     * @throws IOException IO Exception
      */
     public void endArray() throws IOException {
         int p = peeked;
@@ -384,6 +394,8 @@ public class JsonReader implements Closeable {
     /**
      * Consumes the next token from the JSON stream and asserts that it is the
      * beginning of a new object.
+     *
+     * @throws IOException IO Exception
      */
     public void beginObject() throws IOException {
         int p = peeked;
@@ -401,6 +413,8 @@ public class JsonReader implements Closeable {
     /**
      * Consumes the next token from the JSON stream and asserts that it is the
      * end of the current object.
+     *
+     * @throws IOException IO Exception
      */
     public void endObject() throws IOException {
         int p = peeked;
@@ -419,6 +433,9 @@ public class JsonReader implements Closeable {
 
     /**
      * Returns true if the current array or object has another element.
+     *
+     * @return has next
+     * @throws IOException IO Exception
      */
     public boolean hasNext() throws IOException {
         int p = peeked;
@@ -430,6 +447,9 @@ public class JsonReader implements Closeable {
 
     /**
      * Returns the type of the next token without consuming it.
+     *
+     * @return next token
+     * @throws IOException IO exception
      */
     public JsonToken peek() throws IOException {
         int p = peeked;
@@ -782,6 +802,7 @@ public class JsonReader implements Closeable {
      * Returns the next token, a {@link JsonToken#NAME property name}, and
      * consumes it.
      *
+     * @return next token
      * @throws java.io.IOException if the next token in the stream is not a property
      *                             name.
      */
@@ -810,8 +831,9 @@ public class JsonReader implements Closeable {
      * consuming it. If the next token is a number, this method will return its
      * string form.
      *
-     * @throws IllegalStateException if the next token is not a string or if
-     *                               this reader is closed.
+     * @return next token
+     * @throws IOException if the next token is not a string or if
+     *                     this reader is closed.
      */
     public String nextString() throws IOException {
         int p = peeked;
@@ -845,8 +867,9 @@ public class JsonReader implements Closeable {
      * Returns the {@link JsonToken#BOOLEAN boolean} value of the next token,
      * consuming it.
      *
-     * @throws IllegalStateException if the next token is not a boolean or if
-     *                               this reader is closed.
+     * @return next token in boolean
+     * @throws IOException if the next token is not a boolean or if
+     *                     this reader is closed.
      */
     public boolean nextBoolean() throws IOException {
         int p = peeked;
@@ -869,8 +892,8 @@ public class JsonReader implements Closeable {
      * Consumes the next token from the JSON stream and asserts that it is a
      * literal null.
      *
-     * @throws IllegalStateException if the next token is not null or if this
-     *                               reader is closed.
+     * @throws IOException if the next token is not null or if this
+     *                     reader is closed.
      */
     public void nextNull() throws IOException {
         int p = peeked;
@@ -890,9 +913,11 @@ public class JsonReader implements Closeable {
      * consuming it. If the next token is a string, this method will attempt to
      * parse it as a double using {@link Double#parseDouble(String)}.
      *
+     * @return double value
      * @throws IllegalStateException if the next token is not a literal value.
      * @throws NumberFormatException if the next literal value cannot be parsed
      *                               as a double, or is non-finite.
+     * @throws IOException           IO exception
      */
     public double nextDouble() throws IOException {
         int p = peeked;
@@ -935,9 +960,11 @@ public class JsonReader implements Closeable {
      * parse it as a long. If the next token's numeric value cannot be exactly
      * represented by a Java {@code long}, this method throws.
      *
+     * @return long value
      * @throws IllegalStateException if the next token is not a literal value.
      * @throws NumberFormatException if the next literal value cannot be parsed
      *                               as a number, or exactly represented as a long.
+     * @throws IOException           IO Exception
      */
     public long nextLong() throws IOException {
         int p = peeked;
@@ -1167,9 +1194,11 @@ public class JsonReader implements Closeable {
      * parse it as an int. If the next token's numeric value cannot be exactly
      * represented by a Java {@code int}, this method throws.
      *
+     * @return int value
      * @throws IllegalStateException if the next token is not a literal value.
      * @throws NumberFormatException if the next literal value cannot be parsed
      *                               as a number, or exactly represented as an int.
+     * @throws IOException           IO exception
      */
     public int nextInt() throws IOException {
         int p = peeked;
@@ -1223,6 +1252,8 @@ public class JsonReader implements Closeable {
 
     /**
      * Closes this JSON reader and the underlying {@link java.io.Reader}.
+     *
+     * @throws IOException IO Exception
      */
     public void close() throws IOException {
         peeked = PEEKED_NONE;
@@ -1235,6 +1266,8 @@ public class JsonReader implements Closeable {
      * Skips the next value recursively. If it is an object or array, all nested
      * elements are skipped. This method is intended for use when the JSON token
      * stream contains unrecognized or unhandled values.
+     *
+     * @throws IOException IO Exception
      */
     public void skipValue() throws IOException {
         int count = 0;
@@ -1291,6 +1324,8 @@ public class JsonReader implements Closeable {
      * Returns true once {@code limit - pos >= minimum}. If the data is
      * exhausted before that many characters are available, this returns
      * false.
+     *
+     * @throws IOException IO Exception
      */
     private boolean fillBuffer(int minimum) throws IOException {
         char[] buffer = this.buffer;
@@ -1326,6 +1361,10 @@ public class JsonReader implements Closeable {
      * part of a comment. When this returns, the returned character is always at
      * {@code buffer[pos-1]}; this means the caller can always push back the
      * returned character by decrementing {@code pos}.
+     *
+     * @param throwOnEof if throw exception when EOF
+     * @return Returns the next character
+     * @throws IOException IO Exception
      */
     private int nextNonWhitespace(boolean throwOnEof) throws IOException {
         /*
@@ -1442,6 +1481,7 @@ public class JsonReader implements Closeable {
 
     /**
      * @param toFind a string to search for. Must not contain a newline.
+     * @throws IOException IO Exception
      */
     private boolean skipTo(String toFind) throws IOException {
         int length = toFind.length();
@@ -1476,6 +1516,8 @@ public class JsonReader implements Closeable {
     /**
      * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to
      * the current location in the JSON value.
+     *
+     * @return path
      */
     public String getPath() {
         StringBuilder result = new StringBuilder().append('$');

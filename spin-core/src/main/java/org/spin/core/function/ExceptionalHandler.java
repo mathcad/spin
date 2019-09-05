@@ -9,6 +9,6 @@ package org.spin.core.function;
  * @version 1.0
  */
 @FunctionalInterface
-public interface ExceptionalHandler {
-    void handle() throws Exception;
+public interface ExceptionalHandler<E extends Exception> {
+    void handle() throws E;
 }

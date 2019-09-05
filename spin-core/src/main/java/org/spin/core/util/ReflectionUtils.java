@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * Simple utility class for working with the reflection API and handling
  * reflection exceptions.
- * <p>
+ *
  * <p>Only intended for internal use.
  *
  * @author Juergen Hoeller
@@ -361,6 +361,7 @@ public abstract class ReflectionUtils {
      * Determine whether the given field is a "public static final" constant.
      *
      * @param field the field to check
+     * @return 是否是public static final的常量
      */
     public static boolean isPublicStaticFinal(Field field) {
         int modifiers = field.getModifiers();
@@ -370,6 +371,8 @@ public abstract class ReflectionUtils {
     /**
      * Determine whether the given method is an "equals" method.
      *
+     * @param method 需要被检查的方法
+     * @return 是否是equals方法
      * @see Object#equals(Object)
      */
     public static boolean isEqualsMethod(Method method) {
@@ -383,6 +386,8 @@ public abstract class ReflectionUtils {
     /**
      * Determine whether the given method is a "hashCode" method.
      *
+     * @param method 需要被检查的方法
+     * @return 是否是hashCode方法
      * @see Object#hashCode()
      */
     public static boolean isHashCodeMethod(Method method) {
@@ -392,6 +397,8 @@ public abstract class ReflectionUtils {
     /**
      * Determine whether the given method is a "toString" method.
      *
+     * @param method 需要被检查的方法
+     * @return 是否是toString方法
      * @see Object#toString()
      */
     public static boolean isToStringMethod(Method method) {
@@ -400,6 +407,9 @@ public abstract class ReflectionUtils {
 
     /**
      * Determine whether the given method is originally declared by {@link Object}.
+     *
+     * @param method 需要被检查的方法
+     * @return 是否是Object中的方法
      */
     public static boolean isObjectMethod(Method method) {
         if (method == null) {
@@ -418,6 +428,7 @@ public abstract class ReflectionUtils {
      * following the pattern "CGLIB$methodName$0".
      *
      * @param renamedMethod the method to check
+     * @return 方法是否被CGLIB代理重命名
      */
     public static boolean isCglibRenamedMethod(Method renamedMethod) {
         String name = renamedMethod.getName();
@@ -549,10 +560,10 @@ public abstract class ReflectionUtils {
     }
 
     /**
-     * Get all declared methods on the leaf class and all superclasses.
-     * Leaf class methods are included first.
+     * 获取指定类及其所有父类中声明的所有方法
      *
-     * @param leafClass the class to introspect
+     * @param leafClass 需要被解析的类
+     * @return 方法列表
      */
     public static Method[] getAllDeclaredMethods(Class<?> leafClass) {
         final List<Method> methods = new ArrayList<>(32);
@@ -566,6 +577,7 @@ public abstract class ReflectionUtils {
      * any methods found with signatures matching a method already included are filtered out.
      *
      * @param leafClass the class to introspect
+     * @return 方法列表
      */
     public static Method[] getUniqueDeclaredMethods(Class<?> leafClass) {
         final List<Method> methods = new ArrayList<>(32);
@@ -720,6 +732,9 @@ public abstract class ReflectionUtils {
      * Given the source object and the destination, which must be the same class
      * or a subclass, copy all fields, including inherited fields. Designed to
      * work on objects with public no-arg constructors.
+     *
+     * @param src  源对象
+     * @param dest 目标对象
      */
     public static void shallowCopyFieldState(final Object src, final Object dest) {
         if (src == null) {
@@ -759,6 +774,7 @@ public abstract class ReflectionUtils {
          * Perform an operation using the given method.
          *
          * @param method the method to operate on
+         * @throws IllegalAccessException 访问异常时抛出
          */
         void doWith(Method method) throws IllegalAccessException;
     }
@@ -772,7 +788,8 @@ public abstract class ReflectionUtils {
         /**
          * Determine whether the given method matches.
          *
-         * @param method the method to check
+         * @param method 需要被检查的方法
+         * @return 是否匹配
          */
         boolean matches(Method method);
     }
@@ -787,6 +804,7 @@ public abstract class ReflectionUtils {
          * Perform an operation using the given field.
          *
          * @param field the field to operate on
+         * @throws IllegalAccessException 访问异常时抛出
          */
         void doWith(Field field) throws IllegalAccessException;
     }
@@ -800,7 +818,8 @@ public abstract class ReflectionUtils {
         /**
          * Determine whether the given field matches.
          *
-         * @param field the field to check
+         * @param field 需要被检查的字段
+         * @return 是否匹配
          */
         boolean matches(Field field);
     }
@@ -826,6 +845,9 @@ public abstract class ReflectionUtils {
 
     /**
      * 通过反射，获得定义Class时声明的父类的第一个泛型参数的类型。
+     *
+     * @param clazz 需要被解析的类
+     * @return 第一个泛型参数的类型
      */
     public static Class getSuperClassGenricType(Class clazz) {
         return getSuperClassGenricType(clazz, 0);

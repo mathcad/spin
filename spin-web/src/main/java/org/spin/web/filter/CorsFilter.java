@@ -82,7 +82,6 @@ public class CorsFilter implements Filter {
     }
 
     private void addCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
-
         response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, request.getHeader(HttpHeaders.ORIGIN));
         response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
         response.setHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, ALL);

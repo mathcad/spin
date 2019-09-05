@@ -30,11 +30,11 @@ import org.springframework.cloud.openfeign.FeignContext;
 public class HystrixTargeter implements Targeter {
 
     @Override
-    public <T> T target(FeignClientFactoryBean factory, Feign.Builder feign,
-                        FeignContext context, Target.HardCodedTarget<T> target) {
+    public <T> T target(FeignClientFactoryBean factory, Feign.Builder feign, FeignContext context, Target.HardCodedTarget<T> target) {
         if (!(feign instanceof feign.hystrix.HystrixFeign.Builder)) {
             return feign.target(target);
         }
+
         feign.hystrix.HystrixFeign.Builder builder = (feign.hystrix.HystrixFeign.Builder) feign;
         SetterFactory setterFactory = getOptional(factory.getName(), context, SetterFactory.class);
         if (setterFactory != null) {
@@ -56,8 +56,7 @@ public class HystrixTargeter implements Targeter {
                                             Target.HardCodedTarget<T> target, HystrixFeign.Builder builder,
                                             Class<?> fallbackFactoryClass) {
         @SuppressWarnings("unchecked")
-        FallbackFactory<? extends T> fallbackFactory =
-            getFromContext("fallbackFactory", feignClientName, context, fallbackFactoryClass, FallbackFactory.class);
+        FallbackFactory<? extends T> fallbackFactory = getFromContext("fallbackFactory", feignClientName, context, fallbackFactoryClass, FallbackFactory.class);
         return builder.target(target, fallbackFactory);
     }
 

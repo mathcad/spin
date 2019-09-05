@@ -908,11 +908,13 @@ public final class TypeAdapters {
     }
 
     /**
-     * Returns a factory for all subtypes of {@code typeAdapter}. We do a runtime check to confirm
+     * @param clazz       type
+     * @param typeAdapter type adapter
+     * @param <T1>        class generic type
+     * @return a factory for all subtypes of {@code typeAdapter}. We do a runtime check to confirm
      * that the deserialized type matches the type requested.
      */
-    public static <T1> TypeAdapterFactory newTypeHierarchyFactory(
-        final Class<T1> clazz, final TypeAdapter<T1> typeAdapter) {
+    public static <T1> TypeAdapterFactory newTypeHierarchyFactory(final Class<T1> clazz, final TypeAdapter<T1> typeAdapter) {
         return new TypeAdapterFactory() {
             @SuppressWarnings("unchecked")
             @Override

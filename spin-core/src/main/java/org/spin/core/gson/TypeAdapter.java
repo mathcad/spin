@@ -123,7 +123,9 @@ public abstract class TypeAdapter<T> {
      * Writes one JSON value (an array, object, string, number, boolean or null)
      * for {@code value}.
      *
+     * @param out   writer
      * @param value the Java object to write. May be null.
+     * @throws IOException IO Exception
      */
     public abstract void write(JsonWriter out, T value) throws IOException;
 
@@ -135,7 +137,9 @@ public abstract class TypeAdapter<T> {
      * {@link #write(JsonWriter, Object)} for lenient
      * writing.
      *
+     * @param out   writer
      * @param value the Java object to convert. May be null.
+     * @throws IOException IO Exception
      * @since 2.2
      */
     public final void toJson(Writer out, T value) throws IOException {
@@ -182,6 +186,8 @@ public abstract class TypeAdapter<T> {
      *   }.nullSafe()).create();
      * }</pre>
      * Note that we didn't need to check for nulls in our type adapter after we used nullSafe.
+     *
+     * @return TypeAdapter
      */
     public final TypeAdapter<T> nullSafe() {
         return new TypeAdapter<T>() {
@@ -213,6 +219,7 @@ public abstract class TypeAdapter<T> {
      * writing.
      *
      * @param value the Java object to convert. May be null.
+     * @return json String
      * @since 2.2
      */
     public final String toJson(T value) {
@@ -246,7 +253,9 @@ public abstract class TypeAdapter<T> {
      * Reads one JSON value (an array, object, string, number, boolean or null)
      * and converts it to a Java object. Returns the converted object.
      *
+     * @param in jsonReader
      * @return the converted Java object. May be null.
+     * @throws IOException IO Exception
      */
     public abstract T read(JsonReader in) throws IOException;
 
@@ -256,7 +265,9 @@ public abstract class TypeAdapter<T> {
      * read is strict. Create a {@link JsonReader#setLenient(boolean) lenient}
      * {@code JsonReader} and call {@link #read(JsonReader)} for lenient reading.
      *
+     * @param in json Reader
      * @return the converted Java object. May be null.
+     * @throws IOException IO Exception
      * @since 2.2
      */
     public final T fromJson(Reader in) throws IOException {
@@ -270,7 +281,9 @@ public abstract class TypeAdapter<T> {
      * strict. Create a {@link JsonReader#setLenient(boolean) lenient} {@code
      * JsonReader} and call {@link #read(JsonReader)} for lenient reading.
      *
+     * @param json json String
      * @return the converted Java object. May be null.
+     * @throws IOException IO Exception
      * @since 2.2
      */
     public final T fromJson(String json) throws IOException {
@@ -281,6 +294,7 @@ public abstract class TypeAdapter<T> {
      * Converts {@code jsonTree} to a Java object.
      *
      * @param jsonTree the Java object to convert. May be {@link JsonNull}.
+     * @return parsed Object
      * @since 2.2
      */
     public final T fromJsonTree(JsonElement jsonTree) {

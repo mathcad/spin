@@ -99,6 +99,7 @@ public abstract class EnumUtils {
      *
      * @param enumCls  枚举类型
      * @param enumName 枚举名称
+     * @param <E>      枚举类型参数
      * @return 枚举常量
      */
     public static <E extends Enum<E>> E fromName(Class<E> enumCls, String enumName) {
@@ -114,6 +115,7 @@ public abstract class EnumUtils {
      *
      * @param enumCls 枚举类型
      * @param ordinal 序号
+     * @param <E>     枚举类型参数
      * @return 枚举常量
      */
     public static <E extends Enum<E>> E fromOrdinal(Class<E> enumCls, int ordinal) {
@@ -135,6 +137,8 @@ public abstract class EnumUtils {
      *
      * @param enumCls 枚举类型
      * @param value   字段的值
+     * @param <E>     枚举类型参数
+     * @param <T>     value的类型参数
      * @return 枚举常量
      */
     public static <E extends Enum<E>, T> E getEnum(Class<E> enumCls, T value) {
@@ -147,6 +151,8 @@ public abstract class EnumUtils {
      * @param enumCls 枚举类型
      * @param value   字段的值
      * @param field   字段名
+     * @param <E>     枚举类型参数
+     * @param <T>     value的类型参数
      * @return 枚举常量
      */
     public static <E extends Enum<E>, T> E getEnum(Class<E> enumCls, T value, String field) {
@@ -189,6 +195,9 @@ public abstract class EnumUtils {
      * @param enumCls 枚举类型
      * @param map     map
      * @param key     键
+     * @param <E>     枚举类型参数
+     * @param <K>     map的key的类型
+     * @param <V>     map的值的类型
      * @return 枚举常量
      */
     public static <E extends Enum<E>, K, V> Enum getByValue(Class<E> enumCls, Map<K, V> map, K key) {

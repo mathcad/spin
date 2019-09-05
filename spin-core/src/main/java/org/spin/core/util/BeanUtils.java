@@ -813,6 +813,7 @@ public abstract class BeanUtils {
      * @param src     源对象
      * @param dest    目标对象
      * @param getters 属性getter列表
+     * @param <T>     源对象的类型参数
      */
     public static <T> void copyTo(T src, Object dest, Iterable<Function<T, ?>> getters) {
         if (null == src || null == dest || null == getters)

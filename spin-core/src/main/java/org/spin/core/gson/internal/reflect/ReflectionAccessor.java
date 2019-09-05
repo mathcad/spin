@@ -38,6 +38,8 @@ public abstract class ReflectionAccessor {
     /**
      * Does the same as {@code ao.setAccessible(true)}
      * {
+     *
+     * @param ao accessible object
      */
     public abstract void makeAccessible(AccessibleObject ao);
 
@@ -46,6 +48,8 @@ public abstract class ReflectionAccessor {
      * <p>
      * In such a case, use {@link ReflectionAccessor#makeAccessible(AccessibleObject)} on a field, method or constructor
      * (instead of basic {@link AccessibleObject#setAccessible(boolean)}).
+     *
+     * @return {@link ReflectionAccessor} instance suitable for the current Java version
      */
     public static ReflectionAccessor getInstance() {
         return instance;

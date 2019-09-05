@@ -16,6 +16,7 @@ public interface Authenticator<U> {
      * 获取用户
      *
      * @param identity 用户标识符，具体由实现类定义
+     * @return 用户
      */
     U getSubject(Object identity);
 
@@ -23,6 +24,8 @@ public interface Authenticator<U> {
      * 验证用户密码前的自定义校验，如验证用户类型等。
      * <p>验证不通过直接抛出异常即可</p>
      * 默认什么也不做
+     *
+     * @param user 用户
      */
     default void preCheck(U user) {
     }
@@ -31,6 +34,7 @@ public interface Authenticator<U> {
      * 获取角色与权限信息
      *
      * @param identity 用户标识符
+     * @return 角色权限信息
      */
     RolePermission getRolePermissionList(Object identity);
 

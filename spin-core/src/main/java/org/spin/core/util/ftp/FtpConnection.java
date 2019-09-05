@@ -60,6 +60,7 @@ public class FtpConnection implements AutoCloseable {
      *
      * @param url      标准FTP连接地址，形如：ftp://用户名:密码@服务器ip地址
      * @param protocal 如果是ftps连接，需指明加密协议
+     * @return FTP连接
      */
     public static FtpConnection ofUrl(String url, String protocal) {
         Matcher matcher = PROTOCAL_PATTERN.matcher(url);

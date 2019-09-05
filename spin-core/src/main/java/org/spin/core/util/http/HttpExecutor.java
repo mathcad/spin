@@ -19,8 +19,10 @@ import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.Handler;
+import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.IOUtils;
+import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
 
 import javax.net.ssl.SSLException;
@@ -29,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.lang.reflect.Type;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -297,6 +300,18 @@ public abstract class HttpExecutor {
         } catch (IOException e) {
             throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "转换请求结果发生错误", e);
         }
+    }
+
+    public static <T> T toObjectProc(HttpEntity entity, Class<T> clazz) {
+        return JsonUtils.fromJson(toStringProc(entity), clazz);
+    }
+
+    public static <T> T toObjectProc(HttpEntity entity, Type type) {
+        return JsonUtils.fromJson(toStringProc(entity), type);
+    }
+
+    public static <T> T toObjectProc(HttpEntity entity, TypeToken<T> typeToken) {
+        return JsonUtils.fromJson(toStringProc(entity), typeToken);
     }
 
     public static Map<String, String> downloadProc(HttpEntity entity, String savePath) {

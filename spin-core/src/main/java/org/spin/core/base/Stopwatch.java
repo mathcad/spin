@@ -194,6 +194,8 @@ public final class Stopwatch {
      * Returns the current elapsed time shown on this stopwatch as a {@link Duration}. Unlike {@link
      * #elapsed(TimeUnit)}, this method does not lose any precision due to rounding.
      *
+     * @param recordIndex 计次索引
+     * @return 计次逝去的时间
      * @since 22.0
      */
     public Duration elapsedRecord(int recordIndex) {
@@ -211,6 +213,8 @@ public final class Stopwatch {
      * elapsed time. Therefore, we recommend using {@link #elapsed()} instead, which returns a
      * strongly-typed {@link Duration} instance.
      *
+     * @param desiredUnit 时间单位
+     * @return 逝去的时间
      * @since 14.0 (since 10.0 as {@code elapsedTime()})
      */
     public long elapsed(TimeUnit desiredUnit) {
@@ -221,6 +225,7 @@ public final class Stopwatch {
      * Returns the current elapsed time shown on this stopwatch as a {@link Duration}. Unlike {@link
      * #elapsed(TimeUnit)}, this method does not lose any precision due to rounding.
      *
+     * @return 逝去的时间
      * @since 22.0
      */
     public Duration elapsed() {

@@ -16,7 +16,6 @@ import java.util.Optional;
  * 全局Session管理器
  *
  * @author xuweinan
- * @version V1.0
  * @version 1.0
  * @deprecated 不建议再使用，有Session请自行选择相关框架
  */
@@ -60,6 +59,7 @@ public abstract class SessionManager {
     /**
      * 获取当前线程绑定的用户Session，如果不存在，返回null
      *
+     * @param requiredNew 当前不存在session时，创建一个新的session
      * @return 当前线程上的Session
      */
     public static Session getCurrentSession(boolean requiredNew) {

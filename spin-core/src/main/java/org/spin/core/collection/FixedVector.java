@@ -43,6 +43,8 @@ public class FixedVector<T> implements Collection<T> {
 
     /**
      * 获取第一个元素
+     *
+     * @return 队首元素
      */
     public T get() {
         //noinspection unchecked
@@ -59,6 +61,8 @@ public class FixedVector<T> implements Collection<T> {
 
     /**
      * 获取最后一个元素
+     *
+     * @return 栈顶元素
      */
     public T peek() {
         return get(cursor - 1);
@@ -66,6 +70,8 @@ public class FixedVector<T> implements Collection<T> {
 
     /**
      * 将最后一个元素出栈
+     *
+     * @return 栈顶元素
      */
     public T pop() {
         if (base == cursor) {

@@ -76,11 +76,6 @@ public class ExcelXlsxReader extends DefaultHandler implements ExcelReader {
     private String lastContents;
 
     /**
-     * 字符串标识
-     */
-    private boolean nextIsString;
-
-    /**
      * 当前列
      */
     private int curCol = -1;
@@ -210,9 +205,6 @@ public class ExcelXlsxReader extends DefaultHandler implements ExcelReader {
         if ("c".equals(name)) {
             // 设定单元格类型
             setNextDataType(attributes);
-            // Figure out if the value is an index in the SST
-            String cellType = attributes.getValue("t");
-            nextIsString = cellType != null && cellType.equals("s");
         }
 
         // 当元素为t时

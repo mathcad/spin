@@ -225,6 +225,7 @@ public class Matrix<T> implements RowUpdateListener {
      *
      * @param column 列编号，从0开始
      * @param key    列值
+     * @return 如果删除成功，返回true
      */
     public boolean delete(int column, T key) {
         rangeCheck(column);
@@ -238,6 +239,7 @@ public class Matrix<T> implements RowUpdateListener {
      *
      * @param columnHeader 列编号
      * @param key          列值
+     * @return 如果删除成功，返回true
      */
     public boolean delete(String columnHeader, T key) {
         Integer column = matrixHeader.get(columnHeader);

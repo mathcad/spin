@@ -15,14 +15,14 @@
  */
 package org.spin.core.gson;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-
 import org.spin.core.gson.internal.Streams;
 import org.spin.core.gson.stream.JsonReader;
 import org.spin.core.gson.stream.JsonToken;
 import org.spin.core.gson.stream.MalformedJsonException;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 
 /**
  * A parser to parse Json into a parse tree of {@link JsonElement}s
@@ -61,20 +61,21 @@ public final class JsonParser {
                 throw new JsonSyntaxException("Did not consume the entire document.");
             }
             return element;
-        } catch (MalformedJsonException e) {
+        } catch (MalformedJsonException | NumberFormatException e) {
             throw new JsonSyntaxException(e);
         } catch (IOException e) {
             throw new JsonIOException(e);
-        } catch (NumberFormatException e) {
-            throw new JsonSyntaxException(e);
         }
     }
 
     /**
      * Returns the next value from the JSON stream as a parse tree.
      *
-     * @throws JsonParseException if there is an IOException or if the specified
-     *                            text is not valid JSON
+     * @param json json reader
+     * @return json element
+     * @throws JsonIOException     if there is an IOException or if the specified
+     *                             text is not valid JSON
+     * @throws JsonSyntaxException if there is a syntax error in json
      * @since 1.6
      */
     public JsonElement parse(JsonReader json) throws JsonIOException, JsonSyntaxException {
@@ -82,9 +83,7 @@ public final class JsonParser {
         json.setLenient(true);
         try {
             return Streams.parse(json);
-        } catch (StackOverflowError e) {
-            throw new JsonParseException("Failed parsing JSON source: " + json + " to Json", e);
-        } catch (OutOfMemoryError e) {
+        } catch (StackOverflowError | OutOfMemoryError e) {
             throw new JsonParseException("Failed parsing JSON source: " + json + " to Json", e);
         } finally {
             json.setLenient(lenient);

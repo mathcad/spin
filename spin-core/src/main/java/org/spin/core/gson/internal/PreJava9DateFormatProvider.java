@@ -26,6 +26,9 @@ public class PreJava9DateFormatProvider {
 
     /**
      * Returns the same DateFormat as {@code DateFormat.getDateInstance(style, Locale.US)} in Java 8 or below.
+     *
+     * @param style date style
+     * @return date format
      */
     public static DateFormat getUSDateFormat(int style) {
         return new SimpleDateFormat(getDateFormatPattern(style), Locale.US);
@@ -34,6 +37,10 @@ public class PreJava9DateFormatProvider {
     /**
      * Returns the same DateFormat as {@code DateFormat.getDateTimeInstance(dateStyle, timeStyle, Locale.US)}
      * in Java 8 or below.
+     *
+     * @param dateStyle date style
+     * @param timeStyle time style
+     * @return dateformat
      */
     public static DateFormat getUSDateTimeFormat(int dateStyle, int timeStyle) {
         String pattern = getDatePartOfDateTimePattern(dateStyle) + " " + getTimePartOfDateTimePattern(timeStyle);

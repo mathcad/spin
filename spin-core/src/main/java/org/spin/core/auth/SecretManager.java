@@ -75,6 +75,9 @@ public class SecretManager {
 
     /**
      * 从密钥中获取用户信息
+     *
+     * @param keyStr 密钥字符串
+     * @return 密钥信息
      */
     public KeyInfo getKeyInfo(String keyStr) {
         KeyInfo keyInfo = secretDao.getKeyInfoByKey(keyStr);

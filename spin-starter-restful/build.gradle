@@ -1,8 +1,8 @@
 buildscript {
     ext {
-        springBootVersion = '2.1.5.RELEASE'
-        junitJupiterVersion = '5.4.2'
-        springDataRedisVersion = '2.1.8.RELEASE'
+        springBootVersion = '2.1.6.RELEASE'
+        junitJupiterVersion = '5.5.1'
+        springDataRedisVersion = '2.1.9.RELEASE'
     }
     repositories {
         mavenLocal()
@@ -21,7 +21,7 @@ plugins {
 }
 
 description 'spin-web的starter'
-version '2.1.33-SNAPSHOT'
+version '2.2.4-SNAPSHOT'
 def artifactId = 'spin-starter-restful'
 
 compileJava.dependsOn(processResources)

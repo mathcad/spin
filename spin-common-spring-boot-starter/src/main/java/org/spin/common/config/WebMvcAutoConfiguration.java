@@ -2,6 +2,7 @@ package org.spin.common.config;
 
 import org.spin.common.service.remote.PermissionService;
 import org.spin.common.util.PermissionUtils;
+import org.spin.common.web.InternalWhiteList;
 import org.spin.common.web.config.RequestMappingBeanValidator;
 import org.spin.common.web.converter.JsonHttpMessageConverter;
 import org.spin.common.web.handler.ReplacementReturnValueHandler;
@@ -13,6 +14,7 @@ import org.spin.core.gson.JsonSerializer;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.JsonUtils;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -131,5 +133,10 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
     @ConditionalOnBean(PermissionService.class)
     public InitializingBean permissionService(PermissionService permissionService) {
         return () -> PermissionUtils.init(permissionService);
+    }
+
+    @Value("${internal.whiteList:}")
+    public void refreshWhiteList(String hosts) {
+        InternalWhiteList.refreshList(hosts);
     }
 }

@@ -64,7 +64,7 @@ import java.lang.annotation.Target;
 public @interface Until {
 
     /**
-     * the value indicating a version number until this member
+     * @return the value indicating a version number until this member
      * or type should be ignored.
      */
     double value();

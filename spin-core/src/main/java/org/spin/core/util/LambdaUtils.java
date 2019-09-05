@@ -43,6 +43,8 @@ public abstract class LambdaUtils {
      * 从可序列化的lambda中解析出相关信息
      *
      * @param lambda 函数式接口
+     * @param <T>    lambda第一个参数类型
+     * @param <U>    lambda第二个参数类型
      * @return lambda信息
      */
     public static <T, U> SerializedLambda resolveLambda(BiConsumer<T, U> lambda) {

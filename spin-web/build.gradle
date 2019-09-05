@@ -3,14 +3,14 @@ plugins {
 }
 
 description = '基于spring mvc的web模块'
-version = '2.1.33-SNAPSHOT'
+version = '2.2.4-SNAPSHOT'
 def artifactId = 'spin-web'
 
 ext {
-    junitJupiterVersion = '5.4.2'
-    springVersion = '5.1.7.RELEASE'
-    itextpdfVersion = '5.5.13'
-    hibernateVersion = '5.4.3.Final'
+    junitJupiterVersion = '5.5.1'
+    springVersion = '5.1.8.RELEASE'
+    itextpdfVersion = '5.5.13.1'
+    hibernateVersion = '5.4.4.Final'
 }
 
 test {

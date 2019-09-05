@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * TITLE
+ * Feign客户端自动配置
  * <p>DESCRIPTION</p>
  * <p>Created by xuweinan on 2019/3/19</p>
  *
@@ -51,6 +51,18 @@ public class FeignAutoConfiguration {
         @ConditionalOnMissingBean
         public Targeter feignTargeter() {
             return new HystrixTargeter();
+        }
+
+    }
+
+    @Configuration
+    @ConditionalOnMissingClass("feign.hystrix.HystrixFeign")
+    protected static class DefaultFeignTargeterConfiguration {
+
+        @Bean("spinFeignTargeter")
+        @ConditionalOnMissingBean
+        public Targeter feignTargeter() {
+            return new DefaultTargeter();
         }
 
     }

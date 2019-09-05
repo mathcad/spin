@@ -74,6 +74,8 @@ public final class JsonTreeWriter extends JsonWriter {
 
     /**
      * Returns the top level object produced by this writer.
+     *
+     * @return the top level object produced by this writer
      */
     public JsonElement get() {
         if (!stack.isEmpty()) {

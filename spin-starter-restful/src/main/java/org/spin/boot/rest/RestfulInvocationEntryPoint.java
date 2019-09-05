@@ -43,6 +43,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartRequest;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
@@ -54,8 +55,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * restful请求分发
@@ -213,13 +212,6 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
                 String token = request.getParameter("token");
                 if (StringUtils.isEmpty(token)) {
                     token = request.getHeader("token");
-                }
-                try {
-                    secretManager.bindCurrentSession(token);
-                } catch (SimplifiedException e) {
-                    if (rMethod.auth()) {
-                        return RestfulResponse.error(e);
-                    }
                 }
             }
             return invoke(argumentsDescriptors.get(selected));

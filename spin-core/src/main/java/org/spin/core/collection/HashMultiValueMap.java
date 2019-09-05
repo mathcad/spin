@@ -17,9 +17,9 @@
 package org.spin.core.collection;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,7 +27,6 @@ import java.util.Set;
 /**
  * Simple implementation of {@link MultiValueMap} that wraps a {@link HashMap},
  * storing multiple values in a {@link ArrayList}.
- * <p>
  * <p>This Map implementation is generally not thread-safe. It is primarily designed
  * for data structures exposed from request objects, for use in a single thread only.
  *

@@ -171,6 +171,8 @@ public abstract class MapUtils {
      *
      * @param map map对象
      * @param key 属性键
+     * @param <K> map的key类型
+     * @param <V> map的值类型
      * @return 获取的结果
      */
     public static <K, V> String getStringValue(Map<K, V> map, K key) {
@@ -183,6 +185,8 @@ public abstract class MapUtils {
      * @param map        map对象
      * @param key        属性键
      * @param defaultVal 默认值
+     * @param <K>        map的key类型
+     * @param <V>        map的值类型
      * @return 获取的结果
      */
     public static <K, V> String getStringValue(Map<K, V> map, K key, String defaultVal) {
@@ -194,6 +198,8 @@ public abstract class MapUtils {
      *
      * @param map map对象
      * @param key 属性键
+     * @param <K> map的key类型
+     * @param <V> map的值类型
      * @return 获取的结果
      */
     public static <K, V> Long getLongValue(Map<K, V> map, K key) {
@@ -206,6 +212,8 @@ public abstract class MapUtils {
      * @param map        map对象
      * @param key        属性键
      * @param defaultVal 默认值
+     * @param <K>        map的key类型
+     * @param <V>        map的值类型
      * @return 获取的结果
      */
     public static <K, V> Long getLongValue(Map<K, V> map, K key, Long defaultVal) {
@@ -234,6 +242,8 @@ public abstract class MapUtils {
      *
      * @param map map对象
      * @param key 属性键
+     * @param <K> map的key类型
+     * @param <V> map的值类型
      * @return 获取的结果
      */
     public static <K, V> Integer getIntValue(Map<K, V> map, K key) {
@@ -246,6 +256,8 @@ public abstract class MapUtils {
      * @param map        map对象
      * @param key        属性键
      * @param defaultVal 默认值
+     * @param <K>        map的key类型
+     * @param <V>        map的值类型
      * @return 获取的结果
      */
     public static <K, V> Integer getIntValue(Map<K, V> map, K key, Integer defaultVal) {
@@ -274,6 +286,8 @@ public abstract class MapUtils {
      *
      * @param map map对象
      * @param key 属性键
+     * @param <K> map的key类型
+     * @param <V> map的值类型
      * @return 获取的结果
      */
     public static <K, V> Double getDoubleValue(Map<K, V> map, K key) {
@@ -286,6 +300,8 @@ public abstract class MapUtils {
      * @param map        map对象
      * @param key        属性键
      * @param defaultVal 默认值
+     * @param <K>        map的key类型
+     * @param <V>        map的值类型
      * @return 获取的结果
      */
     public static <K, V> Double getDoubleValue(Map<K, V> map, K key, Double defaultVal) {
@@ -314,6 +330,8 @@ public abstract class MapUtils {
      *
      * @param map map对象
      * @param key 属性键
+     * @param <K> map的key类型
+     * @param <V> map的值类型
      * @return 获取的结果
      */
     public static <K, V> Float getFloatValue(Map<K, V> map, K key) {
@@ -326,6 +344,8 @@ public abstract class MapUtils {
      * @param map        map对象
      * @param key        属性键
      * @param defaultVal 默认值
+     * @param <K>        map的key类型
+     * @param <V>        map的值类型
      * @return 获取的结果
      */
     public static <K, V> Float getFloatValue(Map<K, V> map, K key, Float defaultVal) {
@@ -354,6 +374,8 @@ public abstract class MapUtils {
      *
      * @param map map对象
      * @param key 属性键
+     * @param <K> map的key类型
+     * @param <V> map的值类型
      * @return 获取的结果
      */
     public static <K, V> BigDecimal getBigDecimalValue(Map<K, V> map, K key) {
@@ -366,6 +388,8 @@ public abstract class MapUtils {
      * @param map        map对象
      * @param key        属性键
      * @param defaultVal 默认值
+     * @param <K>        map的key类型
+     * @param <V>        map的值类型
      * @return 获取的结果
      */
     public static <K, V> BigDecimal getBigDecimalValue(Map<K, V> map, K key, BigDecimal defaultVal) {
@@ -385,6 +409,8 @@ public abstract class MapUtils {
      *
      * @param map map对象
      * @param key 属性键
+     * @param <K> map的key类型
+     * @param <V> map的值类型
      * @return Date
      */
     public static <K, V> Date getDateValue(Map<K, V> map, K key) {
@@ -397,6 +423,8 @@ public abstract class MapUtils {
      * @param map        map对象
      * @param key        属性键
      * @param defaultVal 默认值
+     * @param <K>        map的key类型
+     * @param <V>        map的值类型
      * @return Date
      */
     public static <K, V> Date getDateValue(Map<K, V> map, K key, Date defaultVal) {
@@ -425,6 +453,8 @@ public abstract class MapUtils {
      *
      * @param map map对象
      * @param key 属性键
+     * @param <K> map的key类型
+     * @param <V> map的值类型
      * @return LocalDateTime
      */
     public static <K, V> LocalDateTime getLocalDateTimeValue(Map<K, V> map, K key) {
@@ -437,6 +467,8 @@ public abstract class MapUtils {
      * @param map        map对象
      * @param key        属性键
      * @param defaultVal 默认值
+     * @param <K>        map的key类型
+     * @param <V>        map的值类型
      * @return LocalDateTime
      */
     public static <K, V> LocalDateTime getLocalDateTimeValue(Map<K, V> map, K key, LocalDateTime defaultVal) {
@@ -468,6 +500,8 @@ public abstract class MapUtils {
      * @param map map对象
      * @param key 属性键
      * @param <T> 类型参数
+     * @param <K> map的key类型
+     * @param <V> map的值类型
      * @return 获取的结果
      */
     public static <T, K, V> T getObjectValue(Map<K, V> map, K key) {
@@ -481,6 +515,8 @@ public abstract class MapUtils {
      * @param key        属性键
      * @param defaultVal 默认值
      * @param <T>        类型参数
+     * @param <K>        map的key类型
+     * @param <V>        map的值类型
      * @return 获取的结果
      */
     public static <T, K, V> T getObjectValue(Map<K, V> map, K key, T defaultVal) {
@@ -499,6 +535,9 @@ public abstract class MapUtils {
      * @param map1 第一个map
      * @param map2 第二个map
      * @param keys 指定的字段
+     * @param <K>  key类型
+     * @param <V1> map1的值类型
+     * @param <V2> map2的值类型
      * @return 判断结果
      */
     @SafeVarargs

@@ -17,6 +17,8 @@ public @interface UserEnum {
 
     /**
      * 枚举名称
+     *
+     * @return 枚举名称
      */
     String value();
 }

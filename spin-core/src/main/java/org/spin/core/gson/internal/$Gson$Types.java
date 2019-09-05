@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -49,6 +50,9 @@ public final class $Gson$Types {
      * Returns a new parameterized type, applying {@code typeArguments} to
      * {@code rawType} and enclosed by {@code ownerType}.
      *
+     * @param ownerType     owner type
+     * @param rawType       raw type
+     * @param typeArguments argument types
      * @return a {@link java.io.Serializable serializable} parameterized type.
      */
     public static ParameterizedType newParameterizedTypeWithOwner(
@@ -60,6 +64,7 @@ public final class $Gson$Types {
      * Returns an array type whose elements are all instances of
      * {@code componentType}.
      *
+     * @param componentType component type
      * @return a {@link java.io.Serializable serializable} generic array type.
      */
     public static GenericArrayType arrayOf(Type componentType) {
@@ -67,7 +72,8 @@ public final class $Gson$Types {
     }
 
     /**
-     * Returns a type that represents an unknown type that extends {@code bound}.
+     * @param bound type
+     * @return a type that represents an unknown type that extends {@code bound}.
      * For example, if {@code bound} is {@code CharSequence.class}, this returns
      * {@code ? extends CharSequence}. If {@code bound} is {@code Object.class},
      * this returns {@code ?}, which is shorthand for {@code ? extends Object}.
@@ -83,7 +89,8 @@ public final class $Gson$Types {
     }
 
     /**
-     * Returns a type that represents an unknown supertype of {@code bound}. For
+     * @param bound type
+     * @return a type that represents an unknown supertype of {@code bound}. For
      * example, if {@code bound} is {@code String.class}, this returns {@code ?
      * super String}.
      */
@@ -98,7 +105,8 @@ public final class $Gson$Types {
     }
 
     /**
-     * Returns a type that is functionally equal but not necessarily equal
+     * @param type type
+     * @return a type that is functionally equal but not necessarily equal
      * according to {@link Object#equals(Object) Object.equals()}. The returned
      * type is {@link java.io.Serializable}.
      */
@@ -161,11 +169,13 @@ public final class $Gson$Types {
     }
 
     static boolean equal(Object a, Object b) {
-        return a == b || (a != null && a.equals(b));
+        return Objects.equals(a, b);
     }
 
     /**
-     * Returns true if {@code a} and {@code b} are equal.
+     * @param a type a
+     * @param b type b
+     * @return true if {@code a} and {@code b} are equal.
      */
     public static boolean equals(Type a, Type b) {
         if (a == b) {
@@ -287,7 +297,8 @@ public final class $Gson$Types {
     }
 
     /**
-     * Returns the component type of this array type.
+     * @param array type
+     * @return the component type of this array type.
      * @throws ClassCastException if this type is not an array.
      */
     public static Type getArrayComponentType(Type array) {
@@ -297,7 +308,9 @@ public final class $Gson$Types {
     }
 
     /**
-     * Returns the element type of this collection type.
+     * @param context        context
+     * @param contextRawType raw type
+     * @return the element type of this collection type.
      * @throws IllegalArgumentException if this type is not a collection.
      */
     public static Type getCollectionElementType(Type context, Class<?> contextRawType) {
@@ -313,7 +326,9 @@ public final class $Gson$Types {
     }
 
     /**
-     * Returns a two element array containing this map's key and value types in
+     * @param context        context
+     * @param contextRawType raw type
+     * @return a two element array containing this map's key and value types in
      * positions 0 and 1 respectively.
      */
     public static Type[] getMapKeyAndValueTypes(Type context, Class<?> contextRawType) {
@@ -336,7 +351,7 @@ public final class $Gson$Types {
     }
 
     public static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
-        return resolve(context, contextRawType, toResolve, new HashSet<TypeVariable>());
+        return resolve(context, contextRawType, toResolve, new HashSet<>());
     }
 
     private static Type resolve(Type context, Class<?> contextRawType, Type toResolve,

@@ -1,14 +1,11 @@
 package org.spin.boot.configuration;
 
 import org.spin.boot.properties.SecretManagerProperties;
-import org.spin.boot.rest.RestfulInvocationEntryPoint;
 import org.spin.core.auth.InMemorySecretDao;
 import org.spin.core.auth.SecretDao;
 import org.spin.core.auth.SecretManager;
-import org.spin.web.filter.TokenResolveFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -34,16 +31,5 @@ public class InMemorySecretManagerConfiguration {
         manager.setKeyExpiredIn(properties.getKeyExpireTime());
         manager.setTokenExpiredIn(properties.getTokenExpireTime());
         return manager;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(RestfulInvocationEntryPoint.class)
-    public FilterRegistrationBean<TokenResolveFilter> apiFilter(SecretManager secretManager) {
-        FilterRegistrationBean<TokenResolveFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new TokenResolveFilter(secretManager));
-        registration.addUrlPatterns("/*");
-        registration.setName("tokenFilter");
-        registration.setOrder(4);
-        return registration;
     }
 }

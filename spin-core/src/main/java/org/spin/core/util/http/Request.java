@@ -16,6 +16,7 @@ import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.Handler;
+import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.DateUtils;
@@ -23,6 +24,7 @@ import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
@@ -118,6 +120,7 @@ public class Request<T extends HttpRequestBase> {
      * </pre>
      *
      * @param headers 头部信息
+     * @param <E>     参数泛型
      * @return 当前请求本身
      */
     public <E> Request<T> withHead(Map<String, E> headers) {
@@ -162,6 +165,7 @@ public class Request<T extends HttpRequestBase> {
      * </pre>
      *
      * @param formData form表单
+     * @param <E>      参数泛型
      * @return 当前请求本身
      */
     public <E> Request<T> withForm(Map<String, E> formData) {
@@ -323,6 +327,45 @@ public class Request<T extends HttpRequestBase> {
     }
 
     /**
+     * 执行自定义请求，并将响应结果通过JSON转换为指定对象
+     *
+     * @param clazz 返回结果类型
+     * @param <E>   返回结果类型泛型参数
+     * @return 请求结果
+     */
+    public <E> E execute(Class<E> clazz) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequest(request, e -> HttpExecutor.toObjectProc(e, clazz));
+    }
+
+    /**
+     * 执行自定义请求，并将响应结果通过JSON转换为指定对象
+     *
+     * @param type 返回结果类型
+     * @param <E>  返回结果类型泛型参数
+     * @return 请求结果
+     */
+    public <E> E execute(Type type) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequest(request, e -> HttpExecutor.toObjectProc(e, type));
+    }
+
+    /**
+     * 执行自定义请求，并将响应结果通过JSON转换为指定对象
+     *
+     * @param typeToken 结果类型
+     * @param <E>       类型参数
+     * @return 请求结果
+     */
+    public <E> E execute(TypeToken<E> typeToken) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequest(request, e -> HttpExecutor.toObjectProc(e, typeToken));
+    }
+
+    /**
      * 执行自定义请求，并通过自定义方式转换请求结果
      *
      * @param entityProc 请求结果处理器
@@ -370,6 +413,57 @@ public class Request<T extends HttpRequestBase> {
         buildForm();
         request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, null);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param clazz             结果转换类型
+     * @param completedCallback 请求成功时的回调
+     * @param failedCallback    请求失败时的回调
+     * @param <E>               处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<HttpResponse> executeAsync(Class<E> clazz,
+                                                 FinalConsumer<E> completedCallback,
+                                                 FinalConsumer<Exception> failedCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, clazz), completedCallback, failedCallback, null);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param type              结果转换类型
+     * @param completedCallback 请求成功时的回调
+     * @param failedCallback    请求失败时的回调
+     * @param <E>               处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<HttpResponse> executeAsync(Type type,
+                                                 FinalConsumer<E> completedCallback,
+                                                 FinalConsumer<Exception> failedCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), completedCallback, failedCallback, null);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param typeToken         结果转换类型
+     * @param completedCallback 请求成功时的回调
+     * @param failedCallback    请求失败时的回调
+     * @param <E>               处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<HttpResponse> executeAsync(TypeToken<E> typeToken,
+                                                 FinalConsumer<E> completedCallback,
+                                                 FinalConsumer<Exception> failedCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, typeToken), completedCallback, failedCallback, null);
     }
 
     /**

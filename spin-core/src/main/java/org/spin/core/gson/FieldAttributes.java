@@ -105,6 +105,7 @@ public final class FieldAttributes {
      * {@code null}.
      *
      * @param annotation the class of the annotation that will be retrieved
+     * @param <T>        annotation type
      * @return the annotation instance if it is bound to the field; otherwise {@code null}
      */
     public <T extends Annotation> T getAnnotation(Class<T> annotation) {
@@ -129,6 +130,8 @@ public final class FieldAttributes {
      * boolean hasPublicModifier = fieldAttribute.hasModifier(java.lang.reflect.Modifier.PUBLIC);
      * </pre>
      *
+     * @param modifier modifier
+     * @return true if the field is defined with the {@code modifier}
      * @see java.lang.reflect.Modifier
      */
     public boolean hasModifier(int modifier) {

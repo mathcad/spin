@@ -1,6 +1,5 @@
 package org.spin.core.collection;
 
-import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.ObjectUtils;
 

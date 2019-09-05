@@ -71,6 +71,7 @@ public @interface Expose {
      * serializing. If {@code false}, the field marked with this annotation is skipped from the
      * serialized output. Defaults to {@code true}.
      *
+     * @return true to serialize
      * @since 1.4
      */
     boolean serialize() default true;
@@ -80,6 +81,7 @@ public @interface Expose {
      * If {@code false}, the field marked with this annotation is skipped during deserialization.
      * Defaults to {@code true}.
      *
+     * @return true to deserialize
      * @since 1.4
      */
     boolean deserialize() default true;

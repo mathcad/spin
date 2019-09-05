@@ -16,11 +16,11 @@
 
 package org.spin.core.gson.annotation;
 
+import org.spin.core.gson.GsonBuilder;
 import org.spin.core.gson.JsonDeserializer;
 import org.spin.core.gson.JsonSerializer;
 import org.spin.core.gson.TypeAdapter;
 import org.spin.core.gson.TypeAdapterFactory;
-import org.spin.core.gson.GsonBuilder;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -97,12 +97,12 @@ import java.lang.annotation.Target;
 public @interface JsonAdapter {
 
     /**
-     * Either a {@link TypeAdapter} or {@link TypeAdapterFactory}, or one or both of {@link JsonDeserializer} or {@link JsonSerializer}.
+     * @return Either a {@link TypeAdapter} or {@link TypeAdapterFactory}, or one or both of {@link JsonDeserializer} or {@link JsonSerializer}.
      */
     Class<?> value();
 
     /**
-     * false, to be able to handle {@code null} values within the adapter, default value is true.
+     * @return false, to be able to handle {@code null} values within the adapter, default value is true.
      */
     boolean nullSafe() default true;
 

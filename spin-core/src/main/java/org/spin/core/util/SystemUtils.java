@@ -100,7 +100,7 @@ public abstract class SystemUtils {
      * <li>{@code "/"} on UNIX</li>
      * <li>{@code "\"} on Windows.</li>
      * </ul>
-     * <p>
+     *
      * <p>
      * Defaults to {@code null} if the runtime does not have security access to read this property or the property does
      * not exist.

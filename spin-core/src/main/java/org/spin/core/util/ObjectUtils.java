@@ -137,6 +137,7 @@ public abstract class ObjectUtils {
      *
      * @param type   转换的目标类型
      * @param target 待转换对象
+     * @param <T>    目标类型参数
      * @return 转换类型后的对象
      * @throws ClassCastException 转换失败，抛出异常
      */
@@ -206,6 +207,8 @@ public abstract class ObjectUtils {
      *
      * @param array 添加元素的数组(可以为 {@code null})
      * @param obj   待添加的元素
+     * @param <A>   数组元素泛型
+     * @param <O>   obj的类型
      * @return 新的数组 (不为 {@code null})
      */
     public static <A, O extends A> A[] addObjectToArray(A[] array, O obj) {

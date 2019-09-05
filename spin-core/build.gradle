@@ -3,19 +3,19 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.2.3-SNAPSHOT'
+version = '2.2.5-SNAPSHOT'
 def artifactId = 'spin-core'
 
 ext {
-    junitJupiterVersion = '5.4.2'
+    junitJupiterVersion = '5.5.1'
     slf4jVersion = '1.7.26'
     asmVersion = '7.1'
-    httpclientVersion = '4.5.8'
+    httpclientVersion = '4.5.9'
     httpasyncclientVersion = '4.1.4'
     commonsNetVersion = '3.6'
     dom4jVersion = '1.6'
     poiVersion = '4.1.0'
-    bouncyVersion = '1.61'
+    bouncyVersion = '1.62'
 }
 
 test {
@@ -34,7 +34,7 @@ uploadArchives {
     repositories {
         mavenDeployer {
             repository(url: "http://192.168.12.151:8081/repository/maven-snapshots/") {
-                authentication(userName: "admin", password: "a47f81739be03H")
+                authentication(userName: "dev", password: "8D22185")
             }
             pom.version = "$project.version"
             pom.artifactId = "$artifactId"
@@ -59,7 +59,6 @@ dependencies {
 //    core
     api group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
     api group: 'org.ow2.asm', name: 'asm', version: asmVersion
-//    api group: 'org.apache.shiro', name: 'shiro-core', version: '1.4.0'
 
     compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
     compileOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
@@ -68,7 +67,6 @@ dependencies {
     compileOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
-//    compileOnly group: 'com.google.guava', name: 'guava', version: '27.0.1-jre'
     compileOnly group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
     compileOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
 }

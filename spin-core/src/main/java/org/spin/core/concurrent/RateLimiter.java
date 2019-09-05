@@ -84,6 +84,7 @@ public abstract class RateLimiter {
      *
      * @param permitsPerSecond the rate of the returned {@code RateLimiter}, measured in how many
      *                         permits become available per second
+     * @return RateLimiter的实例
      * @throws IllegalArgumentException if {@code permitsPerSecond} is negative or zero
      */
     // TODO(user): "This is equivalent to
@@ -132,6 +133,7 @@ public abstract class RateLimiter {
      * @param warmupPeriod     the duration of the period where the {@code RateLimiter} ramps up its rate,
      *                         before reaching its stable (maximum) rate
      * @param unit             the time unit of the warmupPeriod argument
+     * @return RateLimiter的实例
      * @throws IllegalArgumentException if {@code permitsPerSecond} is negative or zero or {@code
      *                                  warmupPeriod} is negative
      */
@@ -211,6 +213,8 @@ public abstract class RateLimiter {
      * configured with. The initial value of this is the same as the {@code permitsPerSecond} argument
      * passed in the factory method that produced this {@code RateLimiter}, and it is only updated
      * after invocations to {@linkplain #setRate}.
+     *
+     * @return rate
      */
     public final double getRate() {
         synchronized (mutex()) {

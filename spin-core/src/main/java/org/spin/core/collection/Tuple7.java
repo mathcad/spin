@@ -1,6 +1,5 @@
 package org.spin.core.collection;
 
-import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.ObjectUtils;
 
@@ -103,7 +102,7 @@ public class Tuple7<A, B, C, D, E, F, G> implements Tuple<Tuple7<G, F, E, D, C, 
         action.accept(c6);
         action.accept(c7);
     }
-    
+
     public Tuple7<G, F, E, D, C, B, A> reverse() {
         return of(c7, c6, c5, c4, c3, c2, c1);
     }

@@ -82,6 +82,7 @@ public interface JsonSerializer<T> {
      *
      * @param src       the object that needs to be converted to Json.
      * @param typeOfSrc the actual type (fully genericized version) of the source object.
+     * @param context   context
      * @return a JsonElement corresponding to the specified object.
      */
     JsonElement serialize(T src, Type typeOfSrc, JsonSerializationContext context);

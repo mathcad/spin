@@ -512,6 +512,8 @@ public final class GsonBuilder {
      * is designed to handle a large number of factories, so you should consider registering
      * them to be at par with registering an individual type adapter.
      *
+     * @param factory type adapter factory
+     * @return a GsonBuilder instance
      * @since 2.1
      */
     public GsonBuilder registerTypeAdapterFactory(TypeAdapterFactory factory) {

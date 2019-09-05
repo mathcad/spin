@@ -1,6 +1,6 @@
 package org.spin.common.config;
 
-import org.spin.common.redis.lock.RedisDistributedLock;
+//import org.spin.common.redis.lock.RedisDistributedLock;
 import org.spin.core.concurrent.DistributedLock;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -27,11 +27,11 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 public class RedisExtendsAutoConfiguration {
 
-    @Bean
-    @ConditionalOnBean(StringRedisTemplate.class)
-    public DistributedLock redisDistributedLock(StringRedisTemplate redisTemplate) {
-        return new RedisDistributedLock(redisTemplate);
-    }
+//    @Bean
+//    @ConditionalOnBean(StringRedisTemplate.class)
+//    public DistributedLock redisDistributedLock(StringRedisTemplate redisTemplate) {
+//        return new RedisDistributedLock(redisTemplate);
+//    }
 
     @Bean
     @ConditionalOnBean(RedisTemplate.class)

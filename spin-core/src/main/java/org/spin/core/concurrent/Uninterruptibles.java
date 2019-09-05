@@ -29,6 +29,8 @@ public final class Uninterruptibles {
 
     /**
      * Invokes {@code latch.}{@link CountDownLatch#await() await()} uninterruptibly.
+     *
+     * @param latch countdownLatch
      */
     public static void awaitUninterruptibly(CountDownLatch latch) {
         boolean interrupted = false;
@@ -51,6 +53,11 @@ public final class Uninterruptibles {
     /**
      * Invokes {@code latch.}{@link CountDownLatch#await(long, TimeUnit) await(timeout, unit)}
      * uninterruptibly.
+     *
+     * @param latch   latch
+     * @param timeout timeout
+     * @param unit    timeout unit
+     * @return false if the waiting time detectably elapsed before return from the method, else true
      */
     public static boolean awaitUninterruptibly(CountDownLatch latch, long timeout, TimeUnit unit) {
         return awaitUninterruptibly(latch::await, timeout, unit);
@@ -60,6 +67,10 @@ public final class Uninterruptibles {
      * Invokes {@code condition.}{@link Condition#await(long, TimeUnit) await(timeout, unit)}
      * uninterruptibly.
      *
+     * @param condition condition
+     * @param timeout   timeout
+     * @param unit      timeout unit
+     * @return false if the waiting time detectably elapsed before return from the method, else true
      * @since 23.6
      */
     public static boolean awaitUninterruptibly(Condition condition, long timeout, TimeUnit unit) {
@@ -68,6 +79,8 @@ public final class Uninterruptibles {
 
     /**
      * Invokes {@code toJoin.}{@link Thread#join() join()} uninterruptibly.
+     *
+     * @param toJoin Thread to join
      */
     public static void joinUninterruptibly(Thread toJoin) {
         boolean interrupted = false;
@@ -90,6 +103,10 @@ public final class Uninterruptibles {
     /**
      * Invokes {@code unit.}{@link TimeUnit#timedJoin(Thread, long) timedJoin(toJoin, timeout)}
      * uninterruptibly.
+     *
+     * @param toJoin  join Thread
+     * @param timeout timeout
+     * @param unit    timeout unit
      */
     public static void joinUninterruptibly(Thread toJoin, long timeout, TimeUnit unit) {
         Assert.notNull(toJoin);
@@ -125,6 +142,9 @@ public final class Uninterruptibles {
      * <li>To get uninterruptibility and remove checked exceptions.</li>
      * </ul>
      *
+     * @param <V>    generic type
+     * @param future work
+     * @return result
      * @throws ExecutionException    if the computation threw an exception
      * @throws CancellationException if the computation was cancelled
      */
@@ -156,6 +176,11 @@ public final class Uninterruptibles {
      * <li>To get uninterruptibility and remove checked exceptions.</li>
      * </ul>
      *
+     * @param <V>     generic type
+     * @param future  future
+     * @param timeout timeout
+     * @param unit    timeout unit
+     * @return result
      * @throws ExecutionException    if the computation threw an exception
      * @throws CancellationException if the computation was cancelled
      * @throws TimeoutException      if the wait timed out
@@ -185,6 +210,10 @@ public final class Uninterruptibles {
 
     /**
      * Invokes {@code queue.}{@link BlockingQueue#take() take()} uninterruptibly.
+     *
+     * @param queue queue
+     * @param <E>   queue element type
+     * @return element
      */
     public static <E> E takeUninterruptibly(BlockingQueue<E> queue) {
         boolean interrupted = false;
@@ -206,6 +235,9 @@ public final class Uninterruptibles {
     /**
      * Invokes {@code queue.}{@link BlockingQueue#put(Object) put(element)} uninterruptibly.
      *
+     * @param queue   queue
+     * @param element element
+     * @param <E>     element type
      * @throws ClassCastException       if the class of the specified element prevents it from being added
      *                                  to the given queue
      * @throws IllegalArgumentException if some property of the specified element prevents it from
@@ -233,6 +265,9 @@ public final class Uninterruptibles {
 
     /**
      * Invokes {@code unit.}{@link TimeUnit#sleep(long) sleep(sleepFor)} uninterruptibly.
+     *
+     * @param sleepFor sleep time
+     * @param unit     time unit
      */
     public static void sleepUninterruptibly(long sleepFor, TimeUnit unit) {
         boolean interrupted = false;
@@ -260,10 +295,13 @@ public final class Uninterruptibles {
      * Invokes {@code semaphore.}{@link Semaphore#tryAcquire(int, long, TimeUnit) tryAcquire(1,
      * timeout, unit)} uninterruptibly.
      *
+     * @param semaphore semaphore
+     * @param timeout   timeout
+     * @param unit      timeout unit
+     * @return true if all permits were acquired and false if the waiting time elapsed before all permits were acquired
      * @since 18.0
      */
-    public static boolean tryAcquireUninterruptibly(
-        Semaphore semaphore, long timeout, TimeUnit unit) {
+    public static boolean tryAcquireUninterruptibly(Semaphore semaphore, long timeout, TimeUnit unit) {
         return tryAcquireUninterruptibly(semaphore, 1, timeout, unit);
     }
 
@@ -271,10 +309,14 @@ public final class Uninterruptibles {
      * Invokes {@code semaphore.}{@link Semaphore#tryAcquire(int, long, TimeUnit) tryAcquire(permits,
      * timeout, unit)} uninterruptibly.
      *
+     * @param semaphore semaphore
+     * @param permits   permits
+     * @param timeout   timeout
+     * @param unit      timeout unit
+     * @return true if all permits were acquired and false if the waiting time elapsed before all permits were acquired
      * @since 18.0
      */
-    public static boolean tryAcquireUninterruptibly(
-        Semaphore semaphore, int permits, long timeout, TimeUnit unit) {
+    public static boolean tryAcquireUninterruptibly(Semaphore semaphore, int permits, long timeout, TimeUnit unit) {
         boolean interrupted = false;
         try {
             long remainingNanos = unit.toNanos(timeout);

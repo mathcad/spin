@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * then it is followed by a low surrogate. If a low surrogate is chosen,
  * 56320 (dc00) to 57343 (dfff) then it is placed after a randomly
  * chosen high surrogate. </p>
- * <p>
+ *
  * <p>#ThreadSafe#</p>
  *
  * @version $DistributedId: RandomStringUtils.java 1532684 2013-10-16 08:28:42Z bayard $
@@ -35,7 +35,7 @@ public abstract class RandomStringUtils {
     /**
      * <p>Creates a random string whose length is the number of characters
      * specified.</p>
-     * <p>
+     *
      * <p>Characters will be chosen from the set of all characters.</p>
      *
      * @param count the length of random string to create
@@ -48,7 +48,7 @@ public abstract class RandomStringUtils {
     /**
      * <p>Creates a random string whose length is the number of characters
      * specified.</p>
-     * <p>
+     *
      * <p>Characters will be chosen from the set of characters whose
      * ASCII value is between {@code 32} and {@code 126} (inclusive).</p>
      *
@@ -70,7 +70,7 @@ public abstract class RandomStringUtils {
     /**
      * <p>Creates a random string whose length is the number of characters
      * specified.</p>
-     * <p>
+     *
      * <p>Characters will be chosen from the set of alphabetic
      * characters.</p>
      *
@@ -84,7 +84,7 @@ public abstract class RandomStringUtils {
     /**
      * <p>Creates a random string whose length is the number of characters
      * specified.</p>
-     * <p>
+     *
      * <p>Characters will be chosen from the set of alpha-numeric
      * characters.</p>
      *
@@ -98,7 +98,7 @@ public abstract class RandomStringUtils {
     /**
      * <p>Creates a random string whose length is the number of characters
      * specified.</p>
-
+     *
      * <p>Characters will be chosen from the set of numeric
      * characters.</p>
      *
@@ -279,7 +279,7 @@ public abstract class RandomStringUtils {
     /**
      * <p>Creates a random string whose length is the number of characters
      * specified.</p>
-     * <p>
+     *
      * <p>Characters will be chosen from the set of characters
      * specified by the string, must not be empty.
      * If null, the set of all characters is used.</p>
@@ -300,7 +300,7 @@ public abstract class RandomStringUtils {
     /**
      * <p>Creates a random string whose length is the number of characters
      * specified.</p>
-     * <p>
+     *
      * <p>Characters will be chosen from the set of characters specified.</p>
      *
      * @param count the length of random string to create

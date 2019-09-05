@@ -90,6 +90,8 @@ public class TypeToken<T> {
 
     /**
      * Returns the raw (non-generic) type for this type.
+     *
+     * @return raw type
      */
     public final Class<? super T> getRawType() {
         return rawType;
@@ -97,6 +99,8 @@ public class TypeToken<T> {
 
     /**
      * Gets underlying {@code Type} instance.
+     *
+     * @return type
      */
     public final Type getType() {
         return type;
@@ -105,6 +109,8 @@ public class TypeToken<T> {
     /**
      * Check if this type is assignable from the given class object.
      *
+     * @param cls type
+     * @return true if is assignable from token
      * @deprecated this implementation may be inconsistent with javac for types
      * with wildcards.
      */
@@ -116,6 +122,8 @@ public class TypeToken<T> {
     /**
      * Check if this type is assignable from the given Type.
      *
+     * @param from type
+     * @return true if is assignable from type
      * @deprecated this implementation may be inconsistent with javac for types
      * with wildcards.
      */
@@ -146,6 +154,8 @@ public class TypeToken<T> {
     /**
      * Check if this type is assignable from the given type token.
      *
+     * @param token type
+     * @return true if is assignable from token
      * @deprecated this implementation may be inconsistent with javac for types
      * with wildcards.
      */
@@ -295,6 +305,9 @@ public class TypeToken<T> {
 
     /**
      * Gets type literal for the given {@code Type} instance.
+     *
+     * @param type type
+     * @return TypeToken
      */
     public static TypeToken<?> get(Type type) {
         return new TypeToken<>(type);
@@ -302,6 +315,10 @@ public class TypeToken<T> {
 
     /**
      * Gets type literal for the given {@code Class} instance.
+     *
+     * @param type type
+     * @param <T>  generic type
+     * @return TypeToken
      */
     public static <T> TypeToken<T> get(Class<T> type) {
         return new TypeToken<>(type);
@@ -310,6 +327,10 @@ public class TypeToken<T> {
     /**
      * Gets type literal for the parameterized type represented by applying {@code typeArguments} to
      * {@code rawType}.
+     *
+     * @param rawType       raw type
+     * @param typeArguments types
+     * @return TypeToken
      */
     public static TypeToken<?> getParameterized(Type rawType, Type... typeArguments) {
         return new TypeToken<>($Gson$Types.newParameterizedTypeWithOwner(null, rawType, typeArguments));
@@ -317,6 +338,9 @@ public class TypeToken<T> {
 
     /**
      * Gets type literal for the array type whose elements are all instances of {@code componentType}.
+     *
+     * @param componentType type
+     * @return TypeToken
      */
     public static TypeToken<?> getArray(Type componentType) {
         return new TypeToken<>($Gson$Types.arrayOf(componentType));

@@ -694,6 +694,7 @@ public abstract class Assert {
      *
      * @param input   the character sequence to validate, not null
      * @param pattern the regular expression pattern, not null
+     * @param <T>     字符序列泛型
      * @return input本身
      * @throws AssertFailException if the character sequence does not match the pattern
      * @see #matchesPattern(CharSequence, String, String, Object...)
@@ -717,6 +718,7 @@ public abstract class Assert {
      * @param pattern the regular expression pattern, not null
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
+     * @param <T>     class 泛型
      * @return value本身
      * @throws AssertFailException if the character sequence does not match the pattern
      * @see #matchesPattern(CharSequence, String)
@@ -1073,6 +1075,7 @@ public abstract class Assert {
      *
      * @param type the class the object must be validated against, not null
      * @param obj  the object to check, null throws an exception
+     * @param <T>  class 泛型
      * @return value本身
      * @throws AssertFailException if argument is not of specified class
      * @see #isInstanceOf(Class, Object, String, Object...)
@@ -1093,6 +1096,7 @@ public abstract class Assert {
      * @param obj     the object to check, null throws an exception
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
+     * @param <T>     class 泛型
      * @return value本身
      * @throws AssertFailException if argument is not of specified class
      * @see #isInstanceOf(Class, Object)
@@ -1118,6 +1122,7 @@ public abstract class Assert {
      *
      * @param superType the class the class must be validated against, not null
      * @param type      the class to check, not null
+     * @param <T>       class 泛型
      * @return value本身
      * @throws AssertFailException if type argument is not assignable to the specified superType
      * @see #isAssignableFrom(Class, Class, String, Object...)
@@ -1140,6 +1145,7 @@ public abstract class Assert {
      * @param type      the class to check, not null
      * @param message   the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values    the optional values for the formatted exception message, null array not recommended
+     * @param <T>       class 泛型
      * @return type本身
      * @throws AssertFailException if argument can not be converted to the specified class
      * @see #isAssignableFrom(Class, Class)

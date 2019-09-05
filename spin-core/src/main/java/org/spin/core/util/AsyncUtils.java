@@ -330,6 +330,7 @@ public abstract class AsyncUtils {
          * @param corePoolSize             核心线程数
          * @param maxPoolSize              最大线程数
          * @param keepAliveTimeInMs        空闲线程存活时间(毫秒)
+         * @param timeUnit                 时间单位
          * @param queueSize                阻塞队列长度，负值表示无界
          * @param rejectedExecutionHandler 拒绝策略
          */

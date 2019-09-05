@@ -25,9 +25,6 @@ public class HttpTrace extends HttpEntityEnclosingRequestBase {
         setURI(uri);
     }
 
-    /**
-     * @throws IllegalArgumentException if the uri is invalid.
-     */
     public HttpTrace(final String uri) {
         super();
         setURI(URI.create(uri));
