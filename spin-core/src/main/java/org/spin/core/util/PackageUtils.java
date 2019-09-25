@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -58,10 +57,8 @@ public abstract class PackageUtils {
             if ("file".equals(type)) {
                 fileNames = getClassNameByPath(url.getPath(), packageName, childPackage);
             } else if ("jar".equals(type)) {
-                fileNames = getClassNameByJar(url.getPath(), packageName, childPackage);
+                fileNames = getClassNameByJar(url.getPath(), childPackage);
             }
-        } else {
-            fileNames = getClassNameByJars(((URLClassLoader) loader).getURLs(), packagePath, childPackage);
         }
         return fileNames;
     }
@@ -93,11 +90,10 @@ public abstract class PackageUtils {
      * 从jar获取某包下所有类（支持spring boot的fat jar）
      *
      * @param jarPath      jar路径
-     * @param packageName  包名
      * @param childPackage 是否遍历子包
      * @return 类的完整名称
      */
-    public static List<String> getClassNameByJar(String jarPath, String packageName, boolean childPackage) {
+    public static List<String> getClassNameByJar(String jarPath, boolean childPackage) {
         List<String> classNames = new ArrayList<>();
         String[] jarInfo = jarPath.split("!");
         String jarFilePath = jarInfo[0].substring(jarInfo[0].indexOf('/'));
@@ -124,10 +120,12 @@ public abstract class PackageUtils {
                     }
                 }
             }
-            Stream<String> stream = StreamUtils.enumerationAsStream(jarFile.entries()).map(JarEntry::getName).filter(entryName -> entryName.endsWith(".class") && entryName.indexOf('$') == -1);
+            Stream<String> stream = StreamUtils.enumerationAsStream(jarFile.entries())
+                .map(JarEntry::getName)
+                .filter(entryName -> entryName.endsWith(".class") && entryName.indexOf('$') == -1);
             if (childPackage) {
                 stream.filter(n -> n.startsWith(packagePath))
-                    .forEach(n -> classNames.add(n.replace('/', '.').substring(isJarInJar ? 0 : contextPath.length() + 1, n.length() - 6)));
+                    .forEach(n -> classNames.add(n.replace('/', '.').substring(isJarInJar ? 0 : contextPath.length(), n.length() - 6)));
             } else {
                 stream.forEach(n -> {
                     int index = n.lastIndexOf('/');
@@ -164,7 +162,7 @@ public abstract class PackageUtils {
         List<String> myClassName = new ArrayList<>();
         Optional.ofNullable(urls).ifPresent(u -> Arrays.stream(u).map(URL::getPath).filter(p -> !p.endsWith("classes/"))
             .map(urlPath -> urlPath + "!/" + packageName)
-            .forEach(jarPath -> myClassName.addAll(getClassNameByJar(jarPath, packageName, childPackage))));
+            .forEach(jarPath -> myClassName.addAll(getClassNameByJar(jarPath, childPackage))));
         return myClassName;
     }
 }
