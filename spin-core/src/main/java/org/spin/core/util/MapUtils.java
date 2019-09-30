@@ -11,8 +11,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 
 /**
@@ -47,14 +47,25 @@ public abstract class MapUtils {
     }
 
     public static Map<String, String> ofMap(Properties properties) {
-        properties.propertyNames();
-        return StreamUtils.enumerationAsStream(properties.propertyNames()).map(Object::toString).collect(Collectors.toMap(n -> n, properties::getProperty));
+        Map<String, String> map = new HashMap<>(properties.size());
+        properties.forEach((k, v) -> map.put(k.toString(), v.toString()));
+        return map;
     }
 
-    public static <T extends Map<K, V>, K, V> MapBuilder<T, K, V> with(Supplier<T> mapSupplier) {
-        MapBuilder<T, K, V> builder = new MapBuilder<>();
-        builder.mapSupplier = mapSupplier;
-        return builder;
+    public static <T extends Map<K, V>, K, V> MapBuilder<T, K, V> of(Supplier<T> mapSupplier) {
+        return new MapBuilder<>(mapSupplier);
+    }
+
+    public static <K, V> MapBuilder<HashMap<K, V>, K, V> ofHashMap() {
+        return new MapBuilder<>(HashMap::new);
+    }
+
+    public static MapBuilder<HashMap<String, String>, String, String> ofStringHashMap() {
+        return new MapBuilder<>(HashMap::new);
+    }
+
+    public static MapBuilder<HashMap<String, Object>, String, Object> ofStringObjectMap() {
+        return new MapBuilder<>(HashMap::new);
     }
 
     public static <K, V> Map<K, V> ofMap() {
@@ -83,56 +94,31 @@ public abstract class MapUtils {
     }
 
     public static <K, V> Map<K, V> ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4) {
-        Map<K, V> map = new HashMap<>();
-        map.put(k1, v1);
-        map.put(k2, v2);
-        map.put(k3, v3);
+        Map<K, V> map = ofMap(k1, v1, k2, v2, k3, v3);
         map.put(k4, v4);
         return map;
     }
 
     public static <K, V> Map<K, V> ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5) {
-        Map<K, V> map = new HashMap<>();
-        map.put(k1, v1);
-        map.put(k2, v2);
-        map.put(k3, v3);
-        map.put(k4, v4);
+        Map<K, V> map = ofMap(k1, v1, k2, v2, k3, v3, k4, v4);
         map.put(k5, v5);
         return map;
     }
 
     public static <K, V> Map<K, V> ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6) {
-        Map<K, V> map = new HashMap<>();
-        map.put(k1, v1);
-        map.put(k2, v2);
-        map.put(k3, v3);
-        map.put(k4, v4);
-        map.put(k5, v5);
+        Map<K, V> map = ofMap(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5);
         map.put(k6, v6);
         return map;
     }
 
     public static <K, V> Map<K, V> ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7) {
-        Map<K, V> map = new HashMap<>();
-        map.put(k1, v1);
-        map.put(k2, v2);
-        map.put(k3, v3);
-        map.put(k4, v4);
-        map.put(k5, v5);
-        map.put(k6, v6);
+        Map<K, V> map = ofMap(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5, k6, v6);
         map.put(k7, v7);
         return map;
     }
 
     public static <K, V> Map<K, V> ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8) {
-        Map<K, V> map = new HashMap<>();
-        map.put(k1, v1);
-        map.put(k2, v2);
-        map.put(k3, v3);
-        map.put(k4, v4);
-        map.put(k5, v5);
-        map.put(k6, v6);
-        map.put(k7, v7);
+        Map<K, V> map = ofMap(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5, k6, v6, k7, v7);
         map.put(k8, v8);
         return map;
     }
@@ -643,66 +629,58 @@ public abstract class MapUtils {
     }
 
     public static class MapBuilder<T extends Map<K, V>, K, V> {
-        @SuppressWarnings("unchecked")
-        private Supplier<T> mapSupplier = () -> (T) new HashMap<K, V>();
+        private final T map;
 
-        public T ofMap() {
-            return mapSupplier.get();
+        public MapBuilder(Supplier<T> mapSupplier) {
+            map = mapSupplier.get();
         }
 
-        public T ofMap(K k1, V v1) {
-            T map = mapSupplier.get();
+        public final MapBuilder<T, K, V> with(K k1, V v1) {
             map.put(k1, v1);
-            return map;
+            return this;
         }
 
-        public T ofMap(K k1, V v1, K k2, V v2) {
-            T map = mapSupplier.get();
+        public final MapBuilder<T, K, V> with(K k1, V v1, K k2, V v2) {
             map.put(k1, v1);
             map.put(k2, v2);
-            return map;
+            return this;
         }
 
-        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3) {
-            T map = mapSupplier.get();
+        public final MapBuilder<T, K, V> with(K k1, V v1, K k2, V v2, K k3, V v3) {
             map.put(k1, v1);
             map.put(k2, v2);
             map.put(k3, v3);
-            return map;
+            return this;
         }
 
-        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4) {
-            T map = mapSupplier.get();
+        public final MapBuilder<T, K, V> with(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4) {
             map.put(k1, v1);
             map.put(k2, v2);
             map.put(k3, v3);
             map.put(k4, v4);
-            return map;
+            return this;
         }
 
-        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5) {
-            T map = mapSupplier.get();
+        public final MapBuilder<T, K, V> with(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5) {
             map.put(k1, v1);
             map.put(k2, v2);
             map.put(k3, v3);
             map.put(k4, v4);
             map.put(k5, v5);
-            return map;
+            return this;
         }
 
-        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6) {
-            T map = mapSupplier.get();
+        public final MapBuilder<T, K, V> with(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6) {
             map.put(k1, v1);
             map.put(k2, v2);
             map.put(k3, v3);
             map.put(k4, v4);
             map.put(k5, v5);
             map.put(k6, v6);
-            return map;
+            return this;
         }
 
-        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7) {
-            T map = mapSupplier.get();
+        public final MapBuilder<T, K, V> with(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7) {
             map.put(k1, v1);
             map.put(k2, v2);
             map.put(k3, v3);
@@ -710,11 +688,10 @@ public abstract class MapUtils {
             map.put(k5, v5);
             map.put(k6, v6);
             map.put(k7, v7);
-            return map;
+            return this;
         }
 
-        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8) {
-            T map = mapSupplier.get();
+        public final MapBuilder<T, K, V> with(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8) {
             map.put(k1, v1);
             map.put(k2, v2);
             map.put(k3, v3);
@@ -723,11 +700,10 @@ public abstract class MapUtils {
             map.put(k6, v6);
             map.put(k7, v7);
             map.put(k8, v8);
-            return map;
+            return this;
         }
 
-        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8, K k9, V v9) {
-            T map = mapSupplier.get();
+        public final MapBuilder<T, K, V> with(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8, K k9, V v9) {
             map.put(k1, v1);
             map.put(k2, v2);
             map.put(k3, v3);
@@ -737,11 +713,10 @@ public abstract class MapUtils {
             map.put(k7, v7);
             map.put(k8, v8);
             map.put(k9, v9);
-            return map;
+            return this;
         }
 
-        public T ofMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8, K k9, V v9, K k10, V v10) {
-            T map = mapSupplier.get();
+        public final MapBuilder<T, K, V> with(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8, K k9, V v9, K k10, V v10) {
             map.put(k1, v1);
             map.put(k2, v2);
             map.put(k3, v3);
@@ -752,6 +727,52 @@ public abstract class MapUtils {
             map.put(k8, v8);
             map.put(k9, v9);
             map.put(k10, v10);
+            return this;
+        }
+
+        public final MapBuilder<T, K, V> with(Map<K, V> otherMap) {
+            map.putAll(otherMap);
+            return this;
+        }
+
+        public final MapBuilder<T, K, V> with(Properties properties, Function<Object, K> keyMapper, Function<Object, V> valueMapper) {
+            properties.forEach((k, v) -> map.put(keyMapper.apply(k), valueMapper.apply(v)));
+            return this;
+        }
+
+        @SafeVarargs
+        public final MapBuilder<T, K, V> without(K... keys) {
+            if (null != keys && keys.length > 0) {
+                for (K key : keys) {
+                    map.remove(key);
+                }
+            }
+            return this;
+        }
+
+        public final <V2> MapBuilder<T, K, V> without(Map<K, V2> keys) {
+            if (null != keys && keys.size() > 0) {
+                keys.forEach((k, v) -> map.remove(k));
+            }
+            return this;
+        }
+
+        public final MapBuilder<T, K, V> without(Collection<K> keys) {
+            if (null != keys && keys.size() > 0) {
+                for (K key : keys) {
+
+                    map.remove(key);
+                }
+            }
+            return this;
+        }
+
+        public final MapBuilder<T, K, V> clear() {
+            map.clear();
+            return this;
+        }
+
+        public final T get() {
             return map;
         }
     }

@@ -72,6 +72,7 @@ public class FileWatcher implements Closeable, AutoCloseable {
                     @Override
                     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                         WatchKey key = dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+                        keys.put(key, Tuple.of(dir, null, true, fileActionCallback));
                         return FileVisitResult.CONTINUE;
                     }
                 });
@@ -180,10 +181,6 @@ public class FileWatcher implements Closeable, AutoCloseable {
                 // 移除不可访问的目录
                 // 因为有可能目录被移除，就会无法访问
                 keys.remove(key);
-                // 如果待监控的目录都不存在了，就中断执行
-                if (keys.isEmpty()) {
-                    break;
-                }
             }
         }
     }

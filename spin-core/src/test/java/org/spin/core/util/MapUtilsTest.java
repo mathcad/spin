@@ -2,9 +2,9 @@ package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * TITLE
@@ -18,7 +18,8 @@ class MapUtilsTest {
 
     @Test
     public void testMapBuild() {
-        HashMap<String, String> a = MapUtils.with(HashMap<String, String>::new).ofMap("a", "1");
+//        Map<String, String> a = MapUtils.of(HashMap<String, String>::new).with("a", "1").get();
+        Map<String, String> a = MapUtils.ofStringHashMap().with("a", "1", "b", "2").get();
         System.out.println(a);
         assertTrue(a.containsKey("a"));
     }

@@ -49,16 +49,14 @@ public final class XmlUtils {
         try {
             document = reader.read(xmlStream);
         } catch (DocumentException e) {
-            logger.error("XmlUtils parse ERROR 无法解析指定文档({}) -----------");
+            logger.error("XmlUtils parse ERROR 无法解析指定文档 -----------");
             logger.debug("Exception Message:{}", e.getMessage());
         }
     }
 
     public XmlUtils(String xmlContent) {
-        try {
-            StringReader strReader = new StringReader(xmlContent);
+        try (StringReader strReader = new StringReader(xmlContent)) {
             document = reader.read(strReader);
-            strReader.close();
         } catch (DocumentException e) {
             logger.error("XmlUtils parse ERROR 无法解析指定文档({}) -----------", xmlContent);
             logger.debug("Exception Message:{}", e.getMessage());
@@ -70,6 +68,14 @@ public final class XmlUtils {
         return document.selectNodes(xPath);
     }
 
+    public Node getLastNodesbyXPath(String xPath) {
+        List<Node> list = getNodesbyXPath(xPath);
+        if (list.size() > 0) {
+            return list.get(list.size() - 1);
+        }
+        return null;
+    }
+
     /**
      * 获取指定xpath的最后一个值（如果有多个的话）
      *
@@ -77,12 +83,11 @@ public final class XmlUtils {
      * @return 获取的最后一个值
      */
     public String getLastValuebyXPath(String xPath) {
-        List<?> list = this.getNodesbyXPath(xPath);
+        List<Node> list = getNodesbyXPath(xPath);
         if (list == null)
             return null;
         String result = null;
-        for (Object aList : list) {
-            Node n = (Node) aList;
+        for (Node n : list) {
             result = n.valueOf(".");
         }
         return result;
