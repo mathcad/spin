@@ -70,7 +70,7 @@ public class RestfulHandledDecoder implements Decoder {
             }
             return data;
         }
-        throw new DecodeException(ErrorCode.SERIALIZE_EXCEPTION.getCode(), "type is not an instance of Class or ParameterizedType: " + type);
+        throw new DecodeException(ErrorCode.SERIALIZE_EXCEPTION.getCode(), "type is not an instance of Class or ParameterizedType: " + type, response.request());
     }
 
     private final class FeignResponseAdapter implements ClientHttpResponse {

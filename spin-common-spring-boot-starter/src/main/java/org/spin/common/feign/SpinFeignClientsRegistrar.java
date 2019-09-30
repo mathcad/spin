@@ -59,6 +59,7 @@ import java.util.*;
  * @author Jakub Narloch
  * @author Venil Noronha
  * @author Gang Li
+ * @author xuweinan
  */
 class SpinFeignClientsRegistrar
     implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, EnvironmentAware {

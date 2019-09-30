@@ -2,9 +2,9 @@ package org.spin.common.web.interceptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.common.internal.NetworkUtils;
-import org.spin.common.util.PermissionUtils;
+import org.spin.common.util.NetworkUtils;
 import org.spin.common.vo.CurrentUser;
+import org.spin.common.web.AuthLevel;
 import org.spin.common.web.InternalWhiteList;
 import org.spin.common.web.RestfulResponse;
 import org.spin.common.web.ScopeType;
@@ -23,9 +23,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Set;
 
 /**
  * 用户权限拦截器
@@ -50,70 +47,38 @@ public class UserAuthInterceptor implements HandlerInterceptor {
 
         Auth authAnno = AnnotatedElementUtils.getMergedAnnotation(method, Auth.class);
         if (null == authAnno) {
+            CurrentUser.clearCurrent();
             responseWrite(response, ErrorCode.OTHER, "接口定义不正确");
             return false;
         }
 
         boolean internal = internalRequest(request);
         if (authAnno.scope() == ScopeType.INTERNAL && !internal) {
+            CurrentUser.clearCurrent();
             responseWrite(response, ErrorCode.ACCESS_DENINED, "该接口仅允许内部调用: " + request.getRequestURI());
             return false;
         }
         // 用户信息
-        Enumeration<String> enumeration = request.getHeaders(HttpHeaders.FROM);
+        String user = request.getHeader(HttpHeaders.FROM);
         CurrentUser currentUser = null;
-        if (enumeration.hasMoreElements()) {
-            String user = enumeration.nextElement();
-            if (StringUtils.isNotEmpty(user)) {
-                currentUser = CurrentUser.setCurrent(StringUtils.urlDecode(user));
-            }
+        if (StringUtils.isNotBlank(user)) {
+            currentUser = CurrentUser.setCurrent(user);
         }
 
-        boolean auth = authAnno.value();
+        AuthLevel authLevel = authAnno.value();
+        boolean auth = AuthLevel.NONE != authLevel;
         if (auth && authAnno.scope() == ScopeType.OPEN_UNAUTH) {
             auth = !internal;
         }
 
-        ErrorCode errorCode = null;
         if (null == currentUser) {
             CurrentUser.clearCurrent();
-            errorCode = ErrorCode.ACCESS_DENINED;
-        } else if (ErrorCode.TOKEN_EXPIRED.getCode() == -currentUser.getId().intValue()) {
-            CurrentUser.clearCurrent();
-            errorCode = ErrorCode.TOKEN_EXPIRED;
-        } else if (ErrorCode.TOKEN_INVALID.getCode() == -currentUser.getId().intValue()) {
-            CurrentUser.clearCurrent();
-            errorCode = ErrorCode.TOKEN_INVALID;
+            if (auth) {
+                responseWrite(response, ErrorCode.ACCESS_DENINED, "该接口不允许匿名访问: " + request.getRequestURI());
+                return false;
+            }
         }
-
-        if (null != errorCode && errorCode != ErrorCode.ACCESS_DENINED) {
-            logger.warn("非法的Token: {}", errorCode.toString());
-        }
-
-        if (!auth) {
-            return true;
-        } else if (null != errorCode) {
-            responseWrite(response, errorCode);
-            return false;
-        }
-
-        // 权限信息
-        String[] permissions = authAnno.permissions();
-        if (permissions.length == 0) {
-            return true;
-        }
-
-        Set<String> allPermissions = PermissionUtils.getUserPermissions(currentUser.getId());
-
-        if (allPermissions.containsAll(Arrays.asList(permissions))) {
-            return true;
-        }
-
-        // 无效的授权
-        responseWrite(response, ErrorCode.ACCESS_DENINED);
-
-        return false;
-
+        return true;
     }
 
     @Override
@@ -123,7 +88,7 @@ public class UserAuthInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        // do nothing
+        CurrentUser.clearCurrent();
     }
 
     /**

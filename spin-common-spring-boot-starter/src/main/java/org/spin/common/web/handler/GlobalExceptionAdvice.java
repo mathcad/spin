@@ -8,6 +8,7 @@ import org.spin.common.throwable.FeignHttpException;
 import org.spin.common.web.RestfulResponse;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.BooleanExt;
 import org.spin.core.util.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,6 +76,9 @@ public class GlobalExceptionAdvice {
             if (cause instanceof SimplifiedException) {
                 logger.info(((SimplifiedException) cause).getSimpleMessage(), cause.getStackTrace()[0]);
                 return RestfulResponse.error((SimplifiedException) cause);
+            } else if (cause instanceof SpinException) {
+                logger.info("", cause);
+                return RestfulResponse.error(((SpinException) cause).getExceptionType(),((SpinException) cause).getSimpleMessage(), cause.getMessage());
             } else if (cause instanceof HttpRequestMethodNotSupportedException) {
                 String msg = String.format("不支持的请求类型: %s [%s]", ((HttpRequestMethodNotSupportedException) cause).getMethod(), request.getRequestURI());
                 logger.warn(msg);

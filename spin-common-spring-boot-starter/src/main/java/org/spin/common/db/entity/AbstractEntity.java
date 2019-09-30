@@ -1,40 +1,22 @@
 package org.spin.common.db.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import org.spin.core.gson.annotation.PreventOverflow;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * 抽象实体
- * <p>DESCRIPTION</p>
+ * <p>继承自基础实体, 增加了创建人, 更新人, 逻辑删除与备注信息</p>
  * <p>Created by xuweinan on 2019/3/18</p>
  *
  * @author xuweinan
- * @version 1.0
+ * @version 1.1
+ * @see org.spin.common.db.entity.BasicEntity BasicEntity
  */
-public abstract class AbstractEntity implements Serializable {
-
-    /**
-     * 主键
-     */
-    @TableId
-    @PreventOverflow
-    private Long id;
-
-    /**
-     * 逻辑删除标识
-     */
-    @TableLogic
-    @TableField
-    private Integer valid = 1;
-
-    /**
-     * 备注
-     */
-    @TableField
-    private String remark;
+public abstract class AbstractEntity extends BasicEntity {
 
     /**
      * 创建人ID
@@ -75,34 +57,17 @@ public abstract class AbstractEntity implements Serializable {
     private LocalDateTime updateTime;
 
     /**
-     * 版本号用于并发控制
+     * 逻辑删除标识
      */
-    @Version
-    private Integer version = 0;
+    @TableLogic(value = "1", delval = "0")
+    @TableField
+    private Byte valid = 1;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Integer getValid() {
-        return valid;
-    }
-
-    public void setValid(Integer valid) {
-        this.valid = valid;
-    }
-
-    public String getRemark() {
-        return remark;
-    }
-
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
+    /**
+     * 备注
+     */
+    @TableField
+    private String remark;
 
     public Long getCreateBy() {
         return createBy;
@@ -152,11 +117,19 @@ public abstract class AbstractEntity implements Serializable {
         this.updateTime = updateTime;
     }
 
-    public Integer getVersion() {
-        return version;
+    public Byte getValid() {
+        return valid;
     }
 
-    public void setVersion(Integer version) {
-        this.version = version;
+    public void setValid(Byte valid) {
+        this.valid = valid;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 }

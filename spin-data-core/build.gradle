@@ -7,9 +7,10 @@ version = '2.2.4-SNAPSHOT'
 def artifactId = 'spin-data-core'
 
 ext {
-    junitJupiterVersion = '5.5.1'
-    springVersion = '5.1.8.RELEASE'
-    springDataRedisVersion = '2.1.9.RELEASE'
+    junitJupiterVersion = '5.5.2'
+    springVersion = '5.1.9.RELEASE'
+    springDataRedisVersion = '2.1.10.RELEASE'
+    zkclientVersion = '0.11'
 }
 
 test {
@@ -27,8 +28,8 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://139.199.59.195:8081/repository/ne/") {
-                authentication(userName: "admin", password: "admin123")
+            repository(url: "http://60.169.170.69:8081/repository/maven-snapshots/") {
+                authentication(userName: "dev", password: "8D22185")
             }
             pom.version = "$project.version"
             pom.artifactId = "$artifactId"
@@ -40,11 +41,11 @@ uploadArchives {
 dependencies {
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
-    testRuntimeOnly group: 'com.101tec', name: 'zkclient', version: '0.11'
+    testRuntimeOnly group: 'com.101tec', name: 'zkclient', version: zkclientVersion
 
 
     api group: 'org.mathcat', name: 'spin-core', version: "$project.version"
 
     compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
-    compileOnly group: 'com.101tec', name: 'zkclient', version: '0.11'
+    compileOnly group: 'com.101tec', name: 'zkclient', version: zkclientVersion
 }

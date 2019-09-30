@@ -1,9 +1,6 @@
 package org.spin.common.config;
 
-import org.spin.common.internal.NetworkUtils;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -17,8 +14,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class FrameworkAutoConfiguration {
 
-    @ConditionalOnBean(DiscoveryClient.class)
-    public InitializingBean networkInit(DiscoveryClient client) {
-        return () -> NetworkUtils.setDiscoveryClient(client);
+    @Bean
+    public UtilsClassInitApplicationRunner utilsClassInitApplicationRunner() {
+        return new UtilsClassInitApplicationRunner();
     }
 }

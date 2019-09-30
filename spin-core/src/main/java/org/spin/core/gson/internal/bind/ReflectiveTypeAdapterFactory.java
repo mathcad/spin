@@ -122,7 +122,11 @@ public final class ReflectiveTypeAdapterFactory implements TypeAdapterFactory {
                 } else {
                     TypeAdapter t = jsonAdapterPresent ? typeAdapter
                         : new TypeAdapterRuntimeTypeWrapper(context, typeAdapter, fieldType.getType());
-                    t.write(writer, fieldValue);
+                    if (t instanceof TypeAdapterRuntimeTypeWrapper) {
+                        ((TypeAdapterRuntimeTypeWrapper) t).write(writer, fieldValue, field);
+                    } else {
+                        t.write(writer, fieldValue);
+                    }
                 }
             }
 

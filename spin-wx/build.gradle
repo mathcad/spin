@@ -7,7 +7,7 @@ version = '2.2.4-SNAPSHOT'
 def artifactId = 'spin-wx'
 
 ext {
-    junitJupiterVersion = '5.5.1'
+    junitJupiterVersion = '5.5.2'
 }
 
 test {
@@ -25,8 +25,8 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://192.168.0.248:8081/nexus/content/repositories/snapshots/") {
-                authentication(userName: "admin", password: "admin123")
+            repository(url: "http://60.169.170.69:8081/repository/maven-snapshots/") {
+                authentication(userName: "dev", password: "8D22185")
             }
             pom.version = "$project.version"
             pom.artifactId = "$artifactId"

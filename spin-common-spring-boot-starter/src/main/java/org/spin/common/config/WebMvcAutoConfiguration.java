@@ -1,18 +1,13 @@
 package org.spin.common.config;
 
-import org.spin.common.service.remote.PermissionService;
-import org.spin.common.util.PermissionUtils;
 import org.spin.common.web.InternalWhiteList;
 import org.spin.common.web.config.RequestMappingBeanValidator;
 import org.spin.common.web.converter.JsonHttpMessageConverter;
 import org.spin.common.web.handler.ReplacementReturnValueHandler;
 import org.spin.common.web.handler.WrappedRequestResponseBodyProcessor;
+import org.spin.common.web.interceptor.GrayInterceptor;
 import org.spin.common.web.interceptor.UserAuthInterceptor;
-import org.spin.core.gson.Gson;
-import org.spin.core.gson.JsonParser;
-import org.spin.core.gson.JsonSerializer;
 import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.JsonUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -26,11 +21,9 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor;
-import springfox.documentation.spring.web.json.Json;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,16 +35,10 @@ import java.util.stream.Collectors;
  * <p>Created by wangy on 2019/3/13.</p>
  */
 @Configuration
-@ComponentScan(basePackages = {"org.spin.common.web.handler", "org.spin.common.service"})
+@ComponentScan(basePackages = {"org.spin.common.web.handler"})
 public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
-    private static final JsonParser jsonParser = new JsonParser();
-
     private static final JsonHttpMessageConverter JSON_HTTP_MESSAGE_CONVERTER = new JsonHttpMessageConverter();
-
-    static {
-        JSON_HTTP_MESSAGE_CONVERTER.setGson(gson());
-    }
 
     @Bean
     public FilterRegistrationBean<CharacterEncodingFilter> encodingFilterRegistration() {
@@ -76,27 +63,12 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
         return new RequestMappingBeanValidator();
     }
 
-    /**
-     * springfox Json To Gson
-     */
-    private static Gson gson() {
-        return JsonUtils.buildGson(gb -> gb.registerTypeAdapter(Json.class, (JsonSerializer<Json>) (json, type, jsonSerializationContext) ->
-            jsonParser.parse(json.value())
-        ));
-    }
-
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/**").addResourceLocations("classpath:/META-INF/resources/", "classpath:/resources/",
-            "classpath:/static/", "classpath:/public/");
-        registry.addResourceHandler("/swagger-ui.html").addResourceLocations("classpath:/META-INF/resources/");
-        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
-    }
-
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addWebRequestInterceptor(new GrayInterceptor()).addPathPatterns("/**").order(Ordered.HIGHEST_PRECEDENCE);
+
         registry.addInterceptor(new UserAuthInterceptor()).addPathPatterns("/**")
-            .excludePathPatterns("/swagger-ui.html/**", "/webjars/**", "/swagger-resources/**", "/v2/api-docs", "/error", "/job/executor/**");
+            .excludePathPatterns("/swagger-ui.html/**", "/webjars/**", "/swagger-resources/**", "/error", "/job/executor/**");
     }
 
     @Bean
@@ -127,12 +99,6 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
     private ReplacementReturnValueHandler getMatched(HandlerMethodReturnValueHandler handler, List<ReplacementReturnValueHandler> replacement) {
         return replacement.stream().filter(h -> h.replace().equals(handler.getClass())).findFirst().orElse(null);
-    }
-
-    @Bean
-    @ConditionalOnBean(PermissionService.class)
-    public InitializingBean permissionService(PermissionService permissionService) {
-        return () -> PermissionUtils.init(permissionService);
     }
 
     @Value("${internal.whiteList:}")

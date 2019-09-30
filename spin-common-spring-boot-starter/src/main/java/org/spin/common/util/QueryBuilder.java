@@ -2,6 +2,7 @@ package org.spin.common.util;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 /**
  * description query builder
@@ -18,5 +19,9 @@ public interface QueryBuilder {
     static <T> LambdaQueryWrapper<T> lambdaQuery() {
         QueryWrapper<T> queryWrapper = new QueryWrapper<>();
         return queryWrapper.lambda();
+    }
+
+    static <T> QueryWrapper<T> emptyQuery() {
+        return Wrappers.emptyWrapper();
     }
 }

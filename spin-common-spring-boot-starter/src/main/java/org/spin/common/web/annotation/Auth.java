@@ -1,5 +1,6 @@
 package org.spin.common.web.annotation;
 
+import org.spin.common.web.AuthLevel;
 import org.spin.common.web.ScopeType;
 
 import java.lang.annotation.ElementType;
@@ -18,11 +19,11 @@ import java.lang.annotation.Target;
 public @interface Auth {
 
     /**
-     * 是否需要认证，默认true
+     * 认证级别，默认为仅认证
      *
      * @return 是否需要认证
      */
-    boolean value() default true;
+    AuthLevel value() default AuthLevel.AUTHENCATE;
 
     /**
      * 授权资源名称
@@ -34,16 +35,16 @@ public @interface Auth {
     /**
      * 授权信息
      *
-     * @return 所需权限列表
+     * @return 所需角色列表
      */
-    String[] permissions() default {};
+    String[] roles() default {};
 
     /**
      * 接口可见范围
      * <pre>
      *     OPEN        公开调用
      *     INTERNAL    内部调用，意味着该接口仅能由服务间相互调用，不允许由网关分发。
-     *     OPEN_UNAUTH 公开调用，且内部调用时不验证用户权限(无论是否指定auth)
+     *     OPEN_UNAUTH 公开调用，且内部调用时不验证用户身份(无论是否指定auth)
      * </pre>
      *
      * @return 是否仅内部调用

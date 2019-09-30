@@ -15,6 +15,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
+import springfox.documentation.spring.web.json.Json;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -187,6 +188,8 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
             // 基本类型或String，不作处理直接写出
             if (null != ClassUtils.wrapperToPrimitive(t.getClass()) || ClassUtils.isAssignable(t.getClass(), CharSequence.class)) {
                 writer.write(t.toString());
+            } else if (t instanceof Json) {
+                writer.write(((Json) t).value());
             } else if (type != null) {
                 this.gson.toJson(t, type, writer);
             } else {

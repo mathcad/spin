@@ -2,17 +2,10 @@ package org.spin.core.util;
 
 import org.spin.core.Assert;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FilterInputStream;
-import java.io.FilterOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Java输入输出流的工具类. 所有方法的block size都是4096字节.
@@ -219,6 +212,214 @@ public abstract class IOUtils {
     public static OutputStream nonClosing(OutputStream out) {
         Assert.notNull(out, "No OutputStream specified");
         return new NonClosingOutputStream(out);
+    }
+
+    /**
+     * 无条件关闭一个 <code>Closeable</code>.
+     * <p>
+     * 与 {@link Closeable#close()}效果相同, 但会忽略任何异常.
+     * 通常在finally代码块中使用该方法.
+     * <p>
+     * 示例:
+     * <pre>
+     *   Closeable closeable = null;
+     *   try {
+     *       closeable = new FileReader("foo.txt");
+     *       // process closeable
+     *       closeable.close();
+     *   } catch (Exception e) {
+     *       // error handling
+     *   } finally {
+     *       IOUtils.closeQuietly(closeable);
+     *   }
+     * </pre>
+     *
+     * @param closeable the object to close, may be null or already closed
+     * @since 2.0
+     */
+    public static void closeQuietly(Closeable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (IOException ioe) {
+            // ignore
+        }
+    }
+
+    /**
+     * 无条件关闭一个 <code>AutoCloseable</code>.
+     * <p>
+     * 与 {@link AutoCloseable#close()}效果相同, 但会忽略任何异常.
+     * 通常在finally代码块中使用该方法.
+     * <p>
+     * 示例:
+     * <pre>
+     *   AutoCloseable closeable = null;
+     *   try {
+     *       closeable = new FileReader("foo.txt");
+     *       // process closeable
+     *       closeable.close();
+     *   } catch (Exception e) {
+     *       // error handling
+     *   } finally {
+     *       IOUtils.closeQuietly(closeable);
+     *   }
+     * </pre>
+     *
+     * @param closeable the object to close, may be null or already closed
+     * @since 2.0
+     */
+    public static void closeQuietly(AutoCloseable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (Exception ioe) {
+            // ignore
+        }
+    }
+
+    /**
+     * Returns the given reader if it is a {@link BufferedReader}, otherwise creates a toBufferedReader for the given
+     * reader.
+     *
+     * @param reader the reader to wrap or return
+     * @return the given reader or a new {@link BufferedReader} for the given reader
+     * @since 2.2
+     */
+    public static BufferedReader toBufferedReader(Reader reader) {
+        return reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
+    }
+
+    /**
+     * Get the contents of an <code>InputStream</code> as a list of Strings,
+     * one entry per line, using the default character encoding of the platform.
+     * <p>
+     * This method buffers the input internally, so there is no need to use a
+     * <code>BufferedInputStream</code>.
+     *
+     * @param input the <code>InputStream</code> to read from, not null
+     * @return the list of Strings, never null
+     * @throws NullPointerException if the input is null
+     * @throws IOException          if an I/O error occurs
+     * @since 1.1
+     */
+    public static List<String> readLines(InputStream input) throws IOException {
+        InputStreamReader reader = new InputStreamReader(input);
+        return readLines(reader);
+    }
+
+    /**
+     * Get the contents of an <code>InputStream</code> as a list of Strings,
+     * one entry per line, using the specified character encoding.
+     * <p>
+     * Character encoding names can be found at
+     * <a href="http://www.iana.org/assignments/character-sets">IANA</a>.
+     * <p>
+     * This method buffers the input internally, so there is no need to use a
+     * <code>BufferedInputStream</code>.
+     *
+     * @param input    the <code>InputStream</code> to read from, not null
+     * @param encoding the encoding to use, null means platform default
+     * @return the list of Strings, never null
+     * @throws NullPointerException if the input is null
+     * @throws IOException          if an I/O error occurs
+     * @since 1.1
+     */
+    public static List<String> readLines(InputStream input, String encoding) throws IOException {
+        if (encoding == null) {
+            return readLines(input);
+        } else {
+            InputStreamReader reader = new InputStreamReader(input, encoding);
+            return readLines(reader);
+        }
+    }
+
+    /**
+     * Get the contents of a <code>Reader</code> as a list of Strings,
+     * one entry per line.
+     * <p>
+     * This method buffers the input internally, so there is no need to use a
+     * <code>BufferedReader</code>.
+     *
+     * @param input the <code>Reader</code> to read from, not null
+     * @return the list of Strings, never null
+     * @throws NullPointerException if the input is null
+     * @throws IOException          if an I/O error occurs
+     * @since 1.1
+     */
+    public static List<String> readLines(Reader input) throws IOException {
+        BufferedReader reader = toBufferedReader(input);
+        List<String> list = new ArrayList<>();
+        String line = reader.readLine();
+        while (line != null) {
+            list.add(line);
+            line = reader.readLine();
+        }
+        return list;
+    }
+
+    /**
+     * Convert the specified CharSequence to an input stream, encoded as bytes
+     * using the default character encoding of the platform.
+     *
+     * @param input the CharSequence to convert
+     * @return an input stream
+     * @since 2.0
+     */
+    public static InputStream toInputStream(CharSequence input) {
+        return toInputStream(input.toString());
+    }
+
+    /**
+     * Convert the specified CharSequence to an input stream, encoded as bytes
+     * using the specified character encoding.
+     * <p>
+     * Character encoding names can be found at
+     * <a href="http://www.iana.org/assignments/character-sets">IANA</a>.
+     *
+     * @param input    the CharSequence to convert
+     * @param encoding the encoding to use, null means platform default
+     * @return an input stream
+     * @throws IOException if the encoding is invalid
+     * @since 2.0
+     */
+    public static InputStream toInputStream(CharSequence input, String encoding) throws IOException {
+        return toInputStream(input.toString(), encoding);
+    }
+
+    //-----------------------------------------------------------------------
+
+    /**
+     * Convert the specified string to an input stream, encoded as bytes
+     * using the default character encoding of the platform.
+     *
+     * @param input the string to convert
+     * @return an input stream
+     * @since 1.1
+     */
+    public static InputStream toInputStream(String input) {
+        byte[] bytes = input.getBytes();
+        return new ByteArrayInputStream(bytes);
+    }
+
+    /**
+     * Convert the specified string to an input stream, encoded as bytes
+     * using the specified character encoding.
+     * <p>
+     * Character encoding names can be found at
+     * <a href="http://www.iana.org/assignments/character-sets">IANA</a>.
+     *
+     * @param input    the string to convert
+     * @param encoding the encoding to use, null means platform default
+     * @return an input stream
+     * @throws IOException if the encoding is invalid
+     * @since 1.1
+     */
+    public static InputStream toInputStream(String input, String encoding) throws IOException {
+        byte[] bytes = encoding != null ? input.getBytes(encoding) : input.getBytes();
+        return new ByteArrayInputStream(bytes);
     }
 
 

@@ -7,10 +7,9 @@ import org.spin.core.util.excel.ExcelUtils;
 import org.spin.core.util.file.FileType;
 import org.springframework.web.servlet.view.AbstractView;
 
-import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
 
 /**
  * Created by xuweinan on 2017/2/7.
@@ -19,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class ModelExcelView extends AbstractView {
 
-    private static final String defaultFileName = "export";
+    private static final String DEFAULT_FILE_NAME = "export";
 
     private FileType.Document fileType;
 
@@ -47,7 +46,7 @@ public class ModelExcelView extends AbstractView {
         // Set the content type.
         response.setContentType(getContentType());
 
-        String fileName = StringUtils.isNotEmpty(excelModel.getGrid().getFileName()) ? excelModel.getGrid().getFileName() : defaultFileName;
+        String fileName = StringUtils.isNotEmpty(excelModel.getGrid().getFileName()) ? excelModel.getGrid().getFileName() : DEFAULT_FILE_NAME;
         fileName = StringUtils.urlEncode(fileName.endsWith(fileType.getExtension()) ? fileName : fileName + fileType.getExtension());
         response.setHeader("Content-disposition", "attachment;filename=" + fileName);
 

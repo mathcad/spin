@@ -1,7 +1,8 @@
-package org.spin.common.internal;
+package org.spin.common.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.common.annotation.UtilClass;
 import org.spin.core.util.NetUtils;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -14,14 +15,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * TITLE
+ * 网络工具类
  * <p>DESCRIPTION</p>
  * <p>Created by xuweinan on 2019/6/24</p>
  *
  * @author xuweinan
  * @version 1.0
  */
-public class NetworkUtils {
+@UtilClass
+public abstract class NetworkUtils {
     private static final Logger logger = LoggerFactory.getLogger(NetworkUtils.class);
     private static volatile long updateTime;
     private static final Set<String> networks = new HashSet<>();
@@ -31,6 +33,9 @@ public class NetworkUtils {
 
     private static Set<String> hosts = new HashSet<>();
     private static DiscoveryClient discoveryClient;
+
+    private NetworkUtils() {
+    }
 
     static {
         try {
@@ -52,6 +57,10 @@ public class NetworkUtils {
         }
     }
 
+    public static void init(DiscoveryClient discoveryClient) {
+        NetworkUtils.discoveryClient = discoveryClient;
+        updateHosts();
+    }
 
     public static boolean contains(String host) {
         updateHosts();
@@ -98,11 +107,6 @@ public class NetworkUtils {
         } catch (Exception ignore) {
         }
         return false;
-    }
-
-    public static void setDiscoveryClient(DiscoveryClient discoveryClient) {
-        NetworkUtils.discoveryClient = discoveryClient;
-        updateHosts();
     }
 
     private static boolean isExpired() {

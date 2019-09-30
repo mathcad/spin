@@ -1,5 +1,6 @@
 package org.spin.common.web.annotation;
 
+import org.spin.common.web.AuthLevel;
 import org.spin.common.web.ScopeType;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,17 +19,18 @@ import java.lang.annotation.Target;
  */
 @RequestMapping(method = RequestMethod.DELETE)
 @Auth
+@Author
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DeleteApi {
 
     /**
-     * 是否需要认证，默认true
+     * 认证级别，默认为仅认证
      *
      * @return 是否需要认证
      */
     @AliasFor(annotation = Auth.class, attribute = "value")
-    boolean auth() default true;
+    AuthLevel auth() default AuthLevel.AUTHENCATE;
 
     /**
      * 授权资源名称
@@ -42,10 +44,10 @@ public @interface DeleteApi {
     /**
      * 授权信息
      *
-     * @return 所需权限列表
+     * @return 所需角色列表
      */
-    @AliasFor(annotation = Auth.class, attribute = "permissions")
-    String[] permissions() default {};
+    @AliasFor(annotation = Auth.class, attribute = "roles")
+    String[] roles() default {};
 
     /**
      * 接口可见范围
@@ -107,4 +109,28 @@ public @interface DeleteApi {
 
     @AliasFor(annotation = RequestMapping.class, attribute = "produces")
     String[] produces() default {};
+
+    /**
+     * 接口作者
+     *
+     * @return 作者
+     */
+    @AliasFor(annotation = Author.class, attribute = "value")
+    String[] authors() default {};
+
+    /**
+     * 部门名称
+     *
+     * @return 部门名称
+     */
+    @AliasFor(annotation = Author.class, attribute = "department")
+    String department() default "";
+
+    /**
+     * 联系方式
+     *
+     * @return 联系方式
+     */
+    @AliasFor(annotation = Author.class, attribute = "contact")
+    String contact() default "";
 }

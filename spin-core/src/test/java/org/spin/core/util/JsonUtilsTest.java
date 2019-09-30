@@ -1,8 +1,20 @@
 package org.spin.core.util;
 
+import org.junit.jupiter.api.Test;
+import org.spin.core.gson.annotation.DatePattern;
+import org.spin.core.gson.annotation.PreventOverflow;
+import org.spin.core.gson.annotation.SerializedName;
 import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.trait.IntEvaluatable;
 import org.spin.core.trait.IntegerEvaluatable;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,6 +37,25 @@ public class JsonUtilsTest {
         Vo[] vos1 = JsonUtils.fromJson(json, new TypeToken<Vo[]>() {
         });
         System.out.println();
+    }
+
+
+//    @Test
+    public void testEntityId() throws IOException {
+        E a = new E();
+        a.setId(81241321817279489L);
+        a.setXxx(LocalDateTime.now());
+        a.setExt(91241321817279489L);
+        BufferedWriter fos = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("D:\\res.log"))));
+        for (int i = 0; i < 1000000; ++i) {
+            a.setId(a.getId() + 1L);
+            fos.write(JsonUtils.toJson(a));
+            fos.newLine();
+        }
+        fos.close();
+        String b = "{\"id\":81241321817279489,\"create_user_id\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212', first: 'Neptune'}";
+        E c = JsonUtils.fromJsonWithUnderscore(b, E.class);
+        System.out.println(c);
     }
 }
 
@@ -107,5 +138,99 @@ enum ServiceType implements IntegerEvaluatable {
             }
         }
         return serviceTypes;
+    }
+}
+
+
+enum Status implements IntEvaluatable {
+    A(1), B(2);
+
+    private int value;
+
+    Status(int value) {
+        this.value = value;
+    }
+
+    @Override
+    public int getValue() {
+        return value;
+    }
+}
+
+enum Type implements IntEvaluatable {
+    C(1), D(2);
+
+    private int value;
+
+    Type(int value) {
+        this.value = value;
+    }
+
+    @Override
+    public int getValue() {
+        return value;
+    }
+}
+
+
+class E {
+    @PreventOverflow
+    private Long id;
+    @DatePattern(write = "yyyyMMddHH")
+    private LocalDateTime xxx;
+    private Status status;
+    private Type type;
+    @PreventOverflow
+    private Long ext;
+
+    @SerializedName("first")
+    private String firstName;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public LocalDateTime getXxx() {
+        return xxx;
+    }
+
+    public void setXxx(LocalDateTime xxx) {
+        this.xxx = xxx;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public Long getExt() {
+        return ext;
+    }
+
+    public void setExt(Long ext) {
+        this.ext = ext;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 }

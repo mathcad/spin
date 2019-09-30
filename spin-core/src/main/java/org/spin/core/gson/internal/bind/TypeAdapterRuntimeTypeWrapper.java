@@ -24,6 +24,7 @@ import org.spin.core.gson.stream.JsonReader;
 import org.spin.core.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -50,9 +51,21 @@ final class TypeAdapterRuntimeTypeWrapper<T> extends TypeAdapter<T> {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    public T read(JsonReader in, Field field) throws IOException {
+        if (delegate instanceof MatchableTypeAdapter) {
+            return ((MatchableTypeAdapter<T>) delegate).read(in, typeToken, field);
+        } else {
+            return delegate.read(in);
+        }
+    }
+
     @Override
     public void write(JsonWriter out, T value) throws IOException {
+        write(out, value, null);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void write(JsonWriter out, T value, Field field) throws IOException {
         // Order of preference for choosing type adapters
         // First preference: a type adapter registered for the runtime type
         // Second preference: a type adapter registered for the declared type
@@ -75,7 +88,11 @@ final class TypeAdapterRuntimeTypeWrapper<T> extends TypeAdapter<T> {
                 chosen = runtimeTypeAdapter;
             }
         }
-        chosen.write(out, value);
+        if (chosen instanceof MatchableTypeAdapter) {
+            ((MatchableTypeAdapter) chosen).write(out, value, field);
+        } else {
+            chosen.write(out, value);
+        }
     }
 
     /**

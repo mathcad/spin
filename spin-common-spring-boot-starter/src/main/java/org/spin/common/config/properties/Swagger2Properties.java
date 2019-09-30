@@ -36,11 +36,6 @@ public class Swagger2Properties {
     private String contactEmail;
 
     /**
-     * 版本号
-     */
-    private String version;
-
-    /**
      * 描述
      */
     private String description;
@@ -96,14 +91,6 @@ public class Swagger2Properties {
 
     public void setContactEmail(String contactEmail) {
         this.contactEmail = contactEmail;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
     }
 
     public String getDescription() {
