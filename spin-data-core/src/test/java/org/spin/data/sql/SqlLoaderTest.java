@@ -18,7 +18,6 @@
 package org.spin.data.sql;
 
 import org.junit.jupiter.api.Test;
-import org.spin.data.core.SQLLoader;
 import org.spin.data.sql.loader.FileSystemXmlLoader;
 import org.spin.data.sql.resolver.FreemarkerResolver;
 

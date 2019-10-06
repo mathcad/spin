@@ -892,7 +892,7 @@ public class RepositoryContext {
         List<CriteriaImpl.OrderEntry> orderEntries = BeanUtils.getFieldValue(ct, ORDER_ENTRIES);
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
-        List<T> res = EntityUtils.wrapperMapToBeanList(cb.getEnCls(), list);
+        List<T> res = BeanUtils.wrapperMapToBeanList(cb.getEnCls(), list);
         return new Page<>(res, total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
     }
 
@@ -986,7 +986,7 @@ public class RepositoryContext {
      */
     public <T extends IEntity<P>, P extends Serializable> List<T> list(CriteriaBuilder<T> cb) {
         List<Map<String, Object>> list = listFlatMap(cb);
-        return EntityUtils.wrapperMapToBeanList(cb.getEnCls(), list);
+        return BeanUtils.wrapperMapToBeanList(cb.getEnCls(), list);
     }
 
     /**

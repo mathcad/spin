@@ -1,9 +1,6 @@
 package org.spin.data.rs;
 
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,14 +12,11 @@ import java.util.Map;
  */
 public class MapRowMapper implements RowMapper<Map<String, Object>> {
 
-    public Map<String, Object> apply(ResultSet rs, int rowNum) throws SQLException {
-        ResultSetMetaData rsmd = rs.getMetaData();
-        int columnCount = rsmd.getColumnCount();
-        Map<String, Object> mapOfColValues = new HashMap<>(columnCount);
-        for (int i = 1; i <= columnCount; i++) {
-            String key = lookupColumnName(rsmd, i);
-            Object obj = getResultSetValue(rs, i);
-            mapOfColValues.put(key, obj);
+    @Override
+    public Map<String, Object> apply(String[] columnNames, Object[] columns, int columnCount, int rowIdx) {
+        Map<String, Object> mapOfColValues = new HashMap<>();
+        for (int i = 0; i < columnCount; i++) {
+            mapOfColValues.put(columnNames[i], columns[i]);
         }
         return mapOfColValues;
     }

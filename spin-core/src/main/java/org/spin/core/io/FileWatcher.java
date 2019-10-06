@@ -93,6 +93,10 @@ public class FileWatcher implements Closeable, AutoCloseable {
 
     /**
      * 注册监听器
+     *
+     * @param watchFile          监视的文件
+     * @param recursion          是否递归监视子文件夹
+     * @param fileActionCallback 文件监视回调
      */
     public void registWatcher(File watchFile, boolean recursion, FileActionCallback fileActionCallback) {
         registWatcher(watchFile, recursion, ((kind, file) -> {

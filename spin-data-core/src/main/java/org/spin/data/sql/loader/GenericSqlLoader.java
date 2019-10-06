@@ -2,7 +2,7 @@ package org.spin.data.sql.loader;
 
 import org.spin.data.core.DatabaseType;
 import org.spin.data.core.PageRequest;
-import org.spin.data.core.SQLLoader;
+import org.spin.data.sql.SQLLoader;
 import org.spin.data.sql.SqlSource;
 import org.spin.data.sql.resolver.SimpleResolver;
 import org.spin.data.sql.resolver.TemplateResolver;

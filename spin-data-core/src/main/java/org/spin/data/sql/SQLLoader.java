@@ -1,6 +1,7 @@
-package org.spin.data.core;
+package org.spin.data.sql;
 
-import org.spin.data.sql.SqlSource;
+import org.spin.data.core.DatabaseType;
+import org.spin.data.core.PageRequest;
 import org.spin.data.sql.resolver.TemplateResolver;
 
 import java.util.Map;

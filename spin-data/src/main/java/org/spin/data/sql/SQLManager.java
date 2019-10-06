@@ -2,18 +2,20 @@ package org.spin.data.sql;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.core.DataSourceContext;
 import org.spin.data.core.DatabaseType;
 import org.spin.data.core.Page;
 import org.spin.data.core.PageRequest;
-import org.spin.data.core.SQLLoader;
 import org.spin.data.extend.DataSourceConfig;
 import org.spin.data.extend.MultiDataSourceConfig;
 import org.spin.data.rs.MapRowMapper;
 import org.spin.data.rs.RowMapper;
+import org.spin.data.rs.RowMappers;
 import org.spin.data.sql.dbtype.MySQLDatabaseType;
 import org.spin.data.sql.dbtype.OracleDatabaseType;
 import org.spin.data.sql.dbtype.PostgreSQLDatabaseType;
@@ -21,7 +23,6 @@ import org.spin.data.sql.dbtype.SQLServerDatabaseType;
 import org.spin.data.sql.dbtype.SQLiteDatabaseType;
 import org.spin.data.sql.param.ParameterizedSql;
 import org.spin.data.sql.resolver.TemplateResolver;
-import org.spin.data.util.EntityUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -44,7 +45,6 @@ import java.util.regex.Pattern;
 public class SQLManager {
     private static final Logger logger = LoggerFactory.getLogger(SQLManager.class);
     private static final String COUNT_SQL = "SELECT COUNT(1) FROM (%s) OUT_ALIAS";
-    private static final String WRAPPER_ERROR = "Entity wrapper error";
     private static final String QUERY_ERROR = "执行查询出错";
     private static final String SQL_LOG = "sqlId: %s\nsqlText: %s";
     private static final int DEFAULT_CACHE_LIMIT = 256;
@@ -153,7 +153,7 @@ public class SQLManager {
      */
     public <T> T findOne(Connection connection, String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
         ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
-        return executeQueryForOneRow(connection, parsedSql, paramMap, (rs, rowIdx) -> rsToEntity(rs, rowIdx, entityClazz));
+        return executeQueryForOneRow(connection, parsedSql, paramMap, RowMappers.getMapper(TypeToken.get(entityClazz)));
     }
 
     /**
@@ -226,7 +226,7 @@ public class SQLManager {
     public <T> List<T> list(Connection connection, String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
         ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
 
-        return executeQuery(connection, parsedSql, paramMap, (rs, rowIdx) -> rsToEntity(rs, rowIdx, entityClazz));
+        return executeQuery(connection, parsedSql, paramMap, RowMappers.getMapper(TypeToken.get(entityClazz)));
     }
 
     /**
@@ -244,14 +244,7 @@ public class SQLManager {
         ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
         ParameterizedSql parsedPageSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getPagedSQL(sqlId, paramMap, pageRequest)));
 
-        List<T> res = executeQuery(connection, parsedPageSql, paramMap, ((rs, rowIdx) -> {
-            Map<String, Object> map = DEFAULT_ROW_MAPPER.apply(rs, rowIdx);
-            try {
-                return EntityUtils.wrapperMapToBean(entityClazz, map);
-            } catch (Exception e) {
-                throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.MAPPING_ERROR, "转换实体出现错误");
-            }
-        }));
+        List<T> res = executeQuery(connection, parsedPageSql, paramMap, RowMappers.getMapper(TypeToken.get(entityClazz)));
         long total = total(connection, parsedSql, paramMap);
         return new Page<>(res, total, pageRequest.getPageSize());
     }
@@ -266,7 +259,7 @@ public class SQLManager {
      */
     public Long count(Connection connection, String sqlId, Map<String, ?> paramMap) {
         ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
-        Long cnt = executeQueryForOneRow(connection, parsedSql, paramMap, (rs, idx) -> rs.getLong(1));
+        Long cnt = executeQueryForOneRow(connection, parsedSql, paramMap, (k, v, c, r) -> (Long) v[0]);
         if (null == cnt) {
             throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.NOT_UNIQUE_ERROR, "执行查询失败");
         }
@@ -401,10 +394,11 @@ public class SQLManager {
         try (PreparedStatement ps = connection.prepareStatement(parsedSql.getActualSql().getSql())) {
             JdbcUtils.setParameterValues(ps, parsedSql.getNamedParameters(), paramMap);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapper.apply(rs, 0);
-                } else {
+                List<T> tList = mapper.extractData(rs, 1);
+                if (CollectionUtils.isEmpty(tList)) {
                     return null;
+                } else {
+                    return tList.get(0);
                 }
             }
         } catch (SQLException e) {
@@ -449,15 +443,6 @@ public class SQLManager {
             sql = sql.substring(0, sortStart);
         }
         return sql;
-    }
-
-    private <T> T rsToEntity(ResultSet rs, int rowIdx, Class<T> entityClazz) throws SQLException {
-        Map<String, Object> map = DEFAULT_ROW_MAPPER.apply(rs, rowIdx);
-        try {
-            return EntityUtils.wrapperMapToBean(entityClazz, map);
-        } catch (Exception e) {
-            throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.MAPPING_ERROR, WRAPPER_ERROR);
-        }
     }
 
     private long total(Connection connection, ParameterizedSql parsedSql, Map<String, ?> paramMap) {

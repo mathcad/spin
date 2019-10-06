@@ -22,12 +22,13 @@ public interface RowMapper<R> {
     /**
      * 将ResultSet中的当前行转换为指定类型
      *
-     * @param rs     结果集
-     * @param rowIdx 当前行的索引
+     * @param columnNames 列名称
+     * @param columns     列值
+     * @param columnCount 列数
+     * @param rowIdx      当前行的索引
      * @return 转换后的对象
-     * @throws SQLException sql异常
      */
-    R apply(ResultSet rs, int rowIdx) throws SQLException;
+    R apply(String[] columnNames, Object[] columns, int columnCount, int rowIdx);
 
     /**
      * 从ResultSet中抽取数据到List中
@@ -37,10 +38,31 @@ public interface RowMapper<R> {
      * @throws SQLException sql异常
      */
     default List<R> extractData(ResultSet rs) throws SQLException {
+        return extractData(rs, Integer.MAX_VALUE);
+    }
+
+    /**
+     * 从ResultSet中抽取指定n行的数据到List中
+     *
+     * @param rs   ResultSet
+     * @param rows 行数
+     * @return 结果列表
+     * @throws SQLException sql异常
+     */
+    default List<R> extractData(ResultSet rs, int rows) throws SQLException {
         List<R> results = new LinkedList<>();
         int rowNum = 0;
-        while (rs.next()) {
-            results.add(apply(rs, rowNum++));
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int columnCount = rsmd.getColumnCount();
+        String[] keys = lookupColumnNames(rsmd);
+        Object[] values;
+        while (rs.next() && rowNum < rows) {
+            values = new Object[columnCount];
+            for (int i = 1; i <= columnCount; i++) {
+                Object obj = getResultSetValue(rs, i);
+                values[i - 1] = obj;
+            }
+            results.add(apply(keys, values, columnCount, rowNum++));
         }
         return results;
     }
@@ -59,7 +81,7 @@ public interface RowMapper<R> {
      */
     default <V> RowMapper<V> andThen(Function<? super R, ? extends V> after) {
         Objects.requireNonNull(after);
-        return (ResultSet t, int u) -> after.apply(apply(t, u));
+        return (String[] k, Object[] v, int c, int r) -> after.apply(apply(k, v, c, r));
     }
 
     /**
@@ -81,6 +103,19 @@ public interface RowMapper<R> {
             name = resultSetMetaData.getColumnName(columnIndex);
         }
         return name;
+    }
+
+    default String[] lookupColumnNames(ResultSetMetaData resultSetMetaData) throws SQLException {
+        int columnCount = resultSetMetaData.getColumnCount();
+        String[] names = new String[columnCount];
+        for (int i = 1; i <= columnCount; i++) {
+            String name = resultSetMetaData.getColumnLabel(i);
+            if (name == null || name.length() < 1) {
+                name = resultSetMetaData.getColumnName(i);
+            }
+            names[i - 1] = name;
+        }
+        return names;
     }
 
     /**

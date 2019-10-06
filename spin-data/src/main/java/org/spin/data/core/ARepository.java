@@ -816,7 +816,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         List<CriteriaImpl.OrderEntry> orderEntries = BeanUtils.getFieldValue(ct, ORDER_ENTRIES);
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
-        List<T> res = EntityUtils.wrapperMapToBeanList(this.entityClazz, list);
+        List<T> res = BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
         return new Page<>(res, total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
     }
 
@@ -893,7 +893,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             cb.setEnCls(entityClazz);
         }
         List<Map<String, Object>> list = listFlatMap(cb);
-        return EntityUtils.wrapperMapToBeanList(this.entityClazz, list);
+        return BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
     }
 
     /**
