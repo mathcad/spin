@@ -28,7 +28,7 @@ public class Sqlite implements AutoCloseable {
     private static final String MEMORY_MODE = ":memory:";
     private static final String CONN_STR_PREFIX = "jdbc:sqlite:";
 
-    private boolean inMemory = false;
+    private boolean inMemory;
     private boolean closed = false;
     private Connection connection;
     private String dbFilePath;
@@ -59,6 +59,10 @@ public class Sqlite implements AutoCloseable {
         }
     }
 
+    public boolean execute(String sql) {
+        return execute(sql, null);
+    }
+
     public int update(String sql, FinalConsumer<PreparedStatement> statementProcessor) {
         Connection connection = getConnection();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -69,6 +73,10 @@ public class Sqlite implements AutoCloseable {
         } catch (SQLException e) {
             throw new org.spin.data.throwable.SQLException(SQLError.SQL_EXCEPTION, "SQL执行失败", e);
         }
+    }
+
+    public int update(String sql) {
+        return update(sql, null);
     }
 
     public <T> List<T> query(String sql, FinalConsumer<PreparedStatement> statementProcessor, RowMapper<T> rowMapper) {
@@ -85,8 +93,16 @@ public class Sqlite implements AutoCloseable {
         }
     }
 
+    public <T> List<T> query(String sql, RowMapper<T> rowMapper) {
+        return query(sql, null, rowMapper);
+    }
+
     public <T> List<T> query(String sql, FinalConsumer<PreparedStatement> statementProcessor, TypeToken<T> resultType) {
         return query(sql, statementProcessor, RowMappers.getMapper(resultType));
+    }
+
+    public <T> List<T> query(String sql, TypeToken<T> resultType) {
+        return query(sql, null, RowMappers.getMapper(resultType));
     }
 
     public <T> T queryFirst(String sql, FinalConsumer<PreparedStatement> statementProcessor, RowMapper<T> rowMapper) {
@@ -108,8 +124,16 @@ public class Sqlite implements AutoCloseable {
         }
     }
 
+    public <T> T queryFirst(String sql, RowMapper<T> rowMapper) {
+        return queryFirst(sql, null, rowMapper);
+    }
+
     public <T> T queryFirst(String sql, FinalConsumer<PreparedStatement> statementProcessor, TypeToken<T> resultType) {
         return queryFirst(sql, statementProcessor, RowMappers.getMapper(resultType));
+    }
+
+    public <T> T queryFirst(String sql, TypeToken<T> resultType) {
+        return queryFirst(sql, null, RowMappers.getMapper(resultType));
     }
 
     @Override
@@ -124,6 +148,18 @@ public class Sqlite implements AutoCloseable {
             }
             closed = true;
         }
+    }
+
+    public boolean isInMemory() {
+        return inMemory;
+    }
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public String getDbFilePath() {
+        return dbFilePath;
     }
 
     /**

@@ -1,6 +1,8 @@
 package org.spin.core.util;
 
 import org.spin.core.annotation.UserEnum;
+import org.spin.core.trait.IntEvaluatable;
+import org.spin.core.trait.IntegerEvaluatable;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
@@ -149,7 +151,7 @@ public abstract class ObjectUtils {
             return (T) target;
         } else if (BigDecimal.class.equals(type)) {
             return target == null ? null : (T) new BigDecimal(target.toString());
-        } else if (type.getAnnotation(UserEnum.class) != null && target != null) {
+        } else if ((type.getAnnotation(UserEnum.class) != null || IntEvaluatable.class.isAssignableFrom(type) || IntegerEvaluatable.class.isAssignableFrom(type)) && target != null) {
             return (T) EnumUtils.getEnum((Class<Enum>) type, Integer.valueOf(target.toString()));
         } else {
             Class<?> typePrimitive = ClassUtils.wrapperToPrimitive(type);

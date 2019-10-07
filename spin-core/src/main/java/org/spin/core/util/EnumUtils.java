@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.trait.IntEvaluatable;
+import org.spin.core.trait.IntegerEvaluatable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -142,6 +143,21 @@ public abstract class EnumUtils {
      * @return 枚举常量
      */
     public static <E extends Enum<E>, T> E getEnum(Class<E> enumCls, T value) {
+        if (IntEvaluatable.class.isAssignableFrom(enumCls)) {
+            for (E enumConstant : enumCls.getEnumConstants()) {
+                if (value.equals(((IntEvaluatable) enumConstant).getValue())) {
+                    return enumConstant;
+                }
+            }
+        }
+
+        if (IntegerEvaluatable.class.isAssignableFrom(enumCls)) {
+            for (E enumConstant : enumCls.getEnumConstants()) {
+                if (value.equals(((IntegerEvaluatable) enumConstant).getValue())) {
+                    return enumConstant;
+                }
+            }
+        }
         return getEnum(enumCls, value, "value");
     }
 
