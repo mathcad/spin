@@ -6,17 +6,6 @@ description = '数据访问模块核心依赖,脱离于具体的DAO层实现，�
 version = '2.2.5-SNAPSHOT'
 def artifactId = 'spin-data-core'
 
-ext {
-    junitJupiterVersion = '5.5.2'
-    springVersion = '5.1.9.RELEASE'
-    springDataRedisVersion = '2.1.10.RELEASE'
-    zkclientVersion = '0.11'
-    sqliteVersion = '3.28.0'
-    freemarkerVersion = '2.3.29'
-    beetlVersion = '3.0.12.RELEASE'
-    dom4jVersion = '1.6'
-}
-
 test {
     useJUnitPlatform()
 }
@@ -32,12 +21,12 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://60.169.170.69:8081/repository/maven-snapshots/") {
-                authentication(userName: "dev", password: "8D22185")
+            repository(url: repoSnapUrl) {
+                authentication(userName: repoUser, password: repoPasswd)
             }
-            pom.version = "$project.version"
-            pom.artifactId = "$artifactId"
             pom.groupId = "$project.group"
+            pom.artifactId = "$artifactId"
+            pom.version = "$project.version"
         }
     }
 }

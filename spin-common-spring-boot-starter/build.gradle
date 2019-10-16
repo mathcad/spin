@@ -1,31 +1,3 @@
-buildscript {
-    ext {
-        junitJupiterVersion = '5.5.2'
-        spinVersion = '2.2.5-SNAPSHOT'
-        springVersion = '5.1.9.RELEASE'
-        springBootVersion = '2.1.8.RELEASE'
-        springCloudVersion = '2.1.3.RELEASE'
-        sentinelStarterVersion = '0.9.0.RELEASE'
-        sentinelVersion = '1.6.3'
-        yamlVersion = '1.25'
-        apolloVersion = '1.4.1'
-        knife4jVersion = '1.9.6'
-        mybatisPlusVersion = '3.2.0'
-        httpclientVersion = '4.5.10'
-        openFeignVersion = '10.4.0'
-        validationVersion = '2.0.1.Final'
-        servletVersion = '4.0.1'
-    }
-    repositories {
-        mavenLocal()
-        maven { url = "http://60.169.170.69:8081/repository/mathcat/" }
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
-    }
-}
-
 plugins {
     id 'java-library'
 }
@@ -33,8 +5,6 @@ plugins {
 description '公共通用组件starter'
 version '2.0.2-SNAPSHOT'
 def artifactId = 'spin-common-spring-boot-starter'
-
-compileJava.dependsOn(processResources)
 
 test {
     useJUnitPlatform()
@@ -51,12 +21,12 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://60.169.170.69:8081/repository/maven-snapshots/") {
-                authentication(userName: "dev", password: "8D22185")
+            repository(url: repoSnapUrl) {
+                authentication(userName: repoUser, password: repoPasswd)
             }
-            pom.version = "$project.version"
-            pom.artifactId = "$artifactId"
             pom.groupId = "$project.group"
+            pom.artifactId = "$artifactId"
+            pom.version = "$project.version"
         }
     }
 }
@@ -69,9 +39,10 @@ dependencies {
 
     api group: 'org.springframework', name: 'spring-context-support', version: springVersion
     api group: 'org.springframework', name: 'spring-aspects', version: springVersion
-    api group: 'org.springframework.kafka', name: 'spring-kafka', version: '2.2.8.RELEASE'
+    api group: 'org.springframework.kafka', name: 'spring-kafka', version: springKafkaVersion
 
     api group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
+    api group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion
     api group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springBootVersion
     api group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
 
@@ -80,6 +51,10 @@ dependencies {
     api(group: 'org.springframework.cloud', name: 'spring-cloud-starter-alibaba-sentinel', version: sentinelStarterVersion) {
         exclude(group: 'com.alibaba.csp')
     }
+    api(group: 'com.baomidou', name: 'mybatis-plus-boot-starter', version: mybatisPlusVersion) {
+        exclude(group: 'org.springframework.boot')
+    }
+
     api group: 'com.alibaba.csp', name: 'sentinel-annotation-aspectj', version: sentinelVersion
     api group: 'com.alibaba.csp', name: 'sentinel-web-servlet', version: sentinelVersion
     api group: 'com.alibaba.csp', name: 'sentinel-transport-simple-http', version: sentinelVersion
@@ -91,15 +66,12 @@ dependencies {
     api group: 'org.yaml', name: 'snakeyaml', version: yamlVersion
     api group: 'com.ctrip.framework.apollo', name: 'apollo-client', version: apolloVersion
     api group: 'com.github.xiaoymin', name: 'knife4j-spring', version: knife4jVersion
-
-
-    api(group: 'com.baomidou', name: 'mybatis-plus-boot-starter', version: mybatisPlusVersion) {
-        exclude(group: 'org.springframework.boot')
-    }
+    api group: 'p6spy', name: 'p6spy', version: p6spyVersion
     api group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
-    api group: 'io.github.openfeign', name: 'feign-httpclient', version: openFeignVersion
-
+    api group: 'io.github.openfeign', name: 'feign-httpclient', version: feignHttpVersion
     api group: 'javax.validation', name: 'validation-api', version: validationVersion
+    api group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: prometheusVersion
+
 
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis', version: springBootVersion
     implementation group: 'org.springframework', name: 'spring-webmvc', version: springVersion

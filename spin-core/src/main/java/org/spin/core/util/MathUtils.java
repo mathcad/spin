@@ -172,7 +172,6 @@ public class MathUtils {
         return NumericUtils.toBigDeciaml(value1).subtract(NumericUtils.toBigDeciaml(value2));
     }
 
-
     /**
      * 统计某数值列的汇总
      * <pre>

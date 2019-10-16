@@ -6,18 +6,6 @@ description = '核心模块'
 version = '2.2.5-SNAPSHOT'
 def artifactId = 'spin-core'
 
-ext {
-    junitJupiterVersion = '5.5.2'
-    slf4jVersion = '1.7.26'
-    asmVersion = '7.1'
-    httpclientVersion = '4.5.10'
-    httpasyncclientVersion = '4.1.4'
-    commonsNetVersion = '3.6'
-    dom4jVersion = '1.6'
-    poiVersion = '4.1.0'
-    bouncyVersion = '1.62'
-}
-
 test {
     useJUnitPlatform()
 }
@@ -33,12 +21,12 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://60.169.170.69:8081/repository/maven-snapshots/") {
-                authentication(userName: "dev", password: "8D22185")
+            repository(url: repoSnapUrl) {
+                authentication(userName: repoUser, password: repoPasswd)
             }
-            pom.version = "$project.version"
-            pom.artifactId = "$artifactId"
             pom.groupId = "$project.group"
+            pom.artifactId = "$artifactId"
+            pom.version = "$project.version"
         }
     }
 }

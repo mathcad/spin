@@ -1,37 +1,43 @@
-buildscript {
-    ext {
-        kotlinVersion = '1.3.41'
-        springBootVersion = '2.1.8.RELEASE'
-        junitJupiterVersion = '5.5.2'
-        springDataRedisVersion = '2.1.10.RELEASE'
-    }
-    repositories {
-        mavenLocal()
-        maven { url = 'http://maven.aliyun.com/nexus/content/groups/public/' }
-        maven { url = 'https://repo.spring.io/libs-release' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.springframework:springloaded:1.2.8.RELEASE'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.41'
-//        classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlinVersion"
-//        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
-    }
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.50'
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.3.50'
+    id 'org.jetbrains.kotlin.plugin.noarg' version '1.3.50'
+    id 'org.springframework.boot' version '2.1.9.RELEASE'
+    id "com.google.cloud.tools.jib" version "1.6.1"
 }
 
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.3.41'
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.3.41'
-    id 'org.jetbrains.kotlin.plugin.noarg' version '1.3.41'
-    id 'org.springframework.boot' version '2.1.6.RELEASE'
-    id 'com.google.cloud.tools.jib' version '1.0.0'
-}
-jib.to.image = 'test/mathcat/test-built-with-jib'
+description '测试项目'
 version = '1.0-SNAPSHOT'
-//def artifactId = 'shipping-mis'
+def artifactId = 'test'
 
 test {
     useJUnitPlatform()
+}
+
+jib {
+    from {
+        image = 'openjdk:8-jdk-alpine'
+    }
+    to {
+        image = "192.168.12.150:8086/library/$artifactId"
+        auth {
+            username = 'robot$publisher'
+            password = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NzMyNjQ3MjcsImlhdCI6MTU3MDY3MjcyNywiaXNzIjoiaGFyYm9yLXRva2VuLWlzc3VlciIsImlkIjoyLCJwaWQiOjEsImFjY2VzcyI6W3siUmVzb3VyY2UiOiIvcHJvamVjdC8xL3JlcG9zaXRvcnkiLCJBY3Rpb24iOiJwdXNoIiwiRWZmZWN0IjoiIn1dfQ.n2GWC9bT7NlSAfEgpSaHkAqk1Xm4JHjIdhEPaHP8XpqIIQd6TUWWbDHTLo2tL7fgPE8om6pjwQ2MELLy-GcesSTZh1-LeNrUYpTbzexomvdVTg99xMAnDPKHHJJOpxFW3VKWt7Ufjx0FpBpmbxZvUiQCMP1far_46URskBH1zMkNnQc6zjmPaZOHCOQ6BmtFH8Z0xJNO8N1iDdj0RGCiz-VF45uve0pC2VlR2q4IixUl_Jh0xj2oxYfeswJg8RgoQQFmqI3DIBh2Pgc7LiAvPU3Sz3KnoeGGUnaeSyeW2EliMV8jOoXAZSI5kMPEe9f-ZaE-r8yi_VPFfjnZb9khgmtmEb8z0w4ZHpgXQ0yyTU4s5n8tXjNtoC7cKSovCCLVIrx2CzIQpmiqSpY86IuiagXf-_skjzIt0xN1xIUpWnFG_TtA8i9ylquXFFv7PkQsPVDjSkzHXpzCAtwSFaKkV2TdyhgMxxL21rKVHP7oxv_5XR3mgyymB16fDYiE7j-5wizELNfIWxk7C-zaSACnmtiaTMCRPba6vqe-PwZsXUCvmz3HxYOE1QivdTC-4_HwJlzcFI5t7fHhqEDGb3NJurlg9tgOFFsyAXwRGz_DwVfxMJ-TPAzl1N8AR98y4IUNI4Ns-pPzHrvd9iQUTtqCPukudWXOspp2BKPY_QNL1P0'
+        }
+        tags = [version]
+        credHelper = 'osxkeychain'
+    }
+    container {
+        jvmFlags = ['-Djava.security.egd=file:/dev/./urandom', '-Duser.timezone=GMT+08', '-Dfile.encoding=UTF-8']
+        mainClass = 'com.shipping.ShippingApplicationKt'
+        ports = ['8080']
+    }
+    allowInsecureRegistries = true
+}
+
+bootJar {
+    archiveBaseName.set("$artifactId")
+    archiveVersion.set("$project.version")
 }
 
 bootRun {

@@ -1,8 +1,14 @@
 package org.spin.core.util;
 
 import org.spin.core.Assert;
+import org.spin.core.io.StreamProgress;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +27,213 @@ public abstract class IOUtils {
 
     private static final byte[] EMPTY_CONTENT = new byte[0];
 
+    /**
+     * 数据流末尾
+     */
+    public static final int EOF = -1;
+
+    /**
+     * 将Reader中的内容复制到Writer中 使用默认缓存大小
+     *
+     * @param reader Reader
+     * @param writer Writer
+     * @return 拷贝的字节数
+     * @throws IOException IO异常
+     */
+    public static long copy(Reader reader, Writer writer) throws IOException {
+        return copy(reader, writer, BUFFER_SIZE);
+    }
+
+    /**
+     * 将Reader中的内容复制到Writer中
+     *
+     * @param reader     Reader
+     * @param writer     Writer
+     * @param bufferSize 缓存大小
+     * @return 传输的byte数
+     * @throws IOException IO异常
+     */
+    public static long copy(Reader reader, Writer writer, int bufferSize) throws IOException {
+        return copy(reader, writer, bufferSize, null);
+    }
+
+    /**
+     * 将Reader中的内容复制到Writer中
+     *
+     * @param reader         Reader
+     * @param writer         Writer
+     * @param bufferSize     缓存大小
+     * @param streamProgress 进度处理器
+     * @return 传输的byte数
+     * @throws IOException IO异常
+     */
+    public static long copy(Reader reader, Writer writer, int bufferSize, StreamProgress streamProgress) throws IOException {
+        char[] buffer = new char[bufferSize];
+        long size = 0;
+        int readSize;
+        if (null != streamProgress) {
+            streamProgress.start();
+        }
+        try {
+            while ((readSize = reader.read(buffer, 0, bufferSize)) != EOF) {
+                writer.write(buffer, 0, readSize);
+                size += readSize;
+                writer.flush();
+                if (null != streamProgress) {
+                    streamProgress.progress(size);
+                }
+            }
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+        if (null != streamProgress) {
+            streamProgress.finish();
+        }
+        return size;
+    }
+
+    /**
+     * 拷贝流
+     *
+     * @param in         输入流
+     * @param out        输出流
+     * @param bufferSize 缓存大小
+     * @return 传输的byte数
+     * @throws IOException IO异常
+     */
+    public static long copy(InputStream in, OutputStream out, int bufferSize) throws IOException {
+        return copy(in, out, bufferSize, null);
+    }
+
+    /**
+     * 拷贝流
+     *
+     * @param in             输入流
+     * @param out            输出流
+     * @param bufferSize     缓存大小
+     * @param streamProgress 进度条
+     * @return 传输的byte数
+     * @throws IOException IO异常
+     */
+    public static long copy(InputStream in, OutputStream out, int bufferSize, StreamProgress streamProgress) throws IOException {
+        Assert.notNull(in, "InputStream is null !");
+        Assert.notNull(out, "OutputStream is null !");
+        if (bufferSize <= 0) {
+            bufferSize = BUFFER_SIZE;
+        }
+
+        byte[] buffer = new byte[bufferSize];
+        if (null != streamProgress) {
+            streamProgress.start();
+        }
+        long size = 0;
+        for (int readSize; (readSize = in.read(buffer)) != EOF; ) {
+            out.write(buffer, 0, readSize);
+            size += readSize;
+            out.flush();
+            if (null != streamProgress) {
+                streamProgress.progress(size);
+            }
+        }
+        if (null != streamProgress) {
+            streamProgress.finish();
+        }
+        return size;
+    }
+
+    /**
+     * 拷贝流
+     * 本方法不会关闭流
+     *
+     * @param in             输入流
+     * @param out            输出流
+     * @param bufferSize     缓存大小
+     * @param streamProgress 进度条
+     * @return 传输的byte数
+     * @throws IOException IO异常
+     */
+    public static long copyByNIO(InputStream in, OutputStream out, int bufferSize, StreamProgress streamProgress) throws IOException {
+        return copy(Channels.newChannel(in), Channels.newChannel(out), bufferSize, streamProgress);
+    }
+
+    /**
+     * 拷贝文件流，使用NIO
+     *
+     * @param in  输入
+     * @param out 输出
+     * @return 拷贝的字节数
+     * @throws IOException IO异常
+     */
+    public static long copy(FileInputStream in, FileOutputStream out) throws IOException {
+        Assert.notNull(in, "FileInputStream is null!");
+        Assert.notNull(out, "FileOutputStream is null!");
+
+        final FileChannel inChannel = in.getChannel();
+        final FileChannel outChannel = out.getChannel();
+
+        return inChannel.transferTo(0, inChannel.size(), outChannel);
+    }
+
+    /**
+     * 拷贝流，使用NIO，不会关闭流
+     *
+     * @param in  {@link ReadableByteChannel}
+     * @param out {@link WritableByteChannel}
+     * @return 拷贝的字节数
+     * @throws IOException IO异常
+     * @since 4.5.0
+     */
+    public static long copy(ReadableByteChannel in, WritableByteChannel out) throws IOException {
+        return copy(in, out, BUFFER_SIZE);
+    }
+
+    /**
+     * 拷贝流，使用NIO，不会关闭流
+     *
+     * @param in         {@link ReadableByteChannel}
+     * @param out        {@link WritableByteChannel}
+     * @param bufferSize 缓冲大小，如果小于等于0，使用默认
+     * @return 拷贝的字节数
+     * @throws IOException IO异常
+     * @since 4.5.0
+     */
+    public static long copy(ReadableByteChannel in, WritableByteChannel out, int bufferSize) throws IOException {
+        return copy(in, out, bufferSize, null);
+    }
+
+    /**
+     * 拷贝流，使用NIO，不会关闭流
+     *
+     * @param in             {@link ReadableByteChannel}
+     * @param out            {@link WritableByteChannel}
+     * @param bufferSize     缓冲大小，如果小于等于0，使用默认
+     * @param streamProgress {@link StreamProgress}进度处理器
+     * @return 拷贝的字节数
+     * @throws IOException IO异常
+     */
+    public static long copy(ReadableByteChannel in, WritableByteChannel out, int bufferSize, StreamProgress streamProgress) throws IOException {
+        Assert.notNull(in, "InputStream is null !");
+        Assert.notNull(out, "OutputStream is null !");
+
+        ByteBuffer byteBuffer = ByteBuffer.allocate(bufferSize <= 0 ? BUFFER_SIZE : bufferSize);
+        long size = 0;
+        if (null != streamProgress) {
+            streamProgress.start();
+        }
+        while (in.read(byteBuffer) != EOF) {
+            byteBuffer.flip();// 写转读
+            size += out.write(byteBuffer);
+            byteBuffer.clear();
+            if (null != streamProgress) {
+                streamProgress.progress(size);
+            }
+        }
+        if (null != streamProgress) {
+            streamProgress.finish();
+        }
+
+        return size;
+    }
 
     /**
      * 将输入流中的内容读取到字节数组中. 当输入流内容很大或者无法预料时请慎用，以免过渡消耗内存

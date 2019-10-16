@@ -1,21 +1,3 @@
-buildscript {
-    ext {
-        springBootVersion = '2.1.8.RELEASE'
-        junitJupiterVersion = '5.5.2'
-        springDataRedisVersion = '2.1.10.RELEASE'
-    }
-    repositories {
-        mavenLocal()
-        maven { url = 'http://maven.aliyun.com/nexus/content/groups/public/' }
-        maven { url = 'https://repo.spring.io/libs-release' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
-        classpath 'org.springframework:springloaded:1.2.8.RELEASE'
-    }
-}
-
 plugins {
     id 'java-library'
 }
@@ -23,8 +5,6 @@ plugins {
 description 'spin-web的starter'
 version '2.2.4-SNAPSHOT'
 def artifactId = 'spin-starter-restful'
-
-compileJava.dependsOn(processResources)
 
 test {
     useJUnitPlatform()
@@ -41,12 +21,12 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://60.169.170.69:8081/repository/maven-snapshots/") {
-                authentication(userName: "dev", password: "8D22185")
+            repository(url: repoSnapUrl) {
+                authentication(userName: repoUser, password: repoPasswd)
             }
-            pom.version = "$project.version"
-            pom.artifactId = "$artifactId"
             pom.groupId = "$project.group"
+            pom.artifactId = "$artifactId"
+            pom.version = "$project.version"
         }
     }
 }
@@ -63,5 +43,5 @@ dependencies {
     compileOnly group: 'org.mathcat', name: 'spin-data', version: "$project.version"
     compileOnly group: 'org.mathcat', name: 'spin-wx', version: "$project.version"
     compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
-    compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
+    compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: servletVersion
 }

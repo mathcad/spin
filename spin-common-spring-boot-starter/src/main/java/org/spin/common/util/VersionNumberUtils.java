@@ -10,8 +10,8 @@ import java.util.regex.Pattern;
 /**
  * 版本号工具类
  * <p>支持Major.Minor.Build格式的版本解析</p>
- * 合法的版本号定义如下:
  * <pre>
+ *     合法的版本号定义如下:
  *     1.版本号(字符串形式)由3个非负整数,中间由“.”隔开的字符串表示, 从左至右分别称为Major, Minor, Build
  *     2.Major, Minor, Build都必须属于[0, 65535], 即必须是一个16bit无符号数
  *     3.当Major, Minor都为0时, Build不能为0, 即0.0.0不是合法的版本号

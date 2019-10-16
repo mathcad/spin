@@ -3,15 +3,8 @@ plugins {
 }
 
 description = '基于spring mvc的web模块'
-version = '2.2.4-SNAPSHOT'
+version = '2.2.5-SNAPSHOT'
 def artifactId = 'spin-web'
-
-ext {
-    junitJupiterVersion = '5.5.2'
-    springVersion = '5.1.9.RELEASE'
-    itextpdfVersion = '5.5.13.1'
-    hibernateVersion = '5.4.5.Final'
-}
 
 test {
     useJUnitPlatform()
@@ -28,12 +21,12 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://139.199.59.195:8081/repository/ne/") {
-                authentication(userName: "admin", password: "admin123")
+            repository(url: repoSnapUrl) {
+                authentication(userName: repoUser, password: repoPasswd)
             }
-            pom.version = "$project.version"
-            pom.artifactId = "$artifactId"
             pom.groupId = "$project.group"
+            pom.artifactId = "$artifactId"
+            pom.version = "$project.version"
         }
     }
 }
@@ -52,5 +45,5 @@ dependencies {
     compileOnly group: 'com.itextpdf', name: 'itextpdf', version: itextpdfVersion
     compileOnly group: 'org.springframework', name: 'spring-orm', version: springVersion
     compileOnly group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
-    compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
+    compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: servletVersion
 }

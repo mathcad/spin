@@ -34,6 +34,7 @@ public class ErrorCode implements Serializable {
     public static final ErrorCode IO_FAIL = new ErrorCode(70, "IO异常");
     public static final ErrorCode NETWORK_EXCEPTION = new ErrorCode(100, "网络连接异常");
     public static final ErrorCode SERIALIZE_EXCEPTION = new ErrorCode(120, "JSON序列化错误");
+    public static final ErrorCode CLONE_EXCEPTION = new ErrorCode(125, "对象克隆错误");
 
     /////////////////////////////////// 可通过Restful接口暴露给客户端的错误 //////////////////////////////////////
     // 4** 访问及权限错误

@@ -6,11 +6,6 @@ description = '扩展模块'
 version = '2.2.4-SNAPSHOT'
 def artifactId = 'spin-enhance'
 
-
-ext {
-    junitJupiterVersion = '5.5.2'
-}
-
 test {
     useJUnitPlatform()
 }
@@ -26,12 +21,12 @@ install {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://60.169.170.69:9527/repository/maven-releases/") {
-                authentication(userName: "admin", password: "1238524565")
+            repository(url: repoSnapUrl) {
+                authentication(userName: repoUser, password: repoPasswd)
             }
-            pom.version = "$project.version"
-            pom.artifactId = "$artifactId"
             pom.groupId = "$project.group"
+            pom.artifactId = "$artifactId"
+            pom.version = "$project.version"
         }
     }
 }
