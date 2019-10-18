@@ -1,4 +1,4 @@
-package org.spin.common.web;
+package org.spin.web;
 
 /**
  * 认证级别

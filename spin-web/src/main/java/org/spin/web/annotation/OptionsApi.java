@@ -1,7 +1,7 @@
-package org.spin.common.web.annotation;
+package org.spin.web.annotation;
 
-import org.spin.common.web.AuthLevel;
-import org.spin.common.web.ScopeType;
+import org.spin.web.AuthLevel;
+import org.spin.web.ScopeType;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;

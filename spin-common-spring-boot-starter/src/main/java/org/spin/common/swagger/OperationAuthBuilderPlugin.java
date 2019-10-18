@@ -2,9 +2,9 @@ package org.spin.common.swagger;
 
 import com.github.xiaoymin.knife4j.spring.plugin.AbstractOperationBuilderPlugin;
 import com.google.common.collect.Lists;
-import org.spin.common.web.AuthLevel;
-import org.spin.common.web.annotation.Auth;
-import org.spin.common.web.annotation.Author;
+import org.spin.web.AuthLevel;
+import org.spin.web.annotation.Auth;
+import org.spin.web.annotation.Author;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.StringUtils;

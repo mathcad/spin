@@ -6,7 +6,7 @@ import feign.codec.Decoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.common.throwable.BizException;
-import org.spin.common.web.RestfulResponse;
+import org.spin.web.RestfulResponse;
 import org.spin.core.ErrorCode;
 import org.spin.core.gson.internal.$Gson$Types;
 import org.springframework.beans.factory.ObjectFactory;

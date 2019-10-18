@@ -1,4 +1,4 @@
-package org.spin.common.web.converter;
+package org.spin.web.converter;
 
 import org.spin.core.gson.Gson;
 import org.spin.core.gson.JsonIOException;

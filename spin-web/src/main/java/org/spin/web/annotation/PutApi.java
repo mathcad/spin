@@ -1,7 +1,7 @@
-package org.spin.common.web.annotation;
+package org.spin.web.annotation;
 
-import org.spin.common.web.AuthLevel;
-import org.spin.common.web.ScopeType;
+import org.spin.web.AuthLevel;
+import org.spin.web.ScopeType;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -12,17 +12,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 定义resetful接口，组合了 {@link RequestMapping}({@link RequestMethod#POST})与{@link Auth}，拦截并验证身份
+ * 定义resetful接口，组合了 {@link RequestMapping}({@link RequestMethod#PUT})与{@link Auth}，拦截并验证身份
  * <p>Created by xuweinan on 2016/10/2.</p>
  *
  * @author xuweinan
  */
-@RequestMapping(method = RequestMethod.POST)
+@RequestMapping(method = RequestMethod.PUT)
 @Auth
 @Author
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface PostApi {
+public @interface PutApi {
 
     /**
      * 认证级别，默认为仅认证

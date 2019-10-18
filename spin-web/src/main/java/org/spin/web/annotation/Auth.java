@@ -1,7 +1,8 @@
-package org.spin.common.web.annotation;
+package org.spin.web.annotation;
 
-import org.spin.common.web.AuthLevel;
-import org.spin.common.web.ScopeType;
+
+import org.spin.web.AuthLevel;
+import org.spin.web.ScopeType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

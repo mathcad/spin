@@ -1,11 +1,13 @@
 package org.spin.core.util.excel;
 
+import org.spin.core.Assert;
+
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Excel表格定义
@@ -16,35 +18,71 @@ import java.util.Set;
 public class ExcelGrid implements Serializable {
     private static final long serialVersionUID = 3306654738869974692L;
 
-    private String fileId;
-
     private String fileName;
 
-    private List<GridColumn> columns = new ArrayList<>();
+    private List<ExcelSheet> sheets = new LinkedList<>();
 
-    private Set<String> excludeColumns = new HashSet<>();
 
-    public void addGridColumn(String header, Integer width, String dataIndex, String dataType) {
-        GridColumn col = new GridColumn(header, width, dataIndex, dataType);
-        this.columns.add(col);
+    public static ExcelGrid ofFileName(String fileName) {
+        return new ExcelGrid(fileName);
     }
 
-    public ExcelGrid addGridColumns(GridColumn... columns) {
-        Collections.addAll(this.columns, columns);
+    public ExcelGrid() {
+    }
+
+    public ExcelGrid(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public ExcelGrid appendSheet(GridColumn... columns) {
+        sheets.add(new ExcelSheet(validateSheetName(null)).appendColumns(columns));
         return this;
     }
 
-    public ExcelGrid removGridColumn(String header) {
-        columns.removeIf(column -> header.equals(column.getHeader()));
+    public ExcelGrid appendSheet(Consumer<ExcelSheet> sheetConsumer) {
+        ExcelSheet sheet = new ExcelSheet(validateSheetName(null));
+        sheetConsumer.accept(sheet);
+        sheets.add(sheet);
         return this;
     }
 
-    public String getFileId() {
-        return fileId;
+    public ExcelGrid appendSheet(String sheetName, GridColumn... columns) {
+        sheets.add(new ExcelSheet(validateSheetName(sheetName)).appendColumns(columns));
+        return this;
     }
 
-    public void setFileId(String fileId) {
-        this.fileId = fileId;
+    public ExcelGrid appendSheet(String sheetName, Consumer<ExcelSheet> sheetConsumer) {
+        ExcelSheet sheet = new ExcelSheet(validateSheetName(sheetName));
+        sheetConsumer.accept(sheet);
+        sheets.add(sheet);
+        return this;
+    }
+
+    public ExcelGrid appendSheets(Iterable<ExcelSheet> sheets) {
+        sheets.forEach(it -> {
+            it.setSheetName(validateSheetName(it.getSheetName()));
+            this.sheets.add(it);
+        });
+        return this;
+    }
+
+    public ExcelGrid appendSheets(ExcelSheet... sheets) {
+        for (ExcelSheet sheet : sheets) {
+            sheet.setSheetName(validateSheetName(sheet.getSheetName()));
+            this.sheets.add(sheet);
+        }
+        return this;
+    }
+
+    public ExcelGrid withSheets(List<ExcelSheet> sheets) {
+        this.sheets.clear();
+        appendSheets(sheets);
+        return this;
+    }
+
+    public ExcelGrid removeSheet(Predicate<ExcelSheet> predicate) {
+        sheets = sheets.stream().filter(it -> !predicate.test(it)).collect(Collectors.toCollection(LinkedList::new));
+        return this;
     }
 
     public String getFileName() {
@@ -55,19 +93,15 @@ public class ExcelGrid implements Serializable {
         this.fileName = fileName;
     }
 
-    public List<GridColumn> getColumns() {
-        return columns;
+    public List<ExcelSheet> getSheets() {
+        return sheets;
     }
 
-    public void setColumns(List<GridColumn> columns) {
-        this.columns = columns;
-    }
-
-    public Set<String> getExcludeColumns() {
-        return excludeColumns;
-    }
-
-    public void setExcludeColumns(Set<String> excludeColumns) {
-        this.excludeColumns = excludeColumns;
+    private String validateSheetName(String sheetName) {
+        if (null == sheetName) {
+            sheetName = "Sheet" + (sheets.size() + 1);
+        }
+        Assert.notTrue(sheets.stream().map(ExcelSheet::getSheetName).anyMatch(sheetName::equals), "Sheet名称[" + sheetName + "]在当前工作簿中已经存在");
+        return sheetName;
     }
 }

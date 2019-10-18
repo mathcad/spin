@@ -1,4 +1,4 @@
-package org.spin.common.web;
+package org.spin.web;
 
 /**
  * 接口可见范围

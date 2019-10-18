@@ -1,6 +1,6 @@
 package org.spin.common.throwable;
 
-import org.spin.common.web.RestfulResponse;
+import org.spin.web.RestfulResponse;
 import org.spin.core.ErrorCode;
 
 /**

@@ -12,6 +12,7 @@ import org.spin.core.function.serializable.ExceptionalSupplier;
 import org.spin.core.io.BytesCombinedInputStream;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.BeanUtils;
+import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
@@ -179,83 +180,89 @@ public abstract class ExcelUtils {
      */
     public static Workbook generateWorkbook(FileType fileType, ExcelModel excelModel) {
         ExcelGrid grid = excelModel.getGrid();
-        Iterable<?> data = excelModel.getData();
+        Map<String, Iterable<?>> data = excelModel.getData();
         Workbook workbook = createWorkbook(fileType);
-        Sheet sheet = workbook.createSheet();
-        sheet.createFreezePane(1, 1);
 
-        // 列头的样式
-        CellStyle columnHeadStyle = getHeaderCellStyle(workbook);
+        for (ExcelSheet excelSheet : grid.getSheets()) {
+            Sheet sheet = workbook.createSheet(excelSheet.getSheetName());
+            sheet.createFreezePane(1, 1);
 
-        try {
-            // 创建第一行
-            Row row0 = sheet.createRow(0);
-            // 设置行高
-            row0.setHeight((short) 285); // 14.25磅
+            // 列头的样式
+            CellStyle columnHeadStyle = getHeaderCellStyle(workbook);
 
-            // 初始化列头和数据列单元格样式
-            Map<String, CellStyle> columnStyleMap = new HashMap<>();
-
-            for (int i = 0; i < grid.getColumns().size(); i++) {
-                GridColumn col = grid.getColumns().get(i);
-                if (grid.getExcludeColumns().contains(col.getHeader())) {
-                    continue;
-                }
-                if (col.getWidth() != null) {
-                    sheet.setColumnWidth(i, (col.getWidth() * PIX_TO_WIDTH));
-                } else {
-                    sheet.setColumnWidth(i, 100 * PIX_TO_WIDTH);
-                }
-
-                Cell cell = row0.createCell(i);
-                cell.setCellStyle(columnHeadStyle);
-                if (workbook instanceof HSSFWorkbook) {
-                    cell.setCellValue(new HSSFRichTextString(col.getHeader()));
-                } else if (workbook instanceof XSSFWorkbook) {
-                    cell.setCellValue(new XSSFRichTextString(col.getHeader()));
-                }
-
-                columnStyleMap.put(col.getDataIndex(), getDataCellStyle(workbook, col.getDataType()));
-            }
-
-            // 填充数据内容
-            int i = 1;
-            for (Object robj : data) {
-                Row row = sheet.createRow(i);// 除去头部
+            try {
+                // 创建第一行
+                Row row0 = sheet.createRow(0);
+                // 设置行高
                 row0.setHeight((short) 285); // 14.25磅
-                Cell cell;
-                // 当行赋值
-                for (int c = 0; c < grid.getColumns().size(); c++) {
-                    GridColumn col = grid.getColumns().get(c);
-                    if (grid.getExcludeColumns().contains(col.getHeader())) {
+
+                // 初始化列头和数据列单元格样式
+                Map<String, CellStyle> columnStyleMap = new HashMap<>();
+
+                for (int i = 0; i < excelSheet.getColumns().size(); i++) {
+                    GridColumn col = excelSheet.getColumns().get(i);
+                    if (excelSheet.getExcludeColumns().contains(col.getHeader())) {
                         continue;
                     }
-                    cell = row.createCell(c);
-
-                    setDataCellValue(robj, cell, col);
-                    if (col.getWidth() == null) {
-                        int columnWidth = 10;
-
-                        int length = cell.getStringCellValue().getBytes().length;
-                        if (columnWidth < length) {
-                            columnWidth = length;
-                        }
-                        int columnWidthFinal = columnWidth + 2;
-                        if (columnWidthFinal > 255) {
-                            columnWidthFinal = 255;
-                        }
-                        sheet.setColumnWidth(c, columnWidthFinal * WID_PER_CHAR);
+                    if (col.getWidth() != null) {
+                        sheet.setColumnWidth(i, (col.getWidth() * PIX_TO_WIDTH));
+                    } else {
+                        sheet.setColumnWidth(i, 100 * PIX_TO_WIDTH);
                     }
-                    cell.setCellStyle(columnStyleMap.get(col.getDataIndex()));
+
+                    Cell cell = row0.createCell(i);
+                    cell.setCellStyle(columnHeadStyle);
+                    if (workbook instanceof HSSFWorkbook) {
+                        cell.setCellValue(new HSSFRichTextString(col.getHeader()));
+                    } else if (workbook instanceof XSSFWorkbook) {
+                        cell.setCellValue(new XSSFRichTextString(col.getHeader()));
+                    }
+
+                    columnStyleMap.put(col.getDataIndex(), getDataCellStyle(workbook, col.getDataType()));
                 }
-                ++i;
+
+                // 填充数据内容
+                Iterable<?> sheetData = data.get(sheet.getSheetName());
+                if (!CollectionUtils.isEmpty(sheetData)) {
+                    int i = 1;
+                    for (Object robj : sheetData) {
+                        Row row = sheet.createRow(i);// 除去头部
+                        row0.setHeight((short) 285); // 14.25磅
+                        Cell cell;
+                        // 当行赋值
+                        for (int c = 0; c < excelSheet.getColumns().size(); c++) {
+                            GridColumn col = excelSheet.getColumns().get(c);
+                            if (excelSheet.getExcludeColumns().contains(col.getHeader())) {
+                                continue;
+                            }
+                            cell = row.createCell(c);
+
+                            setDataCellValue(robj, cell, col);
+                            if (col.getWidth() == null) {
+                                int columnWidth = 10;
+
+                                int length = cell.getStringCellValue().getBytes().length;
+                                if (columnWidth < length) {
+                                    columnWidth = length;
+                                }
+                                int columnWidthFinal = columnWidth + 2;
+                                if (columnWidthFinal > 255) {
+                                    columnWidthFinal = 255;
+                                }
+                                sheet.setColumnWidth(c, columnWidthFinal * WID_PER_CHAR);
+                            }
+                            cell.setCellStyle(columnStyleMap.get(col.getDataIndex()));
+                        }
+                        ++i;
+                    }
+                }
+
+            } catch (Exception e) {
+                throw new SpinException("生成Excel文件[" + grid.getFileName() + "]出错", e);
             }
-
-            return workbook;
-
-        } catch (Exception e) {
-            throw new SpinException("生成Excel文件[" + grid.getFileName() + "]出错", e);
         }
+
+        return workbook;
     }
 
     /**

@@ -1,12 +1,12 @@
-package org.spin.common.web.handler;
+package org.spin.web.handler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.common.web.RestfulResponse;
-import org.spin.common.web.annotation.Auth;
-import org.spin.common.web.annotation.Plain;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.ReflectionUtils;
+import org.spin.web.RestfulResponse;
+import org.spin.web.annotation.Auth;
+import org.spin.web.annotation.Plain;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpInputMessage;
@@ -31,7 +31,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * MVC返回结果处理器

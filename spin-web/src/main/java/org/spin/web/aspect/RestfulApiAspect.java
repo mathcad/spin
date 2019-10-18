@@ -15,10 +15,10 @@ import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.StringUtils;
 import org.spin.web.RestfulResponse;
-import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.RestfulApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
@@ -75,7 +75,7 @@ public class RestfulApiAspect implements Ordered {
                 Annotation[][] annotations = apiMethod.getParameterAnnotations();
                 for (int idx = 0; idx < annotations.length; ++idx) {
                     for (int j = 0; j < annotations[idx].length; ++j) {
-                        if (annotations[idx][j] instanceof Needed) {
+                        if (annotations[idx][j] instanceof NonNull) {
 
                             nonNullArgs.add(idx);
                         }

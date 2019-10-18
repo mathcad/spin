@@ -87,6 +87,14 @@ public class RestfulResponse<T> {
         return response;
     }
 
+    public static <T> RestfulResponse<T> error(ErrorCode errorCode,String path, String message, String error) {
+        RestfulResponse<T> response = new RestfulResponse<>(errorCode);
+        response.setPath(path);
+        response.setMessage(message);
+        response.setError(error);
+        return response;
+    }
+
     public RestfulResponse setCodeAndMsg(ErrorCode errorCode) {
         this.status = errorCode.getCode();
         this.message = errorCode.getDesc();
@@ -141,3 +149,4 @@ public class RestfulResponse<T> {
         this.data = data;
     }
 }
+

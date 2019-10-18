@@ -58,6 +58,7 @@ subprojects {
 
         // web
         itextpdfVersion = '5.5.13.1'
+        swaggerVersion = '2.9.2'
         servletVersion = '4.0.1'
 
         springCloudVersion = '2.1.3.RELEASE'

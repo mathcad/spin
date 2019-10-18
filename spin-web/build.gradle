@@ -41,6 +41,8 @@ dependencies {
     api group: 'org.springframework', name: 'spring-context-support', version: springVersion
     api group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     api group: 'org.springframework', name: 'spring-aspects', version: springVersion
+    api group: 'javax.validation', name: 'validation-api', version: validationVersion
+    api group: 'io.springfox', name: 'springfox-swagger2', version: swaggerVersion
 
     compileOnly group: 'com.itextpdf', name: 'itextpdf', version: itextpdfVersion
     compileOnly group: 'org.springframework', name: 'spring-orm', version: springVersion

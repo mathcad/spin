@@ -4,10 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.common.vo.RequestMappingInfoWrapper;
 import org.spin.common.vo.ServiceRequestInfo;
-import org.spin.common.web.AuthLevel;
-import org.spin.common.web.annotation.Auth;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.web.AuthLevel;
+import org.spin.web.annotation.Auth;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -29,7 +29,11 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**

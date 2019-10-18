@@ -1,4 +1,4 @@
-package org.spin.common.web.handler;
+package org.spin.web.handler;
 
 import org.springframework.core.Ordered;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;

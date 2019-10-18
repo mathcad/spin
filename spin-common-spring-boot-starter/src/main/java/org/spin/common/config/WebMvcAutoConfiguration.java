@@ -1,13 +1,13 @@
 package org.spin.common.config;
 
-import org.spin.common.web.InternalWhiteList;
 import org.spin.common.web.config.RequestMappingBeanValidator;
-import org.spin.common.web.converter.JsonHttpMessageConverter;
-import org.spin.common.web.handler.ReplacementReturnValueHandler;
-import org.spin.common.web.handler.WrappedRequestResponseBodyProcessor;
 import org.spin.common.web.interceptor.GrayInterceptor;
 import org.spin.common.web.interceptor.UserAuthInterceptor;
 import org.spin.core.util.CollectionUtils;
+import org.spin.web.InternalWhiteList;
+import org.spin.web.converter.JsonHttpMessageConverter;
+import org.spin.web.handler.ReplacementReturnValueHandler;
+import org.spin.web.handler.WrappedRequestResponseBodyProcessor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -25,7 +25,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -35,7 +39,7 @@ import java.util.stream.Collectors;
  * <p>Created by wangy on 2019/3/13.</p>
  */
 @Configuration
-@ComponentScan(basePackages = {"org.spin.common.web.handler"})
+@ComponentScan(basePackages = {"org.spin.common.web.handler", "org.spin.web.handler"})
 public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
     private static final JsonHttpMessageConverter JSON_HTTP_MESSAGE_CONVERTER = new JsonHttpMessageConverter();

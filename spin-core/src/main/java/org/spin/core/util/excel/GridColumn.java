@@ -52,6 +52,18 @@ public class GridColumn implements Serializable {
         this.dataType = dataType;
     }
 
+    public static GridColumn of(String header, String dataIndex) {
+        return new GridColumn(header, dataIndex);
+    }
+
+    public static GridColumn of(String header, Integer width, String dataIndex) {
+        return new GridColumn(header, width, dataIndex);
+    }
+
+    public static GridColumn of(String header, Integer width, String dataIndex, String dataType) {
+        return new GridColumn(header, width, dataIndex, dataType);
+    }
+
     public String getHeader() {
         return header;
     }

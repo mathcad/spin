@@ -2,11 +2,11 @@ package org.spin.common.vo;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.spin.common.web.AuthLevel;
-import org.spin.common.web.ScopeType;
-import org.spin.common.web.annotation.Auth;
-import org.spin.common.web.annotation.Author;
 import org.spin.core.util.StringUtils;
+import org.spin.web.AuthLevel;
+import org.spin.web.ScopeType;
+import org.spin.web.annotation.Auth;
+import org.spin.web.annotation.Author;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
