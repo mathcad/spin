@@ -56,8 +56,9 @@ public class Browser extends UserAgentInfo {
     /**
      * 构造
      *
-     * @param name  浏览器名称
-     * @param regex 关键字或表达式
+     * @param name         浏览器名称
+     * @param regex        关键字或表达式
+     * @param versionRegex 版本正则表达式
      */
     public Browser(String name, String regex, String versionRegex) {
         super(name, regex);
