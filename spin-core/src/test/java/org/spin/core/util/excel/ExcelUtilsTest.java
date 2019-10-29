@@ -1,8 +1,6 @@
 package org.spin.core.util.excel;
 
 import org.junit.jupiter.api.Test;
-import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.MapUtils;
 import org.spin.core.util.file.FileType;
 
 import java.io.File;
@@ -10,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -38,8 +37,11 @@ class ExcelUtilsTest {
 
     @Test
     void testExport() {
+        Iterable<?> sheet1Data = new ArrayList<>();
+        Iterable<?> sheet2Data = new ArrayList<>();
+
         ExcelGrid grid = ExcelGrid.ofFileName("asdfasdf")
-            .appendSheet("demo",
+            .appendSheet("demo", // 指定sheet名称，在一个工作簿中，sheet名称不能重复
                 s -> s.appendColumn("订单号", "orderNo")
                     .appendColumn("下单时间", "createTime")
                     .appendColumn("渠道", "mrchShortCode")
@@ -55,11 +57,14 @@ class ExcelUtilsTest {
                     .appendColumn("支付方式", "channelType")
                     .appendColumn("订单开票", "makeInvoice")
             )
-            .appendSheet(s -> {
-                s.appendColumn("距离", "distance");
-            });
+            .appendSheet(s -> s.appendColumn("距离", "distance")); // 不指定sheet名称时，sheet名称默认为Sheet+索引(从1开始，如Sheet1)
 
-        ExcelUtils.generateWorkBook(FileType.Document.XLSX, new ExcelModel(grid).putData("Sheet2", CollectionUtils.ofArrayList(MapUtils.ofMap("distance", 100))), () -> new FileOutputStream(new File("D:\\a.xlsx")));
+        // 写法1
+        ExcelModel excelModel = new ExcelModel(grid, sheet1Data, sheet2Data);
+        // 写法2 通过sheet名称来指定数据
+        // ExcelModel excelModel = new ExcelModel(grid).putData("demo", sheet1Data).putData("Sheet2", sheet2Data);
+
+        ExcelUtils.generateWorkBook(FileType.Document.XLSX, excelModel, () -> new FileOutputStream(new File("D:\\a.xlsx")));
 
     }
 }

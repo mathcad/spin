@@ -145,8 +145,9 @@ public abstract class ObjectUtils {
      */
     @SuppressWarnings("unchecked")
     public static <T> T convert(Class<T> type, Object target) {
-        if (null == type)
+        if (null == type) {
             throw new IllegalArgumentException("The type witch convert to can not be null");
+        }
         if (target != null && (type.isInstance(target) || ClassUtils.isAssignable(type, target.getClass(), true))) {
             return (T) target;
         } else if (BigDecimal.class.equals(type)) {

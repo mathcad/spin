@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.collection.Tuple;
-import org.spin.core.function.serializable.BiConsumer;
 import org.spin.core.function.serializable.Function;
+import org.spin.core.function.serializable.Supplier;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
 
@@ -13,19 +13,12 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -36,17 +29,9 @@ import java.util.stream.Collectors;
 public abstract class BeanUtils {
     private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
     private static final Map<String, Map<String, PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Class, Map<String, Field>> CLASS_FIELD_CACHE = new ConcurrentHashMap<>();
 
     private BeanUtils() {
-    }
-
-    public static Method tailMethod(Class<?> type, String name) {
-        try {
-            return type.getMethod(name, String.class, Object.class);
-        } catch (NoSuchMethodException | SecurityException e) {
-            logger.error(e.getMessage());
-            return null;
-        }
     }
 
     /**
@@ -118,24 +103,15 @@ public abstract class BeanUtils {
      * @param bean       目标对象
      * @param properties 属性properties
      */
-    public static void applyProperties(Object bean, Map<?, ?> properties) {
-        properties.forEach((key, value) -> {
-            String getterName = "get" + StringUtils.capitalize(key.toString());
-            String setterName = "set" + StringUtils.capitalize(key.toString());
-            try {
-                Object v = value;
-                Class<?>[] args = {};
-                Method getter = MethodUtils.getAccessibleMethod(bean.getClass(), getterName, args);
-                if (Objects.nonNull(getter)) {
-                    v = ObjectUtils.convert(getter.getReturnType(), value);
-                }
-                MethodUtils.invokeMethod(bean, setterName, v);
-            } catch (NoSuchMethodException e) {
-                logger.info("不存在属性[" + key + "]的set方法");
-            } catch (IllegalAccessException e) {
-                throw new SpinException("属性[" + key + "]的set方法不允许访问");
-            } catch (InvocationTargetException e) {
-                throw new SpinException("设置属性[" + key + "]失败", e);
+    public static void applyProperties(Object bean, Map<String, ?> properties) {
+        Map<String, BeanUtils.PropertyDescriptorWrapper> props = BeanUtils.getBeanPropertyDes(bean.getClass());
+        if (props.size() == 0) {
+            return;
+        }
+
+        properties.forEach((propName, propVal) -> {
+            if (props.containsKey(propName)) {
+                props.get(propName).applyProperty(bean, propVal);
             }
         });
     }
@@ -150,7 +126,6 @@ public abstract class BeanUtils {
     public static void applyProperties(Object bean, String[] fieldNames, Object[] fieldValues) {
         Assert.isTrue(fieldNames.length == fieldValues.length, "属性名称与属性值个数不一致");
         int columnCount = fieldNames.length;
-        Object[] args = new Object[1];
 
         Map<String, BeanUtils.PropertyDescriptorWrapper> props = BeanUtils.getBeanPropertyDes(bean.getClass());
         if (props.size() == 0) {
@@ -158,20 +133,10 @@ public abstract class BeanUtils {
         }
 
         for (int i = 0; i < columnCount; i++) {
-            String colName = fieldNames[i];
-            Object column = fieldValues[i];
-
-            BeanUtils.PropertyDescriptorWrapper descriptorWrapper = props.get(colName);
-            if (null != descriptorWrapper) {
-                args[0] = ObjectUtils.convert(descriptorWrapper.protertyType, column);
-                try {
-                    descriptorWrapper.writer.invoke(bean, args);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    logger.warn("Java Bean - {}设置属性[{}]失败", bean.getClass().getName(), colName);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("错误详情: ", e);
-                    }
-                }
+            String propName = fieldNames[i];
+            Object propVal = fieldValues[i];
+            if (props.containsKey(propName)) {
+                props.get(propName).applyProperty(bean, propVal);
             }
         }
     }
@@ -609,55 +574,6 @@ public abstract class BeanUtils {
         }
     }
 
-
-    private static Object toMapInternal(Object target, boolean recursively) {
-        // null值，直接返回
-        if (null == target) {
-            return null;
-        }
-
-        // 如果是Map，做适应性调整
-        if (target instanceof Map) {
-            Map<?, ?> m = (Map<?, ?>) target;
-            if (recursively) {
-                return m.entrySet().stream().filter(entry -> null != entry.getValue()).collect(Collectors.toMap(e -> e.getKey().toString(), e -> BeanUtils.toMapInternal(e.getValue(), true)));
-            } else {
-                return m.entrySet().stream().filter(entry -> null != entry.getValue()).collect(Collectors.toMap(e -> e.getKey().toString(), Map.Entry::getValue));
-            }
-        }
-
-        // 如果是集合，将其元素转为Map后返回
-        if (CollectionUtils.isCollection(target)) {
-            List objects = CollectionUtils.asList(target);
-            for (int i = 0; i < objects.size(); i++) {
-                //noinspection unchecked
-                objects.set(i, toMapInternal(objects.get(i), recursively));
-            }
-            return objects;
-        }
-
-        // 如果是JavaBean，将其转换为Map
-        if (isJavaBean(target)) {
-            Collection<PropertyDescriptorWrapper> props = getBeanPropertyDes(target.getClass(), true, false).values();
-            Map<String, Object> res = new HashMap<>(props.size());
-            for (PropertyDescriptorWrapper prop : props) {
-                try {
-                    Object value = prop.reader.invoke(target);
-                    if (null != value) {
-                        res.put(prop.getDescriptor().getName(), toMapInternal(value, recursively));
-                    }
-                } catch (IllegalAccessException | InvocationTargetException ignore) {
-                    // 忽略访问失败的属性
-                }
-            }
-            return res;
-        } else {
-            // 否则原样返回
-            return target;
-        }
-
-    }
-
     /**
      * 判断一个对象是否是JavaBean
      * <p>一个JavaBean，一定是一个自定义对象（非java自带的类，数组，集合，Map，枚举，字符序列，流，异常)</p>
@@ -666,9 +582,18 @@ public abstract class BeanUtils {
      * @return 是否是JavaBean
      */
     public static boolean isJavaBean(Object target) {
-        return !(null == target || target.getClass().isArray()
-            || target.getClass().getName().startsWith("java.")
-            || target.getClass().getName().startsWith("javax.")
+        if (null == target) {
+            return false;
+        }
+        String name = target.getClass().getName();
+        return !(target.getClass().isArray()
+            || name.startsWith("java.")
+            || name.startsWith("javax.")
+            || name.startsWith("sun.")
+            || name.startsWith("jdk.")
+            || name.startsWith("com.sun.")
+            || name.startsWith("org.jcp.")
+            || name.startsWith("org.omg.")
             || target instanceof Map
             || target instanceof Iterable
             || target instanceof Enum
@@ -694,7 +619,7 @@ public abstract class BeanUtils {
             for (PropertyDescriptor descriptor : propertyDescriptors) {
                 writer = descriptor.getWriteMethod();
                 if (writer != null)
-                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, descriptor.getReadMethod(), writer));
+                    props.put(descriptor.getName(), new PropertyDescriptorWrapper(descriptor, descriptor.getReadMethod(), writer));
             }
             CLASS_PROPERTY_CACHE.put(type.getName(), props);
         }
@@ -720,7 +645,7 @@ public abstract class BeanUtils {
                 writer = descriptor.getWriteMethod();
                 reader = descriptor.getReadMethod();
                 if (!("class".equals(descriptor.getName()) && Class.class == descriptor.getPropertyType()) && (!readable || reader != null) && (!writable || writer != null)) {
-                    props.put(descriptor.getName().toLowerCase(), new PropertyDescriptorWrapper(descriptor, reader, writer));
+                    props.put(descriptor.getName(), new PropertyDescriptorWrapper(descriptor, reader, writer));
                 }
             }
             CLASS_PROPERTY_CACHE.put(type.getName() + readable + writable, props);
@@ -747,22 +672,6 @@ public abstract class BeanUtils {
     }
 
     /**
-     * 通过内省机制，获取一个JavaBean的所有属性
-     *
-     * @param c JavaBean类型
-     * @return 属性描述器数组
-     */
-    private static PropertyDescriptor[] propertyDescriptors(Class<?> c) {
-        BeanInfo beanInfo;
-        try {
-            beanInfo = Introspector.getBeanInfo(c);
-        } catch (IntrospectionException e) {
-            throw new SpinException("解析Bean属性异常", e);
-        }
-        return beanInfo.getPropertyDescriptors();
-    }
-
-    /**
      * 属性描述器
      */
     public static class PropertyDescriptorWrapper {
@@ -783,6 +692,17 @@ public abstract class BeanUtils {
             this.protertyType = descriptor.getPropertyType();
             this.reader = descriptor.getReadMethod();
             this.writer = descriptor.getWriteMethod();
+        }
+
+        public void applyProperty(Object target, Object propVal) {
+            try {
+                writer.invoke(target, ObjectUtils.convert(protertyType, propVal));
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                logger.warn("Java Bean - {}设置属性[{}]失败", target.getClass().getName(), descriptor.getName());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("错误详情: ", e);
+                }
+            }
         }
 
         public PropertyDescriptor getDescriptor() {
@@ -820,328 +740,292 @@ public abstract class BeanUtils {
 
     /**
      * 复制JavaBean的属性到另一个JavaBean中，直接反射字段值，不通过getter/setter
-     * <p>如果不指定字段列表，并且源对象是JavaBean，则会拷贝所有字段</p>
+     * <p>如果不指定字段列表，并且源对象是JavaBean，则会拷贝所有字段。如果类型不匹配，会尝试进行类型转换</p>
      *
      * @param src    源实体
-     * @param dest   目标实体
-     * @param fields 字段名列表
+     * @param target 目标实体
+     * @param fields 需要拷贝的字段名(如果为空则表示拷贝所有共有字段)
+     * @param ignore 需要排除的字段名
      */
-    public static void copyTo(Object src, Object dest, String... fields) {
-        if (null == src || null == dest) {
+    public static void copyTo(Object src, Object target, Collection<String> fields, Collection<String> ignore) {
+        if (null == src || null == target) {
             return;
         }
-        if ((null == fields || fields.length == 0)) {
+
+        Map<String, Field> srcProps = parseFields(src.getClass());
+        Map<String, Field> targetProps = parseFields(target.getClass());
+        Set<String> ignoreFields = CollectionUtils.isEmpty(ignore) ? Collections.emptySet() : new HashSet<>(ignore);
+
+        if (null == fields || fields.isEmpty()) {
             if (isJavaBean(src)) {
-                Set<String> srcFields = getBeanPropertyDes(src.getClass(), false, false).values().stream().map(p -> p.getDescriptor().getName()).collect(Collectors.toSet());
-                fields = getBeanPropertyDes(dest.getClass(), false, false).values().stream().map(p -> p.getDescriptor().getName()).filter(srcFields::contains).toArray(String[]::new);
+                fields = targetProps.keySet().stream()
+                    .filter(srcProps::containsKey)
+                    .filter(it -> !ignoreFields.contains(it))
+                    .collect(Collectors.toList());
             } else {
                 throw new SpinException("非JavaBean请指定需要Copy的属性列表");
             }
         }
 
-        for (String field : fields) {
-            copyPropertie(src, dest, field);
+        try {
+            for (String field : fields) {
+                Field targetField = targetProps.get(field);
+                Field srcField = srcProps.get(field);
+
+                if (null == srcField) {
+                    throw new SpinException("属性" + field + "在源对象中不存在");
+                }
+
+                if (null == targetField) {
+                    throw new SpinException("属性" + field + "在目标对象中不存在");
+                }
+                targetField.set(target, ObjectUtils.convert(targetField.getType(), srcField.get(src)));
+            }
+        } catch (IllegalAccessException e) {
+            throw new SpinException("反射访问成员变量失败", e);
         }
     }
 
     /**
      * 复制JavaBean的属性到另一个JavaBean中，直接反射字段值，不通过getter/setter
+     * <p>如果不指定字段列表，并且源对象是JavaBean，则会拷贝所有字段</p>
      *
-     * @param src     源对象
-     * @param dest    目标对象
-     * @param getters 属性getter列表
-     * @param <T>     源对象的类型参数
+     * @param src    源实体
+     * @param target 目标实体
+     * @param fields 字段名列表
      */
-    public static <T> void copyTo(T src, Object dest, Iterable<Function<T, ?>> getters) {
-        if (null == src || null == dest || null == getters)
-            return;
-
-        for (Function<T, ?> field : getters) {
-            copyPropertie(src, dest, toFieldName(LambdaUtils.resolveLambda(field).getImplMethodName()));
-        }
+    public static void copyTo(Object src, Object target, String... fields) {
+        copyTo(src, target, Arrays.asList(fields), null);
     }
 
-    public static <T, V, P> void copyTo(T src, V dest, Function<T, P> getter, BiConsumer<V, P> setter) {
-        if (null == src || null == dest || null == getter || null == setter)
-            return;
-        setter.accept(dest, getter.apply(src));
+    public static <S, T> void copyTo(S src, T target, Function<S, ?> prop) {
+        copyTo(src, target, Collections.singletonList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop).getImplMethodName())
+        ), null);
     }
 
-    public static <T, V, P1, P2>
-    void copyTo(T src, V dest,
-                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
-                Function<T, P2> getter2, BiConsumer<V, P2> setter2
-    ) {
-        if (null == src || null == dest)
-            return;
-
-        if (null != getter1 && null != setter1) {
-            setter1.accept(dest, getter1.apply(src));
-        }
-
-        if (null != getter2 && null != setter2) {
-            setter2.accept(dest, getter2.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target, Supplier<?> prop) {
+        copyTo(src, target, Collections.singletonList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop).getImplMethodName())
+        ), null);
     }
 
-    public static <T, V, P1, P2, P3>
-    void copyTo(T src, V dest,
-                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
-                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
-                Function<T, P3> getter3, BiConsumer<V, P3> setter3
-    ) {
-        if (null == src || null == dest)
-            return;
-
-        if (null != getter1 && null != setter1) {
-            setter1.accept(dest, getter1.apply(src));
-        }
-
-        if (null != getter2 && null != setter2) {
-            setter2.accept(dest, getter2.apply(src));
-        }
-
-        if (null != getter3 && null != setter3) {
-            setter3.accept(dest, getter3.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target, Function<S, ?> prop1, Function<S, ?> prop2) {
+        copyTo(src, target, Arrays.asList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop1).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop2).getImplMethodName())
+        ), null);
     }
 
-
-    public static <T, V, P1, P2, P3, P4>
-    void copyTo(T src, V dest,
-                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
-                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
-                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
-                Function<T, P4> getter4, BiConsumer<V, P4> setter4
-    ) {
-        if (null == src || null == dest)
-            return;
-
-        if (null != getter1 && null != setter1) {
-            setter1.accept(dest, getter1.apply(src));
-        }
-
-        if (null != getter2 && null != setter2) {
-            setter2.accept(dest, getter2.apply(src));
-        }
-
-        if (null != getter3 && null != setter3) {
-            setter3.accept(dest, getter3.apply(src));
-        }
-
-        if (null != getter4 && null != setter4) {
-            setter4.accept(dest, getter4.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target, Supplier<?> prop1, Supplier<?> prop2) {
+        copyTo(src, target, Arrays.asList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop1).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop2).getImplMethodName())
+        ), null);
     }
 
-    public static <T, V, P1, P2, P3, P4, P5>
-    void copyTo(T src, V dest,
-                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
-                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
-                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
-                Function<T, P4> getter4, BiConsumer<V, P4> setter4,
-                Function<T, P5> getter5, BiConsumer<V, P5> setter5
-    ) {
-        if (null == src || null == dest)
-            return;
-
-        if (null != getter1 && null != setter1) {
-            setter1.accept(dest, getter1.apply(src));
-        }
-
-        if (null != getter2 && null != setter2) {
-            setter2.accept(dest, getter2.apply(src));
-        }
-
-        if (null != getter3 && null != setter3) {
-            setter3.accept(dest, getter3.apply(src));
-        }
-
-        if (null != getter4 && null != setter4) {
-            setter4.accept(dest, getter4.apply(src));
-        }
-
-        if (null != getter5 && null != setter5) {
-            setter5.accept(dest, getter5.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target, Function<S, ?> prop1, Function<S, ?> prop2, Function<S, ?> prop3) {
+        copyTo(src, target, Arrays.asList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop1).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop2).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop3).getImplMethodName())
+        ), null);
     }
 
-    public static <T, V, P1, P2, P3, P4, P5, P6>
-    void copyTo(T src, V dest,
-                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
-                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
-                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
-                Function<T, P4> getter4, BiConsumer<V, P4> setter4,
-                Function<T, P5> getter5, BiConsumer<V, P5> setter5,
-                Function<T, P6> getter6, BiConsumer<V, P6> setter6
-    ) {
-        if (null == src || null == dest)
-            return;
-
-        if (null != getter1 && null != setter1) {
-            setter1.accept(dest, getter1.apply(src));
-        }
-
-        if (null != getter2 && null != setter2) {
-            setter2.accept(dest, getter2.apply(src));
-        }
-
-        if (null != getter3 && null != setter3) {
-            setter3.accept(dest, getter3.apply(src));
-        }
-
-        if (null != getter4 && null != setter4) {
-            setter4.accept(dest, getter4.apply(src));
-        }
-
-        if (null != getter5 && null != setter5) {
-            setter5.accept(dest, getter5.apply(src));
-        }
-
-        if (null != getter6 && null != setter6) {
-            setter6.accept(dest, getter6.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target, Supplier<?> prop1, Supplier<?> prop2, Supplier<?> prop3) {
+        copyTo(src, target, Arrays.asList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop1).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop2).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop3).getImplMethodName())
+        ), null);
     }
 
-    public static <T, V, P1, P2, P3, P4, P5, P6, P7>
-    void copyTo(T src, V dest,
-                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
-                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
-                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
-                Function<T, P4> getter4, BiConsumer<V, P4> setter4,
-                Function<T, P5> getter5, BiConsumer<V, P5> setter5,
-                Function<T, P6> getter6, BiConsumer<V, P6> setter6,
-                Function<T, P7> getter7, BiConsumer<V, P7> setter7
-    ) {
-        if (null == src || null == dest)
-            return;
-
-        if (null != getter1 && null != setter1) {
-            setter1.accept(dest, getter1.apply(src));
-        }
-
-        if (null != getter2 && null != setter2) {
-            setter2.accept(dest, getter2.apply(src));
-        }
-
-        if (null != getter3 && null != setter3) {
-            setter3.accept(dest, getter3.apply(src));
-        }
-
-        if (null != getter4 && null != setter4) {
-            setter4.accept(dest, getter4.apply(src));
-        }
-
-        if (null != getter5 && null != setter5) {
-            setter5.accept(dest, getter5.apply(src));
-        }
-
-        if (null != getter6 && null != setter6) {
-            setter6.accept(dest, getter6.apply(src));
-        }
-
-        if (null != getter7 && null != setter7) {
-            setter7.accept(dest, getter7.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target,
+                                     Function<S, ?> prop1,
+                                     Function<S, ?> prop2,
+                                     Function<S, ?> prop3,
+                                     Function<S, ?> prop4) {
+        copyTo(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4));
     }
 
-    public static <T, V, P1, P2, P3, P4, P5, P6, P7, P8>
-    void copyTo(T src, V dest,
-                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
-                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
-                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
-                Function<T, P4> getter4, BiConsumer<V, P4> setter4,
-                Function<T, P5> getter5, BiConsumer<V, P5> setter5,
-                Function<T, P6> getter6, BiConsumer<V, P6> setter6,
-                Function<T, P7> getter7, BiConsumer<V, P7> setter7,
-                Function<T, P8> getter8, BiConsumer<V, P8> setter8
-    ) {
-        if (null == src || null == dest)
-            return;
-
-        if (null != getter1 && null != setter1) {
-            setter1.accept(dest, getter1.apply(src));
-        }
-
-        if (null != getter2 && null != setter2) {
-            setter2.accept(dest, getter2.apply(src));
-        }
-
-        if (null != getter3 && null != setter3) {
-            setter3.accept(dest, getter3.apply(src));
-        }
-
-        if (null != getter4 && null != setter4) {
-            setter4.accept(dest, getter4.apply(src));
-        }
-
-        if (null != getter5 && null != setter5) {
-            setter5.accept(dest, getter5.apply(src));
-        }
-
-        if (null != getter6 && null != setter6) {
-            setter6.accept(dest, getter6.apply(src));
-        }
-
-        if (null != getter7 && null != setter7) {
-            setter7.accept(dest, getter7.apply(src));
-        }
-
-        if (null != getter8 && null != setter8) {
-            setter8.accept(dest, getter8.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target,
+                                     Supplier<?> prop1,
+                                     Supplier<?> prop2,
+                                     Supplier<?> prop3,
+                                     Supplier<?> prop4) {
+        copyTo(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4));
     }
 
-    public static <T, V, P1, P2, P3, P4, P5, P6, P7, P8, P9>
-    void copyTo(T src, V dest,
-                Function<T, P1> getter1, BiConsumer<V, P1> setter1,
-                Function<T, P2> getter2, BiConsumer<V, P2> setter2,
-                Function<T, P3> getter3, BiConsumer<V, P3> setter3,
-                Function<T, P4> getter4, BiConsumer<V, P4> setter4,
-                Function<T, P5> getter5, BiConsumer<V, P5> setter5,
-                Function<T, P6> getter6, BiConsumer<V, P6> setter6,
-                Function<T, P7> getter7, BiConsumer<V, P7> setter7,
-                Function<T, P8> getter8, BiConsumer<V, P8> setter8,
-                Function<T, P9> getter9, BiConsumer<V, P9> setter9
-    ) {
-        if (null == src || null == dest)
-            return;
+    public static <S, T> void copyTo(S src, T target,
+                                     Function<S, ?> prop1,
+                                     Function<S, ?> prop2,
+                                     Function<S, ?> prop3,
+                                     Function<S, ?> prop4,
+                                     Function<S, ?> prop5) {
+        copyTo(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4), LambdaUtils.resolveLambda(prop5));
+    }
 
-        if (null != getter1 && null != setter1) {
-            setter1.accept(dest, getter1.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target,
+                                     Supplier<?> prop1,
+                                     Supplier<?> prop2,
+                                     Supplier<?> prop3,
+                                     Supplier<?> prop4,
+                                     Supplier<?> prop5) {
+        copyTo(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4), LambdaUtils.resolveLambda(prop5));
+    }
 
-        if (null != getter2 && null != setter2) {
-            setter2.accept(dest, getter2.apply(src));
-        }
+    public static <S, T>
+    void copyTo(S src, T target,
+                Function<S, ?> prop1,
+                Function<S, ?> prop2,
+                Function<S, ?> prop3,
+                Function<S, ?> prop4,
+                Function<S, ?> prop5,
+                Function<S, ?> prop6) {
+        copyTo(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4), LambdaUtils.resolveLambda(prop5), LambdaUtils.resolveLambda(prop6));
+    }
 
-        if (null != getter3 && null != setter3) {
-            setter3.accept(dest, getter3.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target,
+                                     Supplier<?> prop1,
+                                     Supplier<?> prop2,
+                                     Supplier<?> prop3,
+                                     Supplier<?> prop4,
+                                     Supplier<?> prop5,
+                                     Supplier<?> prop6) {
+        copyTo(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4), LambdaUtils.resolveLambda(prop5), LambdaUtils.resolveLambda(prop6));
+    }
 
-        if (null != getter4 && null != setter4) {
-            setter4.accept(dest, getter4.apply(src));
-        }
+    public static <S, T>
+    void copyTo(S src, T target,
+                Function<S, ?> prop1,
+                Function<S, ?> prop2,
+                Function<S, ?> prop3,
+                Function<S, ?> prop4,
+                Function<S, ?> prop5,
+                Function<S, ?> prop6,
+                Function<S, ?> prop7) {
+        copyTo(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4), LambdaUtils.resolveLambda(prop5), LambdaUtils.resolveLambda(prop6),
+            LambdaUtils.resolveLambda(prop7));
+    }
 
-        if (null != getter5 && null != setter5) {
-            setter5.accept(dest, getter5.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target,
+                                     Supplier<?> prop1,
+                                     Supplier<?> prop2,
+                                     Supplier<?> prop3,
+                                     Supplier<?> prop4,
+                                     Supplier<?> prop5,
+                                     Supplier<?> prop6,
+                                     Supplier<?> prop7) {
+        copyTo(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4), LambdaUtils.resolveLambda(prop5), LambdaUtils.resolveLambda(prop6),
+            LambdaUtils.resolveLambda(prop7));
+    }
 
-        if (null != getter6 && null != setter6) {
-            setter6.accept(dest, getter6.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target,
+                                     Function<S, ?> prop1,
+                                     Function<S, ?> prop2,
+                                     Function<S, ?> prop3,
+                                     Function<S, ?> prop4,
+                                     Function<S, ?> prop5,
+                                     Function<S, ?> prop6,
+                                     Function<S, ?> prop7,
+                                     Function<S, ?> prop8) {
+        copyTo(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4), LambdaUtils.resolveLambda(prop5), LambdaUtils.resolveLambda(prop6),
+            LambdaUtils.resolveLambda(prop7), LambdaUtils.resolveLambda(prop8));
+    }
 
-        if (null != getter7 && null != setter7) {
-            setter7.accept(dest, getter7.apply(src));
-        }
+    public static <S, T> void copyTo(S src, T target,
+                                     Supplier<?> prop1,
+                                     Supplier<?> prop2,
+                                     Supplier<?> prop3,
+                                     Supplier<?> prop4,
+                                     Supplier<?> prop5,
+                                     Supplier<?> prop6,
+                                     Supplier<?> prop7,
+                                     Supplier<?> prop8) {
+        copyTo(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4), LambdaUtils.resolveLambda(prop5), LambdaUtils.resolveLambda(prop6),
+            LambdaUtils.resolveLambda(prop7), LambdaUtils.resolveLambda(prop8));
+    }
 
-        if (null != getter8 && null != setter8) {
-            setter8.accept(dest, getter8.apply(src));
-        }
+    /**
+     * 复制JavaBean的属性到另一个JavaBean中，直接反射字段值，不通过getter/setter
+     * <p>如果不指定字段列表，并且源对象是JavaBean，则会拷贝所有字段</p>
+     *
+     * @param src    源实体
+     * @param target 目标实体
+     * @param ignore 忽略的字段名列表
+     */
+    public static void copyToIgnore(Object src, Object target, String... ignore) {
+        copyTo(src, target, null, Arrays.asList(ignore));
+    }
 
-        if (null != getter9 && null != setter9) {
-            setter9.accept(dest, getter9.apply(src));
-        }
+    public static <S, T> void copyToIgnore(S src, T target, Function<S, ?> prop) {
+        copyTo(src, target, null, Collections.singletonList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop).getImplMethodName())
+        ));
+    }
+
+    public static <S, T> void copyToIgnore(S src, T target, Supplier<?> prop) {
+        copyTo(src, target, null, Collections.singletonList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop).getImplMethodName())
+        ));
+    }
+
+    public static <S, T> void copyToIgnore(S src, T target, Function<S, ?> prop1, Function<S, ?> prop2) {
+        copyTo(src, target, null, Arrays.asList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop1).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop2).getImplMethodName())
+        ));
+    }
+
+    public static <S, T> void copyToIgnore(S src, T target, Supplier<?> prop1, Supplier<?> prop2) {
+        copyTo(src, target, null, Arrays.asList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop1).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop2).getImplMethodName())
+        ));
+    }
+
+    public static <S, T> void copyToIgnore(S src, T target, Function<S, ?> prop1, Function<S, ?> prop2, Function<S, ?> prop3) {
+        copyTo(src, target, null, Arrays.asList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop1).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop2).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop3).getImplMethodName())
+        ));
+    }
+
+    public static <S, T> void copyToIgnore(S src, T target, Supplier<?> prop1, Supplier<?> prop2, Supplier<?> prop3) {
+        copyTo(src, target, null, Arrays.asList(
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop1).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop2).getImplMethodName()),
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(prop3).getImplMethodName())
+        ));
+    }
+
+    public static <S, T> void copyToIgnore(S src, T target,
+                                           Function<S, ?> prop1,
+                                           Function<S, ?> prop2,
+                                           Function<S, ?> prop3,
+                                           Function<S, ?> prop4) {
+        copyToIgnore(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4));
+    }
+
+    public static <S, T> void copyToIgnore(S src, T target,
+                                           Supplier<?> prop1,
+                                           Supplier<?> prop2,
+                                           Supplier<?> prop3,
+                                           Supplier<?> prop4) {
+        copyToIgnore(src, target, LambdaUtils.resolveLambda(prop1), LambdaUtils.resolveLambda(prop2), LambdaUtils.resolveLambda(prop3),
+            LambdaUtils.resolveLambda(prop4));
     }
 
     /**
@@ -1281,18 +1165,96 @@ public abstract class BeanUtils {
         return bean;
     }
 
-    private static void copyPropertie(Object src, Object dest, String fieldName) {
-        Field f1 = ReflectionUtils.findField(src.getClass(), fieldName);
-        Field f2 = ReflectionUtils.findField(dest.getClass(), fieldName);
-        if (f1 == null) {
-            throw new SpinException(fieldName + "不存在于" + src.getClass().getSimpleName());
+    private static Map<String, Field> parseFields(Class<?> type) {
+        if (CLASS_FIELD_CACHE.containsKey(type)) {
+            return CLASS_FIELD_CACHE.get(type);
         }
-        if (f2 == null) {
-            throw new SpinException(fieldName + "不存在于" + dest.getClass().getSimpleName());
+        Map<String, Field> props;
+        Map<String, Field> fieldMap = new HashMap<>();
+        ReflectionUtils.doWithFields(type, field -> {
+            ReflectionUtils.makeAccessible(field);
+            fieldMap.put(field.getName(), field);
+        });
+        props = fieldMap;
+        CLASS_FIELD_CACHE.put(type, props);
+        return props;
+    }
+
+    /**
+     * 通过内省机制，获取一个JavaBean的所有属性
+     *
+     * @param c JavaBean类型
+     * @return 属性描述器数组
+     */
+    private static PropertyDescriptor[] propertyDescriptors(Class<?> c) {
+        BeanInfo beanInfo;
+        try {
+            beanInfo = Introspector.getBeanInfo(c);
+        } catch (IntrospectionException e) {
+            throw new SpinException("解析Bean属性异常", e);
         }
-        ReflectionUtils.makeAccessible(f1);
-        ReflectionUtils.makeAccessible(f2);
-        Object o1 = ReflectionUtils.getField(f1, src);
-        ReflectionUtils.setField(f2, dest, o1);
+        return beanInfo.getPropertyDescriptors();
+    }
+
+
+    private static Object toMapInternal(Object target, boolean recursively) {
+        // null值，直接返回
+        if (null == target) {
+            return null;
+        }
+
+        // 如果是Map，做适应性调整
+        if (target instanceof Map) {
+            Map<?, ?> m = (Map<?, ?>) target;
+            if (recursively) {
+                return m.entrySet().stream().filter(entry -> null != entry.getValue()).collect(Collectors.toMap(e -> e.getKey().toString(), e -> BeanUtils.toMapInternal(e.getValue(), true)));
+            } else {
+                return m.entrySet().stream().filter(entry -> null != entry.getValue()).collect(Collectors.toMap(e -> e.getKey().toString(), Map.Entry::getValue));
+            }
+        }
+
+        // 如果是集合，将其元素转为Map后返回
+        if (CollectionUtils.isCollection(target)) {
+            List objects = CollectionUtils.asList(target);
+            for (int i = 0; i < objects.size(); i++) {
+                //noinspection unchecked
+                objects.set(i, toMapInternal(objects.get(i), recursively));
+            }
+            return objects;
+        }
+
+        // 如果是JavaBean，将其转换为Map
+        if (isJavaBean(target)) {
+            Collection<PropertyDescriptorWrapper> props = getBeanPropertyDes(target.getClass(), true, false).values();
+            Map<String, Object> res = new HashMap<>(props.size());
+            for (PropertyDescriptorWrapper prop : props) {
+                try {
+                    Object value = prop.reader.invoke(target);
+                    if (null != value) {
+                        res.put(prop.getDescriptor().getName(), toMapInternal(value, recursively));
+                    }
+                } catch (IllegalAccessException | InvocationTargetException ignore) {
+                    // 忽略访问失败的属性
+                }
+            }
+            return res;
+        } else {
+            // 否则原样返回
+            return target;
+        }
+    }
+
+    private static <S, T> void copyTo(S src, T target, SerializedLambda... serializedLambdas) {
+        copyTo(src, target, Arrays.stream(serializedLambdas)
+            .map(SerializedLambda::getImplMethodName)
+            .map(BeanUtils::toFieldName)
+            .collect(Collectors.toList()), null);
+    }
+
+    private static <S, T> void copyToIgnore(S src, T target, SerializedLambda... serializedLambdas) {
+        copyTo(src, target, null, Arrays.stream(serializedLambdas)
+            .map(SerializedLambda::getImplMethodName)
+            .map(BeanUtils::toFieldName)
+            .collect(Collectors.toList()));
     }
 }

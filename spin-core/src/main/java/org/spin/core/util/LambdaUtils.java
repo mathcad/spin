@@ -2,6 +2,7 @@ package org.spin.core.util;
 
 import org.spin.core.function.serializable.BiConsumer;
 import org.spin.core.function.serializable.Function;
+import org.spin.core.function.serializable.Supplier;
 import org.spin.core.throwable.SpinException;
 
 import java.lang.invoke.SerializedLambda;
@@ -36,6 +37,17 @@ public abstract class LambdaUtils {
      * @return lambda信息
      */
     public static <T> SerializedLambda resolveLambda(Function<T, ?> lambda) {
+        return resolveLambdaInternal(lambda);
+    }
+
+    /**
+     * 从可序列化的lambda中解析出相关信息
+     *
+     * @param lambda 函数式接口
+     * @param <T>    参数类型
+     * @return lambda信息
+     */
+    public static <T> SerializedLambda resolveLambda(Supplier<?> lambda) {
         return resolveLambdaInternal(lambda);
     }
 

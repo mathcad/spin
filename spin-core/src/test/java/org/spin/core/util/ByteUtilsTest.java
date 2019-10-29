@@ -2,8 +2,6 @@ package org.spin.core.util;
 
 
 import org.junit.jupiter.api.Test;
-import org.spin.core.function.SerializedLambda;
-import org.spin.core.session.Session;
 
 /**
  * TITLE
@@ -23,36 +21,5 @@ class ByteUtilsTest {
         double a = ByteUtils.littleEndian().readDouble(r, 0);
         System.out.println(a);
 
-    }
-
-    @Test
-    public void testLambda() {
-        long s = System.currentTimeMillis();
-        SerializedLambda resolve = SerializedLambda.convert(Session::getAttributeKeys);
-        String implMethodName = resolve.getImplMethodName();
-        long e = System.currentTimeMillis();
-        System.out.println(e - s);
-        System.out.println(implMethodName);
-
-        s = System.currentTimeMillis();
-        java.lang.invoke.SerializedLambda serializedLambda = LambdaUtils.resolveLambda(Session::getTimeout);
-        implMethodName = serializedLambda.getImplMethodName();
-        e = System.currentTimeMillis();
-        System.out.println(e - s);
-        System.out.println(BeanUtils.toFieldName(implMethodName));
-
-        s = System.currentTimeMillis();
-        serializedLambda = LambdaUtils.resolveLambda(Session::getAttributeKeys);
-        implMethodName = serializedLambda.getImplMethodName();
-        e = System.currentTimeMillis();
-        System.out.println(e - s);
-        System.out.println(implMethodName);
-
-        s = System.currentTimeMillis();
-        serializedLambda = LambdaUtils.resolveLambda(Session::getAttributeKeys);
-        implMethodName = serializedLambda.getImplMethodName();
-        e = System.currentTimeMillis();
-        System.out.println(e - s);
-        System.out.println(implMethodName);
     }
 }

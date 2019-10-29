@@ -17,7 +17,7 @@ class UserAgentUtilTest {
     @Test
     void parse() {
         UserAgent parse = UserAgentUtil.parse("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36");
-        parse = UserAgentUtil.parse("PostmanRuntime/7.17.1");
+//        parse = UserAgentUtil.parse("PostmanRuntime/7.17.1");
         System.out.println(parse);
     }
 }

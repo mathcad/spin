@@ -3,6 +3,7 @@ package org.spin.core.util;
 import org.junit.jupiter.api.Test;
 import org.spin.core.session.SimpleSession;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +62,7 @@ class BeanUtilsTest {
 //        BeanUtils.copyTo(a, b, Ba::getName, Ba::getName, Ba::getAge);
 
 
-        BeanUtils.copyTo(a, b, Ba::getName, Bb::setName, Ba::getAddress, Bb::setAddress);
+        BeanUtils.copyTo(a, b, Ba::getName, Ba::getAddress);
         assertEquals(b.name, "xxx");
         assertEquals(b.address, "asdfasdfasdfasdf");
         b = new Bb();
@@ -71,8 +72,27 @@ class BeanUtilsTest {
 
     }
 
+    @Test
+    public void testLambda() {
+        DemoA a = new DemoA();
+        a.setAge(100L);
+        a.setName("asdf");
+        a.setNickName("镜");
+        a.setCreateTime(LocalDateTime.now());
+
+        DemoB b = new DemoB();
+        BeanUtils.copyTo(a, b, a::getName, a::getAge, a::getCreateTime, a::getNickName);
+
+        System.out.println(b.getAge());
+
+        b = new DemoB();
+        b.setName("123");
+        BeanUtils.copyToIgnore(a, b, a::getName);
+        System.out.println(b);
+    }
+
     public static class Ba {
-        private String name;
+        public String name;
         private String address;
         private int age;
         private String nick;
@@ -138,5 +158,84 @@ class BeanUtilsTest {
         public void setAge(int age) {
             this.age = age;
         }
+    }
+}
+
+
+class DemoA {
+    private String name;
+    private String nickName;
+    private LocalDateTime createTime;
+    private long age;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public long getAge() {
+        return age;
+    }
+
+    public void setAge(long age) {
+        this.age = age;
+    }
+}
+
+class DemoB {
+    private String name;
+    private String nickName;
+    private LocalDateTime createTime;
+    private Double age;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public Double getAge() {
+        return age;
+    }
+
+    public void setAge(Double age) {
+        this.age = age;
     }
 }

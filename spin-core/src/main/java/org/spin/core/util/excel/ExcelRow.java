@@ -3,6 +3,7 @@ package org.spin.core.util.excel;
 import org.spin.core.util.StringUtils;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * EXCEL表格中的一行
@@ -118,7 +119,7 @@ public class ExcelRow implements Serializable {
     }
 
     public String[] getRow() {
-        return row;
+        return Arrays.copyOf(row, columnNum);
     }
 
     public void sheetIdxInc() {

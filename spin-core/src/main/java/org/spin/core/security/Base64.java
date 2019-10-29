@@ -2,6 +2,7 @@ package org.spin.core.security;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.util.StringUtils;
 
 /**
  * BASE64工具类
@@ -60,21 +61,6 @@ public class Base64 {
     private Base64() {
     }
 
-    private static boolean isWhiteSpace(char octect) {
-        return (octect == 0x20 || octect == 0xd || octect == 0xa || octect == 0x9);
-    }
-
-    private static boolean isPad(char octect) {
-        return (octect == PAD);
-    }
-
-    private static boolean isData(char octect) {
-        return (octect < BASELENGTH && base64Alphabet[octect] != -1);
-    }
-
-    private static boolean notData(char octect) {
-        return (octect >= BASELENGTH || base64Alphabet[octect] == -1);
-    }
 
     /**
      * Encodes hex octects into Base64
@@ -247,6 +233,30 @@ public class Base64 {
         }
 
         return decodedData;
+    }
+
+    public static String encodeWithUtf8(Object src) {
+        return encode(StringUtils.getBytesUtf8(StringUtils.toString(src)));
+    }
+
+    public static String decodeWithUtf8(String encoded) {
+        return StringUtils.newStringUtf8(decode(encoded));
+    }
+
+    private static boolean isWhiteSpace(char octect) {
+        return (octect == 0x20 || octect == 0xd || octect == 0xa || octect == 0x9);
+    }
+
+    private static boolean isPad(char octect) {
+        return (octect == PAD);
+    }
+
+    private static boolean isData(char octect) {
+        return (octect < BASELENGTH && base64Alphabet[octect] != -1);
+    }
+
+    private static boolean notData(char octect) {
+        return (octect >= BASELENGTH || base64Alphabet[octect] == -1);
     }
 
     /**
