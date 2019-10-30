@@ -219,8 +219,8 @@ public abstract class BeanUtils {
      * 数组, {@link Iterable}, {@link Tuple}等可迭代类型通过"[idx]"索引位置访问，Map中的元素可以直接访问，如果需要访问{@link Map}对象中的成员变量,
      * 需要在变量名前加"#", 如map.#size</p>
      * <p>获取数组与List等可迭代类型中的第n个元素：list[n], 高维数组(嵌套集合): list[x][y][z]</p>
-     * <p>获取中Map中键为key对应的value：map.key</p>
-     * <p>获取中Map中名称为size的成员变量的值：map.#size</p>
+     * <p>获取Map中键为key对应的value：map.key</p>
+     * <p>获取Map中名称为size的成员变量的值：map.#size</p>
      *
      * @param target    对象实例
      * @param valuePath 属性名称，支持嵌套
@@ -367,106 +367,98 @@ public abstract class BeanUtils {
         return (T) o;
     }
 
-//    public static <T> T setFieldValue(T target, String valuePath, Object value) {
-//        String[] valuePaths = Assert.notEmpty(valuePath, "valuePath必须指定属性名称").split("\\.");
-//        if (null == target) {
-//            return null;
-//        }
-//        Object o = target;
-//        for (int i = 0; i < valuePaths.length; i++) {
-//            String field = valuePaths[i];
-//            char mark = field.charAt(0);
-//            if (o == null) {
-//                throw new SpinException(field + "属性为null");
-//            }
-//            if ('#' == mark) {
-//                if (o instanceof Map) {
-//                    if (i == valuePaths.length - 1) {
-//                        ((Map) o).put(field.substring(1), value);
-//                    } else {
-//                        o = ((Map) o).get(field.substring(1));
-//                    }
-//                } else if (o instanceof List) {
-//                    int idx = decodeIdx(field);
-//                    if (((List) o).size() <= idx) {
-//                        throw new SpinException(idx + " 索引超出范围0-" + ((List) o).size());
-//                    }
-//                    if (i == valuePaths.length - 1) {
-//                        ((List) o).set(idx, value);
-//                    } else {
-//                        o = ((List) o).get(idx);
-//                    }
-//                } else if (o.getClass().isArray()) {
-//                    int idx = decodeIdx(field);
-//                    @SuppressWarnings("ConstantConditions")
-//                    Object[] t = (Object[]) o;
-//                    if (t.length <= idx) {
-//                        throw new SpinException(idx + " 索引超出范围0-" + t.length);
-//                    }
-//                    if (i == valuePaths.length - 1) {
-//                        t[idx] = o;
-//                    } else {
-//                        o = t[idx];
-//                    }
-//                } else if (o instanceof Collection) {
-//                    Collection<?> t = (Collection<?>) o;
-//                    int idx = decodeIdx(field);
-//                    if (t.size() <= idx) {
-//                        throw new SpinException(idx + " 索引超出范围0-" + t.size());
-//                    }
-//                    int k = 0;
-//                    for (Object obj : t) {
-//                        if (k == idx) {
-//                            o = obj;
-//                            break;
-//                        }
-//                        ++k;
-//                    }
-//                } else {
-//                    throw new SpinException(o.getClass().toString() + "中的属性名称[" + field + "]不合法");
-//                }
-//            } else {
-//                if (i == valuePaths.length - 1) {
-//                    setFieldValueInternal(target, field, value);
-//                } else {
-//                    o = getFieldValueInternal(o, field);
-//                }
-//            }
-//        }
-//        return target;
-//    }
+    /**
+     * 设置对象指定属性的值
+     * <p>通过反射直接设置属性.
+     * 数组, {@link List}可以通过"[idx]"索引位置来存放元素，Map中的元素可以直接设置，如果需要访问{@link Map}对象中的成员变量,
+     * 需要在变量名前加"#", 如map.#table</p>
+     * <p>设置数组与List中的第n个元素：list[n], 高维数组(嵌套集合): list[x][y][z]</p>
+     * <p>设置Map中键为key对应的value：map.key</p>
+     * <p>设置Map中名称为table的成员变量的值：map.#table</p>
+     *
+     * @param target    对象实例
+     * @param valuePath 需要设置的属性名称，支持嵌套
+     * @param value     需要设置的值
+     * @param <T>       属性类型参数
+     * @return 属性值
+     */
+    public static <T> T setFieldValue(T target, String valuePath, Object value) {
+        String prefixPath;
+        String fieldPath;
+        boolean isItr = false;
 
-//    private static Object getFieldValueInternal(Object target, String field) {
-//        Field f;
-//        try {
-//            f = ReflectionUtils.findField(target.getClass(), field);
-//            ReflectionUtils.makeAccessible(f);
-//        } catch (Exception e) {
-//            throw new SpinException(target.getClass().toString() + "不存在" + field + "属性", e);
-//        }
-//
-//        try {
-//            return ReflectionUtils.getField(f, target);
-//        } catch (Exception e) {
-//            throw new SpinException(target.getClass().toString() + "获取属性" + field + "的值失败", e);
-//        }
-//    }
-//
-//    private static void setFieldValueInternal(Object target, String field, Object value) {
-//        Field f;
-//        try {
-//            f = ReflectionUtils.findField(target.getClass(), field);
-//            ReflectionUtils.makeAccessible(f);
-//        } catch (Exception e) {
-//            throw new SpinException(target.getClass().toString() + "不存在" + field + "属性", e);
-//        }
-//
-//        try {
-//            ReflectionUtils.setField(f, target, value);
-//        } catch (Exception e) {
-//            throw new SpinException(target.getClass().toString() + "获取属性" + field + "的值失败", e);
-//        }
-//    }
+        Object o = target;
+        if (Assert.notEmpty(valuePath, "valuePath必须指定属性名称").charAt(valuePath.length() - 1) == ']') {
+            int i = valuePath.lastIndexOf('[');
+            prefixPath = valuePath.substring(0, Assert.inclusiveBetween(0, valuePath.length() - 2, i, "表达式不合法, '[', ']'没有成对出现"));
+            fieldPath = Assert.notEmpty(valuePath.substring(i + 1, valuePath.length() - 1), valuePath + "中包含无效的索引值");
+            isItr = true;
+        } else {
+            int i = valuePath.lastIndexOf('.');
+            if (i < 0) {
+                prefixPath = null;
+                fieldPath = valuePath;
+            } else {
+                prefixPath = valuePath.substring(0, i);
+                fieldPath = valuePath.substring(i + 1);
+            }
+        }
+
+        if (StringUtils.isNotEmpty(prefixPath)) {
+            o = Assert.notNull(getFieldValue(o, prefixPath), "目标对象中的属性" + prefixPath + "为null");
+        }
+
+        if (isItr) {
+            int idx;
+            try {
+                idx = Integer.parseInt(fieldPath);
+            } catch (NumberFormatException e) {
+                throw new SpinException("索引值必须是合法的数字: " + fieldPath);
+            }
+            if (idx < 0) {
+                throw new SpinException("索引不能为负数: " + idx);
+            }
+            if (o instanceof List) {
+                try {
+                    //noinspection unchecked
+                    ((List) o).set(idx, value);
+                } catch (IndexOutOfBoundsException e) {
+                    throw new SpinException("为目标对象填充索引为" + idx + "的元素失败: 索引越界");
+                } catch (UnsupportedOperationException e) {
+                    throw new SpinException("为目标对象填充索引为" + idx + "的元素失败: 集合[" + o.getClass().getName() + "]不支持set操作");
+                } catch (ClassCastException e) {
+                    throw new SpinException("为目标对象填充索引为" + idx + "的元素失败: 集合[" + o.getClass().getName() + "]类型与元素类型[" + value.getClass().getName() + "]不匹配");
+                }
+            } else if (o.getClass().isArray()) {
+                Object[] objects = (Object[]) o;
+                if (objects.length <= idx) {
+                    throw new SpinException("为目标对象填充索引为" + idx + "的元素失败: 索引越界");
+                }
+                try {
+                    objects[idx] = o;
+                } catch (ClassCastException e) {
+                    throw new SpinException("为目标对象填充索引为" + idx + "的元素失败: 集合[" + o.getClass().getName() + "]类型与元素类型[" + value.getClass().getName() + "]不匹配");
+                }
+            } else {
+                throw new SpinException("不支持在类型[" + o.getClass().getName() + "]上进行基于索引的赋值操作");
+            }
+        } else {
+            if (o instanceof Map && fieldPath.charAt(0) != '#') {
+                //noinspection unchecked
+                ((Map) o).put(fieldPath, value);
+            } else {
+                Field field = Assert.notNull(ReflectionUtils.findField(o.getClass(), fieldPath), "对象[" + o.getClass().getName() + "]中不存在[" + fieldPath + "字段");
+                ReflectionUtils.makeAccessible(field);
+                try {
+                    field.set(o, value);
+                } catch (IllegalAccessException e) {
+                    throw new SpinException("为对象[" + o.getClass().getName() + "]设置属性" + fieldPath + "失败, 无法访问该属性", e);
+                }
+            }
+        }
+
+        return target;
+    }
 
     /**
      * 获取对象指定属性的值
