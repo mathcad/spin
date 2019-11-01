@@ -3,6 +3,7 @@ package org.spin.core.util.excel;
 import org.spin.core.Assert;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -80,8 +81,13 @@ public class ExcelGrid implements Serializable {
         return this;
     }
 
-    public ExcelGrid removeSheet(Predicate<ExcelSheet> predicate) {
+    public ExcelGrid removeSheets(Predicate<ExcelSheet> predicate) {
         sheets = sheets.stream().filter(it -> !predicate.test(it)).collect(Collectors.toCollection(LinkedList::new));
+        return this;
+    }
+
+    public ExcelGrid removeSheet(String sheetName) {
+        sheets.removeIf(it -> it.getSheetName().equals(sheetName));
         return this;
     }
 
