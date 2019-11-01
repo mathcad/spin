@@ -28,7 +28,7 @@ subprojects {
 
         // core
         junitJupiterVersion = '5.5.2'
-        slf4jVersion = '1.7.26'
+        slf4jVersion = '1.7.28'
         asmVersion = '7.2'
         httpclientVersion = '4.5.10'
         httpasyncclientVersion = '4.1.4'
@@ -64,7 +64,7 @@ subprojects {
         springCloudVersion = '2.1.3.RELEASE'
         jasyptVersion = '2.1.1'
         commonsPoolVersion = '2.7.0'
-        spinVersion = '2.2.5-SNAPSHOT'
+        spinVersion = '2.2.7-SNAPSHOT'
         springKafkaVersion = '2.2.9.RELEASE'
         sentinelStarterVersion = '0.9.0.RELEASE'
         sentinelVersion = '1.6.3'

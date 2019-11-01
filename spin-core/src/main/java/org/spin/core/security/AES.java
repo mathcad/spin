@@ -3,6 +3,7 @@ package org.spin.core.security;
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SpinException;
+import org.spin.core.trait.Evaluatable;
 import org.spin.core.trait.IntEvaluatable;
 
 import javax.crypto.BadPaddingException;
@@ -65,7 +66,7 @@ public class AES extends ProviderDetector {
         }
 
         @Override
-        public int getValue() {
+        public int intValue() {
             return this.value;
         }
     }
@@ -73,7 +74,7 @@ public class AES extends ProviderDetector {
     /**
      * AES的工作模式，未引用其他Security Provider的情况下只能使用ECB模式(默认ECB)
      */
-    public enum Mode {
+    public enum Mode implements Evaluatable<String> {
 
         /**
          * 电子密码本模式：Electronic codebook
@@ -118,6 +119,7 @@ public class AES extends ProviderDetector {
             this.needIv = needIv;
         }
 
+        @Override
         public String getValue() {
             return this.value;
         }
@@ -126,7 +128,7 @@ public class AES extends ProviderDetector {
     /**
      * AES的填充方式(默认PKCS5Padding)
      */
-    public enum Padding {
+    public enum Padding implements Evaluatable<String> {
 
         /**
          * NoPadding
@@ -154,6 +156,7 @@ public class AES extends ProviderDetector {
             this.value = value;
         }
 
+        @Override
         public String getValue() {
             return this.value;
         }
@@ -206,7 +209,7 @@ public class AES extends ProviderDetector {
         } catch (Exception e) {
             throw new SpinException(ErrorCode.KEY_FAIL, e);
         }
-        kg.init(keySize.getValue(), secureRandom);
+        kg.init(keySize.intValue(), secureRandom);
         //获取密匙对象
         SecretKey skey = kg.generateKey();
         //获取随机密匙

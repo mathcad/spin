@@ -2,6 +2,7 @@ package org.spin.core.util;
 
 import org.spin.core.Assert;
 import org.spin.core.collection.ConcurrentReferenceHashMap;
+import org.spin.core.function.ExceptionalConsumer;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -14,15 +15,15 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
- * Simple utility class for working with the reflection API and handling
- * reflection exceptions.
- *
- * <p>Only intended for internal use.
+ * 反射工具类
  *
  * @author Juergen Hoeller
  * @author Rob Harrop
@@ -42,6 +43,8 @@ public abstract class ReflectionUtils {
      */
     private static final String CGLIB_RENAMED_METHOD_PREFIX = "CGLIB$";
 
+    private static final Class<?>[] EMPTY_METHOD_PARAM = new Class[0];
+
     private static final Method[] NO_METHODS = {};
 
     private static final Field[] NO_FIELDS = {};
@@ -51,37 +54,54 @@ public abstract class ReflectionUtils {
      * Cache for {@link Class#getDeclaredMethods()} plus equivalent default methods
      * from Java 8 based interfaces, allowing for fast iteration.
      */
-    private static final Map<Class<?>, Method[]> declaredMethodsCache =
-        new ConcurrentReferenceHashMap<>(256);
+    private static final Map<Class<?>, Method[]> DECLARED_METHODS_CACHE = new ConcurrentReferenceHashMap<>(256);
 
     /**
      * Cache for {@link Class#getDeclaredFields()}, allowing for fast iteration.
      */
-    private static final Map<Class<?>, Field[]> declaredFieldsCache =
-        new ConcurrentReferenceHashMap<>(256);
+    private static final Map<Class<?>, Field[]> DECLARED_FIELDS_CACHE = new ConcurrentReferenceHashMap<>(256);
+
+    private static final Map<Class, Map<String, Field>> CLASS_FIELD_CACHE = new ConcurrentReferenceHashMap<>(256);
 
 
     /**
-     * Attempt to find a {@link Field field} on the supplied {@link Class} with the
-     * supplied {@code name}. Searches all superclasses up to {@link Object}.
+     * Pre-built FieldFilter that matches all non-static, non-final fields.
+     */
+    public static final Predicate<Field> COPYABLE_FIELDS = field -> !(Modifier.isStatic(field.getModifiers()) || Modifier.isFinal(field.getModifiers()));
+
+
+    /**
+     * Pre-built MethodFilter that matches all non-bridge methods.
+     */
+    public static final Predicate<Method> NON_BRIDGED_METHODS = method -> !method.isBridge();
+
+
+    /**
+     * Pre-built MethodFilter that matches all non-bridge methods
+     * which are not declared on {@code java.lang.Object}.
+     */
+    public static final Predicate<Method> USER_DECLARED_METHODS = method -> (!method.isBridge() && method.getDeclaringClass() != Object.class);
+
+
+    /**
+     * 尝试在指定类中查找名称为{@code name}的字段, 如果当前类中不存在, 则向上递归搜索所有父类直到{@link Object}
      *
-     * @param clazz the class to introspect
-     * @param name  the name of the field
-     * @return the corresponding Field object, or {@code null} if not found
+     * @param clazz 需要被解析的类
+     * @param name  字段名称
+     * @return 搜索到的字段, 如果未找到, 返回 {@code null}
      */
     public static Field findField(Class<?> clazz, String name) {
         return findField(clazz, name, null);
     }
 
     /**
-     * Attempt to find a {@link Field field} on the supplied {@link Class} with the
-     * supplied {@code name} and/or {@link Class type}. Searches all superclasses
-     * up to {@link Object}.
+     * 尝试在指定类中查找名称为{@code name}且/或类型为{@code type}的字段,
+     * 如果当前类中不存在, 则向上递归搜索所有父类直到{@link Object}
      *
-     * @param clazz the class to introspect
-     * @param name  the name of the field (may be {@code null} if type is specified)
-     * @param type  the type of the field (may be {@code null} if name is specified)
-     * @return the corresponding Field object, or {@code null} if not found
+     * @param clazz 需要被解析的类
+     * @param name  字段名称 (如果指定了类型，名称可以为{@code null})
+     * @param type  字段类型 (如果指定了名称，类型可以为{@code null})
+     * @return 搜索到的字段, 如果未找到, 返回 {@code null}
      */
     public static Field findField(Class<?> clazz, String name, Class<?> type) {
         Assert.notNull(clazz, "Class must not be null");
@@ -91,7 +111,7 @@ public abstract class ReflectionUtils {
             ns = name.split("\\.");
         }
         Class<?> searchType = clazz;
-        boolean isFinded = false;
+        boolean isFinded;
 
         for (int i = 0; i < ns.length; i++) {
             String n = ns[i];
@@ -172,7 +192,7 @@ public abstract class ReflectionUtils {
      * @return the Method object, or {@code null} if none found
      */
     public static Method findMethod(Class<?> clazz, String name) {
-        return findMethod(clazz, name, new Class<?>[0]);
+        return findMethod(clazz, name, EMPTY_METHOD_PARAM);
     }
 
     /**
@@ -502,11 +522,11 @@ public abstract class ReflectionUtils {
      * @see #doWithMethods
      * @since 4.2
      */
-    public static void doWithLocalMethods(Class<?> clazz, MethodCallback mc) {
+    public static void doWithLocalMethods(Class<?> clazz, ExceptionalConsumer<Method, IllegalAccessException> mc) {
         Method[] methods = getDeclaredMethods(clazz);
         for (Method method : methods) {
             try {
-                mc.doWith(method);
+                mc.accept(method);
             } catch (IllegalAccessException ex) {
                 throw new IllegalStateException("Not allowed to access method '" + method.getName() + "': " + ex);
             }
@@ -517,13 +537,13 @@ public abstract class ReflectionUtils {
      * Perform the given callback operation on all matching methods of the given
      * class and superclasses.
      * <p>The same named method occurring on subclass and superclass will appear
-     * twice, unless excluded by a {@link MethodFilter}.
+     * twice, unless excluded by a {@link Predicate}.
      *
      * @param clazz the class to introspect
      * @param mc    the callback to invoke for each method
-     * @see #doWithMethods(Class, MethodCallback, MethodFilter)
+     * @see #doWithMethods(Class, ExceptionalConsumer, Predicate)
      */
-    public static void doWithMethods(Class<?> clazz, MethodCallback mc) {
+    public static void doWithMethods(Class<?> clazz, ExceptionalConsumer<Method, IllegalAccessException> mc) {
         doWithMethods(clazz, mc, null);
     }
 
@@ -531,21 +551,21 @@ public abstract class ReflectionUtils {
      * Perform the given callback operation on all matching methods of the given
      * class and superclasses (or given interface and super-interfaces).
      * <p>The same named method occurring on subclass and superclass will appear
-     * twice, unless excluded by the specified {@link MethodFilter}.
+     * twice, unless excluded by the specified {@link Predicate}.
      *
      * @param clazz the class to introspect
      * @param mc    the callback to invoke for each method
      * @param mf    the filter that determines the methods to apply the callback to
      */
-    public static void doWithMethods(Class<?> clazz, MethodCallback mc, MethodFilter mf) {
+    public static void doWithMethods(Class<?> clazz, ExceptionalConsumer<Method, IllegalAccessException> mc, Predicate<Method> mf) {
         // Keep backing up the inheritance hierarchy.
         Method[] methods = getDeclaredMethods(clazz);
         for (Method method : methods) {
-            if (mf != null && !mf.matches(method)) {
+            if (mf != null && !mf.test(method)) {
                 continue;
             }
             try {
-                mc.doWith(method);
+                mc.accept(method);
             } catch (IllegalAccessException ex) {
                 throw new IllegalStateException("Not allowed to access method '" + method.getName() + "': " + ex);
             }
@@ -568,7 +588,22 @@ public abstract class ReflectionUtils {
     public static Method[] getAllDeclaredMethods(Class<?> leafClass) {
         final List<Method> methods = new ArrayList<>(32);
         doWithMethods(leafClass, methods::add);
-        return methods.toArray(new Method[methods.size()]);
+        return methods.toArray(new Method[0]);
+    }
+
+    /**
+     * 获取指定类及其所有父类中声明的所有字段
+     *
+     * @param leafClass 需要被解析的类
+     * @return 方法列表
+     */
+    public static Map<String, Field> getAllDeclaredField(Class<?> leafClass) {
+        if (!CLASS_FIELD_CACHE.containsKey(leafClass)) {
+            Map<String, Field> fieldMap = new HashMap<>();
+            doWithFields(leafClass, f -> fieldMap.put(f.getName(), f));
+            CLASS_FIELD_CACHE.put(leafClass, Collections.unmodifiableMap(fieldMap));
+        }
+        return CLASS_FIELD_CACHE.get(leafClass);
     }
 
     /**
@@ -604,7 +639,7 @@ public abstract class ReflectionUtils {
                 methods.add(method);
             }
         });
-        return methods.toArray(new Method[methods.size()]);
+        return methods.toArray(new Method[0]);
     }
 
     /**
@@ -617,8 +652,8 @@ public abstract class ReflectionUtils {
      * @return the cached array of methods
      * @see Class#getDeclaredMethods()
      */
-    private static Method[] getDeclaredMethods(Class<?> clazz) {
-        Method[] result = declaredMethodsCache.get(clazz);
+    public static Method[] getDeclaredMethods(Class<?> clazz) {
+        Method[] result = DECLARED_METHODS_CACHE.get(clazz);
         if (result == null) {
             Method[] declaredMethods = clazz.getDeclaredMethods();
             List<Method> defaultMethods = findConcreteMethodsOnInterfaces(clazz);
@@ -633,22 +668,7 @@ public abstract class ReflectionUtils {
             } else {
                 result = declaredMethods;
             }
-            declaredMethodsCache.put(clazz, (result.length == 0 ? NO_METHODS : result));
-        }
-        return result;
-    }
-
-    private static List<Method> findConcreteMethodsOnInterfaces(Class<?> clazz) {
-        List<Method> result = null;
-        for (Class<?> ifc : clazz.getInterfaces()) {
-            for (Method ifcMethod : ifc.getMethods()) {
-                if (!Modifier.isAbstract(ifcMethod.getModifiers())) {
-                    if (result == null) {
-                        result = new LinkedList<>();
-                    }
-                    result.add(ifcMethod);
-                }
-            }
+            DECLARED_METHODS_CACHE.put(clazz, (result.length == 0 ? NO_METHODS : result));
         }
         return result;
     }
@@ -662,10 +682,10 @@ public abstract class ReflectionUtils {
      * @see #doWithFields
      * @since 4.2
      */
-    public static void doWithLocalFields(Class<?> clazz, FieldCallback fc) {
+    public static void doWithLocalFields(Class<?> clazz, ExceptionalConsumer<Field, IllegalAccessException> fc) {
         for (Field field : getDeclaredFields(clazz)) {
             try {
-                fc.doWith(field);
+                fc.accept(field);
             } catch (IllegalAccessException ex) {
                 throw new IllegalStateException("Not allowed to access field '" + field.getName() + "': " + ex);
             }
@@ -679,7 +699,7 @@ public abstract class ReflectionUtils {
      * @param clazz the target class to analyze
      * @param fc    the callback to invoke for each field
      */
-    public static void doWithFields(Class<?> clazz, FieldCallback fc) {
+    public static void doWithFields(Class<?> clazz, ExceptionalConsumer<Field, IllegalAccessException> fc) {
         doWithFields(clazz, fc, null);
     }
 
@@ -691,17 +711,17 @@ public abstract class ReflectionUtils {
      * @param fc    the callback to invoke for each field
      * @param ff    the filter that determines the fields to apply the callback to
      */
-    public static void doWithFields(Class<?> clazz, FieldCallback fc, FieldFilter ff) {
+    public static void doWithFields(Class<?> clazz, ExceptionalConsumer<Field, IllegalAccessException> fc, Predicate<Field> ff) {
         // Keep backing up the inheritance hierarchy.
         Class<?> targetClass = clazz;
         do {
             Field[] fields = getDeclaredFields(targetClass);
             for (Field field : fields) {
-                if (ff != null && !ff.matches(field)) {
+                if (ff != null && !ff.test(field)) {
                     continue;
                 }
                 try {
-                    fc.doWith(field);
+                    fc.accept(field);
                 } catch (IllegalAccessException ex) {
                     throw new IllegalStateException("Not allowed to access field '" + field.getName() + "': " + ex);
                 }
@@ -719,39 +739,13 @@ public abstract class ReflectionUtils {
      * @return the cached array of fields
      * @see Class#getDeclaredFields()
      */
-    private static Field[] getDeclaredFields(Class<?> clazz) {
-        Field[] result = declaredFieldsCache.get(clazz);
+    public static Field[] getDeclaredFields(Class<?> clazz) {
+        Field[] result = DECLARED_FIELDS_CACHE.get(clazz);
         if (result == null) {
             result = clazz.getDeclaredFields();
-            declaredFieldsCache.put(clazz, (result.length == 0 ? NO_FIELDS : result));
+            DECLARED_FIELDS_CACHE.put(clazz, (result.length == 0 ? NO_FIELDS : result));
         }
         return result;
-    }
-
-    /**
-     * Given the source object and the destination, which must be the same class
-     * or a subclass, copy all fields, including inherited fields. Designed to
-     * work on objects with public no-arg constructors.
-     *
-     * @param src  源对象
-     * @param dest 目标对象
-     */
-    public static void shallowCopyFieldState(final Object src, final Object dest) {
-        if (src == null) {
-            throw new IllegalArgumentException("Source for field copy cannot be null");
-        }
-        if (dest == null) {
-            throw new IllegalArgumentException("Destination for field copy cannot be null");
-        }
-        if (!src.getClass().isAssignableFrom(dest.getClass())) {
-            throw new IllegalArgumentException("Destination class [" + dest.getClass().getName() +
-                "] must be same or subclass as source class [" + src.getClass().getName() + "]");
-        }
-        doWithFields(src.getClass(), field -> {
-            makeAccessible(field);
-            Object srcValue = field.get(src);
-            field.set(dest, srcValue);
-        }, COPYABLE_FIELDS);
     }
 
     /**
@@ -760,88 +754,9 @@ public abstract class ReflectionUtils {
      * @since 4.2.4
      */
     public static void clearCache() {
-        declaredMethodsCache.clear();
-        declaredFieldsCache.clear();
+        DECLARED_METHODS_CACHE.clear();
+        DECLARED_FIELDS_CACHE.clear();
     }
-
-
-    /**
-     * Action to take on each method.
-     */
-    public interface MethodCallback {
-
-        /**
-         * Perform an operation using the given method.
-         *
-         * @param method the method to operate on
-         * @throws IllegalAccessException 访问异常时抛出
-         */
-        void doWith(Method method) throws IllegalAccessException;
-    }
-
-
-    /**
-     * Callback optionally used to filter methods to be operated on by a method callback.
-     */
-    public interface MethodFilter {
-
-        /**
-         * Determine whether the given method matches.
-         *
-         * @param method 需要被检查的方法
-         * @return 是否匹配
-         */
-        boolean matches(Method method);
-    }
-
-
-    /**
-     * Callback interface invoked on each field in the hierarchy.
-     */
-    public interface FieldCallback {
-
-        /**
-         * Perform an operation using the given field.
-         *
-         * @param field the field to operate on
-         * @throws IllegalAccessException 访问异常时抛出
-         */
-        void doWith(Field field) throws IllegalAccessException;
-    }
-
-
-    /**
-     * Callback optionally used to filter fields to be operated on by a field callback.
-     */
-    public interface FieldFilter {
-
-        /**
-         * Determine whether the given field matches.
-         *
-         * @param field 需要被检查的字段
-         * @return 是否匹配
-         */
-        boolean matches(Field field);
-    }
-
-
-    /**
-     * Pre-built FieldFilter that matches all non-static, non-final fields.
-     */
-    public static final FieldFilter COPYABLE_FIELDS = field -> !(Modifier.isStatic(field.getModifiers()) || Modifier.isFinal(field.getModifiers()));
-
-
-    /**
-     * Pre-built MethodFilter that matches all non-bridge methods.
-     */
-    public static final MethodFilter NON_BRIDGED_METHODS = method -> !method.isBridge();
-
-
-    /**
-     * Pre-built MethodFilter that matches all non-bridge methods
-     * which are not declared on {@code java.lang.Object}.
-     */
-    public static final MethodFilter USER_DECLARED_METHODS = method -> (!method.isBridge() && method.getDeclaringClass() != Object.class);
 
     /**
      * 通过反射，获得定义Class时声明的父类的第一个泛型参数的类型。
@@ -883,5 +798,20 @@ public abstract class ReflectionUtils {
         }
 
         return (Class) params[index];
+    }
+
+    private static List<Method> findConcreteMethodsOnInterfaces(Class<?> clazz) {
+        List<Method> result = null;
+        for (Class<?> ifc : clazz.getInterfaces()) {
+            for (Method ifcMethod : ifc.getMethods()) {
+                if (!Modifier.isAbstract(ifcMethod.getModifiers())) {
+                    if (result == null) {
+                        result = new LinkedList<>();
+                    }
+                    result.add(ifcMethod);
+                }
+            }
+        }
+        return result;
     }
 }

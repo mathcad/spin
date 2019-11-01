@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 public abstract class BeanUtils {
     private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
     private static final Map<String, Map<String, PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
-    private static final Map<Class, Map<String, Field>> CLASS_FIELD_CACHE = new ConcurrentHashMap<>();
 
     private BeanUtils() {
     }
@@ -744,8 +743,8 @@ public abstract class BeanUtils {
             return;
         }
 
-        Map<String, Field> srcProps = parseFields(src.getClass());
-        Map<String, Field> targetProps = parseFields(target.getClass());
+        Map<String, Field> srcProps = ReflectionUtils.getAllDeclaredField(src.getClass());
+        Map<String, Field> targetProps = ReflectionUtils.getAllDeclaredField(target.getClass());
         Set<String> ignoreFields = CollectionUtils.isEmpty(ignore) ? Collections.emptySet() : new HashSet<>(ignore);
 
         if (null == fields || fields.isEmpty()) {
@@ -1155,21 +1154,6 @@ public abstract class BeanUtils {
             }
         }
         return bean;
-    }
-
-    private static Map<String, Field> parseFields(Class<?> type) {
-        if (CLASS_FIELD_CACHE.containsKey(type)) {
-            return CLASS_FIELD_CACHE.get(type);
-        }
-        Map<String, Field> props;
-        Map<String, Field> fieldMap = new HashMap<>();
-        ReflectionUtils.doWithFields(type, field -> {
-            ReflectionUtils.makeAccessible(field);
-            fieldMap.put(field.getName(), field);
-        });
-        props = fieldMap;
-        CLASS_FIELD_CACHE.put(type, props);
-        return props;
     }
 
     /**

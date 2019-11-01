@@ -1,8 +1,13 @@
 package org.spin.core.util;
 
-import org.spin.core.annotation.UserEnum;
+import org.spin.core.trait.BooleanEvaluatable;
+import org.spin.core.trait.ByteEvaluatable;
+import org.spin.core.trait.DoubleEvaluatable;
+import org.spin.core.trait.Evaluatable;
+import org.spin.core.trait.FloatEvaluatable;
 import org.spin.core.trait.IntEvaluatable;
-import org.spin.core.trait.IntegerEvaluatable;
+import org.spin.core.trait.LongEvaluatable;
+import org.spin.core.trait.ShortEvaluatable;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
@@ -152,8 +157,16 @@ public abstract class ObjectUtils {
             return (T) target;
         } else if (BigDecimal.class.equals(type)) {
             return target == null ? null : (T) new BigDecimal(target.toString());
-        } else if ((type.getAnnotation(UserEnum.class) != null || IntEvaluatable.class.isAssignableFrom(type) || IntegerEvaluatable.class.isAssignableFrom(type)) && target != null) {
-            return (T) EnumUtils.getEnum((Class<Enum>) type, Integer.valueOf(target.toString()));
+        } else if (target != null && type.isEnum() &&
+            (Evaluatable.class.isAssignableFrom(type)
+                || IntEvaluatable.class.isAssignableFrom(type)
+                || LongEvaluatable.class.isAssignableFrom(type)
+                || ShortEvaluatable.class.isAssignableFrom(type)
+                || ByteEvaluatable.class.isAssignableFrom(type)
+                || FloatEvaluatable.class.isAssignableFrom(type)
+                || DoubleEvaluatable.class.isAssignableFrom(type)
+                || BooleanEvaluatable.class.isAssignableFrom(type))) {
+            return (T) EnumUtils.getEnum((Class<Enum>) type, target);
         } else {
             Class<?> typePrimitive = ClassUtils.wrapperToPrimitive(type);
             if (null == target) {

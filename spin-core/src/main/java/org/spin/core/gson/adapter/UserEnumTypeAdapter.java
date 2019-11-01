@@ -1,12 +1,13 @@
 package org.spin.core.gson.adapter;
 
+import org.spin.core.ErrorCode;
 import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.gson.stream.JsonReader;
 import org.spin.core.gson.stream.JsonToken;
 import org.spin.core.gson.stream.JsonWriter;
-import org.spin.core.trait.IntEvaluatable;
-import org.spin.core.trait.IntegerEvaluatable;
+import org.spin.core.throwable.SpinException;
+import org.spin.core.trait.Evaluatable;
 import org.spin.core.util.EnumUtils;
 
 import java.io.IOException;
@@ -24,15 +25,24 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
             in.nextNull();
             return null;
         }
-        String v = in.nextString();
+        JsonToken jsonToken = in.peek();
         @SuppressWarnings("unchecked")
         Class<E> t = (Class<E>) type.getRawType();
-        try {
-            Integer iv = Integer.valueOf(v);
-            return EnumUtils.getEnum(t, iv);
-        } catch (Exception e) {
-            return EnumUtils.fromName(t, v);
+        if (jsonToken == JsonToken.BOOLEAN) {
+            try {
+                return EnumUtils.getEnum(t, in.nextBoolean());
+            } catch (Exception e) {
+                throw new SpinException(ErrorCode.SERIALIZE_EXCEPTION, "不支持的枚举转换", e);
+            }
+        } else {
+            String v = in.nextString();
+            try {
+                return EnumUtils.getEnum(t, v);
+            } catch (Exception e) {
+                return EnumUtils.fromName(t, v);
+            }
         }
+
     }
 
     @Override
@@ -40,13 +50,20 @@ public class UserEnumTypeAdapter<E extends Enum<E>> extends MatchableTypeAdapter
         if (null == value) {
             out.nullValue();
         } else {
-            out.value((value instanceof IntEvaluatable) ? ((IntEvaluatable) value).getValue() : ((IntegerEvaluatable) value).getValue());
+            Object enumVal = ((Evaluatable) value).getValue();
+            if (enumVal instanceof Number) {
+                out.value((Number) enumVal);
+            } else if (enumVal instanceof CharSequence) {
+                out.value(enumVal.toString());
+            } else if (enumVal instanceof Boolean) {
+                out.value((Boolean) enumVal);
+            }
         }
     }
 
     @Override
     public boolean isMatch(TypeToken<?> type) {
-        boolean matchIntf = IntEvaluatable.class.isAssignableFrom(type.getRawType()) || IntegerEvaluatable.class.isAssignableFrom(type.getRawType());
-        return Enum.class.isAssignableFrom(type.getRawType()) && matchIntf;
+        boolean matchIntf = Evaluatable.class.isAssignableFrom(type.getRawType());
+        return type.getRawType().isEnum() && matchIntf;
     }
 }

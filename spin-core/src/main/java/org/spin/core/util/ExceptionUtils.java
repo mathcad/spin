@@ -11,7 +11,7 @@ import org.spin.core.throwable.SpinException;
  * @version 1.0
  */
 public abstract class ExceptionUtils {
-    public ExceptionUtils() {
+    private ExceptionUtils() {
         throw new SpinException("工具类禁止实例化");
     }
 

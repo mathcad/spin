@@ -5,15 +5,10 @@ import org.spin.core.gson.annotation.DatePattern;
 import org.spin.core.gson.annotation.PreventOverflow;
 import org.spin.core.gson.annotation.SerializedName;
 import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.trait.Evaluatable;
 import org.spin.core.trait.IntEvaluatable;
-import org.spin.core.trait.IntegerEvaluatable;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,20 +35,20 @@ public class JsonUtilsTest {
     }
 
 
-//    @Test
+    @Test
     public void testEntityId() throws IOException {
-        E a = new E();
-        a.setId(81241321817279489L);
-        a.setXxx(LocalDateTime.now());
-        a.setExt(91241321817279489L);
-        BufferedWriter fos = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("D:\\res.log"))));
-        for (int i = 0; i < 1000000; ++i) {
-            a.setId(a.getId() + 1L);
-            fos.write(JsonUtils.toJson(a));
-            fos.newLine();
-        }
-        fos.close();
-        String b = "{\"id\":81241321817279489,\"create_user_id\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212', first: 'Neptune'}";
+//        E a = new E();
+//        a.setId(81241321817279489L);
+//        a.setXxx(LocalDateTime.now());
+//        a.setExt(91241321817279489L);
+//        BufferedWriter fos = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("D:\\res.log"))));
+//        for (int i = 0; i < 1000000; ++i) {
+//            a.setId(a.getId() + 1L);
+//            fos.write(JsonUtils.toJson(a));
+//            fos.newLine();
+//        }
+//        fos.close();
+        String b = "{\"status\":\"2\", \"id\":81241321817279489,\"create_user_id\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212', first: 'Neptune'}";
         E c = JsonUtils.fromJsonWithUnderscore(b, E.class);
         System.out.println(c);
     }
@@ -81,7 +76,7 @@ class Vo {
  * @author wangy QQ 837195190
  * <p>Created by wangy on 2019/4/1.</p >
  */
-enum ServiceType implements IntegerEvaluatable {
+enum ServiceType implements IntEvaluatable {
 
     NO_REASON(1, "七天无理由退货"),
     LIGHTNING_REFUND(2, "闪电退款"),
@@ -101,7 +96,7 @@ enum ServiceType implements IntegerEvaluatable {
     private final String desc;
 
     @Override
-    public Integer getValue() {
+    public int intValue() {
         return value;
     }
 
@@ -142,17 +137,17 @@ enum ServiceType implements IntegerEvaluatable {
 }
 
 
-enum Status implements IntEvaluatable {
-    A(1), B(2);
+enum Status implements Evaluatable<String> {
+    A("1"), B("2");
 
-    private int value;
+    private String value;
 
-    Status(int value) {
+    Status(String value) {
         this.value = value;
     }
 
     @Override
-    public int getValue() {
+    public String getValue() {
         return value;
     }
 }
@@ -167,7 +162,7 @@ enum Type implements IntEvaluatable {
     }
 
     @Override
-    public int getValue() {
+    public int intValue() {
         return value;
     }
 }

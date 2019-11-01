@@ -6,6 +6,11 @@ package org.spin.core.trait;
  *
  * @author xuweinan
  */
-public interface IntEvaluatable {
-    int getValue();
+public interface IntEvaluatable extends Evaluatable<Integer> {
+    int intValue();
+
+    @Override
+    default Integer getValue() {
+        return intValue();
+    }
 }

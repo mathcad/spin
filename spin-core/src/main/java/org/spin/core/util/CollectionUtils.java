@@ -516,13 +516,24 @@ public abstract class CollectionUtils {
         return target.getClass().isArray();
     }
 
+    public static <T> List<T> asList(Iterable<T> iterable) {
+        List<T> res = new LinkedList<>();
+        iterable.forEach(res::add);
+        return res;
+    }
+
+    public static <T> List<T> asList(Collection<T> iterable) {
+        return new LinkedList<>(iterable);
+    }
+
     /**
      * 判断一个对象是否是集合(List, Set, 数组, Tuple等)，如果是，将对象以List的形式返回
      *
      * @param target 对象
+     * @param <T>    元素类型
      * @return 转换后的List
      */
-    public static List<?> asList(Object target) {
+    public static <T> List<T> asList(Object target) {
         if (null == target) {
             return null;
         }
@@ -533,14 +544,15 @@ public abstract class CollectionUtils {
         }
 
         if (target instanceof Iterable) {
-            List res = new LinkedList<>();
+            List<T> res = new LinkedList<>();
             //noinspection unchecked
-            ((Iterable) target).forEach(res::add);
+            ((Iterable) target).forEach(it -> res.add((T) it));
             return res;
         }
 
         if (target.getClass().isArray()) {
-            return ofLinkedList((Object[]) target);
+            //noinspection unchecked
+            return ofLinkedList((T[]) target);
         }
 
         throw new SpinException("目标对象不是集合类型:" + target.getClass().getName());

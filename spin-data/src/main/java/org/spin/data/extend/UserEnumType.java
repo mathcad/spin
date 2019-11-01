@@ -1,19 +1,21 @@
 package org.spin.data.extend;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.Assert;
+import org.spin.core.throwable.SpinException;
+import org.spin.core.trait.Evaluatable;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.EnumUtils;
+import org.spin.core.util.StringUtils;
+import org.spin.data.sql.JdbcUtils;
 
 import javax.persistence.Enumerated;
 import javax.persistence.MapKeyEnumerated;
@@ -38,16 +40,24 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     private static final Logger logger = LoggerFactory.getLogger(UserEnumType.class);
 
     public static final String ENUM = "enumClass";
-    public static final String NAMED = "useNamed";
-    public static final String TYPE = "type";
+    public static final String FIELD = "field";
 
     private Class<? extends Enum> enumClass;
     private EnumValueMapper enumValueMapper;
-    private int sqlType = Types.INTEGER;
+    private String field;
 
     @Override
     public int[] sqlTypes() {
-        return new int[]{sqlType};
+        return new int[]{Types.INTEGER,
+            Types.NUMERIC,
+            Types.SMALLINT,
+            Types.TINYINT,
+            Types.BIGINT,
+            Types.DECIMAL,
+            Types.DOUBLE,
+            Types.FLOAT,
+            Types.VARCHAR,
+            Types.CHAR};
     }
 
     @Override
@@ -68,61 +78,17 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
     @Override
     public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws SQLException {
         if (enumValueMapper == null) {
-            resolveEnumValueMapper(rs, names[0]);
+            throw new SpinException("枚举映射尚未初始化");
         }
         return enumValueMapper.getValue(rs, names);
     }
 
-    private void resolveEnumValueMapper(ResultSet rs, String name) {
-        if (enumValueMapper == null) {
-            try {
-                resolveEnumValueMapper(rs.getMetaData().getColumnType(rs.findColumn(name)));
-            } catch (Exception e) {
-                logger.debug("JDBC driver threw exception calling java.sql.ResultSetMetaData.getColumnType; "
-                    + "using fallback determination [%s] : %s", enumClass.getName(), e.getMessage());
-                try {
-                    Object value = rs.getObject(name);
-                    if (value instanceof Number) {
-                        treatAsOrdinal();
-                    } else {
-                        throw new SimplifiedException("不支持字符型值枚举列");
-                    }
-                } catch (SQLException ignore) {
-                    treatAsOrdinal();
-                }
-            }
-        }
-    }
-
-    private void resolveEnumValueMapper(int columnType) {
-        if (isOrdinal(columnType)) {
-            treatAsOrdinal();
-        } else {
-            throw new SimplifiedException("不支持非数值枚举列");
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     @Override
     public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws SQLException {
         if (enumValueMapper == null) {
-            resolveEnumValueMapper(st, index);
+            throw new SpinException("枚举映射尚未初始化");
         }
         enumValueMapper.setValue(st, (Enum) value, index);
-    }
-
-    private void resolveEnumValueMapper(PreparedStatement st, int index) {
-        if (enumValueMapper == null) {
-            try {
-                resolveEnumValueMapper(st.getParameterMetaData().getParameterType(index));
-            } catch (Exception e) {
-                logger.debug(
-                    "JDBC driver threw exception calling java.sql.ParameterMetaData#getParameterType; "
-                        + "falling back to ordinal-based enum mapping [%s] : %s",
-                    enumClass.getName(), e.getMessage());
-                treatAsOrdinal();
-            }
-        }
     }
 
     @Override
@@ -157,22 +123,15 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
         if (reader != null) {
             enumClass = reader.getReturnedClass().asSubclass(Enum.class);
 
-            final boolean isOrdinal;
             final javax.persistence.EnumType enumType = getEnumType(reader);
-            if (enumType == null || javax.persistence.EnumType.ORDINAL.equals(enumType)) {
-                isOrdinal = true;
-            } else if (javax.persistence.EnumType.STRING.equals(enumType)) {
-                isOrdinal = false;
-            } else {
-                throw new AssertionFailure("Unknown EnumType: " + enumType);
-            }
-
-            if (isOrdinal) {
+            EnumMapType mapType = (EnumMapType) parameters.get("enumMapType");
+            if (javax.persistence.EnumType.ORDINAL.equals(enumType) || EnumMapType.ORDINAL.equals(mapType)) {
                 treatAsOrdinal();
+            } else if (EnumMapType.NAME.equals(mapType)) {
+                treatAsName();
             } else {
-                throw new SimplifiedException("不支持字符型值枚举列");
+                treatAsValue(parameters);
             }
-            sqlType = enumValueMapper.getSqlType();
         } else {
             String enumClassName = (String) parameters.get(ENUM);
             try {
@@ -181,28 +140,62 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
                 throw new HibernateException("Enum class not found", exception);
             }
 
-            final Object useNamedSetting = parameters.get(NAMED);
-            if (useNamedSetting != null) {
-                final boolean useNamed = ConfigurationHelper.getBoolean(NAMED, parameters);
-                if (useNamed) {
-                    throw new SimplifiedException("不支持字符型值枚举列");
-                } else {
-                    treatAsOrdinal();
-                }
-                sqlType = enumValueMapper.getSqlType();
+            EnumMapType mapType = (EnumMapType) parameters.get("enumMapType");
+            if (EnumMapType.ORDINAL.equals(mapType)) {
+                treatAsOrdinal();
+            } else if (EnumMapType.NAME.equals(mapType)) {
+                treatAsName();
+            } else {
+                treatAsValue(parameters);
             }
         }
+    }
 
-        final String type = (String) parameters.get(TYPE);
-        if (type != null) {
-            sqlType = Integer.decode(type);
+    @Override
+    public String objectToSQLString(Object value) {
+        return enumValueMapper.toSQLString((Enum<?>) value);
+    }
+
+    @Override
+    @Deprecated
+    public String toXMLString(Object value) {
+        return enumValueMapper.toSQLString((Enum<?>) value);
+    }
+
+    @Override
+    @Deprecated
+    public Object fromXMLString(String xmlValue) {
+        return enumValueMapper.fromStringValue(xmlValue);
+    }
+
+    @Override
+    public String toLoggableString(Object value, SessionFactoryImplementor factory) {
+        if (enumValueMapper != null) {
+            return enumValueMapper.toSQLString((Enum<?>) value);
         }
+        return value.toString();
     }
 
     private void treatAsOrdinal() {
         if (!(enumValueMapper instanceof OrdinalEnumValueMapper)) {
-            enumValueMapper = new ValueEnumValueMapper();
-            sqlType = enumValueMapper.getSqlType();
+            enumValueMapper = new OrdinalEnumValueMapper();
+        }
+    }
+
+    private void treatAsValue(Properties parameters) {
+        if (Evaluatable.class.isAssignableFrom(enumClass)) {
+            if (!(enumValueMapper instanceof ValueEnumValueMapper)) {
+                enumValueMapper = new ValueEnumValueMapper();
+            }
+        } else {
+            field = Assert.notEmpty(parameters.getProperty(FIELD));
+            treatAsName();
+        }
+    }
+
+    private void treatAsName() {
+        if (!(enumValueMapper instanceof NameEnumValueMapper)) {
+            enumValueMapper = new NameEnumValueMapper();
         }
     }
 
@@ -232,150 +225,25 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
         return null;
     }
 
-    @Override
-    public String objectToSQLString(Object value) {
-        return enumValueMapper.toSQLString((Enum<?>) value);
-    }
-
-    @Override
-    @Deprecated
-    public String toXMLString(Object value) {
-        return enumValueMapper.toSQLString((Enum<?>) value);
-    }
-
-    @Override
-    @Deprecated
-    public Object fromXMLString(String xmlValue) {
-        return enumValueMapper.fromStringValue(xmlValue);
-    }
-
-    @Override
-    public String toLoggableString(Object value, SessionFactoryImplementor factory) {
-        if (enumValueMapper != null) {
-            return enumValueMapper.toSQLString((Enum<?>) value);
-        }
-        return value.toString();
-    }
-
-    public boolean isOrdinal() {
-        return isOrdinal(sqlType);
-    }
-
-    private boolean isOrdinal(int paramType) {
-        switch (paramType) {
-            case Types.INTEGER:
-            case Types.NUMERIC:
-            case Types.SMALLINT:
-            case Types.TINYINT:
-            case Types.BIGINT:
-            case Types.DECIMAL: // for Oracle Driver
-            case Types.DOUBLE: // for Oracle Driver
-            case Types.FLOAT:
-                return true;
-            case Types.CHAR:
-            case Types.LONGVARCHAR:
-            case Types.VARCHAR:
-                return false;
-            default:
-                throw new HibernateException("Unable to persist an Enum in a column of SQL Type: " + paramType);
-        }
-    }
-
-    /**
-     * 枚举-jdbc数据类型转换器
-     */
-    private interface EnumValueMapper {
-        /**
-         * 获取jdbc数据类型
-         *
-         * @return jdbc数据类型
-         */
-        int getSqlType();
-
-        /**
-         * 从ResultSet中解析枚举
-         *
-         * @param rs    结果集
-         * @param names 字段名称
-         * @return 解析出的枚举
-         * @throws SQLException 异常时抛出
-         */
-        Enum<?> getValue(ResultSet rs, String[] names) throws SQLException;
-
-        /**
-         * 将枚举解析为数据库支持的类型并设置到Statement中
-         *
-         * @param st    语句
-         * @param value 枚举值
-         * @param index 参数在语句中的索引
-         * @throws SQLException 异常时抛出
-         */
-        void setValue(PreparedStatement st, Enum<?> value, int index) throws SQLException;
-
-        /**
-         * 将枚举转换为字符串
-         *
-         * @param value 枚举值
-         * @return 转换后的字符串
-         */
-        String toSQLString(Enum<?> value);
-
-        /**
-         * 将字符串转换为枚举
-         *
-         * @param string 字符串
-         * @return 转换后的枚举
-         */
-        Enum<?> fromStringValue(String string);
-    }
-
-    public abstract class EnumValueMapperSupport implements EnumValueMapper {
-
-        /**
-         * 将枚举解析成jdbc类型
-         *
-         * @param value 枚举值
-         * @return 解析后的jdbc类型数据
-         */
-        protected abstract Object extractJdbcValue(Enum<?> value);
-
-        @Override
-        public void setValue(PreparedStatement st, Enum<?> value, int index) throws SQLException {
-            final Object jdbcValue = value == null ? null : extractJdbcValue(value);
-
-            final boolean traceEnabled = logger.isTraceEnabled();
-            if (jdbcValue == null) {
-                if (traceEnabled) {
-                    logger.trace(String.format("Binding null to parameter: [%s]", index));
-                }
-                st.setNull(index, getSqlType());
-                return;
-            }
-
-            if (traceEnabled) {
-                logger.trace(String.format("Binding [%s] to parameter: [%s]", jdbcValue, index));
-            }
-            st.setObject(index, jdbcValue, UserEnumType.this.sqlType);
-        }
-    }
-
     private class ValueEnumValueMapper extends EnumValueMapperSupport {
-        @Override
-        public int getSqlType() {
-            return Types.INTEGER;
-        }
 
         @Override
         public Enum<?> getValue(ResultSet rs, String[] names) throws SQLException {
-            final Integer value = rs.getInt(names[0]);
+            final Object value = rs.getObject(names[0]);
             if (rs.wasNull()) {
                 if (logger.isDebugEnabled()) {
                     logger.debug(String.format("Returning null as column [%s]", names[0]));
                 }
                 return null;
             }
-            @SuppressWarnings("unchecked")
-            Enum<?> enumValue = EnumUtils.getEnum(enumClass, value);
+            Enum<?> enumValue;
+            if (StringUtils.isEmpty(field)) {
+                //noinspection unchecked
+                enumValue = EnumUtils.getEnum(enumClass, value);
+            } else {
+                //noinspection unchecked
+                enumValue = EnumUtils.getEnum(enumClass, value, field);
+            }
             if (logger.isDebugEnabled()) {
                 logger.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
             }
@@ -384,32 +252,32 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
         @Override
         public String toSQLString(Enum<?> value) {
-            return BeanUtils.getFieldValue(value, "value").toString();
+            return StringUtils.toString(extractJdbcValue(value));
         }
 
         @Override
         public Enum<?> fromStringValue(String string) {
             //noinspection unchecked
-            return EnumUtils.getEnum(enumClass, Integer.parseInt(string));
+            return EnumUtils.getEnum(enumClass, string);
         }
 
         @Override
         protected Object extractJdbcValue(Enum<?> value) {
-            return BeanUtils.getFieldValue(value, "value");
+            if (value instanceof Evaluatable) {
+                return ((Evaluatable) value).getValue();
+            } else if (null == value) {
+                return null;
+            } else {
+                return BeanUtils.getFieldValue(value, field);
+            }
         }
     }
 
     private class OrdinalEnumValueMapper extends EnumValueMapperSupport {
-        private transient Enum<?>[] enumsByOrdinal;
-
-        @Override
-        public int getSqlType() {
-            return Types.INTEGER;
-        }
 
         @Override
         public Enum<?> getValue(ResultSet rs, String[] names) throws SQLException {
-            final Integer ordinal = rs.getInt(names[0]);
+            final int ordinal = rs.getInt(names[0]);
             final boolean traceEnabled = logger.isTraceEnabled();
             if (rs.wasNull()) {
                 if (traceEnabled) {
@@ -418,51 +286,136 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
                 return null;
             }
 
-            final Enum<?> enumValue = fromOrdinal(ordinal);
+            @SuppressWarnings("unchecked") final Enum<?> enumValue = EnumUtils.fromOrdinal(enumClass, ordinal);
             if (traceEnabled) {
                 logger.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
             }
             return enumValue;
         }
 
-        private Enum<?> fromOrdinal(int ordinal) {
-            final Enum<?>[] enumsByOrdinal = enumsByOrdinal();
-            if (ordinal < 0 || ordinal >= enumsByOrdinal.length) {
-                throw new IllegalArgumentException(
-                    String.format(
-                        "Unknown ordinal value [%s] for enum class [%s]",
-                        ordinal,
-                        enumClass.getName()
-                    )
-                );
-            }
-            return enumsByOrdinal[ordinal];
-
-        }
-
-        private Enum<?>[] enumsByOrdinal() {
-            if (enumsByOrdinal == null) {
-                enumsByOrdinal = enumClass.getEnumConstants();
-                if (enumsByOrdinal == null) {
-                    throw new HibernateException("Failed to init enum values");
-                }
-            }
-            return enumsByOrdinal;
-        }
-
         @Override
         public String toSQLString(Enum<?> value) {
-            return Integer.toString(value.ordinal());
+            return StringUtils.toString(null == value ? null : value.ordinal());
         }
 
         @Override
         public Enum<?> fromStringValue(String string) {
-            return fromOrdinal(Integer.parseInt(string));
+            //noinspection unchecked
+            return EnumUtils.fromOrdinal(enumClass, Integer.parseInt(string));
         }
 
         @Override
         protected Object extractJdbcValue(Enum<?> value) {
-            return value.ordinal();
+            return null == value ? null : value.ordinal();
+        }
+    }
+
+    private class NameEnumValueMapper extends EnumValueMapperSupport {
+
+        @Override
+        public Enum<?> getValue(ResultSet rs, String[] names) throws SQLException {
+            final String name = rs.getString(names[0]);
+            final boolean traceEnabled = logger.isTraceEnabled();
+            if (rs.wasNull()) {
+                if (traceEnabled) {
+                    logger.trace(String.format("Returning null as column [%s]", names[0]));
+                }
+                return null;
+            }
+
+            @SuppressWarnings("unchecked") final Enum<?> enumValue = EnumUtils.fromName(enumClass, name);
+            if (traceEnabled) {
+                logger.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
+            }
+            return enumValue;
+        }
+
+        @Override
+        public String toSQLString(Enum<?> value) {
+            return null == value ? null : value.name();
+        }
+
+        @Override
+        public Enum<?> fromStringValue(String string) {
+            //noinspection unchecked
+            return EnumUtils.fromName(enumClass, string);
+        }
+
+        @Override
+        protected Object extractJdbcValue(Enum<?> value) {
+            return null == value ? null : value.name();
+        }
+    }
+}
+
+/**
+ * 枚举-jdbc数据类型转换器
+ */
+interface EnumValueMapper {
+
+    /**
+     * 从ResultSet中解析枚举
+     *
+     * @param rs    结果集
+     * @param names 字段名称
+     * @return 解析出的枚举
+     * @throws SQLException 异常时抛出
+     */
+    Enum<?> getValue(ResultSet rs, String[] names) throws SQLException;
+
+    /**
+     * 将枚举解析为数据库支持的类型并设置到Statement中
+     *
+     * @param st    语句
+     * @param value 枚举值
+     * @param index 参数在语句中的索引
+     * @throws SQLException 异常时抛出
+     */
+    void setValue(PreparedStatement st, Enum<?> value, int index) throws SQLException;
+
+    /**
+     * 将枚举转换为字符串
+     *
+     * @param value 枚举值
+     * @return 转换后的字符串
+     */
+    String toSQLString(Enum<?> value);
+
+    /**
+     * 将字符串转换为枚举
+     *
+     * @param string 字符串
+     * @return 转换后的枚举
+     */
+    Enum<?> fromStringValue(String string);
+}
+
+abstract class EnumValueMapperSupport implements EnumValueMapper {
+    private static final Logger logger = LoggerFactory.getLogger(EnumValueMapperSupport.class);
+
+    /**
+     * 将枚举解析成jdbc类型
+     *
+     * @param value 枚举值
+     * @return 解析后的jdbc类型数据
+     */
+    protected abstract Object extractJdbcValue(Enum<?> value);
+
+    @Override
+    public void setValue(PreparedStatement st, Enum<?> value, int index) throws SQLException {
+        final Object jdbcValue = extractJdbcValue(value);
+
+        final boolean traceEnabled = logger.isTraceEnabled();
+        if (jdbcValue == null) {
+            JdbcUtils.setParameterValue(st, index, null);
+            if (traceEnabled) {
+                logger.trace(String.format("Binding null to parameter: [%s]", index));
+            }
+        } else {
+            JdbcUtils.setParameterValue(st, index, jdbcValue);
+            if (traceEnabled) {
+                logger.trace(String.format("Binding [%s] to parameter: [%s]", jdbcValue.toString(), index));
+            }
         }
     }
 }

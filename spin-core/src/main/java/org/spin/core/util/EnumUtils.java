@@ -2,13 +2,10 @@ package org.spin.core.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.Assert;
 import org.spin.core.throwable.SpinException;
-import org.spin.core.trait.IntEvaluatable;
-import org.spin.core.trait.IntegerEvaluatable;
+import org.spin.core.trait.Evaluatable;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,24 +75,6 @@ public abstract class EnumUtils {
     }
 
     /**
-     * Assert that {@code enumClass} is compatible with representation in a {@code long}.
-     *
-     * @param <E>       the type of the enumeration
-     * @param enumClass to check
-     * @return {@code enumClass}
-     * @throws NullPointerException     if {@code enumClass} is {@code null}
-     * @throws IllegalArgumentException if {@code enumClass} is not an enum class or has more than 64 values
-     * @since 3.0.1
-     */
-    private static <E extends Enum<E>> Class<E> checkBitVectorable(final Class<E> enumClass) {
-        final E[] constants = enumClass.getEnumConstants();
-        Assert.isTrue(constants.length <= Long.SIZE, CANNOT_STORE_S_S_VALUES_IN_S_BITS,
-            constants.length, enumClass.getSimpleName(), Long.SIZE);
-
-        return enumClass;
-    }
-
-    /**
      * 通过枚举名称，获得枚举类型的常量
      *
      * @param enumCls  枚举类型
@@ -143,23 +122,19 @@ public abstract class EnumUtils {
      * @return 枚举常量
      */
     public static <E extends Enum<E>, T> E getEnum(Class<E> enumCls, T value) {
-        if (IntEvaluatable.class.isAssignableFrom(enumCls)) {
+        if (Evaluatable.class.isAssignableFrom(enumCls)) {
             for (E enumConstant : enumCls.getEnumConstants()) {
-                if (value.equals(((IntEvaluatable) enumConstant).getValue())) {
+                Object enumVal = ((Evaluatable) enumConstant).getValue();
+                if (ObjectUtils.nullSafeEquals(value, enumVal)) {
                     return enumConstant;
-                }
-            }
-        }
-
-        if (IntegerEvaluatable.class.isAssignableFrom(enumCls)) {
-            for (E enumConstant : enumCls.getEnumConstants()) {
-                if (value.equals(((IntegerEvaluatable) enumConstant).getValue())) {
+                } else if (null != value && enumVal.equals(ObjectUtils.convert(enumVal.getClass(), value))) {
                     return enumConstant;
                 }
             }
         }
         return getEnum(enumCls, value, "value");
     }
+
 
     /**
      * 通过字段值，获得枚举类型的常量。默认为value字段
@@ -178,28 +153,22 @@ public abstract class EnumUtils {
         } else {
             fieldName = "value";
         }
-        Field valueField = null;
+        Field valueField = ReflectionUtils.findField(enumCls, fieldName);
         Method getMethod = null;
 
-        try {
-            valueField = enumCls.getDeclaredField(fieldName);
-            ReflectionUtils.makeAccessible(valueField);
-        } catch (NoSuchFieldException ignore) {
-            // do nothing
-        }
-
-        if (Objects.isNull(valueField)) {
-            try {
-                getMethod = enumCls.getMethod("get" + StringUtils.capitalize(fieldName));
-            } catch (NoSuchMethodException e) {
-                throw new SpinException("Enum:" + enumCls.getName() + " has no such field:" + fieldName);
+        if (null == valueField) {
+            getMethod = ReflectionUtils.findMethod(enumCls, "get" + StringUtils.capitalize(fieldName));
+            if (null == getMethod) {
+                return null;
             }
+        } else {
+            ReflectionUtils.makeAccessible(valueField);
         }
 
-        for (E o : enumCls.getEnumConstants()) {
-            Object fVal = Objects.nonNull(valueField) ? ReflectionUtils.getField(valueField, o) : ReflectionUtils.invokeMethod(getMethod, o);
-            if (value.equals(fVal)) {
-                return o;
+        for (E e : enumCls.getEnumConstants()) {
+            Object fVal = Objects.nonNull(valueField) ? ReflectionUtils.getField(valueField, e) : ReflectionUtils.invokeMethod(getMethod, e);
+            if (ObjectUtils.nullSafeEquals(value, fVal)) {
+                return e;
             }
         }
         return null;
@@ -229,15 +198,10 @@ public abstract class EnumUtils {
      * @param basePkg 包名
      * @return 包含所有枚举常量name-value的map
      */
-    public static Map<String, List<Map>> parseEnums(String basePkg) {
+    public static Map<String, List<Map<String, Object>>> parseEnums(String basePkg) {
         List<String> clsList = PackageUtils.getClassName(basePkg);
-        HashMap<String, List<Map>> enumsMap = new HashMap<>();
-        Method getValueMehod;
-        try {
-            getValueMehod = IntEvaluatable.class.getMethod("getValue");
-        } catch (NoSuchMethodException ignore) {
-            return null;
-        }
+        HashMap<String, List<Map<String, Object>>> enumsMap = new HashMap<>();
+        Method getValueMehod = ReflectionUtils.findMethod(Evaluatable.class, "getValue");
         for (String clz : clsList) {
             Class cls;
             try {
@@ -245,20 +209,13 @@ public abstract class EnumUtils {
             } catch (ClassNotFoundException e) {
                 continue;
             }
-            if (cls.isEnum() && IntEvaluatable.class.isAssignableFrom(cls)) {
-                List<Map> valueList = new ArrayList<>();
+            if (cls.isEnum() && Evaluatable.class.isAssignableFrom(cls)) {
+                List<Map<String, Object>> valueList = new ArrayList<>();
                 //取value值
                 for (Object o : cls.getEnumConstants()) {
-                    String name = o.toString();
-                    int value;
-                    try {
-                        value = Integer.parseInt(getValueMehod.invoke(o).toString());
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        continue;
-                    }
-                    Map<String, String> m = new HashMap<>();
-                    m.put("name", name);
-                    m.put("value", ObjectUtils.toString(value));
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("name", o.toString());
+                    m.put("value", ReflectionUtils.invokeMethod(getValueMehod, o));
                     valueList.add(m);
                 }
                 enumsMap.put(cls.getSimpleName(), valueList);

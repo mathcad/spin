@@ -6,6 +6,11 @@ package org.spin.core.trait;
  *
  * @author xuweinan
  */
-public interface LongEvaluatable {
-    long getValue();
+public interface LongEvaluatable extends Evaluatable<Long> {
+    long longValue();
+
+    @Override
+    default Long getValue() {
+        return longValue();
+    }
 }

@@ -37,6 +37,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Spencer Gibb
@@ -145,7 +146,7 @@ class FeignClientFactoryBean
         }
 
         if (config.getConnectTimeout() != null && config.getReadTimeout() != null) {
-            builder.options(new Request.Options(config.getConnectTimeout(), config.getReadTimeout()));
+            builder.options(new Request.Options(config.getConnectTimeout(), TimeUnit.MILLISECONDS, config.getReadTimeout(), TimeUnit.MILLISECONDS, true));
         }
 
         if (config.getRetryer() != null) {

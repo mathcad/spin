@@ -1,8 +1,9 @@
 package org.spin.common.db.entity;
 
 import com.baomidou.mybatisplus.core.enums.IEnum;
-import org.spin.core.trait.IntegerEvaluatable;
+import org.spin.core.trait.Evaluatable;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,7 +15,7 @@ import java.util.Map;
  * @author xuweinan
  * @version 1.0
  */
-public interface MyBatisIntEnum extends IEnum<Integer>, IntegerEvaluatable {
+public interface MyBatisIntEnum<T extends Serializable> extends IEnum<T>, Evaluatable<T> {
 
     /**
      * 获取枚举描述
@@ -29,7 +30,7 @@ public interface MyBatisIntEnum extends IEnum<Integer>, IntegerEvaluatable {
         return "";
     }
 
-    static <T extends MyBatisIntEnum> T valueOf(Class<T> clazz, Integer value) {
+    static <E extends Serializable, T extends MyBatisIntEnum<E>> T valueOf(Class<T> clazz, T value) {
         for (T enumConstant : clazz.getEnumConstants()) {
             if (enumConstant.getValue().equals(value)) {
                 return enumConstant;
@@ -38,10 +39,10 @@ public interface MyBatisIntEnum extends IEnum<Integer>, IntegerEvaluatable {
         return null;
     }
 
-    static Map<Integer, String> toMap(Class<MyBatisIntEnum> enumClass) {
-        MyBatisIntEnum[] enumConstants = enumClass.getEnumConstants();
-        Map<Integer, String> res = new HashMap<>(enumConstants.length);
-        for (MyBatisIntEnum enumConstant : enumConstants) {
+    static <T extends Serializable> Map<T, String> toMap(Class<MyBatisIntEnum<T>> enumClass) {
+        MyBatisIntEnum<T>[] enumConstants = enumClass.getEnumConstants();
+        Map<T, String> res = new HashMap<>(enumConstants.length);
+        for (MyBatisIntEnum<T> enumConstant : enumConstants) {
             res.put(enumConstant.getValue(), enumConstant.getDescription());
         }
 
