@@ -31,13 +31,6 @@ public class GridColumn implements Serializable {
      */
     private String dataType;
 
-    private int rowStart;
-    private int rowEnd;
-    private int colStart;
-    private int colEnd;
-
-    private boolean region = false;
-
     public GridColumn() {
     }
 
