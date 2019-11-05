@@ -29,7 +29,7 @@ public class RSATest {
         assertTrue(true);
     }
 
-    @Test
+//    @Test
     void testKey() throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         FileInputStream fis = new FileInputStream("F:\\cert\\ca.crt");
@@ -40,7 +40,7 @@ public class RSATest {
         System.out.println("ss");
     }
 
-    @Test
+//    @Test
     void testSsh() throws Exception {
         String pub = IOUtils.copyToString(new FileInputStream("F:\\id_rsa.pub"), StandardCharsets.UTF_8).split(" ")[1];
         String pri = IOUtils.copyToString(new FileInputStream("F:\\id_rsa"), StandardCharsets.UTF_8);
