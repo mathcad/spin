@@ -31,7 +31,7 @@ import java.security.spec.X509EncodedKeySpec;
  * @version 1.0
  */
 public class RSA extends ProviderDetector {
-    private static final int KEY_SIZE = 1024;
+    private static final int DEFAULT_KEY_SIZE = 1024;
     private static final String SIGN_ALGORITHMS = "SHA1WithRSA";
     private static final String RSA_ALGORITHMS = "RSA";
     private static final String KEY_INVALIE = "密钥不合法";
@@ -52,7 +52,7 @@ public class RSA extends ProviderDetector {
         } catch (NoSuchAlgorithmException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL);
         }
-        keyPairGen.initialize(KEY_SIZE, new SecureRandom());
+        keyPairGen.initialize(DEFAULT_KEY_SIZE, new SecureRandom());
         return keyPairGen.generateKeyPair();
     }
 

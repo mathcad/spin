@@ -1,6 +1,14 @@
 package org.spin.core.security;
 
 import org.junit.jupiter.api.Test;
+import org.spin.core.util.IOUtils;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -19,5 +27,28 @@ public class RSATest {
 
         System.out.println(RSA.encrypt(publicKey, "abcd"));
         assertTrue(true);
+    }
+
+    @Test
+    void testKey() throws Exception {
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        FileInputStream fis = new FileInputStream("F:\\cert\\ca.crt");
+        Certificate c=cf.generateCertificate(fis);
+//        KeyStore ks = KeyStore.getInstance("JKS");
+//        ks.load(fis, null);
+//        Certificate c = ks.getCertificate("alias");//alias为条目的别名
+        System.out.println("ss");
+    }
+
+    @Test
+    void testSsh() throws Exception {
+        String pub = IOUtils.copyToString(new FileInputStream("F:\\id_rsa.pub"), StandardCharsets.UTF_8).split(" ")[1];
+        String pri = IOUtils.copyToString(new FileInputStream("F:\\id_rsa"), StandardCharsets.UTF_8);
+        pri = pri.replaceAll("\n", "").substring(31);
+        pri = pri.substring(0, pri.length() - 29);
+
+        System.out.println(RSA.encrypt(pub, "abcd"));
+        System.out.println(RSA.decrypt(pri, "abcd"));
+        System.out.println("1");
     }
 }

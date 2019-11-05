@@ -550,6 +550,16 @@ public abstract class CollectionUtils {
             return res;
         }
 
+        if (target instanceof Iterator) {
+            List<T> res = new LinkedList<>();
+            Iterator iter = (Iterator) target;
+            while (iter.hasNext()) {
+                //noinspection unchecked
+                res.add((T) iter.next());
+            }
+            return res;
+        }
+
         if (target.getClass().isArray()) {
             //noinspection unchecked
             return ofLinkedList((T[]) target);

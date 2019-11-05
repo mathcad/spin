@@ -17,15 +17,15 @@ class FileWatcherTest {
 //    @Test
     void registWatcher() throws InterruptedException {
         FileWatcher fileWatcher = new FileWatcher().start();
-        fileWatcher.registWatcher(new File("C:\\Users\\Mathcat\\feign-resolve.properties"), false, (kind, file) -> {
-            System.out.println(kind.name());
-            System.out.println(file.getAbsolutePath());
+        fileWatcher.registWatcher(new File("C:\\Users\\Mathcat\\feign-resolve.properties"), false, action -> {
+            System.out.println(action.getKind().name());
+            System.out.println(action.getFile().getAbsolutePath());
             System.out.println("-------------------------");
         });
 
-        fileWatcher.registWatcher(new File("C:\\Users\\Mathcat\\feign-resolve.properties"), false, (kind, file) -> {
-            System.out.println(kind.name());
-            System.out.println(file.getAbsolutePath());
+        fileWatcher.registWatcher(new File("C:\\Users\\Mathcat\\feign-resolve.properties"), false, action -> {
+            System.out.println(action.getKind().name());
+            System.out.println(action.getFile().getAbsolutePath());
             System.out.println("-------------------------");
         });
 

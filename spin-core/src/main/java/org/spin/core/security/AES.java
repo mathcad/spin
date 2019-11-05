@@ -27,7 +27,7 @@ import java.util.Random;
  * <p>Created by xuweinan on 2016/8/15.</p>
  *
  * @author xuweinan
- * @version 1.0
+ * @version 1.1
  */
 public class AES extends ProviderDetector {
     private static final String ALGORITHM = "AES";

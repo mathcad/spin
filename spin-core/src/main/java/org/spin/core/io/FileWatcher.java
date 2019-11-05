@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.collection.Tuple;
 import org.spin.core.collection.Tuple4;
-import org.spin.core.function.serializable.BiConsumer;
+import org.spin.core.function.serializable.Consumer;
 import org.spin.core.throwable.SpinException;
 
 import java.io.Closeable;
@@ -28,13 +28,13 @@ import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
  * @author xuweinan
  * @version 1.0
  */
-public class FileWatcher implements Closeable, AutoCloseable {
+public class FileWatcher implements Closeable {
     private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
     private static final AtomicInteger COUNTER = new AtomicInteger();
     private static final String THREAD_NAME_PREFIX = "FILE-WATCHER-";
 
     private final WatchService watchService;
-    private final Map<WatchKey, Tuple4<Path, Path, Boolean, BiConsumer<Kind, File>>> keys;
+    private final Map<WatchKey, Tuple4<Path, Path, Boolean, Consumer<FileAction>>> keys;
     private final Thread workThread;
     private final String id;
 
@@ -51,7 +51,7 @@ public class FileWatcher implements Closeable, AutoCloseable {
         workThread = new Thread(this::working, id);
     }
 
-    public void registWatcher(File file, boolean recursion, BiConsumer<Kind, File> fileActionCallback) {
+    public void registWatcher(File file, boolean recursion, Consumer<FileAction> fileActionCallback) {
         checkState();
         Path originPath = null;
         if (!file.isDirectory()) {
@@ -99,13 +99,13 @@ public class FileWatcher implements Closeable, AutoCloseable {
      * @param fileActionCallback 文件监视回调
      */
     public void registWatcher(File watchFile, boolean recursion, FileActionCallback fileActionCallback) {
-        registWatcher(watchFile, recursion, ((kind, file) -> {
-            if (kind.name().equals(StandardWatchEventKinds.ENTRY_DELETE.name())) {
-                fileActionCallback.onDelete(file);
-            } else if (kind.name().equals(StandardWatchEventKinds.ENTRY_CREATE.name())) {
-                fileActionCallback.onCreate(file);
-            } else if (kind.name().equals(StandardWatchEventKinds.ENTRY_MODIFY.name())) {
-                fileActionCallback.onModify(file);
+        registWatcher(watchFile, recursion, (action -> {
+            if (action.isDelete()) {
+                fileActionCallback.onDelete(action.file);
+            } else if (action.isCreate()) {
+                fileActionCallback.onCreate(action.file);
+            } else if (action.isModify()) {
+                fileActionCallback.onModify(action.file);
             }
         }));
     }
@@ -144,7 +144,7 @@ public class FileWatcher implements Closeable, AutoCloseable {
                 logger.info("当前监视器实例已经终止: {}", id);
                 return;
             }
-            Tuple4<Path, Path, Boolean, BiConsumer<Kind, File>> tuple = keys.get(key);
+            Tuple4<Path, Path, Boolean, Consumer<FileAction>> tuple = keys.get(key);
             if (tuple == null) {
                 System.err.println("操作未识别");
                 continue;
@@ -165,7 +165,7 @@ public class FileWatcher implements Closeable, AutoCloseable {
 
                 try {
                     if (null == tuple.c2 || tuple.c2.equals(child)) {
-                        tuple.c4.accept(kind, file);
+                        tuple.c4.accept(new FileAction(kind, file));
                     }
                 } catch (Exception e) {
                     logger.warn("文件监视回调异常", e);
@@ -186,6 +186,36 @@ public class FileWatcher implements Closeable, AutoCloseable {
                 // 因为有可能目录被移除，就会无法访问
                 keys.remove(key);
             }
+        }
+    }
+
+    public static class FileAction {
+        private final Kind kind;
+        private final File file;
+
+        public FileAction(Kind kind, File file) {
+            this.kind = kind;
+            this.file = file;
+        }
+
+        public Kind getKind() {
+            return kind;
+        }
+
+        public File getFile() {
+            return file;
+        }
+
+        public boolean isDelete() {
+            return kind != null && kind.name().equals(StandardWatchEventKinds.ENTRY_DELETE.name());
+        }
+
+        public boolean isModify() {
+            return kind != null && kind.name().equals(StandardWatchEventKinds.ENTRY_MODIFY.name());
+        }
+
+        public boolean isCreate() {
+            return kind != null && kind.name().equals(StandardWatchEventKinds.ENTRY_CREATE.name());
         }
     }
 
