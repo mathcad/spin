@@ -18,6 +18,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -751,10 +752,15 @@ public abstract class BeanUtils {
             if (isJavaBean(src)) {
                 fields = targetProps.keySet().stream()
                     .filter(srcProps::containsKey)
+                    .filter(it -> !Modifier.isStatic(targetProps.get(it).getModifiers()))
                     .filter(it -> !ignoreFields.contains(it))
                     .collect(Collectors.toList());
             } else {
                 throw new SpinException("非JavaBean请指定需要Copy的属性列表");
+            }
+        } else {
+            if (!CollectionUtils.isEmpty(ignore)) {
+                throw new SpinException("不能同时指定属性列表与排除属性列表");
             }
         }
 
@@ -770,6 +776,21 @@ public abstract class BeanUtils {
                 if (null == targetField) {
                     throw new SpinException("属性" + field + "在目标对象中不存在");
                 }
+
+                if (Modifier.isStatic(srcField.getModifiers())) {
+                    throw new SpinException(field + "在" + src.getClass().getName() + "中为静态变量, 不能作为属性使用");
+                }
+
+                if (Modifier.isStatic(targetField.getModifiers())) {
+                    throw new SpinException(field + "在" + target.getClass().getName() + "中为静态变量, 不能作为属性使用");
+                }
+
+                if (Modifier.isFinal(targetField.getModifiers())) {
+                    throw new SpinException(field + "在" + target.getClass().getName() + "中为常量, 不能作为属性使用");
+                }
+
+                ReflectionUtils.makeAccessible(srcField);
+                ReflectionUtils.makeAccessible(targetField);
                 targetField.set(target, ObjectUtils.convert(targetField.getType(), srcField.get(src)));
             }
         } catch (IllegalAccessException e) {
