@@ -217,12 +217,14 @@ public abstract class HttpExecutor {
             }
             res = Assert.notNull(entityProc, "请求结果处理器不能为空").process(entity);
             EntityUtils.consume(response.getEntity());
+        } catch (SpinException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("远程连接到" + request.getURI() + "，发生错误:", e);
             throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
                 + request.getURI()
                 + "，发生错误: "
-                + e.getMessage());
+                + e.getMessage(), e);
         }
         return res;
     }
@@ -283,12 +285,14 @@ public abstract class HttpExecutor {
                     }
                 }
             });
+        } catch (SpinException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("远程连接到" + request.getURI() + "，发生错误:", e);
             throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
                 + request.getURI()
                 + "，发生错误: "
-                + e.getMessage());
+                + e.getMessage(), e);
         }
     }
     // endregion
