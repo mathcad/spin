@@ -5,6 +5,7 @@ import org.spin.core.util.StringUtils;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -19,10 +20,16 @@ import java.util.regex.Pattern;
 public abstract class Assert {
 
     private static final String DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE = "[Assertion failed] - The value %s is not in the specified exclusive range of %s to %s";
+    private static final String DEFAULT_GT_EX_MESSAGE = "[Assertion failed] - The value %s must greater than specified value %s";
+    private static final String DEFAULT_GE_EX_MESSAGE = "[Assertion failed] - The value %s must greater than or equals specified value %s";
+    private static final String DEFAULT_LT_EX_MESSAGE = "[Assertion failed] - The value %s must less than specified value %s";
+    private static final String DEFAULT_LE_EX_MESSAGE = "[Assertion failed] - The value %s must less than or equals specified value %s";
     private static final String DEFAULT_INCLUSIVE_BETWEEN_EX_MESSAGE = "[Assertion failed] - The value %s is not in the specified inclusive range of %s to %s";
     private static final String DEFAULT_MATCHES_PATTERN_EX = "[Assertion failed] - The string %s does not match the pattern %s";
     private static final String DEFAULT_IS_NULL_EX_MESSAGE = "[Assertion failed] - this argument is required; it must not be null";
     private static final String DEFAULT_IS_TRUE_EX_MESSAGE = "[Assertion failed] - this expression must be true";
+    private static final String DEFAULT_IS_EQUALS_EX_MESSAGE = "[Assertion failed] - these two objects must be equals";
+    private static final String DEFAULT_NOT_EQUALS_EX_MESSAGE = "[Assertion failed] - these two objects must not equals";
     private static final String DEFAULT_NO_NULL_ELEMENTS_ARRAY_EX_MESSAGE = "[Assertion failed] - The validated array contains null element at index: %d";
     private static final String DEFAULT_NO_NULL_ELEMENTS_COLLECTION_EX_MESSAGE = "[Assertion failed] - The validated collection contains null element at index: %d";
     private static final String DEFAULT_NOT_BLANK_EX_MESSAGE = "[Assertion failed] - The validated character sequence is blank";
@@ -33,12 +40,48 @@ public abstract class Assert {
     private static final String DEFAULT_VALID_INDEX_ARRAY_EX_MESSAGE = "[Assertion failed] - The validated array index is invalid: %d";
     private static final String DEFAULT_VALID_INDEX_CHAR_SEQUENCE_EX_MESSAGE = "[Assertion failed] - The validated character sequence index is invalid: %d";
     private static final String DEFAULT_VALID_INDEX_COLLECTION_EX_MESSAGE = "[Assertion failed] - The validated collection index is invalid: %d";
-    private static final String DEFAULT_VALID_STATE_EX_MESSAGE = "[Assertion failed] - The validated state must be true";
     private static final String DEFAULT_IS_ASSIGNABLE_EX_MESSAGE = "[Assertion failed] - Cannot assign a %s to a %s";
     private static final String DEFAULT_IS_INSTANCE_OF_EX_MESSAGE = "[Assertion failed] - Expected type: %s, actual: %s";
 
     private Assert() {
     }
+
+    public static void isEquals(final Object o1, final Object o2, Supplier<? extends RuntimeException> exception) {
+        if (!Objects.equals(o1, o2)) {
+            throw exception.get();
+        }
+    }
+
+    public static void isEquals(final Object o1, final Object o2, final String message, final Object... values) {
+        if (!Objects.equals(o1, o2)) {
+            throw new AssertFailException(String.format(message, values));
+        }
+    }
+
+    public static void isEquals(final Object o1, final Object o2) {
+        if (!Objects.equals(o1, o2)) {
+            throw new AssertFailException(DEFAULT_IS_EQUALS_EX_MESSAGE);
+        }
+    }
+
+    public static void notEquals(final Object o1, final Object o2, Supplier<? extends RuntimeException> exception) {
+        if (Objects.equals(o1, o2)) {
+            throw exception.get();
+        }
+    }
+
+    public static void notEquals(final Object o1, final Object o2, final String message, final Object... values) {
+        if (Objects.equals(o1, o2)) {
+            throw new AssertFailException(String.format(message, values));
+        }
+    }
+
+    public static void notEquals(final Object o1, final Object o2) {
+        if (!Objects.equals(o1, o2)) {
+            throw new AssertFailException(DEFAULT_NOT_EQUALS_EX_MESSAGE);
+        }
+    }
+
     // isTrue
     //---------------------------------------------------------------------------------
 
@@ -57,42 +100,6 @@ public abstract class Assert {
 
     /**
      * 断言指定的bool表达式结果为 {@code true}; 否则使用指定的消息抛出异常
-     * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;d", i);</pre>
-     *
-     * @param expression 需要判断的bool表达式
-     * @param message    {@link String#format(String, Object...)} 条件不成立时的异常信息, 不能为空
-     * @param value      条件不成立时，追加在异常信息中的long值
-     * @throws AssertFailException 条件不成立时抛出异常 {@code false}
-     * @see #isTrue(boolean)
-     * @see #isTrue(boolean, String, double)
-     * @see #isTrue(boolean, String, Object...)
-     */
-    public static void isTrue(final boolean expression, final String message, final long value) {
-        if (!expression) {
-            throw new AssertFailException(String.format(message, value));
-        }
-    }
-
-    /**
-     * 断言指定的bool表达式结果为 {@code true}; 否则使用指定的消息抛出异常
-     * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;s", i);</pre>
-     *
-     * @param expression 需要判断的bool表达式
-     * @param message    {@link String#format(String, Object...)} 条件不成立时的异常信息, 不能为空
-     * @param value      条件不成立时，追加在异常信息中的double值
-     * @throws AssertFailException 条件不成立时抛出异常 {@code false}
-     * @see #isTrue(boolean)
-     * @see #isTrue(boolean, String, long)
-     * @see #isTrue(boolean, String, Object...)
-     */
-    public static void isTrue(final boolean expression, final String message, final double value) {
-        if (!expression) {
-            throw new AssertFailException(String.format(message, value));
-        }
-    }
-
-    /**
-     * 断言指定的bool表达式结果为 {@code true}; 否则使用指定的消息抛出异常
      * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;d, &#37;s", i, 0.0);</pre>
      *
      * @param expression 需要判断的bool表达式
@@ -100,8 +107,6 @@ public abstract class Assert {
      * @param values     条件不成立时，追加在异常信息中的参数
      * @throws AssertFailException 条件不成立时抛出异常 {@code false}
      * @see #isTrue(boolean)
-     * @see #isTrue(boolean, String, long)
-     * @see #isTrue(boolean, String, double)
      */
     public static void isTrue(final boolean expression, final String message, final Object... values) {
         if (!expression) {
@@ -115,8 +120,6 @@ public abstract class Assert {
      *
      * @param expression 需要判断的bool表达式
      * @throws AssertFailException 条件不成立时抛出异常 {@code false}
-     * @see #isTrue(boolean, String, long)
-     * @see #isTrue(boolean, String, double)
      * @see #isTrue(boolean, String, Object...)
      */
     public static void isTrue(final boolean expression) {
@@ -135,48 +138,11 @@ public abstract class Assert {
      * @param expression 需要判断的bool表达式
      * @param exception  条件成立时的异常, 不能为空
      * @see #notTrue(boolean)
-     * @see #notTrue(boolean, String, double)
      * @see #notTrue(boolean, String, Object...)
      */
     public static void notTrue(final boolean expression, Supplier<? extends RuntimeException> exception) {
         if (expression) {
             throw exception.get();
-        }
-    }
-
-    /**
-     * 断言指定的bool表达式结果为 {@code false}; 否则使用指定的消息抛出异常
-     * <pre>Assert.notTrue(i &gt; 0.0, "必须小于等于0: &#37;d", i);</pre>
-     *
-     * @param expression 需要判断的bool表达式
-     * @param message    {@link String#format(String, Object...)} 条件成立时的异常信息, 不能为空
-     * @param value      条件成立时，追加在异常信息中的long值
-     * @throws AssertFailException 条件成立时抛出异常 {@code true}
-     * @see #notTrue(boolean)
-     * @see #notTrue(boolean, String, double)
-     * @see #notTrue(boolean, String, Object...)
-     */
-    public static void notTrue(final boolean expression, final String message, final long value) {
-        if (expression) {
-            throw new AssertFailException(String.format(message, value));
-        }
-    }
-
-    /**
-     * 断言指定的bool表达式结果为 {@code false}; 否则使用指定的消息抛出异常
-     * <pre>Assert.notTrue(i &gt; 0.0, "必须小于等于0: &#37;s", i);</pre>
-     *
-     * @param expression 需要判断的bool表达式
-     * @param message    {@link String#format(String, Object...)} 条件成立时的异常信息, 不能为空
-     * @param value      条件成立时，追加在异常信息中的double值
-     * @throws AssertFailException 条件成立时抛出异常 {@code true}
-     * @see #notTrue(boolean)
-     * @see #notTrue(boolean, String, long)
-     * @see #notTrue(boolean, String, Object...)
-     */
-    public static void notTrue(final boolean expression, final String message, final double value) {
-        if (expression) {
-            throw new AssertFailException(String.format(message, value));
         }
     }
 
@@ -189,8 +155,6 @@ public abstract class Assert {
      * @param values     条件成立时，追加在异常信息中的参数
      * @throws AssertFailException 条件成立时抛出异常 {@code true}
      * @see #notTrue(boolean)
-     * @see #notTrue(boolean, String, long)
-     * @see #notTrue(boolean, String, double)
      */
     public static void notTrue(final boolean expression, final String message, final Object... values) {
         if (expression) {
@@ -204,8 +168,6 @@ public abstract class Assert {
      *
      * @param expression 需要判断的bool表达式
      * @throws AssertFailException 条件成立时抛出异常 {@code true}
-     * @see #notTrue(boolean, String, long)
-     * @see #notTrue(boolean, String, double)
      * @see #notTrue(boolean, String, Object...)
      */
     public static void notTrue(final boolean expression) {
@@ -646,7 +608,7 @@ public abstract class Assert {
      * @throws AssertFailException if the text does not contain valid text content
      */
     public static String notBlank(String text) {
-        return notBlank(text, "[Assertion failed] - this String argument must have text; it must not be null, empty, or blank");
+        return notBlank(text, DEFAULT_NOT_BLANK_EX_MESSAGE);
 
     }
 
@@ -1063,6 +1025,230 @@ public abstract class Assert {
         return value;
     }
 
+    public static int gt(final int floor, final int value, final String message) {
+        if (value <= floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static int gt(final int floor, final int value) {
+        if (value <= floor) {
+            throw new AssertFailException(String.format(DEFAULT_GT_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static long gt(final long floor, final long value, final String message) {
+        if (value <= floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static long gt(final long floor, final long value) {
+        if (value <= floor) {
+            throw new AssertFailException(String.format(DEFAULT_GT_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static double gt(final double floor, final double value, final String message) {
+        if (value <= floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static double gt(final double floor, final double value) {
+        if (value <= floor) {
+            throw new AssertFailException(String.format(DEFAULT_GT_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T gt(final T floor, final T value, final String message, final Object... params) {
+        if (value.compareTo(floor) <= 0) {
+            throw new AssertFailException(null != params && params.length > 0 ? String.format(message, params) : message);
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T gt(final T floor, final T value) {
+        if (value.compareTo(floor) <= 0) {
+            throw new AssertFailException(String.format(DEFAULT_GT_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static int ge(final int floor, final int value, final String message) {
+        if (value < floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static int ge(final int floor, final int value) {
+        if (value < floor) {
+            throw new AssertFailException(String.format(DEFAULT_GE_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static long ge(final long floor, final long value, final String message) {
+        if (value < floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static long ge(final long floor, final long value) {
+        if (value < floor) {
+            throw new AssertFailException(String.format(DEFAULT_GE_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static double ge(final double floor, final double value, final String message) {
+        if (value < floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static double ge(final double floor, final double value) {
+        if (value < floor) {
+            throw new AssertFailException(String.format(DEFAULT_GE_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T ge(final T floor, final T value, final String message) {
+        if (value.compareTo(floor) < 0) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T ge(final T floor, final T value) {
+        if (value.compareTo(floor) < 0) {
+            throw new AssertFailException(String.format(DEFAULT_GE_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+
+    public static int lt(final int floor, final int value, final String message) {
+        if (value >= floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static int lt(final int floor, final int value) {
+        if (value >= floor) {
+            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static long lt(final long floor, final long value, final String message) {
+        if (value >= floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static long lt(final long floor, final long value) {
+        if (value >= floor) {
+            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static double lt(final double floor, final double value, final String message) {
+        if (value >= floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static double lt(final double floor, final double value) {
+        if (value >= floor) {
+            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T lt(final T floor, final T value, final String message) {
+        if (value.compareTo(floor) >= 0) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T lt(final T floor, final T value) {
+        if (value.compareTo(floor) >= 0) {
+            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static int le(final int floor, final int value, final String message) {
+        if (value > floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static int le(final int floor, final int value) {
+        if (value > floor) {
+            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static long le(final long floor, final long value, final String message) {
+        if (value > floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static long le(final long floor, final long value) {
+        if (value > floor) {
+            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static double le(final double floor, final double value, final String message) {
+        if (value > floor) {
+            throw new AssertFailException(message);
+        }
+        return value;
+    }
+
+    public static double le(final double floor, final double value) {
+        if (value > floor) {
+            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T le(final T floor, final T value, final String message, final Object... params) {
+        if (value.compareTo(floor) > 0) {
+            throw new AssertFailException(null != params && params.length > 0 ? String.format(message, params) : message);
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T le(final T floor, final T value) {
+        if (value.compareTo(floor) > 0) {
+            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
     // isInstanceOf
     //---------------------------------------------------------------------------------
 

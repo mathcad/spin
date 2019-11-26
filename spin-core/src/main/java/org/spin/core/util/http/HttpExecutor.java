@@ -207,26 +207,45 @@ public abstract class HttpExecutor {
      * @return 处理后的请求结果
      */
     public static <T> T executeRequest(HttpUriRequest request, EntityProcessor<T> entityProc) {
-        T res;
         initSync();
-        try (CloseableHttpResponse response = HttpExecutorSyncHolder.getClient().execute(request)) {
-            int code = response.getStatusLine().getStatusCode();
-            HttpEntity entity = response.getEntity();
-            if (code != 200) {
-                throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity));
-            }
-            res = Assert.notNull(entityProc, "请求结果处理器不能为空").process(entity);
-            EntityUtils.consume(response.getEntity());
-        } catch (SpinException e) {
-            throw e;
+
+        CloseableHttpResponse response = null;
+        HttpEntity entity;
+        int code;
+
+        try {
+            response = HttpExecutorSyncHolder.getClient().execute(request);
+            code = response.getStatusLine().getStatusCode();
+            entity = response.getEntity();
         } catch (Exception e) {
+            if (response != null) {
+                try {
+                    response.close();
+                } catch (Throwable e2) {
+                    e.addSuppressed(e2);
+                }
+            }
+
             logger.error("远程连接到" + request.getURI() + "，发生错误:", e);
             throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
                 + request.getURI()
                 + "，发生错误: "
                 + e.getMessage(), e);
         }
-        return res;
+
+        try {
+            if (code != 200) {
+                throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity));
+            }
+            return Assert.notNull(entityProc, "请求结果处理器不能为空").process(entity);
+        } finally {
+            try {
+                EntityUtils.consume(entity);
+                response.close();
+            } catch (IOException e) {
+                // do nothing
+            }
+        }
     }
 
 
