@@ -1,5 +1,13 @@
 package org.spin.data.pk.meta;
 
+/**
+ * ID结构定义
+ * <p>DESCRIPTION</p>
+ * <p>Created by xuweinan on 2017/5/5</p>
+ *
+ * @author xuweinan
+ * @version 1.0
+ */
 public class IdMeta {
 
     private byte machineBits;

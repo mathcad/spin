@@ -4,7 +4,16 @@ import org.spin.data.pk.Id;
 
 import java.io.Serializable;
 
-
+/**
+ * 分布式ID生成器
+ * <p>DESCRIPTION</p>
+ * <p>Created by xuweinan on 2017/5/5</p>
+ *
+ * @param <K> ID数据类型
+ * @param <I> ID类型
+ * @author xuweinan
+ * @version 1.0
+ */
 public interface IdGenerator<K extends Serializable, I extends Id> {
 
     /**

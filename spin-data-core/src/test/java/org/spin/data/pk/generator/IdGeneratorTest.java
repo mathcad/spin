@@ -2,7 +2,10 @@ package org.spin.data.pk.generator;
 
 import org.junit.jupiter.api.Test;
 import org.spin.data.pk.DistributedId;
-import org.spin.data.pk.PkProperties;
+import org.spin.data.pk.IdGeneratorConfig;
+import org.spin.data.pk.generator.provider.PropertyMachineIdProvider;
+import org.spin.data.pk.meta.IdGenMethodE;
+import org.spin.data.pk.meta.IdTypeE;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -15,13 +18,10 @@ public class IdGeneratorTest {
 
     @Test
     public void testId() {
-        PkProperties pkProperties = new PkProperties();
-        pkProperties.setGenMethod(0);
-        pkProperties.setMachineId(1);
-        pkProperties.setType(0);
-        pkProperties.setProviderType("PROPERTY");
-        pkProperties.setVersion(0);
-        IdGenerator<Long, DistributedId> idIdGenerator = new DistributedIdGenerator(pkProperties);
+        IdGeneratorConfig idGeneratorConfig = new IdGeneratorConfig();
+        idGeneratorConfig.setProviderType(PropertyMachineIdProvider.class);
+        idGeneratorConfig.setInitParams("machineId=1");
+        IdGenerator<Long, DistributedId> idIdGenerator = new DistributedIdGenerator(idGeneratorConfig);
 
         for (int i = 0; i != 100; ++i) {
             System.out.println(idIdGenerator.genId());

@@ -5,22 +5,33 @@ import org.spin.data.pk.meta.IdMeta;
 import org.spin.data.pk.meta.IdMetaFactory;
 import org.spin.data.pk.meta.IdTypeE;
 
+/**
+ * 分布式ID转换器默认实现
+ * <p>DESCRIPTION</p>
+ * <p>Created by xuweinan on 2017/5/5</p>
+ *
+ * @author xuweinan
+ * @version 1.0
+ */
 public class DistributedIdConverter implements IdConverter<Long, DistributedId> {
 
     private IdTypeE idType;
+    private IdMeta idMeta;
 
     public DistributedIdConverter() {
     }
 
     public DistributedIdConverter(IdTypeE idType) {
         this.idType = idType;
+        this.idMeta = IdMetaFactory.getIdMeta(idType);
     }
 
+    @Override
     public Long convert(DistributedId id) {
-        return doConvert(id, IdMetaFactory.getIdMeta(idType));
+        return doConvert(id, idMeta);
     }
 
-    protected Long doConvert(DistributedId id, IdMeta idMeta) {
+    protected long doConvert(DistributedId id, IdMeta idMeta) {
         long ret = 0;
 
         ret |= id.getMachine();
@@ -38,8 +49,9 @@ public class DistributedIdConverter implements IdConverter<Long, DistributedId> 
         return ret;
     }
 
+    @Override
     public DistributedId convert(Long id) {
-        return doConvert(id, IdMetaFactory.getIdMeta(idType));
+        return doConvert(id, idMeta);
     }
 
     protected DistributedId doConvert(long id, IdMeta idMeta) {

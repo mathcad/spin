@@ -1,7 +1,5 @@
 package org.spin.data.rs;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.ConstructorUtils;
 import org.spin.data.throwable.SQLError;
@@ -18,9 +16,8 @@ import java.lang.reflect.Constructor;
  * @version 1.0
  */
 public class EntityRowMapper<E> implements RowMapper<E> {
-    private static final Logger logger = LoggerFactory.getLogger(EntityRowMapper.class);
 
-    private static final Class[] CONSTRUCTOR_ARGS = new Class[0];
+    private static final Class<?>[] CONSTRUCTOR_ARGS = new Class[0];
     private final Class<E> type;
     private final Constructor<E> accessibleConstructor;
 

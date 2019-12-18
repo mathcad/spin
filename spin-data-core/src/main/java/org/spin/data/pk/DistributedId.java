@@ -2,21 +2,46 @@ package org.spin.data.pk;
 
 import java.io.Serializable;
 
+/**
+ * 分布式ID默认实现
+ * <p>DESCRIPTION</p>
+ * <p>Created by xuweinan on 2017/5/5</p>
+ *
+ * @author xuweinan
+ * @version 1.0
+ */
 public class DistributedId implements Id, Serializable {
 
     private static final long serialVersionUID = 6870931236218221183L;
 
-    // 机器ID 0-9
+    /**
+     * 机器ID 0-9
+     */
     private long machine;
-    // 序列号 10-39, 10-19
+
+    /**
+     * 序列号 10-39, 10-19
+     */
     private long seq;
-    // 秒级时间 40-59, 毫秒级时间 20-59
+
+    /**
+     * 秒级时间 40-59, 毫秒级时间 20-59
+     */
     private long time;
-    // 生成方式 60-61 2位，用来区分三种发布模式：嵌入发布模式，中心服务器发布模式，REST发布模式。
+
+    /**
+     * 生成方式 60-61 2位，用来区分三种发布模式：嵌入发布模式，中心服务器发布模式，REST发布模式。
+     */
     private long genMethod;
-    // 类型 62 1位，用来区分两种ID类型：最大峰值型和最小粒度型。
+
+    /**
+     * 类型 62 1位，用来区分两种ID类型：最大峰值型和最小粒度型。
+     */
     private long type;
-    // 版本 63 扩展备用
+
+    /**
+     * 版本 63 扩展备用
+     */
     private long version;
 
     public DistributedId(long machine, long seq, long time, long genMethod, long type, long version) {

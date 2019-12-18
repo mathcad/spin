@@ -42,12 +42,13 @@ public class BeetlTest {
         C(1), D(2);
 
         private int value;
+
         Type(int value) {
             this.value = value;
         }
 
         @Override
-        public int getValue() {
+        public int intValue() {
             return value;
         }
     }

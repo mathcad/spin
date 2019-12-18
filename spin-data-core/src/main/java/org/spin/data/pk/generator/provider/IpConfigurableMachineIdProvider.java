@@ -8,47 +8,48 @@ import org.springframework.util.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-
+/**
+ * 基于IP的机器ID提供者
+ * <p>DESCRIPTION</p>
+ * <p>Created by xuweinan on 2017/5/5</p>
+ *
+ * @author xuweinan
+ * @version 1.0
+ */
 public class IpConfigurableMachineIdProvider implements MachineIdProvider {
-    private static final Logger log = LoggerFactory.getLogger(IpConfigurableMachineIdProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(IpConfigurableMachineIdProvider.class);
 
     private long machineId;
 
     private Map<String, Long> ipsMap = new HashMap<>();
 
-    public IpConfigurableMachineIdProvider() {
-        log.debug("IpConfigurableMachineIdProvider constructed.");
-    }
+    @Override
+    public void init(String initParams) {
+        setIps(initParams);
 
-    public IpConfigurableMachineIdProvider(String ips) {
-        setIps(ips);
-        init();
-    }
-
-    public void init() {
         String ip = NetUtils.getLocalhost().getHostAddress();
 
         if (StringUtils.isEmpty(ip)) {
             String msg = "Fail to get host IP address. Stop to initialize the IpConfigurableMachineIdProvider provider.";
 
-            log.error(msg);
+            logger.error(msg);
             throw new IllegalStateException(msg);
         }
 
         if (!ipsMap.containsKey(ip)) {
             String msg = String.format("Fail to configure Id for host IP address %s. Stop to initialize the IpConfigurableMachineIdProvider provider.", ip);
 
-            log.error(msg);
+            logger.error(msg);
             throw new IllegalStateException(msg);
         }
 
         machineId = ipsMap.get(ip);
 
-        log.info("IpConfigurableMachineIdProvider.init ip {} id {}", ip, machineId);
+        logger.info("IpConfigurableMachineIdProvider.init ip {} id {}", ip, machineId);
     }
 
     public void setIps(String ips) {
-        log.debug("IpConfigurableMachineIdProvider ips {}", ips);
+        logger.debug("IpConfigurableMachineIdProvider ips {}", ips);
         if (!StringUtils.isEmpty(ips)) {
             String[] ipArray = ips.split(",");
 
@@ -58,6 +59,7 @@ public class IpConfigurableMachineIdProvider implements MachineIdProvider {
         }
     }
 
+    @Override
     public long getMachineId() {
         return machineId;
     }
