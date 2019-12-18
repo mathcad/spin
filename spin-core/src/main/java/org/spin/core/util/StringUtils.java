@@ -3821,6 +3821,10 @@ public abstract class StringUtils {
      * @return 编码后的字符串
      */
     public static String urlEncode(String input) {
+        if (isEmpty(input)) {
+            return input;
+        }
+
         try {
             return URLEncoder.encode(input, "UTF-8");
         } catch (UnsupportedEncodingException ignore) {
@@ -3835,6 +3839,10 @@ public abstract class StringUtils {
      * @return 编码后的字符串
      */
     public static String urlEncodeChinese(String input) {
+        if (isEmpty(input)) {
+            return input;
+        }
+
         StringBuffer sb = new StringBuffer(input.length() * 2);
         Matcher matcher = CONTAINS_CHINESE_PATTERN.matcher(input);
         while (matcher.find()) {
@@ -3851,6 +3859,10 @@ public abstract class StringUtils {
      * @return 解码后的字符串
      */
     public static String urlDecode(String input) {
+        if (isEmpty(input)) {
+            return input;
+        }
+
         try {
             return URLDecoder.decode(input, "UTF-8");
         } catch (UnsupportedEncodingException ignore) {

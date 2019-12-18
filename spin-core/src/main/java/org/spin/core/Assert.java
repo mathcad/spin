@@ -46,15 +46,15 @@ public abstract class Assert {
     private Assert() {
     }
 
-    public static void isEquals(final Object o1, final Object o2, Supplier<? extends RuntimeException> exception) {
+    public static void isEquals(final Object o1, final Object o2, Supplier<String> message) {
         if (!Objects.equals(o1, o2)) {
-            throw exception.get();
+            throw new AssertFailException(message.get());
         }
     }
 
     public static void isEquals(final Object o1, final Object o2, final String message, final Object... values) {
         if (!Objects.equals(o1, o2)) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
     }
 
@@ -64,15 +64,15 @@ public abstract class Assert {
         }
     }
 
-    public static void notEquals(final Object o1, final Object o2, Supplier<? extends RuntimeException> exception) {
+    public static void notEquals(final Object o1, final Object o2, Supplier<String> message) {
         if (Objects.equals(o1, o2)) {
-            throw exception.get();
+            throw new AssertFailException(message.get());
         }
     }
 
     public static void notEquals(final Object o1, final Object o2, final String message, final Object... values) {
         if (Objects.equals(o1, o2)) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
     }
 
@@ -90,11 +90,11 @@ public abstract class Assert {
      * <pre>Assert.notTrue(i &gt; 0, "必须大于0: &#37;d", i);</pre>
      *
      * @param expression 需要判断的bool表达式
-     * @param exception  条件不成立时的异常, 不能为空
+     * @param message    条件不成立时的异常消息, 不能为空
      */
-    public static void isTrue(final boolean expression, Supplier<? extends RuntimeException> exception) {
+    public static void isTrue(final boolean expression, Supplier<String> message) {
         if (!expression) {
-            throw exception.get();
+            throw new AssertFailException(message.get());
         }
     }
 
@@ -110,7 +110,7 @@ public abstract class Assert {
      */
     public static void isTrue(final boolean expression, final String message, final Object... values) {
         if (!expression) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
     }
 
@@ -136,13 +136,13 @@ public abstract class Assert {
      * <pre>Assert.notTrue(i &gt; 0.0, "必须小于等于0: &#37;d", i);</pre>
      *
      * @param expression 需要判断的bool表达式
-     * @param exception  条件成立时的异常, 不能为空
+     * @param message    条件成立时的异常消息, 不能为空
      * @see #notTrue(boolean)
      * @see #notTrue(boolean, String, Object...)
      */
-    public static void notTrue(final boolean expression, Supplier<? extends RuntimeException> exception) {
+    public static void notTrue(final boolean expression, Supplier<String> message) {
         if (expression) {
-            throw exception.get();
+            throw new AssertFailException(message.get());
         }
     }
 
@@ -158,7 +158,7 @@ public abstract class Assert {
      */
     public static void notTrue(final boolean expression, final String message, final Object... values) {
         if (expression) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
     }
 
@@ -185,14 +185,18 @@ public abstract class Assert {
      *
      * <p>异常信息为:  &quot;[Assertion failed] - this argument is required; it must not be null&quot;.</p>
      *
-     * @param <T>    类型参数
-     * @param object 待检查对象
+     * @param <T>     类型参数
+     * @param object  待检查对象
+     * @param message 对象为null时的异常信息
      * @return 返回对象自身 (一定不为 {@code null})
      * @throws AssertFailException 当对象为空时抛出 {@code null}
      * @see #notNull(Object, String, Object...)
      */
-    public static <T> T notNull(final T object) {
-        return notNull(object, DEFAULT_IS_NULL_EX_MESSAGE);
+    public static <T> T notNull(final T object, Supplier<String> message) {
+        if (object == null) {
+            throw new AssertFailException(message.get());
+        }
+        return object;
     }
 
     /**
@@ -209,13 +213,50 @@ public abstract class Assert {
      */
     public static <T> T notNull(final T object, final String message, final Object... values) {
         if (object == null) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
+        }
+        return object;
+    }
+
+    /**
+     * 断言指定对象不为 {@code null}，并返回该对象。否则抛出异常
+     * <pre>Assert.notNull(myObject);</pre>
+     *
+     * <p>异常信息为:  &quot;[Assertion failed] - this argument is required; it must not be null&quot;.</p>
+     *
+     * @param <T>    类型参数
+     * @param object 待检查对象
+     * @return 返回对象自身 (一定不为 {@code null})
+     * @throws AssertFailException 当对象为空时抛出 {@code null}
+     * @see #notNull(Object, String, Object...)
+     */
+    public static <T> T notNull(final T object) {
+        if (object == null) {
+            throw new AssertFailException(DEFAULT_IS_NULL_EX_MESSAGE);
         }
         return object;
     }
 
     // notEmpty array
     //---------------------------------------------------------------------------------
+
+    /**
+     * 断言指定的数组不为null，且长度&gt;0（一定有元素），否则抛出异常
+     * <pre>Assert.notEmpty(myArray, "The array must not be empty");</pre>
+     *
+     * @param <T>     数组元素类型
+     * @param array   待检查的数组
+     * @param message 异常信息
+     * @return 检查通过时返回原数组
+     * @throws AssertFailException 当数组为{@code null}时抛出
+     * @throws AssertFailException 当数组为空时抛出
+     */
+    public static <T> T[] notEmpty(final T[] array, final Supplier<String> message) {
+        if (array == null || array.length == 0) {
+            throw new AssertFailException(message.get());
+        }
+        return array;
+    }
 
     /**
      * 断言指定的数组不为null，且长度&gt;0（一定有元素），否则抛出异常
@@ -230,11 +271,8 @@ public abstract class Assert {
      * @throws AssertFailException 当数组为空时抛出
      */
     public static <T> T[] notEmpty(final T[] array, final String message, final Object... values) {
-        if (array == null) {
-            throw new AssertFailException(String.format(message, values));
-        }
-        if (array.length == 0) {
-            throw new AssertFailException(String.format(message, values));
+        if (array == null || array.length == 0) {
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return array;
     }
@@ -253,11 +291,32 @@ public abstract class Assert {
      * @throws AssertFailException 当数组为空时抛出
      */
     public static <T> T[] notEmpty(final T[] array) {
-        return notEmpty(array, DEFAULT_NOT_EMPTY_ARRAY_EX_MESSAGE);
+        if (array == null || array.length == 0) {
+            throw new AssertFailException(DEFAULT_NOT_EMPTY_ARRAY_EX_MESSAGE);
+        }
+        return array;
     }
 
     // notEmpty collection
     //---------------------------------------------------------------------------------
+
+    /**
+     * 断言指定的集合不为null，且size&gt;0（一定有元素），否则抛出异常
+     * <pre>Assert.notEmpty(myCollection, "The collection must not be empty");</pre>
+     *
+     * @param <T>        集合参数类型
+     * @param collection 待检查的集合
+     * @param message    异常信息
+     * @return 检查通过时返回原集合
+     * @throws AssertFailException 当集合为{@code null}时抛出
+     * @throws AssertFailException 当集合为空时抛出
+     */
+    public static <T extends Collection<?>> T notEmpty(final T collection, final Supplier<String> message) {
+        if (collection == null || collection.isEmpty()) {
+            throw new AssertFailException(message.get());
+        }
+        return collection;
+    }
 
     /**
      * 断言指定的集合不为null，且size&gt;0（一定有元素），否则抛出异常
@@ -272,11 +331,8 @@ public abstract class Assert {
      * @throws AssertFailException 当集合为空时抛出
      */
     public static <T extends Collection<?>> T notEmpty(final T collection, final String message, final Object... values) {
-        if (collection == null) {
-            throw new AssertFailException(String.format(message, values));
-        }
-        if (collection.isEmpty()) {
-            throw new AssertFailException(String.format(message, values));
+        if (collection == null || collection.isEmpty()) {
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return collection;
     }
@@ -295,11 +351,32 @@ public abstract class Assert {
      * @throws AssertFailException 当集合为空时抛出
      */
     public static <T extends Collection<?>> T notEmpty(final T collection) {
-        return notEmpty(collection, DEFAULT_NOT_EMPTY_COLLECTION_EX_MESSAGE);
+        if (collection == null || collection.isEmpty()) {
+            throw new AssertFailException(DEFAULT_NOT_EMPTY_COLLECTION_EX_MESSAGE);
+        }
+        return collection;
     }
 
     // notEmpty map
     //---------------------------------------------------------------------------------
+
+    /**
+     * 断言指定的Map不为null，且size&gt;0（一定有元素），否则抛出异常
+     * <pre>Assert.notEmpty(myMap, "The map must not be empty");</pre>
+     *
+     * @param <T>     Map参数类型
+     * @param map     待检查的Map
+     * @param message 异常信息
+     * @return 检查通过时返回原Map
+     * @throws AssertFailException 当Map为{@code null}时抛出
+     * @throws AssertFailException 当Map为空时抛出
+     */
+    public static <T extends Map<?, ?>> T notEmpty(final T map, final Supplier<String> message) {
+        if (map == null || map.isEmpty()) {
+            throw new AssertFailException(message.get());
+        }
+        return map;
+    }
 
     /**
      * 断言指定的Map不为null，且size&gt;0（一定有元素），否则抛出异常
@@ -314,11 +391,8 @@ public abstract class Assert {
      * @throws AssertFailException 当Map为空时抛出
      */
     public static <T extends Map<?, ?>> T notEmpty(final T map, final String message, final Object... values) {
-        if (map == null) {
-            throw new AssertFailException(String.format(message, values));
-        }
-        if (map.isEmpty()) {
-            throw new AssertFailException(String.format(message, values));
+        if (map == null || map.isEmpty()) {
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return map;
     }
@@ -337,11 +411,32 @@ public abstract class Assert {
      * @throws AssertFailException 当Map为空时抛出
      */
     public static <T extends Map<?, ?>> T notEmpty(final T map) {
-        return notEmpty(map, DEFAULT_NOT_EMPTY_MAP_EX_MESSAGE);
+        if (map == null || map.isEmpty()) {
+            throw new AssertFailException(DEFAULT_NOT_EMPTY_MAP_EX_MESSAGE);
+        }
+        return map;
     }
 
     // notEmpty string
     //---------------------------------------------------------------------------------
+
+    /**
+     * <p>断言指定的字符串一定非空（不为null且长度大于0）
+     * </p>
+     * <pre>Assert.notEmpty(myString, "The string must not be empty");</pre>
+     *
+     * @param <T>     字符串类型
+     * @param chars   待检查的字符串
+     * @param message 检查失败时的信息
+     * @return 检查通过时返回原字符串
+     * @throws AssertFailException 当字符串为{@code null} 或长度为0时抛出
+     */
+    public static <T extends CharSequence> T notEmpty(final T chars, final Supplier<String> message) {
+        if (chars == null || chars.length() == 0) {
+            throw new AssertFailException(message.get());
+        }
+        return chars;
+    }
 
     /**
      * <p>断言指定的字符串一定非空（不为null且长度大于0）
@@ -356,11 +451,8 @@ public abstract class Assert {
      * @throws AssertFailException 当字符串为{@code null} 或长度为0时抛出
      */
     public static <T extends CharSequence> T notEmpty(final T chars, final String message, final Object... values) {
-        if (chars == null) {
-            throw new AssertFailException(String.format(message, values));
-        }
-        if (chars.length() == 0) {
-            throw new AssertFailException(String.format(message, values));
+        if (chars == null || chars.length() == 0) {
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return chars;
     }
@@ -381,7 +473,10 @@ public abstract class Assert {
      * @throws AssertFailException if the character sequence is empty
      */
     public static <T extends CharSequence> T notEmpty(final T chars) {
-        return notEmpty(chars, DEFAULT_NOT_EMPTY_CHAR_SEQUENCE_EX_MESSAGE);
+        if (chars == null || chars.length() == 0) {
+            throw new AssertFailException(DEFAULT_NOT_EMPTY_CHAR_SEQUENCE_EX_MESSAGE);
+        }
+        return chars;
     }
 
     // validIndex array
@@ -409,7 +504,7 @@ public abstract class Assert {
     public static <T> T[] validIndex(final T[] array, final int index, final String message, final Object... values) {
         Assert.notNull(array);
         if (index < 0 || index >= array.length) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return array;
     }
@@ -551,7 +646,7 @@ public abstract class Assert {
     public static <T extends CharSequence> T validIndex(final T chars, final int index, final String message, final Object... values) {
         Assert.notNull(chars);
         if (index < 0 || index >= chars.length()) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return chars;
     }
@@ -579,6 +674,23 @@ public abstract class Assert {
      */
     public static <T extends CharSequence> T validIndex(final T chars, final int index) {
         return validIndex(chars, index, DEFAULT_VALID_INDEX_CHAR_SEQUENCE_EX_MESSAGE, index);
+    }
+
+    /**
+     * Assert that the given String has valid text content; that is, it must not
+     * be {@code null} and must contain at least one non-whitespace character.
+     * <pre class="code">Assert.hasText(name, "'name' must not be empty");</pre>
+     *
+     * @param text    the String to check
+     * @param message the exception message to use if the assertion fails
+     * @return text本身
+     * @throws AssertFailException if the text does not contain valid text content
+     */
+    public static String notBlank(String text, Supplier<String> message) {
+        if (StringUtils.isBlank(text)) {
+            throw new AssertFailException(message.get());
+        }
+        return text;
     }
 
     /**
@@ -1025,49 +1137,68 @@ public abstract class Assert {
         return value;
     }
 
-    public static int gt(final int floor, final int value, final String message) {
+    public static void gt(final int value, final int floor, final Supplier<String> message) {
+        if (value <= floor) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void gt(final int value, final int floor, final String message) {
         if (value <= floor) {
             throw new AssertFailException(message);
         }
-        return value;
     }
 
-    public static int gt(final int floor, final int value) {
+    public static void gt(final int value, final int floor) {
         if (value <= floor) {
-            throw new AssertFailException(String.format(DEFAULT_GT_EX_MESSAGE, value, floor));
+            throw new AssertFailException(String.format(DEFAULT_GT_EX_MESSAGE, floor, value));
         }
-        return value;
     }
 
-    public static long gt(final long floor, final long value, final String message) {
+    public static void gt(final long value, final long floor, final Supplier<String> message) {
         if (value <= floor) {
-            throw new AssertFailException(message);
+            throw new AssertFailException(message.get());
         }
-        return value;
     }
 
-    public static long gt(final long floor, final long value) {
-        if (value <= floor) {
-            throw new AssertFailException(String.format(DEFAULT_GT_EX_MESSAGE, value, floor));
-        }
-        return value;
-    }
-
-    public static double gt(final double floor, final double value, final String message) {
+    public static void gt(final long value, final long floor, final String message) {
         if (value <= floor) {
             throw new AssertFailException(message);
         }
-        return value;
     }
 
-    public static double gt(final double floor, final double value) {
+    public static void gt(final long value, final long floor) {
         if (value <= floor) {
-            throw new AssertFailException(String.format(DEFAULT_GT_EX_MESSAGE, value, floor));
+            throw new AssertFailException(String.format(DEFAULT_GT_EX_MESSAGE, floor, value));
+        }
+    }
+
+    public static void gt(final double value, final double floor, final Supplier<String> message) {
+        if (value <= floor) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void gt(final double value, final double floor, final String message) {
+        if (value <= floor) {
+            throw new AssertFailException(message);
+        }
+    }
+
+    public static void gt(final double value, final double floor) {
+        if (value <= floor) {
+            throw new AssertFailException(String.format(DEFAULT_GT_EX_MESSAGE, floor, value));
+        }
+    }
+
+    public static <T extends Comparable<T>> T gt(final T value, final T floor, final Supplier<String> message) {
+        if (value.compareTo(floor) <= 0) {
+            throw new AssertFailException(message.get());
         }
         return value;
     }
 
-    public static <T extends Comparable<T>> T gt(final T floor, final T value, final String message, final Object... params) {
+    public static <T extends Comparable<T>> T gt(final T value, final T floor, final String message, final Object... params) {
         if (value.compareTo(floor) <= 0) {
             throw new AssertFailException(null != params && params.length > 0 ? String.format(message, params) : message);
         }
@@ -1081,171 +1212,227 @@ public abstract class Assert {
         return value;
     }
 
-    public static int ge(final int floor, final int value, final String message) {
+    public static void ge(final int value, final int floor, final Supplier<String> message) {
+        if (value < floor) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void ge(final int value, final int floor, final String message) {
         if (value < floor) {
             throw new AssertFailException(message);
         }
-        return value;
     }
 
-    public static int ge(final int floor, final int value) {
+    public static void ge(final int value, final int floor) {
         if (value < floor) {
             throw new AssertFailException(String.format(DEFAULT_GE_EX_MESSAGE, value, floor));
         }
-        return value;
     }
 
-    public static long ge(final long floor, final long value, final String message) {
+    public static void ge(final long value, final long floor, final Supplier<String> message) {
+        if (value < floor) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void ge(final long value, final long floor, final String message) {
         if (value < floor) {
             throw new AssertFailException(message);
         }
-        return value;
     }
 
-    public static long ge(final long floor, final long value) {
+    public static void ge(final long value, final long floor) {
         if (value < floor) {
             throw new AssertFailException(String.format(DEFAULT_GE_EX_MESSAGE, value, floor));
         }
-        return value;
     }
 
-    public static double ge(final double floor, final double value, final String message) {
+    public static void ge(final double value, final double floor, final Supplier<String> message) {
+        if (value < floor) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void ge(final double value, final double floor, final String message) {
         if (value < floor) {
             throw new AssertFailException(message);
         }
-        return value;
     }
 
-    public static double ge(final double floor, final double value) {
+    public static void ge(final double value, final double floor) {
         if (value < floor) {
             throw new AssertFailException(String.format(DEFAULT_GE_EX_MESSAGE, value, floor));
         }
-        return value;
     }
 
-    public static <T extends Comparable<T>> T ge(final T floor, final T value, final String message) {
+    public static <T extends Comparable<T>> T ge(final T value, final T floor, final Supplier<String> message) {
         if (value.compareTo(floor) < 0) {
-            throw new AssertFailException(message);
+            throw new AssertFailException(message.get());
         }
         return value;
     }
 
-    public static <T extends Comparable<T>> T ge(final T floor, final T value) {
+    public static <T extends Comparable<T>> T ge(final T value, final T floor, final String message, final Object... params) {
         if (value.compareTo(floor) < 0) {
-            throw new AssertFailException(String.format(DEFAULT_GE_EX_MESSAGE, value, floor));
-        }
-        return value;
-    }
-
-
-    public static int lt(final int floor, final int value, final String message) {
-        if (value >= floor) {
-            throw new AssertFailException(message);
-        }
-        return value;
-    }
-
-    public static int lt(final int floor, final int value) {
-        if (value >= floor) {
-            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, value, floor));
-        }
-        return value;
-    }
-
-    public static long lt(final long floor, final long value, final String message) {
-        if (value >= floor) {
-            throw new AssertFailException(message);
-        }
-        return value;
-    }
-
-    public static long lt(final long floor, final long value) {
-        if (value >= floor) {
-            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, value, floor));
-        }
-        return value;
-    }
-
-    public static double lt(final double floor, final double value, final String message) {
-        if (value >= floor) {
-            throw new AssertFailException(message);
-        }
-        return value;
-    }
-
-    public static double lt(final double floor, final double value) {
-        if (value >= floor) {
-            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, value, floor));
-        }
-        return value;
-    }
-
-    public static <T extends Comparable<T>> T lt(final T floor, final T value, final String message) {
-        if (value.compareTo(floor) >= 0) {
-            throw new AssertFailException(message);
-        }
-        return value;
-    }
-
-    public static <T extends Comparable<T>> T lt(final T floor, final T value) {
-        if (value.compareTo(floor) >= 0) {
-            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, value, floor));
-        }
-        return value;
-    }
-
-    public static int le(final int floor, final int value, final String message) {
-        if (value > floor) {
-            throw new AssertFailException(message);
-        }
-        return value;
-    }
-
-    public static int le(final int floor, final int value) {
-        if (value > floor) {
-            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, value, floor));
-        }
-        return value;
-    }
-
-    public static long le(final long floor, final long value, final String message) {
-        if (value > floor) {
-            throw new AssertFailException(message);
-        }
-        return value;
-    }
-
-    public static long le(final long floor, final long value) {
-        if (value > floor) {
-            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, value, floor));
-        }
-        return value;
-    }
-
-    public static double le(final double floor, final double value, final String message) {
-        if (value > floor) {
-            throw new AssertFailException(message);
-        }
-        return value;
-    }
-
-    public static double le(final double floor, final double value) {
-        if (value > floor) {
-            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, value, floor));
-        }
-        return value;
-    }
-
-    public static <T extends Comparable<T>> T le(final T floor, final T value, final String message, final Object... params) {
-        if (value.compareTo(floor) > 0) {
             throw new AssertFailException(null != params && params.length > 0 ? String.format(message, params) : message);
         }
         return value;
     }
 
-    public static <T extends Comparable<T>> T le(final T floor, final T value) {
-        if (value.compareTo(floor) > 0) {
-            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, value, floor));
+    public static <T extends Comparable<T>> T ge(final T value, final T floor) {
+        if (value.compareTo(floor) < 0) {
+            throw new AssertFailException(String.format(DEFAULT_GE_EX_MESSAGE, value, floor));
+        }
+        return value;
+    }
+
+    public static void lt(final int value, final int ceil, final Supplier<String> message) {
+        if (value >= ceil) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void lt(final int value, final int ceil, final String message) {
+        if (value >= ceil) {
+            throw new AssertFailException(message);
+        }
+    }
+
+    public static void lt(final int value, final int ceil) {
+        if (value >= ceil) {
+            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, ceil, value));
+        }
+    }
+
+    public static void lt(final long value, final long ceil, final Supplier<String> message) {
+        if (value >= ceil) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void lt(final long value, final long ceil, final String message) {
+        if (value >= ceil) {
+            throw new AssertFailException(message);
+        }
+    }
+
+    public static void lt(final long value, final long ceil) {
+        if (value >= ceil) {
+            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, ceil, value));
+        }
+    }
+
+    public static void lt(final double value, final double ceil, final Supplier<String> message) {
+        if (value >= ceil) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void lt(final double value, final double ceil, final String message) {
+        if (value >= ceil) {
+            throw new AssertFailException(message);
+        }
+    }
+
+    public static void lt(final double value, final double ceil) {
+        if (value >= ceil) {
+            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, ceil, value));
+        }
+    }
+
+    public static <T extends Comparable<T>> T lt(final T value, final T ceil, final Supplier<String> message) {
+        if (value.compareTo(ceil) >= 0) {
+            throw new AssertFailException(message.get());
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T lt(final T value, final T ceil, final String message, final Object... params) {
+        if (value.compareTo(ceil) >= 0) {
+            throw new AssertFailException(null != params && params.length > 0 ? String.format(message, params) : message);
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T lt(final T value, final T ceil) {
+        if (value.compareTo(ceil) >= 0) {
+            throw new AssertFailException(String.format(DEFAULT_LT_EX_MESSAGE, ceil, value));
+        }
+        return value;
+    }
+
+    public static void le(final int value, final int ceil, final Supplier<String> message) {
+        if (value > ceil) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void le(final int value, final int ceil, final String message) {
+        if (value > ceil) {
+            throw new AssertFailException(message);
+        }
+    }
+
+    public static void le(final int value, final int ceil) {
+        if (value > ceil) {
+            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, ceil, value));
+        }
+    }
+
+    public static void le(final long value, final long ceil, final Supplier<String> message) {
+        if (value > ceil) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void le(final long value, final long ceil, final String message) {
+        if (value > ceil) {
+            throw new AssertFailException(message);
+        }
+    }
+
+    public static void le(final long value, final long ceil) {
+        if (value > ceil) {
+            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, ceil, value));
+        }
+    }
+
+    public static void le(final double value, final double ceil, final Supplier<String> message) {
+        if (value > ceil) {
+            throw new AssertFailException(message.get());
+        }
+    }
+
+    public static void le(final double value, final double ceil, final String message) {
+        if (value > ceil) {
+            throw new AssertFailException(message);
+        }
+    }
+
+    public static void le(final double value, final double ceil) {
+        if (value > ceil) {
+            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, ceil, value));
+        }
+    }
+
+    public static <T extends Comparable<T>> T le(final T value, final T ceil, final Supplier<String> message) {
+        if (value.compareTo(ceil) > 0) {
+            throw new AssertFailException(message.get());
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T le(final T value, final T ceil, final String message, final Object... params) {
+        if (value.compareTo(ceil) > 0) {
+            throw new AssertFailException(null != params && params.length > 0 ? String.format(message, params) : message);
+        }
+        return value;
+    }
+
+    public static <T extends Comparable<T>> T le(final T value, final T ceil) {
+        if (value.compareTo(ceil) > 0) {
+            throw new AssertFailException(String.format(DEFAULT_LE_EX_MESSAGE, ceil, value));
         }
         return value;
     }
@@ -1290,7 +1477,7 @@ public abstract class Assert {
      */
     public static <T> T isInstanceOf(final Class<?> type, final Object obj, final String message, final Object... values) {
         if (!notNull(type).isInstance(obj)) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         //noinspection unchecked
         return (T) obj;
@@ -1338,7 +1525,7 @@ public abstract class Assert {
      */
     public static <T> Class<T> isAssignableFrom(final Class<?> superType, final Class<T> type, final String message, final Object... values) {
         if (!superType.isAssignableFrom(type)) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return type;
     }
