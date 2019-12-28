@@ -3,12 +3,25 @@ package org.spin.core.util.http;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
+import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.AsyncUtils;
+import org.spin.core.util.ImageUtils;
+import org.spin.core.util.JsonUtils;
 import org.spin.core.util.MapUtils;
+import org.spin.core.util.XmlUtils;
 
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,6 +35,7 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -192,5 +206,148 @@ class HttpUtilsTest {
         } catch (IOException e) {
         }
         System.out.println(con);
+    }
+
+    private String loginInfo = "<v:Envelope xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:d=\"http://www.w3.org/2001/XMLSchema\" xmlns:c=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:v=\"http://schemas.xmlsoap.org/soap/envelope/\"><v:Header /><v:Body><n0:loginByPhone id=\"o0\" c:root=\"1\" xmlns:n0=\"http://wse.oa.srt.com/\"><phone i:type=\"d:string\">13955363928</phone><password i:type=\"d:string\">08d9f467677cef1663a5ca112ecd4e76</password></n0:loginByPhone></v:Body></v:Envelope>";
+
+    @Test
+    void testLogin() {
+        String result = Http.POST.withUrl("http://47.106.86.168:7071/welcome/cxf/login?wsdl").withXmlBody(loginInfo).execute();
+        XmlUtils xml = new XmlUtils(result);
+        String node = xml.getLastNodesbyXPath("//return").getText();
+        MrxResult<Map<String, Object>> obj = JsonUtils.fromJson(node, new TypeToken<MrxResult<Map<String, Object>>>() {
+        });
+        System.out.println(obj.data);
+
+        System.out.println(obj.data.get("token"));
+    }
+
+    @Test
+    void testCardRecord() throws IOException {
+        procImage("D:\\cat.jpg");
+    }
+
+    @Test
+    void procMask() throws IOException {
+        BufferedImage mask = readMask();
+        int[] rgb = new int[3];
+        int width = mask.getWidth();
+        int height = mask.getHeight();
+        int minX = mask.getMinX();
+        int minY = mask.getMinY();
+        for (int y = minY; y < height; y++) {
+            for (int x = minX; x < width; x++) {
+                int pixel = mask.getRGB(x, y);
+                rgb[0] = (pixel & 0xff0000) >> 16;
+                rgb[1] = (pixel & 0xff00) >> 8;
+                rgb[2] = (pixel & 0xff);
+                if (rgb[0] < 5 || rgb[1] < 5 || rgb[2] < 5) {
+                    mask.setRGB(x, y, 0);
+                }
+            }
+        }
+        ImageIO.write(mask, "BMP", new File("D:\\mask_n.bmp"));
+    }
+
+    void procImage(String imagePath) throws IOException {
+        BufferedImage bi = ImageUtils.scale(ImageIO.read(new File(imagePath)), 1080, 1458, false, null);
+        BufferedImage mask = readMask();
+
+        // 叠加水印
+        int[] rgb = new int[3];
+        int width = mask.getWidth();
+        int height = mask.getHeight();
+        int minX = mask.getMinX();
+        int minY = mask.getMinY();
+        int dif = bi.getHeight() - mask.getHeight();
+        for (int y = minY; y < height; y++) {
+            for (int x = minX; x < width; x++) {
+                int pixel = mask.getRGB(x, y);
+                rgb[0] = (pixel & 0xff0000) >> 16;
+                rgb[1] = (pixel & 0xff00) >> 8;
+                rgb[2] = (pixel & 0xff);
+                if (height - y > 30) {
+                    int back = bi.getRGB(x, y + dif);
+                    int alpha = back & 0xff000000;
+                    rgb[0] = Math.min(((back & 0xff0000) >> 16) + rgb[0], 255);
+                    rgb[1] = Math.min(((back & 0xff00) >> 8) + rgb[1], 255);
+                    rgb[2] = Math.min(((back & 0xff)) + rgb[2], 255);
+
+                    back = alpha | ((rgb[0]) << 16) | ((rgb[1] << 8)) | rgb[2];
+                    bi.setRGB(x, y + dif, back);
+                } else {
+                    bi.setRGB(x, y + dif, pixel);
+                }
+            }
+        }
+
+        try (InputStream aixing = new FileInputStream(new File("D:\\MILT_RG.ttf"))) {
+            Font dynamicFont = Font.createFont(Font.TRUETYPE_FONT, aixing);
+            // 绘制时间
+            ImageUtils.pressText(bi, "安徽", dynamicFont, Font.BOLD, Color.WHITE, 38, 10, 89, 1);
+            ImageUtils.pressText(bi, "2019-12-19", dynamicFont, Font.BOLD, Color.WHITE, 34, 10, 136, 1);
+            ImageUtils.pressText(bi, "11:02", dynamicFont, Font.BOLD, Color.WHITE, 34, 10, 185, 1);
+        } catch (FontFormatException e) {
+            e.printStackTrace();
+        }
+
+        ImageWriter writer = null;
+        ImageTypeSpecifier type = ImageTypeSpecifier.createFromRenderedImage(bi);
+        Iterator<ImageWriter> iter = ImageIO.getImageWriters(type, "jpg");
+        if (iter.hasNext()) {
+            writer = iter.next();
+        }
+        if (writer == null) {
+            return;
+        }
+        IIOImage iioImage = new IIOImage(bi, null, null);
+        ImageWriteParam param = writer.getDefaultWriteParam();
+
+        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        param.setCompressionQuality(1);
+        ImageOutputStream outputStream = ImageIO.createImageOutputStream(new File("D:\\test.jpg"));
+        writer.setOutput(outputStream);
+        writer.write(null, iioImage, param);
+
+//        ImageIO.write(bi, "JPEG", new File("D:\\test.jpg"));
+    }
+
+
+    BufferedImage readMask() {
+        try {
+            return ImageIO.read(new File("D:\\mask_bottom.bmp"));
+        } catch (IOException e) {
+            throw new SimplifiedException(e);
+        }
+    }
+
+    public static class MrxResult<T> {
+        private T data;
+        private String msg;
+        private Integer status;
+
+        public T getData() {
+            return data;
+        }
+
+        public void setData(T data) {
+            this.data = data;
+        }
+
+        public String getMsg() {
+            return msg;
+        }
+
+        public void setMsg(String msg) {
+            this.msg = msg;
+        }
+
+        public Integer getStatus() {
+            return status;
+        }
+
+        public void setStatus(Integer status) {
+            this.status = status;
+        }
     }
 }

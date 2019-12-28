@@ -493,6 +493,32 @@ public abstract class Assert {
      * @param <T>     the array type
      * @param array   the array to check, validated not null by this method
      * @param index   the index to check
+     * @param message the exception message if invalid, not null
+     * @return the validated array (never {@code null} for method chaining)
+     * @throws AssertFailException if the array is {@code null}
+     * @throws AssertFailException if the index is invalid
+     * @see #validIndex(Object[], int)
+     * @since 3.0
+     */
+    public static <T> T[] validIndex(final T[] array, final int index, Supplier<String> message) {
+        Assert.notNull(array);
+        if (index < 0 || index >= array.length) {
+            throw new AssertFailException(message.get());
+        }
+        return array;
+    }
+
+    /**
+     * <p>Validates that the index is within the bounds of the argument
+     * array; otherwise throwing an exception with the specified message.</p>
+     * <pre>Assert.validIndex(myArray, 2, "The array index is invalid: ");</pre>
+     *
+     * <p>If the array is {@code null}, then the message of the exception
+     * is &quot;The validated object is null&quot;.</p>
+     *
+     * @param <T>     the array type
+     * @param array   the array to check, validated not null by this method
+     * @param index   the index to check
      * @param message the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values  the optional values for the formatted exception message, null array not recommended
      * @return the validated array (never {@code null} for method chaining)
@@ -565,6 +591,31 @@ public abstract class Assert {
      * @param <T>        the collection type
      * @param collection the collection to check, validated not null by this method
      * @param index      the index to check
+     * @param message    the  exception message if invalid, not null
+     * @return the validated collection (never {@code null} for chaining)
+     * @throws AssertFailException if the index is invalid
+     * @see #validIndex(Collection, int)
+     * @since 3.0
+     */
+    public static <T extends Collection<?>> T validIndex(final T collection, final int index, final Supplier<String> message) {
+        Assert.notNull(collection);
+        if (index < 0 || index >= collection.size()) {
+            throw new AssertFailException(message.get());
+        }
+        return collection;
+    }
+
+    /**
+     * <p>Validates that the index is within the bounds of the argument
+     * collection; otherwise throwing an exception with the specified message.</p>
+     * <pre>Assert.validIndex(myCollection, 2, "The collection index is invalid: ");</pre>
+     *
+     * <p>If the collection is {@code null}, then the message of the
+     * exception is &quot;The validated object is null&quot;.</p>
+     *
+     * @param <T>        the collection type
+     * @param collection the collection to check, validated not null by this method
+     * @param index      the index to check
      * @param message    the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values     the optional values for the formatted exception message, null array not recommended
      * @return the validated collection (never {@code null} for chaining)
@@ -575,7 +626,7 @@ public abstract class Assert {
     public static <T extends Collection<?>> T validIndex(final T collection, final int index, final String message, final Object... values) {
         Assert.notNull(collection);
         if (index < 0 || index >= collection.size()) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return collection;
     }
@@ -800,7 +851,7 @@ public abstract class Assert {
      */
     public static <T extends CharSequence> T matchesPattern(final T input, final String pattern, final String message, final Object... values) {
         if (!Pattern.matches(pattern, input)) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return input;
     }
@@ -846,7 +897,7 @@ public abstract class Assert {
      */
     public static <T extends Comparable<T>> T inclusiveBetween(final T start, final T end, final T value, final String message, final Object... values) {
         if (value.compareTo(start) < 0 || value.compareTo(end) > 0) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return value;
     }
@@ -1012,7 +1063,7 @@ public abstract class Assert {
      */
     public static <T extends Comparable<T>> T exclusiveBetween(final T start, final T end, final T value, final String message, final Object... values) {
         if (value.compareTo(start) <= 0 || value.compareTo(end) >= 0) {
-            throw new AssertFailException(String.format(message, values));
+            throw new AssertFailException(null == values || values.length == 0 ? message : String.format(message, values));
         }
         return value;
     }
@@ -1530,4 +1581,3 @@ public abstract class Assert {
         return type;
     }
 }
-

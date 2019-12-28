@@ -1,6 +1,16 @@
 package org.spin.core.util;
 
+import org.junit.jupiter.api.Test;
+import org.spin.core.util.file.FileType;
+import org.spin.core.util.qrcode.QrCodeUtils;
+
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * <p>Created by xuweinan on 2017/10/10.</p>
@@ -9,38 +19,21 @@ import java.awt.*;
  */
 public class ImageUtilsTest {
 
+    @Test
     public void test() {
-        // 1-缩放图像：
-        // 方法一：按比例缩放
-        ImageUtils.scale("e:/abc.jpg", "e:/abc_scale.jpg", 2);//测试OK
-        // 方法二：按高度和宽度缩放
-        ImageUtils.scale("e:/abc.jpg", "e:/abc_scale2.jpg", 500, 300, true);//测试OK
+        try (InputStream is = new FileInputStream(new File("D:\\cat.jpg"))) {
+            BufferedImage bufferedImage = ImageIO.read(is);
+            BufferedImage radius = ImageUtils.radius(bufferedImage, 10, 5, Color.MAGENTA, 20);
+            ImageUtils.writeImage(radius, FileType.Image.PNG, new File("D:\\d.png"));
+        } catch (Exception e) {
+        }
+    }
 
-
-        // 2-切割图像：
-        // 方法一：按指定起点坐标和宽高切割
-        ImageUtils.cut("e:/abc.jpg", "e:/abc_cut.jpg", 0, 0, 400, 400);//测试OK
-        // 方法二：指定切片的行数和列数
-        ImageUtils.cut2("e:/abc.jpg", "e:/", 2, 2);//测试OK
-        // 方法三：指定切片的宽度和高度
-        ImageUtils.cut3("e:/abc.jpg", "e:/", 300, 300);//测试OK
-
-
-        // 3-图像类型转换：
-        ImageUtils.convert("e:/abc.jpg", "GIF", "e:/abc_convert.gif");//测试OK
-
-
-        // 4-彩色转黑白：
-        ImageUtils.gray("e:/abc.jpg", "e:/abc_gray.jpg");//测试OK
-
-
-        // 5-给图片添加文字水印：
-        // 方法一：
-        ImageUtils.pressText("我是水印文字", "e:/abc.jpg", "e:/abc_pressText.jpg", "宋体", Font.BOLD, Color.white, 80, 0, 0, 0.5f);//测试OK
-        // 方法二：
-        ImageUtils.pressText2("我也是水印文字", "e:/abc.jpg", "e:/abc_pressText2.jpg", "黑体", 36, Color.white, 80, 0, 0, 0.5f);//测试OK
-
-        // 6-给图片添加图片水印：
-        ImageUtils.pressImage("e:/abc2.jpg", "e:/abc.jpg", "e:/abc_pressImage.jpg", 0, 0, 0.5f);//测试OK
+    @Test
+    public void testQr() throws IOException {
+        String content = "https://lanhuapp.com/web/#/item/project/product?pid=688abfb3-a19d-4f5c-9303-a869ab161f00&docId=77c0ff0f-af9d-4b93-a448-0c7a78557e11&docType=axure&pageId=079d66aaae8149ca9070923ef60d43b4&image_id=77c0ff0f-af9d-4b93-a448-0c7a78557e11&type=share_mark&tab=product&teamId=8686155b-cd59-45ec-aa35-3bbc6cb14f35&param=228528db-dcc4-4bd6-a9f9-61efaae33ce3&parentId=83aa7328-a3f0-4ea1-94a6-ae99eab3d067";
+        BufferedImage logo = QrCodeUtils.optimizeLogo(ImageIO.read(new File("D:\\cat.jpg")), 430, Color.WHITE);
+        BufferedImage encode = QrCodeUtils.encode(content, 430, logo);
+        ImageUtils.writeImage(encode, FileType.Image.PNG, new File("D:\\qr.png"));
     }
 }

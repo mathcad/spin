@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.2.13-SNAPSHOT'
+version = '2.2.14-SNAPSHOT'
 def artifactId = 'spin-core'
 
 test {
@@ -43,6 +43,7 @@ dependencies {
     testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
     testRuntimeOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
     testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
+    testRuntimeOnly group: 'com.google.zxing', name: 'core', version: '3.4.0'
 
 //    core
     api group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
@@ -57,4 +58,5 @@ dependencies {
     }
     compileOnly group: 'org.apache.poi', name: 'poi-scratchpad', version: poiVersion
     compileOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
+    compileOnly group: 'com.google.zxing', name: 'core', version: '3.4.0'
 }

@@ -1,18 +1,34 @@
-# build files
-*.bin
-*.lock
-out/
+HELP.md
+.gradle
+build/
 bin/
-/**/build/
-target/
-.gradle/
+out/
+logs/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**
+!**/src/test/**
 
-# IDEA project metadata
-.idea/
-*.iml
-
-# Eclipse workspace metadata
-.settings/
-.metadata/
-.project
+### STS ###
+.apt_generated
 .classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/

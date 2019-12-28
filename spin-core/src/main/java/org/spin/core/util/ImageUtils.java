@@ -1,10 +1,13 @@
 package org.spin.core.util;
 
 import org.spin.core.ErrorCode;
+import org.spin.core.security.Base64;
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.file.FileType;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.color.ColorSpace;
 import java.awt.geom.AffineTransform;
@@ -14,8 +17,10 @@ import java.awt.image.ColorConvertOp;
 import java.awt.image.CropImageFilter;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.ImageFilter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * 图像工具
@@ -27,75 +32,116 @@ public abstract class ImageUtils {
     private ImageUtils() {
     }
 
-    public static void scale(String srcImg, String destImg, int scale) {
-        try {
-            Image image = scale(srcImg, scale);
-            BufferedImage result = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_RGB);
-            Graphics g = result.getGraphics();
-            g.drawImage(image, 0, 0, null);
-            g.dispose();
-            ImageIO.write(result, FileType.Image.JPEG.getFormat(), new File(destImg));
-        } catch (IOException e) {
-            throw new SpinException(ErrorCode.IO_FAIL, "写入文件失败", e);
+    public enum ScaleMode {
+        /**
+         * 拉伸
+         */
+        STRENTCH,
+
+        /**
+         * 填充
+         */
+        FILL,
+
+        /**
+         * 平铺
+         */
+        TILE
+    }
+
+    public static BufferedImage scale(Image image, int width, int height, ScaleMode mode, Color fillColor, Integer transparency) {
+        int originWidth = image.getWidth(null);
+        int originHeight = image.getHeight(null);
+
+        // 尺寸不变直接返回
+        if (originWidth == width && originHeight == height) {
+            return toBufferedImage(image, false, null);
         }
-    }
 
-    public static Image scale(String srcImg, int scale) {
-        try {
-            BufferedImage src = ImageIO.read(new File(srcImg)); // 读入文件
-            return scale(src, scale);
-        } catch (IOException e) {
-            throw new SpinException(ErrorCode.IO_FAIL, "读取文件失败", e);
-        }
-    }
-
-    public static Image scale(Image srcImg, int scale) {
-        int width = srcImg.getWidth(null) * scale;
-        int height = srcImg.getHeight(null) * scale;
-        return srcImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-    }
-
-//    public static Image scale(Image srcImg, int width, int height) {
-//        return srcImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-//    }
-
-    public static void scale(String srcImageFile, String result, int width, int height, boolean bb) {
-        try {
-            double ratio; // 缩放比例
-            BufferedImage bi = ImageIO.read(new File(srcImageFile));
-            Image itemp = bi.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-            // 计算比例
-            if ((bi.getHeight() > height) || (bi.getWidth() > width)) {
-                if (bi.getHeight() > bi.getWidth()) {
-                    ratio = (Integer.valueOf(height)).doubleValue() / bi.getHeight();
-                } else {
-                    ratio = (Integer.valueOf(width)).doubleValue() / bi.getWidth();
-                }
-                AffineTransformOp op = new AffineTransformOp(AffineTransform.getScaleInstance(ratio, ratio), null);
-                itemp = op.filter(bi, null);
-            }
-            if (bb) {//补白
-                BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-                Graphics2D g = image.createGraphics();
-                g.setColor(Color.white);
+        switch (mode) {
+            case STRENTCH:
+                Image image_scaled = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                return toBufferedImage(image_scaled, false, null);
+                break;
+            case FILL:
+                BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                Graphics2D g = img.createGraphics();
+                g.setColor(fillColor);
                 g.fillRect(0, 0, width, height);
-                if (width == itemp.getWidth(null))
-                    g.drawImage(itemp, 0, (height - itemp.getHeight(null)) / 2,
-                        itemp.getWidth(null), itemp.getHeight(null),
-                        Color.white, null);
-                else
-                    g.drawImage(itemp, (width - itemp.getWidth(null)) / 2, 0,
-                        itemp.getWidth(null), itemp.getHeight(null),
-                        Color.white, null);
+
+                int targetWidth;
+                int targetHeight;
+                if (width < originWidth || height < originHeight) {
+                    // 缩小
+                    if (width < originWidth) {
+                        targetWidth = width;
+                        targetHeight = originHeight * width / originWidth;
+                    } else {
+                        targetWidth = originWidth * height / originHeight;
+                        targetHeight = height;
+                    }
+                } else {
+                    // 放大
+                    if (width > originWidth) {
+                        targetWidth = width;
+                        targetHeight = originHeight * width / originWidth;
+                    } else {
+                        targetWidth = originWidth * height / originHeight;
+                        targetHeight = height;
+                    }
+                }
+                Image scaledInstance = image.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+                if (width == targetWidth) {
+                    g.drawImage(scaledInstance, 0, (height - targetHeight) / 2, targetWidth, targetHeight, fillColor, null);
+                } else {
+                    g.drawImage(scaledInstance, (width - targetWidth) / 2, 0, targetWidth, targetHeight, fillColor, null);
+                }
                 g.dispose();
-                itemp = image;
-            }
-            ImageIO.write((BufferedImage) itemp, "JPEG", new File(result));
-        } catch (IOException e) {
-            e.printStackTrace();
+                return img;
+            break;
+            case TILE:
+                break;
         }
+
+        double ratioX; // 缩放比例
+        double ratioY; // 缩放比例
+        BufferedImage bi = toBufferedImage(image, false, transparency);
+        Image image_scaled = bi.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        // 计算比例
+        if ((bi.getHeight() > height) || (bi.getWidth() > width)) {
+            if (bi.getHeight() > bi.getWidth()) {
+                ratioY = (Integer.valueOf(height)).doubleValue() / bi.getHeight();
+            } else {
+                ratioX = (Integer.valueOf(width)).doubleValue() / bi.getWidth();
+            }
+            AffineTransformOp op = new AffineTransformOp(AffineTransform.getScaleInstance(ratioX, ratioY), null);
+            image_scaled = op.filter(bi, null);
+        }
+        if (bb) {//补白
+            BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = img.createGraphics();
+            g.setColor(Color.white);
+            g.fillRect(0, 0, width, height);
+            if (width == image_scaled.getWidth(null))
+                g.drawImage(image_scaled, 0, (height - image_scaled.getHeight(null)) / 2,
+                    image_scaled.getWidth(null), image_scaled.getHeight(null),
+                    Color.white, null);
+            else
+                g.drawImage(image_scaled, (width - image_scaled.getWidth(null)) / 2, 0,
+                    image_scaled.getWidth(null), image_scaled.getHeight(null),
+                    Color.white, null);
+            g.dispose();
+            image_scaled = img;
+        }
+        return ImageUtils.toBufferedImage(image_scaled, false, transparency);
     }
 
+
+    public static BufferedImage scale(Image srcImg, float scale, Integer transparency) {
+        int width = Math.round(srcImg.getWidth(null) * scale);
+        int height = Math.round(srcImg.getHeight(null) * scale);
+        return scale(srcImg, width, height, false, transparency);
+    }
 
     public static void cut(String srcImageFile, String result, int x, int y, int width, int height) {
         try {
@@ -230,113 +276,96 @@ public abstract class ImageUtils {
         }
     }
 
-
-    public static void convert(String srcImageFile, String formatName, String destImageFile) {
-        try {
-            File f = new File(srcImageFile);
-            BufferedImage src = ImageIO.read(f);
-            ImageIO.write(src, formatName, new File(destImageFile));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public static BufferedImage gray(Image image) {
+        ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+        ColorConvertOp op = new ColorConvertOp(cs, null);
+        return op.filter(toBufferedImage(image, true, null), null);
     }
 
-
-    public static void gray(String srcImageFile, String destImageFile) {
-        try {
-            BufferedImage src = ImageIO.read(new File(srcImageFile));
-            ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-            ColorConvertOp op = new ColorConvertOp(cs, null);
-            src = op.filter(src, null);
-            ImageIO.write(src, "JPEG", new File(destImageFile));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static BufferedImage pressText(Image image, String pressText, Font font, int fontStyle, Color color, float fontSize, int x, int y, float alpha) {
+        BufferedImage bufferedImage = toBufferedImage(image, true, null);
+        pressText(bufferedImage, pressText, font, fontStyle, color, fontSize, x, y, alpha);
+        return bufferedImage;
     }
 
-
-    public static void pressText(String pressText,
-                                 String srcImageFile, String destImageFile, String fontName,
-                                 int fontStyle, Color color, int fontSize, int x,
-                                 int y, float alpha) {
+    public static void pressText(BufferedImage bufferedImage, String pressText, Font font, int fontStyle, Color color, float fontSize, int x, int y, float alpha) {
         try {
-            File img = new File(srcImageFile);
-            Image src = ImageIO.read(img);
-            int width = src.getWidth(null);
-            int height = src.getHeight(null);
-            BufferedImage image = new BufferedImage(width, height,
-                BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = image.createGraphics();
-            g.drawImage(src, 0, 0, width, height, null);
+            Font dynamicFontPt = font.deriveFont(fontStyle, fontSize);
+            Graphics2D g = bufferedImage.createGraphics();
             g.setColor(color);
-            g.setFont(new Font(fontName, fontStyle, fontSize));
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP,
-                alpha));
+            g.setFont(dynamicFontPt);
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_DEFAULT);
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha));
             // 在指定坐标绘制水印文字
-            g.drawString(pressText, (width - (getLength(pressText) * fontSize))
-                / 2 + x, (height - fontSize) / 2 + y);
+            g.drawString(pressText, x, y);
             g.dispose();
-            ImageIO.write(image, "JPEG", new File(destImageFile));// 输出到文件流
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new SimplifiedException(e);
         }
     }
 
-
-    public static void pressText2(String pressText, String srcImageFile, String destImageFile,
-                                  String fontName, int fontStyle, Color color, int fontSize, int x,
-                                  int y, float alpha) {
-        try {
-            File img = new File(srcImageFile);
-            Image src = ImageIO.read(img);
-            int width = src.getWidth(null);
-            int height = src.getHeight(null);
-            BufferedImage image = new BufferedImage(width, height,
-                BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = image.createGraphics();
-            g.drawImage(src, 0, 0, width, height, null);
-            g.setColor(color);
-            g.setFont(new Font(fontName, fontStyle, fontSize));
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP,
-                alpha));
-            // 在指定坐标绘制水印文字
-            g.drawString(pressText, (width - (getLength(pressText) * fontSize))
-                / 2 + x, (height - fontSize) / 2 + y);
-            g.dispose();
-            ImageIO.write(image, "JPEG", new File(destImageFile));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public static BufferedImage overlay(Image srcImage, Image overlay, int x, int y, float alpha) {
+        BufferedImage image = toBufferedImage(srcImage, true, null);
+        overlay(image, overlay, x, y, alpha);
+        return image;
     }
 
-
-    public static void pressImage(String pressImg, String srcImageFile, String destImageFile,
-                                  int x, int y, float alpha) {
-        try {
-            File img = new File(srcImageFile);
-            Image src = ImageIO.read(img);
-            int wideth = src.getWidth(null);
-            int height = src.getHeight(null);
-            BufferedImage image = new BufferedImage(wideth, height,
-                BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = image.createGraphics();
-            g.drawImage(src, 0, 0, wideth, height, null);
-            // 水印文件
-            Image srcBiao = ImageIO.read(new File(pressImg));
-            int widethBiao = srcBiao.getWidth(null);
-            int heightBiao = srcBiao.getHeight(null);
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP,
-                alpha));
-            g.drawImage(srcBiao, (wideth - widethBiao) / 2,
-                (height - heightBiao) / 2, widethBiao, heightBiao, null);
-            // 水印文件结束
-            g.dispose();
-            ImageIO.write(image, "JPEG", new File(destImageFile));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public static void overlay(BufferedImage image, Image overlay, int x, int y, float alpha) {
+        Graphics2D g = image.createGraphics();
+        int wideth = overlay.getWidth(null);
+        int height = overlay.getHeight(null);
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha));
+        g.drawImage(overlay, x, y, wideth, height, null);
+        g.dispose();
     }
 
+    /**
+     * 图片设置圆角
+     *
+     * @param srcImage    源图像
+     * @param radius
+     * @param border
+     * @param borderColor
+     * @param padding
+     * @return
+     */
+    public static BufferedImage radius(Image srcImage, int radius, int border, Color borderColor, int padding) {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        int trans = Transparency.TRANSLUCENT;
+        GraphicsDevice gs = ge.getDefaultScreenDevice();
+        GraphicsConfiguration gc = gs.getDefaultConfiguration();
+        BufferedImage bimage = gc.createCompatibleImage(srcImage.getWidth(null) + padding * 2, srcImage.getHeight(null) + padding * 2, trans);
+
+//        BufferedImage image = toBufferedImage(srcImage, false, Transparency.TRANSLUCENT);
+
+        Graphics2D g2 = bimage.createGraphics();
+//        g2.setComposite(AlphaComposite.Clear);
+//        g2.fill(new Rectangle(image.getWidth(), image.getHeight()));
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC, 1.0f));
+
+        int width = srcImage.getWidth(null);
+        int height = srcImage.getHeight(null);
+
+//        Ellipse2D.Double shape = new Ellipse2D.Double(0, 0, image.getWidth(), image.getHeight());
+//
+//        g2.setClip(shape);
+//        // 使用 setRenderingHint 设置抗锯齿
+//        g2 = image.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.fillRoundRect(padding, padding, width, height, radius, radius);
+        g2.setComposite(AlphaComposite.SrcIn);
+        g2.drawImage(srcImage, padding, padding, width, height, null);
+
+        if (border > 0) {
+            g2.setColor(borderColor);
+            g2.setStroke(new BasicStroke(border));
+            g2.drawRoundRect(padding, padding, width - border / 2, height - border / 2, radius, radius);
+        }
+        g2.dispose();
+
+        return bimage;
+    }
 
     public static int getLength(String text) {
         int length = 0;
@@ -348,5 +377,104 @@ public abstract class ImageUtils {
             }
         }
         return length / 2;
+    }
+
+    public static void writeImage(Image image, FileType.Image fileType, OutputStream outputStream) {
+        BufferedImage img = toBufferedImage(image, false, null);
+        try {
+            ImageIO.write(img, fileType.getFormat(), outputStream);
+        } catch (IOException e) {
+            throw new SpinException(ErrorCode.IO_FAIL, "图片写出失败", e);
+        }
+    }
+
+    public static void writeImage(Image image, FileType.Image fileType, File outputFile) {
+        BufferedImage img = toBufferedImage(image, false, null);
+        try {
+            ImageIO.write(img, fileType.getFormat(), outputFile);
+        } catch (IOException e) {
+            throw new SpinException(ErrorCode.IO_FAIL, "图片写出失败", e);
+        }
+    }
+
+    /**
+     * 将图片进行Base64编码
+     *
+     * @param image    图片内容
+     * @param fileType 转换目标格式
+     * @return 图片的Base64编码
+     */
+    public String encodeWithBase64(Image image, FileType.Image fileType) {
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            writeImage(image, fileType, os);
+            return "data:image/" + fileType.getFormat() + ";base64," + Base64.encode(os.toByteArray());
+        } catch (IOException e) {
+            throw new SpinException(ErrorCode.IO_FAIL, "生成图片base64编码失败", e);
+        }
+    }
+
+    /**
+     * 将Image对象转换为BufferedImage
+     *
+     * @param image        源图像
+     * @param copy         是否复制(如果源图像就是BufferedImage, 当copy为false时会直接返回源图像;如果copy为true, 不论源图像是何对象, 都将为其生成新的副本)
+     * @param transparency 透明模式
+     * @return BufferedImage
+     */
+    public static BufferedImage toBufferedImage(Image image, boolean copy, Integer transparency) {
+        if (image instanceof BufferedImage) {
+            if ((null == transparency || transparency == ((BufferedImage) image).getTransparency()) && !copy) {
+                return (BufferedImage) image;
+            }
+
+            if (null == transparency) {
+                transparency = ((BufferedImage) image).getTransparency();
+            }
+        }
+
+        // This code ensures that all the pixels in the image are loaded
+        image = new ImageIcon(image).getImage();
+
+        // Determine if the image has transparent pixels; for this method's
+        // implementation, see e661 Determining If an Image Has Transparent Pixels
+        //boolean hasAlpha = hasAlpha(image);
+
+        // Create a buffered image with a format that's compatible with the screen
+        BufferedImage bimage = null;
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        try {
+            // Determine the type of transparency of the new buffered image
+            int trans = null == transparency ? Transparency.OPAQUE : transparency;
+	       /* if (hasAlpha) {
+	         transparency = Transparency.BITMASK;
+	         }*/
+
+            // Create the buffered image
+            GraphicsDevice gs = ge.getDefaultScreenDevice();
+            GraphicsConfiguration gc = gs.getDefaultConfiguration();
+            bimage = gc.createCompatibleImage(
+                image.getWidth(null), image.getHeight(null), trans);
+        } catch (HeadlessException e) {
+            // The system does not have a screen
+        }
+
+        if (bimage == null) {
+            // Create a buffered image using the default color model
+            int type = BufferedImage.TYPE_INT_RGB;
+            //int type = BufferedImage.TYPE_3BYTE_BGR;//by wang
+	        /*if (hasAlpha) {
+	         type = BufferedImage.TYPE_INT_ARGB;
+	         }*/
+            bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), type);
+        }
+
+        // Copy image to buffered image
+        Graphics g = bimage.createGraphics();
+
+        // Paint the image onto the buffered image
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+
+        return bimage;
     }
 }

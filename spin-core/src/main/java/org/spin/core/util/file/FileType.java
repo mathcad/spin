@@ -75,7 +75,7 @@ public abstract class FileType {
      * 图像文件类型
      */
     public static final class Image extends FileType {
-        public static final Image JPG = new Image(".jgp", "image/jpeg", "FFD8FF");
+        public static final Image JPG = new Image(".jpg", "image/jpeg", "FFD8FF");
         public static final Image JPEG = new Image(".jpeg", "image/jpeg", "FFD8F");
         public static final Image BMP = new Image(".bmp", "application/x-MS-bmp", "424D");
         public static final Image PNG = new Image(".png", "image/png", "89504E47");
