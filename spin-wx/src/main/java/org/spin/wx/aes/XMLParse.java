@@ -24,6 +24,7 @@ public class XMLParse {
      *
      * @param xmltext 待提取的xml字符串
      * @return 提取出的加密消息字符串
+     * @throws AesException AES加密算法执行异常
      */
     public static Object[] extract(String xmltext) throws AesException {
         Object[] result = new Object[3];

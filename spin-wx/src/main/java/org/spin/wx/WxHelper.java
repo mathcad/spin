@@ -38,6 +38,9 @@ public class WxHelper {
 
     /**
      * 将字符串数组按字典序排序后拼接，计算SHA1值(小写16进制表示)
+     *
+     * @param param 参数
+     * @return sha1签名
      */
     public static String sha1(String... param) {
         StringBuilder sbuilder = new StringBuilder();
@@ -47,6 +50,10 @@ public class WxHelper {
 
     /**
      * 将字符串数组按字典序排序后拼接，计算MD5值(大写16进制表示)
+     *
+     * @param key   key
+     * @param param 参数
+     * @return md5签名
      */
     public static String md5Sign(String key, String... param) {
         List<String> list = new ArrayList<>();
@@ -63,9 +70,6 @@ public class WxHelper {
         return DigestUtils.md5Hex(sbuilder.substring(1, sbuilder.length()));
     }
 
-    /**
-     * 验证消息签名
-     */
     public static boolean verifySign(String signature, String token, String timestamp, String nonce) {
         return signature.equals(sha1(token, timestamp, nonce));
     }
@@ -73,7 +77,9 @@ public class WxHelper {
     /**
      * 根据code获取微信用户信息
      *
-     * @param code 用户同意授权后，带的code参数
+     * @param code       用户同意授权后，带的code参数
+     * @param configName 配置名称
+     * @return 微信用户信息
      */
     public static WxUserInfo getUserInfo(String code, String... configName) {
         AccessToken access_token = WxTokenManager.getOAuthToken(extractConfigName(configName), code);
@@ -83,7 +89,9 @@ public class WxHelper {
     /**
      * 获取模板消息的模板ID
      *
-     * @param code 短code
+     * @param code       短code
+     * @param configName 配置名称
+     * @return 模板ID
      */
     public static String getTmplId(String code, String... configName) {
         AccessToken accessToken = WxTokenManager.getToken(extractConfigName(configName));
@@ -93,7 +101,7 @@ public class WxHelper {
             if (null != resMap && "0".equals(resMap.get("errcode"))) {
                 return resMap.get("template_id");
             } else {
-                logger.error("getTmplId Returned Message: ", res);
+                logger.error("getTmplId Returned Message: {}", res);
                 throw new SimplifiedException("获取模板ID失败");
             }
         } catch (Exception e) {
@@ -105,7 +113,9 @@ public class WxHelper {
     /**
      * 发送模板消息
      *
-     * @param msg 消息实体
+     * @param msg        消息实体
+     * @param configName 配置名称
+     * @return 发送结果
      */
     public static String postTmplMsg(TmplMsgEntity msg, String... configName) {
         AccessToken accessToken = WxTokenManager.getToken(extractConfigName(configName));
@@ -114,7 +124,7 @@ public class WxHelper {
         if (null != resMap && "0".equals(resMap.get("errcode"))) {
             return resMap.get("msgid");
         } else {
-            logger.error("发送模板消息失败: ", res);
+            logger.error("发送模板消息失败: {}", res);
             throw new SimplifiedException("发送模板消息失败");
         }
     }
@@ -124,6 +134,7 @@ public class WxHelper {
      *
      * @param accessToken 网页授权接口调用凭证,注意：此access_token与基础支持的access_token不同
      * @param openId      用户的唯一标识
+     * @return 微信用户信息
      */
     public static WxUserInfo getUserInfo(String accessToken, String openId) {
         String tmp;
@@ -143,7 +154,9 @@ public class WxHelper {
     /**
      * 根据jsapi_ticket对url生成签名
      *
-     * @param url 需要调用jsapi的url
+     * @param url        需要调用jsapi的url
+     * @param configName 配置名称
+     * @return 签名
      */
     public static Map<String, String> signature(String url, String... configName) {
         Map<String, String> ret = new HashMap<>();

@@ -50,6 +50,7 @@ public final class MatrixToImageWriter {
      * As {@link #toBufferedImage(BitMatrix)}, but allows customization of the output.
      *
      * @param matrix {@link BitMatrix} to write
+     * @param logo   logo
      * @return {@link BufferedImage} representation of the input
      */
     public static BufferedImage toBufferedImage(BitMatrix matrix, Image logo) {
@@ -60,13 +61,14 @@ public final class MatrixToImageWriter {
      * As {@link #toBufferedImage(BitMatrix)}, but allows customization of the output.
      *
      * @param matrix {@link BitMatrix} to write
+     * @param logo   logo
      * @param config output configuration
      * @return {@link BufferedImage} representation of the input
      */
     public static BufferedImage toBufferedImage(BitMatrix matrix, Image logo, MatrixToImageConfig config) {
         int width = matrix.getWidth();
         int height = matrix.getHeight();
-        BufferedImage image = new BufferedImage(width, height, config.getBufferedImageColorModel());
+        BufferedImage image = new BufferedImage(width, height, null == logo ? config.getBufferedImageColorModel() : BufferedImage.TYPE_INT_RGB);
 
         BufferedImage bufferedLogo = null;
         int startX = 0;
@@ -79,9 +81,9 @@ public final class MatrixToImageWriter {
                 throw new SpinException("the Logo size is greater than qrcode image's size");
             }
             bufferedLogo = ImageUtils.toBufferedImage(logo, false, null);
-            startX = width - bufferedLogo.getWidth(null) / 2;
+            startX = (width - bufferedLogo.getWidth(null)) / 2;
             endX = startX + bufferedLogo.getWidth(null);
-            startY = height - bufferedLogo.getHeight(null) / 2;
+            startY = (height - bufferedLogo.getHeight(null)) / 2;
             endY = startY + bufferedLogo.getHeight(null);
         }
         int onColor = config.getPixelOnColor();

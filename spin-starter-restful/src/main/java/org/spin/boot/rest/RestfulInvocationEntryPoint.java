@@ -26,7 +26,6 @@ import org.spin.data.core.Page;
 import org.spin.data.query.QueryParam;
 import org.spin.data.util.EntityUtils;
 import org.spin.web.RestfulResponse;
-import org.spin.web.annotation.Needed;
 import org.spin.web.annotation.Payload;
 import org.spin.web.annotation.RestfulMethod;
 import org.spin.web.view.ModelExcelView;
@@ -35,7 +34,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -69,7 +70,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     private static final Logger logger = LoggerFactory.getLogger(RestfulInvocationEntryPoint.class);
     private static final String PATH_NOT_VALID = "请求的路径不正确";
     private static final String REQUEST_BODY_NAME = "request_body_param";
-    private static final Function<Parameter, Boolean> checkNeeded = p -> Objects.nonNull(p.getAnnotation(Needed.class));
+    private static final Function<Parameter, Boolean> checkNeeded = p -> Objects.nonNull(p.getAnnotation(NonNull.class));
 
     @Autowired(required = false)
     private Authenticator authenticator;
@@ -111,7 +112,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         }
         RestfulResponse restfulResponse = exec(module, service, request);
 
-        if (200 != restfulResponse.getCode()) {
+        if (200 != restfulResponse.getStatus()) {
             return restfulResponse.getMessage();
         } else {
             return JsonUtils.toJson(restfulResponse.getData());
@@ -119,7 +120,7 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
 
     }
 
-    @RequestMapping(value = "${spin.web.restfulPrefix}/expExcel/**")
+    @PostMapping("${spin.web.restfulPrefix}/expExcel/**")
     public ModelAndView exportExec(HttpServletRequest request, String grid) {
         ModelAndView mv = new ModelAndView();
         if (StringUtils.isEmpty(grid)) {
@@ -141,23 +142,23 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         String service = resc[2];
         RestfulResponse restfulResponse = exec(module, service, request);
 
-        if (200 != restfulResponse.getCode()) {
-            return addCodeAndMsg(mv, restfulResponse.getCode(), restfulResponse.getMessage());
+        if (200 != restfulResponse.getStatus()) {
+            return addCodeAndMsg(mv, restfulResponse.getStatus(), restfulResponse.getMessage());
         } else {
             Object data = restfulResponse.getData();
-            Iterable<?> excelData;
-            if (data instanceof ExcelModel) {
-                g = ((ExcelModel) data).getGrid();
-                excelData = ((ExcelModel) data).getData();
-            } else if (data instanceof Iterable) {
-                excelData = (Iterable) data;
-            } else if (data instanceof Page) {
-                excelData = ((Page) data).getRows();
-            } else if (data instanceof IEntity) {
-                excelData = CollectionUtils.ofArrayList(data);
-            } else {
-                return addCodeAndMsg(mv, -1, "请求的服务未返回数据列表，不能导出");
-            }
+            Iterable<?> excelData = null;
+//            if (data instanceof ExcelModel) {
+//                g = ((ExcelModel) data).getGrid();
+//                excelData = ((ExcelModel) data).getData();
+//            } else if (data instanceof Iterable) {
+//                excelData = (Iterable) data;
+//            } else if (data instanceof Page) {
+//                excelData = ((Page) data).getRows();
+//            } else if (data instanceof IEntity) {
+//                excelData = CollectionUtils.ofArrayList(data);
+//            } else {
+//                return addCodeAndMsg(mv, -1, "请求的服务未返回数据列表，不能导出");
+//            }
             ModelExcelView mev = new ModelExcelView(new ExcelModel(g, excelData));
             mv.setView(mev);
             return mv;

@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.2.14-SNAPSHOT'
+version = '2.2.15-SNAPSHOT'
 def artifactId = 'spin-core'
 
 test {
@@ -43,6 +43,7 @@ dependencies {
     testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
     testRuntimeOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
     testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
+    testRuntimeOnly group: 'org.jsoup', name: 'jsoup', version: '1.12.1'
     testRuntimeOnly group: 'com.google.zxing', name: 'core', version: '3.4.0'
 
 //    core

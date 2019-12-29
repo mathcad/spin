@@ -90,10 +90,10 @@ dependencies {
 //    implementation group: 'com.atomikos', name: 'transactions-jta', version: '5.0.0'
 
 //    implementation(project(":spin-starter-restful"))
-    implementation group: 'org.mathcat', name: 'spin-data-spring-boot-starter', version: '2.2.4-SNAPSHOT'
-    implementation group: 'org.mathcat', name: 'spin-starter-restful', version: '2.2.4-SNAPSHOT'
-    implementation group: 'org.mathcat', name: 'spin-data', version: '2.2.4-SNAPSHOT'
-    implementation group: 'org.mathcat', name: 'spin-wx', version: '2.2.4-SNAPSHOT'
+    implementation group: 'org.mathcat', name: 'spin-data-spring-boot-starter', version: '2.2.7-SNAPSHOT'
+    implementation group: 'org.mathcat', name: 'spin-starter-restful', version: '2.2.7-SNAPSHOT'
+    implementation group: 'org.mathcat', name: 'spin-data', version: '2.2.7-SNAPSHOT'
+    implementation group: 'org.mathcat', name: 'spin-wx', version: '2.2.7-SNAPSHOT'
     implementation group: 'com.ibeetl', name: 'beetl', version: '3.0.10.RELEASE'
 
     implementation group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'

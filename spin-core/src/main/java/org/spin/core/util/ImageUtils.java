@@ -1,5 +1,6 @@
 package org.spin.core.util;
 
+import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.security.Base64;
 import org.spin.core.throwable.SimplifiedException;
@@ -10,13 +11,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.color.ColorSpace;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
-import java.awt.image.BufferedImage;
-import java.awt.image.ColorConvertOp;
-import java.awt.image.CropImageFilter;
-import java.awt.image.FilteredImageSource;
-import java.awt.image.ImageFilter;
+import java.awt.image.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +27,9 @@ public abstract class ImageUtils {
     private ImageUtils() {
     }
 
+    /**
+     * 缩放模式
+     */
     public enum ScaleMode {
         /**
          * 拉伸
@@ -49,98 +47,100 @@ public abstract class ImageUtils {
         TILE
     }
 
+    /**
+     * 缩放图像
+     *
+     * @param image        原始图像
+     * @param width        目标宽度
+     * @param height       目标高度
+     * @param mode         缩放模式
+     * @param fillColor    填充颜色(仅填充模式时有效)
+     * @param transparency 透明模式
+     * @return 缩放后的图像
+     */
     public static BufferedImage scale(Image image, int width, int height, ScaleMode mode, Color fillColor, Integer transparency) {
         int originWidth = image.getWidth(null);
         int originHeight = image.getHeight(null);
 
         // 尺寸不变直接返回
         if (originWidth == width && originHeight == height) {
-            return toBufferedImage(image, false, null);
+            return toBufferedImage(image, false, transparency);
         }
 
         switch (mode) {
             case STRENTCH:
                 Image image_scaled = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                return toBufferedImage(image_scaled, false, null);
-                break;
+                return toBufferedImage(image_scaled, false, transparency);
             case FILL:
-                BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                int trans = null == transparency ? Transparency.OPAQUE : transparency;
+                GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                GraphicsDevice gs = ge.getDefaultScreenDevice();
+                GraphicsConfiguration gc = gs.getDefaultConfiguration();
+                BufferedImage img = gc.createCompatibleImage(width, height, trans);
+
+                Assert.notTrue((fillColor == null || fillColor.getAlpha() != 255) && (trans == Transparency.OPAQUE), "不透明模式时，无法实现透明的背景填充");
                 Graphics2D g = img.createGraphics();
-                g.setColor(fillColor);
-                g.fillRect(0, 0, width, height);
+                if (null != fillColor) {
+                    g.setColor(fillColor);
+                    g.fillRect(0, 0, width, height);
+                }
 
                 int targetWidth;
                 int targetHeight;
                 if (width < originWidth || height < originHeight) {
                     // 缩小
-                    if (width < originWidth) {
+                    if (height >= originHeight) {
                         targetWidth = width;
                         targetHeight = originHeight * width / originWidth;
-                    } else {
+                    } else if (width >= originWidth) {
                         targetWidth = originWidth * height / originHeight;
                         targetHeight = height;
+                    } else {
+                        float incW = (originWidth - width + 0F) / originWidth;
+                        float incH = (originHeight - height + 0F) / originHeight;
+
+                        if (incW > incH) {
+                            targetWidth = width;
+                            targetHeight = originHeight * width / originWidth;
+                        } else {
+                            targetWidth = originWidth * height / originHeight;
+                            targetHeight = height;
+                        }
                     }
-                } else {
+                } else if (width != originWidth && height != originHeight) {
                     // 放大
-                    if (width > originWidth) {
+                    float incW = (width - originWidth + 0F) / originWidth;
+                    float incH = (height - originHeight + 0F) / originHeight;
+                    if (incW < incH) {
                         targetWidth = width;
                         targetHeight = originHeight * width / originWidth;
                     } else {
                         targetWidth = originWidth * height / originHeight;
                         targetHeight = height;
                     }
-                }
-                Image scaledInstance = image.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
-                if (width == targetWidth) {
-                    g.drawImage(scaledInstance, 0, (height - targetHeight) / 2, targetWidth, targetHeight, fillColor, null);
                 } else {
-                    g.drawImage(scaledInstance, (width - targetWidth) / 2, 0, targetWidth, targetHeight, fillColor, null);
+                    // 尺寸不变，只做填充
+                    targetWidth = originWidth;
+                    targetHeight = originHeight;
+                }
+                Image scaledInstance;
+                if (width != originWidth) {
+                    scaledInstance = image.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+                } else {
+                    scaledInstance = image;
+                }
+                if (width == targetWidth) {
+                    g.drawImage(scaledInstance, 0, (height - targetHeight) / 2, targetWidth, targetHeight, null);
+                } else {
+                    g.drawImage(scaledInstance, (width - targetWidth) / 2, 0, targetWidth, targetHeight, null);
                 }
                 g.dispose();
                 return img;
-            break;
             case TILE:
-                break;
+                throw new SpinException("Unsupported yet");
+            default:
+                throw new SpinException("Unsupported MODE");
         }
-
-        double ratioX; // 缩放比例
-        double ratioY; // 缩放比例
-        BufferedImage bi = toBufferedImage(image, false, transparency);
-        Image image_scaled = bi.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        // 计算比例
-        if ((bi.getHeight() > height) || (bi.getWidth() > width)) {
-            if (bi.getHeight() > bi.getWidth()) {
-                ratioY = (Integer.valueOf(height)).doubleValue() / bi.getHeight();
-            } else {
-                ratioX = (Integer.valueOf(width)).doubleValue() / bi.getWidth();
-            }
-            AffineTransformOp op = new AffineTransformOp(AffineTransform.getScaleInstance(ratioX, ratioY), null);
-            image_scaled = op.filter(bi, null);
-        }
-        if (bb) {//补白
-            BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = img.createGraphics();
-            g.setColor(Color.white);
-            g.fillRect(0, 0, width, height);
-            if (width == image_scaled.getWidth(null))
-                g.drawImage(image_scaled, 0, (height - image_scaled.getHeight(null)) / 2,
-                    image_scaled.getWidth(null), image_scaled.getHeight(null),
-                    Color.white, null);
-            else
-                g.drawImage(image_scaled, (width - image_scaled.getWidth(null)) / 2, 0,
-                    image_scaled.getWidth(null), image_scaled.getHeight(null),
-                    Color.white, null);
-            g.dispose();
-            image_scaled = img;
-        }
-        return ImageUtils.toBufferedImage(image_scaled, false, transparency);
-    }
-
-
-    public static BufferedImage scale(Image srcImg, float scale, Integer transparency) {
-        int width = Math.round(srcImg.getWidth(null) * scale);
-        int height = Math.round(srcImg.getHeight(null) * scale);
-        return scale(srcImg, width, height, false, transparency);
     }
 
     public static void cut(String srcImageFile, String result, int x, int y, int width, int height) {
@@ -324,11 +324,11 @@ public abstract class ImageUtils {
      * 图片设置圆角
      *
      * @param srcImage    源图像
-     * @param radius
-     * @param border
-     * @param borderColor
-     * @param padding
-     * @return
+     * @param radius      圆角半径
+     * @param border      边框宽度
+     * @param borderColor 边框颜色
+     * @param padding     内边距
+     * @return 处理后的图像
      */
     public static BufferedImage radius(Image srcImage, int radius, int border, Color borderColor, int padding) {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -460,7 +460,7 @@ public abstract class ImageUtils {
 
         if (bimage == null) {
             // Create a buffered image using the default color model
-            int type = BufferedImage.TYPE_INT_RGB;
+            int type = transparency == null || transparency == Transparency.OPAQUE ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
             //int type = BufferedImage.TYPE_3BYTE_BGR;//by wang
 	        /*if (hasAlpha) {
 	         type = BufferedImage.TYPE_INT_ARGB;

@@ -28,7 +28,7 @@ public class QrCodeUtils {
     private static final Logger logger = LoggerFactory.getLogger(QrCodeUtils.class);
 
     private static final float LOGO_RATIO = 100F / 430F;
-    private static final float RADIUS_RATIO = 15F / 430F;
+    private static final float RADIUS_RATIO = 20F / 430F;
     private static final float BORDER_RATIO = 5F / 430F;
 
     public static BufferedImage optimizeLogo(Image logo, int qrcodeSize, Color borderColor) {
@@ -38,7 +38,7 @@ public class QrCodeUtils {
     public static BufferedImage optimizeLogo(Image logo, int qrcodeSize, int radius, int border, Color borderColor, int padding) {
         int logoSize = Math.round(qrcodeSize * LOGO_RATIO);
         int contentSize = logoSize - padding * 2 - border * 2;
-        BufferedImage logoContent = ImageUtils.scale(logo, contentSize, contentSize, true, Transparency.TRANSLUCENT);
+        BufferedImage logoContent = ImageUtils.scale(logo, contentSize, contentSize, ImageUtils.ScaleMode.FILL, Color.WHITE, Transparency.TRANSLUCENT);
         return ImageUtils.radius(logoContent, radius, border, borderColor, padding);
     }
 
@@ -46,7 +46,9 @@ public class QrCodeUtils {
      * 对指定内容生成二维码，结果交由用户逻辑处理
      *
      * @param content   内容
+     * @param size      二维码尺寸(像素)
      * @param processor 处理逻辑
+     * @return 像素矩阵
      */
     public static BitMatrix encode(CharSequence content, int size, FinalConsumer<BitMatrix> processor) {
         return encode(content, size, bitMatrix -> {
@@ -61,11 +63,18 @@ public class QrCodeUtils {
         });
     }
 
+    public static BufferedImage encode(CharSequence content, int size) {
+        return encode(content, size, (Function<BitMatrix, BufferedImage>) MatrixToImageWriter::toBufferedImage);
+    }
+
     /**
      * 对指定内容生成二维码，结果交由用户逻辑处理
      *
      * @param content 内容
-     * @param mapper  处理逻辑
+     * @param size    二维码尺寸(像素)
+     * @param mapper  转换逻辑
+     * @param <T>     转换类型
+     * @return 转换结果
      */
     public static <T> T encode(CharSequence content, int size, Function<BitMatrix, T> mapper) {
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();

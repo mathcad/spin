@@ -3,10 +3,7 @@ package org.spin.boot;
 import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.boot.properties.WxConfigProperties;
 import org.spin.core.util.JsonUtils;
-import org.spin.data.cache.RedisCache;
 import org.spin.web.converter.JsonHttpMessageConverter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -14,9 +11,6 @@ import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.util.unit.DataSize;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -35,23 +29,6 @@ import java.util.Collection;
 @EnableConfigurationProperties({SpinWebPorperties.class, WxConfigProperties.class})
 @ComponentScan("org.spin")
 public class SpinAutoConfiguration {
-
-    @Configuration
-    @ConditionalOnClass(name = "org.springframework.data.redis.connection.RedisConnectionFactory")
-    static class RedisCacheConfiguration {
-        @Bean
-        @ConditionalOnBean(RedisConnectionFactory.class)
-        public RedisCache<?> redisCache(RedisConnectionFactory redisConnectionFactory) {
-            RedisTemplate<String, Object> template = new RedisTemplate<>();
-            template.setConnectionFactory(redisConnectionFactory);
-            template.afterPropertiesSet();
-
-            RedisCache<Object> redisCache = new RedisCache<>();
-            redisCache.setRedisTemplate(template);
-            redisCache.setRedisSerializer(new JdkSerializationRedisSerializer());
-            return redisCache;
-        }
-    }
 
     @Bean
     public FilterRegistrationBean<CharacterEncodingFilter> encodingFilterRegistration() {

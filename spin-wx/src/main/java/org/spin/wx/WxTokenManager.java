@@ -37,6 +37,8 @@ public class WxTokenManager {
 
     /**
      * 获取默认的AccessToken对象，根据生命周期对token自管理
+     *
+     * @return AccessToken
      */
     public static AccessToken getDefaultToken() {
         return getToken(WxConfigManager.DEFAULT);
@@ -46,6 +48,7 @@ public class WxTokenManager {
      * 获取默认的网页授权AccessToken对象，根据生命周期对token自管理
      *
      * @param code 微信code
+     * @return AccessToken
      */
     public static AccessToken getDefaultOAuthToken(String... code) {
         return getOAuthToken(WxConfigManager.DEFAULT, code);
@@ -53,6 +56,9 @@ public class WxTokenManager {
 
     /**
      * 获取AccessToken对象，根据生命周期对token自管理
+     *
+     * @param configName 配置名称
+     * @return AccessToken
      */
     public static AccessToken getToken(String configName) {
         WxConfigInfo info = WxConfigManager.getConfig(configName);
@@ -61,6 +67,10 @@ public class WxTokenManager {
 
     /**
      * 获取网页授权AccessToken对象，根据生命周期对token自管理
+     *
+     * @param configName 配置名称
+     * @param code       授权码
+     * @return AccessToken
      */
     public static AccessToken getOAuthToken(String configName, String... code) {
         WxConfigInfo info = WxConfigManager.getConfig(configName);
@@ -76,6 +86,7 @@ public class WxTokenManager {
      * @param appSecret  微信appsecret
      * @param code       访问时微信带来的code
      * @param type       需要的accessToken类型
+     * @return AccessToken
      */
     public static AccessToken getToken(String configName, String appId, String appSecret, String code, AccessToken.TokenType type) {
         logger.info("getInstance({}, {}, {}, {})", configName, appId, appSecret, code);

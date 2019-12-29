@@ -8,7 +8,6 @@ import org.spin.core.util.MethodUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.extend.SpringJtaPlatformAdapter;
-import org.spin.web.annotation.RestfulInterface;
 import org.spin.web.annotation.RestfulMethod;
 import org.spin.web.annotation.RestfulService;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -16,13 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Bean后处理器
@@ -59,12 +53,6 @@ public class SpinBeanPostProcessor implements BeanPostProcessor {
             String value = annoService.value();
             ReflectionUtils.doWithMethods(beanClass, method -> processRestMethod(bean, StringUtils.isEmpty(value) ? beanName : value, method));
         }
-
-        Arrays.stream(beanClass.getInterfaces()).filter(i -> Objects.nonNull(i.getAnnotation(RestfulInterface.class))).forEach(i -> {
-            RestfulInterface annotation = i.getAnnotation(RestfulInterface.class);
-            String value = annotation.value();
-            ReflectionUtils.doWithMethods(i, method -> processRestMethod(bean, StringUtils.isEmpty(value) ? beanName : value, method));
-        });
     }
 
     private void processRestMethod(final Object bean, final String module, final Method method) {
