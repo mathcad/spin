@@ -3,9 +3,8 @@ package org.spin.data.pk.generator;
 import org.junit.jupiter.api.Test;
 import org.spin.data.pk.DistributedId;
 import org.spin.data.pk.IdGeneratorConfig;
+import org.spin.data.pk.generator.provider.ExternalMachineIdProvider;
 import org.spin.data.pk.generator.provider.PropertyMachineIdProvider;
-import org.spin.data.pk.meta.IdGenMethodE;
-import org.spin.data.pk.meta.IdTypeE;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -27,6 +26,15 @@ public class IdGeneratorTest {
             System.out.println(idIdGenerator.genId());
         }
         assertTrue(true);
+    }
+
+    @Test
+    void testConfig() {
+        ExternalMachineIdProvider idProvider = new ExternalMachineIdProvider();
+
+        idProvider.init("");
+
+        System.out.println(idProvider.getMachineId());
     }
 
 
