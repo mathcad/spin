@@ -3,11 +3,22 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.2.15-SNAPSHOT'
+version = '2.2.16-SNAPSHOT'
 def artifactId = 'spin-core'
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes("Specification-Title": artifactId)
+        attributes("Specification-Vendor": "Mathcat")
+        attributes("Specification-Version": project.version)
+        attributes("Implementation-Title": artifactId)
+        attributes("Implementation-Vendor": "Mathcat")
+        attributes("Implementation-Version": project.version)
+    }
 }
 
 install {

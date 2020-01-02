@@ -11,7 +11,12 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.color.ColorSpace;
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorConvertOp;
+import java.awt.image.CropImageFilter;
+import java.awt.image.FilteredImageSource;
+import java.awt.image.ImageFilter;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -67,19 +72,19 @@ public abstract class ImageUtils {
             return toBufferedImage(image, false, transparency);
         }
 
+        int trans = null == transparency ? Transparency.OPAQUE : transparency;
+        BufferedImage result;
+        Graphics2D g;
         switch (mode) {
             case STRENTCH:
                 Image image_scaled = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
                 return toBufferedImage(image_scaled, false, transparency);
             case FILL:
-                int trans = null == transparency ? Transparency.OPAQUE : transparency;
-                GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-                GraphicsDevice gs = ge.getDefaultScreenDevice();
-                GraphicsConfiguration gc = gs.getDefaultConfiguration();
-                BufferedImage img = gc.createCompatibleImage(width, height, trans);
+                result = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+                    .getDefaultConfiguration().createCompatibleImage(width, height, trans);
 
                 Assert.notTrue((fillColor == null || fillColor.getAlpha() != 255) && (trans == Transparency.OPAQUE), "不透明模式时，无法实现透明的背景填充");
-                Graphics2D g = img.createGraphics();
+                g = result.createGraphics();
                 if (null != fillColor) {
                     g.setColor(fillColor);
                     g.fillRect(0, 0, width, height);
@@ -96,8 +101,8 @@ public abstract class ImageUtils {
                         targetWidth = originWidth * height / originHeight;
                         targetHeight = height;
                     } else {
-                        float incW = (originWidth - width + 0F) / originWidth;
-                        float incH = (originHeight - height + 0F) / originHeight;
+                        float incW = (originWidth - ((float) width)) / originWidth;
+                        float incH = (originHeight - ((float) height)) / originHeight;
 
                         if (incW > incH) {
                             targetWidth = width;
@@ -109,8 +114,8 @@ public abstract class ImageUtils {
                     }
                 } else if (width != originWidth && height != originHeight) {
                     // 放大
-                    float incW = (width - originWidth + 0F) / originWidth;
-                    float incH = (height - originHeight + 0F) / originHeight;
+                    float incW = (width - (float) originWidth) / originWidth;
+                    float incH = (height - (float) originHeight) / originHeight;
                     if (incW < incH) {
                         targetWidth = width;
                         targetHeight = originHeight * width / originWidth;
@@ -135,159 +140,158 @@ public abstract class ImageUtils {
                     g.drawImage(scaledInstance, (width - targetWidth) / 2, 0, targetWidth, targetHeight, null);
                 }
                 g.dispose();
-                return img;
+                return result;
             case TILE:
-                throw new SpinException("Unsupported yet");
+                result = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+                    .getDefaultConfiguration().createCompatibleImage(width, height, trans);
+                g = result.createGraphics();
+                int xTimes = (int) Math.ceil(((double) width) / originWidth);
+                int yTimes = (int) Math.ceil(((double) height) / originHeight);
+                for (int y = 0; y < yTimes; ++y) {
+                    for (int x = 0; x < xTimes; ++x) {
+                        g.drawImage(image, x * originWidth, y * originHeight, originWidth, originHeight, null);
+                    }
+                }
+                g.dispose();
+                return result;
             default:
                 throw new SpinException("Unsupported MODE");
         }
     }
 
-    public static void cut(String srcImageFile, String result, int x, int y, int width, int height) {
-        try {
-            // 读取源图像
-            BufferedImage bi = ImageIO.read(new File(srcImageFile));
-            int srcWidth = bi.getHeight(); // 源图宽度
-            int srcHeight = bi.getWidth(); // 源图高度
-            if (srcWidth > 0 && srcHeight > 0) {
-                Image image = bi.getScaledInstance(srcWidth, srcHeight,
-                    Image.SCALE_DEFAULT);
-                // 四个参数分别为图像起点坐标和宽高
-                // 即: CropImageFilter(int x,int y,int width,int height)
-                ImageFilter cropFilter = new CropImageFilter(x, y, width, height);
-                Image img = Toolkit.getDefaultToolkit().createImage(
-                    new FilteredImageSource(image.getSource(),
-                        cropFilter));
-                BufferedImage tag = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-                Graphics g = tag.getGraphics();
-                g.drawImage(img, 0, 0, width, height, null); // 绘制切割后的图
+    /**
+     * 图像裁剪
+     *
+     * @param image  原图像
+     * @param x      起始x
+     * @param y      起始y
+     * @param width  裁剪宽度
+     * @param height 裁剪高度
+     * @return 裁剪的结果
+     */
+    public static BufferedImage cut(Image image, int x, int y, int width, int height) {
+        int originWidth = image.getWidth(null);
+        int originHeight = image.getHeight(null);
+
+        BufferedImage result = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+            .getDefaultConfiguration().createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+
+        // 如果起始坐标超出源图像范围，直接返回空白图像
+        if (x >= originWidth || y >= originHeight) {
+            return result;
+        }
+
+        int targetWidth = Math.min((originWidth - x), width);
+        int targetHeight = Math.min((originHeight - y), height);
+
+        ImageFilter cropFilter = new CropImageFilter(x, y, targetWidth, targetHeight);
+        Image img = Toolkit.getDefaultToolkit().createImage(new FilteredImageSource(image.getSource(), cropFilter));
+        Graphics g = result.getGraphics();
+        g.drawImage(img, 0, 0, targetWidth, targetHeight, null);
+        g.dispose();
+        return result;
+    }
+
+
+    /**
+     * 图像分割
+     * <p>将图像分割成rows * cols个部分，如果不能整除，最后一行与最后一列将会使用指定颜色的像素补齐</p>
+     *
+     * @param image           源图像
+     * @param rows            行数
+     * @param cols            列数
+     * @param completionColor 像素不足时的填充颜色(默认使用透明像素)
+     * @return 分割后的图像(二维数组)
+     */
+    public static BufferedImage[][] split(Image image, int rows, int cols, Color completionColor) {
+        BufferedImage[][] res = new BufferedImage[rows][cols];
+        int originWidth = image.getWidth(null);
+        int originHeight = image.getHeight(null);
+
+        int ppr = (int) Math.ceil(((double) originWidth) / rows);
+        int ppc = (int) Math.ceil(((double) originHeight) / cols);
+
+        for (int y = 0; y < cols; ++y) {
+            for (int x = 0; x < rows; x++) {
+                res[x][y] = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+                    .getDefaultConfiguration().createCompatibleImage(ppr, ppc, Transparency.TRANSLUCENT);
+
+                int startX = x * ppr;
+                int startY = y * ppc;
+
+                int targetWidth = Math.min((originWidth - startX), ppr);
+                int targetHeight = Math.min((originHeight - startY), ppc);
+
+                Image img = Toolkit.getDefaultToolkit().createImage(new FilteredImageSource(image.getSource(),
+                    new CropImageFilter(startX, startY, targetWidth, targetHeight)));
+                Graphics g = res[x][y].getGraphics();
+                g.drawImage(img, 0, 0, targetWidth, targetHeight, null);
+                if (null != completionColor) {
+                    int shortageX = ppr - targetWidth;
+                    int shortageY = ppc - targetHeight;
+                    if (shortageX > 0 || shortageY > 0) {
+                        if (shortageY == 0) {
+                            targetHeight = 0;
+                        }
+
+                        if (shortageX == 0) {
+                            targetWidth = 0;
+                        }
+                        g.setColor(completionColor);
+                        g.fillRect(targetWidth, targetHeight, ppr - targetWidth, ppr - targetHeight);
+                    }
+                }
                 g.dispose();
-                // 输出为文件
-                ImageIO.write(tag, "JPEG", new File(result));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        return res;
     }
 
-
-    public static void cut2(String srcImageFile, String descDir, int rows, int cols) {
-        try {
-            if (rows <= 0 || rows > 20) rows = 2; // 切片行数
-            if (cols <= 0 || cols > 20) cols = 2; // 切片列数
-            // 读取源图像
-            BufferedImage bi = ImageIO.read(new File(srcImageFile));
-            int srcWidth = bi.getHeight(); // 源图宽度
-            int srcHeight = bi.getWidth(); // 源图高度
-            if (srcWidth > 0 && srcHeight > 0) {
-                Image img;
-                ImageFilter cropFilter;
-                Image image = bi.getScaledInstance(srcWidth, srcHeight, Image.SCALE_DEFAULT);
-                int destWidth; // 每张切片的宽度
-                int destHeight; // 每张切片的高度
-                // 计算切片的宽度和高度
-                if (srcWidth % cols == 0) {
-                    destWidth = srcWidth / cols;
-                } else {
-                    destWidth = srcWidth / cols + 1;
-                }
-                if (srcHeight % rows == 0) {
-                    destHeight = srcHeight / rows;
-                } else {
-                    destHeight = srcWidth / rows + 1;
-                }
-                // 循环建立切片
-                // 改进的想法:是否可用多线程加快切割速度
-                for (int i = 0; i < rows; i++) {
-                    for (int j = 0; j < cols; j++) {
-                        // 四个参数分别为图像起点坐标和宽高
-                        // 即: CropImageFilter(int x,int y,int width,int height)
-                        cropFilter = new CropImageFilter(j * destWidth, i * destHeight,
-                            destWidth, destHeight);
-                        img = Toolkit.getDefaultToolkit().createImage(
-                            new FilteredImageSource(image.getSource(),
-                                cropFilter));
-                        BufferedImage tag = new BufferedImage(destWidth,
-                            destHeight, BufferedImage.TYPE_INT_RGB);
-                        Graphics g = tag.getGraphics();
-                        g.drawImage(img, 0, 0, null); // 绘制缩小后的图
-                        g.dispose();
-                        // 输出为文件
-                        ImageIO.write(tag, "JPEG", new File(descDir
-                            + "_r" + i + "_c" + j + ".jpg"));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    public static void cut3(String srcImageFile, String descDir, int destWidth, int destHeight) {
-        try {
-            if (destWidth <= 0) destWidth = 200; // 切片宽度
-            if (destHeight <= 0) destHeight = 150; // 切片高度
-            // 读取源图像
-            BufferedImage bi = ImageIO.read(new File(srcImageFile));
-            int srcWidth = bi.getHeight(); // 源图宽度
-            int srcHeight = bi.getWidth(); // 源图高度
-            if (srcWidth > destWidth && srcHeight > destHeight) {
-                Image img;
-                ImageFilter cropFilter;
-                Image image = bi.getScaledInstance(srcWidth, srcHeight, Image.SCALE_DEFAULT);
-                int cols = 0; // 切片横向数量
-                int rows = 0; // 切片纵向数量
-                // 计算切片的横向和纵向数量
-                if (srcWidth % destWidth == 0) {
-                    cols = srcWidth / destWidth;
-                } else {
-                    cols = srcWidth / destWidth + 1;
-                }
-                if (srcHeight % destHeight == 0) {
-                    rows = srcHeight / destHeight;
-                } else {
-                    rows = srcHeight / destHeight + 1;
-                }
-                // 循环建立切片
-                // 改进的想法:是否可用多线程加快切割速度
-                for (int i = 0; i < rows; i++) {
-                    for (int j = 0; j < cols; j++) {
-                        // 四个参数分别为图像起点坐标和宽高
-                        // 即: CropImageFilter(int x,int y,int width,int height)
-                        cropFilter = new CropImageFilter(j * destWidth, i * destHeight,
-                            destWidth, destHeight);
-                        img = Toolkit.getDefaultToolkit().createImage(
-                            new FilteredImageSource(image.getSource(),
-                                cropFilter));
-                        BufferedImage tag = new BufferedImage(destWidth,
-                            destHeight, BufferedImage.TYPE_INT_RGB);
-                        Graphics g = tag.getGraphics();
-                        g.drawImage(img, 0, 0, null); // 绘制缩小后的图
-                        g.dispose();
-                        // 输出为文件
-                        ImageIO.write(tag, "JPEG", new File(descDir
-                            + "_r" + i + "_c" + j + ".jpg"));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+    /**
+     * 将图像转换为灰度图
+     *
+     * @param image 原图像
+     * @return 灰度图
+     */
     public static BufferedImage gray(Image image) {
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
         ColorConvertOp op = new ColorConvertOp(cs, null);
         return op.filter(toBufferedImage(image, true, null), null);
     }
 
+    /**
+     * 绘制文字, 并返回新的图像
+     *
+     * @param image     源图像
+     * @param pressText 文字内容
+     * @param font      字体
+     * @param fontStyle 字体样式
+     * @param color     绘制颜色
+     * @param fontSize  字体大小
+     * @param x         起始x
+     * @param y         起始y
+     * @param alpha     透明度
+     * @return 绘制后的图像
+     */
     public static BufferedImage pressText(Image image, String pressText, Font font, int fontStyle, Color color, float fontSize, int x, int y, float alpha) {
         BufferedImage bufferedImage = toBufferedImage(image, true, null);
         pressText(bufferedImage, pressText, font, fontStyle, color, fontSize, x, y, alpha);
         return bufferedImage;
     }
 
+    /**
+     * 在原图像上绘制文字
+     *
+     * @param bufferedImage 图像
+     * @param pressText     文字内容
+     * @param font          字体
+     * @param fontStyle     字体样式
+     * @param color         绘制颜色
+     * @param fontSize      字体大小
+     * @param x             起始x
+     * @param y             起始y
+     * @param alpha         透明度
+     */
     public static void pressText(BufferedImage bufferedImage, String pressText, Font font, int fontStyle, Color color, float fontSize, int x, int y, float alpha) {
         try {
             Font dynamicFontPt = font.deriveFont(fontStyle, fontSize);
@@ -305,12 +309,31 @@ public abstract class ImageUtils {
         }
     }
 
+    /**
+     * 图像叠加
+     *
+     * @param srcImage 原图像
+     * @param overlay  叠加层
+     * @param x        叠加层起点x
+     * @param y        叠加层起点y
+     * @param alpha    叠加层透明度
+     * @return 处理后的图像
+     */
     public static BufferedImage overlay(Image srcImage, Image overlay, int x, int y, float alpha) {
         BufferedImage image = toBufferedImage(srcImage, true, null);
         overlay(image, overlay, x, y, alpha);
         return image;
     }
 
+    /**
+     * 图像叠加(在原图像上直接叠加)
+     *
+     * @param image   图像
+     * @param overlay 叠加层
+     * @param x       叠加层起点x
+     * @param y       叠加层起点y
+     * @param alpha   叠加层透明度
+     */
     public static void overlay(BufferedImage image, Image overlay, int x, int y, float alpha) {
         Graphics2D g = image.createGraphics();
         int wideth = overlay.getWidth(null);
@@ -322,6 +345,7 @@ public abstract class ImageUtils {
 
     /**
      * 图片设置圆角
+     * <p>处理后的图像实际宽/高为原始图像宽/高 + 边框宽度 * 2 + 边距 * 2</p>
      *
      * @param srcImage    源图像
      * @param radius      圆角半径
@@ -331,38 +355,27 @@ public abstract class ImageUtils {
      * @return 处理后的图像
      */
     public static BufferedImage radius(Image srcImage, int radius, int border, Color borderColor, int padding) {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        int originWidth = srcImage.getWidth(null);
+        int originHeight = srcImage.getHeight(null);
+
         int trans = Transparency.TRANSLUCENT;
-        GraphicsDevice gs = ge.getDefaultScreenDevice();
-        GraphicsConfiguration gc = gs.getDefaultConfiguration();
-        BufferedImage bimage = gc.createCompatibleImage(srcImage.getWidth(null) + padding * 2, srcImage.getHeight(null) + padding * 2, trans);
+        BufferedImage bimage = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()
+            .createCompatibleImage(originWidth + padding * 2 + border * 2, originHeight + padding * 2 + border * 2, trans);
 
-//        BufferedImage image = toBufferedImage(srcImage, false, Transparency.TRANSLUCENT);
+        Graphics2D g = bimage.createGraphics();
 
-        Graphics2D g2 = bimage.createGraphics();
-//        g2.setComposite(AlphaComposite.Clear);
-//        g2.fill(new Rectangle(image.getWidth(), image.getHeight()));
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC, 1.0f));
-
-        int width = srcImage.getWidth(null);
-        int height = srcImage.getHeight(null);
-
-//        Ellipse2D.Double shape = new Ellipse2D.Double(0, 0, image.getWidth(), image.getHeight());
-//
-//        g2.setClip(shape);
-//        // 使用 setRenderingHint 设置抗锯齿
-//        g2 = image.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.fillRoundRect(padding, padding, width, height, radius, radius);
-        g2.setComposite(AlphaComposite.SrcIn);
-        g2.drawImage(srcImage, padding, padding, width, height, null);
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC, 1.0F));
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.fillRoundRect(padding, padding, originWidth + border * 2, originHeight + border * 2, radius, radius);
+        g.setComposite(AlphaComposite.SrcIn);
+        g.drawImage(srcImage, padding + border, padding + border, originWidth, originHeight, null);
 
         if (border > 0) {
-            g2.setColor(borderColor);
-            g2.setStroke(new BasicStroke(border));
-            g2.drawRoundRect(padding, padding, width - border / 2, height - border / 2, radius, radius);
+            g.setColor(borderColor);
+            g.setStroke(new BasicStroke(border));
+            g.drawRoundRect(padding + border / 2, padding + border / 2, originWidth + border, originHeight + border, radius, radius);
         }
-        g2.dispose();
+        g.dispose();
 
         return bimage;
     }
@@ -379,6 +392,13 @@ public abstract class ImageUtils {
         return length / 2;
     }
 
+    /**
+     * 将图像写出到输出流
+     *
+     * @param image        图像
+     * @param fileType     文件类型
+     * @param outputStream 输出流
+     */
     public static void writeImage(Image image, FileType.Image fileType, OutputStream outputStream) {
         BufferedImage img = toBufferedImage(image, false, null);
         try {
@@ -388,6 +408,13 @@ public abstract class ImageUtils {
         }
     }
 
+    /**
+     * 将文件写出到文件
+     *
+     * @param image      图像
+     * @param fileType   文件类型
+     * @param outputFile 文件
+     */
     public static void writeImage(Image image, FileType.Image fileType, File outputFile) {
         BufferedImage img = toBufferedImage(image, false, null);
         try {
@@ -404,12 +431,36 @@ public abstract class ImageUtils {
      * @param fileType 转换目标格式
      * @return 图片的Base64编码
      */
-    public String encodeWithBase64(Image image, FileType.Image fileType) {
+    public static String encodeWithBase64(Image image, FileType.Image fileType) {
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             writeImage(image, fileType, os);
             return "data:image/" + fileType.getFormat() + ";base64," + Base64.encode(os.toByteArray());
         } catch (IOException e) {
-            throw new SpinException(ErrorCode.IO_FAIL, "生成图片base64编码失败", e);
+            throw new SpinException(ErrorCode.IO_FAIL, "生成图片Base64编码失败", e);
+        }
+    }
+
+    /**
+     * 将Base64编码解析为{@link BufferedImage}对象
+     *
+     * @param base64Str 图片的Base64编码
+     * @return Buffered图像对象
+     */
+    public static BufferedImage decodeFromBase64(String base64Str) {
+        if (StringUtils.isEmpty(base64Str)) {
+            throw new SpinException("图片Base64内容不能为空");
+        }
+        int start = 0;
+        if (base64Str.startsWith("data:image/")) {
+            start = base64Str.indexOf(',');
+            if (start < 12) {
+                throw new SpinException("图片Base64格式不合法");
+            }
+        }
+        try (ByteArrayInputStream is = new ByteArrayInputStream(Base64.decode(start > 0 ? base64Str.substring(start + 1) : base64Str))) {
+            return ImageIO.read(is);
+        } catch (IOException e) {
+            throw new SpinException(ErrorCode.IO_FAIL, "解析Base64编码失败", e);
         }
     }
 
@@ -417,7 +468,7 @@ public abstract class ImageUtils {
      * 将Image对象转换为BufferedImage
      *
      * @param image        源图像
-     * @param copy         是否复制(如果源图像就是BufferedImage, 当copy为false时会直接返回源图像;如果copy为true, 不论源图像是何对象, 都将为其生成新的副本)
+     * @param copy         是否复制(当copy为false, 如果源图像就是BufferedImage且透明模式与声明的一致时会直接返回源图像; 如果copy为true, 不论源图像是何对象, 都将为其生成新的副本)
      * @param transparency 透明模式
      * @return BufferedImage
      */
