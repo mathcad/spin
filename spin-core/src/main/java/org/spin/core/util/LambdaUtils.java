@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class LambdaUtils {
 
 
-    private static final Map<Class, WeakReference<SerializedLambda>> FUNC_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, WeakReference<SerializedLambda>> FUNC_CACHE = new ConcurrentHashMap<>();
 
     private LambdaUtils() {
     }
@@ -47,7 +47,7 @@ public abstract class LambdaUtils {
      * @param <T>    参数类型
      * @return lambda信息
      */
-    public static <T> SerializedLambda resolveLambda(Supplier<?> lambda) {
+    public static <T> SerializedLambda resolveLambda(Supplier<T> lambda) {
         return resolveLambdaInternal(lambda);
     }
 
@@ -65,7 +65,7 @@ public abstract class LambdaUtils {
 
     private static SerializedLambda resolveLambdaInternal(Object lambda) {
 
-        Class clazz = lambda.getClass();
+        Class<?> clazz = lambda.getClass();
         return Optional.ofNullable(FUNC_CACHE.get(clazz))
             .map(WeakReference::get)
             .orElseGet(() -> {
