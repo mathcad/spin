@@ -39,7 +39,7 @@ public abstract class ImageUtils {
         /**
          * 拉伸
          */
-        STRENTCH,
+        STRETCH,
 
         /**
          * 填充
@@ -55,7 +55,7 @@ public abstract class ImageUtils {
     /**
      * 缩放图像
      *
-     * @param image        原始图像
+     * @param image        原始图像c
      * @param width        目标宽度
      * @param height       目标高度
      * @param mode         缩放模式
@@ -76,7 +76,7 @@ public abstract class ImageUtils {
         BufferedImage result;
         Graphics2D g;
         switch (mode) {
-            case STRENTCH:
+            case STRETCH:
                 Image image_scaled = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
                 return toBufferedImage(image_scaled, false, transparency);
             case FILL:
