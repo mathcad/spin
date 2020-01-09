@@ -280,13 +280,13 @@ public abstract class ExcelUtils {
     }
 
     private static Workbook createWorkbook(FileType fileType) {
-        switch (fileType.getExtension()) {
-            case ".xls":
+        switch (fileType.getFormat()) {
+            case "XLS":
                 return new HSSFWorkbook();
-            case ".xlsx":
+            case "XLSX":
                 return new XSSFWorkbook();
             default:
-                throw new SpinException("不支持的文件类型: " + fileType.getExtension());
+                throw new SpinException("不支持的文件类型: " + fileType.getFormat());
         }
     }
 
