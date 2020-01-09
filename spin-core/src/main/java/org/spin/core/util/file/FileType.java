@@ -1,5 +1,9 @@
 package org.spin.core.util.file;
 
+import org.spin.core.util.CollectionUtils;
+
+import java.util.List;
+
 /**
  * 文件类型
  * Created by xuweinan on 2017/2/7.
@@ -8,10 +12,10 @@ package org.spin.core.util.file;
  */
 public abstract class FileType {
     /**
-     * 文件扩展名，包含"."
+     * 合法文件扩展名列表，包含"."
      * 如<code>.exe</code>
      */
-    protected String extension;
+    protected List<String> validExts;
 
     /**
      * 文件格式
@@ -29,18 +33,26 @@ public abstract class FileType {
      */
     protected String trait;
 
-    protected FileType(String extension, String contentType, String trait) {
-        this.extension = extension.charAt(0) == '.' ? extension : "." + extension;
-        this.format = this.extension.substring(1).toUpperCase();
+    /**
+     * 特征码偏移
+     */
+    protected int traitOffset;
+
+    protected FileType(String contentType, String trait, int traitOffset, String... validExts) {
+        this.format = this.getClass().getSimpleName();
         this.contentType = contentType;
         this.trait = trait.length() > 16 ? trait.toUpperCase().substring(0, 16) : trait.toUpperCase();
+        this.traitOffset = traitOffset;
+        this.validExts = CollectionUtils.ofLinkedList(validExts);
     }
 
-
-    public String getExtension() {
-        return extension;
+    public String getFirstExt() {
+        return validExts.get(0);
     }
 
+    public List<String> getValidExts() {
+        return validExts;
+    }
 
     public String getFormat() {
         return format;
@@ -56,18 +68,22 @@ public abstract class FileType {
         return trait;
     }
 
+    public int getTraitOffset() {
+        return traitOffset;
+    }
+
     /**
      * 文本文件类型
      */
     public static final class Text extends FileType {
-        public static final Text PLAIN = new Text(".txt", "text/plain", "");
-        public static final Text JSON = new Text(".json", "application/json", "");
-        public static final Text XML = new Text(".xml", "text/xml", "");
-        public static final Text HTML = new Text(".html", "text/html", "");
-        public static final Text CSS = new Text(".css", "text/css", "");
+        public static final Text PLAIN = new Text("text/plain", "", 0, ".txt");
+        public static final Text JSON = new Text("application/json", "", 0, ".json");
+        public static final Text XML = new Text("text/xml", "", 0, ".xml");
+        public static final Text HTML = new Text("text/html", "", 0, ".html", ".htm");
+        public static final Text CSS = new Text("text/css", "", 0, ".css");
 
-        public Text(String extension, String contentType, String trait) {
-            super(extension, contentType, trait);
+        public Text(String contentType, String trait, int traitOffset, String... validExts) {
+            super(contentType, trait, traitOffset, validExts);
         }
     }
 
@@ -75,16 +91,18 @@ public abstract class FileType {
      * 图像文件类型
      */
     public static final class Image extends FileType {
-        public static final Image JPG = new Image(".jpg", "image/jpeg", "FFD8FF");
-        public static final Image JPEG = new Image(".jpeg", "image/jpeg", "FFD8F");
-        public static final Image BMP = new Image(".bmp", "application/x-MS-bmp", "424D");
-        public static final Image PNG = new Image(".png", "image/png", "89504E47");
-        public static final Image GIG = new Image(".gif", "image/gif", "47494638");
-        public static final Image TIFF = new Image(".tiff", "image/tiff", "49492A00");
-        public static final Image PSD = new Image(".psd", "", "");
+        public static final Image JPEG = new Image("image/jpeg", "FFD8F", 0, ".jpg", ".jpeg", ".jpe");
+        public static final Image BMP = new Image("application/x-bmp", "424D", 0, ".bmp", ".rle", ".dib");
+        public static final Image PNG = new Image("image/png", "89504E47", 0, ".png", "pns");
+        public static final Image GIG = new Image("image/gif", "47494638", 0, ".gif");
+        public static final Image TIFF = new Image("image/tiff", "49492A00", 0, ".tiff", ".tif");
+        public static final Image ICO = new Image("image/x-icon", "00000100", 0, ".ico");
+        public static final Image PSD = new Image("application/octet-stream", "38425053", 0, ".psd", ".pdd");
+        public static final Image DICOM = new Image("application/octet-stream", "4449434D", 128, ".dcm", ".dc3", ".dic");
+        public static final Image SCT = new Image("application/octet-stream", "4354", 80, ".sct", ".dc3", ".dic");
 
-        public Image(String extension, String contentType, String trait) {
-            super(extension, contentType, trait);
+        public Image(String contentType, String trait, int traitOffset, String... validExts) {
+            super(contentType, trait, traitOffset, validExts);
         }
     }
 
@@ -92,11 +110,12 @@ public abstract class FileType {
      * 文档类型
      */
     public static final class Document extends FileType {
-        public static final Document XLS = new Document(".xls", "application/vnd.ms-excel", "D0CF11E0");
-        public static final Document XLSX = new Document(".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "504B0304");
+        public static final Document PDF = new Document("application/pdf", "255044462D312E", 0, ".pdf");
+        public static final Document XLS = new Document("application/vnd.ms-excel", "D0CF11E0", 0, ".xls");
+        public static final Document XLSX = new Document("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "504B0304", 0, ".xlsx");
 
-        public Document(String extension, String contentType, String trait) {
-            super(extension, contentType, trait);
+        public Document(String contentType, String trait, int traitOffset, String... validExts) {
+            super(contentType, trait, traitOffset, validExts);
         }
 
     }
@@ -105,15 +124,16 @@ public abstract class FileType {
      * 压缩文件类型
      */
     public static final class Archive extends FileType {
-        public static final Archive ZIP = new Archive(".zip", "", "");
-        public static final Archive RAR = new Archive(".rar", "", "");
-        public static final Archive Z7 = new Archive(".7z", "", "");
-        public static final Archive GZIP = new Archive(".gz", "", "");
-        public static final Archive TAR = new Archive(".tar", "", "");
-        public static final Archive ARC = new Archive(".arc", "", "");
+        public static final Archive ZIP = new Archive("application/octet-stream", "504B0304", 0, ".zip");
+        public static final Archive RAR = new Archive("application/octet-stream", "52617221", 0, ".rar");
+        public static final Archive GZIP = new Archive("application/octet-stream", "1F8B", 0, ".gz");
+        public static final Archive Z7 = new Archive("application/octet-stream", "377A", 0, ".7z");
+        public static final Archive XZ = new Archive("application/octet-stream", "FD377A585A", 0, ".xz");
+        public static final Archive BZ2 = new Archive("application/octet-stream", "425A", 0, ".bz2");
+        public static final Archive CAB = new Archive("application/octet-stream", "49536328", 0, ".cab");
 
-        public Archive(String extension, String contentType, String trait) {
-            super(extension, contentType, trait);
+        public Archive(String contentType, String trait, int traitOffset, String... validExts) {
+            super(contentType, trait, traitOffset, validExts);
         }
     }
 
@@ -121,10 +141,10 @@ public abstract class FileType {
      * 音频文件类型
      */
     public static final class Audio extends FileType {
-        public static final Audio WAV = new Audio(".wav", "", "");
+        public static final Audio WAV = new Audio("audio/wav", "57415645", 0, ".wav");
 
-        public Audio(String extension, String contentType, String trait) {
-            super(extension, contentType, trait);
+        public Audio(String contentType, String trait, int traitOffset, String... validExts) {
+            super(contentType, trait, traitOffset, validExts);
         }
     }
 
@@ -132,10 +152,10 @@ public abstract class FileType {
      * 视频文件类型
      */
     public static final class Video extends FileType {
-        public static final Video MP4 = new Video(".mp4", "", "");
+        public static final Video MP4 = new Video("video/mpeg4", "667479706D703432", 4, ".mp4");
 
-        public Video(String extension, String contentType, String trait) {
-            super(extension, contentType, trait);
+        public Video(String contentType, String trait, int traitOffset, String... validExts) {
+            super(contentType, trait, traitOffset, validExts);
         }
     }
 
@@ -143,10 +163,11 @@ public abstract class FileType {
      * 二进制文件类型
      */
     public static final class Bin extends FileType {
-        public static final Video EXE = new Video(".exe", "", "");
+        public static final Bin PE = new Bin("application/octet-stream", "4D5A", 0, ".exe", ".dll", ".sys");
+        public static final Bin ELF = new Bin("application/octet-stream", "7F454C46", 0, "");
 
-        public Bin(String extension, String contentType, String trait) {
-            super(extension, contentType, trait);
+        public Bin(String contentType, String trait, int traitOffset, String... validExts) {
+            super(contentType, trait, traitOffset, validExts);
         }
     }
 }

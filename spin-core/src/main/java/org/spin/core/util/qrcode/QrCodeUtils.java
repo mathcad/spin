@@ -38,7 +38,7 @@ public class QrCodeUtils {
     public static BufferedImage optimizeLogo(Image logo, int qrcodeSize, int radius, int border, Color borderColor, int padding) {
         int logoSize = Math.round(qrcodeSize * LOGO_RATIO);
         int contentSize = logoSize - padding * 2 - border * 2;
-        BufferedImage logoContent = ImageUtils.scale(logo, contentSize, contentSize, ImageUtils.ScaleMode.FILL, Color.WHITE, Transparency.TRANSLUCENT);
+        BufferedImage logoContent = ImageUtils.scale(logo, contentSize, contentSize, ImageUtils.ScaleMode.STRETCH, Color.WHITE, Transparency.TRANSLUCENT);
         return ImageUtils.radius(logoContent, radius, border, borderColor, padding);
     }
 
@@ -52,7 +52,9 @@ public class QrCodeUtils {
      */
     public static BitMatrix encode(CharSequence content, int size, FinalConsumer<BitMatrix> processor) {
         return encode(content, size, bitMatrix -> {
-            processor.accept(bitMatrix);
+            if (null != processor) {
+                processor.accept(bitMatrix);
+            }
             return bitMatrix;
         });
     }

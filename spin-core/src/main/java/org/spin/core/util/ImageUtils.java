@@ -42,6 +42,11 @@ public abstract class ImageUtils {
         STRETCH,
 
         /**
+         * 适应
+         */
+        ADAPT,
+
+        /**
          * 填充
          */
         FILL,
@@ -54,12 +59,13 @@ public abstract class ImageUtils {
 
     /**
      * 缩放图像
+     * <p>支持拉伸、适应、填充与平铺4种缩放模式</p>
      *
-     * @param image        原始图像c
+     * @param image        原始图像
      * @param width        目标宽度
      * @param height       目标高度
      * @param mode         缩放模式
-     * @param fillColor    填充颜色(仅填充模式时有效)
+     * @param fillColor    填充颜色(仅适应模式时有效)
      * @param transparency 透明模式
      * @return 缩放后的图像
      */
@@ -72,14 +78,23 @@ public abstract class ImageUtils {
             return toBufferedImage(image, false, transparency);
         }
 
+        // 比例不变直接缩放
+        if (originHeight * width == originWidth * height) {
+            return toBufferedImage(image.getScaledInstance(width, height, Image.SCALE_SMOOTH), false, transparency);
+        }
+
         int trans = null == transparency ? Transparency.OPAQUE : transparency;
+        Image scaledInstance;
         BufferedImage result;
         Graphics2D g;
+        int targetHeight;
+        int targetWidth;
+
         switch (mode) {
             case STRETCH:
-                Image image_scaled = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                return toBufferedImage(image_scaled, false, transparency);
-            case FILL:
+                scaledInstance = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                return toBufferedImage(scaledInstance, false, transparency);
+            case ADAPT:
                 result = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
                     .getDefaultConfiguration().createCompatibleImage(width, height, trans);
 
@@ -89,9 +104,6 @@ public abstract class ImageUtils {
                     g.setColor(fillColor);
                     g.fillRect(0, 0, width, height);
                 }
-
-                int targetWidth;
-                int targetHeight;
                 if (width < originWidth || height < originHeight) {
                     // 缩小
                     if (height >= originHeight) {
@@ -128,7 +140,6 @@ public abstract class ImageUtils {
                     targetWidth = originWidth;
                     targetHeight = originHeight;
                 }
-                Image scaledInstance;
                 if (width != originWidth) {
                     scaledInstance = image.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
                 } else {
@@ -141,6 +152,17 @@ public abstract class ImageUtils {
                 }
                 g.dispose();
                 return result;
+            case FILL:
+                targetHeight = height;
+                targetWidth = originWidth * height / originHeight;
+                if (targetWidth < width) {
+                    targetHeight = originHeight * width / originWidth;
+                    targetWidth = width;
+                }
+                scaledInstance = image.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+                ImageFilter cropFilter = new CropImageFilter((targetWidth - width) / 2, (targetHeight - height) / 2, width, height);
+                scaledInstance = Toolkit.getDefaultToolkit().createImage(new FilteredImageSource(scaledInstance.getSource(), cropFilter));
+                return toBufferedImage(scaledInstance, false, transparency);
             case TILE:
                 result = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
                     .getDefaultConfiguration().createCompatibleImage(width, height, trans);

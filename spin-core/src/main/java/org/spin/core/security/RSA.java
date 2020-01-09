@@ -2,6 +2,8 @@ package org.spin.core.security;
 
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
+import org.spin.core.collection.Pair;
+import org.spin.core.collection.Tuple;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.SerializeUtils;
 import org.spin.core.util.StringUtils;
@@ -54,6 +56,16 @@ public class RSA extends ProviderDetector {
         }
         keyPairGen.initialize(DEFAULT_KEY_SIZE, new SecureRandom());
         return keyPairGen.generateKeyPair();
+    }
+
+    /**
+     * 生成序列化的随机密钥对(公钥/私钥)
+     *
+     * @return BASE64格式的公钥与私钥对
+     */
+    public static Pair<String, String> generateSerializedKeyPair() {
+        KeyPair keyPair = generateKeyPair();
+        return Tuple.of(Base64.encode(keyPair.getPublic().getEncoded()), Base64.encode(keyPair.getPrivate().getEncoded()));
     }
 
     /**

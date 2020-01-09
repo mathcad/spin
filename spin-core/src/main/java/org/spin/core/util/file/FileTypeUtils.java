@@ -40,13 +40,13 @@ public abstract class FileTypeUtils {
     }
 
     static {
-        traits.add(new Trait(Document.XLS.getExtension(), Document.XLS.getTrait(), Document.XLS));
-        traits.add(new Trait(Document.XLSX.getExtension(), Document.XLSX.getTrait(), Document.XLSX));
-        traits.add(new Trait(Image.JPG.getExtension(), Image.JPG.getTrait(), Image.JPG));
-        traits.add(new Trait(Image.BMP.getExtension(), Image.BMP.getTrait(), Image.BMP));
-        traits.add(new Trait(Image.PNG.getExtension(), Image.PNG.getTrait(), Image.PNG));
-        traits.add(new Trait(Image.GIG.getExtension(), Image.GIG.getTrait(), Image.GIG));
-        traits.add(new Trait(Image.TIFF.getExtension(), Image.TIFF.getTrait(), Image.TIFF));
+        traits.add(new Trait(Document.XLS.getFirstExt(), Document.XLS.getTrait(), Document.XLS));
+        traits.add(new Trait(Document.XLSX.getFirstExt(), Document.XLSX.getTrait(), Document.XLSX));
+        traits.add(new Trait(Image.JPEG.getFirstExt(), Image.JPEG.getTrait(), Image.JPEG));
+        traits.add(new Trait(Image.BMP.getFirstExt(), Image.BMP.getTrait(), Image.BMP));
+        traits.add(new Trait(Image.PNG.getFirstExt(), Image.PNG.getTrait(), Image.PNG));
+        traits.add(new Trait(Image.GIG.getFirstExt(), Image.GIG.getTrait(), Image.GIG));
+        traits.add(new Trait(Image.TIFF.getFirstExt(), Image.TIFF.getTrait(), Image.TIFF));
     }
 
     /**
@@ -56,7 +56,7 @@ public abstract class FileTypeUtils {
      */
     public static void registType(Collection<FileType> types) {
         for (FileType f : types) {
-            traits.add(new Trait(f.getExtension(), f.getTrait(), f));
+            traits.add(new Trait(f.getFirstExt(), f.getTrait(), f));
         }
     }
 
