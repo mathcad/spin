@@ -17,7 +17,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.SecureRandom;
 import java.util.Random;
 
@@ -223,7 +222,7 @@ public class AES extends ProviderDetector {
      * @param key 密钥字节数据
      * @return 密钥
      */
-    public static Key toKey(byte[] key) {
+    public static SecretKey toKey(byte[] key) {
         return new SecretKeySpec(key, ALGORITHM);
     }
 
@@ -256,6 +255,21 @@ public class AES extends ProviderDetector {
      */
     public synchronized AES withKey(SecretKey secretKey, KeyLength keyLength) {
         this.secretKey = Assert.notNull(secretKey, "密钥不能为空");
+        this.keyLength = Assert.notNull(keyLength, "密钥强度不能为空");
+
+        initCipher();
+        return this;
+    }
+
+    /**
+     * 指定加密密钥与密钥强度
+     *
+     * @param key       密钥
+     * @param keyLength 密钥强度
+     * @return 当前AES加密工具实例
+     */
+    public synchronized AES withKey(byte[] key, KeyLength keyLength) {
+        this.secretKey = toKey(Assert.notNull(key, "密钥不能为空"));
         this.keyLength = Assert.notNull(keyLength, "密钥强度不能为空");
 
         initCipher();
