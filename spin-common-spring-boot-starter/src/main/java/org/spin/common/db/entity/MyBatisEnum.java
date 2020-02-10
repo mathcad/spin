@@ -15,7 +15,7 @@ import java.util.Map;
  * @author xuweinan
  * @version 1.0
  */
-public interface MyBatisIntEnum<T extends Serializable> extends IEnum<T>, Evaluatable<T> {
+public interface MyBatisEnum<T extends Serializable> extends IEnum<T>, Evaluatable<T> {
 
     /**
      * 获取枚举描述
@@ -30,7 +30,7 @@ public interface MyBatisIntEnum<T extends Serializable> extends IEnum<T>, Evalua
         return "";
     }
 
-    static <E extends Serializable, T extends MyBatisIntEnum<E>> T valueOf(Class<T> clazz, T value) {
+    static <E extends Serializable, T extends MyBatisEnum<E>> T valueOf(Class<T> clazz, E value) {
         for (T enumConstant : clazz.getEnumConstants()) {
             if (enumConstant.getValue().equals(value)) {
                 return enumConstant;
@@ -39,10 +39,10 @@ public interface MyBatisIntEnum<T extends Serializable> extends IEnum<T>, Evalua
         return null;
     }
 
-    static <T extends Serializable> Map<T, String> toMap(Class<MyBatisIntEnum<T>> enumClass) {
-        MyBatisIntEnum<T>[] enumConstants = enumClass.getEnumConstants();
+    static <T extends Serializable> Map<T, String> toMap(Class<MyBatisEnum<T>> enumClass) {
+        MyBatisEnum<T>[] enumConstants = enumClass.getEnumConstants();
         Map<T, String> res = new HashMap<>(enumConstants.length);
-        for (MyBatisIntEnum<T> enumConstant : enumConstants) {
+        for (MyBatisEnum<T> enumConstant : enumConstants) {
             res.put(enumConstant.getValue(), enumConstant.getDescription());
         }
 

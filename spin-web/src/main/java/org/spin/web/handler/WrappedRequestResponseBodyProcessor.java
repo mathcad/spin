@@ -31,11 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * MVC返回结果处理器
@@ -130,7 +126,7 @@ public class WrappedRequestResponseBodyProcessor implements HandlerMethodReturnV
     private void writeWithMessageConverters(RestfulResponse<?> value, ServletServerHttpResponse outputMessage)
         throws IOException, HttpMediaTypeNotAcceptableException {
 
-        MediaType selectedMediaType = MediaType.APPLICATION_JSON_UTF8.removeQualityValue();
+        MediaType selectedMediaType = MediaType.APPLICATION_JSON.removeQualityValue();
 
         for (HttpMessageConverter<?> converter : this.messageConverters) {
             GenericHttpMessageConverter<RestfulResponse<?>> genericConverter = (converter instanceof GenericHttpMessageConverter ? (GenericHttpMessageConverter<RestfulResponse<?>>) converter : null);

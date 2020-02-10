@@ -87,17 +87,25 @@ public class RestfulResponse<T> {
         return response;
     }
 
-    public static <T> RestfulResponse<T> error(ErrorCode errorCode,String path, String message, String error) {
-        RestfulResponse<T> response = new RestfulResponse<>(errorCode);
-        response.setPath(path);
-        response.setMessage(message);
-        response.setError(error);
-        return response;
-    }
-
-    public RestfulResponse setCodeAndMsg(ErrorCode errorCode) {
+    public RestfulResponse<T> setCodeAndMsg(ErrorCode errorCode) {
         this.status = errorCode.getCode();
         this.message = errorCode.getDesc();
+        return this;
+    }
+
+    public RestfulResponse<T> withPath(String path) {
+        this.path = path;
+        return this;
+    }
+
+    public RestfulResponse<T> withError(String error) {
+        this.error = error;
+        return this;
+    }
+
+    public RestfulResponse<T> withPathAndError(String path, String error) {
+        this.path = path;
+        this.error = error;
         return this;
     }
 

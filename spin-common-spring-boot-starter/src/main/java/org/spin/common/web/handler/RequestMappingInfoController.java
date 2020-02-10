@@ -1,10 +1,8 @@
 package org.spin.common.web.handler;
 
 import org.spin.common.vo.ServiceRequestInfo;
+import org.spin.common.web.annotation.GetApi;
 import org.spin.common.web.config.RequestMappingInfoHolder;
-import org.spin.web.AuthLevel;
-import org.spin.web.ScopeType;
-import org.spin.web.annotation.GetApi;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 

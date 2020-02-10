@@ -6,7 +6,6 @@ import org.spin.common.annotation.UtilClass;
 import org.spin.core.util.NetUtils;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import sun.net.util.IPAddressUtil;
 
 import java.net.InetAddress;
 import java.util.HashSet;
@@ -78,10 +77,10 @@ public abstract class NetworkUtils {
             byte[] address;
             Set<Short> netMasks;
             if (host.contains(":")) {
-                address = IPAddressUtil.textToNumericFormatV6(host);
+                address = NetUtils.textToNumericFormatV6(host);
                 netMasks = v6NetMasks;
             } else {
-                address = IPAddressUtil.textToNumericFormatV4(host);
+                address = NetUtils.textToNumericFormatV4(host);
                 netMasks = v4NetMasks;
             }
 

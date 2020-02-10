@@ -7,6 +7,7 @@ import feign.optionals.OptionalDecoder;
 import org.spin.common.feign.*;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -68,8 +69,8 @@ public class FeignAutoConfiguration {
     }
 
     @Bean
-    public RequestInterceptor feignInterceptor() {
-        return new FeignInterceptor();
+    public RequestInterceptor feignInterceptor(@Value("${spring.application.name:}") String appName) {
+        return new FeignInterceptor(appName);
     }
 
     @Bean

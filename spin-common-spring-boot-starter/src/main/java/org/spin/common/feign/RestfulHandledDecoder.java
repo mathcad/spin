@@ -5,10 +5,10 @@ import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.common.throwable.BizException;
-import org.spin.web.RestfulResponse;
+import org.spin.common.throwable.FeignHttpException;
 import org.spin.core.ErrorCode;
 import org.spin.core.gson.internal.$Gson$Types;
+import org.spin.web.RestfulResponse;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.http.HttpHeaders;
@@ -43,26 +43,30 @@ public class RestfulHandledDecoder implements Decoder {
     }
 
     @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Object decode(final Response response, Type type) throws IOException {
         if (type instanceof Class || type instanceof ParameterizedType || type instanceof WildcardType) {
 
             Type actType = type;
             boolean wrapped = false;
-            Collection<String> eTag = response.headers().get("Encoded");
-            if (null != eTag && eTag.stream().anyMatch(it -> it.equals("1"))
+            Collection<String> encoded = response.headers().get("Encoded");
+            if (null != encoded && encoded.contains("1")
                 && (!(type instanceof ParameterizedType) || (((ParameterizedType) type).getRawType() != RestfulResponse.class))) {
                 actType = $Gson$Types.newParameterizedTypeWithOwner(null, RestfulResponse.class, type);
                 wrapped = true;
             }
-            @SuppressWarnings({"unchecked", "rawtypes"})
             HttpMessageConverterExtractor<?> extractor = new HttpMessageConverterExtractor(actType, this.messageConverters.getObject().getConverters());
 
             Object data = extractor.extractData(new FeignResponseAdapter(response));
             if (data instanceof RestfulResponse) {
                 if (((RestfulResponse) data).getStatus() != ErrorCode.OK.getCode()) {
-                    logger.error("Path: {}", ((RestfulResponse) data).getPath());
-                    logger.error("Error Message: {}", ((RestfulResponse) data).getError());
-                    throw new BizException(new ErrorCode(((RestfulResponse) data).getStatus(), ""), ((RestfulResponse) data).getMessage());
+                    FeignHttpException exception = new FeignHttpException(((RestfulResponse) data).getStatus(), ((RestfulResponse) data).getPath(), ((RestfulResponse) data).getError(), ((RestfulResponse) data).getMessage(), null);
+                    logger.warn("Feign 远程服务返回异常: {}-[{}]\n-->{}\n-->{}",
+                        exception.getStatus(),
+                        exception.getPath(),
+                        exception.getError(),
+                        exception.getMessage());
+                    throw exception;
                 }
                 if (wrapped) {
                     data = ((RestfulResponse) data).getData();
@@ -73,7 +77,7 @@ public class RestfulHandledDecoder implements Decoder {
         throw new DecodeException(ErrorCode.SERIALIZE_EXCEPTION.getCode(), "type is not an instance of Class or ParameterizedType: " + type, response.request());
     }
 
-    private final class FeignResponseAdapter implements ClientHttpResponse {
+    private static final class FeignResponseAdapter implements ClientHttpResponse {
 
         private final Response response;
 

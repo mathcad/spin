@@ -2,16 +2,12 @@ package org.spin.common.web.interceptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.common.util.NetworkUtils;
 import org.spin.common.vo.CurrentUser;
+import org.spin.common.web.annotation.Auth;
 import org.spin.core.ErrorCode;
 import org.spin.core.util.JsonUtils;
+import org.spin.core.util.NetUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.web.AuthLevel;
-import org.spin.web.InternalWhiteList;
-import org.spin.web.RestfulResponse;
-import org.spin.web.ScopeType;
-import org.spin.web.annotation.Auth;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -55,6 +51,7 @@ public class UserAuthInterceptor implements HandlerInterceptor {
         boolean internal = internalRequest(request);
         if (authAnno.scope() == ScopeType.INTERNAL && !internal) {
             CurrentUser.clearCurrent();
+            logger.info("该接口[{}]仅允许内部调用, 实际来源[{}-{}]", request.getRequestURI(), request.getRemoteHost(), request.getRemoteAddr());
             responseWrite(response, ErrorCode.ACCESS_DENINED, "该接口仅允许内部调用: " + request.getRequestURI());
             return false;
         }
@@ -96,7 +93,7 @@ public class UserAuthInterceptor implements HandlerInterceptor {
      * <pre>
      *     内部的定义:
      *     1. 不允许来源于网关
-     *     2. 在白名单中，或者属于同一子网(不允许跨VLAN)
+     *     2. 在白名单中，或者来源于局域网
      * </pre>
      *
      * @param request 请求
@@ -105,13 +102,14 @@ public class UserAuthInterceptor implements HandlerInterceptor {
     private boolean internalRequest(HttpServletRequest request) {
         return !StringUtils.toStringEmpty(request.getHeader(HttpHeaders.REFERER)).endsWith("GATEWAY")
             && (InternalWhiteList.containsOne(request.getRemoteAddr(), request.getRemoteHost())
-            || NetworkUtils.inSameVlan(request.getRemoteHost()) || NetworkUtils.inSameVlan(request.getRemoteAddr()));
+            // || NetworkUtils.inSameVlan(request.getRemoteHost()) || NetworkUtils.inSameVlan(request.getRemoteAddr())
+            || NetUtils.isInnerIP(request.getRemoteHost()) || NetUtils.isInnerIP(request.getRemoteAddr()));
     }
 
     private void responseWrite(HttpServletResponse response, ErrorCode errorCode, String... message) {
         try {
             response.setCharacterEncoding("UTF-8");
-            response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setHeader("Encoded", "1");
             response.getWriter().write(JsonUtils.toJson(RestfulResponse
                 .error(errorCode, ((null == message || message.length == 0 || StringUtils.isEmpty(message[0])) ? errorCode.getDesc() : message[0]))));

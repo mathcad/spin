@@ -47,7 +47,7 @@ public class ModelExcelView extends AbstractView {
         response.setContentType(getContentType());
 
         String fileName = StringUtils.isNotEmpty(excelModel.getGrid().getFileName()) ? excelModel.getGrid().getFileName() : DEFAULT_FILE_NAME;
-        fileName = StringUtils.urlEncode(fileName.endsWith(fileType.getExtension()) ? fileName : fileName + fileType.getExtension());
+        fileName = StringUtils.urlEncode(fileName.endsWith(fileType.getFirstExt()) ? fileName : fileName + fileType.getFirstExt());
         response.setHeader("Content-disposition", "attachment;filename=" + fileName);
 
         // Create a fresh workbook instance for this render step and flush byte array to servlet output stream

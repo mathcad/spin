@@ -18,10 +18,10 @@ import java.util.regex.Pattern;
  */
 public abstract class NumericUtils {
     private static final String UNKNOW_NUM = "无法识别的数字格式";
-    private static Pattern numPattern = Pattern.compile("^([-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]+)[^-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]{0,2}$");
-    private static Pattern pureNum = Pattern.compile("^-?\\d+(\\.\\d+)?$");
-    private static String[] scales = {"亿", "万", "千", "仟", "百", "佰", "十", "拾"};
-    private static Map<String, Long> numMap = new HashMap<>();
+    private static final Pattern numPattern = Pattern.compile("^([-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]+)[^-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]{0,2}$");
+    private static final Pattern pureNum = Pattern.compile("^-?\\d+(\\.\\d+)?$");
+    private static final String[] scales = {"亿", "万", "千", "仟", "百", "佰", "十", "拾"};
+    private static final Map<String, Long> numMap = new HashMap<>();
 
     static {
         numMap.put("零", 0L);

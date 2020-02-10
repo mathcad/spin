@@ -87,6 +87,7 @@ class FeignClientFactoryBean
             .logger(logger)
             .encoder(get(context, Encoder.class))
             .decoder(get(context, Decoder.class))
+            .errorDecoder(new RestfulErrorDecoder())
             .contract(get(context, Contract.class));
         // @formatter:on
 

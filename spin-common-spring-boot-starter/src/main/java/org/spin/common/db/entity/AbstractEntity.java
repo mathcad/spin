@@ -22,13 +22,13 @@ public abstract class AbstractEntity extends BasicEntity {
      * 创建人ID
      */
     @TableField(fill = FieldFill.INSERT)
+    @PreventOverflow
     private Long createBy = 0L;
 
     /**
      * 创建人
      */
     @TableField(fill = FieldFill.INSERT)
-    @PreventOverflow
     private String createUsername = "";
 
     /**

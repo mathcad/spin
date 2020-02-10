@@ -2,11 +2,9 @@ package org.spin.common.vo;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.spin.common.web.annotation.Auth;
+import org.spin.common.web.annotation.Author;
 import org.spin.core.util.StringUtils;
-import org.spin.web.AuthLevel;
-import org.spin.web.ScopeType;
-import org.spin.web.annotation.Auth;
-import org.spin.web.annotation.Author;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -56,6 +54,7 @@ public class RequestMappingInfoWrapper implements Serializable {
             if (StringUtils.isEmpty(authName)) {
                 authName = beanType + "-" + methodName;
             }
+            authName  = "API:" + authName;
             roles = new LinkedHashSet<>(authAnno.roles().length);
             roles.addAll(Arrays.asList(authAnno.roles()));
         }
@@ -75,7 +74,7 @@ public class RequestMappingInfoWrapper implements Serializable {
 
         Api apiAnno = AnnotatedElementUtils.getMergedAnnotation(handlerMethod.getMethod().getDeclaringClass(), Api.class);
         if (null != apiAnno) {
-            groupDesc = apiAnno.value();
+            groupDesc = (apiAnno.tags().length > 0 && StringUtils.isNotEmpty(apiAnno.tags()[0])) ? apiAnno.tags()[0] : apiAnno.value();
         }
     }
 

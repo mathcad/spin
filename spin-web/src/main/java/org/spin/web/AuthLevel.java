@@ -16,9 +16,14 @@ public enum AuthLevel {
     NONE("无需认证"),
 
     /**
-     * 仅认证
+     * 临时身份认证
      */
-    AUTHENCATE("仅认证"),
+    VIRTUAL("临时身份认证"),
+
+    /**
+     * 身份认证
+     */
+    AUTHENCATE("身份认证"),
 
     /**
      * 授权访问

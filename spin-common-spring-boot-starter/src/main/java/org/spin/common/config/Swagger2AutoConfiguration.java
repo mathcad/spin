@@ -1,8 +1,10 @@
 package org.spin.common.config;
 
-import com.github.xiaoymin.knife4j.spring.annotations.EnableSwaggerBootstrapUi;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import java.util.Collections;
+import java.util.List;
+
+import com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j;
+
 import org.spin.common.config.properties.Swagger2Properties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,6 +13,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -23,9 +28,6 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-import java.util.Collections;
-import java.util.List;
-
 /**
  * description swagger2 Configuration
  *
@@ -34,7 +36,7 @@ import java.util.List;
  */
 @Configuration
 @EnableSwagger2
-@EnableSwaggerBootstrapUi
+@EnableKnife4j
 @ConditionalOnProperty(prefix = "swagger2", value = {"enable"}, havingValue = "true")
 @ComponentScan(basePackages = {"org.spin.common.swagger"})
 @EnableConfigurationProperties(Swagger2Properties.class)

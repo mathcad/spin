@@ -1,7 +1,7 @@
 package org.spin.common.config;
 
-import org.spin.core.concurrent.DistributedLock;
 import org.spin.data.lock.RedisDistributedLock;
+import org.spin.core.concurrent.DistributedLock;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

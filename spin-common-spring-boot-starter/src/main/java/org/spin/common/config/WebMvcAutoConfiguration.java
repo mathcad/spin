@@ -25,11 +25,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -39,7 +35,7 @@ import java.util.stream.Collectors;
  * <p>Created by wangy on 2019/3/13.</p>
  */
 @Configuration
-@ComponentScan(basePackages = {"org.spin.common.web.handler", "org.spin.web.handler"})
+@ComponentScan(basePackages = {"org.spin.common.web.handler"})
 public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
     private static final JsonHttpMessageConverter JSON_HTTP_MESSAGE_CONVERTER = new JsonHttpMessageConverter();

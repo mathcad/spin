@@ -46,9 +46,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
      */
     public JsonHttpMessageConverter() {
         super(MediaType.APPLICATION_JSON,
-            MediaType.APPLICATION_JSON_UTF8,
             MediaType.APPLICATION_PROBLEM_JSON,
-            MediaType.APPLICATION_PROBLEM_JSON_UTF8,
             MediaType.APPLICATION_OCTET_STREAM,
             MediaType.TEXT_PLAIN,
             MediaType.TEXT_EVENT_STREAM,

@@ -39,7 +39,7 @@ public abstract class AbstractFallback {
      * </pre>
      */
     protected void handleKnownException() {
-        logger.warn("-Feign客户端调用异常: {}", Thread.currentThread().getStackTrace()[2]);
+        logger.warn("-Feign客户端调用异常: [{}]-{}", this.getClass().getSimpleName(), Thread.currentThread().getStackTrace()[2]);
         logger.warn("|");
 
         Throwable ex = ExceptionUtils.getCause(this.cause, SimplifiedException.class,
@@ -86,7 +86,9 @@ public abstract class AbstractFallback {
                     msg = "远程调用失败: 不支持的请求类型";
                 }
                 logger.warn("|--{}-{}", msg, ex.getMessage());
-                throw new FeignHttpException(status, ex.getMessage(), msg, ex);
+                throw new FeignHttpException(status,
+                    ((FeignException) ex).hasRequest() ? ((FeignException) ex).request().url() : "",
+                    ex.getMessage(), msg, ex);
             }
         }
 

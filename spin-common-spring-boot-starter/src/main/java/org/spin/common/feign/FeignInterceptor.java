@@ -4,6 +4,7 @@ import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import org.spin.common.vo.CurrentUser;
 import org.spin.common.web.interceptor.GrayInterceptor;
+import org.spin.core.util.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -17,8 +18,20 @@ import org.springframework.web.context.request.RequestContextHolder;
  * @version 1.0
  */
 public class FeignInterceptor implements RequestInterceptor {
+    public static final String X_APP_NAME = "X-App-Name";
+
+    private final String appName;
+
+    public FeignInterceptor(String appName) {
+        this.appName = appName;
+    }
+
     @Override
     public void apply(RequestTemplate template) {
+        if (StringUtils.isNotEmpty(appName)) {
+            template.header(X_APP_NAME, appName);
+        }
+
         if (null != CurrentUser.getCurrent()) {
             template.header(HttpHeaders.FROM, CurrentUser.getCurrent().toString());
         }
