@@ -3,7 +3,7 @@ plugins {
 }
 
 description '公共通用组件starter'
-version '2.2.7-SNAPSHOT'
+version '2.2.10-SNAPSHOT'
 def artifactId = 'spin-common-spring-boot-starter'
 
 test {
@@ -49,20 +49,11 @@ dependencies {
 
     api group: 'org.springframework.cloud', name: 'spring-cloud-starter-netflix-eureka-client', version: springCloudVersion
     api group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign', version: springCloudVersion
-    api(group: 'org.springframework.cloud', name: 'spring-cloud-starter-alibaba-sentinel', version: sentinelStarterVersion) {
-        exclude(group: 'com.alibaba.csp')
-    }
+    api group: 'com.alibaba.cloud', name: 'spring-cloud-starter-alibaba-sentinel', version: sentinelStarterVersion
+
     api(group: 'com.baomidou', name: 'mybatis-plus-boot-starter', version: mybatisPlusVersion) {
         exclude(group: 'org.springframework.boot')
     }
-
-    api group: 'com.alibaba.csp', name: 'sentinel-annotation-aspectj', version: sentinelVersion
-    api group: 'com.alibaba.csp', name: 'sentinel-web-servlet', version: sentinelVersion
-    api group: 'com.alibaba.csp', name: 'sentinel-transport-simple-http', version: sentinelVersion
-    api group: 'com.alibaba.csp', name: 'sentinel-cluster-server-default', version: sentinelVersion
-    api group: 'com.alibaba.csp', name: 'sentinel-parameter-flow-control', version: sentinelVersion
-    api group: 'com.alibaba.csp', name: 'sentinel-cluster-client-default', version: sentinelVersion
-    api group: 'com.alibaba.csp', name: 'sentinel-datasource-apollo', version: sentinelVersion
 
     api group: 'com.ctrip.framework.apollo', name: 'apollo-client', version: apolloVersion
     api group: 'com.github.xiaoymin', name: 'knife4j-micro-spring-boot-starter', version: knife4jVersion

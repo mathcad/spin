@@ -6,6 +6,7 @@ import org.spin.common.annotation.UtilClass;
 import org.spin.common.throwable.BizException;
 import org.spin.core.Assert;
 import org.spin.core.collection.Pair;
+import org.spin.core.collection.Triple;
 import org.spin.core.collection.Tuple;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.security.Base64;
@@ -32,6 +33,7 @@ public class CurrentUser {
     private static final Logger logger = LoggerFactory.getLogger(CurrentUser.class);
     private static final TypeToken<Map<String, Set<String>>> STRING_SETSTR_MAP_TOKEN = new TypeToken<Map<String, Set<String>>>() {
     };
+    private static Pair<Long, Long> NON_ENTERPRISE = Tuple.of(0L, 0L);
 
     private static final String REDIS_NOT_PREPARED = "CurrentUser未能顺利初始化, 无法访问Redis";
     private static final String SESSION_ENTERPRISE_REDIS_KEY = "SESSION_ENTERPRISE:";
@@ -136,6 +138,18 @@ public class CurrentUser {
     }
 
     /**
+     * 获取用户当前Session上设置的企业
+     * 如果非企业员工，返回(用户ID, 0, 0)
+     *
+     * @return 当前用户id, 当前员工ID, 当前企业ID
+     */
+    public static Triple<Long, Long, Long> getEnterpriseInfo() {
+        CurrentUser current = getCurrentNonNull();
+        Pair<Long, Long> enterprise = current.getSessionEnterprise();
+        return Tuple.of(current.getId(), enterprise.c1, enterprise.c2);
+    }
+
+    /**
      * 获取当前用户ID
      *
      * @return 用户ID
@@ -191,14 +205,14 @@ public class CurrentUser {
 
     /**
      * 获取用户当前Session上设置的企业
-     * 如果非企业员工，返回null
+     * 如果非企业员工，返回(0, 0)
      *
      * @return 当前员工ID, 当前企业ID
      */
     public Pair<Long, Long> getSessionEnterprise() {
         String s = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(SESSION_ENTERPRISE_REDIS_KEY + sid);
         if (null == s) {
-            return null;
+            return NON_ENTERPRISE;
         }
         int i = s.indexOf(':');
         return Tuple.of(Long.parseLong(s.substring(0, i)), Long.parseLong(s.substring(i + 1)));
