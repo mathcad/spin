@@ -81,4 +81,11 @@ class StringUtilsTest {
         System.out.println(StringUtils.trimWhitespace(tmp));
     }
 
+    @Test
+    void testUrlEncode() {
+        System.out.println(StringUtils.urlEncode("访客管理系统1 1581324513055"));
+        System.out.println(StringUtils.urlEncode("     +"));
+        System.out.println(StringUtils.urlDecode("%E8%AE%BF%E5%AE%A2%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F1%201581324513055%2B*-.%20+"));
+    }
+
 }
