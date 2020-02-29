@@ -203,73 +203,73 @@ class HttpUtilsTest {
     private String novelId = "0_92";
     private int titlePrefix = 0;
 
-    @Test
-    void testNovel() {
-        Map<String, String> chapters = chapters(novelId, titlePrefix);
-
-        chapters.forEach((k, v) -> {
-            System.out.println(k);
-            System.out.println("\n");
-
-            StringBuilder sb = new StringBuilder();
-            int pageSize = parseContent(v, true, sb);
-            for (int i = 2; i <= pageSize; ++i) {
-                parseContent(v + "_" + i, false, sb);
-            }
-            System.out.println(sb.toString().replaceAll("\n+", "\n").replaceAll("\n[^ ]", ""));
-        });
-    }
-
-    private Map<String, String> chapters(String novelId, int titlePrefix) {
-        Map<String, String> chapterList = new LinkedHashMap<>();
-
-        int pageSize = parseChapter(novelId, 1, titlePrefix, chapterList);
-        for (int i = 2; i <= pageSize; i++) {
-            parseChapter(novelId, i, titlePrefix, chapterList);
-        }
-        return chapterList;
-    }
-
-    private int parseChapter(String novelId, int page, int titlePrefix, Map<String, String> chapterList) {
-        String html = Http.GET.withUrl(url + "/" + novelId + "/all" + (page == 1 ? "" : ("_" + page)) + ".html").execute();
-        Document document = Jsoup.parse(html);
-        int pageSize = 1;
-        if (1 == page) {
-            String text = document.getElementsByClass("page").get(1).text();
-            Matcher matcher = pattern.matcher(text);
-            if (matcher.find()) {
-                pageSize = Integer.parseInt(matcher.group(1));
-            }
-        }
-        Elements chapters = document.getElementsByClass("chapter").get(0).children();
-        chapters.stream().map(it -> it.child(0)).forEach(c -> chapterList.put(c.text().substring(titlePrefix), c.attr("href").replace(".html", "")));
-
-        return pageSize;
-    }
-
-    private int parseContent(String no, boolean parsePageSize, StringBuilder content) {
-        String html = Http.GET.withUrl(url + no + ".html").execute();
-        Document document = Jsoup.parse(html);
-
-        int pageSize = 1;
-        if (parsePageSize) {
-            String title = document.getElementsByClass("nr_title").get(0).text();
-            Matcher matcher = pattern.matcher(title);
-            if (matcher.find()) {
-                pageSize = Integer.parseInt(matcher.group(1));
-            }
-        }
-
-        Elements nr = document.getElementsByClass("nr_nr");
-
-        nr.forEach(e -> content.append(e.children().stream().map(Element::html)
-            .map(it -> it.replaceAll("&nbsp;", " ")
-                .replaceAll("<br>", "")
-                .replaceAll("--&gt;.*）", "")
-                .replaceAll("&amp;", "")
-                .replaceAll("amp;", "")
-            )
-            .reduce("", (a, b) -> a + b)));
-        return pageSize;
-    }
+//    @Test
+//    void testNovel() {
+//        Map<String, String> chapters = chapters(novelId, titlePrefix);
+//
+//        chapters.forEach((k, v) -> {
+//            System.out.println(k);
+//            System.out.println("\n");
+//
+//            StringBuilder sb = new StringBuilder();
+//            int pageSize = parseContent(v, true, sb);
+//            for (int i = 2; i <= pageSize; ++i) {
+//                parseContent(v + "_" + i, false, sb);
+//            }
+//            System.out.println(sb.toString().replaceAll("\n+", "\n").replaceAll("\n[^ ]", ""));
+//        });
+//    }
+//
+//    private Map<String, String> chapters(String novelId, int titlePrefix) {
+//        Map<String, String> chapterList = new LinkedHashMap<>();
+//
+//        int pageSize = parseChapter(novelId, 1, titlePrefix, chapterList);
+//        for (int i = 2; i <= pageSize; i++) {
+//            parseChapter(novelId, i, titlePrefix, chapterList);
+//        }
+//        return chapterList;
+//    }
+//
+//    private int parseChapter(String novelId, int page, int titlePrefix, Map<String, String> chapterList) {
+//        String html = Http.GET.withUrl(url + "/" + novelId + "/all" + (page == 1 ? "" : ("_" + page)) + ".html").execute();
+//        Document document = Jsoup.parse(html);
+//        int pageSize = 1;
+//        if (1 == page) {
+//            String text = document.getElementsByClass("page").get(1).text();
+//            Matcher matcher = pattern.matcher(text);
+//            if (matcher.find()) {
+//                pageSize = Integer.parseInt(matcher.group(1));
+//            }
+//        }
+//        Elements chapters = document.getElementsByClass("chapter").get(0).children();
+//        chapters.stream().map(it -> it.child(0)).forEach(c -> chapterList.put(c.text().substring(titlePrefix), c.attr("href").replace(".html", "")));
+//
+//        return pageSize;
+//    }
+//
+//    private int parseContent(String no, boolean parsePageSize, StringBuilder content) {
+//        String html = Http.GET.withUrl(url + no + ".html").execute();
+//        Document document = Jsoup.parse(html);
+//
+//        int pageSize = 1;
+//        if (parsePageSize) {
+//            String title = document.getElementsByClass("nr_title").get(0).text();
+//            Matcher matcher = pattern.matcher(title);
+//            if (matcher.find()) {
+//                pageSize = Integer.parseInt(matcher.group(1));
+//            }
+//        }
+//
+//        Elements nr = document.getElementsByClass("nr_nr");
+//
+//        nr.forEach(e -> content.append(e.children().stream().map(Element::html)
+//            .map(it -> it.replaceAll("&nbsp;", " ")
+//                .replaceAll("<br>", "")
+//                .replaceAll("--&gt;.*）", "")
+//                .replaceAll("&amp;", "")
+//                .replaceAll("amp;", "")
+//            )
+//            .reduce("", (a, b) -> a + b)));
+//        return pageSize;
+//    }
 }

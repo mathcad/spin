@@ -3,7 +3,7 @@ plugins {
 }
 
 description 'spin-data的starter'
-version '2.2.7-SNAPSHOT'
+version '2.2.21-SNAPSHOT'
 def artifactId = 'spin-data-spring-boot-starter'
 
 test {

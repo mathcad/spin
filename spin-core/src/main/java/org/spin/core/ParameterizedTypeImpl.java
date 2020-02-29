@@ -17,6 +17,7 @@ public class ParameterizedTypeImpl implements ParameterizedType {
     private final Type ownerType;
 
     private ParameterizedTypeImpl(Class<?> rawType, Type[] actualTypeArguments, Type ownerType) {
+
         this.actualTypeArguments = actualTypeArguments.clone();
         for (int t = 0, length = this.actualTypeArguments.length; t < length; t++) {
             $Gson$Preconditions.checkNotNull(this.actualTypeArguments[t]);
