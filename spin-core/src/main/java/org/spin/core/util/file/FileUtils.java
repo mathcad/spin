@@ -297,7 +297,7 @@ public abstract class FileUtils {
     public static List<String> listFilesFromJarOrZip(String filePath, Predicate<String> filter) {
         List<String> fileNames = new ArrayList<>();
         try (ZipFile file = new ZipFile(filePath)) {
-            StreamUtils.enumerationAsStream(file.entries()).map(ZipEntry::getName).filter(filter).forEach(fileNames::add);
+            StreamUtils.stream(file.entries()).map(ZipEntry::getName).filter(filter).forEach(fileNames::add);
         } catch (IOException e) {
             logger.error(e.getMessage());
             throw new SpinException("Read jar file" + filePath + "error", e);

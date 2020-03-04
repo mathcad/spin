@@ -9,21 +9,10 @@ import org.apache.poi.hssf.eventusermodel.HSSFRequest;
 import org.apache.poi.hssf.eventusermodel.MissingRecordAwareHSSFListener;
 import org.apache.poi.hssf.eventusermodel.dummyrecord.LastCellOfRowDummyRecord;
 import org.apache.poi.hssf.model.HSSFFormulaParser;
-import org.apache.poi.hssf.record.BOFRecord;
-import org.apache.poi.hssf.record.BlankRecord;
-import org.apache.poi.hssf.record.BoolErrRecord;
-import org.apache.poi.hssf.record.BoundSheetRecord;
-import org.apache.poi.hssf.record.ColumnInfoRecord;
-import org.apache.poi.hssf.record.FormulaRecord;
-import org.apache.poi.hssf.record.LabelRecord;
-import org.apache.poi.hssf.record.LabelSSTRecord;
-import org.apache.poi.hssf.record.NumberRecord;
-import org.apache.poi.hssf.record.Record;
-import org.apache.poi.hssf.record.SSTRecord;
-import org.apache.poi.hssf.record.StringRecord;
-import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.hssf.record.*;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.StringUtils;
@@ -173,7 +162,7 @@ public class ExcelXlsReader implements ExcelReader, HSSFListener {
             case NumberRecord.sid: // 单元格为数字类型
                 NumberRecord numrec = (NumberRecord) record;
                 if (Arrays.binarySearch(DATE_INT, formatListener.getFormatIndex(numrec)) >= 0) {
-                    value = DateUtils.formatDateForSecond(HSSFDateUtil.getJavaDate(numrec.getValue()));
+                    value = DateUtils.formatDateForSecond(DateUtil.getJavaDate(numrec.getValue()));
                 } else {
                     value = formatListener.formatNumberDateCell(numrec).trim();
                 }

@@ -300,7 +300,7 @@ public abstract class NetUtils {
             throw new SpinException("获取本机网卡异常", e);
         }
 
-        return StreamUtils.enumerationAsStream(networkInterfaces).collect(Collectors.toList());
+        return StreamUtils.stream(networkInterfaces).collect(Collectors.toList());
     }
 
     /**

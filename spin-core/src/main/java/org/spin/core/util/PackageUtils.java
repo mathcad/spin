@@ -104,7 +104,7 @@ public abstract class PackageUtils {
         try {
             jarFile = new JarFile(jarFilePath);
             if (contextPath.endsWith(".jar")) {
-                JarEntry jarEntry = StreamUtils.enumerationAsStream(jarFile.entries()).filter(entry -> entry.getName().endsWith(contextPath)).findFirst().orElse(null);
+                JarEntry jarEntry = StreamUtils.stream(jarFile.entries()).filter(entry -> entry.getName().endsWith(contextPath)).findFirst().orElse(null);
                 if (null != jarEntry && !jarEntry.isDirectory()) {
                     String fileName = SystemUtils.getJavaIoTmpDir() + SystemUtils.FILE_SEPARATOR + RandomStringUtils.randomAlphanumeric(16) + ".jar";
                     try (OutputStream os = new FileOutputStream(fileName); InputStream is = jarFile.getInputStream(jarEntry)) {
@@ -120,7 +120,7 @@ public abstract class PackageUtils {
                     }
                 }
             }
-            Stream<String> stream = StreamUtils.enumerationAsStream(jarFile.entries())
+            Stream<String> stream = StreamUtils.stream(jarFile.entries())
                 .map(JarEntry::getName)
                 .filter(entryName -> entryName.endsWith(".class") && entryName.indexOf('$') == -1);
             if (childPackage) {

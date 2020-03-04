@@ -1,5 +1,6 @@
 package org.spin.core.util;
 
+import org.spin.core.function.serializable.Function;
 import org.spin.core.throwable.SpinException;
 
 import java.io.CharArrayWriter;
@@ -8,8 +9,11 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static java.lang.Character.isLetterOrDigit;
 import static java.lang.Character.isWhitespace;
@@ -3281,6 +3285,38 @@ public abstract class StringUtils {
             return CollectionUtils.ofArray(toSplit);
         }
         return toSplit.split(regex);
+    }
+
+    public static Set<String> splitToSet(String toSplit, String regex) {
+        return CollectionUtils.asSet(split(toSplit, regex));
+    }
+
+    public static List<String> splitToList(String toSplit, String regex) {
+        return CollectionUtils.asList(split(toSplit, regex));
+    }
+
+    public static <R> Set<R> splitToSet(String toSplit, String regex, Function<String, R> mapping) {
+        String[] split = split(toSplit, regex);
+        if (null == split) {
+            return null;
+        }
+        return Arrays.stream(split).map(mapping).collect(Collectors.toSet());
+    }
+
+    public static <R> List<R> splitToList(String toSplit, String regex, Function<String, R> mapping) {
+        String[] split = split(toSplit, regex);
+        if (null == split) {
+            return null;
+        }
+        return Arrays.stream(split).map(mapping).collect(Collectors.toList());
+    }
+
+    public static <T, R> R splitToList(String toSplit, String regex, Predicate<String> filter, Function<String, T> mapping, Collector<T, ?, R> collector) {
+        String[] split = split(toSplit, regex);
+        if (null == split) {
+            return null;
+        }
+        return Arrays.stream(split).filter(filter).map(mapping).collect(collector);
     }
 
     /**

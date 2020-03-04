@@ -1,6 +1,5 @@
 package org.spin.core.util.excel;
 
-import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.ss.usermodel.BuiltinFormats;
@@ -338,7 +337,7 @@ public class ExcelXlsxReader extends DefaultHandler implements ExcelReader {
                 break;
             case DATE:
                 if (NumericUtils.isNum(value)) {
-                    thisStr = DateUtils.formatDateForSecond(HSSFDateUtil.getJavaDate(Double.parseDouble(value)));
+                    thisStr = DateUtils.formatDateForSecond(DateUtil.getJavaDate(Double.parseDouble(value)));
                 } else {
                     thisStr = value;
                 }

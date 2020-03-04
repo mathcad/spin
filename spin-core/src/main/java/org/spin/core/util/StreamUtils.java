@@ -1,6 +1,9 @@
 package org.spin.core.util;
 
+import org.spin.core.collection.Pair;
+
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
@@ -22,23 +25,29 @@ public interface StreamUtils {
      * @param <T> 对象类型
      * @return 流
      */
-    static <T> Stream<T> enumerationAsStream(Enumeration<T> e) {
-        return StreamSupport.stream(
-            new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED) {
+    static <T> Stream<T> stream(Enumeration<T> e) {
+        return StreamSupport.stream(new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED) {
 
-                @Override
-                public boolean tryAdvance(Consumer<? super T> action) {
-                    if (e.hasMoreElements()) {
-                        action.accept(e.nextElement());
-                        return true;
-                    }
-                    return false;
+            @Override
+            public boolean tryAdvance(Consumer<? super T> action) {
+                if (e.hasMoreElements()) {
+                    action.accept(e.nextElement());
+                    return true;
                 }
-
-                @Override
-                public void forEachRemaining(Consumer<? super T> action) {
-                    while (e.hasMoreElements()) action.accept(e.nextElement());
-                }
-            }, false);
+                return false;
+            }
+        }, false);
     }
+
+    /**
+     * 将Iterable转换为流
+     *
+     * @param iterable 可迭代对象
+     * @param <T>      对象类型
+     * @return 流
+     */
+    static <T> Stream<T> stream(Iterable<T> iterable) {
+        return StreamSupport.stream(iterable.spliterator(), false);
+    }
+
 }
