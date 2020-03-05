@@ -5,8 +5,9 @@ plugins {
 sonarqube {
     properties {
         property "sonar.sourceEncoding", "UTF-8"
-        property "sonar.host.url", "http://192.168.12.151:9000/"
-        property "sonar.login", "7d1627a0615b8406bcf02a459c42df204bdc04eb"
+        property "sonar.host.url", "http://192.168.12.150:9000/"
+        property "sonar.login", "8ee1a48e6733cddb38d2ac24db06978cd49aea35"
+        property "sonar.profile", "Sonar way"
     }
 }
 

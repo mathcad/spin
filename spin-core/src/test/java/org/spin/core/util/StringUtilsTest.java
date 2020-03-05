@@ -173,4 +173,13 @@ class StringUtilsTest {
         }
     }
 
+    @Test
+    void testId() {
+        String idCard = "340207199001170015";
+        System.out.println(IdCardUtils.isValid(idCard));
+        System.out.println(IdCardUtils.getBirthDate(idCard));
+        System.out.println(IdCardUtils.getGenderByIdCard(idCard));
+        System.out.println(IdCardUtils.getAgeByIdCard(idCard));
+    }
+
 }
