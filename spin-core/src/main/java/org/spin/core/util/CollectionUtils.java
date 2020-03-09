@@ -4,6 +4,7 @@ import org.spin.core.Assert;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.throwable.SpinException;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
@@ -725,6 +726,143 @@ public abstract class CollectionUtils {
         }
     }
 
+    public static <T> T[][] divide(T[] array, int batchSize) {
+        if (null == array) {
+            return null;
+        }
+        @SuppressWarnings("unchecked")
+        T[][] res = (T[][]) Array.newInstance(array.getClass(), (int) Math.ceil(array.length * 1.0 / batchSize));
+        int idx = 0;
+        int group = 0;
+        while (idx < array.length) {
+            int end = idx + batchSize;
+            end = Math.min(end, array.length);
+            res[group] = Arrays.copyOfRange(array, idx, end);
+            idx += batchSize;
+            ++group;
+        }
+        return res;
+    }
+
+    public static byte[][] divide(byte[] array, int batchSize) {
+        if (null == array) {
+            return null;
+        }
+        byte[][] res = new byte[(int) Math.ceil(array.length * 1.0 / batchSize)][];
+        int idx = 0;
+        int group = 0;
+        while (idx < array.length) {
+            int end = idx + batchSize;
+            end = Math.min(end, array.length);
+            res[group] = Arrays.copyOfRange(array, idx, end);
+            idx += batchSize;
+            ++group;
+        }
+        return res;
+    }
+
+    public static short[][] divide(short[] array, int batchSize) {
+        if (null == array) {
+            return null;
+        }
+        short[][] res = new short[(int) Math.ceil(array.length * 1.0 / batchSize)][];
+        int idx = 0;
+        int group = 0;
+        while (idx < array.length) {
+            int end = idx + batchSize;
+            end = Math.min(end, array.length);
+            res[group] = Arrays.copyOfRange(array, idx, end);
+            idx += batchSize;
+            ++group;
+        }
+        return res;
+    }
+
+    public static int[][] divide(int[] array, int batchSize) {
+        if (null == array) {
+            return null;
+        }
+        int[][] res = new int[(int) Math.ceil(array.length * 1.0 / batchSize)][];
+        int idx = 0;
+        int group = 0;
+        while (idx < array.length) {
+            int end = idx + batchSize;
+            end = Math.min(end, array.length);
+            res[group] = Arrays.copyOfRange(array, idx, end);
+            idx += batchSize;
+            ++group;
+        }
+        return res;
+    }
+
+    public static char[][] divide(char[] array, int batchSize) {
+        if (null == array) {
+            return null;
+        }
+        char[][] res = new char[(int) Math.ceil(array.length * 1.0 / batchSize)][];
+        int idx = 0;
+        int group = 0;
+        while (idx < array.length) {
+            int end = idx + batchSize;
+            end = Math.min(end, array.length);
+            res[group] = Arrays.copyOfRange(array, idx, end);
+            idx += batchSize;
+            ++group;
+        }
+        return res;
+    }
+
+    public static float[][] divide(float[] array, int batchSize) {
+        if (null == array) {
+            return null;
+        }
+        float[][] res = new float[(int) Math.ceil(array.length * 1.0 / batchSize)][];
+        int idx = 0;
+        int group = 0;
+        while (idx < array.length) {
+            int end = idx + batchSize;
+            end = Math.min(end, array.length);
+            res[group] = Arrays.copyOfRange(array, idx, end);
+            idx += batchSize;
+            ++group;
+        }
+        return res;
+    }
+
+    public static double[][] divide(double[] array, int batchSize) {
+        if (null == array) {
+            return null;
+        }
+        double[][] res = new double[(int) Math.ceil(array.length * 1.0 / batchSize)][];
+        int idx = 0;
+        int group = 0;
+        while (idx < array.length) {
+            int end = idx + batchSize;
+            end = Math.min(end, array.length);
+            res[group] = Arrays.copyOfRange(array, idx, end);
+            idx += batchSize;
+            ++group;
+        }
+        return res;
+    }
+
+    public static long[][] divide(long[] array, int batchSize) {
+        if (null == array) {
+            return null;
+        }
+        long[][] res = new long[(int) Math.ceil(array.length * 1.0 / batchSize)][];
+        int idx = 0;
+        int group = 0;
+        while (idx < array.length) {
+            int end = idx + batchSize;
+            end = Math.min(end, array.length);
+            res[group] = Arrays.copyOfRange(array, idx, end);
+            idx += batchSize;
+            ++group;
+        }
+        return res;
+    }
+
     public static <T> List<List<T>> divide(List<T> list, int batchSize) {
         Assert.isTrue(batchSize > 0, "分组容量必须大于0");
         if (null == list) {
@@ -749,6 +887,23 @@ public abstract class CollectionUtils {
             consumer.accept(list.subList(i - batchSize, i));
         }
         consumer.accept(list.subList(i - batchSize, list.size()));
+    }
+
+    public static <T> List<List<T>> divide(Iterable<T> iterable, int batchSize) {
+        if (iterable instanceof List) {
+            return divide((List<T>) iterable, batchSize);
+        }
+
+        List<List<T>> res = new LinkedList<>();
+        List<T> work = new ArrayList<>(batchSize);
+        for (T it : iterable) {
+            if (work.size() == batchSize) {
+                res.add(work);
+                work = new ArrayList<>(batchSize);
+            }
+            work.add(it);
+        }
+        return res;
     }
 
     /**

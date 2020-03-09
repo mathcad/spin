@@ -15,7 +15,6 @@
  */
 package org.spin.core.gson.internal.bind;
 
-import org.spin.core.ParameterizedTypeImpl;
 import org.spin.core.gson.Gson;
 import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.gson.TypeAdapter;
@@ -99,11 +98,15 @@ final class TypeAdapterRuntimeTypeWrapper<T> extends TypeAdapter<T> {
      * Finds a compatible runtime type if it is more specific
      */
     private Type getRuntimeTypeIfMoreSpecific(Type type, Object value) {
-        if (value != null
-            && (type == Object.class || type instanceof TypeVariable<?> || type instanceof Class<?>)) {
+        if (value != null && (type == Object.class || type instanceof TypeVariable<?> || type instanceof Class<?>)) {
             type = value.getClass();
         } else if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType() instanceof Class && value != null) {
-            type = ParameterizedTypeImpl.make(value.getClass(), ((ParameterizedType) type).getActualTypeArguments(), ((ParameterizedType) type).getOwnerType());
+            Class<?> valueClass = value.getClass();
+            ParameterizedType declaredType = (ParameterizedType) type;
+            if (!valueClass.equals(declaredType.getRawType())) {
+//                type = ParameterizedTypeImpl.make(value.getClass(), actualTypeArguments, declaredType).getOwnerType();
+                type = valueClass;
+            }
         }
         return type;
     }

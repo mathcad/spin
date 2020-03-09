@@ -22,7 +22,7 @@ import java.util.List;
  * @version 1.0
  */
 public class JsonUtilsTest {
-    public static void main(String[] args) {
+    void test1() {
         String json = "[{types: [1,2]}]";
 
         Vos type = JsonUtils.fromJson("{type:1}", Vos.class);
@@ -51,6 +51,96 @@ public class JsonUtilsTest {
         String b = "{\"status\":\"2\", \"id\":81241321817279489,\"create_user_id\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212', first: 'Neptune'}";
         E c = JsonUtils.fromJsonWithUnderscore(b, E.class);
         System.out.println(c);
+    }
+
+
+    @Test
+    void testMalformedType() {
+        String s = JsonUtils.toJson(CollectionUtils.divide(CollectionUtils.ofArrayList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 5));
+
+        System.out.println(s);
+
+        Vo1 vo = new Vo1();
+        int[] ids = new int[2];
+        ids[0] = 1;
+        ids[1] = 2;
+        vo.setIds(CollectionUtils.divide(CollectionUtils.ofArrayList(ids, ids), 2).get(0));
+
+
+        System.out.println(JsonUtils.toJson(vo));
+
+        Vo2 vo2 = new Vo2();
+
+        User<String> user = new User<>();
+        user.setId(1L);
+        user.setName("aaaa");
+        user.setValue("bbbb");
+
+        vo2.setUser(user);
+
+
+        System.out.println(JsonUtils.toJson(vo2));
+
+        byte[] array = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+        System.out.println(JsonUtils.toJson(CollectionUtils.divide(array, 7)));
+    }
+
+    static class Vo1 {
+        List<int[]> ids;
+
+        public List<int[]> getIds() {
+            return ids;
+        }
+
+        public void setIds(List<int[]> ids) {
+            this.ids = ids;
+        }
+    }
+
+    static class Vo2 {
+        AUser<Long> user;
+
+        public AUser<Long> getUser() {
+            return user;
+        }
+
+        public void setUser(AUser<Long> user) {
+            this.user = user;
+        }
+    }
+
+    static abstract class AUser<T> {
+        private T id;
+
+        public T getId() {
+            return id;
+        }
+
+        public void setId(T id) {
+            this.id = id;
+        }
+    }
+
+    static class User<T> extends AUser<Long> implements Evaluatable<T> {
+        private String name;
+        private T value;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public T getValue() {
+            return null;
+        }
+
+        public void setValue(T value) {
+            this.value = value;
+        }
     }
 }
 

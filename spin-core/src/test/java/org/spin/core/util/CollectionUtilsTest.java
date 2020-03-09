@@ -60,6 +60,6 @@ public class CollectionUtilsTest {
             System.out.println(JsonUtils.toJson(it));
         });
 
-        System.out.println(StringUtils.join(CollectionUtils.ofArrayList(1, 2, 3, 4, 5),","));
+        System.out.println(StringUtils.join(CollectionUtils.ofArrayList(1, 2, 3, 4, 5), ","));
     }
 }
