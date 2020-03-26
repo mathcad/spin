@@ -10,5 +10,10 @@ public enum DataSourceType {
     /**
      * Druid
      */
-    DRUID
+    DRUID,
+
+    /**
+     * HikariCP
+     */
+    HIKARICP
 }

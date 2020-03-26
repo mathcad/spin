@@ -14,6 +14,7 @@ import org.springframework.http.converter.AbstractGenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import springfox.documentation.spring.web.json.Json;
 
@@ -119,7 +120,8 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     }
 
     @Override
-    protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
+    @NonNull
+    protected Object readInternal(@NonNull Class<?> clazz, @NonNull HttpInputMessage inputMessage)
         throws IOException {
 
         TypeToken<?> token = getTypeToken(clazz);
@@ -127,7 +129,8 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     }
 
     @Override
-    public Object read(Type type, Class<?> contextClass, HttpInputMessage inputMessage)
+    @NonNull
+    public Object read(@NonNull Type type, Class<?> contextClass, @NonNull HttpInputMessage inputMessage)
         throws IOException {
 
         TypeToken<?> token = getTypeToken(type);
@@ -153,7 +156,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
      * @param type the type for which to return the TypeToken
      * @return the type token
      */
-    protected TypeToken getTypeToken(Type type) {
+    protected TypeToken<?> getTypeToken(Type type) {
         return TypeToken.get(type);
     }
 
@@ -174,7 +177,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     }
 
     @Override
-    protected void writeInternal(Object t, Type type, HttpOutputMessage outputMessage)
+    protected void writeInternal(@NonNull Object t, @Nullable Type type, HttpOutputMessage outputMessage)
         throws IOException {
 
         Charset charset = getCharset(outputMessage.getHeaders());

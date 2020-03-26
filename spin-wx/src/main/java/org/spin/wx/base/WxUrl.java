@@ -55,6 +55,7 @@ public enum WxUrl {
         this.url = url;
     }
 
+    @SuppressWarnings("ConfusingArgumentToVarargsMethod")
     public String getUrl(String... params) {
         return StringUtils.plainFormat(url, params);
     }

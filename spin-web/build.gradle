@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '基于spring mvc的web模块'
-version = '2.2.20-SNAPSHOT'
+version = '2.2.25-SNAPSHOT'
 def artifactId = 'spin-web'
 
 test {
@@ -43,9 +43,9 @@ dependencies {
     api group: 'org.springframework', name: 'spring-aspects', version: springVersion
     api group: 'javax.validation', name: 'validation-api', version: validationVersion
     api group: 'io.springfox', name: 'springfox-swagger2', version: swaggerVersion
+    api group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
 
     compileOnly group: 'com.itextpdf', name: 'itextpdf', version: itextpdfVersion
     compileOnly group: 'org.springframework', name: 'spring-orm', version: springVersion
-    compileOnly group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: servletVersion
 }

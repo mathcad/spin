@@ -7,14 +7,10 @@ import org.spin.boot.converter.RestfulExceptionHandler;
 import org.spin.boot.properties.SpinWebPorperties;
 import org.spin.core.ErrorCode;
 import org.spin.core.SpinContext;
-import org.spin.core.auth.Authenticator;
-import org.spin.core.auth.SecretManager;
 import org.spin.core.inspection.ArgumentsDescriptor;
 import org.spin.core.inspection.MethodDescriptor;
-import org.spin.core.session.SessionManager;
 import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.ObjectUtils;
@@ -22,7 +18,6 @@ import org.spin.core.util.StringUtils;
 import org.spin.core.util.excel.ExcelGrid;
 import org.spin.core.util.excel.ExcelModel;
 import org.spin.data.core.IEntity;
-import org.spin.data.core.Page;
 import org.spin.data.query.QueryParam;
 import org.spin.data.util.EntityUtils;
 import org.spin.web.RestfulResponse;
@@ -71,12 +66,6 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
     private static final String PATH_NOT_VALID = "请求的路径不正确";
     private static final String REQUEST_BODY_NAME = "request_body_param";
     private static final Function<Parameter, Boolean> checkNeeded = p -> Objects.nonNull(p.getAnnotation(NonNull.class));
-
-    @Autowired(required = false)
-    private Authenticator authenticator;
-
-    @Autowired(required = false)
-    private SecretManager secretManager;
 
     @Autowired
     private SpinWebPorperties webPorperties;
@@ -209,12 +198,12 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
 
             // token验证
             RestfulMethod rMethod = argumentsDescriptors.get(selected).getMethodDescriptor().getMethod().getAnnotation(RestfulMethod.class);
-            if (null != secretManager) {
-                String token = request.getParameter("token");
-                if (StringUtils.isEmpty(token)) {
-                    token = request.getHeader("token");
-                }
-            }
+//            if (null != secretManager) {
+//                String token = request.getParameter("token");
+//                if (StringUtils.isEmpty(token)) {
+//                    token = request.getHeader("token");
+//                }
+//            }
             return invoke(argumentsDescriptors.get(selected));
         } else {
             return RestfulResponse.error(new SimplifiedException("请求的资源不存在"));
@@ -431,10 +420,10 @@ public class RestfulInvocationEntryPoint implements ApplicationContextAware {
         boolean needAuth = anno.auth();
         if (needAuth) {
             String authRouter = anno.authRouter();
-            SessionUser user = SessionManager.getCurrentUser();
-            if (user != null && authenticator.checkAuthorities(user.getId(), authRouter)) {
-                isAllowed = true;
-            }
+            SessionUser<?> user = SessionUser.getCurrent();
+//            if (user != null && authenticator.checkAuthorities(user.getId(), authRouter)) {
+//                isAllowed = true;
+//            }
         }
         if (isAllowed || !needAuth) {
             if (descriptor.getRank() > 100) {

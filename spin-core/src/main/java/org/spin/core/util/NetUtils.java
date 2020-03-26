@@ -320,6 +320,10 @@ public abstract class NetUtils {
         try {
             for (Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces(); ifaces.hasMoreElements(); ) {
                 iface = ifaces.nextElement();
+                String name = iface.getDisplayName().toLowerCase();
+                if (name.contains("vmware") || name.contains("docker") || name.contains("hyper") || name.contains("virtual")) {
+                    continue;
+                }
                 for (Enumeration<InetAddress> inetAddrs = iface.getInetAddresses(); inetAddrs.hasMoreElements(); ) {
                     inetAddr = inetAddrs.nextElement();
                     if (!inetAddr.isLoopbackAddress() && !inetAddr.isLinkLocalAddress()) {

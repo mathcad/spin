@@ -70,16 +70,16 @@ public interface DataSourceConfig {
     void setUsername(String username);
 
     /**
-     * 获取数据库连接密码(明文)
+     * 获取数据库连接密码
      *
-     * @return 密码明文
+     * @return 密码
      */
     String getPassword();
 
     /**
-     * 获取数据库连接密码(密文)
+     * 获取数据库连接密码
      *
-     * @param password 密码密文
+     * @param password 密码
      */
     void setPassword(String password);
 
@@ -112,15 +112,6 @@ public interface DataSourceConfig {
     String getDataSourceClassName();
 
     /**
-     * 是否在View层开启Session
-     *
-     * @return 是/否
-     */
-    default boolean isOpenSessionInView() {
-        return false;
-    }
-
-    /**
      * 将当前配置输出为Properties文件
      *
      * @param prefix 前缀
@@ -150,5 +141,14 @@ public interface DataSourceConfig {
         if (value != null) {
             properties.setProperty(StringUtils.trimToEmpty(prefix) + key, value.toString());
         }
+    }
+
+    /**
+     * 是否支持XA数据源
+     *
+     * @return 默认为true
+     */
+    default boolean supportXa() {
+        return true;
     }
 }

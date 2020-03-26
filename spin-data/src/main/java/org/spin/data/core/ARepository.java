@@ -17,7 +17,6 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
 import org.spin.core.Assert;
-import org.spin.core.session.SessionManager;
 import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.AssertFailException;
 import org.spin.core.throwable.SimplifiedException;
@@ -117,14 +116,14 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         Assert.notNull(entity, "The entity to save MUST NOT be NULL");
         if (entity instanceof AbstractEntity) {
             AbstractEntity aEn = (AbstractEntity) entity;
-            SessionUser user = SessionManager.getCurrentUser();
+            SessionUser<Long> user = SessionUser.getCurrent();
             aEn.setUpdateTime(LocalDateTime.now());
-            aEn.setUpdateUserId(user == null ? null : user.getId());
-            aEn.setUpdateUserName(user == null ? null : user.getUserName());
+            aEn.setUpdateBy(user == null ? null : user.getId());
+            aEn.setUpdateUsername(user == null ? null : user.getName());
             if (null == aEn.getId() || saveWithPk) {
                 aEn.setCreateTime(LocalDateTime.now());
-                aEn.setCreateUserId(user == null ? null : user.getId());
-                aEn.setCreateUserName(user == null ? null : user.getUserName());
+                aEn.setCreateBy(user == null ? null : user.getId());
+                aEn.setCreateUsername(user == null ? null : user.getName());
             }
         }
         try {

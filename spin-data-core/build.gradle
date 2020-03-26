@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '数据访问模块核心依赖,脱离于具体的DAO层实现，只定义必须的接口与通用工具'
-version = '2.2.21-SNAPSHOT'
+version = '2.2.25-SNAPSHOT'
 def artifactId = 'spin-data-core'
 
 test {
@@ -34,16 +34,14 @@ uploadArchives {
 dependencies {
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
-    testRuntimeOnly group: 'com.101tec', name: 'zkclient', version: zkclientVersion
-    testRuntimeOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: '3.5.7'
+    testRuntimeOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion
     testRuntimeOnly group: 'org.xerial', name: 'sqlite-jdbc', version: sqliteVersion
 
 
     api group: 'org.mathcat', name: 'spin-core', version: "$project.version"
 
     compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
-    compileOnly group: 'com.101tec', name: 'zkclient', version: zkclientVersion
-    compileOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: '3.5.7'
+    compileOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion
     compileOnly group: 'org.xerial', name: 'sqlite-jdbc', version: sqliteVersion
     compileOnly group: 'org.freemarker', name: 'freemarker', version: freemarkerVersion
     compileOnly group: 'com.ibeetl', name: 'beetl', version: beetlVersion

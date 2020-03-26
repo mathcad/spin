@@ -1,0 +1,89 @@
+{
+  "properties": [
+    {
+      "name": "spin.datasource.druid.primaryDataSource",
+      "type": "java.lang.String",
+      "description": "Druid主数据源名称."
+    },
+    {
+      "name": "spin.datasource.druid.openSessionInView",
+      "type": "java.lang.Boolean",
+      "description": "是否在View层开启Session."
+    },
+    {
+      "name": "spin.datasource.druid.excluePathPattern",
+      "type": "java.lang.String",
+      "description": "OpenSessionInView的排除路径."
+    },
+    {
+      "name": "spin.datasource.druid.ds",
+      "type": "java.util.Map<java.lang.String, org.spin.boot.datasource.property.DruidDataSourceProperties>",
+      "description": "Druid数据源列表."
+    },
+    {
+      "name": "spin.datasource.hikari.primaryDataSource",
+      "type": "java.lang.String",
+      "description": "Hikari主数据源名称."
+    },
+    {
+      "name": "spin.datasource.hikari.openSessionInView",
+      "type": "java.lang.Boolean",
+      "description": "是否在View层开启Session."
+    },
+    {
+      "name": "spin.datasource.hikari.excluePathPattern",
+      "type": "java.lang.String",
+      "description": "OpenSessionInView的排除路径."
+    },
+    {
+      "name": "spin.datasource.hikari.ds",
+      "type": "java.util.Map<java.lang.String, org.spin.boot.datasource.property.SpinHikariDataSource>",
+      "description": "Hikari数据源列表."
+    },
+    {
+      "name": "spin.data.sql.namingStrategy",
+      "type": "java.lang.Class",
+      "description": "Hibernate命名策略."
+    },
+    {
+      "name": "spin.data.sql.resolver",
+      "type": "java.lang.Class",
+      "description": "SQL模板解析器, 默认为org.spin.data.sql.resolver.FreemarkerResolver."
+    },
+    {
+      "name": "spin.data.sql.sqlLoader",
+      "type": "java.lang.Class",
+      "description": "SQL模板加载器, 默认为org.spin.data.sql.loader.FileSystemMdLoader."
+    },
+    {
+      "name": "spin.data.sql.sqlUri",
+      "type": "java.lang.String",
+      "description": "SQL模板的根目录, 默认为/sqlmapper."
+    },
+    {
+      "name": "spin.data.pk.providerType",
+      "type": "java.lang.Class",
+      "description": "ID生成器的机器码提供者类."
+    },
+    {
+      "name": "spin.data.pk.initParams",
+      "type": "java.lang.String",
+      "description": "机器码提供者的初始化参数."
+    },
+    {
+      "name": "spin.data.pk.genMethod",
+      "type": "org.spin.data.pk.meta.IdGenMethodE",
+      "description": "ID生成方式, 默认为EMBED"
+    },
+    {
+      "name": "spin.data.pk.idType",
+      "type": "org.spin.data.pk.meta.IdTypeE",
+      "description": "ID类型, 默认为MAX_PEAK."
+    },
+    {
+      "name": "spin.data.pk.version",
+      "type": "java.lang.Long",
+      "description": "ID版本, 默认为0."
+    }
+  ]
+}

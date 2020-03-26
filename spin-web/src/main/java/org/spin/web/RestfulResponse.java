@@ -66,6 +66,8 @@ public class RestfulResponse<T> {
 
     public static <T> RestfulResponse<T> error(SimplifiedException exception) {
         RestfulResponse<T> response = new RestfulResponse<>(exception.getExceptionType());
+        response.setError(null == exception.getCause() ? exception.getMessage() :
+            exception.getCause().getClass().getName() + exception.getCause().getMessage());
         response.setMessage(exception.getSimpleMessage());
         return response;
     }

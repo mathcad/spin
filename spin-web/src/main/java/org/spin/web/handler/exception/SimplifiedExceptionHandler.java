@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.web.RestfulResponse;
 import org.spin.web.handler.WebExceptionHalder;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,13 +17,14 @@ import javax.servlet.http.HttpServletRequest;
  * @author xuweinan
  * @version 1.0
  */
+@Component
 public class SimplifiedExceptionHandler implements WebExceptionHalder {
     private static final Logger logger = LoggerFactory.getLogger(SimplifiedExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(Throwable e, HttpServletRequest request) {
+    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.info(((SimplifiedException) e).getSimpleMessage(), e.getStackTrace()[0]);
-        return RestfulResponse.error((SimplifiedException) e);
+        return RestfulResponse.<Void>error((SimplifiedException) e).withPath(appName + request.getRequestURI());
     }
 
     @Override
@@ -32,6 +34,6 @@ public class SimplifiedExceptionHandler implements WebExceptionHalder {
 
     @Override
     public int order() {
-        return Integer.MIN_VALUE;
+        return 100;
     }
 }

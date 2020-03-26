@@ -16,14 +16,11 @@ import javax.persistence.Table
 @Table(name = "sys_permission")
 class Permission(
 
-    @Column(length = 64, unique = true)
-    var name: String = "",
+        @Column(length = 64, unique = true)
+        var name: String = "",
 
-    @Column(length = 64, unique = true)
-    var code: String = "",
-
-    @Column
-    var remark: String? = null
+        @Column(length = 64, unique = true)
+        var code: String = ""
 
 ) : AbstractEntity() {
     companion object {

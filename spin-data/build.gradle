@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '数据访问模块, 基于Hibernate的实现'
-version = '2.2.21-SNAPSHOT'
+version = '2.2.25-SNAPSHOT'
 def artifactId = 'spin-data'
 
 test {
@@ -44,6 +44,4 @@ dependencies {
     api group: 'org.springframework', name: 'spring-tx', version: springVersion
     api group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
     api group: 'javax.transaction', name: 'javax.transaction-api', version: transactionApiVersion
-
-    compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
 }

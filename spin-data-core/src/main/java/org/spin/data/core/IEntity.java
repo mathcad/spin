@@ -21,13 +21,13 @@ public interface IEntity<PK extends Serializable> extends Serializable {
 
     void setId(PK id);
 
-    int getVersion();
+    Integer getVersion();
 
-    void setVersion(int version);
+    void setVersion(Integer version);
 
-    boolean isValid();
+    Boolean getValid();
 
-    void setValid(boolean valid);
+    void setValid(Boolean valid);
 
     /**
      * 为当前实体指定ID并返回当前实体

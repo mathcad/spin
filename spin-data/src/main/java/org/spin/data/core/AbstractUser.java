@@ -1,16 +1,12 @@
 package org.spin.data.core;
 
 
-import org.spin.core.session.SessionUser;
 import org.spin.core.util.DigestUtils;
 import org.spin.core.util.RandomStringUtils;
 import org.spin.core.util.StringUtils;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * 用户的父类，定义了用户的通用属性
@@ -19,7 +15,7 @@ import java.time.LocalDateTime;
  * @author xuweinan
  */
 @MappedSuperclass
-public abstract class AbstractUser extends AbstractEntity implements SessionUser {
+public abstract class AbstractUser extends AbstractEntity {
     private static final long serialVersionUID = 4486949049542319147L;
 
     /**
@@ -45,18 +41,6 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
      */
     @Column
     private boolean active = true;
-
-    /**
-     * 登录时间
-     */
-    @Transient
-    private LocalDateTime loginTime = LocalDateTime.now();
-
-    /**
-     * 如果与session关联，session的id
-     */
-    @Transient
-    private Serializable sessionId;
 
     public String getUserName() {
         return userName;
@@ -86,7 +70,6 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
         this.salt = salt;
     }
 
-    @Override
     public boolean isActive() {
         return active;
     }
@@ -96,28 +79,11 @@ public abstract class AbstractUser extends AbstractEntity implements SessionUser
     }
 
     @Override
-    public LocalDateTime getLoginTime() {
-        return loginTime;
-    }
-
-    @Override
-    public Serializable getSessionId() {
-        return sessionId;
-    }
-
-    @Override
-    public void setSessionId(Serializable sessionId) {
-        this.sessionId = sessionId;
-    }
-
-    @Override
     public String toString() {
         return "AbstractUser(" + getClass().getSimpleName() + "){" +
             "userName='" + userName + '\'' +
             ", salt='" + salt + '\'' +
             ", active=" + active +
-            ", loginTime=" + loginTime +
-            ", sessionId='" + sessionId + '\'' +
             "} " + super.toString();
     }
 }

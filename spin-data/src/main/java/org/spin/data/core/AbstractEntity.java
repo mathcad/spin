@@ -36,13 +36,13 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      */
     @Column
     @PreventOverflow
-    private long createUserId = 0L;
+    private Long createBy = 0L;
 
     /**
      * 记录创建者用户名
      */
     @Column(length = 32)
-    private String createUserName = "";
+    private String createUsername = "";
 
     /**
      * 创建时间，禁止更改
@@ -55,13 +55,13 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      */
     @Column
     @PreventOverflow
-    private Long updateUserId = 0L;
+    private Long updateBy = 0L;
 
     /**
      * 记录更新者用户名
      */
     @Column(length = 32)
-    private String updateUserName = "";
+    private String updateUsername = "";
 
     /**
      * 最后更新时间
@@ -73,19 +73,19 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * 版本号用于并发控制
      */
     @Version
-    private int version = 0;
-
-    /**
-     * 排序号
-     */
-    @Column
-    private float orderNo = 0;
+    private Integer version = 0;
 
     /**
      * 标记逻辑删除
      */
     @Column
-    private boolean valid = true;
+    private Boolean valid = true;
+
+    /**
+     * 备注
+     */
+    @Column(length = 120)
+    private String remark;
 
     /**
      * 扩展字段1
@@ -129,7 +129,7 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractEntity that = (AbstractEntity) o;
-        return version == that.version &&
+        return Objects.equals(version, that.version) &&
             Objects.equals(id, that.id);
     }
 
@@ -142,14 +142,13 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     public String toString() {
         return "AbstractEntity(" + getClass().getSimpleName() + "){" +
             "id=" + id +
-            ", createUserId=" + createUserId +
-            ", createUserName=" + createUserName +
+            ", createBy=" + createBy +
+            ", createUsername=" + createUsername +
             ", createTime=" + createTime +
-            ", updateUserId=" + updateUserId +
-            ", updateUserName=" + updateUserName +
+            ", updateBy=" + updateBy +
+            ", updateUsername=" + updateUsername +
             ", updateTime=" + updateTime +
             ", version=" + version +
-            ", orderNo=" + orderNo +
             ", valid=" + valid +
             '}';
     }
@@ -164,20 +163,20 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.id = id;
     }
 
-    public Long getCreateUserId() {
-        return createUserId;
+    public Long getCreateBy() {
+        return createBy;
     }
 
-    public void setCreateUserId(Long createUserId) {
-        this.createUserId = createUserId;
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
     }
 
-    public String getCreateUserName() {
-        return createUserName;
+    public String getCreateUsername() {
+        return createUsername;
     }
 
-    public void setCreateUserName(String createUserName) {
-        this.createUserName = createUserName;
+    public void setCreateUsername(String createUsername) {
+        this.createUsername = createUsername;
     }
 
     public LocalDateTime getCreateTime() {
@@ -188,20 +187,20 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
         this.createTime = createTime;
     }
 
-    public Long getUpdateUserId() {
-        return updateUserId;
+    public Long getUpdateBy() {
+        return updateBy;
     }
 
-    public String getUpdateUserName() {
-        return updateUserName;
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
     }
 
-    public void setUpdateUserName(String updateUserName) {
-        this.updateUserName = updateUserName;
+    public String getUpdateUsername() {
+        return updateUsername;
     }
 
-    public void setUpdateUserId(Long updateUserId) {
-        this.updateUserId = updateUserId;
+    public void setUpdateUsername(String updateUsername) {
+        this.updateUsername = updateUsername;
     }
 
     public LocalDateTime getUpdateTime() {
@@ -213,31 +212,30 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     }
 
     @Override
-    public int getVersion() {
+    public Integer getVersion() {
         return version;
     }
 
-    @Override
-    public void setVersion(int version) {
+    public void setVersion(Integer version) {
         this.version = version;
     }
 
-    public float getOrderNo() {
-        return orderNo;
-    }
-
-    public void setOrderNo(float orderNo) {
-        this.orderNo = orderNo;
-    }
-
     @Override
-    public boolean isValid() {
+    public Boolean getValid() {
         return valid;
     }
 
     @Override
-    public void setValid(boolean valid) {
+    public void setValid(Boolean valid) {
         this.valid = valid;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public Serializable getExtInfo1() {

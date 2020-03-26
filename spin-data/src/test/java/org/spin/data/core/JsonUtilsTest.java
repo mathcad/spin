@@ -46,9 +46,9 @@ public class JsonUtilsTest {
     public void testEntityId() {
         E a = new E();
         a.setId(81241321817279489L);
-        a.setCreateUserId(9007299254740992L);
+        a.setCreateBy(9007299254740992L);
         a.setXxx(LocalDateTime.now());
-        a.setUpdateUserId(2L);
+        a.setUpdateBy(2L);
         a.setExt(91241321817279489L);
         System.out.println(JsonUtils.toJson(a));
         String b = "{\"id\":81241321817279489,\"create_user_id\":'9007299254740992',\"updateUserId\":2,\"version\":0,\"orderNo\":0.0,\"valid\":true,xxx:'2018031212', first: 'Neptune'}";
@@ -166,7 +166,12 @@ enum Status implements IntEvaluatable {
     }
 
     @Override
-    public int getValue() {
+    public int intValue() {
+        return value;
+    }
+
+    @Override
+    public Integer getValue() {
         return value;
     }
 }
@@ -181,7 +186,12 @@ enum Type implements IntEvaluatable {
     }
 
     @Override
-    public int getValue() {
+    public int intValue() {
+        return value;
+    }
+
+    @Override
+    public Integer getValue() {
         return value;
     }
 }

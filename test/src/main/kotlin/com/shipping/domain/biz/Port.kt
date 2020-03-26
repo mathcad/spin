@@ -6,13 +6,6 @@ import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.Table
 
-/**
- * 港口
- *
- * @author X
- * @contact TEL:18900539326, QQ:396616781
- * @create 2017-09-04 下午10:43
- */
 @Entity
 @Table(name = "biz_port")
 class Port : AbstractEntity() {
@@ -37,9 +30,9 @@ class Port : AbstractEntity() {
 
     override fun toString(): String {
         return "Port{" +
-            "name='" + name + '\'' +
-            ", longitude=" + longitude +
-            ", latitude=" + latitude +
-            '}'
+                "name='" + name + '\'' +
+                ", longitude=" + longitude +
+                ", latitude=" + latitude +
+                '}'
     }
 }

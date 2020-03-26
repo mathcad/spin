@@ -1,0 +1,10 @@
+# Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.spin.cloud.config.ConverterAutoConfiguration,\
+org.spin.cloud.config.FeignAutoConfiguration, \
+org.spin.cloud.config.FrameworkAutoConfiguration,\
+org.spin.cloud.config.RedisExtendsAutoConfiguration,\
+org.spin.cloud.config.SpinRedisAutoConfiguration,\
+org.spin.cloud.config.SpinRibbonClientConfiguration,\
+org.spin.cloud.config.Swagger2AutoConfiguration, \
+org.spin.cloud.config.WebMvcAutoConfiguration

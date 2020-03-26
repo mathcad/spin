@@ -40,7 +40,7 @@ import java.util.concurrent.Callable;
  * @author Rossen Stoyanchev
  * @since 4.2
  */
-class AsyncRequestInterceptor implements CallableProcessingInterceptor, DeferredResultProcessingInterceptor {
+public class AsyncRequestInterceptor implements CallableProcessingInterceptor, DeferredResultProcessingInterceptor {
 
 	private static final Log logger = LogFactory.getLog(AsyncRequestInterceptor.class);
 

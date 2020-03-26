@@ -83,6 +83,8 @@ public class HanyuPinyinVCharType {
 
     /**
      * Constructor
+     *
+     * @param name name
      */
     protected HanyuPinyinVCharType(String name) {
         setName(name);

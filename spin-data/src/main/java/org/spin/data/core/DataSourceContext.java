@@ -91,6 +91,15 @@ public final class DataSourceContext {
     }
 
     /**
+     * 获取主数据源名称
+     *
+     * @return 主数据源名称
+     */
+    public static String getPrimaryDataSourceName() {
+        return primaryDataSourceName;
+    }
+
+    /**
      * 切换到默认数据源
      */
     public static void usePrimaryDataSource() {

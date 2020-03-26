@@ -66,8 +66,8 @@ package org.spin.enhance.pinyin.format;
  * </tr>
  * <tr>
  * <th>WITH_TONE_MARK</th>
- * <td><font color="red">throw exception</font></td>
- * <td><font color="red">throw exception</font></td>
+ * <td><font>throw exception</font></td>
+ * <td><font>throw exception</font></td>
  * <td>lǚ</td>
  * </tr>
  * </table>
@@ -96,8 +96,8 @@ package org.spin.enhance.pinyin.format;
  * </tr>
  * <tr>
  * <th>WITH_TONE_MARK</th>
- * <td><font color="red">throw exception</font></td>
- * <td><font color="red">throw exception</font></td>
+ * <td><font>throw exception</font></td>
+ * <td><font>throw exception</font></td>
  * <td>LǙ</td>
  * </tr>
  * </table>
@@ -132,6 +132,7 @@ public final class HanyuPinyinOutputFormat {
     /**
      * Returns the output cases of Hanyu Pinyin characters
      *
+     * @return caseType
      * @see HanyuPinyinCaseType
      */
     public HanyuPinyinCaseType getCaseType() {
@@ -151,6 +152,7 @@ public final class HanyuPinyinOutputFormat {
     /**
      * Returns the output format of Chinese tones
      *
+     * @return toneType
      * @see HanyuPinyinToneType
      */
     public HanyuPinyinToneType getToneType() {
@@ -170,6 +172,7 @@ public final class HanyuPinyinOutputFormat {
     /**
      * Returns output format of character 'ü'
      *
+     * @return charType
      * @see HanyuPinyinVCharType
      */
     public HanyuPinyinVCharType getVCharType() {

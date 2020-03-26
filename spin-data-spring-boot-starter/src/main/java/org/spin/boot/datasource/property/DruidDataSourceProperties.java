@@ -52,7 +52,6 @@ public class DruidDataSourceProperties implements DataSourceConfig {
     private boolean removeAbandoned = false;
     private long removeAbandonedTimeoutMillis = 300L * 1000L;
     private String servletPath = "/druid/*";
-    private boolean openSessionInView = false;
     private FilterProperties filter = new FilterProperties();
 //    private Properties connectionProperties = new Properties() {
 //        private static final long serialVersionUID = -8638010368833820798L;
@@ -107,7 +106,6 @@ public class DruidDataSourceProperties implements DataSourceConfig {
         notNullAdd(properties, prefix, "removeAbandoned", removeAbandoned);
         notNullAdd(properties, prefix, "removeAbandonedTimeoutMillis", removeAbandonedTimeoutMillis);
         notNullAdd(properties, prefix, "servletPath", servletPath);
-        notNullAdd(properties, prefix, "openSessionInView", openSessionInView);
         return properties;
     }
 
@@ -441,15 +439,6 @@ public class DruidDataSourceProperties implements DataSourceConfig {
 
     public void setServletPath(String servletPath) {
         this.servletPath = servletPath;
-    }
-
-    @Override
-    public boolean isOpenSessionInView() {
-        return openSessionInView;
-    }
-
-    public void setOpenSessionInView(boolean openSessionInView) {
-        this.openSessionInView = openSessionInView;
     }
 
     @Override

@@ -6,6 +6,7 @@ import org.spin.core.ErrorCode;
 import org.spin.web.RestfulResponse;
 import org.spin.web.handler.WebExceptionHalder;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -17,17 +18,20 @@ import javax.servlet.http.HttpServletRequest;
  * @author xuweinan
  * @version 1.0
  */
+@Component
 public class HttpParamExceptionHandler implements WebExceptionHalder {
     private static final Logger logger = LoggerFactory.getLogger(HttpParamExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(Throwable e, HttpServletRequest request) {
+    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
         if (e.getMessage().startsWith("Required request body")) {
             logger.warn("请求体中缺失参数: {}", e.getMessage());
-            return RestfulResponse.error(ErrorCode.INVALID_PARAM, "请求体中缺失Request Body参数", e.getMessage());
+            return RestfulResponse.<Void>error(ErrorCode.INVALID_PARAM, "请求体中缺失Request Body参数", e.getMessage())
+                .withPath(appName + request.getRequestURI());
         } else {
             logger.warn("请求体中参数不合法: {}", e.getMessage());
-            return RestfulResponse.error(ErrorCode.INVALID_PARAM, "请求体中参数不合法", e.getMessage());
+            return RestfulResponse.<Void>error(ErrorCode.INVALID_PARAM, "请求体中参数不合法", e.getMessage())
+                .withPath(appName + request.getRequestURI());
         }
     }
 
@@ -38,6 +42,6 @@ public class HttpParamExceptionHandler implements WebExceptionHalder {
 
     @Override
     public int order() {
-        return Integer.MIN_VALUE + 6;
+        return 170;
     }
 }

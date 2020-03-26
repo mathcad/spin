@@ -705,9 +705,10 @@ public abstract class MethodUtils {
 
 
     /**
-     * <p>Return an accessible method (that is, one that can be invoked via
-     * reflection) that implements the specified Method.  If no such method
-     * can be found, return <code>null</code>.</p>
+     * 返回一个可访问的Method实例.
+     * <p>
+     * 可访问是指该方法可以通过反射来调用. 如果没有找到匹配的方法, 返回<code>null</code>
+     * </p>
      *
      * @param clazz  The class of the object
      * @param method The method that we wish to call
@@ -718,12 +719,7 @@ public abstract class MethodUtils {
 
         // Make sure we have a method to check
         if (method == null) {
-            return (null);
-        }
-
-        // If the requested method is not public we cannot call it
-        if (!Modifier.isPublic(method.getModifiers())) {
-            return (null);
+            return null;
         }
 
         boolean sameClass = true;
@@ -745,18 +741,7 @@ public abstract class MethodUtils {
             return (method);
         }
 
-//        final String methodName = method.getName();
-//        final Class<?>[] parameterTypes = method.getParameterTypes();
-
-        // Check the implemented interfaces and subinterfaces
-//        method = getAccessibleMethodFromInterfaceNest(clazz, methodName, parameterTypes);
-
-        // Check the superclass chain
-//        if (method == null) {
-//            method = getAccessibleMethodFromSuperclass(clazz, methodName, parameterTypes);
-//        }
-
-        return (method);
+        return method;
     }
 
 

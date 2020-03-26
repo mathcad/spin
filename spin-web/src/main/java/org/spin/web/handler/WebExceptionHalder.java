@@ -17,11 +17,12 @@ public interface WebExceptionHalder {
     /**
      * 处理逻辑
      *
+     * @param appName app名称
      * @param e       异常
      * @param request 请求
      * @return RestfulResponse
      */
-    RestfulResponse<Void> handler(Throwable e, HttpServletRequest request);
+    RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request);
 
     /**
      * 是否支持指定的异常

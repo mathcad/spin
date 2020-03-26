@@ -8,6 +8,7 @@ import org.spin.core.util.CollectionUtils;
 import org.spin.web.RestfulResponse;
 import org.spin.web.handler.WebExceptionHalder;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,11 +24,12 @@ import java.util.List;
  * @author xuweinan
  * @version 1.0
  */
+@Component
 public class ValidationExceptionHandler implements WebExceptionHalder {
     private static final Logger logger = LoggerFactory.getLogger(ValidationExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(Throwable e, HttpServletRequest request) {
+    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.warn("请求[{}]中携带参数校验不通过: \n  {}", request.getRequestURI(), e.getMessage());
         List<ObjectError> errors = e instanceof BindException ? ((BindException) e).getAllErrors()
             : ((MethodArgumentNotValidException) e).getBindingResult().getAllErrors();
@@ -37,10 +39,9 @@ public class ValidationExceptionHandler implements WebExceptionHalder {
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .reduce((a, b) -> a + "," + b).orElse(""))
             .get();
-        RestfulResponse<Void> restfulResponse = RestfulResponse.error(ErrorCode.INVALID_PARAM, errorMessage);
-        restfulResponse.setError("Bad Request");
-        restfulResponse.setPath(request.getRequestURI());
-        return restfulResponse;
+
+        return RestfulResponse.<Void>error(ErrorCode.INVALID_PARAM, errorMessage)
+            .withPath(appName + request.getRequestURI());
     }
 
     @Override
@@ -50,6 +51,6 @@ public class ValidationExceptionHandler implements WebExceptionHalder {
 
     @Override
     public int order() {
-        return Integer.MIN_VALUE + 4;
+        return 150;
     }
 }

@@ -68,28 +68,25 @@ public class SQLManager {
     /**
      * 多数据源时的构造方法
      *
-     * @param dsConfigs       多数据源配置
-     * @param loaderClassName SQLLoader类名
-     * @param rootUri         sql文件根路径
-     * @param resolver        sql模板解析器
+     * @param dsConfigs   多数据源配置
+     * @param loaderClass SQLLoader类
+     * @param rootUri     sql文件根路径
+     * @param resolver    sql模板解析器
      * @throws ClassNotFoundException 当sql加载器不存在时抛出
      */
-    public SQLManager(MultiDataSourceConfig<?> dsConfigs, String loaderClassName, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
-        @SuppressWarnings("unchecked")
-        Class<SQLLoader> loaderClass = (Class<SQLLoader>) Class.forName(loaderClassName);
-
+    public SQLManager(MultiDataSourceConfig<?> dsConfigs, Class<? extends SQLLoader> loaderClass, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
         DataSourceContext.setPrimaryDataSourceName(dsConfigs.getPrimaryDataSource());
         dsConfigs.getDataSources().forEach((name, config) -> {
             try {
                 SQLLoader loader = loaderClass.getDeclaredConstructor().newInstance();
-                if (StringUtils.isEmpty(rootUri)) {
+                if (StringUtils.isNotEmpty(rootUri)) {
                     loader.setRootUri(rootUri);
                 }
                 loader.setTemplateResolver(resolver);
                 loader.setDbType(getDbType(config.getVenderName()));
                 loaderMap.put(name, loader);
             } catch (Exception e) {
-                throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClassName);
+                throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClass.getName());
             }
         });
         DataSourceContext.usePrimaryDataSource();
@@ -98,16 +95,13 @@ public class SQLManager {
     /**
      * 单数据源时的构造方法
      *
-     * @param dsConfig        单数据源配置
-     * @param loaderClassName SQLLoader类名
-     * @param rootUri         sql文件根路径
-     * @param resolver        sql模板解析器
+     * @param dsConfig    单数据源配置
+     * @param loaderClass SQLLoader类
+     * @param rootUri     sql文件根路径
+     * @param resolver    sql模板解析器
      * @throws ClassNotFoundException 当sql加载器不存在时抛出
      */
-    public SQLManager(DataSourceConfig dsConfig, String loaderClassName, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
-        @SuppressWarnings("unchecked")
-        Class<SQLLoader> loaderClass = (Class<SQLLoader>) Class.forName(loaderClassName);
-
+    public SQLManager(DataSourceConfig dsConfig, Class<? extends SQLLoader> loaderClass, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
         String name = dsConfig.getName();
         if (StringUtils.isEmpty(name)) {
             name = "main";
@@ -123,7 +117,7 @@ public class SQLManager {
             loader.setDbType(getDbType(dsConfig.getVenderName()));
             loaderMap.put(name, loader);
         } catch (Exception e) {
-            throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClassName);
+            throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClass.getName());
         }
         DataSourceContext.usePrimaryDataSource();
     }

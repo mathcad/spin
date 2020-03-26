@@ -25,7 +25,7 @@ class PortService {
      * @param name 港口名
      * @return 港口
      */
-    fun getByName(name: String): Port = repoCtx.findOne(Port::class.java, "name", name)
+    fun getByName(name: String): Port? = repoCtx.findOne(Port::class.java, Port::name.name, name)
 
     /**
      * 新增港口
@@ -34,8 +34,7 @@ class PortService {
      */
     @Transactional
     fun save(port: Port): Port {
-        CriteriaBuilder.forClass(Port::class.java).createAlias(Port::name, "portName")
-        val property1 = Port::name
+        CriteriaBuilder.forClass(Port::class.java).createAlias(Port::name.name, "portName")
         return repoCtx.save(port)
     }
 

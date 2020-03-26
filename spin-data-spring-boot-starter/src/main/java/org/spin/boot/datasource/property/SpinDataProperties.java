@@ -1,6 +1,7 @@
 package org.spin.boot.datasource.property;
 
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.spin.data.sql.SQLLoader;
 import org.spin.data.sql.loader.FileSystemMdLoader;
 import org.spin.data.sql.resolver.FreemarkerResolver;
 import org.spin.data.sql.resolver.TemplateResolver;
@@ -15,35 +16,35 @@ import java.util.Objects;
  *
  * @author xuweinan
  */
-@ConfigurationProperties(prefix = "spring.data")
+@ConfigurationProperties(prefix = "spin.data.sql")
 public class SpinDataProperties {
 
     private PhysicalNamingStrategy namingStrategyObj;
-    private String namingStrategy;
+    private Class<? extends PhysicalNamingStrategy> namingStrategy;
     private boolean enableJtaTransaction = false;
 
     private TemplateResolver resolverObj;
-    private String resolver;
+    private Class<? extends TemplateResolver> resolver;
 
-    private String sqlLoader;
+    private Class<? extends SQLLoader> sqlLoader;
 
     private String sqlUri;
 
     @PostConstruct
-    public void init() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+    public void init() throws IllegalAccessException, InstantiationException {
         if (null != namingStrategy) {
-            namingStrategyObj = (PhysicalNamingStrategy) Class.forName(namingStrategy).newInstance();
+            namingStrategyObj = namingStrategy.newInstance();
         }
 
         if (Objects.nonNull(resolver)) {
-            resolverObj = (TemplateResolver) Class.forName(resolver).newInstance();
+            resolverObj = resolver.newInstance();
         } else {
             resolverObj = new FreemarkerResolver();
-            resolver = FreemarkerResolver.class.getName();
+            resolver = FreemarkerResolver.class;
         }
 
         if (Objects.isNull(sqlLoader)) {
-            sqlLoader = FileSystemMdLoader.class.getName();
+            sqlLoader = FileSystemMdLoader.class;
         }
     }
 
@@ -51,11 +52,11 @@ public class SpinDataProperties {
         return namingStrategyObj;
     }
 
-    public String getNamingStrategy() {
+    public Class<? extends PhysicalNamingStrategy> getNamingStrategy() {
         return namingStrategy;
     }
 
-    public void setNamingStrategy(String namingStrategy) {
+    public void setNamingStrategy(Class<? extends PhysicalNamingStrategy> namingStrategy) {
         this.namingStrategy = namingStrategy;
     }
 
@@ -71,19 +72,19 @@ public class SpinDataProperties {
         return resolverObj;
     }
 
-    public String getResolver() {
+    public Class<? extends TemplateResolver> getResolver() {
         return resolver;
     }
 
-    public void setResolver(String resolver) {
+    public void setResolver(Class<? extends TemplateResolver> resolver) {
         this.resolver = resolver;
     }
 
-    public String getSqlLoader() {
+    public Class<? extends SQLLoader> getSqlLoader() {
         return sqlLoader;
     }
 
-    public void setSqlLoader(String sqlLoader) {
+    public void setSqlLoader(Class<? extends SQLLoader> sqlLoader) {
         this.sqlLoader = sqlLoader;
     }
 

@@ -42,16 +42,16 @@ public class PinyinHelper {
      * Get all unformmatted Hanyu Pinyin presentations of a single Chinese
      * character (both Simplified and Tranditional)
      * <p>
-     * <p>
      * For example, <br> If the input is '间', the return will be an array with
      * two Hanyu Pinyin strings: <br> "jian1" <br> "jian4" <br> <br> If the
      * input is '李', the return will be an array with single Hanyu Pinyin
      * string: <br> "li3"
-     * <p>
+     * </p>
      * <p>
      * <b>Special Note</b>: If the return is "none0", that means the input
      * Chinese character exists in Unicode CJK talbe, however, it has no
      * pronounciation in Chinese
+     * </p>
      *
      * @param ch the given Chinese character
      * @return a String array contains all unformmatted Hanyu Pinyin
@@ -65,16 +65,16 @@ public class PinyinHelper {
      * Get all Hanyu Pinyin presentations of a single Chinese character (both
      * Simplified and Tranditional)
      * <p>
-     * <p>
      * For example, <br> If the input is '间', the return will be an array with
      * two Hanyu Pinyin strings: <br> "jian1" <br> "jian4" <br> <br> If the
      * input is '李', the return will be an array with single Hanyu Pinyin
      * string: <br> "li3"
-     * <p>
+     * </p>
      * <p>
      * <b>Special Note</b>: If the return is "none0", that means the input
      * Chinese character is in Unicode CJK talbe, however, it has no
      * pronounciation in Chinese
+     * </p>
      *
      * @param ch           the given Chinese character
      * @param outputFormat describes the desired format of returned Hanyu Pinyin String
@@ -245,11 +245,15 @@ public class PinyinHelper {
      * Get a string which all Chinese characters are replaced by corresponding
      * main (first) Hanyu Pinyin representation.
      * <p>
-     * <p>
      * <b>Special Note</b>: If the return contains "none0", that means that
      * Chinese character is in Unicode CJK talbe, however, it has not
      * pronounciation in Chinese. <b> This interface will be removed in next
      * release. </b>
+     * </p>
+     * <p>
+     * Chinese characters are converted into main (first) Hanyu Pinyin
+     * representation
+     * </p>
      *
      * @param str          A given string contains Chinese characters
      * @param outputFormat Describes the desired format of returned Hanyu Pinyin string
@@ -257,9 +261,9 @@ public class PinyinHelper {
      *                     the last Chinese character at the end of sentence). <b>Note!
      *                     Separate will not appear after a non-Chinese character</b>
      * @param retain       Retain the characters that cannot be converted into pinyin characters
+     * @param isHead       ishead
      * @return a String identical to the original one but all recognizable
-     * Chinese characters are converted into main (first) Hanyu Pinyin
-     * representation
+     * @throws BadHanyuPinyinOutputFormatCombination format error
      */
     public static String toHanYuPinyinString(String str, HanyuPinyinOutputFormat outputFormat,
                                              String separate, boolean retain, boolean isHead) throws BadHanyuPinyinOutputFormatCombination {

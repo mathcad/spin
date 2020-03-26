@@ -48,16 +48,7 @@ public class UserEnumType implements EnhancedUserType, DynamicParameterizedType,
 
     @Override
     public int[] sqlTypes() {
-        return new int[]{Types.INTEGER,
-            Types.NUMERIC,
-            Types.SMALLINT,
-            Types.TINYINT,
-            Types.BIGINT,
-            Types.DECIMAL,
-            Types.DOUBLE,
-            Types.FLOAT,
-            Types.VARCHAR,
-            Types.CHAR};
+        return new int[]{Types.INTEGER};
     }
 
     @Override

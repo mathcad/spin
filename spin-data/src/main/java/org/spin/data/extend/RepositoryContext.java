@@ -34,6 +34,7 @@ import org.spin.data.sql.SQLManager;
 import org.spin.data.throwable.SQLError;
 import org.spin.data.throwable.SQLException;
 import org.spin.data.util.EntityUtils;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -88,36 +89,34 @@ public class RepositoryContext {
      * @param <P> 主键类型
      * @return 对应实体的持久化操作对象
      */
+    @SuppressWarnings("unchecked")
     public <T extends IEntity<P>, P extends Serializable> ARepository<T, P> getRepo(Class<T> cls) {
         Assert.notNull(cls, "请指定要查询实体类型");
         final String beanName = cls.getName() + "ARepository";
         if (repositoryCache.containsKey(beanName)) {
-            //noinspection unchecked
             return repositoryCache.get(beanName);
         } else {
             if (null == cls.getAnnotation(Entity.class)) {
                 throw new SimplifiedException(String.format("[%s]不是持久化类型，不能获取对应的持久化操作对象", cls.getName()));
             }
-            @SuppressWarnings("unchecked")
-            ARepository<T, P> repository = applicationContext.getBeansOfType(ARepository.class).values().stream()
-                .filter(entry -> cls.isAssignableFrom(entry.getEntityClazz()))
-                .findAny()
-                .orElseGet(() -> {
-                    // 为没有Repository的实体类创建持久化对象并向容器注册
-                    DefaultListableBeanFactory acf = (DefaultListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();
-                    BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(ARepository.class);
-                    bdb.addPropertyValue("entityClazz", cls);
-                    bdb.addPropertyValue("sqlManager", sqlManager);
-                    bdb.addPropertyValue("queryParamParser", paramParser);
-                    IdGenerator<?, ?> idGenerator = idGenerators.get(EntityUtils.getPKField(cls).getType().getName());
-                    if (Objects.nonNull(idGenerator)) {
-                        bdb.addPropertyValue("idGenerator", idGenerator);
-                    }
-                    acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
-                    return acf.getBean(beanName, ARepository.class);
-                });
-            repositoryCache.put(cls.getName(), repository);
-            return repository;
+            DefaultListableBeanFactory acf = (DefaultListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();
+            try {
+                //noinspection unchecked
+                return (ARepository<T, P>) acf.getBean(beanName);
+            } catch (NoSuchBeanDefinitionException e) {
+                // 为没有Repository的实体类创建持久化对象并向容器注册
+                BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(ARepository.class);
+                bdb.addPropertyValue("entityClazz", cls);
+                bdb.addPropertyValue("sqlManager", sqlManager);
+                bdb.addPropertyValue("queryParamParser", paramParser);
+                IdGenerator<?, ?> idGenerator = idGenerators.get(EntityUtils.getPKField(cls).getType().getName());
+                if (Objects.nonNull(idGenerator)) {
+                    bdb.addPropertyValue("idGenerator", idGenerator);
+                }
+                acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
+                repositoryCache.put(beanName, acf.getBean(beanName, ARepository.class));
+                return repositoryCache.get(beanName);
+            }
         }
     }
 

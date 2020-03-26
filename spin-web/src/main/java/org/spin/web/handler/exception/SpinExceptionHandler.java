@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SpinException;
 import org.spin.web.RestfulResponse;
 import org.spin.web.handler.WebExceptionHalder;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,13 +17,16 @@ import javax.servlet.http.HttpServletRequest;
  * @author xuweinan
  * @version 1.0
  */
+@Component
 public class SpinExceptionHandler implements WebExceptionHalder {
     private static final Logger logger = LoggerFactory.getLogger(SpinExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(Throwable e, HttpServletRequest request) {
+    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.info("系统异常", e);
-        return RestfulResponse.error(((SpinException) e).getExceptionType(), ((SpinException) e).getSimpleMessage(), e.getMessage());
+        return RestfulResponse.<Void>error(((SpinException) e).getExceptionType(),
+            ((SpinException) e).getSimpleMessage(), e.getMessage())
+            .withPath(appName + request.getRequestURI());
     }
 
     @Override
@@ -32,6 +36,6 @@ public class SpinExceptionHandler implements WebExceptionHalder {
 
     @Override
     public int order() {
-        return Integer.MIN_VALUE + 1;
+        return 120;
     }
 }

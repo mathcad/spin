@@ -41,6 +41,7 @@ public class Trie {
      * 加载拼音
      *
      * @param inStream 拼音文件输入流
+     * @throws IOException io异常
      */
     public synchronized void load(InputStream inStream) throws IOException {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inStream))) {
@@ -61,6 +62,7 @@ public class Trie {
      * 加载多音字拼音词典
      *
      * @param inStream 拼音文件输入流
+     * @throws IOException io异常
      */
     public synchronized void loadMultiPinyin(InputStream inStream) throws IOException {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inStream))) {
@@ -110,6 +112,8 @@ public class Trie {
 
     /**
      * 加载用户自定义的扩展词库
+     *
+     * @throws IOException io异常
      */
     public void loadMultiPinyinExtend() throws IOException {
         for (Map.Entry<String, Boolean> entry : MultiPinyinConfig.getMultiPinyinPath().entrySet()) {

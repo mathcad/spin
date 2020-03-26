@@ -1,9 +1,7 @@
 package org.spin.core.collection;
 
 import org.junit.jupiter.api.Test;
-import org.spin.core.auth.KeyInfo;
 import org.spin.core.util.JsonUtils;
-import org.spin.core.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,22 +21,6 @@ public class MatrixTest {
 
     @Test
     public void testInsert() {
-        assertTrue(true);
-    }
-
-    @Test
-    public void tesetSet() {
-        KeyInfo keyInfo1 = new KeyInfo("1", "123", "aaa", "defautl", 0L);
-        KeyInfo keyInfo2 = new KeyInfo("2", "456", "bbb", "defautl", 0L);
-        KeyInfo keyInfo3 = new KeyInfo("2", "456", "bbb", "defautl", 0L);
-        Set<KeyInfo> keys = new HashSet<>();
-        keys.add(keyInfo1);
-//        keys.add(keyInfo2);
-        keys.add(keyInfo3);
-
-        KeyInfo keyInfo4 = keys.stream().filter(k -> k.getIdentifier().equals("2")).findFirst().orElse(null);
-//        keyInfo4.updateKey("234","ccc", 0L);
-        keys.add(keyInfo2);
         assertTrue(true);
     }
 

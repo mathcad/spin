@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 /**
@@ -740,6 +741,20 @@ public abstract class BeanUtils {
      * @param ignore 需要排除的字段名
      */
     public static void copyTo(Object src, Object target, Collection<String> fields, Collection<String> ignore) {
+        copyTo(src, target, fields, null, ignore);
+    }
+
+    /**
+     * 复制JavaBean的属性到另一个JavaBean中，直接反射字段值，不通过getter/setter
+     * <p>如果不指定字段列表，并且源对象是JavaBean，则会拷贝所有字段。如果类型不匹配，会尝试进行类型转换</p>
+     *
+     * @param src    源实体
+     * @param target 目标实体
+     * @param fields 需要拷贝的字段名(如果为空则表示拷贝所有共有字段)
+     * @param filter 过滤条件
+     * @param ignore 需要排除的字段名
+     */
+    public static void copyTo(Object src, Object target, Collection<String> fields, BiPredicate<Field, Object> filter, Collection<String> ignore) {
         if (null == src || null == target) {
             return;
         }
@@ -791,7 +806,11 @@ public abstract class BeanUtils {
 
                 ReflectionUtils.makeAccessible(srcField);
                 ReflectionUtils.makeAccessible(targetField);
-                targetField.set(target, ObjectUtils.convert(targetField.getType(), srcField.get(src)));
+
+                Object srcVal = srcField.get(src);
+                if (null == filter || filter.test(srcField, srcVal)) {
+                    targetField.set(target, ObjectUtils.convert(targetField.getType(), srcVal));
+                }
             }
         } catch (IllegalAccessException e) {
             throw new SpinException("反射访问成员变量失败", e);
@@ -808,6 +827,19 @@ public abstract class BeanUtils {
      */
     public static void copyTo(Object src, Object target, String... fields) {
         copyTo(src, target, Arrays.asList(fields), null);
+    }
+
+    /**
+     * 复制JavaBean的属性到另一个JavaBean中，直接反射字段值，不通过getter/setter
+     * <p>如果不指定字段列表，并且源对象是JavaBean，则会拷贝所有字段</p>
+     *
+     * @param src    源实体
+     * @param target 目标实体
+     * @param filter 过滤条件
+     * @param fields 字段名列表
+     */
+    public static void copyTo(Object src, Object target, BiPredicate<Field, Object> filter, String... fields) {
+        copyTo(src, target, Arrays.asList(fields), filter, null);
     }
 
     public static <S, T> void copyTo(S src, T target, Function<S, ?> prop) {

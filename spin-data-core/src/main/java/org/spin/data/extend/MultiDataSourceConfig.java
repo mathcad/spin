@@ -1,6 +1,12 @@
 package org.spin.data.extend;
 
+import org.spin.core.util.StringUtils;
+import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.InitializingBean;
+
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 多数据源配置定义
@@ -8,7 +14,7 @@ import java.util.Map;
  *
  * @author xuweinan
  */
-public interface MultiDataSourceConfig<T extends DataSourceConfig> {
+public interface MultiDataSourceConfig<T extends DataSourceConfig> extends InitializingBean {
 
     /**
      * 获取主数据源配置名称
@@ -54,16 +60,40 @@ public interface MultiDataSourceConfig<T extends DataSourceConfig> {
     T getPrimaryDataSourceConfig();
 
     /**
-     * 获取单数据源配置
+     * 是否在View层开启Session
      *
-     * @return 单数据源配置
+     * @return 是/否
      */
-    T getSingleton();
+    boolean isOpenSessionInView();
 
     /**
-     * 设置单数据源配置
+     * openSessionInview的排除路径
      *
-     * @param singleton 单数据源配置
+     * @return 排除路径
      */
-    void setSingleton(T singleton);
+    String getExcluePathPattern();
+
+    @Override
+    default void afterPropertiesSet() {
+        if (Objects.isNull(getDataSources())) {
+            setDataSources(new HashMap<>());
+            return;
+        }
+        if (getDataSources().size() == 1) {
+            setPrimaryDataSource(getDataSources().keySet().iterator().next());
+        }
+
+        getDataSources().forEach((key, value) -> {
+            if (StringUtils.isEmpty(value.getUrl())
+                || StringUtils.isEmpty(value.getUsername())
+                || StringUtils.isEmpty(value.getPassword())) {
+                throw new BeanCreationException(key + "数据库连接必需配置url, username, password");
+            }
+            value.setName(key);
+        });
+
+        if (StringUtils.isEmpty(getPrimaryDataSource())) {
+            throw new BeanCreationException("多数据源模式下必需配置主数据源[spin.datasource.primaryDataSource]");
+        }
+    }
 }

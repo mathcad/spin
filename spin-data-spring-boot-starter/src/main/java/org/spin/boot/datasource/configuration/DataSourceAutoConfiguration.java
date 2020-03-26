@@ -66,7 +66,7 @@ import java.util.Properties;
     org.springframework.boot.autoconfigure.jdbc.XADataSourceAutoConfiguration.class,
     org.springframework.boot.autoconfigure.transaction.jta.JtaAutoConfiguration.class
 }, name = {
-    "org.springframework.boot.autoconfigure.transaction.jta.AtomikosJtaConfiguration.class"
+    "org.springframework.boot.autoconfigure.transaction.jta.AtomikosJtaConfiguration"
 })
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableTransactionManagement(proxyTargetClass = true)
@@ -78,7 +78,10 @@ public class DataSourceAutoConfiguration {
     private ApplicationContext applicationContext;
 
     @Autowired
-    public DataSourceAutoConfiguration(SpinDataProperties dataProperties, MultiDataSourceConfig dsConfigs, DataSourceBuilder dataSourceBuilder, ApplicationContext applicationContext) {
+    public DataSourceAutoConfiguration(SpinDataProperties dataProperties,
+                                       MultiDataSourceConfig dsConfigs,
+                                       DataSourceBuilder dataSourceBuilder,
+                                       ApplicationContext applicationContext) {
         this.dataProperties = dataProperties;
         this.dsConfigs = dsConfigs;
         this.dataSourceBuilder = dataSourceBuilder;
@@ -88,24 +91,9 @@ public class DataSourceAutoConfiguration {
     @Bean
     @SuppressWarnings("unchecked")
     public TransactionModel transactionModel() {
-        if ((null != dsConfigs.getSingleton() && StringUtils.isNotBlank(dsConfigs.getSingleton().getUrl()))
-            && (null == dsConfigs.getDataSources() || dsConfigs.getDataSources().isEmpty())) {
-            if (StringUtils.isBlank(dsConfigs.getSingleton().getName())) {
-                dsConfigs.getSingleton().setName("main");
-            }
+        if (dsConfigs.getDataSources().size() == 1) {
             return new Singleton();
-        }
-
-        if ((null == dsConfigs.getSingleton() || StringUtils.isBlank(dsConfigs.getSingleton().getUrl()))
-            && (null != dsConfigs.getDataSources() && dsConfigs.getDataSources().size() == 1)) {
-            String name = dsConfigs.getDataSources().keySet().iterator().next().toString();
-            dsConfigs.setSingleton((DataSourceConfig) dsConfigs.getDataSources().get(name));
-            dsConfigs.getSingleton().setName(name);
-            return new Singleton();
-        }
-
-        if ((null == dsConfigs.getSingleton() || StringUtils.isBlank(dsConfigs.getSingleton().getUrl()))
-            && (null != dsConfigs.getDataSources() && dsConfigs.getDataSources().size() > 1)) {
+        } else {
             if (StringUtils.isBlank(dsConfigs.getPrimaryDataSource())) {
                 throw new SimplifiedException("多数据源配置中未指定主数据源");
             }
@@ -115,8 +103,6 @@ public class DataSourceAutoConfiguration {
             dsConfigs.getDataSources().forEach((n, d) -> ((DataSourceConfig) d).setName(n.toString()));
             return new Multipal();
         }
-
-        throw new SimplifiedException("不能同时使用单数据源与多数据源配置");
     }
 
     @Bean
@@ -132,31 +118,11 @@ public class DataSourceAutoConfiguration {
 
                 // SessionFactory
                 sfDefinitionBuilder(acf, name.toString(), dataSourceBean, defaultProperties);
-
-                // OpenSessionInViewFilter
-                try {
-                    Class.forName("org.springframework.boot.web.servlet.FilterRegistrationBean");
-                    if (((DataSourceConfig) config).isOpenSessionInView()) {
-                        osivDefinitionBuilder(acf, name.toString());
-                    }
-                } catch (ClassNotFoundException ignore) {
-                    // do nothing
-                }
             });
         } else {
-            DataSource druidDataSource = dataSourceBuilder.buildSingletonDatasource(acf, dsConfigs.getSingleton());
+            DataSource druidDataSource = dataSourceBuilder.buildSingletonDatasource(acf, dsConfigs.getPrimaryDataSourceConfig());
             // SessionFactory
-            sfDefinitionBuilder(acf, dsConfigs.getSingleton().getName(), druidDataSource, defaultProperties);
-
-            // OpenSessionInViewFilter
-            try {
-                Class.forName("org.springframework.boot.web.servlet.FilterRegistrationBean");
-                if (dsConfigs.getSingleton().isOpenSessionInView()) {
-                    osivDefinitionBuilder(acf, dsConfigs.getSingleton().getName());
-                }
-            } catch (ClassNotFoundException ignore) {
-                // do nothing
-            }
+            sfDefinitionBuilder(acf, dsConfigs.getPrimaryDataSourceConfig().getName(), druidDataSource, defaultProperties);
         }
         return new DbInit();
     }
@@ -173,7 +139,7 @@ public class DataSourceAutoConfiguration {
         if (model instanceof Multipal) {
             return new SQLManager(dsConfigs, dataProperties.getSqlLoader(), dataProperties.getSqlUri(), dataProperties.getResolverObj());
         } else {
-            return new SQLManager(dsConfigs.getSingleton(), dataProperties.getSqlLoader(), dataProperties.getSqlUri(), dataProperties.getResolverObj());
+            return new SQLManager(dsConfigs.getPrimaryDataSourceConfig(), dataProperties.getSqlLoader(), dataProperties.getSqlUri(), dataProperties.getResolverObj());
         }
     }
 
@@ -241,8 +207,8 @@ public class DataSourceAutoConfiguration {
         return () -> {
             if (transactionModel instanceof Singleton) {
                 BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(HibernateTransactionManager.class);
-                bdb.addConstructorArgReference(dsConfigs.getSingleton().getName() + "SessionFactory");
-                String beanName = dsConfigs.getSingleton().getName() + "TransactionManager";
+                bdb.addConstructorArgReference(dsConfigs.getPrimaryDataSourceConfig().getName() + "SessionFactory");
+                String beanName = dsConfigs.getPrimaryDataSourceConfig().getName() + "TransactionManager";
                 acf.registerBeanDefinition(beanName, bdb.getBeanDefinition());
                 applicationContext.getBean(PlatformTransactionManager.class);
             } else {

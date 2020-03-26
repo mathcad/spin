@@ -1,7 +1,5 @@
 package com.shipping
 
-import com.shipping.internal.InfoCache
-import org.spin.boot.annotation.EnableSecretManager
 import org.spin.boot.datasource.annotation.EnableDataSource
 import org.spin.boot.datasource.annotation.EnableIdGenerator
 import org.spin.boot.datasource.option.DataSourceType
@@ -25,7 +23,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
  */
 @EnableIdGenerator
 @EnableDataSource(DataSourceType.DRUID)
-@EnableSecretManager
 @SpringBootApplication
 class ShippingApplication : WebMvcConfigurer {
 
@@ -35,14 +32,6 @@ class ShippingApplication : WebMvcConfigurer {
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
         registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/")
         registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + SpinContext.FILE_UPLOAD_DIR)
-    }
-
-    @Bean
-    fun readConfig(): InitializingBean {
-        return InitializingBean {
-            InfoCache.RSA_PUBKEY = RSA.getRSAPublicKey(env.getProperty("encrypt.rsa.publicKey"))
-            InfoCache.RSA_PRIKEY = RSA.getRSAPrivateKey(env.getProperty("encrypt.rsa.privatekey"))
-        }
     }
 }
 

@@ -4,8 +4,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.spin.core.util.ClassUtils;
-import org.spin.core.util.MethodUtils;
+import org.spin.data.core.DataSourceContext;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.orm.hibernate5.SessionFactoryUtils;
 import org.springframework.orm.hibernate5.SessionHolder;
@@ -22,45 +21,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 public class OpenSessionInViewFilter extends OncePerRequestFilter {
 
-    public static final String DEFAULT_SESSION_FACTORY_BEAN_NAME = "sessionFactory";
-    private static Class<?> dataSourceContextClass;
-
-    private String sessionFactoryBeanName = DEFAULT_SESSION_FACTORY_BEAN_NAME;
-
-
-    static {
-        try {
-            dataSourceContextClass = ClassUtils.getClass("org.spin.data.core.DataSourceContext");
-        } catch (ClassNotFoundException e) {
-            // do nothing
-        }
-    }
-
-    /**
-     * Set the bean name of the SessionFactory to fetch from Spring's
-     * root application context. Default is "sessionFactory".
-     *
-     * @param sessionFactoryBeanName sesssionFactory名称
-     * @see #DEFAULT_SESSION_FACTORY_BEAN_NAME
-     */
-    public void setSessionFactoryBeanName(String sessionFactoryBeanName) {
-        this.sessionFactoryBeanName = sessionFactoryBeanName;
-    }
-
-    /**
-     * Return the bean name of the SessionFactory to fetch from Spring's
-     * root application context.
-     *
-     * @return sesssionFactory名称
-     */
-    protected String getSessionFactoryBeanName() {
-        return this.sessionFactoryBeanName;
-    }
-
+    public static final String DEFAULT_SESSION_FACTORY_BEAN_NAME = "SessionFactory";
 
     /**
      * Returns "false" so that the filter may re-bind the opened Hibernate
@@ -82,8 +46,7 @@ public class OpenSessionInViewFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-        HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
 
         SessionFactory sessionFactory = lookupSessionFactory(request);
@@ -113,21 +76,13 @@ public class OpenSessionInViewFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             if (!participate) {
-                if (null != dataSourceContextClass) {
-                    // 切换回默认Schema
-                    try {
-                        MethodUtils.invokeStaticMethod(dataSourceContextClass, "restoreSchema", null);
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignore) {
-                        // do nothing
-                    }
-                }
-                SessionHolder sessionHolder =
-                    (SessionHolder) TransactionSynchronizationManager.unbindResource(sessionFactory);
+                SessionHolder sessionHolder = (SessionHolder) TransactionSynchronizationManager.unbindResource(sessionFactory);
                 if (!isAsyncStarted(request)) {
                     logger.debug("Closing Hibernate Session in OpenSessionInViewFilter");
-
                     SessionFactoryUtils.closeSession(sessionHolder.getSession());
                 }
+                // 切换回默认Schema
+                DataSourceContext.restoreSchema();
             }
         }
     }
@@ -151,14 +106,14 @@ public class OpenSessionInViewFilter extends OncePerRequestFilter {
      * in Spring's root application context.
      *
      * @return the SessionFactory to use
-     * @see #getSessionFactoryBeanName
      */
     protected SessionFactory lookupSessionFactory() {
+        String sn = DataSourceContext.getPrimaryDataSourceName() + DEFAULT_SESSION_FACTORY_BEAN_NAME;
         if (logger.isDebugEnabled()) {
-            logger.debug("Using SessionFactory '" + getSessionFactoryBeanName() + "' for OpenSessionInViewFilter");
+            logger.debug("Using SessionFactory '" + sn + "' for OpenSessionInViewFilter");
         }
         WebApplicationContext wac = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
-        return wac.getBean(getSessionFactoryBeanName(), SessionFactory.class);
+        return wac.getBean(sn, SessionFactory.class);
     }
 
     /**
