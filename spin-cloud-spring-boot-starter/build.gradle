@@ -3,7 +3,7 @@ plugins {
 }
 
 description '公共通用组件starter'
-version '2.2.25-SNAPSHOT'
+version '2.2.26-SNAPSHOT'
 def artifactId = 'spin-cloud-spring-boot-starter'
 
 test {
@@ -31,12 +31,17 @@ uploadArchives {
     }
 }
 
+artifacts {
+    archives javadocJar
+    archives sourceJar
+}
+
 dependencies {
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
 
-    api group: 'org.mathcat', name: 'spin-web', version: "$project.version"
-    api group: 'org.mathcat', name: 'spin-data-core', version: "$project.version"
+    api group: 'org.mathcat', name: 'spin-web', version: '2.2.25-SNAPSHOT'
+    api group: 'org.mathcat', name: 'spin-data-core', version: '2.2.25-SNAPSHOT'
 
     api group: 'org.springframework', name: 'spring-context-support', version: springVersion
     api group: 'org.springframework', name: 'spring-aspects', version: springVersion

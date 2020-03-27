@@ -1,6 +1,9 @@
 package org.spin.boot.datasource.configuration;
 
 import org.spin.boot.datasource.interceptor.OpenSessionInViewInterceptor;
+import org.spin.boot.datasource.provider.DefaultSessionFactoryProvider;
+import org.spin.boot.datasource.provider.SessionFactoryProvider;
+import org.spin.boot.datasource.provider.WebSessionFactoryProvider;
 import org.spin.core.util.StringUtils;
 import org.spin.data.extend.MultiDataSourceConfig;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -31,7 +34,15 @@ public class OpenSessionInViewConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         if (config.isOpenSessionInView()) {
-            InterceptorRegistration interceptorRegistration = registry.addInterceptor(new OpenSessionInViewInterceptor())
+            SessionFactoryProvider sessionFactoryProvider;
+            try {
+                Class.forName("org.spin.web.annotation.RequestDs");
+                sessionFactoryProvider = new WebSessionFactoryProvider();
+            } catch (ClassNotFoundException e) {
+                sessionFactoryProvider = new DefaultSessionFactoryProvider();
+            }
+
+            InterceptorRegistration interceptorRegistration = registry.addInterceptor(new OpenSessionInViewInterceptor(sessionFactoryProvider))
                 .addPathPatterns("/**");
             if (StringUtils.isNotBlank(config.getExcluePathPattern())) {
                 interceptorRegistration.excludePathPatterns(StringUtils.split(config.getExcluePathPattern(), ","));

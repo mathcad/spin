@@ -6,11 +6,9 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.boot.datasource.annotation.Ds;
 import org.spin.boot.datasource.filter.AsyncRequestInterceptor;
-import org.spin.core.util.StringUtils;
+import org.spin.boot.datasource.provider.SessionFactoryProvider;
 import org.spin.data.core.DataSourceContext;
-import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.orm.hibernate5.SessionFactoryUtils;
 import org.springframework.orm.hibernate5.SessionHolder;
@@ -23,7 +21,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Method;
 
 /**
  * TITLE
@@ -39,17 +36,24 @@ public class OpenSessionInViewInterceptor implements HandlerInterceptor {
     private static final String DEFAULT_SESSION_FACTORY_BEAN_NAME = "SessionFactory";
     private static final ThreadLocal<SessionFactory> CURRENT_SF = new ThreadLocal<>();
 
+    private final SessionFactoryProvider sessionFactoryProvider;
+
+    public OpenSessionInViewInterceptor(SessionFactoryProvider sessionFactoryProvider) {
+        this.sessionFactoryProvider = sessionFactoryProvider;
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         // 是否调用方法
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
-        Method method = ((HandlerMethod) handler).getMethod();
 
-        Ds ds = AnnotatedElementUtils.getMergedAnnotation(method, Ds.class);
+        SessionFactory sessionFactory = sessionFactoryProvider.getSessionFactory((HandlerMethod) handler);
+        if (null == sessionFactory) {
+            return true;
+        }
 
-        SessionFactory sessionFactory = lookupSessionFactory(ds);
         CURRENT_SF.set(sessionFactory);
 
         String key = getParticipateAttributeName(sessionFactory);
@@ -87,23 +91,6 @@ public class OpenSessionInViewInterceptor implements HandlerInterceptor {
             DataSourceContext.restoreSchema();
             CURRENT_SF.remove();
         }
-    }
-
-    /**
-     * Look up the SessionFactory that this filter should use.
-     * <p>The default implementation looks for a bean with the specified name
-     * in Spring's root application context.
-     *
-     * @return the SessionFactory to use
-     */
-    private SessionFactory lookupSessionFactory(Ds ds) {
-        String dsName = null == ds || StringUtils.isEmpty(ds.value()) ? DataSourceContext.getPrimaryDataSourceName() : ds.value();
-        DataSourceContext.switchDataSource(dsName);
-        String sn = DataSourceContext.getCurrentDataSourceName() + DEFAULT_SESSION_FACTORY_BEAN_NAME;
-        if (logger.isDebugEnabled()) {
-            logger.debug("Using SessionFactory '" + sn + "' for OpenSessionInViewFilter");
-        }
-        return DataSourceContext.getCurrentSessionFactory();
     }
 
     /**

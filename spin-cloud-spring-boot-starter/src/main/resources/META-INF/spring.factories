@@ -4,6 +4,7 @@ org.spin.cloud.config.ConverterAutoConfiguration,\
 org.spin.cloud.config.FeignAutoConfiguration, \
 org.spin.cloud.config.FrameworkAutoConfiguration,\
 org.spin.cloud.config.RedisExtendsAutoConfiguration,\
+org.spin.cloud.config.SentinelAutoConfiguration,\
 org.spin.cloud.config.SpinRedisAutoConfiguration,\
 org.spin.cloud.config.SpinRibbonClientConfiguration,\
 org.spin.cloud.config.Swagger2AutoConfiguration, \

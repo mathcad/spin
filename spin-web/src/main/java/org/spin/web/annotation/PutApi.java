@@ -20,6 +20,7 @@ import java.lang.annotation.Target;
 @RequestMapping(method = RequestMethod.PUT)
 @Auth
 @Author
+@RequestDs
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PutApi {
@@ -133,4 +134,20 @@ public @interface PutApi {
      */
     @AliasFor(annotation = Author.class, attribute = "contact")
     String contact() default "";
+
+    /**
+     * 数据源名称
+     *
+     * @return 数据源名称
+     */
+    @AliasFor(annotation = RequestDs.class, attribute = "value")
+    String dsName() default "";
+
+    /**
+     * 是否自动开启Session
+     *
+     * @return 是否自动开启Session
+     */
+    @AliasFor(annotation = RequestDs.class, attribute = "openSession")
+    boolean openSession() default true;
 }

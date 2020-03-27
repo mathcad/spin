@@ -41,6 +41,7 @@ dependencies {
     api group: 'org.glassfish', name: 'javax.annotation', version: '10.0-b28'
 
     api group: 'org.mathcat', name: 'spin-data', version: "$project.version"
+    compileOnly group: 'org.mathcat', name: 'spin-web', version: "$project.version"
     compileOnly group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compileOnly group: 'com.atomikos', name: 'transactions-jdbc', version: atomikosVersion
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'

@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  * <p>Created by wangy on 2019/3/13.</p>
  */
 @Configuration
-@ComponentScan(basePackages = {"org.spin.cloud.web.handler"})
+@ComponentScan(basePackages = {"org.spin.cloud.web.handler", "org.spin.web.handler"})
 public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
     private static final JsonHttpMessageConverter JSON_HTTP_MESSAGE_CONVERTER = new JsonHttpMessageConverter();
