@@ -6,7 +6,7 @@ import org.spin.core.ErrorCode;
 import org.spin.core.util.BooleanExt;
 import org.spin.core.util.CollectionUtils;
 import org.spin.web.RestfulResponse;
-import org.spin.web.handler.WebExceptionHalder;
+import org.spin.web.handler.WebExceptionHandler;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindException;
@@ -25,7 +25,7 @@ import java.util.List;
  * @version 1.0
  */
 @Component
-public class ValidationExceptionHandler implements WebExceptionHalder {
+public class ValidationExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(ValidationExceptionHandler.class);
 
     @Override

@@ -3,7 +3,7 @@ package org.spin.web.handler.exception;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.web.RestfulResponse;
-import org.spin.web.handler.WebExceptionHalder;
+import org.spin.web.handler.WebExceptionHandler;
 import org.spin.web.throwable.FeignHttpException;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletRequest;
  * @version 1.0
  */
 @Component
-public class FeignExceptionHandler implements WebExceptionHalder {
+public class FeignExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(FeignExceptionHandler.class);
 
     @Override

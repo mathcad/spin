@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author xuweinan
  * @version 1.0
  */
-public interface WebExceptionHalder {
+public interface WebExceptionHandler {
 
     /**
      * 处理逻辑

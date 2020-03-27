@@ -5,12 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.AssertFailException;
 import org.spin.web.RestfulResponse;
-import org.spin.web.handler.WebExceptionHalder;
-import org.spin.web.throwable.FeignHttpException;
+import org.spin.web.handler.WebExceptionHandler;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
-import java.time.format.DateTimeParseException;
 
 /**
  * TITLE
@@ -21,7 +19,7 @@ import java.time.format.DateTimeParseException;
  * @version 1.0
  */
 @Component
-public class AssertExceptionHandler implements WebExceptionHalder {
+public class AssertExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(AssertExceptionHandler.class);
 
     @Override

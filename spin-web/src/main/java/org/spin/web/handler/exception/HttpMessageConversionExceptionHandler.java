@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.web.RestfulResponse;
-import org.spin.web.handler.WebExceptionHalder;
+import org.spin.web.handler.WebExceptionHandler;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
  * @version 1.0
  */
 @Component
-public class HttpMessageConversionExceptionHandler implements WebExceptionHalder {
+public class HttpMessageConversionExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(HttpMessageConversionExceptionHandler.class);
 
     @Override

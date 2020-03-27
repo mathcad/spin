@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SpinException;
 import org.spin.web.RestfulResponse;
-import org.spin.web.handler.WebExceptionHalder;
+import org.spin.web.handler.WebExceptionHandler;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletRequest;
  * @version 1.0
  */
 @Component
-public class SpinExceptionHandler implements WebExceptionHalder {
+public class SpinExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(SpinExceptionHandler.class);
 
     @Override

@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.web.RestfulResponse;
-import org.spin.web.handler.WebExceptionHalder;
+import org.spin.web.handler.WebExceptionHandler;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,7 +20,7 @@ import java.net.ConnectException;
  * @version 1.0
  */
 @Component
-public class NetworkExceptionHandler implements WebExceptionHalder {
+public class NetworkExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(NetworkExceptionHandler.class);
 
     @Override

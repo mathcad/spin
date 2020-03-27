@@ -36,12 +36,12 @@ public class GlobalExceptionAdvice {
     @Value("${spring.application.name:}")
     private String appName;
 
-    private final List<WebExceptionHalder> handlers = new LinkedList<>();
+    private final List<WebExceptionHandler> handlers = new LinkedList<>();
 
     private boolean isPro;
 
-    public GlobalExceptionAdvice(List<WebExceptionHalder> handlers) {
-        handlers.sort(Comparator.comparing(WebExceptionHalder::order));
+    public GlobalExceptionAdvice(List<WebExceptionHandler> handlers) {
+        handlers.sort(Comparator.comparing(WebExceptionHandler::order));
         this.handlers.addAll(handlers);
     }
 
@@ -69,7 +69,7 @@ public class GlobalExceptionAdvice {
         boolean isInternal = StringUtils.isNotEmpty(request.getHeader("X-APP-NAME"));
         while (cause != null && depth < 30) {
             ++depth;
-            for (WebExceptionHalder handler : handlers) {
+            for (WebExceptionHandler handler : handlers) {
                 if (handler.support(cause)) {
                     res = handler.handler(appName, cause, request);
                     res.setPath(request.getRequestURI());
