@@ -80,6 +80,17 @@ public class UserAuthInterceptor implements HandlerInterceptor {
                 return false;
             }
         }
+
+        if (AuthLevel.AUTHORIZE == authAnno.value()) {
+            String authName = authAnno.name();
+            if (StringUtils.isEmpty(authName)) {
+                authName = method.getDeclaringClass().getName() + "-" + method.getName();
+            }
+            authName = "API:" + authName;
+
+            // 加载用户当前接口的权限定义
+//            Env.setCurrentAuth(authName);
+        }
         return true;
     }
 

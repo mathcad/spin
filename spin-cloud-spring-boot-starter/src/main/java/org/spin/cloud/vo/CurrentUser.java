@@ -5,18 +5,26 @@ import org.slf4j.LoggerFactory;
 import org.spin.cloud.annotation.UtilClass;
 import org.spin.cloud.throwable.BizException;
 import org.spin.core.Assert;
-import org.spin.core.collection.Pair;
-import org.spin.core.collection.Triple;
-import org.spin.core.collection.Tuple;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.security.Base64;
 import org.spin.core.session.SessionUser;
-import org.spin.core.util.*;
+import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.DateUtils;
+import org.spin.core.util.JsonUtils;
+import org.spin.core.util.MapUtils;
+import org.spin.core.util.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,12 +40,15 @@ public class CurrentUser extends SessionUser<Long> {
     private static final Logger logger = LoggerFactory.getLogger(CurrentUser.class);
     private static final TypeToken<Map<String, Set<String>>> STRING_SETSTR_MAP_TOKEN = new TypeToken<Map<String, Set<String>>>() {
     };
-    private static Pair<Long, Long> NON_ENTERPRISE = Tuple.of(0L, 0L);
+
+    private static final TypeToken<Set<RolePermission>> ROLE_PERMISSION_TYPE = new TypeToken<Set<RolePermission>>() {
+    };
 
     private static final String REDIS_NOT_PREPARED = "CurrentUser未能顺利初始化, 无法访问Redis";
     private static final String REDIS_SESSION_KEY = "ALL_SESSION:";
     private static final Duration SESSION_TIME_OUT = Duration.ofHours(2L);
     private static final String SESSION_ENTERPRISE_REDIS_KEY = "SESSION_ENTERPRISE:";
+    private static final String SESSION_PERMISSION_CACHE_KEY = "SESSION_PERMISSION_CACHE:";
     private static final String USER_ROLE_AND_GROUP_REDIS_KEY = "USER_ROLE_AND_GROUP:";
     private static final String SYS_ROLE_INFO_REDIS_KEY = "SYS_ROLE_INFO";
 
@@ -106,19 +117,19 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     /**
+     * 清除线程上绑定的当前用户
+     */
+    public static void clearCurrent() {
+        CURRENT.remove();
+    }
+
+    /**
      * 绑定指定用户到当前线程上
      *
      * @param current 当前用户
      */
     public static void setCurrent(CurrentUser current) {
         CURRENT.set(Assert.notNull(current, "当前用户不能为空"));
-    }
-
-    /**
-     * 清除线程上绑定的当前用户
-     */
-    public static void clearCurrent() {
-        CURRENT.remove();
     }
 
     /**
@@ -139,15 +150,14 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     /**
-     * 获取用户当前Session上设置的企业
-     * 如果非企业员工，返回(用户ID, 0, 0)
+     * 获取用户当前Session上设置的员工企业信息
+     * 如果非企业员工，返回的企业id与员工id均为0
      *
-     * @return 当前用户ID, 当前员工ID, 当前企业ID
+     * @return 员工企业信息
      */
-    public static Triple<Long, Long, Long> getEnterpriseInfo() {
+    public static SessionEmpInfo getEnterpriseInfo() {
         CurrentUser current = getCurrentNonNull();
-        Pair<Long, Long> enterprise = current.getSessionEnterprise();
-        return Tuple.of(current.getId(), enterprise.c1, enterprise.c2);
+        return current.getSessionEnterprise();
     }
 
     @Override
@@ -194,49 +204,18 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     /**
-     * 获取用户当前Session上设置的企业
+     * 获取用户当前Session上设置的员工企业信息
      * 如果非企业员工，返回(0, 0)
      *
-     * @return 当前员工ID, 当前企业ID
+     * @return 员工企业信息
      */
-    public Pair<Long, Long> getSessionEnterprise() {
+    public SessionEmpInfo getSessionEnterprise() {
         String s = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(SESSION_ENTERPRISE_REDIS_KEY + sid);
         if (null == s) {
-            return NON_ENTERPRISE;
+            return SessionEmpInfo.newNonEntUser(this.id);
         }
-        int i = s.indexOf(':');
-        return Tuple.of(Long.parseLong(s.substring(0, i)), Long.parseLong(s.substring(i + 1)));
-    }
 
-    /**
-     * 设置用户当前Session上的企业
-     *
-     * @param empId        员工id
-     * @param enterpriseId 企业id
-     * @param expireTime   过期时间
-     * @param timeUnit     时间单位
-     */
-    public void setSessionEnterprise(long empId, long enterpriseId, long expireTime, TimeUnit timeUnit) {
-        Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue()
-            .set(SESSION_ENTERPRISE_REDIS_KEY + sid, empId + ":" + enterpriseId, expireTime, timeUnit);
-    }
-
-    /**
-     * 设置用户当前Session上的企业
-     * <p>
-     * 更新旧的当前企业，数据有效期不变，如果没有旧值，更新失败
-     * </p>
-     *
-     * @param empId        员工id
-     * @param enterpriseId 企业id
-     */
-    public void setSessionEnterprise(long empId, long enterpriseId) {
-        Boolean hasKey = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).hasKey(SESSION_ENTERPRISE_REDIS_KEY + sid);
-        if (null != hasKey && hasKey) {
-            redisTemplate.opsForValue().set(SESSION_ENTERPRISE_REDIS_KEY + sid, empId + ":" + enterpriseId);
-        } else {
-            throw new BizException("用户当前会话未设置过当前企业");
-        }
+        return JsonUtils.fromJson(s, SessionEmpInfo.class);
     }
 
     /**
@@ -260,9 +239,9 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 角色与用户组边码列表(用户组编码以GROUP : 开头)
      */
     public Set<String> getRoleAndGroups() {
-        Pair<Long, Long> sessionEnterprise = getSessionEnterprise();
+        SessionEmpInfo sessionEnterprise = getSessionEnterprise();
         if (null != sessionEnterprise) {
-            return getRoleAndGroups(sessionEnterprise.c2);
+            return getRoleAndGroups(sessionEnterprise.getEnterpriseId());
         }
 
         return Collections.emptySet();
@@ -306,9 +285,9 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 角色列表(编码)
      */
     public Set<String> getActualRoles() {
-        Pair<Long, Long> sessionEnterprise = getSessionEnterprise();
+        SessionEmpInfo sessionEnterprise = getSessionEnterprise();
         if (null != sessionEnterprise) {
-            return getActualRoles(sessionEnterprise.c2);
+            return getActualRoles(sessionEnterprise.getEnterpriseId());
         }
 
         return Collections.emptySet();
@@ -327,15 +306,24 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     /**
+     * 获取一个用户拥有的全部权限
+     *
+     * @return 权限列表
+     */
+    public Set<RolePermission> getAllPermissions() {
+        return JsonUtils.fromJson(redisTemplate.opsForValue().get(SESSION_PERMISSION_CACHE_KEY + sid), ROLE_PERMISSION_TYPE);
+    }
+
+    /**
      * 判断用户在当前企业下是否拥有指定角色
      *
      * @param roleCode 角色编码
      * @return 是/否
      */
     public boolean hasRole(String roleCode) {
-        Pair<Long, Long> sessionEnterprise = getSessionEnterprise();
+        SessionEmpInfo sessionEnterprise = getSessionEnterprise();
         if (null != sessionEnterprise) {
-            return hasRole(sessionEnterprise.c2, roleCode);
+            return hasRole(sessionEnterprise.getEnterpriseId(), roleCode);
         }
         return false;
     }
@@ -463,6 +451,16 @@ public class CurrentUser extends SessionUser<Long> {
         Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForHash().delete(sessionKey, keys.toArray());
     }
 
+    /**
+     * 查询当前用户在指定数据权限模式下的机构列表
+     *
+     * @param dataLevel 数据权限级别
+     * @return 机构ID列表
+     */
+    public Set<OrganVo> getDataLevelOrgans(DataLevel dataLevel) {
+        return null;
+    }
+
     private Set<String> getActualRoles(Set<String> roleAndGroups) {
         if (CollectionUtils.isEmpty(roleAndGroups)) {
             return roleAndGroups;
@@ -477,29 +475,29 @@ public class CurrentUser extends SessionUser<Long> {
         // 用户组-组合的的其他角色
         Map<String, Set<String>> userGroupRole = res.size() > 1 ? JsonUtils.fromJson(res.get(1), STRING_SETSTR_MAP_TOKEN) : Collections.emptyMap();
 
-        Set<String> actualRoles = new HashSet<>();
-
-        roleAndGroups.forEach(it -> {
-            if (it.startsWith("GROUP:")) {
-                Set<String> rs = userGroupRole.get(it.substring(6));
+        Set<String> userActualRoles = new HashSet<>();
+        for (String roleOrGroup : roleAndGroups) {
+            if (roleOrGroup.startsWith("GROUP:")) {
+                Set<String> rs = userGroupRole.get(roleOrGroup.substring(roleOrGroup.lastIndexOf(':') + 1));
                 if (null != rs) {
                     for (String r : rs) {
-                        actualRoles.add(r);
+                        userActualRoles.add(r);
                         Set<String> tmp = roleInheritance.get(r);
                         if (!CollectionUtils.isEmpty(tmp)) {
-                            actualRoles.addAll(tmp);
+                            userActualRoles.addAll(tmp);
                         }
                     }
                 }
             } else {
-                actualRoles.add(it);
-                Set<String> tmp = roleInheritance.get(it);
+                String r = roleOrGroup.substring(roleOrGroup.lastIndexOf(':') + 1);
+                userActualRoles.add(r);
+                Set<String> tmp = roleInheritance.get(r);
                 if (!CollectionUtils.isEmpty(tmp)) {
-                    actualRoles.addAll(tmp);
+                    userActualRoles.addAll(tmp);
                 }
             }
-        });
-        return actualRoles;
+        }
+        return userActualRoles;
     }
 
     @Override

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.cloud.vo.LogInfoVo;
+import org.spin.cloud.vo.SessionEmpInfo;
 import org.spin.core.Assert;
 import org.spin.core.collection.Pair;
 import org.spin.core.util.JsonUtils;
@@ -61,11 +62,11 @@ public class SysLogPublisher {
         CurrentUser currentUser = CurrentUser.getCurrent();
         infoVo.setAppName(Env.getAppName());
         if (null != currentUser) {
-            Pair<Long, Long> enterprise = currentUser.getSessionEnterprise();
+            SessionEmpInfo enterprise = currentUser.getSessionEnterprise();
             infoVo.setUserId(currentUser.getId());
             infoVo.setRealName(currentUser.getName());
             if (null != enterprise) {
-                infoVo.setEnterpriseId(enterprise.c2);
+                infoVo.setEnterpriseId(enterprise.getEnterpriseId());
             } else {
                 infoVo.setEnterpriseId(0L);
             }

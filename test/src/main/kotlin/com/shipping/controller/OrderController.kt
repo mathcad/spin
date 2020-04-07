@@ -36,7 +36,7 @@ class OrderController {
      * @return
      */
     @PostMapping(path = ["/add"])
-    @Ds(openSession = false)
+    @Ds(openSession = true)
     fun add(senderName: String?,
             senderMobile: String?, senderPortName: String): RestfulResponse<*> {
         val order = Order()
