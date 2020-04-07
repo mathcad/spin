@@ -96,9 +96,9 @@ dependencies {
 //    implementation group: 'com.atomikos', name: 'transactions', version: '5.0.0'
 //    implementation group: 'com.atomikos', name: 'transactions-jta', version: '5.0.0'
 
-    implementation group: 'org.mathcat', name: 'spin-data-spring-boot-starter', version: spinVersion
-    implementation group: 'org.mathcat', name: 'spin-web', version: spinVersion
-    implementation group: 'org.mathcat', name: 'spin-wx', version: spinVersion
+    implementation group: 'org.mathcat', name: 'spin-data-spring-boot-starter', version: '2.2.25-SNAPSHOT'
+    implementation group: 'org.mathcat', name: 'spin-web', version: '2.2.27-SNAPSHOT'
+    implementation group: 'org.mathcat', name: 'spin-wx', version: '2.2.25-SNAPSHOT'
     implementation group: 'com.ibeetl', name: 'beetl', version: '3.0.10.RELEASE'
 
     implementation group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'

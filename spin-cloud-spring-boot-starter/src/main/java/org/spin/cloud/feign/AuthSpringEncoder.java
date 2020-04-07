@@ -16,7 +16,6 @@
 
 package org.spin.cloud.feign;
 
-import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;

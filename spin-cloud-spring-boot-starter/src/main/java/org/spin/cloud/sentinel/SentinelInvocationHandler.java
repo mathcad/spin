@@ -11,6 +11,7 @@ import feign.InvocationHandlerFactory.MethodHandler;
 import feign.MethodMetadata;
 import feign.Target;
 import feign.hystrix.FallbackFactory;
+import org.spin.cloud.feign.AbstractFallback;
 import org.spin.core.throwable.SimplifiedException;
 
 import java.lang.reflect.InvocationHandler;
@@ -71,7 +72,8 @@ public class SentinelInvocationHandler implements InvocationHandler {
         MethodHandler methodHandler = this.dispatch.get(method);
         // only handle by HardCodedTarget
         if (target instanceof Target.HardCodedTarget) {
-            Target.HardCodedTarget hardCodedTarget = (Target.HardCodedTarget) target;
+            @SuppressWarnings("rawtypes")
+            Target.HardCodedTarget<?> hardCodedTarget = (Target.HardCodedTarget) target;
             MethodMetadata methodMetadata = SentinelContractHolder.METADATA_MAP
                 .get(hardCodedTarget.type().getName()
                     + Feign.configKey(hardCodedTarget.type(), method));
@@ -86,21 +88,22 @@ public class SentinelInvocationHandler implements InvocationHandler {
                     ContextUtil.enter(resourceName);
                     entry = SphU.entry(resourceName, EntryType.OUT, 1, args);
                     result = methodHandler.invoke(args);
+                } catch (SimplifiedException ex) {
+                    throw ex;
                 } catch (Throwable ex) {
                     // fallback handle
                     if (!BlockException.isBlockException(ex)) {
                         Tracer.trace(ex);
                     }
 
-                    if (ex instanceof SimplifiedException) {
-                        throw ex;
-                    }
-
                     if (fallbackFactory != null) {
                         try {
-                            Object fallbackResult = fallbackMethodMap.get(method)
-                                .invoke(fallbackFactory.create(ex), args);
-                            return fallbackResult;
+                            Object o = fallbackFactory.create(ex);
+                            if (o instanceof AbstractFallback) {
+                                ((AbstractFallback) o).prepare(method.toGenericString());
+                            }
+                            return fallbackMethodMap.get(method)
+                                .invoke(o, args);
                         } catch (IllegalAccessException e) {
                             // shouldn't happen as method is public due to being an
                             // interface

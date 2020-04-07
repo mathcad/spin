@@ -1,8 +1,11 @@
 package org.spin.cloud.feign;
 
 import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.block.authority.AuthorityException;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
+import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowException;
+import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.netflix.client.ClientException;
 import feign.FeignException;
 import feign.codec.DecodeException;
@@ -11,10 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.throwable.BizException;
 import org.spin.core.ErrorCode;
-import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.ExceptionUtils;
 import org.spin.web.throwable.FeignHttpException;
+
+import java.util.function.Supplier;
 
 /**
  * 断路器抽象类
@@ -27,55 +31,83 @@ import org.spin.web.throwable.FeignHttpException;
 public abstract class AbstractFallback {
     protected static final Logger logger = LoggerFactory.getLogger(AbstractFallback.class);
     protected final Throwable cause;
-
-    public AbstractFallback(Throwable cause) {
-        this.cause = cause instanceof DecodeException || cause instanceof EncodeException ? cause.getCause() : cause;
-    }
+    protected String errorMsg;
 
     /**
-     * 已知异常处理
-     * <pre>
-     *     每个熔断方法中都必须首先调用该方法
-     * </pre>
+     * 是否被降级
      */
-    protected void handleKnownException() {
-        logger.warn("-Feign客户端调用异常: [{}]-{}", this.getClass().getSimpleName(), Thread.currentThread().getStackTrace()[2]);
-        logger.warn("|");
+    private boolean degrade = false;
 
-        Throwable ex = ExceptionUtils.getCause(this.cause, SimplifiedException.class,
-            DegradeException.class,
-            FlowException.class,
+    /**
+     * 是否被流控
+     */
+    private boolean flowControl = false;
+
+    /**
+     * 是否被参数限流
+     */
+    private boolean paramFlowControl = false;
+
+    /**
+     * 是否被系统保护
+     */
+    private boolean systemBlock = false;
+
+    /**
+     * 是否被访问控制
+     */
+    private boolean authorityControl = false;
+
+    /**
+     * 是否是sentinel熔断
+     */
+    private boolean blocked = false;
+
+    public AbstractFallback(Throwable cause) {
+        cause = cause instanceof DecodeException || cause instanceof EncodeException ?
+            (cause.getCause() == null ? cause : cause.getCause()) : cause;
+
+
+        Throwable ex = ExceptionUtils.getCause(cause,
             BlockException.class,
             ClientException.class,
             FeignException.class);
+        this.cause = null == ex ? cause : ex;
 
-        if (ex instanceof SimplifiedException) {
-            logger.warn("|--远程调用出现业务异常[{}]", ex.getMessage());
-            throw (SimplifiedException) ex;
-        }
 
-        if (ex instanceof DegradeException) {
-            logger.warn("|--由于服务调控, 对资源[{}]的请求已被降级", ((DegradeException) ex).getRuleLimitApp());
-            throw new BizException("由于服务调控, 本次请求已被降级");
-        }
+    }
 
-        if (ex instanceof FlowException) {
-            logger.warn("|--由于流量控制, 对资源[{}]的请求已被拒绝", ((FlowException) ex).getRuleLimitApp());
-            throw new BizException("由于服务流量控制, 本次请求已被拒绝");
-        }
-
-        if (ex instanceof BlockException) {
-            logger.warn("|--由于服务调控, 对资源[{}]的请求已被拒绝", ((BlockException) ex).getRuleLimitApp());
-            throw new BizException("由于服务调控, 本次请求已被拒绝");
-        }
-
-        if (ex instanceof ClientException) {
-            logger.warn("|--远程调用异常: 错误类型[{}]-{}-{}", ((ClientException) ex).getErrorType(), ((ClientException) ex).getErrorCode(), ((ClientException) ex).getErrorMessage());
-            throw new BizException("远程调用失败");
-        }
-
-        if (ex instanceof FeignException) {
-            int status = BeanUtils.getFieldValue(ex, "status");
+    public void prepare(String method) {
+        logger.warn("-Feign客户端调用异常:  - {}", method);
+        logger.warn("|");
+        if (cause instanceof DegradeException) {
+            degrade = true;
+            blocked = true;
+            errorMsg = String.format("由于本次请求触发熔断规则, 对资源[%s]的请求已被降级", ((DegradeException) cause).getRuleLimitApp());
+        } else if (cause instanceof FlowException) {
+            flowControl = true;
+            blocked = true;
+            errorMsg = String.format("由于本次请求触发流控规则, 对资源[%s]的请求已被拒绝", ((FlowException) cause).getRuleLimitApp());
+        } else if (cause instanceof ParamFlowException) {
+            paramFlowControl = true;
+            blocked = true;
+            errorMsg = String.format("由于本次请求触发热点参数限流规则, 对资源[%s]的请求已被拒绝", ((ParamFlowException) cause).getRuleLimitApp());
+        } else if (cause instanceof SystemBlockException) {
+            systemBlock = true;
+            blocked = true;
+            errorMsg = String.format("由于本次请求触发系统保护规则, 对资源[%s]的请求已被拒绝", ((SystemBlockException) cause).getRuleLimitApp());
+        } else if (cause instanceof AuthorityException) {
+            authorityControl = true;
+            blocked = true;
+            errorMsg = String.format("由于本次请求触发访问控制规则, 对资源[%s]的请求已被拒绝", ((AuthorityException) cause).getRuleLimitApp());
+        } else if (cause instanceof BlockException) {
+            blocked = true;
+            errorMsg = String.format("由于服务调控, 对资源[%s]的请求已被拒绝", ((BlockException) cause).getRuleLimitApp());
+        } else if (cause instanceof ClientException) {
+            errorMsg = String.format("远程调用异常: 错误类型[%s]-%s-%s", ((ClientException) cause).getErrorType(),
+                ((ClientException) cause).getErrorCode(), ((ClientException) cause).getErrorMessage());
+        } else if (cause instanceof FeignException) {
+            int status = BeanUtils.getFieldValue(cause, "status");
             if (status >= 400) {
                 String msg = "远程调用失败: " + ErrorCode.INTERNAL_ERROR.getDesc();
                 if (status == 404) {
@@ -85,13 +117,112 @@ public abstract class AbstractFallback {
                 } else if (status == 405) {
                     msg = "远程调用失败: 不支持的请求类型";
                 }
-                logger.warn("|--{}-{}", msg, ex.getMessage());
+                logger.warn("|--{}-{}", msg, cause.getMessage());
                 throw new FeignHttpException(status,
-                    ((FeignException) ex).hasRequest() ? ((FeignException) ex).request().url() : "",
-                    ex.getMessage(), msg, ex);
+                    ((FeignException) cause).hasRequest() ? ((FeignException) cause).request().url() : "",
+                    cause.getMessage(), msg, cause);
+            } else {
+                errorMsg = null;
+                logger.warn("|--远程服务调用出错: {}", cause.getMessage(), cause);
+                return;
             }
+        } else {
+            errorMsg = null;
+            logger.warn("|--远程服务调用出错: {}", cause.getMessage(), cause);
+            return;
         }
 
-        logger.warn("|--接口调用出错: ", this.cause);
+        logger.warn("|--" + errorMsg);
+    }
+
+    /**
+     * 直接抛出异常实现快速失败
+     * <pre>
+     *     每个熔断方法中, 如果不需要自行处理熔断逻辑, 只需要快速失败, 可以调用该方法
+     * </pre>
+     *
+     * @param <T> 返回数据类型
+     * @return 返回数据(实际不可能返回)
+     */
+    protected <T> T rethrowException() {
+        if (null == errorMsg) {
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new RuntimeException(cause);
+            }
+        } else {
+            throw new BizException(errorMsg, cause);
+        }
+    }
+
+    /**
+     * 针对Sentinel Breaker的处理逻辑, 如果对应的处理器为空或其他非Sentinel的中断, 抛出异常
+     *
+     * @param degradeHandler     降级处理
+     * @param flowHandler        流控处理
+     * @param paramFlowHandler   参数流控处理
+     * @param systemBlockHandler 系统保护处理
+     * @param authorityHandler   访问控制处理
+     * @param <T>                返回数据类型
+     * @return 返回数据
+     */
+    protected <T> T doWhileBlocked(Supplier<T> degradeHandler,
+                                   Supplier<T> flowHandler,
+                                   Supplier<T> paramFlowHandler,
+                                   Supplier<T> systemBlockHandler,
+                                   Supplier<T> authorityHandler) {
+        if (degrade && null != degradeHandler) {
+            return degradeHandler.get();
+        } else if (flowControl && null != flowHandler) {
+            return flowHandler.get();
+        } else if (paramFlowControl && null != paramFlowHandler) {
+            return paramFlowHandler.get();
+        } else if (systemBlock && null != systemBlockHandler) {
+            return systemBlockHandler.get();
+        } else if (authorityControl && null != authorityHandler) {
+            return authorityHandler.get();
+        }
+
+        return rethrowException();
+    }
+
+    /**
+     * 针对Sentinel Breaker的处理逻辑, 如果对应的处理器为空或其他非Sentinel的中断, 抛出异常
+     *
+     * @param blockHandler break处理
+     * @param <T>          返回数据类型
+     * @return 返回数据
+     */
+    protected <T> T doWhileBlocked(Supplier<T> blockHandler) {
+        if (blocked && null != blockHandler) {
+            return blockHandler.get();
+        } else {
+            return rethrowException();
+        }
+    }
+
+    public boolean isDegrade() {
+        return degrade;
+    }
+
+    public boolean isFlowControl() {
+        return flowControl;
+    }
+
+    public boolean isParamFlowControl() {
+        return paramFlowControl;
+    }
+
+    public boolean isSystemBlock() {
+        return systemBlock;
+    }
+
+    public boolean isAuthorityControl() {
+        return authorityControl;
+    }
+
+    public boolean isBlocked() {
+        return blocked;
     }
 }
