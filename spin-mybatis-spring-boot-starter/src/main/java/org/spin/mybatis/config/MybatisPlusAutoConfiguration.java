@@ -3,11 +3,15 @@ package org.spin.mybatis.config;
 import com.baomidou.mybatisplus.extension.plugins.OptimisticLockerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import org.spin.mybatis.DataPermissionInterceptor;
+import org.spin.mybatis.handler.MybatisMetaObjectHandler;
 import org.spin.mybatis.handler.MybatisPlusMetaObjectHandler;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+import java.util.List;
 
 @Configuration
 @ConditionalOnProperty("mybatis-plus.mapper-locations")
@@ -50,7 +54,8 @@ public class MybatisPlusAutoConfiguration {
      * @return mybatisPlusMetaObjectHandler
      */
     @Bean
-    public MybatisPlusMetaObjectHandler mybatisPlusMetaObjectHandler() {
-        return new MybatisPlusMetaObjectHandler();
+    @Primary
+    public MybatisPlusMetaObjectHandler mybatisPlusMetaObjectHandler(List<MybatisMetaObjectHandler> mybatisMetaObjectHandlers) {
+        return new MybatisPlusMetaObjectHandler(mybatisMetaObjectHandlers);
     }
 }
