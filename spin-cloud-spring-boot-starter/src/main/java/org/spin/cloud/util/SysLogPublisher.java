@@ -6,7 +6,6 @@ import org.spin.cloud.vo.CurrentUser;
 import org.spin.cloud.vo.LogInfoVo;
 import org.spin.cloud.vo.SessionEmpInfo;
 import org.spin.core.Assert;
-import org.spin.core.collection.Pair;
 import org.spin.core.util.JsonUtils;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -62,7 +61,7 @@ public class SysLogPublisher {
         CurrentUser currentUser = CurrentUser.getCurrent();
         infoVo.setAppName(Env.getAppName());
         if (null != currentUser) {
-            SessionEmpInfo enterprise = currentUser.getSessionEnterprise();
+            SessionEmpInfo enterprise = currentUser.getSessionEmpInfo();
             infoVo.setUserId(currentUser.getId());
             infoVo.setRealName(currentUser.getName());
             if (null != enterprise) {

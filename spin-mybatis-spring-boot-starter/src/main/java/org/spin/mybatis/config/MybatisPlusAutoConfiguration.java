@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import org.spin.mybatis.DataPermissionInterceptor;
 import org.spin.mybatis.handler.MybatisMetaObjectHandler;
 import org.spin.mybatis.handler.MybatisPlusMetaObjectHandler;
+import org.spin.mybatis.handler.PermissionDataMetaObjectHandler;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -46,6 +47,11 @@ public class MybatisPlusAutoConfiguration {
     @Bean
     public OptimisticLockerInterceptor optimisticLockerInterceptor() {
         return new OptimisticLockerInterceptor();
+    }
+
+    @Bean
+    public PermissionDataMetaObjectHandler permissionDataMetaObjectHandler() {
+        return new PermissionDataMetaObjectHandler();
     }
 
     /**

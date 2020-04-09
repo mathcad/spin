@@ -3,6 +3,7 @@ package org.spin.cloud.web.interceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.feign.FeignInterceptor;
+import org.spin.cloud.util.Env;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.core.ErrorCode;
 import org.spin.core.util.JsonUtils;
@@ -88,8 +89,7 @@ public class UserAuthInterceptor implements HandlerInterceptor {
             }
             authName = "API:" + authName;
 
-            // 加载用户当前接口的权限定义
-//            Env.setCurrentAuth(authName);
+            Env.setCurrentApiCode(authName);
         }
         return true;
     }

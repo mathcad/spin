@@ -12,7 +12,7 @@ import java.util.Set;
  * @version 1.0
  */
 public class OrganVo {
-    private long id;
+    private String id;
 
     /**
      * 名称
@@ -32,13 +32,13 @@ public class OrganVo {
     /**
      * 下级机构
      */
-    private Set<Long> children;
+    private Set<String> children;
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -66,11 +66,11 @@ public class OrganVo {
         this.type = type;
     }
 
-    public Set<Long> getChildren() {
+    public Set<String> getChildren() {
         return children;
     }
 
-    public void setChildren(Set<Long> children) {
+    public void setChildren(Set<String> children) {
         this.children = children;
     }
 

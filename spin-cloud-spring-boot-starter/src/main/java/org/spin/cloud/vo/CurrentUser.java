@@ -4,16 +4,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.annotation.UtilClass;
 import org.spin.cloud.throwable.BizException;
+import org.spin.cloud.util.Env;
 import org.spin.core.Assert;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.security.Base64;
 import org.spin.core.session.SessionUser;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.DateUtils;
+import org.spin.core.util.EnumUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.scripting.support.ResourceScriptSource;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -24,8 +29,10 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 当前用户
@@ -51,8 +58,17 @@ public class CurrentUser extends SessionUser<Long> {
     private static final String SESSION_PERMISSION_CACHE_KEY = "SESSION_PERMISSION_CACHE:";
     private static final String USER_ROLE_AND_GROUP_REDIS_KEY = "USER_ROLE_AND_GROUP:";
     private static final String SYS_ROLE_INFO_REDIS_KEY = "SYS_ROLE_INFO";
+    private static final String SYS_ROLE_PERM_REDIS_KEY = "SYS_ROLE_PERMISSION";
+
+    private static final String ENTERPRISE_DETP_CACHE_KEY = "ENTERPRISE_DETP_CACHE:";
+    private static final String ENTERPRISE_STATION_CACHE_KEY = "ENTERPRISE_STATIONS_CACHE:";
+    private static final String ENTERPRISE_CUSTOM_ORG_CACHE_KEY = "ENTERPRISE_CUSTOM_ORG_CACHE:";
 
     private static final String SUPER_AMIN_ROLE_CODE = "0:SUPER_ADMIN";
+
+    private static final DefaultRedisScript<List> ALL_CHILDREN_SCRIPT = new DefaultRedisScript<List>();
+    private static final DefaultRedisScript<List> ALL_BROTHERS_SCRIPT = new DefaultRedisScript<List>();
+
     private static StringRedisTemplate redisTemplate;
 
     private final long id;
@@ -65,6 +81,14 @@ public class CurrentUser extends SessionUser<Long> {
     private final String originData;
 
     private static final ThreadLocal<CurrentUser> CURRENT = new ThreadLocal<>();
+
+    static {
+        ALL_CHILDREN_SCRIPT.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getAllChildren.lua")));
+        ALL_CHILDREN_SCRIPT.setResultType(List.class);
+
+        ALL_BROTHERS_SCRIPT.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getBrother.lua")));
+        ALL_BROTHERS_SCRIPT.setResultType(List.class);
+    }
 
     private CurrentUser(String encodedFromStr) {
         try {
@@ -155,9 +179,9 @@ public class CurrentUser extends SessionUser<Long> {
      *
      * @return 员工企业信息
      */
-    public static SessionEmpInfo getEnterpriseInfo() {
+    public static SessionEmpInfo getCurrentEmpInfo() {
         CurrentUser current = getCurrentNonNull();
-        return current.getSessionEnterprise();
+        return current.getSessionEmpInfo();
     }
 
     @Override
@@ -209,7 +233,7 @@ public class CurrentUser extends SessionUser<Long> {
      *
      * @return 员工企业信息
      */
-    public SessionEmpInfo getSessionEnterprise() {
+    public SessionEmpInfo getSessionEmpInfo() {
         String s = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(SESSION_ENTERPRISE_REDIS_KEY + sid);
         if (null == s) {
             return SessionEmpInfo.newNonEntUser(this.id);
@@ -239,7 +263,7 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 角色与用户组边码列表(用户组编码以GROUP : 开头)
      */
     public Set<String> getRoleAndGroups() {
-        SessionEmpInfo sessionEnterprise = getSessionEnterprise();
+        SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
         if (null != sessionEnterprise) {
             return getRoleAndGroups(sessionEnterprise.getEnterpriseId());
         }
@@ -285,7 +309,7 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 角色列表(编码)
      */
     public Set<String> getActualRoles() {
-        SessionEmpInfo sessionEnterprise = getSessionEnterprise();
+        SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
         if (null != sessionEnterprise) {
             return getActualRoles(sessionEnterprise.getEnterpriseId());
         }
@@ -321,7 +345,7 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 是/否
      */
     public boolean hasRole(String roleCode) {
-        SessionEmpInfo sessionEnterprise = getSessionEnterprise();
+        SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
         if (null != sessionEnterprise) {
             return hasRole(sessionEnterprise.getEnterpriseId(), roleCode);
         }
@@ -451,14 +475,78 @@ public class CurrentUser extends SessionUser<Long> {
         Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForHash().delete(sessionKey, keys.toArray());
     }
 
+    private static final TypeToken<Set<RolePermission>> PERM_TYPE_TOKEN = new TypeToken<Set<RolePermission>>() {
+    };
+
     /**
      * 查询当前用户在指定数据权限模式下的机构列表
      *
-     * @param dataLevel 数据权限级别
-     * @return 机构ID列表
+     * @return 数据权限信息, 为null表示无需控制
      */
-    public Set<OrganVo> getDataLevelOrgans(DataLevel dataLevel) {
-        return null;
+    public DataPermInfo getDataPermInfo() {
+        String apiCode = Env.getCurrentApiCode();
+        if (StringUtils.isEmpty(apiCode)) {
+            return null;
+        }
+        Set<String> actualRoles = getActualRoles();
+        List<String> perms = redisTemplate.<String, String>opsForHash().multiGet(SYS_ROLE_PERM_REDIS_KEY, actualRoles);
+
+        DataLevel dataLevel = perms.stream().map(it -> JsonUtils.fromJson(it, PERM_TYPE_TOKEN))
+            .filter(CollectionUtils::isNotEmpty)
+            .flatMap(Set::stream)
+            .filter(it -> it.getPermissionCode().equals("DATA" + apiCode.substring(3)))
+            .map(RolePermission::getAdditionalAttr)
+            .map(Integer::parseInt)
+            .max(Integer::compareTo)
+            .map(it -> EnumUtils.getEnum(DataLevel.class, it))
+            .orElse(DataLevel.HIMSELF);
+
+        SessionEmpInfo sessionEnterprise = CurrentUser.getCurrentNonNull().getSessionEmpInfo();
+        DataPermInfo info = new DataPermInfo();
+
+        switch (dataLevel) {
+            case ALL_DEPT:
+            case ALL_STATION:
+                return null;
+            case CURRENT_LOWER:
+                info.setHimself(false);
+                // 查询所有下级部门
+                Set<Long> allChildren = getAllChildren(ENTERPRISE_DETP_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getDepts());
+                info.setDeptIds(allChildren);
+                CollectionUtils.mergeIntoLeft(info.getDeptIds(), sessionEnterprise.getDepts());
+                break;
+            case LOWER:
+                // 查询所有下级部门
+                allChildren = getAllChildren(ENTERPRISE_DETP_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getDepts());
+                info.setDeptIds(allChildren);
+                break;
+            case CURRENT_DEPT:
+                info.setDeptIds(sessionEnterprise.getDepts());
+                info.setHimself(false);
+                break;
+            case HIMSELF:
+                info.setHimself(true);
+                break;
+            case COORDINATE_LOWER:
+                info.setHimself(true);
+                // 查询同级岗位及所有下级岗位
+                Set<Long> allBrothers = getAllBrothers(ENTERPRISE_STATION_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getStations());
+                info.setStationIds(allBrothers);
+                allChildren = getAllChildren(ENTERPRISE_STATION_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getDepts());
+                CollectionUtils.mergeIntoLeft(info.getStationIds(), allChildren);
+                break;
+            case COORDINATE:
+                info.setHimself(true);
+                // 查询同级岗位
+                allBrothers = getAllBrothers(ENTERPRISE_STATION_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getStations());
+                info.setStationIds(allBrothers);
+                break;
+            case CURRENT_STATION:
+                info.setHimself(true);
+                info.setStationIds(sessionEnterprise.getStations());
+                break;
+        }
+        return info;
     }
 
     private Set<String> getActualRoles(Set<String> roleAndGroups) {
@@ -498,6 +586,30 @@ public class CurrentUser extends SessionUser<Long> {
             }
         }
         return userActualRoles;
+    }
+
+    private static Set<Long> getAllChildren(String rootKey, long enterpriseId, Set<Long> current) {
+        if (CollectionUtils.isNotEmpty(current)) {
+            List<?> children = redisTemplate.execute(ALL_CHILDREN_SCRIPT,
+                Collections.singletonList(rootKey + enterpriseId),
+                current.stream().map(StringUtils::toString).toArray());
+            return Optional.ofNullable(children).orElse(CollectionUtils.ofLinkedList()).stream().map(Object::toString)
+                .map(d -> JsonUtils.fromJson(d, OrganVo.class)).map(OrganVo::getId).map(Long::valueOf).collect(Collectors.toSet());
+        } else {
+            return CollectionUtils.ofHashSet();
+        }
+    }
+
+    private static Set<Long> getAllBrothers(String rootKey, long enterpriseId, Set<Long> current) {
+        if (CollectionUtils.isNotEmpty(current)) {
+            List<?> children = redisTemplate.execute(ALL_BROTHERS_SCRIPT,
+                Collections.singletonList(rootKey + enterpriseId),
+                current.stream().map(StringUtils::toString).toArray());
+            return Optional.ofNullable(children).orElse(CollectionUtils.ofLinkedList()).stream().map(Object::toString)
+                .map(d -> JsonUtils.fromJson(d, OrganVo.class)).map(OrganVo::getId).map(Long::valueOf).collect(Collectors.toSet());
+        } else {
+            return CollectionUtils.ofHashSet();
+        }
     }
 
     @Override

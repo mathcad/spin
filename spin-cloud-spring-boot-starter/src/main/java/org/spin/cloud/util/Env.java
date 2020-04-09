@@ -3,8 +3,6 @@ package org.spin.cloud.util;
 import org.spin.cloud.annotation.UtilClass;
 import org.springframework.core.env.Environment;
 
-import java.util.Set;
-
 /**
  * 环境信息
  * <p>DESCRIPTION</p>
@@ -21,6 +19,8 @@ public abstract class Env {
     private static Environment environment;
     private static String activeProfile;
     private static String appName;
+
+    private static final ThreadLocal<String> CURRENT_API_CODE = new ThreadLocal<>();
 
     public static void init(Environment environment) {
         Env.environment = environment;
@@ -64,4 +64,11 @@ public abstract class Env {
         return environment.getProperty(key, defaultValue);
     }
 
+    public static String getCurrentApiCode() {
+        return CURRENT_API_CODE.get();
+    }
+
+    public static void setCurrentApiCode(String apiCode) {
+        CURRENT_API_CODE.set(apiCode);
+    }
 }

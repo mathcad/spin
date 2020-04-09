@@ -1,5 +1,7 @@
 package org.spin.cloud.vo;
 
+import org.spin.core.trait.Evaluatable;
+
 /**
  * 数据权限级别
  * <p>DESCRIPTION</p>
@@ -8,7 +10,7 @@ package org.spin.cloud.vo;
  * @author xuweinan
  * @version 1.0
  */
-public enum DataLevel {
+public enum DataLevel implements Evaluatable<Integer> {
 
     // region 部门控制维度
     /**
@@ -17,9 +19,9 @@ public enum DataLevel {
     ALL_DEPT(1, "全部"),
 
     /**
-     * 仅归属部门
+     * 归属部门及下级部门
      */
-    CURRENT_DEPT(3, "仅归属部门"),
+    CURRENT_LOWER(3, "归属部门及下级部门"),
 
     /**
      * 本人及下级部门
@@ -27,9 +29,9 @@ public enum DataLevel {
     LOWER(5, "本人及下级部门"),
 
     /**
-     * 归属部门及下级部门
+     * 仅归属部门
      */
-    CURRENT_LOWER(10, "归属部门及下级部门"),
+    CURRENT_DEPT(10, "仅归属部门"),
 
     /**
      * 仅本人
@@ -45,9 +47,9 @@ public enum DataLevel {
     ALL_STATION(101, "全部"),
 
     /**
-     * 同岗位
+     * 同级岗位及下级岗位
      */
-    CURRENT_STATION(103, "同岗位"),
+    COORDINATE_LOWER(103, "同级岗位及下级岗位"),
 
     /**
      * 同级岗位
@@ -55,9 +57,9 @@ public enum DataLevel {
     COORDINATE(105, "同级岗位"),
 
     /**
-     * 同级岗位及下级岗位
+     * 同岗位
      */
-    COORDINATE_LOWER(110, "同级岗位及下级岗位"),
+    CURRENT_STATION(110, "同岗位"),
 
     // endregion
     ;
@@ -70,6 +72,7 @@ public enum DataLevel {
         this.desc = desc;
     }
 
+    @Override
     public Integer getValue() {
         return value;
     }

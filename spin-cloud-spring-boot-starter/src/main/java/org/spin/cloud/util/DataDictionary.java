@@ -31,7 +31,7 @@ public class DataDictionary {
     private static StringRedisTemplate redisTemplate;
 
     static {
-        redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getDictChildren.lua")));
+        redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getChildren.lua")));
         redisScript.setResultType(List.class);
     }
 
