@@ -68,6 +68,7 @@ public class CurrentUser extends SessionUser<Long> {
 
     private static final DefaultRedisScript<List> ALL_CHILDREN_SCRIPT = new DefaultRedisScript<List>();
     private static final DefaultRedisScript<List> ALL_BROTHERS_SCRIPT = new DefaultRedisScript<List>();
+    private static final ThreadLocal<CurrentUser> CURRENT = new ThreadLocal<>();
 
     private static StringRedisTemplate redisTemplate;
 
@@ -79,8 +80,8 @@ public class CurrentUser extends SessionUser<Long> {
     private final String loginIp;
 
     private final String originData;
+    private SessionEmpInfo currentEmp = null;
 
-    private static final ThreadLocal<CurrentUser> CURRENT = new ThreadLocal<>();
 
     static {
         ALL_CHILDREN_SCRIPT.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getAllChildren.lua")));
@@ -234,12 +235,16 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 员工企业信息
      */
     public SessionEmpInfo getSessionEmpInfo() {
-        String s = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(SESSION_ENTERPRISE_REDIS_KEY + sid);
-        if (null == s) {
-            return SessionEmpInfo.newNonEntUser(this.id);
+        if (null == currentEmp) {
+            String s = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(SESSION_ENTERPRISE_REDIS_KEY + sid);
+            if (null == s) {
+                currentEmp = SessionEmpInfo.newNonEntUser(this.id);
+            } else {
+                currentEmp = JsonUtils.fromJson(s, SessionEmpInfo.class);
+            }
         }
 
-        return JsonUtils.fromJson(s, SessionEmpInfo.class);
+        return currentEmp;
     }
 
     /**
