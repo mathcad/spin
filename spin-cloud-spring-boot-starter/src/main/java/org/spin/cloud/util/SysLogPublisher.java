@@ -2,11 +2,13 @@ package org.spin.cloud.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.cloud.annotation.UtilClass;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.cloud.vo.LogInfoVo;
 import org.spin.cloud.vo.SessionEmpInfo;
 import org.spin.core.Assert;
 import org.spin.core.util.JsonUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.lang.NonNull;
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
  * @author xuweinan
  * @version 1.0
  */
+@UtilClass
 @SuppressWarnings("unchecked")
 public class SysLogPublisher {
     public static final String LOG_DEST = "platform.log";
@@ -42,9 +45,9 @@ public class SysLogPublisher {
 
     private static KafkaTemplate<String, String> kafkaTemplate;
 
-    static {
+    private static void init(ApplicationContext applicationContext) {
         try {
-            SysLogPublisher.kafkaTemplate = BeanHolder.getApplicationContext().getBean(KafkaTemplate.class);
+            SysLogPublisher.kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
         } catch (Exception ignore) {
             logger.warn("系统上下文中没有启用Kafka, 日志功能将被禁用");
         }

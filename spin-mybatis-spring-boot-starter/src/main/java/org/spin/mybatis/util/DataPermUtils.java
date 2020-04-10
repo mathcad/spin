@@ -15,6 +15,7 @@ import org.spin.mybatis.entity.AbstractDataPermEntity;
 public class DataPermUtils {
 
     public void validatePerm(AbstractDataPermEntity entity) {
+        // TODO 完成实体的数据权限校验
         DataPermInfo permInfo = CurrentUser.getCurrentNonNull().getDataPermInfo();
 
     }

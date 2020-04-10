@@ -54,11 +54,6 @@ public class MybatisPlusAutoConfiguration {
         return new PermissionDataMetaObjectHandler();
     }
 
-    /**
-     * 自动填充
-     *
-     * @return mybatisPlusMetaObjectHandler
-     */
     @Bean
     @Primary
     public MybatisPlusMetaObjectHandler mybatisPlusMetaObjectHandler(List<MybatisMetaObjectHandler> mybatisMetaObjectHandlers) {
