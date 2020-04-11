@@ -27,6 +27,10 @@ public abstract class AbstractViewVo<T, E extends AbstractEntity> implements VoE
     @ApiModelProperty(value = "数据版本", example = "0")
     private Integer version = 0;
 
+    @ApiModelProperty(value = "创建人ID", example = "1")
+    @PreventOverflow
+    private Long createBy;
+
     /**
      * 创建人
      */
@@ -71,6 +75,14 @@ public abstract class AbstractViewVo<T, E extends AbstractEntity> implements VoE
 
     public void setVersion(Integer version) {
         this.version = version;
+    }
+
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
     }
 
     public String getCreateUsername() {
