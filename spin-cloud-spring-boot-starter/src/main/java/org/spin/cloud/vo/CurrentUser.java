@@ -22,7 +22,6 @@ import org.springframework.scripting.support.ResourceScriptSource;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -65,6 +64,7 @@ public class CurrentUser extends SessionUser<Long> {
     private static final String ENTERPRISE_CUSTOM_ORG_CACHE_KEY = "ENTERPRISE_CUSTOM_ORG_CACHE:";
 
     private static final String SUPER_AMIN_ROLE_CODE = "0:SUPER_ADMIN";
+    private static final String ENT_AMIN_ROLE_CODE = "ENT_ADMIN";
 
     private static final DefaultRedisScript<List> ALL_CHILDREN_SCRIPT = new DefaultRedisScript<List>();
     private static final DefaultRedisScript<List> ALL_BROTHERS_SCRIPT = new DefaultRedisScript<List>();
@@ -72,6 +72,7 @@ public class CurrentUser extends SessionUser<Long> {
 
     private static StringRedisTemplate redisTemplate;
 
+    // region 内容
     private final long id;
     private final String name;
     private final TokenExpireType expireType;
@@ -80,8 +81,11 @@ public class CurrentUser extends SessionUser<Long> {
     private final String loginIp;
 
     private final String originData;
-    private SessionEmpInfo currentEmp = null;
 
+    private SessionEmpInfo currentEmp = null;
+    private Set<String> userRoleAndGroups = null;
+    private Set<String> userActualRoles = null;
+    // endregion
 
     static {
         ALL_CHILDREN_SCRIPT.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getAllChildren.lua")));
@@ -253,13 +257,19 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 是/否
      */
     public boolean isSuperAdmin() {
-        Boolean exist = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).hasKey(USER_ROLE_AND_GROUP_REDIS_KEY + id);
-        if (Boolean.TRUE.equals(exist)) {
-            String cache = redisTemplate.opsForValue().get(USER_ROLE_AND_GROUP_REDIS_KEY + id);
-            return Arrays.asList(StringUtils.trimToEmpty(cache).split(",")).contains(SUPER_AMIN_ROLE_CODE);
-        }
-        logger.warn("获取用户角色缓存失败,");
-        return false;
+        return getRoleAndGroups().contains(SUPER_AMIN_ROLE_CODE);
+    }
+
+    /**
+     * 用户是否是企业管理员
+     *
+     * @return 是/否
+     */
+    public boolean isEnterpriseAdmin() {
+        Set<String> actualRoles = getActualRoles();
+        SessionEmpInfo sessionEmpInfo = getSessionEmpInfo();
+
+        return actualRoles.contains(sessionEmpInfo.getEnterpriseId() + ":" + ENT_AMIN_ROLE_CODE);
     }
 
     /**
@@ -280,32 +290,28 @@ public class CurrentUser extends SessionUser<Long> {
      * 用户在指定企业下的角色与用户组信息
      *
      * @param enterpriseId 企业id
-     * @return 角色与用户组边码列表(用户组编码以GROUP : 开头)
+     * @return 角色与用户组边码列表(用户组编码以 " GROUP : " 开头)
      */
     public Set<String> getRoleAndGroups(long enterpriseId) {
         String ent = Long.toString(enterpriseId);
-        String cache = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(USER_ROLE_AND_GROUP_REDIS_KEY);
-        if (StringUtils.isNotEmpty(cache)) {
-            Set<String> roleAndGroups = new HashSet<>(cache.length());
-            String[] tmp = StringUtils.trimToEmpty(cache).split(",");
-            for (String s : tmp) {
-                if (s.startsWith("GROUP:")) {
-                    if (s.startsWith("GROUP:" + ent + ":")) {
-                        roleAndGroups.add(s.substring(7 + ent.length()));
-                    }
-                } else {
-                    if (s.startsWith(ent + ":")) {
-                        roleAndGroups.add(s.substring(ent.length() + 1));
-                    } else if (s.equals(SUPER_AMIN_ROLE_CODE)) {
-                        roleAndGroups.add(SUPER_AMIN_ROLE_CODE.substring(2));
-                    }
-                }
+        if (null == userRoleAndGroups) {
+            String cache = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(USER_ROLE_AND_GROUP_REDIS_KEY + id);
+            if (StringUtils.isNotEmpty(cache)) {
+                userRoleAndGroups = StringUtils.splitToSet(cache, ",", StringUtils::trimToEmpty);
+            } else {
+                userRoleAndGroups = Collections.emptySet();
             }
-
-            return roleAndGroups;
-        } else {
-            return Collections.emptySet();
         }
+
+        Set<String> roleAndGroupsInEnt = new HashSet<>();
+        for (String s : userRoleAndGroups) {
+            if (s.startsWith(ent)) {
+                roleAndGroupsInEnt.add(s.substring(ent.length() + 1));
+            } else if (s.equals(SUPER_AMIN_ROLE_CODE)) {
+                roleAndGroupsInEnt.add(SUPER_AMIN_ROLE_CODE.substring(2));
+            }
+        }
+        return roleAndGroupsInEnt;
     }
 
     /**
@@ -314,12 +320,14 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 角色列表(编码)
      */
     public Set<String> getActualRoles() {
-        SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
-        if (null != sessionEnterprise) {
-            return getActualRoles(sessionEnterprise.getEnterpriseId());
+        if (null == userActualRoles) {
+            SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
+            if (null != sessionEnterprise) {
+                userActualRoles = getActualRoles(sessionEnterprise.getEnterpriseId());
+            }
         }
 
-        return Collections.emptySet();
+        return userActualRoles;
     }
 
     /**
@@ -331,7 +339,7 @@ public class CurrentUser extends SessionUser<Long> {
     public Set<String> getActualRoles(long enterpriseId) {
         Set<String> roleAndGroups = getRoleAndGroups(enterpriseId);
 
-        return getActualRoles(roleAndGroups);
+        return getActualRoles(roleAndGroups, Long.toString(enterpriseId));
     }
 
     /**
@@ -368,7 +376,7 @@ public class CurrentUser extends SessionUser<Long> {
         Set<String> roleAndGroups = getRoleAndGroups(enterpriseId);
         boolean contains = roleAndGroups.contains(roleCode);
         if (!contains) {
-            return getActualRoles(roleAndGroups).contains(roleCode);
+            return getActualRoles(roleAndGroups, Long.toString(enterpriseId)).contains(roleCode);
         }
         return true;
     }
@@ -554,9 +562,9 @@ public class CurrentUser extends SessionUser<Long> {
         return info;
     }
 
-    private Set<String> getActualRoles(Set<String> roleAndGroups) {
+    public static Set<String> getActualRoles(Set<String> roleAndGroups, String enterpriseId) {
         if (CollectionUtils.isEmpty(roleAndGroups)) {
-            return roleAndGroups;
+            return Collections.emptySet();
         }
 
         List<String> res = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).<String, String>opsForHash().multiGet(SYS_ROLE_INFO_REDIS_KEY,
@@ -571,22 +579,26 @@ public class CurrentUser extends SessionUser<Long> {
         Set<String> userActualRoles = new HashSet<>();
         for (String roleOrGroup : roleAndGroups) {
             if (roleOrGroup.startsWith("GROUP:")) {
-                Set<String> rs = userGroupRole.get(roleOrGroup.substring(roleOrGroup.lastIndexOf(':') + 1));
+                Set<String> rs = userGroupRole.get(enterpriseId + ":" + roleOrGroup.substring(6));
                 if (null != rs) {
                     for (String r : rs) {
-                        userActualRoles.add(r);
+                        userActualRoles.add(r.substring(enterpriseId.length() + 1));
                         Set<String> tmp = roleInheritance.get(r);
                         if (!CollectionUtils.isEmpty(tmp)) {
-                            userActualRoles.addAll(tmp);
+                            for (String s : tmp) {
+                                userActualRoles.add(s.substring(enterpriseId.length() + 1));
+                            }
                         }
                     }
                 }
             } else {
-                String r = roleOrGroup.substring(roleOrGroup.lastIndexOf(':') + 1);
-                userActualRoles.add(r);
+                userActualRoles.add(roleOrGroup);
+                String r = enterpriseId + ":" + roleOrGroup;
                 Set<String> tmp = roleInheritance.get(r);
                 if (!CollectionUtils.isEmpty(tmp)) {
-                    userActualRoles.addAll(tmp);
+                    for (String s : tmp) {
+                        userActualRoles.add(s.substring(enterpriseId.length() + 1));
+                    }
                 }
             }
         }

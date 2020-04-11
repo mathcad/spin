@@ -16,9 +16,9 @@ public class SessionEmpInfo {
     private final long empId;
     private final long enterpriseId;
 
-    private Set<Long> depts;
-    private Set<Long> stations;
-    private Set<Long> organs;
+    private final Set<Long> depts;
+    private final Set<Long> stations;
+    private final Set<Long> organs;
 
     public SessionEmpInfo(long userId, long empId, long enterpriseId, Set<Long> depts, Set<Long> stations, Set<Long> organs) {
         this.userId = userId;
