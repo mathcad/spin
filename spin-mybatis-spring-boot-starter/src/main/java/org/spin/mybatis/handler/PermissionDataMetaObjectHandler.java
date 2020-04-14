@@ -16,6 +16,9 @@ public class PermissionDataMetaObjectHandler extends MybatisMetaObjectHandler {
 
     @Override
     public void insertFill(MetaObject metaObject) {
+        if (null == CurrentUser.getCurrent()) {
+            return;
+        }
         SessionEmpInfo empInfo = CurrentUser.getCurrentEmpInfo();
         if (null != empInfo) {
             setFieldValByName("departmentId", CollectionUtils.first(empInfo.getDepts()), metaObject);
