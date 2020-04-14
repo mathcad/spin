@@ -59,7 +59,7 @@ public interface QueryBuilder {
         return queryWrapper;
     }
 
-    static <T extends AbstractDataPermEntity, W extends QueryWrapper<T>> LambdaQueryWrapper<T> withDataPermission(LambdaQueryWrapper<T> queryWrapper) {
+    static <T extends AbstractDataPermEntity> LambdaQueryWrapper<T> withDataPermission(LambdaQueryWrapper<T> queryWrapper) {
         DataPermInfo dataPermInfo = CurrentUser.getCurrentNonNull().getDataPermInfo();
         if (null == dataPermInfo) {
             return queryWrapper;
@@ -82,7 +82,7 @@ public interface QueryBuilder {
         alias = StringUtils.trimToEmpty(alias);
         DataPermInfo dataPermInfo = CurrentUser.getCurrentNonNull().getDataPermInfo();
 
-        if (null == dataPermInfo) {
+        if (!dataPermInfo.isHasDataLimit()) {
             return "";
         }
 
@@ -91,7 +91,11 @@ public interface QueryBuilder {
         } else {
             // 没有任何权限
             if (CollectionUtils.isEmpty(dataPermInfo.getDeptIds()) && CollectionUtils.isEmpty(dataPermInfo.getStationIds())) {
-                return prefix + " (1 = 2)";
+                if (Boolean.FALSE.equals(dataPermInfo.getHimself())) {
+                    return prefix + " (1 = 2)";
+                } else {
+                    return prefix + " (" + alias + ".create_by = " + CurrentUser.getCurrent().getId() + ")";
+                }
             }
 
             StringBuilder sql = new StringBuilder();

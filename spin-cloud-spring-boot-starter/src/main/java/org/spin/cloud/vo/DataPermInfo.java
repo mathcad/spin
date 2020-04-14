@@ -15,7 +15,7 @@ public class DataPermInfo {
     /**
      * 是否限制数据权限
      */
-    private boolean hasDataLimit = false;
+    private boolean hasDataLimit = true;
 
     /**
      * 部门维度的数据权限
@@ -31,6 +31,21 @@ public class DataPermInfo {
      * 是否仅自己
      */
     private Boolean himself;
+
+    public DataPermInfo() {
+    }
+
+    public DataPermInfo(boolean hasDataLimit) {
+        this.hasDataLimit = hasDataLimit;
+    }
+
+    public boolean isHasDataLimit() {
+        return hasDataLimit;
+    }
+
+    public void setHasDataLimit(boolean hasDataLimit) {
+        this.hasDataLimit = hasDataLimit;
+    }
 
     public Set<Long> getDeptIds() {
         return deptIds;

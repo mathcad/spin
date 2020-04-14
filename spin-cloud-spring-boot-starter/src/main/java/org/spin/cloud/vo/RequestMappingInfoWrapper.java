@@ -2,6 +2,7 @@ package org.spin.cloud.vo;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.spin.core.Assert;
 import org.spin.core.util.StringUtils;
 import org.spin.web.AuthLevel;
 import org.spin.web.ScopeType;
@@ -73,6 +74,8 @@ public class RequestMappingInfoWrapper implements Serializable {
         if (null != operationAnno) {
             remark = operationAnno.value();
         }
+        Assert.notTrue(auth == AuthLevel.AUTHORIZE && StringUtils.isEmpty(remark),
+            "Web接口[" + beanType + "." + methodName + "]声明了授权访问但没有指定API名称(请通过ApiOperation注解指定)");
 
         Api apiAnno = AnnotatedElementUtils.getMergedAnnotation(handlerMethod.getMethod().getDeclaringClass(), Api.class);
         if (null != apiAnno) {

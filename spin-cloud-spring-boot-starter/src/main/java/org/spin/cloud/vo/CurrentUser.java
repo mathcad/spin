@@ -526,8 +526,11 @@ public class CurrentUser extends SessionUser<Long> {
      */
     public DataPermInfo getDataPermInfo() {
         String apiCode = Env.getCurrentApiCode();
-        if (StringUtils.isEmpty(apiCode)) {
-            return null;
+        DataPermInfo info = new DataPermInfo();
+
+        if (StringUtils.isEmpty(apiCode) || isSuperAdmin()) {
+            info.setHasDataLimit(false);
+            return info;
         }
         SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
 
@@ -537,20 +540,21 @@ public class CurrentUser extends SessionUser<Long> {
             .map(Integer::parseInt)
             .min(Integer::compareTo)
             .map(it -> EnumUtils.getEnum(DataLevel.class, it))
-            .orElse(DataLevel.HIMSELF);
-
-        DataPermInfo info = new DataPermInfo();
+            .orElse(DataLevel.ALL_DEPT);
 
         switch (dataLevel) {
             case ALL_DEPT:
             case ALL_STATION:
-                return null;
+                info.setHasDataLimit(false);
+                break;
             case CURRENT_LOWER:
-                info.setHimself(false);
                 // 查询所有下级部门
                 Set<Long> allChildren = getAllChildren(ENTERPRISE_DETP_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getDepts());
                 info.setDeptIds(allChildren);
                 CollectionUtils.mergeIntoLeft(info.getDeptIds(), sessionEnterprise.getDepts());
+                if (CollectionUtils.isNotEmpty(info.getDeptIds())) {
+                    info.setHimself(false);
+                }
                 break;
             case LOWER:
                 // 查询所有下级部门
@@ -559,28 +563,36 @@ public class CurrentUser extends SessionUser<Long> {
                 break;
             case CURRENT_DEPT:
                 info.setDeptIds(sessionEnterprise.getDepts());
-                info.setHimself(false);
+                if (CollectionUtils.isNotEmpty(info.getDeptIds())) {
+                    info.setHimself(false);
+                }
                 break;
             case HIMSELF:
                 info.setHimself(true);
                 break;
             case COORDINATE_LOWER:
-                info.setHimself(true);
                 // 查询同级岗位及所有下级岗位
                 Set<Long> allBrothers = getAllBrothers(ENTERPRISE_STATION_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getStations());
                 info.setStationIds(allBrothers);
                 allChildren = getAllChildren(ENTERPRISE_STATION_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getDepts());
                 CollectionUtils.mergeIntoLeft(info.getStationIds(), allChildren);
+                if (CollectionUtils.isNotEmpty(info.getStationIds())) {
+                    info.setHimself(false);
+                }
                 break;
             case COORDINATE:
-                info.setHimself(true);
                 // 查询同级岗位
                 allBrothers = getAllBrothers(ENTERPRISE_STATION_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getStations());
                 info.setStationIds(allBrothers);
+                if (CollectionUtils.isNotEmpty(info.getStationIds())) {
+                    info.setHimself(false);
+                }
                 break;
             case CURRENT_STATION:
-                info.setHimself(true);
                 info.setStationIds(sessionEnterprise.getStations());
+                if (CollectionUtils.isNotEmpty(info.getStationIds())) {
+                    info.setHimself(false);
+                }
                 break;
         }
         return info;
