@@ -50,11 +50,13 @@ public class CurrentUser extends SessionUser<Long> {
     private static final TypeToken<Set<RolePermission>> ROLE_PERMISSION_TYPE = new TypeToken<Set<RolePermission>>() {
     };
 
+    private static final TypeToken<Set<RolePermission>> PERM_TYPE_TOKEN = new TypeToken<Set<RolePermission>>() {
+    };
+
     private static final String REDIS_NOT_PREPARED = "CurrentUser未能顺利初始化, 无法访问Redis";
     private static final String REDIS_SESSION_KEY = "ALL_SESSION:";
     private static final Duration SESSION_TIME_OUT = Duration.ofHours(2L);
     private static final String SESSION_ENTERPRISE_REDIS_KEY = "SESSION_ENTERPRISE:";
-    private static final String SESSION_PERMISSION_CACHE_KEY = "SESSION_PERMISSION_CACHE:";
     private static final String USER_ROLE_AND_GROUP_REDIS_KEY = "USER_ROLE_AND_GROUP:";
     private static final String SYS_ROLE_INFO_REDIS_KEY = "SYS_ROLE_INFO";
     private static final String SYS_ROLE_PERM_REDIS_KEY = "SYS_ROLE_PERMISSION";
@@ -85,6 +87,7 @@ public class CurrentUser extends SessionUser<Long> {
     private SessionEmpInfo currentEmp = null;
     private Set<String> userRoleAndGroups = null;
     private Set<String> userActualRoles = null;
+    private Set<RolePermission> allPermsInEnt = null;
     // endregion
 
     static {
@@ -343,15 +346,6 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     /**
-     * 获取一个用户拥有的全部权限
-     *
-     * @return 权限列表
-     */
-    public Set<RolePermission> getAllPermissions() {
-        return JsonUtils.fromJson(redisTemplate.opsForValue().get(SESSION_PERMISSION_CACHE_KEY + sid), ROLE_PERMISSION_TYPE);
-    }
-
-    /**
      * 判断用户在当前企业下是否拥有指定角色
      *
      * @param roleCode 角色编码
@@ -488,8 +482,42 @@ public class CurrentUser extends SessionUser<Long> {
         Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForHash().delete(sessionKey, keys.toArray());
     }
 
-    private static final TypeToken<Set<RolePermission>> PERM_TYPE_TOKEN = new TypeToken<Set<RolePermission>>() {
-    };
+    /**
+     * 获取一个用户在当前企业拥有的全部权限
+     *
+     * @return 权限列表
+     */
+    public Set<RolePermission> getAllPermissions() {
+        if (null == allPermsInEnt) {
+            Set<String> actualRoles = getActualRoles().stream().map(it -> getSessionEmpInfo().getEnterpriseId() + ":" + it).collect(Collectors.toSet());
+            allPermsInEnt = redisTemplate.<String, String>opsForHash().multiGet(SYS_ROLE_PERM_REDIS_KEY, actualRoles).stream()
+                .filter(StringUtils::isNotEmpty)
+                .map(it -> Optional.ofNullable(JsonUtils.fromJson(it, PERM_TYPE_TOKEN)).orElse(Collections.emptySet()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+        }
+
+        return allPermsInEnt;
+    }
+
+    /**
+     * 获取一个用户在指定企业拥有的全部权限
+     *
+     * @param enterpriseId 企业ID
+     * @return 权限列表
+     */
+    public Set<RolePermission> getAllPermissions(long enterpriseId) {
+        if (null == allPermsInEnt) {
+            Set<String> actualRoles = getActualRoles(enterpriseId).stream().map(it -> getSessionEmpInfo().getEnterpriseId() + ":" + it).collect(Collectors.toSet());
+            allPermsInEnt = redisTemplate.<String, String>opsForHash().multiGet(SYS_ROLE_PERM_REDIS_KEY, actualRoles).stream()
+                .filter(StringUtils::isNotEmpty)
+                .map(it -> Optional.ofNullable(JsonUtils.fromJson(it, PERM_TYPE_TOKEN)).orElse(Collections.emptySet()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+        }
+
+        return allPermsInEnt;
+    }
 
     /**
      * 查询当前用户在指定数据权限模式下的机构列表
@@ -501,12 +529,9 @@ public class CurrentUser extends SessionUser<Long> {
         if (StringUtils.isEmpty(apiCode)) {
             return null;
         }
-        Set<String> actualRoles = getActualRoles();
-        List<String> perms = redisTemplate.<String, String>opsForHash().multiGet(SYS_ROLE_PERM_REDIS_KEY, actualRoles);
+        SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
 
-        DataLevel dataLevel = perms.stream().map(it -> JsonUtils.fromJson(it, PERM_TYPE_TOKEN))
-            .filter(CollectionUtils::isNotEmpty)
-            .flatMap(Set::stream)
+        DataLevel dataLevel = getAllPermissions().stream()
             .filter(it -> it.getPermissionCode().equals("DATA" + apiCode.substring(3)))
             .map(RolePermission::getAdditionalAttr)
             .map(Integer::parseInt)
@@ -514,7 +539,6 @@ public class CurrentUser extends SessionUser<Long> {
             .map(it -> EnumUtils.getEnum(DataLevel.class, it))
             .orElse(DataLevel.HIMSELF);
 
-        SessionEmpInfo sessionEnterprise = CurrentUser.getCurrentNonNull().getSessionEmpInfo();
         DataPermInfo info = new DataPermInfo();
 
         switch (dataLevel) {

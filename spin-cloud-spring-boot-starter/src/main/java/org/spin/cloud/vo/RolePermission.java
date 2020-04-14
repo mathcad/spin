@@ -33,6 +33,22 @@ public class RolePermission {
      */
     private String additionalAttr;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RolePermission)) return false;
+        RolePermission that = (RolePermission) o;
+        return roleCode.equals(that.roleCode) &&
+            enterpriseId.equals(that.enterpriseId) &&
+            permissionCode.equals(that.permissionCode) &&
+            Objects.equals(additionalAttr, that.additionalAttr);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(roleCode, enterpriseId, permissionCode, additionalAttr);
+    }
+
     public RolePermission() {
     }
 
@@ -49,6 +65,14 @@ public class RolePermission {
         this.roleCode = roleCode;
     }
 
+    public Long getEnterpriseId() {
+        return enterpriseId;
+    }
+
+    public void setEnterpriseId(Long enterpriseId) {
+        this.enterpriseId = enterpriseId;
+    }
+
     public String getPermissionCode() {
         return permissionCode;
     }
@@ -63,20 +87,5 @@ public class RolePermission {
 
     public void setAdditionalAttr(String additionalAttr) {
         this.additionalAttr = additionalAttr;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RolePermission)) return false;
-        RolePermission that = (RolePermission) o;
-        return
-            roleCode.equals(that.roleCode) &&
-                permissionCode.equals(that.permissionCode);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(roleCode, permissionCode);
     }
 }
