@@ -5,11 +5,11 @@ import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.plugin.Intercepts;
 import org.apache.ibatis.plugin.Invocation;
+import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.Signature;
 import org.spin.core.util.BeanUtils;
 
 import java.sql.Connection;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,11 +49,9 @@ public class DataPermissionInterceptor implements Interceptor {
 
     @Override
     public Object plugin(Object target) {
-        return null;
-    }
-
-    @Override
-    public void setProperties(Properties properties) {
-
+        if (target instanceof StatementHandler) {
+            return Plugin.wrap(target, this);
+        }
+        return target;
     }
 }

@@ -535,7 +535,7 @@ public class CurrentUser extends SessionUser<Long> {
             .filter(it -> it.getPermissionCode().equals("DATA" + apiCode.substring(3)))
             .map(RolePermission::getAdditionalAttr)
             .map(Integer::parseInt)
-            .max(Integer::compareTo)
+            .min(Integer::compareTo)
             .map(it -> EnumUtils.getEnum(DataLevel.class, it))
             .orElse(DataLevel.HIMSELF);
 
