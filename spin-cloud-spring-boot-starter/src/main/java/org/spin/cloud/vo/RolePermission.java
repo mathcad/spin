@@ -19,6 +19,11 @@ public class RolePermission {
     private String roleCode;
 
     /**
+     * 企业ID
+     */
+    private Long enterpriseId;
+
+    /**
      * 权限编码
      */
     private String permissionCode;
