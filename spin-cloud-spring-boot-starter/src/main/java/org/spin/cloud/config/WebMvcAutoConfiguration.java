@@ -1,12 +1,14 @@
 package org.spin.cloud.config;
 
 import org.spin.cloud.web.config.RequestMappingBeanValidator;
+import org.spin.cloud.web.handler.FieldPermissionReturnValueModifier;
 import org.spin.cloud.web.interceptor.GrayInterceptor;
 import org.spin.cloud.web.interceptor.UserAuthInterceptor;
 import org.spin.core.util.CollectionUtils;
 import org.spin.web.InternalWhiteList;
 import org.spin.web.converter.JsonHttpMessageConverter;
 import org.spin.web.handler.ReplacementReturnValueHandler;
+import org.spin.web.handler.RequestResponseBodyModifier;
 import org.spin.web.handler.WrappedRequestResponseBodyProcessor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -84,8 +86,13 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
     }
 
     @Bean
+    public FieldPermissionReturnValueModifier fieldPermissionReturnValueModifier() {
+        return new FieldPermissionReturnValueModifier();
+    }
+
+    @Bean
     @ConditionalOnBean(RequestMappingHandlerAdapter.class)
-    public InitializingBean procReturnValueHandlerBean(RequestMappingHandlerAdapter handlerAdapter, List<ReplacementReturnValueHandler> customerHandlers) {
+    public InitializingBean procReturnValueHandlerBean(RequestMappingHandlerAdapter handlerAdapter, List<ReplacementReturnValueHandler> customerHandlers, List<RequestResponseBodyModifier> modifiers) {
         return () -> {
             handlerAdapter.afterPropertiesSet();
             List<HandlerMethodReturnValueHandler> originHandlers = handlerAdapter.getReturnValueHandlers();
@@ -100,7 +107,7 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
             List<ReplacementReturnValueHandler> collect = null == customerHandlers ? Collections.emptyList() : customerHandlers.stream().sorted(Comparator.comparingInt(Ordered::getOrder)).collect(Collectors.toList());
             List<HandlerMethodReturnValueHandler> handlers = new ArrayList<>(originHandlers.size() + 1);
-            handlers.add(new WrappedRequestResponseBodyProcessor(handler));
+            handlers.add(new WrappedRequestResponseBodyProcessor(handler, modifiers));
             for (HandlerMethodReturnValueHandler originHandler : originHandlers) {
                 ReplacementReturnValueHandler matched = getMatched(originHandler, collect);
                 handlers.add(null != matched ? matched : originHandler);

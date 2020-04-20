@@ -3,7 +3,7 @@ plugins {
 }
 
 description 'mybatis plus的starter'
-version '2.2.27-SNAPSHOT'
+version '2.2.29-SNAPSHOT'
 def artifactId = 'spin-mybatis-spring-boot-starter'
 
 test {
@@ -43,6 +43,6 @@ dependencies {
         exclude(group: 'org.springframework.boot')
     }
 
-    compileOnly group: 'org.mathcat', name: 'spin-cloud-spring-boot-starter', version: '2.2.27-SNAPSHOT'
+    compileOnly group: 'org.mathcat', name: 'spin-cloud-spring-boot-starter', version: '2.2.29-SNAPSHOT'
     compileOnly group: 'io.springfox', name: 'springfox-swagger2', version: swaggerVersion
 }

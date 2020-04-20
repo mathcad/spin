@@ -47,9 +47,6 @@ public class CurrentUser extends SessionUser<Long> {
     private static final TypeToken<Map<String, Set<String>>> STRING_SETSTR_MAP_TOKEN = new TypeToken<Map<String, Set<String>>>() {
     };
 
-    private static final TypeToken<Set<RolePermission>> ROLE_PERMISSION_TYPE = new TypeToken<Set<RolePermission>>() {
-    };
-
     private static final TypeToken<Set<RolePermission>> PERM_TYPE_TOKEN = new TypeToken<Set<RolePermission>>() {
     };
 
@@ -65,11 +62,14 @@ public class CurrentUser extends SessionUser<Long> {
     private static final String ENTERPRISE_STATION_CACHE_KEY = "ENTERPRISE_STATIONS_CACHE:";
     private static final String ENTERPRISE_CUSTOM_ORG_CACHE_KEY = "ENTERPRISE_CUSTOM_ORG_CACHE:";
 
-    private static final String SUPER_AMIN_ROLE_CODE = "0:SUPER_ADMIN";
+    private static final String SUPER_AMIN_ROLE_CODE = "SUPER_ADMIN";
+    private static final String FULL_SUPER_AMIN_ROLE_CODE = "0:SUPER_ADMIN";
     private static final String ENT_AMIN_ROLE_CODE = "ENT_ADMIN";
 
-    private static final DefaultRedisScript<List> ALL_CHILDREN_SCRIPT = new DefaultRedisScript<List>();
-    private static final DefaultRedisScript<List> ALL_BROTHERS_SCRIPT = new DefaultRedisScript<List>();
+    @SuppressWarnings("rawtypes")
+    private static final DefaultRedisScript<List> ALL_CHILDREN_SCRIPT = new DefaultRedisScript<>();
+    @SuppressWarnings("rawtypes")
+    private static final DefaultRedisScript<List> ALL_BROTHERS_SCRIPT = new DefaultRedisScript<>();
     private static final ThreadLocal<CurrentUser> CURRENT = new ThreadLocal<>();
 
     private static StringRedisTemplate redisTemplate;
@@ -269,10 +269,7 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 是/否
      */
     public boolean isEnterpriseAdmin() {
-        Set<String> actualRoles = getActualRoles();
-        SessionEmpInfo sessionEmpInfo = getSessionEmpInfo();
-
-        return actualRoles.contains(sessionEmpInfo.getEnterpriseId() + ":" + ENT_AMIN_ROLE_CODE);
+        return getRoleAndGroups().contains(ENT_AMIN_ROLE_CODE);
     }
 
     /**
@@ -310,7 +307,7 @@ public class CurrentUser extends SessionUser<Long> {
         for (String s : userRoleAndGroups) {
             if (s.startsWith(ent)) {
                 roleAndGroupsInEnt.add(s.substring(ent.length() + 1));
-            } else if (s.equals(SUPER_AMIN_ROLE_CODE)) {
+            } else if (s.equals(FULL_SUPER_AMIN_ROLE_CODE)) {
                 roleAndGroupsInEnt.add(SUPER_AMIN_ROLE_CODE.substring(2));
             }
         }
@@ -520,9 +517,9 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     /**
-     * 查询当前用户在指定数据权限模式下的机构列表
+     * 查询当前用户在当前接口上的数据权限
      *
-     * @return 数据权限信息, 为null表示无需控制
+     * @return 数据权限信息
      */
     public DataPermInfo getDataPermInfo() {
         String apiCode = Env.getCurrentApiCode();
@@ -598,6 +595,24 @@ public class CurrentUser extends SessionUser<Long> {
         return info;
     }
 
+    /**
+     * 查询当前用户在指定的字段权限信息
+     *
+     * @param fieldPermCode 字段权限编码
+     * @return 当前用户拥有的字段权限列表, null表示无需控制字段权限
+     */
+    public Set<String> getFieldPermInfo(String fieldPermCode) {
+        if (StringUtils.isEmpty(fieldPermCode) || isSuperAdmin()) {
+            return null;
+        }
+
+        return getAllPermissions().stream()
+            .filter(it -> it.getPermissionCode().equals(fieldPermCode))
+            .map(RolePermission::getAdditionalAttr)
+            .filter(StringUtils::isNotBlank)
+            .flatMap(it -> StringUtils.splitToSet(it, ",").stream()).collect(Collectors.toSet());
+    }
+
     public static Set<String> getActualRoles(Set<String> roleAndGroups, String enterpriseId) {
         if (CollectionUtils.isEmpty(roleAndGroups)) {
             return Collections.emptySet();
@@ -642,21 +657,18 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     private static Set<Long> getAllChildren(String rootKey, long enterpriseId, Set<Long> current) {
-        if (CollectionUtils.isNotEmpty(current)) {
-            List<?> children = redisTemplate.execute(ALL_CHILDREN_SCRIPT,
-                Collections.singletonList(rootKey + enterpriseId),
-                current.stream().map(StringUtils::toString).toArray());
-            return Optional.ofNullable(children).orElse(CollectionUtils.ofLinkedList()).stream().map(Object::toString)
-                .map(d -> JsonUtils.fromJson(d, OrganVo.class)).map(OrganVo::getId).map(Long::valueOf).collect(Collectors.toSet());
-        } else {
-            return CollectionUtils.ofHashSet();
-        }
+        return executeLua(rootKey, enterpriseId, current, ALL_CHILDREN_SCRIPT);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static Set<Long> getAllBrothers(String rootKey, long enterpriseId, Set<Long> current) {
+        return executeLua(rootKey, enterpriseId, current, ALL_BROTHERS_SCRIPT);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static Set<Long> executeLua(String rootKey, long enterpriseId, Set<Long> current, DefaultRedisScript<List> script) {
         if (CollectionUtils.isNotEmpty(current)) {
-            List<?> children = redisTemplate.execute(ALL_BROTHERS_SCRIPT,
-                Collections.singletonList(rootKey + enterpriseId),
+            List<?> children = redisTemplate.execute(script, Collections.singletonList(rootKey + enterpriseId),
                 current.stream().map(StringUtils::toString).toArray());
             return Optional.ofNullable(children).orElse(CollectionUtils.ofLinkedList()).stream().map(Object::toString)
                 .map(d -> JsonUtils.fromJson(d, OrganVo.class)).map(OrganVo::getId).map(Long::valueOf).collect(Collectors.toSet());

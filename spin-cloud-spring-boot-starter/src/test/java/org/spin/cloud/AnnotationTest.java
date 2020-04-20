@@ -1,11 +1,17 @@
 package org.spin.cloud;
 
 import org.junit.jupiter.api.Test;
+import org.spin.cloud.vo.MailReceiverVo;
+import org.spin.cloud.vo.MailVo;
+import org.spin.cloud.web.handler.FieldPermissionReturnValueModifier;
+import org.spin.core.util.JsonUtils;
 import org.spin.core.util.SystemUtils;
+import org.spin.data.core.Page;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.LinkedList;
 import java.util.Properties;
 
 /**
@@ -62,5 +68,42 @@ class AnnotationTest {
         } catch (Exception e) {
             // do nothing
         }
+    }
+
+    @Test
+    void testCleanField() {
+//        Page<MailVo> page = new Page<>();
+//        page.setRows(new LinkedList<>());
+//
+//        MailVo mailVo = new MailVo();
+//        mailVo.setReceivers(new LinkedList<>());
+//        MailReceiverVo receiverVo = new MailReceiverVo();
+//        receiverVo.setReceiver("r11");
+//        receiverVo.setEnterpriseId(0L);
+//        mailVo.getReceivers().add(receiverVo);
+//        receiverVo = new MailReceiverVo();
+//        receiverVo.setReceiver("r12");
+//        receiverVo.setEnterpriseId(0L);
+//        mailVo.getReceivers().add(receiverVo);
+//        page.getRows().add(mailVo);
+//
+//
+//        mailVo = new MailVo();
+//        mailVo.setReceivers(new LinkedList<>());
+//        receiverVo = new MailReceiverVo();
+//        receiverVo.setReceiver("r21");
+//        receiverVo.setEnterpriseId(0L);
+//        mailVo.getReceivers().add(receiverVo);
+//        receiverVo = new MailReceiverVo();
+//        receiverVo.setReceiver("r22");
+//        receiverVo.setEnterpriseId(0L);
+//        mailVo.getReceivers().add(receiverVo);
+//        page.getRows().add(mailVo);
+//
+//        System.out.println(JsonUtils.toJson(page));
+//
+//        FieldPermissionReturnValueModifier.setFieldValue(page, "rows[*].receivers[*].receiver");
+//        System.out.println(JsonUtils.toJson(page));
+
     }
 }

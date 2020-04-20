@@ -31,7 +31,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * MVC返回结果处理器
@@ -49,6 +54,7 @@ public class WrappedRequestResponseBodyProcessor implements HandlerMethodReturnV
     private RequestResponseBodyMethodProcessor target;
     private List<HttpMessageConverter<?>> messageConverters;
     private final List<MediaType> allSupportedMediaTypes;
+    private final List<RequestResponseBodyModifier> modifiers;
 
     static {
         Method[] declaredMethods = AbstractMessageConverterMethodProcessor.class.getDeclaredMethods();
@@ -62,13 +68,14 @@ public class WrappedRequestResponseBodyProcessor implements HandlerMethodReturnV
         ReflectionUtils.makeAccessible(writeWithMessageConverters);
     }
 
-    public WrappedRequestResponseBodyProcessor(RequestResponseBodyMethodProcessor target) {
+    public WrappedRequestResponseBodyProcessor(RequestResponseBodyMethodProcessor target, List<RequestResponseBodyModifier> modifiers) {
         this.target = target;
+        this.modifiers = null == modifiers ? Collections.emptyList() : modifiers;
+        this.modifiers.sort(Comparator.comparing(RequestResponseBodyModifier::getOrder));
         this.messageConverters = BeanUtils.getFieldValue(target, "messageConverters");
         this.allSupportedMediaTypes = getAllSupportedMediaTypes(this.messageConverters);
 
     }
-
 
     @Override
     public boolean supportsReturnType(@NonNull MethodParameter returnType) {
@@ -86,6 +93,13 @@ public class WrappedRequestResponseBodyProcessor implements HandlerMethodReturnV
         ServletServerHttpResponse outputMessage = createOutputMessage(webRequest);
 
         outputMessage.getHeaders().add("Encoded", "1");
+
+        for (RequestResponseBodyModifier modifier : modifiers) {
+            if (modifier.supported(returnValue)) {
+                returnValue = modifier.modify(returnValue);
+            }
+        }
+
         // Try even with null return value. ResponseBodyAdvice could get involved.
         if (returnValue instanceof RestfulResponse) {
             try {
