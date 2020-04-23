@@ -69,7 +69,7 @@ public class OperationAuthBuilderPlugin extends AbstractOperationBuilderPlugin {
             context.operationBuilder().extensions(Lists.newArrayList(new StringVendorExtension("x-auth", authAnno.value().getDesc())));
             context.operationBuilder().extensions(Lists.newArrayList(new StringVendorExtension("x-scope", authAnno.scope().name())));
             String authName = authAnno.name();
-            if (StringUtils.isEmpty(authName)) {
+            if (StringUtils.isEmpty(authName) && authAnno.value() == AuthLevel.AUTHORIZE) {
                 authName = handlerMethod.getBeanType().getName() + "-" + handlerMethod.getMethod().getName();
             }
             context.operationBuilder().extensions(Lists.newArrayList(new StringVendorExtension("x-authName", authName)));

@@ -111,8 +111,8 @@ public interface QueryBuilder {
             if (CollectionUtils.isNotEmpty(dataPermInfo.getStationIds())) {
                 sql.append(alias).append(".").append("station_id IN (").append(StringUtils.join(dataPermInfo.getStationIds(), ",")).append(") OR ");
             }
-
-            return sql.substring(0, sql.length() - 4);
+            sql.setLength(sql.length() - 4);
+            return sql.append(")").toString();
         }
     }
 }

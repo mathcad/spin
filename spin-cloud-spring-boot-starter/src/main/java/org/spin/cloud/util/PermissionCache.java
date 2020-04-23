@@ -8,6 +8,7 @@ import org.spin.core.util.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -101,8 +102,13 @@ public abstract class PermissionCache {
             return Collections.emptyMap();
         } else {
             // 计算需要清洗的字段
-            fieldPermInfo.forEach(allFiedls::remove);
-            return allFiedls;
+            Map<String, String> toClean = new HashMap<>();
+            fieldPermInfo.forEach(it -> {
+                if (allFiedls.containsKey(it)) {
+                    toClean.put(it, allFiedls.get(it));
+                }
+            });
+            return toClean;
         }
     }
 }

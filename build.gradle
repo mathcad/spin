@@ -23,7 +23,7 @@ subprojects {
     ext {
         javaVersion = 1.8
         encoding = 'UTF-8'
-        repoSnapUrl = 'http://60.169.170.69:8081/repository/maven-snapshots/'
+        repoSnapUrl = 'http://192.168.40.151:8081/repository/maven-snapshots/'
         repoUser = 'dev'
         repoPasswd = '8D22185'
 
