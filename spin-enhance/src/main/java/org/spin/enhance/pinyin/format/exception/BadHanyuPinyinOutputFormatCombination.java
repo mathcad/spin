@@ -20,7 +20,7 @@ package org.spin.enhance.pinyin.format.exception;
  *
  * @author Li Min (xmlerlimin@gmail.com)
  */
-public class BadHanyuPinyinOutputFormatCombination extends Exception {
+public class BadHanyuPinyinOutputFormatCombination extends RuntimeException {
     /**
      * Constructor
      *
