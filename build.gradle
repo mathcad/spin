@@ -28,15 +28,15 @@ subprojects {
         repoPasswd = '8D22185'
 
         // core
-        junitJupiterVersion = '5.6.0'
+        junitJupiterVersion = '5.6.2'
         slf4jVersion = '1.7.30'
-        asmVersion = '7.3.1'
-        httpclientVersion = '4.5.11'
+        asmVersion = '8.0.1'
+        httpclientVersion = '4.5.12'
         httpasyncclientVersion = '4.1.4'
         commonsNetVersion = '3.6'
         dom4jVersion = '1.6'
         poiVersion = '4.1.2'
-        bouncyVersion = '1.64'
+        bouncyVersion = '1.65'
         zxingVersion = '3.4.0'
 
         //data core
@@ -45,37 +45,37 @@ subprojects {
         zookeeperVersion = '3.6.0'
         sqliteVersion = '3.30.1'
         freemarkerVersion = '2.3.30'
-        beetlVersion = '3.0.21.RELEASE'
+        beetlVersion = '3.1.3.RELEASE'
 
         // data
-        hibernateVersion = '5.4.12.Final'
+        hibernateVersion = '5.4.14.Final'
         transactionApiVersion = '1.3'
 
-        // data starter
+        // data spring boot starter
         springBootVersion = '2.2.5.RELEASE'
         atomikosVersion = '5.0.6'
 
         // kotlin
-        kotlinVersion = '1.3.71'
+        kotlinVersion = '1.3.72'
+
+        // mybatis spring boot starter
+        mybatisPlusVersion = '3.3.1'
 
         // web
         itextpdfVersion = '5.5.13.1'
         swaggerVersion = '2.9.2'
         servletVersion = '4.0.1'
+        validationVersion = '2.0.1.Final'
 
+        // cloud starter
         springCloudVersion = '2.2.2.RELEASE'
-        jasyptVersion = '3.0.2'
-        commonsPoolVersion = '2.8.0'
         springKafkaVersion = '2.4.3.RELEASE'
-        sentinelStarterVersion = '2.2.0.RELEASE'
-        yamlVersion = '1.25'
+        sentinelStarterVersion = '2.2.1.RELEASE'
         apolloVersion = '1.6.1.1'
         knife4jVersion = '2.0.1'
-        p6spyVersion = '3.8.7'
-        mybatisPlusVersion = '3.3.1'
+        p6spyVersion = '3.9.0'
         feignHttpVersion = '10.7.4'
-        validationVersion = '2.0.1.Final'
-        prometheusVersion = '1.4.0'
+        prometheusVersion = '1.4.2'
     }
 
     sourceCompatibility = javaVersion

@@ -498,22 +498,49 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     /**
-     * 获取一个用户在指定企业拥有的全部权限
+     * 获取一个用户在指定企业下拥有的全部权限
      *
      * @param enterpriseId 企业ID
      * @return 权限列表
      */
     public Set<RolePermission> getAllPermissions(long enterpriseId) {
-        if (null == allPermsInEnt) {
-            Set<String> actualRoles = getActualRoles(enterpriseId).stream().map(it -> getSessionEmpInfo().getEnterpriseId() + ":" + it).collect(Collectors.toSet());
-            allPermsInEnt = redisTemplate.<String, String>opsForHash().multiGet(SYS_ROLE_PERM_REDIS_KEY, actualRoles).stream()
-                .filter(StringUtils::isNotEmpty)
-                .map(it -> Optional.ofNullable(JsonUtils.fromJson(it, PERM_TYPE_TOKEN)).orElse(Collections.emptySet()))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
+        if (null != allPermsInEnt && enterpriseId == getSessionEmpInfo().getEnterpriseId()) {
+            return allPermsInEnt;
         }
 
-        return allPermsInEnt;
+        Set<String> actualRoles = getActualRoles(enterpriseId).stream().map(it -> getSessionEmpInfo().getEnterpriseId() + ":" + it).collect(Collectors.toSet());
+        return redisTemplate.<String, String>opsForHash().multiGet(SYS_ROLE_PERM_REDIS_KEY, actualRoles).stream()
+            .filter(StringUtils::isNotEmpty)
+            .map(it -> Optional.ofNullable(JsonUtils.fromJson(it, PERM_TYPE_TOKEN)).orElse(Collections.emptySet()))
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
+    }
+
+    /**
+     * 判断用户在当前企业是否拥有指定权限
+     *
+     * @param permissionCode 权限编码
+     * @return 是否拥有权限
+     */
+    public boolean hasPermission(String permissionCode) {
+        if (StringUtils.isEmpty(permissionCode)) {
+            return false;
+        }
+        return getAllPermissions().stream().map(RolePermission::getPermissionCode).anyMatch(permissionCode::equals);
+    }
+
+    /**
+     * 判断用户在制定企业下是否拥有指定权限
+     *
+     * @param permissionCode 权限编码
+     * @param enterpriseId   企业ID
+     * @return 是否拥有权限
+     */
+    public boolean hasPermission(String permissionCode, long enterpriseId) {
+        if (StringUtils.isEmpty(permissionCode)) {
+            return false;
+        }
+        return getAllPermissions(enterpriseId).stream().map(RolePermission::getPermissionCode).anyMatch(permissionCode::equals);
     }
 
     /**

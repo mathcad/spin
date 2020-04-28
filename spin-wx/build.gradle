@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '微信模块'
-version = '2.2.25-SNAPSHOT'
+version = '2.2.26-SNAPSHOT'
 def artifactId = 'spin-wx'
 
 test {
