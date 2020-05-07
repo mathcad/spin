@@ -648,11 +648,11 @@ public class CurrentUser extends SessionUser<Long> {
         List<String> res = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).<String, String>opsForHash().multiGet(SYS_ROLE_INFO_REDIS_KEY,
             CollectionUtils.ofArrayList("GROUP_ROLE", "ROLE_INHERITANCE"));
 
-        // 角色-组合的的其他角色
-        Map<String, Set<String>> roleInheritance = res.size() > 0 ? JsonUtils.fromJson(res.get(0), STRING_SETSTR_MAP_TOKEN) : Collections.emptyMap();
-
         // 用户组-组合的的其他角色
-        Map<String, Set<String>> userGroupRole = res.size() > 1 ? JsonUtils.fromJson(res.get(1), STRING_SETSTR_MAP_TOKEN) : Collections.emptyMap();
+        Map<String, Set<String>> userGroupRole = res.size() > 0 ? JsonUtils.fromJson(res.get(0), STRING_SETSTR_MAP_TOKEN) : Collections.emptyMap();
+
+        // 角色-组合的的其他角色
+        Map<String, Set<String>> roleInheritance = res.size() > 1 ? JsonUtils.fromJson(res.get(1), STRING_SETSTR_MAP_TOKEN) : Collections.emptyMap();
 
         Set<String> userActualRoles = new HashSet<>();
         for (String roleOrGroup : roleAndGroups) {
@@ -660,12 +660,10 @@ public class CurrentUser extends SessionUser<Long> {
                 Set<String> rs = userGroupRole.get(enterpriseId + ":" + roleOrGroup.substring(6));
                 if (null != rs) {
                     for (String r : rs) {
-                        userActualRoles.add(r.substring(enterpriseId.length() + 1));
-                        Set<String> tmp = roleInheritance.get(r);
+                        userActualRoles.add(r);
+                        Set<String> tmp = roleInheritance.get(enterpriseId + ":" + r);
                         if (!CollectionUtils.isEmpty(tmp)) {
-                            for (String s : tmp) {
-                                userActualRoles.add(s.substring(enterpriseId.length() + 1));
-                            }
+                            userActualRoles.addAll(tmp);
                         }
                     }
                 }
@@ -674,9 +672,7 @@ public class CurrentUser extends SessionUser<Long> {
                 String r = enterpriseId + ":" + roleOrGroup;
                 Set<String> tmp = roleInheritance.get(r);
                 if (!CollectionUtils.isEmpty(tmp)) {
-                    for (String s : tmp) {
-                        userActualRoles.add(s.substring(enterpriseId.length() + 1));
-                    }
+                    userActualRoles.addAll(tmp);
                 }
             }
         }
