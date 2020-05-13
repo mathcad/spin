@@ -51,7 +51,9 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
     @Bean
     @LoadBalanced
     public RestTemplate restTemplate() {
-        return new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(0, JSON_HTTP_MESSAGE_CONVERTER);
+        return restTemplate;
     }
 
     @Bean

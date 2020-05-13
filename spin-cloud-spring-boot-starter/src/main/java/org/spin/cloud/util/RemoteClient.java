@@ -19,7 +19,6 @@ import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.core.util.http.Http;
 import org.spin.web.RestfulResponse;
@@ -27,6 +26,7 @@ import org.spin.web.throwable.FeignHttpException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestAttributes;
@@ -43,6 +43,7 @@ import java.util.List;
  * @author xuweinan
  * @version 1.0
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 @UtilClass
 public class RemoteClient {
     private static final Logger logger = LoggerFactory.getLogger(RemoteClient.class);
@@ -77,12 +78,12 @@ public class RemoteClient {
             Pair<String, String> header = obtainHeader();
             if (pair.c1) {
                 HttpEntity<SmsTemplateVo> requestEntity = createHttpEntity(header.c1, header.c2, smsTemplateVo);
-                ResponseEntity<String> response = restTemplate.postForEntity(pair.c2, requestEntity, String.class);
+                ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 短信发送失败:\n{}", response.getBody());
                     throw new FeignHttpException(ErrorCode.NETWORK_EXCEPTION.getCode(), pair.c2, response.getStatusCode().toString(), "远程调用错误, 短信发送失败", null);
                 }
-                entity = JsonUtils.fromJson(response.getBody(), VOID_ENTITY);
+                entity = response.getBody();
 
             } else {
                 entity = Http.POST.withUrl(pair.c2)
@@ -121,12 +122,12 @@ public class RemoteClient {
             Pair<String, String> header = obtainHeader();
             if (pair.c1) {
                 HttpEntity<SmsTemplateVariableVo> requestEntity = createHttpEntity(header.c1, header.c2, templateVariableVo);
-                ResponseEntity<String> response = restTemplate.postForEntity(pair.c2, requestEntity, String.class);
+                ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 变量短信发送失败:\n{}", response.getBody());
                     throw new FeignHttpException(ErrorCode.NETWORK_EXCEPTION.getCode(), pair.c2, response.getStatusCode().toString(), "远程调用错误, 短信发送失败", null);
                 }
-                entity = JsonUtils.fromJson(response.getBody(), VOID_ENTITY);
+                entity = response.getBody();
 
             } else {
                 entity = Http.POST.withUrl(pair.c2)
@@ -170,12 +171,12 @@ public class RemoteClient {
             Pair<String, String> header = obtainHeader();
             if (pair.c1) {
                 HttpEntity<MailVo> requestEntity = createHttpEntity(header.c1, header.c2, mailVo);
-                ResponseEntity<String> response = restTemplate.postForEntity(pair.c2, requestEntity, String.class);
+                ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 邮件发送失败:\n{}", response.getBody());
                     throw new FeignHttpException(ErrorCode.NETWORK_EXCEPTION.getCode(), pair.c2, response.getStatusCode().toString(), "远程调用错误, 邮件发送失败", null);
                 }
-                entity = JsonUtils.fromJson(response.getBody(), RestfulResponse.class);
+                entity = response.getBody();
 
             } else {
                 entity = Http.POST.withUrl(pair.c2)
@@ -209,12 +210,12 @@ public class RemoteClient {
             Pair<String, String> header = obtainHeader();
             if (pair.c1) {
                 HttpEntity<String> requestEntity = createHttpEntity(header.c1, header.c2, null);
-                ResponseEntity<String> response = restTemplate.exchange(pair.c2, HttpMethod.GET, requestEntity, String.class);
+                ResponseEntity<RestfulResponse> response = restTemplate.exchange(pair.c2, HttpMethod.GET, requestEntity, RestfulResponse.class);
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 流水号获取失败:\n{}", response.getBody());
                     throw new FeignHttpException(ErrorCode.NETWORK_EXCEPTION.getCode(), pair.c2, response.getStatusCode().toString(), "远程调用错误, 流水号获取失败", null);
                 }
-                entity = JsonUtils.fromJson(response.getBody(), RestfulResponse.class);
+                entity = response.getBody();
 
             } else {
                 entity = Http.GET.withUrl(pair.c2)
@@ -251,12 +252,12 @@ public class RemoteClient {
             Pair<String, String> header = obtainHeader();
             if (pair.c1) {
                 HttpEntity<String[]> requestEntity = createHttpEntity(header.c1, header.c2, cipher);
-                ResponseEntity<String> response = restTemplate.postForEntity(pair.c2, requestEntity, String.class);
+                ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 数据解密失败:\n{}", response.getBody());
                     throw new FeignHttpException(ErrorCode.NETWORK_EXCEPTION.getCode(), pair.c2, response.getStatusCode().toString(), "远程调用错误, 数据解密失败", null);
                 }
-                entity = JsonUtils.fromJson(response.getBody(), STRING_LIST_ENTITY);
+                entity = response.getBody();
 
             } else {
                 entity = Http.POST.withUrl(pair.c2)
@@ -306,6 +307,7 @@ public class RemoteClient {
 
     private static <T> HttpEntity<T> createHttpEntity(String from, String grayInfo, T body) {
         HttpHeaders requestHeaders = new HttpHeaders();
+        requestHeaders.setContentType(MediaType.APPLICATION_JSON);
         requestHeaders.add(FeignInterceptor.X_APP_NAME, Env.getAppName());
         if (null != from) {
             requestHeaders.add(HttpHeaders.FROM, from);
