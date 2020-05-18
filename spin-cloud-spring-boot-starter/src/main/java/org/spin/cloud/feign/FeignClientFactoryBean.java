@@ -16,7 +16,13 @@
 
 package org.spin.cloud.feign;
 
-import feign.*;
+import feign.Client;
+import feign.Contract;
+import feign.Feign;
+import feign.Logger;
+import feign.Request;
+import feign.RequestInterceptor;
+import feign.Retryer;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
@@ -209,7 +215,7 @@ class FeignClientFactoryBean
         return context.getInstance(this.contextId, type);
     }
 
-    private <T> T loadBalance(Feign.Builder builder, FeignContext context, Target.HardCodedTarget<T> target) {
+    private <T> T loadBalance(Feign.Builder builder, FeignContext context, HardCodedTarget<T> target) {
         Client client = getOptional(context, Client.class);
         if (client != null) {
             builder.client(client);
@@ -241,7 +247,7 @@ class FeignClientFactoryBean
                 this.url = this.name;
             }
             this.url += cleanPath();
-            return loadBalance(builder, context, new Target.HardCodedTarget<>(this.type, this.name, this.url));
+            return loadBalance(builder, context, new HardCodedTarget<>(this.type, this.name, this.url));
         }
         if (StringUtils.hasText(this.url) && !this.url.startsWith("http")) {
             this.url = "http://" + this.url;
@@ -257,7 +263,7 @@ class FeignClientFactoryBean
             builder.client(client);
         }
         Targeter targeter = get(context, Targeter.class);
-        return targeter.target(this, builder, context, new Target.HardCodedTarget<>(this.type, this.name, url));
+        return targeter.target(this, builder, context, new HardCodedTarget<>(this.type, this.name, url));
     }
 
     private String cleanPath() {

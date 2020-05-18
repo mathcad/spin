@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
  */
 public class GrayInterceptor implements WebRequestInterceptor {
 
-    public static final String X_GRAY_INFO = "X-GRAY-INFO";
-    public static final String X_GRAY_INFO_STR = "X-GRAY-INFO-STR";
+    public static final String X_GRAY_INFO = "X-Gray-Info";
+    public static final String X_GRAY_INFO_STR = "X-Gray-Info-Str";
 
     @Override
     public void preHandle(@NonNull WebRequest request) {

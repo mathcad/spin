@@ -17,7 +17,6 @@
 package org.spin.cloud.feign;
 
 import feign.Feign;
-import feign.Target;
 import org.springframework.cloud.openfeign.FeignContext;
 
 /**
@@ -25,5 +24,5 @@ import org.springframework.cloud.openfeign.FeignContext;
  */
 public interface Targeter {
 
-    <T> T target(FeignClientFactoryBean factory, Feign.Builder feign, FeignContext context, Target.HardCodedTarget<T> target);
+    <T> T target(FeignClientFactoryBean factory, Feign.Builder feign, FeignContext context, HardCodedTarget<T> target);
 }

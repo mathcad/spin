@@ -3,6 +3,7 @@ package org.spin.cloud.feign;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import org.spin.cloud.vo.CurrentUser;
+import org.spin.cloud.web.interceptor.CustomizeRouteInterceptor;
 import org.spin.cloud.web.interceptor.GrayInterceptor;
 import org.spin.core.util.StringUtils;
 import org.springframework.http.HttpHeaders;
@@ -41,6 +42,11 @@ public class FeignInterceptor implements RequestInterceptor {
             String grayInfo = (String) requestAttributes.getAttribute(GrayInterceptor.X_GRAY_INFO_STR, RequestAttributes.SCOPE_REQUEST);
             if (null != grayInfo) {
                 template.header(GrayInterceptor.X_GRAY_INFO, grayInfo);
+            }
+
+            String customizeRoutes = (String) requestAttributes.getAttribute(CustomizeRouteInterceptor.CUSTOMIZE_ROUTE_STR, RequestAttributes.SCOPE_REQUEST);
+            if (null != customizeRoutes) {
+                template.header(CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, customizeRoutes);
             }
         }
     }

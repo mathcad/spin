@@ -2,9 +2,11 @@ package org.spin.cloud.config;
 
 import org.spin.cloud.web.config.RequestMappingBeanValidator;
 import org.spin.cloud.web.handler.FieldPermissionReturnValueModifier;
+import org.spin.cloud.web.interceptor.CustomizeRouteInterceptor;
 import org.spin.cloud.web.interceptor.GrayInterceptor;
 import org.spin.cloud.web.interceptor.UserAuthInterceptor;
 import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.StringUtils;
 import org.spin.web.InternalWhiteList;
 import org.spin.web.converter.JsonHttpMessageConverter;
 import org.spin.web.handler.ReplacementReturnValueHandler;
@@ -20,6 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.core.env.Environment;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -34,6 +37,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -47,6 +51,12 @@ import java.util.stream.Collectors;
 public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
     private static final JsonHttpMessageConverter JSON_HTTP_MESSAGE_CONVERTER = new JsonHttpMessageConverter();
+
+    private final Environment environment;
+
+    public WebMvcAutoConfiguration(Environment environment) {
+        this.environment = environment;
+    }
 
     @Bean
     @LoadBalanced
@@ -82,6 +92,12 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addWebRequestInterceptor(new GrayInterceptor()).addPathPatterns("/**").order(Ordered.HIGHEST_PRECEDENCE);
+
+        Set<String> profiles = StringUtils.splitToSet(StringUtils.trimToEmpty(environment.getProperty("spring.profiles.active")).toLowerCase(), ",");
+
+        if (profiles.contains("dev") || profiles.contains("fat")) {
+            registry.addWebRequestInterceptor(new CustomizeRouteInterceptor()).addPathPatterns("/**").order(Ordered.HIGHEST_PRECEDENCE);
+        }
 
         registry.addInterceptor(new UserAuthInterceptor()).addPathPatterns("/**")
             .excludePathPatterns("/swagger-ui.html/**", "/webjars/**", "/swagger-resources/**", "/error", "/job/executor/**");

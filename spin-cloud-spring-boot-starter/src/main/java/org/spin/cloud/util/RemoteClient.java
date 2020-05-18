@@ -10,10 +10,12 @@ import org.spin.cloud.vo.CurrentUser;
 import org.spin.cloud.vo.MailVo;
 import org.spin.cloud.vo.SmsTemplateVariableVo;
 import org.spin.cloud.vo.SmsTemplateVo;
+import org.spin.cloud.web.interceptor.CustomizeRouteInterceptor;
 import org.spin.cloud.web.interceptor.GrayInterceptor;
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.collection.Pair;
+import org.spin.core.collection.Triple;
 import org.spin.core.collection.Tuple;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SimplifiedException;
@@ -34,6 +36,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 公共远程服务客户端
@@ -45,7 +48,7 @@ import java.util.List;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 @UtilClass
-public class RemoteClient {
+public abstract class RemoteClient {
     private static final Logger logger = LoggerFactory.getLogger(RemoteClient.class);
     private static final String MSG_SERVICE = "BONADE-MESSAGE";
     private static final String ADMIN_SERVICE = "BONADE-ADMIN";
@@ -57,6 +60,10 @@ public class RemoteClient {
     };
 
     private static RestTemplate restTemplate;
+
+    private RemoteClient() {
+        throw new UnsupportedOperationException("工具类禁止实例化");
+    }
 
     /**
      * 发送模板短信(支持批量)
@@ -75,9 +82,9 @@ public class RemoteClient {
         Pair<Boolean, String> pair = fixUrl(MSG_SERVICE, "v1/sms/internal/constant");
         try {
             RestfulResponse<Void> entity;
-            Pair<String, String> header = obtainHeader();
+            Triple<String, String, String> header = obtainHeader();
             if (pair.c1) {
-                HttpEntity<SmsTemplateVo> requestEntity = createHttpEntity(header.c1, header.c2, smsTemplateVo);
+                HttpEntity<SmsTemplateVo> requestEntity = createHttpEntity(header.c1, header.c2, header.c3, smsTemplateVo);
                 ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 短信发送失败:\n{}", response.getBody());
@@ -87,7 +94,8 @@ public class RemoteClient {
 
             } else {
                 entity = Http.POST.withUrl(pair.c2)
-                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1, GrayInterceptor.X_GRAY_INFO, header.c2)
+                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1,
+                        GrayInterceptor.X_GRAY_INFO, header.c2, CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, header.c3)
                     .withJsonBody(smsTemplateVo).execute(VOID_ENTITY);
             }
             checkResult(pair.c2, entity);
@@ -119,9 +127,9 @@ public class RemoteClient {
         Pair<Boolean, String> pair = fixUrl(MSG_SERVICE, "v1/sms/internal/variable");
         try {
             RestfulResponse<Void> entity;
-            Pair<String, String> header = obtainHeader();
+            Triple<String, String, String> header = obtainHeader();
             if (pair.c1) {
-                HttpEntity<SmsTemplateVariableVo> requestEntity = createHttpEntity(header.c1, header.c2, templateVariableVo);
+                HttpEntity<SmsTemplateVariableVo> requestEntity = createHttpEntity(header.c1, header.c2, header.c3, templateVariableVo);
                 ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 变量短信发送失败:\n{}", response.getBody());
@@ -131,7 +139,8 @@ public class RemoteClient {
 
             } else {
                 entity = Http.POST.withUrl(pair.c2)
-                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1, GrayInterceptor.X_GRAY_INFO, header.c2)
+                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1,
+                        GrayInterceptor.X_GRAY_INFO, header.c2, CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, header.c3)
                     .withJsonBody(templateVariableVo).execute(VOID_ENTITY);
             }
             checkResult(pair.c2, entity);
@@ -168,9 +177,9 @@ public class RemoteClient {
         Pair<Boolean, String> pair = fixUrl(MSG_SERVICE, "v1/mail/add");
         try {
             RestfulResponse<?> entity;
-            Pair<String, String> header = obtainHeader();
+            Triple<String, String, String> header = obtainHeader();
             if (pair.c1) {
-                HttpEntity<MailVo> requestEntity = createHttpEntity(header.c1, header.c2, mailVo);
+                HttpEntity<MailVo> requestEntity = createHttpEntity(header.c1, header.c2, header.c3, mailVo);
                 ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 邮件发送失败:\n{}", response.getBody());
@@ -180,7 +189,8 @@ public class RemoteClient {
 
             } else {
                 entity = Http.POST.withUrl(pair.c2)
-                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1, GrayInterceptor.X_GRAY_INFO, header.c2)
+                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1,
+                        GrayInterceptor.X_GRAY_INFO, header.c2, CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, header.c3)
                     .withJsonBody(mailVo).execute(RestfulResponse.class);
             }
             checkResult(pair.c2, entity);
@@ -207,9 +217,9 @@ public class RemoteClient {
         Pair<Boolean, String> pair = fixUrl(ADMIN_SERVICE, "v1/serialNumber/generate/" + StringUtils.urlEncode(code));
         try {
             RestfulResponse<?> entity;
-            Pair<String, String> header = obtainHeader();
+            Triple<String, String, String> header = obtainHeader();
             if (pair.c1) {
-                HttpEntity<String> requestEntity = createHttpEntity(header.c1, header.c2, null);
+                HttpEntity<String> requestEntity = createHttpEntity(header.c1, header.c2, header.c3, null);
                 ResponseEntity<RestfulResponse> response = restTemplate.exchange(pair.c2, HttpMethod.GET, requestEntity, RestfulResponse.class);
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 流水号获取失败:\n{}", response.getBody());
@@ -219,7 +229,8 @@ public class RemoteClient {
 
             } else {
                 entity = Http.GET.withUrl(pair.c2)
-                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1, GrayInterceptor.X_GRAY_INFO, header.c2)
+                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1,
+                        GrayInterceptor.X_GRAY_INFO, header.c2, CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, header.c3)
                     .execute(RestfulResponse.class);
             }
             checkResult(pair.c2, entity);
@@ -249,9 +260,9 @@ public class RemoteClient {
         Pair<Boolean, String> pair = fixUrl(UAAC_SERVICE, "v1/auth/decrypt");
         try {
             RestfulResponse<List<String>> entity;
-            Pair<String, String> header = obtainHeader();
+            Triple<String, String, String> header = obtainHeader();
             if (pair.c1) {
-                HttpEntity<String[]> requestEntity = createHttpEntity(header.c1, header.c2, cipher);
+                HttpEntity<String[]> requestEntity = createHttpEntity(header.c1, header.c2, header.c3, cipher);
                 ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 数据解密失败:\n{}", response.getBody());
@@ -261,7 +272,8 @@ public class RemoteClient {
 
             } else {
                 entity = Http.POST.withUrl(pair.c2)
-                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1, GrayInterceptor.X_GRAY_INFO, header.c2)
+                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1,
+                        GrayInterceptor.X_GRAY_INFO, header.c2, CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, header.c3)
                     .withJsonBody(cipher).execute(STRING_LIST_ENTITY);
             }
             checkResult(pair.c2, entity);
@@ -287,35 +299,52 @@ public class RemoteClient {
     }
 
     private static Pair<Boolean, String> fixUrl(String service, String path) {
-        String defUrl = FeignResolver.getUrl(service);
+        String defUrl = null;
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (null != requestAttributes) {
+            Map<String, String> customizeRoutes = (Map<String, String>) requestAttributes.getAttribute(CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, RequestAttributes.SCOPE_REQUEST);
+            if (null != customizeRoutes) {
+                defUrl = customizeRoutes.get(service);
+            }
+        }
+        if (null == defUrl) {
+            defUrl = FeignResolver.getUrl(service);
+        }
         return Tuple.of(null == defUrl, null == defUrl ? ("http://" + service + "/" + path) : (defUrl.endsWith("/") ? (defUrl + path) : (defUrl + "/" + path)));
     }
 
-    private static Pair<String, String> obtainHeader() {
+    private static Triple<String, String, String> obtainHeader() {
         String from = null;
         String grayInfo = null;
+        String customizeRoutes = null;
         if (null != CurrentUser.getCurrent()) {
             from = CurrentUser.getCurrent().toString();
         }
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         if (null != requestAttributes) {
             grayInfo = (String) requestAttributes.getAttribute(GrayInterceptor.X_GRAY_INFO_STR, RequestAttributes.SCOPE_REQUEST);
+            customizeRoutes = (String) requestAttributes.getAttribute(CustomizeRouteInterceptor.CUSTOMIZE_ROUTE_STR, RequestAttributes.SCOPE_REQUEST);
         }
 
-        return Tuple.of(from, grayInfo);
+        return Tuple.of(from, grayInfo, customizeRoutes);
     }
 
-    private static <T> HttpEntity<T> createHttpEntity(String from, String grayInfo, T body) {
+    private static <T> HttpEntity<T> createHttpEntity(String from, String grayInfo, String customizeRoute, T body) {
         HttpHeaders requestHeaders = new HttpHeaders();
         requestHeaders.setContentType(MediaType.APPLICATION_JSON);
         requestHeaders.add(FeignInterceptor.X_APP_NAME, Env.getAppName());
+
         if (null != from) {
             requestHeaders.add(HttpHeaders.FROM, from);
         }
+
         if (null != grayInfo) {
             requestHeaders.add(GrayInterceptor.X_GRAY_INFO, grayInfo);
         }
 
+        if (null != customizeRoute) {
+            requestHeaders.add(CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, customizeRoute);
+        }
         return new HttpEntity<>(body, requestHeaders);
     }
 

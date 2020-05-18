@@ -623,7 +623,7 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     /**
-     * 查询当前用户在指定的字段权限信息
+     * 查询当前用户指定的字段权限信息
      *
      * @param fieldPermCode 字段权限编码
      * @return 当前用户拥有的字段权限列表, null表示无需控制字段权限

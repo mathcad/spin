@@ -1,7 +1,10 @@
 package org.spin.cloud.util;
 
 import org.spin.cloud.annotation.UtilClass;
+import org.spin.core.util.StringUtils;
 import org.springframework.core.env.Environment;
+
+import java.util.Set;
 
 /**
  * 环境信息
@@ -17,35 +20,35 @@ public abstract class Env {
     private static final String APP_NAME = "spring.application.name";
 
     private static Environment environment;
-    private static String activeProfile;
+    private static Set<String> activeProfiles;
     private static String appName;
 
     private static final ThreadLocal<String> CURRENT_API_CODE = new ThreadLocal<>();
 
     public static void init(Environment environment) {
         Env.environment = environment;
-        activeProfile = environment.getProperty(ACTIVE_PROFILE);
+        activeProfiles = StringUtils.splitToSet(StringUtils.trimToEmpty(environment.getProperty(ACTIVE_PROFILE)).toLowerCase(), ",");
         appName = environment.getProperty(APP_NAME);
     }
 
     public static boolean isDev() {
-        return activeProfile.toLowerCase().contains("dev");
+        return activeProfiles.contains("dev");
     }
 
     public static boolean isTest() {
-        return activeProfile.toLowerCase().contains("fat");
+        return activeProfiles.contains("fat");
     }
 
     public static boolean isBeta() {
-        return activeProfile.toLowerCase().contains("uat");
+        return activeProfiles.contains("uat");
     }
 
     public static boolean isProd() {
-        return activeProfile.toLowerCase().contains("pro");
+        return activeProfiles.contains("pro");
     }
 
-    public static String getActiveProfile() {
-        return activeProfile;
+    public static Set<String> getActiveProfiles() {
+        return activeProfiles;
     }
 
     public static String getAppName() {

@@ -3,7 +3,7 @@ plugins {
 }
 
 description '公共通用组件starter'
-version '2.2.35-SNAPSHOT'
+version '2.2.36-SNAPSHOT'
 def artifactId = 'spin-cloud-spring-boot-starter'
 
 test {
