@@ -3,6 +3,8 @@ package org.spin.core.security;
 import org.junit.jupiter.api.Test;
 import org.spin.core.util.IOUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
@@ -22,10 +24,24 @@ public class RSATest {
 
     @Test
     public void testRsaJs() {
-        String dencrypted = RSA.decrypt(privateKey, encrypted);
+        String content = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+        String encrypt = RSA.encrypt(publicKey, content);
+        System.out.println(encrypt);
+        String dencrypted = RSA.decrypt(privateKey, encrypt);
         System.out.println(dencrypted);
 
-        System.out.println(RSA.encrypt(publicKey, "abcd"));
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        RSA.encrypt(RSA.getRSAPublicKey(publicKey), byteArrayInputStream, os);
+
+
+        String encode = Base64.encode(os.toByteArray());
+        System.out.println(encode);
+
+        byteArrayInputStream = new ByteArrayInputStream(Base64.decode(encode));
+        os = new ByteArrayOutputStream();
+        RSA.decrypt(RSA.getRSAPrivateKey(privateKey), byteArrayInputStream, os);
+        System.out.println(new String(os.toByteArray(), StandardCharsets.UTF_8));
         assertTrue(true);
     }
 

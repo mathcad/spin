@@ -4,6 +4,7 @@ import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.collection.Pair;
 import org.spin.core.collection.Tuple;
+import org.spin.core.io.FastByteBuffer;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.SerializeUtils;
 import org.spin.core.util.StringUtils;
@@ -12,9 +13,12 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.ShortBufferException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -149,13 +153,52 @@ public class RSA extends ProviderDetector {
         try {
             cipher = Cipher.getInstance(RSA_ALGORITHMS);
             cipher.init(Cipher.ENCRYPT_MODE, pk);
-            return cipher.doFinal(data);
+            FastByteBuffer byteBuffer = new FastByteBuffer();
+            int offset = 0;
+            while (offset < data.length) {
+                byteBuffer.append(cipher.doFinal(data, offset, Math.min(117, data.length - offset)));
+                offset += 117;
+            }
+            return byteBuffer.toArray();
         } catch (NoSuchAlgorithmException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         } catch (NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
         } catch (InvalidKeyException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+        }
+    }
+
+    /**
+     * 加密
+     *
+     * @param pk              公钥
+     * @param rawInput        数据输入流
+     * @param encryptedOutput 密文输入流
+     */
+    public static void encrypt(PublicKey pk, InputStream rawInput, OutputStream encryptedOutput) {
+        Cipher cipher;
+        try {
+            cipher = Cipher.getInstance(RSA_ALGORITHMS);
+            cipher.init(Cipher.ENCRYPT_MODE, pk);
+            byte[] work = new byte[128];
+
+            int len;
+            int resLen;
+            while ((len = rawInput.read(work, 0, 117)) != -1) {
+                resLen = cipher.doFinal(work, 0, len, work);
+                encryptedOutput.write(work, 0, resLen);
+            }
+        } catch (NoSuchAlgorithmException e) {
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
+        } catch (NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
+        } catch (InvalidKeyException e) {
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+        } catch (IOException e) {
+            throw new SpinException(ErrorCode.IO_FAIL, "IO异常, 加密失败", e);
+        } catch (ShortBufferException ignore) {
+            // donothing
         }
     }
 
@@ -194,13 +237,54 @@ public class RSA extends ProviderDetector {
         try {
             cipher = Cipher.getInstance(RSA_ALGORITHMS);
             cipher.init(Cipher.DECRYPT_MODE, pk);
-            return cipher.doFinal(raw);
+
+            FastByteBuffer byteBuffer = new FastByteBuffer();
+            int offset = 0;
+            while (offset < raw.length) {
+                byteBuffer.append(cipher.doFinal(raw, offset, Math.min(128, raw.length - offset)));
+                offset += 128;
+            }
+            return byteBuffer.toArray();
         } catch (NoSuchAlgorithmException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         } catch (BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
         } catch (InvalidKeyException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+        }
+    }
+
+    /**
+     * 解密
+     *
+     * @param pk            私钥
+     * @param encrypteInput 密文数据流
+     * @param rawOutput     明文数据输出流
+     */
+    public static void decrypt(PrivateKey pk, InputStream encrypteInput, OutputStream rawOutput) {
+        Cipher cipher;
+        try {
+            cipher = Cipher.getInstance(RSA_ALGORITHMS);
+            cipher.init(Cipher.DECRYPT_MODE, pk);
+
+            byte[] work = new byte[128];
+
+            int len;
+            int resLen;
+            while ((len = encrypteInput.read(work)) != -1) {
+                resLen = cipher.doFinal(work, 0, len, work);
+                rawOutput.write(work, 0, resLen);
+            }
+        } catch (NoSuchAlgorithmException e) {
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
+        } catch (BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException e) {
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
+        } catch (InvalidKeyException e) {
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+        } catch (IOException e) {
+            throw new SpinException(ErrorCode.IO_FAIL, "IO异常, 解密失败", e);
+        } catch (ShortBufferException ignore) {
+            // donothing
         }
     }
 

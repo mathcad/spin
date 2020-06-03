@@ -191,7 +191,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
                 writer.write(t.toString());
             } else if (t instanceof Json) {
                 writer.write(((Json) t).value());
-            } else if (type != null) {
+            } else if (type != null && !(type.getTypeName().startsWith("org.springframework.core.ResolvableType"))) {
                 this.gson.toJson(t, type, writer);
             } else {
                 this.gson.toJson(t, writer);

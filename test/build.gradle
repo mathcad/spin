@@ -75,8 +75,13 @@ compileTestKotlin {
 }
 
 dependencies {
-    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
-    testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
+    // additional for Intellij
+    testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: junitLauncherVersion
+    testRuntimeOnly group: 'org.junit.vintage', name: 'junit-vintage-engine', version: junitJupiterVersion
+
+    // test runtime
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
     testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
         exclude(module: 'commons-logging')
     }
@@ -96,7 +101,7 @@ dependencies {
 //    implementation group: 'com.atomikos', name: 'transactions', version: '5.0.0'
 //    implementation group: 'com.atomikos', name: 'transactions-jta', version: '5.0.0'
 
-    implementation group: 'org.mathcat', name: 'spin-data-spring-boot-starter', version: '2.2.25-SNAPSHOT'
+    implementation group: 'org.mathcat', name: 'spin-data-spring-boot-starter', version: '2.2.26-SNAPSHOT'
     implementation group: 'org.mathcat', name: 'spin-web', version: '2.2.27-SNAPSHOT'
     implementation group: 'org.mathcat', name: 'spin-wx', version: '2.2.25-SNAPSHOT'
     implementation group: 'com.ibeetl', name: 'beetl', version: '3.0.10.RELEASE'

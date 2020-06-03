@@ -66,7 +66,7 @@ import java.util.Properties;
     org.springframework.boot.autoconfigure.jdbc.XADataSourceAutoConfiguration.class,
     org.springframework.boot.autoconfigure.transaction.jta.JtaAutoConfiguration.class
 }, name = {
-    "org.springframework.boot.autoconfigure.transaction.jta.AtomikosJtaConfiguration"
+    "org.springframework.boot.autoconfigure.transaction.jta.AtomikosJtaConfiguration","org.springframework.boot.autoconfigure.jdbc.DataSourceConfiguration.Hikari"
 })
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableTransactionManagement(proxyTargetClass = true)

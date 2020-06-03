@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '基于spring mvc的web模块'
-version = '2.2.30-SNAPSHOT'
+version = '2.2.31-SNAPSHOT'
 def artifactId = 'spin-web'
 
 test {
@@ -32,11 +32,16 @@ uploadArchives {
 }
 
 dependencies {
+    // additional for Intellij
+    testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: junitLauncherVersion
+    testRuntimeOnly group: 'org.junit.vintage', name: 'junit-vintage-engine', version: junitJupiterVersion
+
+    // test runtime
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
 
 //    web
-    api group: 'org.mathcat', name: 'spin-core', version: '2.2.26-SNAPSHOT'
+    api group: 'org.mathcat', name: 'spin-core', version: '2.2.28-SNAPSHOT'
 
     api group: 'org.springframework', name: 'spring-context-support', version: springVersion
     api group: 'org.springframework', name: 'spring-webmvc', version: springVersion
