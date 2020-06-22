@@ -20,7 +20,7 @@ import java.util.Random;
  */
 public abstract class CaptchaUtils {
     public static final String VERIFY_CODES = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
-    private static Random random = new Random();
+    private static final Random random = new Random();
 
     private CaptchaUtils() {
         // do nothing

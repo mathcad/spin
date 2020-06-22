@@ -51,8 +51,8 @@ public class Request<T extends HttpRequestBase> {
     private final T request;
     private final RequestConfig.Builder configBuilder;
 
-    private Map<String, String> formData = new HashMap<>();
-    private Map<String, File> multiPartFormData = new HashMap<>();
+    private final Map<String, String> formData = new HashMap<>();
+    private final Map<String, File> multiPartFormData = new HashMap<>();
     private volatile boolean formBuilt = true;
 
     Request(T request) {

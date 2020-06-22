@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.lang.reflect.Type;
 import java.net.UnknownHostException;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -57,9 +58,15 @@ public abstract class HttpExecutor {
     private static int maxTotal = DEFAULT_MAX_TOTAL;
     private static int maxPerRoute = DEFAULT_MAX_PER_ROUTE;
 
-    private static volatile byte[] certificate;
-    private static volatile String password;
-    private static volatile String algorithm;
+    private static volatile byte[] keyStore;
+    private static volatile String keyStorePass;
+    private static final Map<String, KeyStore.ProtectionParameter> keysPass = new HashMap<>();
+    private static volatile KeyStoreType keyStoreType;
+
+    private static volatile byte[] trustStore;
+    private static volatile String trustStorePass;
+    private static volatile KeyStoreType trustStoreType;
+
     private static volatile boolean needReloadSync = true;
     private static volatile boolean needReloadAsync = true;
 
@@ -126,16 +133,73 @@ public abstract class HttpExecutor {
             return this;
         }
 
-        public HttpInitializer withCertificate(InputStream certsInput, String password, String algorithm) {
+        /**
+         * 配置HTTPS证书KeyStore
+         *
+         * <pre>
+         * keystoreType 可用的值
+         *     JCEKS
+         *     JKS
+         *     DKS
+         *     PKCS11
+         *     PKCS12
+         *     Windows-MY
+         *     BKS
+         * </pre>
+         *
+         * @param keyStoreInput keyStore 输入流
+         * @param keyStorePass  keyStore 密码
+         * @param keyStoreType  keyStore 类型
+         * @param keysPass      keyStore 中私钥的密码
+         * @return HttpInitializer
+         */
+        public HttpInitializer withKeyStore(InputStream keyStoreInput, String keyStorePass, KeyStoreType keyStoreType, Map<String, String> keysPass) {
             checkThread();
             changed = true;
             try {
-                HttpExecutor.certificate = IOUtils.copyToByteArray(certsInput);
+                HttpExecutor.keyStore = IOUtils.copyToByteArray(keyStoreInput);
             } catch (IOException e) {
                 throw new SpinException("读取证书内容失败");
             }
-            HttpExecutor.password = password;
-            HttpExecutor.algorithm = algorithm;
+            HttpExecutor.keyStorePass = keyStorePass;
+            HttpExecutor.keyStoreType = keyStoreType;
+
+            HttpExecutor.keysPass.clear();
+            if (null != keysPass) {
+                keysPass.forEach((k, v) -> HttpExecutor.keysPass.put(k, new KeyStore.PasswordProtection(v.toCharArray())));
+            }
+            return this;
+        }
+
+        /**
+         * 配置HTTPS证书TrustStore
+         *
+         * <pre>
+         * keystoreType 可用的值
+         *     JCEKS
+         *     JKS
+         *     DKS
+         *     PKCS11
+         *     PKCS12
+         *     Windows-MY
+         *     BKS
+         * </pre>
+         *
+         * @param trustStoreInput trustStore 输入流
+         * @param trustStorePass  trustStore 密码
+         * @param trustStoreType  trustStore 类型
+         * @return HttpInitializer
+         */
+        public HttpInitializer withTrustStore(InputStream trustStoreInput, String trustStorePass, KeyStoreType trustStoreType) {
+            checkThread();
+            changed = true;
+            try {
+                HttpExecutor.trustStore = IOUtils.copyToByteArray(trustStoreInput);
+            } catch (IOException e) {
+                throw new SpinException("读取证书内容失败");
+            }
+            HttpExecutor.trustStorePass = trustStorePass;
+            HttpExecutor.trustStoreType = trustStoreType;
             return this;
         }
 
@@ -384,7 +448,9 @@ public abstract class HttpExecutor {
             synchronized (HttpExecutor.class) {
                 if (needReloadSync) {
                     try {
-                        HttpExecutorSyncHolder.initSync(maxTotal, maxPerRoute, defaultHttpRetryHandler, certificate, password, algorithm);
+                        HttpExecutorSyncHolder.initSync(maxTotal, maxPerRoute, defaultHttpRetryHandler,
+                            keyStore, keyStorePass, keyStoreType, keysPass,
+                            trustStore, trustStorePass, trustStoreType);
                         needReloadSync = false;
                     } catch (Exception e) {
                         logger.error("Http客户端初始化失败", e);
@@ -403,7 +469,9 @@ public abstract class HttpExecutor {
             synchronized (HttpExecutor.class) {
                 if (needReloadAsync) {
                     try {
-                        HttpExecutorAsyncHolder.initAsync(maxTotal, maxPerRoute, certificate, password, algorithm);
+                        HttpExecutorAsyncHolder.initAsync(maxTotal, maxPerRoute,
+                            keyStore, keyStorePass, keyStoreType, keysPass,
+                            trustStore, trustStorePass, trustStoreType);
                         needReloadAsync = false;
                     } catch (Exception e) {
                         logger.error("Http异步客户端初始化失败", e);

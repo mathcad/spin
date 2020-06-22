@@ -2,7 +2,6 @@ package org.spin.core.util.http;
 
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
-import org.apache.http.conn.util.PublicSuffixMatcherLoader;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
@@ -11,11 +10,10 @@ import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.nio.conn.NoopIOSessionStrategy;
 import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
 import org.spin.core.throwable.SpinException;
-import org.spin.core.util.StringUtils;
 
 import javax.net.ssl.SSLContext;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.security.KeyStore;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
@@ -35,11 +33,15 @@ class HttpExecutorAsyncHolder {
         return httpAsyncClient;
     }
 
-    static void initAsync(int maxTotal, int maxPerRoute, byte[] certificate, String password, String algorithm) {
-        if (null != certificate && StringUtils.isNotEmpty(algorithm)) {
-            try (InputStream certInput = new ByteArrayInputStream(certificate)) {
-                SSLContext sslContext = HttpExecutorSyncHolder.buildSSLContext(certInput, password, algorithm);
-                SSLIOSessionStrategy sslStrategy = new SSLIOSessionStrategy(sslContext, new DefaultHostnameVerifier(PublicSuffixMatcherLoader.getDefault()));
+    static void initAsync(int maxTotal, int maxPerRoute,
+                          byte[] keyStore, String keyStorePass, KeyStoreType keyStoreType,
+                          Map<String, KeyStore.ProtectionParameter> keysPass,
+                          byte[] trustStore, String trustStorePass, KeyStoreType trustStoreType) {
+        if (null != keyStore && null != keyStoreType) {
+            try {
+                SSLContext sslContext = HttpExecutorSyncHolder.buildSSLContext(keyStore, keyStorePass, keyStoreType, keysPass,
+                    trustStore, trustStorePass, trustStoreType);
+                SSLIOSessionStrategy sslStrategy = new SSLIOSessionStrategy(sslContext, new DefaultHostnameVerifier());
                 final org.apache.http.nio.reactor.ConnectingIOReactor ioreactor = new DefaultConnectingIOReactor(IOReactorConfig.DEFAULT, THREAD_FACTORY);
                 final PoolingNHttpClientConnectionManager poolingmgr =
                     new PoolingNHttpClientConnectionManager(

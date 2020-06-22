@@ -5,6 +5,7 @@ import org.spin.core.throwable.SpinException;
 import org.spin.core.util.StringUtils;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -164,6 +165,21 @@ public final class VersionNumber implements Comparable<VersionNumber>, Serializa
 
     public long toNumber() {
         return (major << 32) | (minor << 16) | build;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof VersionNumber)) return false;
+        VersionNumber that = (VersionNumber) o;
+        return major == that.major &&
+            minor == that.minor &&
+            build == that.build;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(major, minor, build);
     }
 
     @Override

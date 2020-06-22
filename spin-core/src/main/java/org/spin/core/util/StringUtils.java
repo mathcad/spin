@@ -3103,7 +3103,7 @@ public abstract class StringUtils {
         final StringBuilder u = new StringBuilder(tplt);
         Optional.ofNullable(params).ifPresent(p -> Arrays.stream(p).forEach(c -> {
             int b = u.indexOf("{}");
-            if (b > 0)
+            if (b > -1)
                 u.replace(b, b + 2, c.toString());
         }));
         return u.toString();

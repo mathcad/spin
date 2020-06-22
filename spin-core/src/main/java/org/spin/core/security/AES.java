@@ -13,6 +13,9 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
@@ -30,6 +33,7 @@ import java.util.Random;
  */
 public class AES extends ProviderDetector {
     private static final String ALGORITHM = "AES";
+    private static final int BUFFER_SIZE = 2048;
 
     private Mode mode = Mode.ECB;
     private Padding padding = Padding.PKCS5Padding;
@@ -37,8 +41,8 @@ public class AES extends ProviderDetector {
     private SecretKey secretKey;
     private KeyLength keyLength;
 
-    private Cipher enCipher;
-    private Cipher deCipher;
+    private final Cipher enCipher;
+    private final Cipher deCipher;
 
     /**
      * 密钥强度，WEAK为128bit，MEDIAM为192bit，STRONG为256bit
@@ -58,7 +62,7 @@ public class AES extends ProviderDetector {
          * 最高强度(256bit)
          */
         STRONG(256);
-        private int value;
+        private final int value;
 
         KeyLength(int value) {
             this.value = value;
@@ -110,8 +114,8 @@ public class AES extends ProviderDetector {
          */
         GCM("GCM", true);
 
-        private String value;
-        private boolean needIv;
+        private final String value;
+        private final boolean needIv;
 
         Mode(String value, boolean needIv) {
             this.value = value;
@@ -149,7 +153,7 @@ public class AES extends ProviderDetector {
          */
         PKCS7Padding("PKCS7Padding");
 
-        private String value;
+        private final String value;
 
         Padding(String value) {
             this.value = value;
@@ -349,6 +353,23 @@ public class AES extends ProviderDetector {
     }
 
     /**
+     * 流式加密，适用于大文件
+     *
+     * @param input  明文输入流
+     * @param output 密文输出流
+     */
+    public void encrypte(InputStream input, OutputStream output) {
+        byte[] buffer = new byte[BUFFER_SIZE];
+        try {
+            doEncode(input, output, buffer, enCipher);
+        } catch (IOException e) {
+            throw new SpinException(ErrorCode.IO_FAIL, "加密失败, IO异常", e);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
+        }
+    }
+
+    /**
      * 使用指定的Key生成最低强度的密钥进行解密
      *
      * @param data 待解密数据
@@ -383,6 +404,23 @@ public class AES extends ProviderDetector {
         }
     }
 
+    /**
+     * 流式解密，适用于大文件
+     *
+     * @param input  密文输入流
+     * @param output 明文输出流
+     */
+    public void decrypt(InputStream input, OutputStream output) {
+        byte[] buffer = new byte[BUFFER_SIZE];
+        try {
+            doEncode(input, output, buffer, deCipher);
+        } catch (IOException e) {
+            throw new SpinException(ErrorCode.IO_FAIL, "解密失败, IO异常", e);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
+        }
+    }
+
     public Mode getMode() {
         return mode;
     }
@@ -403,5 +441,24 @@ public class AES extends ProviderDetector {
         } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, "AES密码初始化失败", e);
         }
+    }
+
+
+    private void doEncode(InputStream input, OutputStream output, byte[] buffer, Cipher enCipher) throws IOException, IllegalBlockSizeException, BadPaddingException {
+        int bytesRead;
+        boolean finish = false;
+        while ((bytesRead = input.read(buffer)) > 0) {
+            if (bytesRead == BUFFER_SIZE) {
+                output.write(enCipher.update(buffer));
+            } else {
+                output.write(enCipher.doFinal(buffer, 0, bytesRead));
+                finish = true;
+            }
+        }
+
+        if (!finish) {
+            output.write(enCipher.doFinal());
+        }
+        output.flush();
     }
 }

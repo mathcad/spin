@@ -151,7 +151,7 @@ public class FileWatcher implements Closeable {
             }
 
             for (WatchEvent<?> event : key.pollEvents()) {
-                Kind kind = event.kind();
+                Kind<?> kind = event.kind();
 
                 // 事件可能丢失或遗弃
                 if (kind == StandardWatchEventKinds.OVERFLOW) {
@@ -190,15 +190,15 @@ public class FileWatcher implements Closeable {
     }
 
     public static class FileAction {
-        private final Kind kind;
+        private final Kind<?> kind;
         private final File file;
 
-        public FileAction(Kind kind, File file) {
+        public FileAction(Kind<?> kind, File file) {
             this.kind = kind;
             this.file = file;
         }
 
-        public Kind getKind() {
+        public Kind<?> getKind() {
             return kind;
         }
 

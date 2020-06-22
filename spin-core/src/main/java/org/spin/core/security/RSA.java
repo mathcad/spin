@@ -22,11 +22,16 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Set;
 
 
 /**
@@ -38,7 +43,7 @@ import java.security.spec.X509EncodedKeySpec;
  */
 public class RSA extends ProviderDetector {
     private static final int DEFAULT_KEY_SIZE = 1024;
-    private static final String SIGN_ALGORITHMS = "SHA1WithRSA";
+    private static final String SIGN_ALGORITHMS = "SHA256withRSA";
     private static final String RSA_ALGORITHMS = "RSA";
     private static final String KEY_INVALIE = "密钥不合法";
     private static final String NO_SUCH_ALGORITHM = "加密算法不存在";
@@ -189,6 +194,7 @@ public class RSA extends ProviderDetector {
                 resLen = cipher.doFinal(work, 0, len, work);
                 encryptedOutput.write(work, 0, resLen);
             }
+            encryptedOutput.flush();
         } catch (NoSuchAlgorithmException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         } catch (NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
@@ -211,7 +217,7 @@ public class RSA extends ProviderDetector {
      */
     public static String encrypt(String publicKey, String content) {
         PublicKey key = getRSAPublicKey(publicKey);
-        return Base64.encode(encrypt(key, getBytes(content)));
+        return Base64.encode(encrypt(key, StringUtils.getBytesUtf8(content)));
     }
 
     /**
@@ -222,7 +228,7 @@ public class RSA extends ProviderDetector {
      * @return 密文字符串
      */
     public static String encrypt(PublicKey publicKey, String content) {
-        return Base64.encode(encrypt(publicKey, getBytes(content)));
+        return Base64.encode(encrypt(publicKey, StringUtils.getBytesUtf8(content)));
     }
 
     /**
@@ -275,6 +281,7 @@ public class RSA extends ProviderDetector {
                 resLen = cipher.doFinal(work, 0, len, work);
                 rawOutput.write(work, 0, resLen);
             }
+            rawOutput.flush();
         } catch (NoSuchAlgorithmException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         } catch (BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException e) {
@@ -320,11 +327,22 @@ public class RSA extends ProviderDetector {
      */
     public static String sign(String content, String privateKey) {
         PrivateKey priKey = getRSAPrivateKey(privateKey);
+        return sign(content, priKey);
+    }
+
+    /**
+     * RSA签名
+     *
+     * @param content    待签名数据
+     * @param privateKey 私钥
+     * @return 签名
+     */
+    public static String sign(String content, PrivateKey privateKey) {
         Signature signature;
         try {
             signature = Signature.getInstance(SIGN_ALGORITHMS);
-            signature.initSign(priKey);
-            signature.update(getBytes(content));
+            signature.initSign(privateKey);
+            signature.update(StringUtils.getBytesUtf8(content));
             byte[] signed = signature.sign();
             return Base64.encode(signed);
         } catch (NoSuchAlgorithmException e) {
@@ -334,7 +352,6 @@ public class RSA extends ProviderDetector {
         } catch (InvalidKeyException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
-
     }
 
     /**
@@ -347,11 +364,35 @@ public class RSA extends ProviderDetector {
      */
     public static boolean verify(String content, String sign, String publicKey) {
         PublicKey pubKey = getRSAPublicKey(publicKey);
+        return verify(content, sign, pubKey);
+    }
+
+    /**
+     * RSA验签名检查
+     *
+     * @param content     待签名数据
+     * @param sign        签名
+     * @param certificate 公钥字符串
+     * @return 签名是否有效
+     */
+    public static boolean verify(String content, String sign, Certificate certificate) {
+        return verify(content, sign, getPublicKeyFromCert(certificate));
+    }
+
+    /**
+     * RSA验签名检查
+     *
+     * @param content   待签名数据
+     * @param sign      签名
+     * @param publicKey 公钥字符串
+     * @return 签名是否有效
+     */
+    public static boolean verify(String content, String sign, PublicKey publicKey) {
         Signature signature;
         try {
             signature = Signature.getInstance(SIGN_ALGORITHMS);
-            signature.initVerify(pubKey);
-            signature.update(getBytes(content));
+            signature.initVerify(publicKey);
+            signature.update(StringUtils.getBytesUtf8(content));
             return signature.verify(Base64.decode(sign));
         } catch (NoSuchAlgorithmException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, "签名算法不存在: " + SIGN_ALGORITHMS, e);
@@ -360,10 +401,6 @@ public class RSA extends ProviderDetector {
         } catch (InvalidKeyException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
-    }
-
-    private static byte[] getBytes(String str) {
-        return str.getBytes(StandardCharsets.UTF_8);
     }
 
     private static KeyFactory getRSAKeyFactory() {
@@ -375,4 +412,35 @@ public class RSA extends ProviderDetector {
         }
         return keyFactory;
     }
+
+    private static PublicKey getPublicKeyFromCert(Certificate cert) {
+        // If the certificate is of type X509Certificate,
+        // we should check whether it has a Key Usage
+        // extension marked as critical.
+        //if (cert instanceof java.security.cert.X509Certificate) {
+        if (cert instanceof X509Certificate) {
+            // Check whether the cert has a key usage extension
+            // marked as a critical extension.
+            // The OID for KeyUsage extension is 2.5.29.15.
+            X509Certificate c = (X509Certificate) cert;
+            try {
+                c.checkValidity();
+            } catch (CertificateExpiredException e) {
+                throw new SpinException(ErrorCode.ENCRYPT_FAIL, "数字证书已经过期");
+            } catch (CertificateNotYetValidException e) {
+                throw new SpinException(ErrorCode.ENCRYPT_FAIL, "数字证书尚未生效");
+            }
+            Set<String> critSet = c.getCriticalExtensionOIDs();
+
+            if (critSet != null && !critSet.isEmpty()
+                && critSet.contains("2.5.29.15")) {
+                boolean[] keyUsageInfo = c.getKeyUsage();
+                // keyUsageInfo[0] is for digitalSignature.
+                if ((keyUsageInfo != null) && (!keyUsageInfo[0]))
+                    throw new SpinException(ErrorCode.ENCRYPT_FAIL, "证书不正确");
+            }
+        }
+        return cert.getPublicKey();
+    }
+
 }

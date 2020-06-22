@@ -123,7 +123,7 @@ public interface BooleanExt {
     }
 
     class YesMoreThen<E> implements OtherwiseMore<E> {
-        private boolean value;
+        private final boolean value;
         private E result;
 
         public YesMoreThen(E result, boolean value) {
@@ -146,7 +146,7 @@ public interface BooleanExt {
     }
 
     class YesThen implements Otherwise {
-        private boolean value;
+        private final boolean value;
 
         public YesThen(boolean value) {
             this.value = value;
@@ -161,7 +161,7 @@ public interface BooleanExt {
     }
 
     class NoMoreThen<E> implements OtherwiseMore<E> {
-        private boolean value;
+        private final boolean value;
         private E result;
 
         public NoMoreThen(E result, boolean value) {
@@ -184,7 +184,7 @@ public interface BooleanExt {
     }
 
     class NoThen implements Otherwise {
-        private boolean value;
+        private final boolean value;
 
         public NoThen(boolean value) {
             this.value = value;

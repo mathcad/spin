@@ -110,7 +110,7 @@ public abstract class AsyncUtils {
      * @param callable 任务
      * @return Future结果
      */
-    public static Future<?> runAsync(ExceptionalHandler callable) {
+    public static <E extends Exception> Future<?> runAsync(ExceptionalHandler<E> callable) {
         return submit(COMMON_POOL_NAME, callable);
     }
 
@@ -121,7 +121,7 @@ public abstract class AsyncUtils {
      * @param exceptionHandler 异常处理逻辑
      * @return Future结果
      */
-    public static Future<?> runAsync(ExceptionalHandler callable, FinalConsumer<Exception> exceptionHandler) {
+    public static <E extends Exception> Future<?> runAsync(ExceptionalHandler<E> callable, FinalConsumer<Exception> exceptionHandler) {
         return submit(COMMON_POOL_NAME, callable, exceptionHandler);
     }
 
@@ -159,7 +159,7 @@ public abstract class AsyncUtils {
      * @param callable 任务
      * @return Future结果
      */
-    public static Future<?> submit(String name, ExceptionalHandler callable) {
+    public static <E extends Exception> Future<?> submit(String name, ExceptionalHandler<E> callable) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
         checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
@@ -184,7 +184,7 @@ public abstract class AsyncUtils {
      * @param exceptionHandler 异常处理逻辑
      * @return Future结果
      */
-    public static Future<?> submit(String name, ExceptionalHandler callable, FinalConsumer<Exception> exceptionHandler) {
+    public static <E extends Exception> Future<?> submit(String name, ExceptionalHandler<E> callable, FinalConsumer<Exception> exceptionHandler) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
         checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
@@ -231,7 +231,7 @@ public abstract class AsyncUtils {
      * @param callable         任务
      * @param exceptionHandler 异常处理逻辑
      */
-    public static void execute(String name, ExceptionalHandler callable, FinalConsumer<Exception> exceptionHandler) {
+    public static <E extends Exception> void execute(String name, ExceptionalHandler<E> callable, FinalConsumer<Exception> exceptionHandler) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
         checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
@@ -432,82 +432,82 @@ public abstract class AsyncUtils {
         /**
          * 线程池名称
          */
-        private String name;
+        private final String name;
 
         /**
          * 核心线程数
          */
-        private int coreSize;
+        private final int coreSize;
 
         /**
          * 最大线程数
          */
-        private int maxSize;
+        private final int maxSize;
 
         /**
          * 阻塞队列长度
          */
-        private int queueCapacity;
+        private final int queueCapacity;
 
         /**
          * 合计任务数
          */
-        private AtomicLong taskCnt = new AtomicLong(0L);
+        private final AtomicLong taskCnt = new AtomicLong(0L);
 
         /**
          * 正在运行的任务数
          */
-        private AtomicLong runningTaskCnt = new AtomicLong(0L);
+        private final AtomicLong runningTaskCnt = new AtomicLong(0L);
 
         /**
          * 阻塞的任务数
          */
-        private AtomicLong blockedTaskCnt = new AtomicLong(0L);
+        private final AtomicLong blockedTaskCnt = new AtomicLong(0L);
 
         /**
          * 合计已完成任务数
          */
-        private AtomicLong completedTaskCnt = new AtomicLong(0L);
+        private final AtomicLong completedTaskCnt = new AtomicLong(0L);
 
         /**
          * 合计正确完成的任务数
          */
-        private AtomicLong correctCompletedCnt = new AtomicLong(0L);
+        private final AtomicLong correctCompletedCnt = new AtomicLong(0L);
 
         /**
          * 线程池所有任务累计执行时间
          */
-        private LongAccumulator accrueExecTime = new LongAccumulator(Long::sum, 0L);
+        private final LongAccumulator accrueExecTime = new LongAccumulator(Long::sum, 0L);
 
         /**
          * 线程池所有任务累计等待时间
          */
-        private LongAccumulator accrueWaitTime = new LongAccumulator(Long::sum, 0L);
+        private final LongAccumulator accrueWaitTime = new LongAccumulator(Long::sum, 0L);
 
         /**
          * 线程池单个任务最大执行时间
          */
-        private AtomicLong maxExecTime = new AtomicLong(0L);
+        private final AtomicLong maxExecTime = new AtomicLong(0L);
 
         /**
          * 线程池单个任务最小执行时间
          */
-        private AtomicLong minExecTime = new AtomicLong(Long.MAX_VALUE);
+        private final AtomicLong minExecTime = new AtomicLong(Long.MAX_VALUE);
 
         /**
          * 线程池单个任务最大等待时间
          */
-        private AtomicLong maxWaitTime = new AtomicLong(0L);
+        private final AtomicLong maxWaitTime = new AtomicLong(0L);
 
         /**
          * 线程池单个任务最小等待时间
          */
-        private AtomicLong minWaitTime = new AtomicLong(Long.MAX_VALUE);
+        private final AtomicLong minWaitTime = new AtomicLong(Long.MAX_VALUE);
 
         /**
          * 未完成任务列表
          */
-        private Map<Long, TaskInfo> tasks = new ConcurrentHashMap<>();
+        private final Map<Long, TaskInfo> tasks = new ConcurrentHashMap<>();
 
         private ThreadPoolInfo(String name, int coreSize, int maxSize, int queueCapacity) {
             this.name = name;

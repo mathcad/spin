@@ -2,30 +2,39 @@ package org.spin.core.util.http;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
+import org.spin.core.function.serializable.Function;
 import org.spin.core.util.AsyncUtils;
 import org.spin.core.util.MapUtils;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.KeyStoreBuilderParameters;
 import javax.net.ssl.SSLContext;
-import java.io.*;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509ExtendedKeyManager;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -35,10 +44,11 @@ import java.util.regex.Pattern;
  *
  * @author xuweinan
  * @version 1.0
+ *
  */
 class HttpUtilsTest {
 
-    @Test
+//    @Test
     public void test1() {
         String url = "http://192.168.12.54:9200/mall_goods/_analyze";
         Map<String, Object> param = MapUtils.ofMap("field", "ware_name", "text", "华为手机");
@@ -49,8 +59,8 @@ class HttpUtilsTest {
         System.out.println(s);
     }
 
-    @Test
-    public void testM() throws InterruptedException {
+//    @Test
+    public static void testM() throws InterruptedException {
         String url = "http://www.baidu.com";
         System.out.println(Http.GET.withUrl(url).execute());
 
@@ -102,7 +112,7 @@ class HttpUtilsTest {
         a.toString();
     }
 
-    @Test
+//    @Test
     public void testPost() {
         String url = "https://bizapi.jd.com/oauth2/access_token";
 
@@ -120,11 +130,11 @@ class HttpUtilsTest {
     /**
      *
      */
-    @Test
+//    @Test
     public void testHttps() throws FileNotFoundException, ExecutionException, InterruptedException {
         try (InputStream certInput = new FileInputStream(new File("C:\\Users\\Mathcat\\Desktop\\apiclient_cert.p12"))) {
 //            Http.initSync(certInput, "1530112491", "PKCS12");
-            Http.configure().withCertificate(certInput, "1530112491", "PKCS12").finishConfigure();
+            Http.configure().withKeyStore(certInput, "1530112491", KeyStoreType.PKCS12, null).finishConfigure();
         } catch (IOException e) {
         }
         String execute = Http.POST.withUrl("https://api.mch.weixin.qq.com/secapi/pay/refund").timeout(60000).connTimeout(2000).withXmlBody("<xml><refundFee>10</refundFee><nonce_str>1561452473</nonce_str><out_trade_no>20190621135913442141</out_trade_no><totalFee>10</totalFee><outTradeNo>20190621135913442141</outTradeNo><appid>wxfa3f617e8c84dc09</appid><total_fee>10</total_fee><refund_fee>10</refund_fee><sign>2F118B65923E01D425C2E26E3601A444</sign><mch_id>1530112491</mch_id></xml>").execute();
@@ -139,7 +149,7 @@ class HttpUtilsTest {
 //        System.out.println(execute);
     }
 
-    @Test
+//    @Test
     public void testRefund() throws IOException {
         String url = "https://api.mch.weixin.qq.com/secapi/pay/refund";
         String body = "<xml><refundFee>10</refundFee><nonce_str>1561452473</nonce_str><out_trade_no>20190621135913442141</out_trade_no><totalFee>10</totalFee><outTradeNo>20190621135913442141</outTradeNo><appid>wxfa3f617e8c84dc09</appid><total_fee>10</total_fee><refund_fee>10</refund_fee><sign>2F118B65923E01D425C2E26E3601A444</sign><mch_id>1530112491</mch_id></xml>";
@@ -272,4 +282,79 @@ class HttpUtilsTest {
 //            .reduce("", (a, b) -> a + b)));
 //        return pageSize;
 //    }
+
+    public static class KeyStoreBuilder extends KeyStore.Builder {
+        private final Supplier<KeyStore> keyStoreSupplier;
+        private final Function<String, KeyStore.ProtectionParameter> passwordFunction;
+
+        public KeyStoreBuilder(Supplier<KeyStore> keyStoreSupplier, Function<String, KeyStore.ProtectionParameter> passwordFunction) {
+            Objects.requireNonNull(keyStoreSupplier);
+            Objects.requireNonNull(passwordFunction);
+            this.keyStoreSupplier = keyStoreSupplier;
+            this.passwordFunction = passwordFunction;
+        }
+
+        @Override
+        public KeyStore getKeyStore() throws KeyStoreException {
+            return keyStoreSupplier.get();
+        }
+
+        @Override
+        public KeyStore.ProtectionParameter getProtectionParameter(String alias) throws KeyStoreException {
+            Objects.requireNonNull(alias);
+            return passwordFunction.apply(alias);
+        }
+    }
+
+//    @Test
+    void testJks() throws Exception {
+        String key = "c:/Users/Mathcat/test.keystore";
+        KeyStore keystore = KeyStore.getInstance("JKS");
+        //keystore的类型，默认是jks
+        keystore.load(new FileInputStream(key), "123456".toCharArray());
+        //创建jkd密钥访问库    123456是keystore密码。
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance("NewSunX509");
+        //asdfgh是key密码。
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+
+
+        Map<String, KeyStore.ProtectionParameter> passwordsMap = new HashMap<>();
+        passwordsMap.put("test1", new KeyStore.PasswordProtection("123456".toCharArray()));
+        passwordsMap.put("testp12", new KeyStore.PasswordProtection("654321".toCharArray()));
+        KeyStore.Builder builder = new KeyStoreBuilder(() -> keystore, alias -> {
+            // alias is lowercased keystore alias with prefixed numbers :-/
+            // parse the alias
+            int firstDot = alias.indexOf('.');
+            int secondDot = alias.indexOf('.', firstDot + 1);
+            if ((firstDot == -1) || (secondDot == firstDot)) {
+                // invalid alias
+                return null;
+            }
+            String keyStoreAlias = alias.substring(secondDot + 1);
+            return passwordsMap.get(keyStoreAlias);
+        });
+
+        kmf.init(new KeyStoreBuilderParameters(builder));
+        X509ExtendedKeyManager keyManager = (X509ExtendedKeyManager) kmf.getKeyManagers()[0];
+
+        String rsaAlias = keyManager.chooseServerAlias("RSA", null, null);
+//        kmf.init(keystore, "123456".toCharArray());
+        tmf.init(keystore);
+        //创建管理jks密钥库的x509密钥管理器，用来管理密钥，需要key的密码
+        SSLContext sslc = SSLContext.getInstance("SSLv3");
+    }
+
+//    @Test
+    void testBiSsl() {
+        try (InputStream is = new FileInputStream(new File("c:/Users/Mathcat/test.keystore"))) {
+            Http.configure().withKeyStore(is, "123456", KeyStoreType.JKS, MapUtils.ofMap("test1", "123456", "testp12", "654321")).finishConfigure();
+            String url = "https://api.mch.weixin.qq.com/secapi/pay/refund";
+            String body = "<xml><refundFee>10</refundFee><nonce_str>1561452473</nonce_str><out_trade_no>20190621135913442141</out_trade_no><totalFee>10</totalFee><outTradeNo>20190621135913442141</outTradeNo><appid>wxfa3f617e8c84dc09</appid><total_fee>10</total_fee><refund_fee>10</refund_fee><sign>2F118B65923E01D425C2E26E3601A444</sign><mch_id>1530112491</mch_id></xml>";
+            String execute = Http.POST.withUrl(url).withXmlBody(body).execute();
+            System.out.println(execute);
+        } catch (IOException ignore) {
+        }
+    }
+
+
 }

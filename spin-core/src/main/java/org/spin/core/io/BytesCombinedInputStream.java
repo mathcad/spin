@@ -20,9 +20,9 @@ public class BytesCombinedInputStream extends InputStream implements AutoCloseab
 
     private int pos = 0;
 
-    private int count;
+    private final int count;
 
-    private InputStream source;
+    private final InputStream source;
 
     public BytesCombinedInputStream(byte[] bytes, InputStream source) {
         this.bytesBuf = Assert.notNull(bytes);
@@ -113,7 +113,7 @@ public class BytesCombinedInputStream extends InputStream implements AutoCloseab
      * @return 实际读取的长度，为目标数组与流中的复合数组长度的最小值
      */
     public int readCombinedBytes(byte[] b) {
-        int len = b.length < bytesBuf.length ? b.length : bytesBuf.length;
+        int len = Math.min(b.length, bytesBuf.length);
         System.arraycopy(bytesBuf, 0, b, 0, len);
         return len;
     }
