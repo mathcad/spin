@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '微信模块'
-version = '2.2.26-SNAPSHOT'
+version = '2.2.29-SNAPSHOT'
 def artifactId = 'spin-wx'
 
 test {
@@ -39,6 +39,7 @@ dependencies {
     // test runtime
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
+    testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
 
     api group: 'org.mathcat', name: 'spin-core', version: "$project.version"
 }

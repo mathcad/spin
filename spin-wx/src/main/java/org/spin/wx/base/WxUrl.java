@@ -45,6 +45,11 @@ public enum WxUrl {
     POST_TMPL_MSG("https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={}"),
 
     /**
+     * 发送订阅消息
+     */
+    SEND_SUBSCRIBE_MESSAGE("https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token={}"),
+
+    /**
      * 获取微信服务器地址
      */
     SERVER_ADDR("https://api.weixin.qq.com/cgi-bin/getcallbackip?access_token={}");

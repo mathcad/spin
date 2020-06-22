@@ -35,7 +35,7 @@ public class BoundingBox implements Serializable {
      * @param p1 坐标1
      * @param p2 坐标2
      */
-    public BoundingBox(Cordinate p1, Cordinate p2) {
+    public BoundingBox(Coordinate p1, Coordinate p2) {
         this(p1.getLatitude(), p2.getLatitude(), p1.getLongitude(), p2.getLongitude());
     }
 
@@ -64,7 +64,7 @@ public class BoundingBox implements Serializable {
      * @param point 坐标点
      * @return 是否在矩形区域内
      */
-    public boolean contains(Cordinate point) {
+    public boolean contains(Coordinate point) {
         double latitude = point.getLatitude();
         double longitude = point.getLongitude();
         return (latitude >= minLat) && (longitude >= minLon) //
@@ -86,10 +86,10 @@ public class BoundingBox implements Serializable {
      *
      * @return 矩形中心点区域
      */
-    public Cordinate getCenterPoint() {
+    public Coordinate getCenterPoint() {
         double centerLatitude = (minLat + maxLat) / 2;
         double centerLongitude = (minLon + maxLon) / 2;
-        return new Cordinate(centerLatitude, centerLongitude);
+        return new Coordinate(centerLatitude, centerLongitude);
     }
 
     /**
@@ -145,8 +145,8 @@ public class BoundingBox implements Serializable {
      *
      * @return 左上角坐标
      */
-    public Cordinate getUpperLeft() {
-        return new Cordinate(maxLat, minLon);
+    public Coordinate getUpperLeft() {
+        return new Coordinate(maxLat, minLon);
     }
 
     /**
@@ -154,8 +154,8 @@ public class BoundingBox implements Serializable {
      *
      * @return 右下角坐标
      */
-    public Cordinate getLowerRight() {
-        return new Cordinate(minLat, maxLon);
+    public Coordinate getLowerRight() {
+        return new Coordinate(minLat, maxLon);
     }
 
     /**

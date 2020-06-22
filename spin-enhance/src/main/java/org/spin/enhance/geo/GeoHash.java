@@ -38,7 +38,7 @@ public final class GeoHash implements Comparable<GeoHash>, Serializable {
     /**
      * 中点
      */
-    private Cordinate point;
+    private Coordinate point;
     private BoundingBox boundingBox;
     /**
      * 有效bit位
@@ -166,7 +166,7 @@ public final class GeoHash implements Comparable<GeoHash>, Serializable {
      * @param desiredPrecision 限制长度
      */
     private GeoHash(double latitude, double longitude, int desiredPrecision) {
-        point = new Cordinate(latitude, longitude);
+        point = new Coordinate(CoordinateSystem.GPS, latitude, longitude);
         desiredPrecision = Math.min(desiredPrecision, MAX_BIT_PRECISION);
 
         boolean isEvenBit = true;
@@ -345,17 +345,17 @@ public final class GeoHash implements Comparable<GeoHash>, Serializable {
      * @param point 位置点
      * @return 是否在范围内
      */
-    public boolean contains(Cordinate point) {
+    public boolean contains(Coordinate point) {
         return boundingBox.contains(point);
     }
 
     /**
-     * returns the {@link Cordinate} that was originally used to set up this.<br>
+     * returns the {@link Coordinate} that was originally used to set up this.<br>
      * If it was built from a base32-{@link String}, this is the center point of the bounding box.
      *
-     * @return {@link Cordinate} that was originally used to set up this.
+     * @return {@link Coordinate} that was originally used to set up this.
      */
-    public Cordinate getPoint() {
+    public Coordinate getPoint() {
         return point;
     }
 
@@ -364,7 +364,7 @@ public final class GeoHash implements Comparable<GeoHash>, Serializable {
      *
      * @return 盒子中心点坐标
      */
-    public Cordinate getBoundingBoxCenterPoint() {
+    public Coordinate getBoundingBoxCenterPoint() {
         return boundingBox.getCenterPoint();
     }
 
@@ -377,7 +377,7 @@ public final class GeoHash implements Comparable<GeoHash>, Serializable {
         return boundingBox;
     }
 
-    public boolean enclosesCircleAroundPoint(Cordinate point, double radius) {
+    public boolean enclosesCircleAroundPoint(Coordinate point, double radius) {
         return false;
     }
 

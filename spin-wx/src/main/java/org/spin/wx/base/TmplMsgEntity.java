@@ -10,16 +10,24 @@ import java.util.Map;
  */
 public class TmplMsgEntity {
 
-    // 发送目标OPENID
+    /**
+     * 发送目标OPENID
+     */
     private String touser;
 
-    // 模板ID
-    private String template_id;
+    /**
+     * 模板ID
+     */
+    private String templateId;
 
-    // url
+    /**
+     * url
+     */
     private String url;
 
-    // 模板数据
+    /**
+     * 模板数据
+     */
     private Map<String, ?> data;
 
     public String getTouser() {
@@ -30,12 +38,12 @@ public class TmplMsgEntity {
         this.touser = touser;
     }
 
-    public String getTemplate_id() {
-        return template_id;
+    public String getTemplateId() {
+        return templateId;
     }
 
-    public void setTemplate_id(String template_id) {
-        this.template_id = template_id;
+    public void setTemplateId(String templateId) {
+        this.templateId = templateId;
     }
 
     public String getUrl() {

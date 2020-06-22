@@ -10,7 +10,9 @@ import org.spin.core.util.HexUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.RandomStringUtils;
+import org.spin.core.util.StringUtils;
 import org.spin.core.util.http.Http;
+import org.spin.wx.base.SubscribeMsgEntity;
 import org.spin.wx.base.TmplMsgEntity;
 import org.spin.wx.base.WxUrl;
 import org.spin.wx.base.WxUserInfo;
@@ -119,13 +121,32 @@ public class WxHelper {
      */
     public static String postTmplMsg(TmplMsgEntity msg, String... configName) {
         AccessToken accessToken = WxTokenManager.getToken(extractConfigName(configName));
-        String res = Http.POST.withUrl(WxUrl.POST_TMPL_MSG.getUrl(accessToken.getToken())).withJsonBody(msg).execute();
+        String res = Http.POST.withUrl(WxUrl.POST_TMPL_MSG.getUrl(accessToken.getToken())).withJsonBody(JsonUtils.toJsonWithUnderscore(msg)).execute();
         Map<String, String> resMap = JsonUtils.fromJson(res, type);
         if (null != resMap && "0".equals(resMap.get("errcode"))) {
             return resMap.get("msgid");
         } else {
             logger.error("发送模板消息失败: {}", res);
             throw new SimplifiedException("发送模板消息失败");
+        }
+    }
+
+    /**
+     * 发送订阅消息
+     *
+     * @param msg        消息实体
+     * @param configName 配置名称
+     * @return 发送结果
+     */
+    public static String sendSubscribeMsg(SubscribeMsgEntity msg, String... configName) {
+        AccessToken accessToken = WxTokenManager.getToken(extractConfigName(configName));
+        String res = Http.POST.withUrl(WxUrl.SEND_SUBSCRIBE_MESSAGE.getUrl(accessToken.getToken())).withJsonBody(JsonUtils.toJsonWithUnderscore(msg)).execute();
+        Map<String, String> resMap = JsonUtils.fromJson(res, type);
+        if (null != resMap && "0".equals(resMap.get("errcode"))) {
+            return resMap.get("msgid");
+        } else {
+            logger.error("发送订阅消息失败: {}", res);
+            throw new SimplifiedException(StringUtils.render("发送订阅消息失败: To=${touser}, Tmpl=${templateId}", msg));
         }
     }
 

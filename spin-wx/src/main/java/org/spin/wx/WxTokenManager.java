@@ -23,9 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WxTokenManager {
     private static final Logger logger = LoggerFactory.getLogger(WxTokenManager.class);
 
-    private static Map<String, AccessToken> tokenInstances = new ConcurrentHashMap<>();
-    private static Map<String, AccessToken> oauthTokenInstances = new ConcurrentHashMap<>();
-    private static Map<String, ApiTicket> ticketInstances = new ConcurrentHashMap<>();
+    private static final Map<String, AccessToken> tokenInstances = new ConcurrentHashMap<>();
+    private static final Map<String, AccessToken> oauthTokenInstances = new ConcurrentHashMap<>();
+    private static final Map<String, ApiTicket> ticketInstances = new ConcurrentHashMap<>();
 
     private static final Object tokenLock = new Object();
     private static final Object tokenLockWithCode = new Object();

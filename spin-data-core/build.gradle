@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '数据访问模块核心依赖,脱离于具体的DAO层实现，只定义必须的接口与通用工具'
-version = '2.2.28-SNAPSHOT'
+version = '2.2.29-SNAPSHOT'
 def artifactId = 'spin-data-core'
 
 test {

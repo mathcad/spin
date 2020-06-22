@@ -3,7 +3,7 @@ plugins {
 }
 
 description 'spin-data的starter'
-version '2.2.28-SNAPSHOT'
+version '2.2.29-SNAPSHOT'
 def artifactId = 'spin-data-spring-boot-starter'
 
 test {
@@ -46,10 +46,10 @@ dependencies {
     api group: 'org.glassfish', name: 'javax.annotation', version: '10.0-b28'
 
     api group: 'org.mathcat', name: 'spin-data', version: "$project.version"
-    compileOnly group: 'org.mathcat', name: 'spin-web', version: "2.2.31-SNAPSHOT"
+    compileOnly group: 'org.mathcat', name: 'spin-web', version: "2.2.32-SNAPSHOT"
     compileOnly group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compileOnly group: 'com.atomikos', name: 'transactions-jdbc', version: atomikosVersion
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
-    compileOnly group: 'com.alibaba', name: 'druid', version: '1.1.21'
-    compileOnly group: 'com.zaxxer', name: 'HikariCP', version: '3.4.2'
+    compileOnly group: 'com.alibaba', name: 'druid', version: '1.1.22'
+    compileOnly group: 'com.zaxxer', name: 'HikariCP', version: '3.4.5'
 }
