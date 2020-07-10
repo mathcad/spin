@@ -24,6 +24,7 @@ import org.spin.core.throwable.SpinException;
 import org.spin.core.util.IOUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.core.util.Util;
 
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
@@ -46,7 +47,7 @@ import java.util.concurrent.Future;
  * @author xuweinan
  * @version V1.2
  */
-public abstract class HttpExecutor {
+public final class HttpExecutor extends Util {
     private static final Logger logger = LoggerFactory.getLogger(HttpExecutor.class);
     private static final HttpInitializer INITIALIZER = new HttpInitializer();
     private static final int DEFAULT_MAX_TOTAL = 200;

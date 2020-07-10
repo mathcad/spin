@@ -8,6 +8,7 @@ import org.spin.cloud.vo.LogInfoVo;
 import org.spin.cloud.vo.SessionEmpInfo;
 import org.spin.core.Assert;
 import org.spin.core.util.JsonUtils;
+import org.spin.core.util.Util;
 import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -27,7 +28,7 @@ import java.time.LocalDateTime;
  */
 @UtilClass
 @SuppressWarnings("unchecked")
-public class SysLogPublisher {
+public final class SysLogPublisher extends Util {
     public static final String LOG_DEST = "platform.log";
     private static final Logger logger = LoggerFactory.getLogger(SysLogPublisher.class);
 
@@ -45,15 +46,21 @@ public class SysLogPublisher {
 
     private static KafkaTemplate<String, String> kafkaTemplate;
 
+    static {
+        Util.registerLatch(SysLogPublisher.class);
+    }
+
     private static void init(ApplicationContext applicationContext) {
         try {
             SysLogPublisher.kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
         } catch (Exception ignore) {
             logger.warn("系统上下文中没有启用Kafka, 日志功能将被禁用");
         }
+        Util.ready(SysLogPublisher.class);
     }
 
     public static void publish(LogInfoVo infoVo) {
+        Util.awaitUntilReady(SysLogPublisher.class);
         if (null == kafkaTemplate) {
             throw new UnsupportedOperationException("由于未启用Kafka, 平台日志发送功能无法使用");
         }

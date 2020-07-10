@@ -9,13 +9,12 @@ import org.spin.core.io.Endian;
  *
  * @author xuweinan
  */
-public abstract class ByteUtils {
+public final class ByteUtils extends Util {
 
     private static final ByteConvertor BIG_CONVERTOR = new ByteConvertor(Endian.BIG);
     private static final ByteConvertor LITTLE_CONVERTOR = new ByteConvertor(Endian.LITTLE);
 
     private ByteUtils() {
-        // do nothing
     }
 
     /**

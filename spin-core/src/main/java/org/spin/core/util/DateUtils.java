@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  *
  * @author xuweinan
  */
-public abstract class DateUtils {
+public final class DateUtils extends Util {
     // 2017
     private static final String YEAR_PATTERN = "(\\d{4})";
     // 17

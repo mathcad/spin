@@ -19,7 +19,7 @@ import java.io.IOException;
  * @author xuweinan
  * @version 1.0
  */
-public abstract class RequestUtils {
+public final class RequestUtils {
     private static final Logger logger = LoggerFactory.getLogger(RequestUtils.class);
 
     private RequestUtils() {

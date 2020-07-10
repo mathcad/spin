@@ -24,7 +24,7 @@ import java.util.stream.Stream;
  * @author xuweinan
  * @version V1.0
  */
-public abstract class PackageUtils {
+public final class PackageUtils extends Util {
     private static final Logger logger = LoggerFactory.getLogger(PackageUtils.class);
 
     private PackageUtils() {

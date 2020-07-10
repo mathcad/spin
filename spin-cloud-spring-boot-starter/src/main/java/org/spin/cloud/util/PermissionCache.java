@@ -5,6 +5,7 @@ import org.spin.cloud.vo.CurrentUser;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.core.util.Util;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.Collections;
@@ -22,7 +23,7 @@ import java.util.Set;
  * @version 1.0
  */
 @UtilClass
-public abstract class PermissionCache {
+public final class PermissionCache extends Util {
     public static final TypeToken<Map<String, String>> STRING_MAP_TYPE_TOKEN = new TypeToken<Map<String, String>>() {
     };
     private static final String FIELD_PERMISSION_CACHE_KEY = "ALL_FIELD_PERMISSION";
@@ -31,8 +32,12 @@ public abstract class PermissionCache {
 
     public static void init(StringRedisTemplate redisTemplate) {
         PermissionCache.redisTemplate = redisTemplate;
+        Util.ready(PermissionCache.class);
     }
 
+    static {
+        Util.registerLatch(PermissionCache.class);
+    }
 
     /**
      * 获取指定编码的字段权限定义
@@ -45,6 +50,7 @@ public abstract class PermissionCache {
             return Collections.emptyMap();
         }
 
+        Util.awaitUntilReady(PermissionCache.class);
         return Optional.ofNullable(JsonUtils.fromJson(StringUtils.trimToNull(redisTemplate.<String, String>opsForHash()
             .get(FIELD_PERMISSION_CACHE_KEY, fieldPermCode)), STRING_MAP_TYPE_TOKEN))
             .orElse(Collections.emptyMap());
@@ -62,6 +68,7 @@ public abstract class PermissionCache {
         }
 
         String fieldPermCode = "FIELD" + apiCode.substring(3);
+        Util.awaitUntilReady(PermissionCache.class);
         return Optional.ofNullable(JsonUtils.fromJson(StringUtils.trimToNull(redisTemplate.<String, String>opsForHash()
             .get(FIELD_PERMISSION_CACHE_KEY, fieldPermCode)), STRING_MAP_TYPE_TOKEN))
             .orElse(Collections.emptyMap());
@@ -81,6 +88,7 @@ public abstract class PermissionCache {
             return Collections.emptyMap();
         }
 
+        Util.awaitUntilReady(PermissionCache.class);
         // 获取定义
         Map<String, String> allFiedls = getFieldPermDefByCode(fieldPermCode);
 

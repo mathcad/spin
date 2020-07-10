@@ -16,6 +16,7 @@
 package org.spin.enhance.pinyin;
 
 import org.spin.core.util.StringUtils;
+import org.spin.enhance.ip.Util;
 import org.spin.enhance.pinyin.format.HanyuPinyinOutputFormat;
 import org.spin.enhance.pinyin.format.HanyuPinyinToneType;
 import org.spin.enhance.pinyin.format.HanyuPinyinVCharType;
@@ -31,7 +32,7 @@ import java.util.Optional;
  *
  * @author Li Min (xmlerlimin@gmail.com)
  */
-public class PinyinHelper {
+public final class PinyinHelper extends Util {
 
     private static final String[] ARR_EMPTY = {};
     private static final HanyuPinyinOutputFormat formatParam = new HanyuPinyinOutputFormat();

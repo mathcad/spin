@@ -22,6 +22,7 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.core.util.Util;
 import org.spin.core.util.http.Http;
 import org.spin.web.RestfulResponse;
 import org.spin.web.throwable.FeignHttpException;
@@ -48,7 +49,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 @UtilClass
-public abstract class RemoteClient {
+public final class RemoteClient extends Util {
     private static final Logger logger = LoggerFactory.getLogger(RemoteClient.class);
     private static final String MSG_SERVICE = "BONADE-MESSAGE";
     private static final String ADMIN_SERVICE = "BONADE-ADMIN";
@@ -62,7 +63,10 @@ public abstract class RemoteClient {
     private static RestTemplate restTemplate;
 
     private RemoteClient() {
-        throw new UnsupportedOperationException("工具类禁止实例化");
+    }
+
+    static {
+        Util.registerLatch(RemoteClient.class);
     }
 
     /**
@@ -79,6 +83,7 @@ public abstract class RemoteClient {
             throw new BizException("发送的短信模板编码不能为空");
         }
 
+        Util.awaitUntilReady(RemoteClient.class);
         Pair<Boolean, String> pair = fixUrl(MSG_SERVICE, "v1/sms/internal/constant");
         try {
             RestfulResponse<Void> entity;
@@ -124,6 +129,7 @@ public abstract class RemoteClient {
             throw new BizException("发送的短信模板编码不能为空");
         }
 
+        Util.awaitUntilReady(RemoteClient.class);
         Pair<Boolean, String> pair = fixUrl(MSG_SERVICE, "v1/sms/internal/variable");
         try {
             RestfulResponse<Void> entity;
@@ -174,6 +180,7 @@ public abstract class RemoteClient {
             throw new BizException("邮件内容不能为空");
         }
 
+        Util.awaitUntilReady(RemoteClient.class);
         Pair<Boolean, String> pair = fixUrl(MSG_SERVICE, "v1/mail/add");
         try {
             RestfulResponse<?> entity;
@@ -214,6 +221,7 @@ public abstract class RemoteClient {
     public static String fetchSequenceNo(String code) {
         Assert.notEmpty(code, "流水号编码不能为空");
 
+        Util.awaitUntilReady(RemoteClient.class);
         Pair<Boolean, String> pair = fixUrl(ADMIN_SERVICE, "v1/serialNumber/generate/" + StringUtils.urlEncode(code));
         try {
             RestfulResponse<?> entity;
@@ -257,6 +265,7 @@ public abstract class RemoteClient {
             return Collections.emptyList();
         }
 
+        Util.awaitUntilReady(RemoteClient.class);
         Pair<Boolean, String> pair = fixUrl(UAAC_SERVICE, "v1/auth/decrypt");
         try {
             RestfulResponse<List<String>> entity;
@@ -296,6 +305,7 @@ public abstract class RemoteClient {
 
     private static void init(RestTemplate restTemplate) {
         RemoteClient.restTemplate = restTemplate;
+        Util.ready(RemoteClient.class);
     }
 
     private static Pair<Boolean, String> fixUrl(String service, String path) {

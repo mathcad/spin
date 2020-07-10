@@ -7,6 +7,7 @@ import org.spin.cloud.vo.MessageContent;
 import org.spin.cloud.vo.MessageHeader;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.MapUtils;
+import org.spin.core.util.Util;
 import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -25,7 +26,7 @@ import java.time.LocalDateTime;
  * @version 1.0
  */
 @UtilClass
-public abstract class MessageUtils {
+public final class MessageUtils extends Util {
 
     private static final Logger logger = LoggerFactory.getLogger(MessageUtils.class);
 
@@ -37,13 +38,19 @@ public abstract class MessageUtils {
     private static final String WEBSOCKET_TOPIC = "message.websocket";
     private static final String WX_SUBSCRIBE_TOPIC = "message.wxsubscribe";
 
+    static {
+        Util.registerLatch(MessageUtils.class);
+    }
+
     @SuppressWarnings("unchecked")
-    private static void init(ApplicationContext applicationContext) {
+    public static void init(ApplicationContext applicationContext) {
         try {
             MessageUtils.kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
         } catch (Exception ignore) {
             logger.warn("系统上下文中没有启用Kafka, websocket功能将被禁用");
         }
+
+        Util.ready(MessageUtils.class);
     }
 
     private static final ListenableFutureCallback<SendResult<String, String>> CALLBACK = new ListenableFutureCallback<SendResult<String, String>>() {
@@ -59,6 +66,7 @@ public abstract class MessageUtils {
     };
 
     public static void sendWsMessage(MessageHeader header, MessageContent content) {
+        Util.awaitUntilReady(MessageUtils.class);
         if (null == kafkaTemplate) {
             throw new UnsupportedOperationException("由于未启用Kafka, websocket发送功能无法使用");
         }
@@ -125,6 +133,7 @@ public abstract class MessageUtils {
      * @param lang       进入小程序查看”的语言类型，支持zh_CN(简体中文)、en_US(英文)、zh_HK(繁体中文)、zh_TW(繁体中文)，默认为zh_CN
      */
     public static void sendWxSubscribeMsg(String configName, String openId, String tmplId, String page, Object data, String state, String lang) {
+        Util.awaitUntilReady(MessageUtils.class);
         if (null == kafkaTemplate) {
             throw new UnsupportedOperationException("由于未启用Kafka, 微信消息推送功能无法使用");
         }

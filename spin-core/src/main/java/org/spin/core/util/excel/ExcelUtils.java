@@ -16,6 +16,7 @@ import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.core.util.Util;
 import org.spin.core.util.file.FileType;
 import org.spin.core.util.file.FileTypeUtils;
 
@@ -38,7 +39,7 @@ import java.util.Objects;
  * @author wangy QQ 837195190
  * <p>Created by thinkpad on 2018/5/4.</p>
  */
-public abstract class ExcelUtils {
+public final class ExcelUtils extends Util {
 
     /*******************************************************************************
      EXCEL的行高度和列宽度单位是不一样的

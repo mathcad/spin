@@ -28,7 +28,7 @@ import java.io.OutputStream;
  *
  * @author xuweinan
  */
-public abstract class ImageUtils {
+public final class ImageUtils extends Util {
     private ImageUtils() {
     }
 

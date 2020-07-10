@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version V1.0
  */
-public abstract class EnumUtils {
+public final class EnumUtils extends Util {
     private static Logger logger = LoggerFactory.getLogger(EnumUtils.class);
     private static final String NULL_ELEMENTS_NOT_PERMITTED = "null elements not permitted";
     private static final String CANNOT_STORE_S_S_VALUES_IN_S_BITS = "Cannot store %s %s values in %s bits";

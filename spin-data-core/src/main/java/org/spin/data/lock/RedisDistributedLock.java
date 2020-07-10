@@ -25,9 +25,9 @@ public class RedisDistributedLock implements DistributedLock {
     private static final Logger logger = LoggerFactory.getLogger(RedisDistributedLock.class);
     private static final String REDIS_UNLOCK_SCRIPT;
 
-    private StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
-    private ThreadLocal<String> lockFlag = new ThreadLocal<>();
+    private final ThreadLocal<String> lockFlag = new ThreadLocal<>();
 
 
     /*

@@ -25,7 +25,7 @@ public enum IdGenMethodE {
      */
     REST(2);
 
-    private int value;
+    private final int value;
 
     IdGenMethodE(int value) {
         this.value = value;

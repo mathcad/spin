@@ -34,7 +34,7 @@ import java.util.function.Predicate;
  * @author xuweinan
  * @since 1.2.3
  */
-public abstract class ReflectionUtils {
+public final class ReflectionUtils extends Util {
 
     /**
      * Naming prefix for CGLIB-renamed methods.
@@ -82,6 +82,8 @@ public abstract class ReflectionUtils {
      */
     public static final Predicate<Method> USER_DECLARED_METHODS = method -> (!method.isBridge() && method.getDeclaringClass() != Object.class);
 
+    private ReflectionUtils() {
+    }
 
     /**
      * 尝试在指定类中查找名称为{@code name}的字段, 如果当前类中不存在, 则向上递归搜索所有父类直到{@link Object}

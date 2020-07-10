@@ -65,7 +65,7 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
     private final String zkServers;
     private final int sessionTimeOut;
     private final long operationRetryTimeoutInMillis;
-    private boolean zkSaslEnabled = isZkSaslEnabled();
+    private final boolean zkSaslEnabled = isZkSaslEnabled();
 
     private ZooKeeper zooKeeper;
     private final ReentrantLock zookeeperLock = new ReentrantLock();
@@ -76,7 +76,7 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
     /**
      * 当前线程上的锁实例
      */
-    private ThreadLocal<Map<String, String>> currentLock = ThreadLocal.withInitial(HashMap::new);
+    private final ThreadLocal<Map<String, String>> currentLock = ThreadLocal.withInitial(HashMap::new);
 
     public ZookeeperDistributedLock(String zkServers) {
         this(zkServers, Integer.MAX_VALUE);

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version 1.0
  */
-public abstract class AsyncUtils {
+public final class AsyncUtils extends Util {
     private static final Logger logger = LoggerFactory.getLogger(AsyncUtils.class);
 
     private static final String COMMON_POOL_NAME = "GlobalCommon";
@@ -108,10 +108,9 @@ public abstract class AsyncUtils {
      * 提交任务到公用线程池
      *
      * @param callable 任务
-     * @param <E>      异常类型
      * @return Future结果
      */
-    public static <E extends Exception> Future<?> runAsync(ExceptionalHandler<E> callable) {
+    public static Future<?> runAsync(ExceptionalHandler<Exception> callable) {
         return submit(COMMON_POOL_NAME, callable);
     }
 
@@ -120,10 +119,9 @@ public abstract class AsyncUtils {
      *
      * @param callable         任务
      * @param exceptionHandler 异常处理逻辑
-     * @param <E>              异常类型
      * @return Future结果
      */
-    public static <E extends Exception> Future<?> runAsync(ExceptionalHandler<E> callable, FinalConsumer<Exception> exceptionHandler) {
+    public static Future<?> runAsync(ExceptionalHandler<Exception> callable, FinalConsumer<Exception> exceptionHandler) {
         return submit(COMMON_POOL_NAME, callable, exceptionHandler);
     }
 
@@ -159,10 +157,9 @@ public abstract class AsyncUtils {
      *
      * @param name     线程池名称
      * @param callable 任务
-     * @param <E>      异常类型
      * @return Future结果
      */
-    public static <E extends Exception> Future<?> submit(String name, ExceptionalHandler<E> callable) {
+    public static Future<?> submit(String name, ExceptionalHandler<Exception> callable) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
         checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
@@ -185,10 +182,9 @@ public abstract class AsyncUtils {
      * @param name             线程池名称
      * @param callable         任务
      * @param exceptionHandler 异常处理逻辑
-     * @param <E>              异常类型
      * @return Future结果
      */
-    public static <E extends Exception> Future<?> submit(String name, ExceptionalHandler<E> callable, FinalConsumer<Exception> exceptionHandler) {
+    public static Future<?> submit(String name, ExceptionalHandler<Exception> callable, FinalConsumer<Exception> exceptionHandler) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
         checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
@@ -234,9 +230,8 @@ public abstract class AsyncUtils {
      * @param name             线程池名称
      * @param callable         任务
      * @param exceptionHandler 异常处理逻辑
-     * @param <E>              异常类型
      */
-    public static <E extends Exception> void execute(String name, ExceptionalHandler<E> callable, FinalConsumer<Exception> exceptionHandler) {
+    public static void execute(String name, ExceptionalHandler<Exception> callable, FinalConsumer<Exception> exceptionHandler) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
         checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();

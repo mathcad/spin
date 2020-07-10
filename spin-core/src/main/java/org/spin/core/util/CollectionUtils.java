@@ -14,12 +14,11 @@ import java.util.stream.Stream;
 /**
  * 集合工具类
  */
-public abstract class CollectionUtils {
+public final class CollectionUtils extends Util {
 
     private static final long PARALLEL_FACTORY = 10000L;
 
     private CollectionUtils() {
-        throw new UnsupportedOperationException("工具类不允许实例化");
     }
 
     // region 集合检查

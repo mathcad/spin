@@ -3,6 +3,7 @@ package org.spin.cloud.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.annotation.UtilClass;
+import org.spin.core.util.AsyncUtils;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.PackageUtils;
 import org.spin.core.util.ReflectionUtils;
@@ -36,6 +37,10 @@ public class UtilsClassInitApplicationRunner implements ApplicationRunner, Appli
 
     @Override
     public void run(ApplicationArguments args) {
+        AsyncUtils.runAsync(this::procUtilClasses);
+    }
+
+    private void procUtilClasses() {
         Map<String, Object> beansWithAnnotation = applicationContext.getBeansWithAnnotation(SpringBootApplication.class);
         for (Object value : beansWithAnnotation.values()) {
             String packageName = value.getClass().getPackage().getName();

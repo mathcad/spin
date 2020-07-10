@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author xuweinan
  */
-public abstract class LambdaUtils {
+public final class LambdaUtils extends Util {
 
 
     private static final Map<Class<?>, WeakReference<SerializedLambda>> FUNC_CACHE = new ConcurrentHashMap<>();

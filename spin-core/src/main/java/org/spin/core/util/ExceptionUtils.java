@@ -1,7 +1,5 @@
 package org.spin.core.util;
 
-import org.spin.core.throwable.SpinException;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,9 +11,8 @@ import java.util.Set;
  * @author xuweinan
  * @version 1.0
  */
-public abstract class ExceptionUtils {
+public final class ExceptionUtils extends Util {
     private ExceptionUtils() {
-        throw new SpinException("工具类禁止实例化");
     }
 
     /**

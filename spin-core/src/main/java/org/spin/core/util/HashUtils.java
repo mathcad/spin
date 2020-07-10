@@ -4,7 +4,7 @@ package org.spin.core.util;
  * Hash算法大全<br>
  * 推荐使用FNV1算法
  */
-public abstract class HashUtils {
+public final class HashUtils extends Util {
 
     private HashUtils() {
     }

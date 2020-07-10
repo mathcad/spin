@@ -21,7 +21,7 @@ import java.util.List;
  * @author Brian Clozel
  * @author xuweinan
  */
-public abstract class IOUtils {
+public final class IOUtils extends Util {
 
     public static final int BUFFER_SIZE = 4096;
 

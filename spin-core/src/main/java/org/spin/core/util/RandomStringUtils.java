@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @version $DistributedId: RandomStringUtils.java 1532684 2013-10-16 08:28:42Z bayard $
  * @since 1.0
  */
-public abstract class RandomStringUtils {
+public final class RandomStringUtils extends Util {
 
     /**
      * <p>Random object used by random method.</p>

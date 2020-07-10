@@ -31,7 +31,7 @@ import java.security.NoSuchAlgorithmException;
  *
  * @version 1.0
  */
-public abstract class DigestUtils {
+public final class DigestUtils extends Util {
     private static final int STREAM_BUFFER_LENGTH = 1024;
 
     private DigestUtils() {

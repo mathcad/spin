@@ -23,7 +23,7 @@ import java.util.Objects;
  * 该工具类使用的 {@code JSON} 转换引擎是{@code Google Gson}。
  * </p>
  */
-public abstract class JsonUtils {
+public final class JsonUtils extends Util {
     private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 
     /**

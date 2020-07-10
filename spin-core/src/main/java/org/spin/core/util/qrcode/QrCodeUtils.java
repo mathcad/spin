@@ -10,6 +10,7 @@ import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.serializable.Function;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.ImageUtils;
+import org.spin.core.util.Util;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -23,13 +24,16 @@ import java.util.function.Supplier;
  *
  * @author xuweinan
  */
-public class QrCodeUtils {
+public final class QrCodeUtils extends Util {
 
     private static final Logger logger = LoggerFactory.getLogger(QrCodeUtils.class);
 
     private static final float LOGO_RATIO = 100F / 430F;
     private static final float RADIUS_RATIO = 20F / 430F;
     private static final float BORDER_RATIO = 5F / 430F;
+
+    private QrCodeUtils() {
+    }
 
     public static BufferedImage optimizeLogo(Image logo, int qrcodeSize, Color borderColor) {
         return optimizeLogo(logo, qrcodeSize, Math.round(qrcodeSize * RADIUS_RATIO), Math.round(qrcodeSize * BORDER_RATIO), borderColor, 0);

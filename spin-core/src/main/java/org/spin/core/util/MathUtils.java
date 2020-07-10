@@ -21,7 +21,10 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version 1.0
  */
-public class MathUtils {
+public final class MathUtils extends Util {
+
+    private MathUtils() {
+    }
 
     /**
      * 平方根运算

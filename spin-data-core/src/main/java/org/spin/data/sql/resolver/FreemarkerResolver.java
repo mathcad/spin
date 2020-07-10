@@ -26,8 +26,8 @@ import java.util.Map;
 public class FreemarkerResolver implements TemplateResolver {
     private static final Logger logger = LoggerFactory.getLogger(FreemarkerResolver.class);
     private String charset = "UTF-8";
-    private Configuration configuration;
-    private ConcurrentStrTemplateLoader strTemplateLoader;
+    private final Configuration configuration;
+    private final ConcurrentStrTemplateLoader strTemplateLoader;
 
     public FreemarkerResolver() {
         this.configuration = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);

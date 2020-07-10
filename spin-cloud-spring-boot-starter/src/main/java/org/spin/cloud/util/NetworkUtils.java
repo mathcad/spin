@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.annotation.UtilClass;
 import org.spin.core.util.NetUtils;
+import org.spin.core.util.Util;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
  * @version 1.0
  */
 @UtilClass
-public abstract class NetworkUtils {
+public final class NetworkUtils extends Util {
     private static final Logger logger = LoggerFactory.getLogger(NetworkUtils.class);
     private static volatile long updateTime;
     private static final Set<String> networks = new HashSet<>();
@@ -37,6 +38,7 @@ public abstract class NetworkUtils {
     }
 
     static {
+        Util.registerLatch(NetworkUtils.class);
         try {
             List<NetUtils.NetAddress> networkInfo = NetUtils.getNetworkInfo();
             networkInfo.forEach(it -> {
@@ -59,14 +61,17 @@ public abstract class NetworkUtils {
     public static void init(DiscoveryClient discoveryClient) {
         NetworkUtils.discoveryClient = discoveryClient;
         updateHosts();
+        Util.ready(NetworkUtils.class);
     }
 
     public static boolean contains(String host) {
+        Util.awaitUntilReady(NetworkUtils.class);
         updateHosts();
         return hosts.contains(host.toLowerCase());
     }
 
     public static boolean inSameVlan(String hostName) {
+        Util.awaitUntilReady(NetworkUtils.class);
         updateHosts();
         String host = hostName.toLowerCase();
         if (hosts.contains(host)) {

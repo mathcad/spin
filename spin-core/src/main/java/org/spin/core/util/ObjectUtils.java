@@ -25,7 +25,7 @@ import java.util.Map;
  * @see CollectionUtils
  * @see StringUtils
  */
-public abstract class ObjectUtils {
+public final class ObjectUtils extends Util {
 
     private static final int INITIAL_HASH = 7;
     private static final int MULTIPLIER = 31;

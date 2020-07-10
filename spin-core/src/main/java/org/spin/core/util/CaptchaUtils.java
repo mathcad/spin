@@ -18,12 +18,11 @@ import java.util.Random;
  *
  * @author xuweinan
  */
-public abstract class CaptchaUtils {
+public final class CaptchaUtils extends Util {
     public static final String VERIFY_CODES = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
     private static final Random random = new Random();
 
     private CaptchaUtils() {
-        // do nothing
     }
 
     /**

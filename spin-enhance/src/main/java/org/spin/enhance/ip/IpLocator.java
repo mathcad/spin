@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * ip db searcher class (Not thread safe)
  */
-public class IpLocator {
+public final class IpLocator extends Util {
     public static final int BTREE_ALGORITHM = 1;
     public static final int BINARY_ALGORITHM = 2;
     public static final int MEMORY_ALGORITYM = 3;
@@ -51,6 +51,7 @@ public class IpLocator {
     private byte[] dbBinStr = null;
 
     private final Object mutexLock = new Object();
+
 
     public IpLocator(DbConfig dbConfig, String dbFile) throws FileNotFoundException {
         this.dbConfig = dbConfig;

@@ -19,8 +19,8 @@ public enum IdTypeE {
      */
     MIN_GRANULARITY("min-granularity", 1);
 
-    private String name;
-    private int value;
+    private final String name;
+    private final int value;
 
     IdTypeE(String name, int value) {
         this.name = name;

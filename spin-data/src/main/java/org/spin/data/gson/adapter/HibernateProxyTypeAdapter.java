@@ -10,7 +10,7 @@ import org.spin.core.gson.TypeAdapter;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.gson.stream.JsonReader;
 import org.spin.core.gson.stream.JsonWriter;
-import org.springframework.util.ReflectionUtils;
+import org.spin.core.util.ReflectionUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

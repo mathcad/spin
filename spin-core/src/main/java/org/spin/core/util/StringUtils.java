@@ -40,7 +40,7 @@ import static java.lang.Character.isWhitespace;
  * @author xuweinan
  * @since 16 April 2001
  */
-public abstract class StringUtils {
+public final class StringUtils extends Util {
 
     private static final String FOLDER_SEPARATOR = "/";
 

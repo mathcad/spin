@@ -2,7 +2,11 @@ package org.spin.core.util;
 
 import org.spin.core.throwable.NullArgumentException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -26,7 +30,7 @@ import java.util.*;
  * @version $DistributedId: ClassUtils.java 907121 2010-02-05 22:53:21Z mbenson $
  * @since 2.0
  */
-public abstract class ClassUtils {
+public final class ClassUtils extends Util {
     /**
      * char形式的包名分隔符: <code>'&#x2e;' == {@value}</code>.
      */

@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * Bean工具类
  * Created by xuweinan on 2016/8/15.
  */
-public abstract class BeanUtils {
+public final class BeanUtils extends Util {
     private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
     private static final Map<String, Map<String, PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
 

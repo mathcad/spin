@@ -32,7 +32,7 @@ import java.util.WeakHashMap;
 /**
  * Method工具类
  */
-public abstract class MethodUtils {
+public final class MethodUtils extends Util {
     private static final Logger logger = LoggerFactory.getLogger(MethodUtils.class);
     // --------------------------------------------------------- Private Methods
 

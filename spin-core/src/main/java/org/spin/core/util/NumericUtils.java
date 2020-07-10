@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  *
  * @author xuweinan
  */
-public abstract class NumericUtils {
+public final class NumericUtils extends Util {
     private static final String UNKNOW_NUM = "无法识别的数字格式";
     private static final Pattern numPattern = Pattern.compile("^([-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]+)[^-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]{0,2}$");
     private static final Pattern pureNum = Pattern.compile("^-?\\d+(\\.\\d+)?$");

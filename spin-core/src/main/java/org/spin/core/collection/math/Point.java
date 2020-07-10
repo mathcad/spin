@@ -95,7 +95,7 @@ public class Point {
         BigDecimal sum = BigDecimal.ZERO;
         BigDecimal[] coords;
         BigDecimal[] shorter;
-        int scale = this.scale > point.scale ? this.scale : point.scale;
+        int scale = Math.max(this.scale, point.scale);
         if (point.dimension() > dimension()) {
             coords = Arrays.copyOf(point.coords, point.dimension());
             shorter = this.coords;

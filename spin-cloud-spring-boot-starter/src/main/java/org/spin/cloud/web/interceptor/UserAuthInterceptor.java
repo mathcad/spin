@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.feign.FeignInterceptor;
 import org.spin.cloud.util.Env;
-import org.spin.cloud.util.RequestUtils;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.core.ErrorCode;
 import org.spin.core.util.NetUtils;

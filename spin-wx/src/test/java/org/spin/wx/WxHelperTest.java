@@ -20,10 +20,11 @@ class WxHelperTest {
         String openid = "oYjv40HwT6fLYBf0AHg0StCuINQs";
         WxConfigInfo configInfo = new WxConfigInfo();
         configInfo.setAppId("wxd8fd717ca8acb775");
-        configInfo.setAppSecret("6a565df9b24053cc8137be6ae46b64de");
+        configInfo.setAppSecret("c854c009c0b736d7f23a12d1c32feba4");
         WxConfigManager.putConfig("default", configInfo);
         SubscribeMsgEntity msgEntity = new SubscribeMsgEntity();
         msgEntity.setTouser(openid);
+        msgEntity.setPage("pages/index/index");
         msgEntity.setMiniprogramState("developer");
         msgEntity.setTemplateId("TiYytZt7xC86qKUjMSH2Sp8yaVYgKwBamzVOHzBo4iM");
         MessageData data = new MessageData();

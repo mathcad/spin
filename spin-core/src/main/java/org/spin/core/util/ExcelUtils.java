@@ -30,10 +30,13 @@ import java.util.Objects;
  *
  * @author xuweinan
  */
-public abstract class ExcelUtils {
+public final class ExcelUtils extends Util {
 
     public enum Type {
         XLS, XLSX
+    }
+
+    public ExcelUtils() {
     }
 
     /**

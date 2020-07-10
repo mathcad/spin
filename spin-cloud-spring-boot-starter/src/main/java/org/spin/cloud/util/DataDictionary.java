@@ -5,6 +5,7 @@ import org.spin.core.gson.annotation.PreventOverflow;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.core.util.Util;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -24,19 +25,21 @@ import java.util.stream.Collectors;
  * @version 1.0
  */
 @UtilClass
-public class DataDictionary {
+public final class DataDictionary extends Util {
     private static final String ROOT_DICT_REDIS_KEY = "ALL_DATA_DICTIONARY";
     private static final DefaultRedisScript<List> redisScript = new DefaultRedisScript<List>();
 
     private static StringRedisTemplate redisTemplate;
 
     static {
+        Util.registerLatch(DataDictionary.class);
         redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getChildren.lua")));
         redisScript.setResultType(List.class);
     }
 
     public static void init(StringRedisTemplate redisTemplate) {
         DataDictionary.redisTemplate = redisTemplate;
+        Util.ready(DataDictionary.class);
     }
 
     /**
@@ -46,6 +49,7 @@ public class DataDictionary {
      * @return 数据字典对象
      */
     public static DictContent findByCode(String code) {
+        Util.awaitUntilReady(DataDictionary.class);
         String content = redisTemplate.<String, String>opsForHash().get(ROOT_DICT_REDIS_KEY, code);
         if (StringUtils.isNotEmpty(content)) {
             return JsonUtils.fromJson(content, DictContent.class);
@@ -60,6 +64,7 @@ public class DataDictionary {
      * @return 数据字典对象集合
      */
     public static List<DictContent> findByCode(Set<String> code) {
+        Util.awaitUntilReady(DataDictionary.class);
         List<String> contentList = redisTemplate.<String, String>opsForHash().multiGet(ROOT_DICT_REDIS_KEY, code);
         if (CollectionUtils.isEmpty(code)) {
             return Collections.emptyList();
@@ -74,6 +79,7 @@ public class DataDictionary {
      * @return 数据字典项列表
      */
     public static List<DictContent> findByParent(String parentCode) {
+        Util.awaitUntilReady(DataDictionary.class);
         List<?> children = redisTemplate.execute(redisScript, Collections.singletonList(ROOT_DICT_REDIS_KEY), parentCode);
         if (children != null) {
             return children.stream().map(Object::toString).map(it -> JsonUtils.fromJson(it, DictContent.class)).collect(Collectors.toList());

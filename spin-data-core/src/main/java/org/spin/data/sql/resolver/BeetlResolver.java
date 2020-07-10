@@ -25,8 +25,8 @@ import java.util.Map;
 public class BeetlResolver implements TemplateResolver {
     private static final Logger logger = LoggerFactory.getLogger(BeetlResolver.class);
     private String charset = "UTF-8";
-    private Configuration configuration;
-    private GroupTemplate groupTemplate;
+    private final Configuration configuration;
+    private final GroupTemplate groupTemplate;
 
     public BeetlResolver() {
         StringTemplateResourceLoader resourceLoader = new StringTemplateResourceLoader();

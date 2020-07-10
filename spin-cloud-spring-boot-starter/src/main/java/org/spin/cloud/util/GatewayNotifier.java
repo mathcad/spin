@@ -3,6 +3,7 @@ package org.spin.cloud.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.annotation.UtilClass;
+import org.spin.core.util.Util;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -20,7 +21,7 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
  * @version 1.0
  */
 @UtilClass
-public abstract class GatewayNotifier {
+public final class GatewayNotifier extends Util {
     private static final Logger logger = LoggerFactory.getLogger(GatewayNotifier.class);
 
     private static final String ROLES_UPDATE_TIME_KEY = "GATEWAY.ROLES.UPDATETIME";
@@ -29,15 +30,21 @@ public abstract class GatewayNotifier {
     private static StringRedisTemplate redisTemplate;
     private static ApplicationContext applicationContext;
 
+    static {
+        Util.registerLatch(GatewayNotifier.class);
+    }
+
     public static void init(ApplicationContext applicationContext, StringRedisTemplate redisTemplate) {
         GatewayNotifier.applicationContext = applicationContext;
         GatewayNotifier.redisTemplate = redisTemplate;
+        Util.ready(GatewayNotifier.class);
     }
 
     /**
      * 更新了角色-权限绑定，用户组-角色绑定，角色继承关系后，通知网关
      */
     public static void notifyRoleAndGroupChanged() {
+        Util.awaitUntilReady(GatewayNotifier.class);
         redisTemplate.opsForValue().set(ROLES_UPDATE_TIME_KEY, String.valueOf(System.currentTimeMillis()));
         @SuppressWarnings("unchecked")
         KafkaTemplate<String, String> kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
