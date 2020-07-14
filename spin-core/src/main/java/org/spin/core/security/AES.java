@@ -31,7 +31,7 @@ import java.util.Random;
  * @author xuweinan
  * @version 1.1
  */
-public class AES extends ProviderDetector {
+public final class AES extends ProviderDetector {
     private static final String ALGORITHM = "AES";
     private static final int BUFFER_SIZE = 2048;
 

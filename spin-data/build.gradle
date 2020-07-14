@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '数据访问模块, 基于Hibernate的实现'
-version = '2.2.30-SNAPSHOT'
+version = '2.2.31-SNAPSHOT'
 def artifactId = 'spin-data'
 
 test {

@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  * </ul>
  * <p>线程安全</p>
  */
-public abstract class Assert {
+public final class Assert {
 
     private static final String DEFAULT_EXCLUSIVE_BETWEEN_EX_MESSAGE = "[Assertion failed] - The value %s is not in the specified exclusive range of %s to %s";
     private static final String DEFAULT_GT_EX_MESSAGE = "[Assertion failed] - The value %s must greater than specified value %s";

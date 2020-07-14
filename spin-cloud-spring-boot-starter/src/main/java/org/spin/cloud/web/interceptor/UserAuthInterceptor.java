@@ -12,10 +12,15 @@ import org.spin.web.AuthLevel;
 import org.spin.web.InternalWhiteList;
 import org.spin.web.ScopeType;
 import org.spin.web.annotation.Auth;
+import org.spin.web.annotation.Author;
+import org.spin.web.util.RequestUtils;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,12 +32,13 @@ import java.lang.reflect.Method;
  * @author wangy QQ 837195190
  * <p>Created by wangy on 2019/3/14.</p>
  */
-public class UserAuthInterceptor implements HandlerInterceptor {
+public class UserAuthInterceptor implements HandlerInterceptor, Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(UserAuthInterceptor.class);
+    private static final ThreadLocal<Long> EXECUTION_TIME = new ThreadLocal<>();
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
 
         // 是否调用方法
         if (!(handler instanceof HandlerMethod)) {
@@ -87,11 +93,42 @@ public class UserAuthInterceptor implements HandlerInterceptor {
 
             Env.setCurrentApiCode(authName);
         }
+        EXECUTION_TIME.set(System.currentTimeMillis());
         return true;
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+    public void postHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler, ModelAndView modelAndView) {
+        Long startTime = EXECUTION_TIME.get();
+        if (null != startTime) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            EXECUTION_TIME.remove();
+            String resource;
+            String author = "匿名";
+            if ((handler instanceof HandlerMethod)) {
+                Method method = ((HandlerMethod) handler).getMethod();
+                resource = method.toGenericString();
+                if (executionTime > 1000L) {
+                    Author authorAnno = AnnotatedElementUtils.getMergedAnnotation(method, Author.class);
+                    if (null != authorAnno) {
+                        author = StringUtils.join(authorAnno.value());
+                    }
+                }
+
+            } else {
+                resource = request.getRequestURI();
+            }
+
+            if (executionTime > 1000L) {
+                logger.warn("请求{}的执行时间过长, 作者: {}, 总计耗时: {}ms", resource, author, executionTime);
+            } else {
+                logger.debug("请求{}总计耗时: {}ms", resource, executionTime);
+            }
+        }
+    }
+
+    @Override
+    public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler, Exception ex) {
         CurrentUser.clearCurrent();
     }
 
@@ -113,5 +150,10 @@ public class UserAuthInterceptor implements HandlerInterceptor {
             // || NetworkUtils.inSameVlan(request.getRemoteHost()) || NetworkUtils.inSameVlan(request.getRemoteAddr())
             || NetUtils.isInnerIP(request.getRemoteHost()) || NetUtils.isInnerIP(request.getRemoteAddr()))
             && StringUtils.isNotEmpty(request.getHeader(FeignInterceptor.X_APP_NAME));
+    }
+
+    @Override
+    public int getOrder() {
+        return 0;
     }
 }

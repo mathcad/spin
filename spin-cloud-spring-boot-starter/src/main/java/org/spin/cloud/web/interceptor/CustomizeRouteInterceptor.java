@@ -1,5 +1,6 @@
 package org.spin.cloud.web.interceptor;
 
+import org.spin.cloud.idempotent.IdempotentAspect;
 import org.spin.core.util.StringUtils;
 import org.springframework.lang.NonNull;
 import org.springframework.ui.ModelMap;
@@ -20,20 +21,19 @@ import java.util.Map;
  * @version 1.0
  */
 public class CustomizeRouteInterceptor implements WebRequestInterceptor {
-
     public static final String CUSTOMIZE_ROUTE = "X-Customize-Route";
     public static final String CUSTOMIZE_ROUTE_STR = "X-Customize-Route-Str";
 
     @Override
     public void preHandle(@NonNull WebRequest request) {
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (null == requestAttributes) {
+            RequestContextHolder.setRequestAttributes(request);
+            requestAttributes = request;
+        }
+
         String customizeRoutesStr = request.getHeader(CUSTOMIZE_ROUTE);
         if (StringUtils.isNotEmpty(customizeRoutesStr)) {
-            RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-            if (null == requestAttributes) {
-                RequestContextHolder.setRequestAttributes(request);
-                requestAttributes = request;
-            }
-
             String[] split = customizeRoutesStr.split(",");
             Map<String, String> customizeRoutes = new HashMap<>(split.length);
             for (String r : split) {
@@ -47,6 +47,11 @@ public class CustomizeRouteInterceptor implements WebRequestInterceptor {
             requestAttributes.setAttribute(CUSTOMIZE_ROUTE, customizeRoutes, RequestAttributes.SCOPE_REQUEST);
             requestAttributes.setAttribute(CUSTOMIZE_ROUTE_STR, customizeRoutesStr, RequestAttributes.SCOPE_REQUEST);
         }
+
+        String idempotentId = request.getHeader(IdempotentAspect.IDEMPOTENT_ID);
+        if (StringUtils.isNotEmpty(idempotentId)) {
+            requestAttributes.setAttribute(IdempotentAspect.IDEMPOTENT_ID, idempotentId, RequestAttributes.SCOPE_REQUEST);
+        }
     }
 
     @Override
@@ -55,6 +60,7 @@ public class CustomizeRouteInterceptor implements WebRequestInterceptor {
         if (null != requestAttributes) {
             requestAttributes.removeAttribute(CUSTOMIZE_ROUTE, RequestAttributes.SCOPE_REQUEST);
             requestAttributes.removeAttribute(CUSTOMIZE_ROUTE_STR, RequestAttributes.SCOPE_REQUEST);
+            requestAttributes.removeAttribute(IdempotentAspect.IDEMPOTENT_ID, RequestAttributes.SCOPE_REQUEST);
         }
     }
 

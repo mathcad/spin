@@ -23,6 +23,7 @@ import java.util.UUID;
  */
 public class RedisDistributedLock implements DistributedLock {
     private static final Logger logger = LoggerFactory.getLogger(RedisDistributedLock.class);
+    private static final String SPIN_REDIS_LOCKS = "SPIN_REDIS_LOCKS:";
     private static final String REDIS_UNLOCK_SCRIPT;
 
     private final StringRedisTemplate redisTemplate;
@@ -49,7 +50,8 @@ public class RedisDistributedLock implements DistributedLock {
 
     @Override
     public boolean lock(String key, long expire, int retryTimes, long sleepMillis) {
-        boolean result = setRedis(key, expire);
+        String lockKey = SPIN_REDIS_LOCKS + key;
+        boolean result = setRedis(lockKey, expire);
         // 如果获取锁失败，按照传入的重试次数进行重试
         while ((!result) && retryTimes-- > 0) {
             try {
@@ -59,7 +61,7 @@ public class RedisDistributedLock implements DistributedLock {
                 logger.warn("Interrupted!", e);
                 Thread.currentThread().interrupt();
             }
-            result = setRedis(key, expire);
+            result = setRedis(lockKey, expire);
         }
         return result;
     }
@@ -67,13 +69,14 @@ public class RedisDistributedLock implements DistributedLock {
 
     @Override
     public boolean releaseLock(String key) {
+        String lockKey = SPIN_REDIS_LOCKS + key;
         // 释放锁的时候，有可能因为持锁之后方法执行时间大于锁的有效期，此时有可能已经被另外一个线程持有锁，所以不能直接删除
         try {
             Long result = redisTemplate.execute((RedisConnection connection) -> connection.eval(
                 REDIS_UNLOCK_SCRIPT.getBytes(),
                 ReturnType.INTEGER,
                 1,
-                StringUtils.getBytesUtf8(key),
+                StringUtils.getBytesUtf8(lockKey),
                 StringUtils.getBytesUtf8(lockFlag.get()))
             );
 

@@ -2,6 +2,7 @@ package org.spin.cloud.feign;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import org.spin.cloud.idempotent.IdempotentAspect;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.cloud.web.interceptor.CustomizeRouteInterceptor;
 import org.spin.cloud.web.interceptor.GrayInterceptor;
@@ -9,6 +10,8 @@ import org.spin.core.util.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
+
+import java.util.UUID;
 
 /**
  * Feign拦截器
@@ -38,6 +41,7 @@ public class FeignInterceptor implements RequestInterceptor {
         }
 
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        StringBuilder idempotent = new StringBuilder();
         if (null != requestAttributes) {
             String grayInfo = (String) requestAttributes.getAttribute(GrayInterceptor.X_GRAY_INFO_STR, RequestAttributes.SCOPE_REQUEST);
             if (null != grayInfo) {
@@ -48,6 +52,12 @@ public class FeignInterceptor implements RequestInterceptor {
             if (null != customizeRoutes) {
                 template.header(CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, customizeRoutes);
             }
+
+            idempotent.append(StringUtils.toStringEmpty(requestAttributes.getAttribute(IdempotentAspect.IDEMPOTENT_ID, RequestAttributes.SCOPE_REQUEST)));
+            if (idempotent.length() > 0) {
+                idempotent.append(";");
+            }
         }
+        template.header(IdempotentAspect.IDEMPOTENT_ID, idempotent.append(UUID.randomUUID().toString()).toString());
     }
 }
