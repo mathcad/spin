@@ -54,6 +54,7 @@ public class Request<T extends HttpRequestBase> {
     private final Map<String, String> formData = new HashMap<>();
     private final Map<String, File> multiPartFormData = new HashMap<>();
     private volatile boolean formBuilt = true;
+    private boolean checkFlag = true;
 
     Request(T request) {
         Assert.notNull(request, "请求不能为空");
@@ -311,6 +312,32 @@ public class Request<T extends HttpRequestBase> {
         return this;
     }
 
+    /**
+     * 启用Http响应状态码检查
+     * <pre>
+     *     会启用Http响应结果的状态码检查, 当状态码为非成功标记时, 抛出异常
+     * </pre>
+     *
+     * @return 当前请求本身
+     */
+    public Request<T> withStatusCheck() {
+        this.checkFlag = true;
+        return this;
+    }
+
+    /**
+     * 取消Http响应状态码检查
+     * <pre>
+     *     会取消Http响应结果的状态码检查, 无论任何状态码, 均会按照用户自定义逻辑进行处理
+     * </pre>
+     *
+     * @return 当前请求本身
+     */
+    public Request<T> withoutStatusCheck() {
+        this.checkFlag = false;
+        return this;
+    }
+
     // endregion
 
     // region execute
@@ -323,7 +350,7 @@ public class Request<T extends HttpRequestBase> {
     public String execute() {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequest(request, HttpExecutor::toStringProc);
+        return HttpExecutor.executeRequest(request, HttpExecutor::toStringProc, checkFlag);
     }
 
     /**
@@ -336,7 +363,7 @@ public class Request<T extends HttpRequestBase> {
     public <E> E execute(Class<E> clazz) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequest(request, e -> HttpExecutor.toObjectProc(e, clazz));
+        return HttpExecutor.executeRequest(request, e -> HttpExecutor.toObjectProc(e, clazz), checkFlag);
     }
 
     /**
@@ -349,7 +376,7 @@ public class Request<T extends HttpRequestBase> {
     public <E> E execute(Type type) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequest(request, e -> HttpExecutor.toObjectProc(e, type));
+        return HttpExecutor.executeRequest(request, e -> HttpExecutor.toObjectProc(e, type), checkFlag);
     }
 
     /**
@@ -362,7 +389,7 @@ public class Request<T extends HttpRequestBase> {
     public <E> E execute(TypeToken<E> typeToken) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequest(request, e -> HttpExecutor.toObjectProc(e, typeToken));
+        return HttpExecutor.executeRequest(request, e -> HttpExecutor.toObjectProc(e, typeToken), checkFlag);
     }
 
     /**
@@ -375,7 +402,7 @@ public class Request<T extends HttpRequestBase> {
     public <E> E execute(EntityProcessor<E> entityProc) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequest(request, entityProc);
+        return HttpExecutor.executeRequest(request, entityProc, checkFlag);
     }
 
 
@@ -395,7 +422,7 @@ public class Request<T extends HttpRequestBase> {
                                                  Handler cancelledCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, cancelledCallback);
+        return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, cancelledCallback, checkFlag);
     }
 
     /**
@@ -412,7 +439,7 @@ public class Request<T extends HttpRequestBase> {
                                                  FinalConsumer<Exception> failedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, null);
+        return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, null, checkFlag);
     }
 
     /**
@@ -429,7 +456,7 @@ public class Request<T extends HttpRequestBase> {
                                                  FinalConsumer<Exception> failedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, clazz), completedCallback, failedCallback, null);
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, clazz), completedCallback, failedCallback, null, checkFlag);
     }
 
     /**
@@ -446,7 +473,7 @@ public class Request<T extends HttpRequestBase> {
                                                  FinalConsumer<Exception> failedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), completedCallback, failedCallback, null);
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), completedCallback, failedCallback, null, checkFlag);
     }
 
     /**
@@ -463,7 +490,7 @@ public class Request<T extends HttpRequestBase> {
                                                  FinalConsumer<Exception> failedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, typeToken), completedCallback, failedCallback, null);
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, typeToken), completedCallback, failedCallback, null, checkFlag);
     }
 
     /**
@@ -479,7 +506,7 @@ public class Request<T extends HttpRequestBase> {
                                              Handler cancelledCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, cancelledCallback);
+        return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, cancelledCallback, checkFlag);
     }
 
     /**
@@ -493,7 +520,7 @@ public class Request<T extends HttpRequestBase> {
                                              FinalConsumer<Exception> failedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, null);
+        return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, null, checkFlag);
     }
 
     /**
@@ -505,7 +532,7 @@ public class Request<T extends HttpRequestBase> {
     public Map<String, String> download(String savePath) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequest(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath));
+        return HttpExecutor.executeRequest(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), checkFlag);
     }
 
     /**
@@ -517,7 +544,7 @@ public class Request<T extends HttpRequestBase> {
     public Future<HttpResponse> downloadAsync(String savePath) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), null, null, null);
+        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), null, null, null, checkFlag);
     }
 
     /**
@@ -531,7 +558,7 @@ public class Request<T extends HttpRequestBase> {
                                               FinalConsumer<Map<String, String>> completedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, null, null);
+        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, null, null, checkFlag);
     }
 
     /**
@@ -547,7 +574,7 @@ public class Request<T extends HttpRequestBase> {
                                               FinalConsumer<Exception> failedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, failedCallback, null);
+        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, failedCallback, null, checkFlag);
     }
 
     // endregion

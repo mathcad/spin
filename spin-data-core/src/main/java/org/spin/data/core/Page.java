@@ -20,6 +20,11 @@ public class Page<T> implements Serializable {
     private List<T> rows = new ArrayList<>();
 
     /**
+     * 当前页码, 从1开始
+     */
+    private long currentPage = 1L;
+
+    /**
      * 总数
      */
     private long total = 0L;
@@ -35,12 +40,14 @@ public class Page<T> implements Serializable {
     /**
      * 构造方法
      *
-     * @param rows     数据
-     * @param total    总数
-     * @param pageSize 页面大小
+     * @param rows        数据
+     * @param currentPage 当前页
+     * @param total       总数
+     * @param pageSize    页面大小
      */
-    public Page(List<T> rows, long total, int pageSize) {
+    public Page(List<T> rows, long currentPage, long total, int pageSize) {
         this.rows = rows;
+        this.currentPage = currentPage;
         this.total = total;
         this.pageSize = pageSize;
     }
@@ -51,6 +58,14 @@ public class Page<T> implements Serializable {
 
     public void setRows(List<T> rows) {
         this.rows = rows;
+    }
+
+    public long getCurrentPage() {
+        return currentPage;
+    }
+
+    public void setCurrentPage(long currentPage) {
+        this.currentPage = currentPage;
     }
 
     public long getTotal() {

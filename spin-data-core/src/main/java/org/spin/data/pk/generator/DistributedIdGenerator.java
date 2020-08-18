@@ -36,7 +36,7 @@ public class DistributedIdGenerator implements IdGenerator<Long, DistributedId> 
 
     private long idType;
     private IdMeta idMeta;
-    private Lock lock = new ReentrantLock();
+    private final Lock lock = new ReentrantLock();
 
     private IdConverter<Long, DistributedId> idConverter;
     private MachineIdProvider machineIdProvider;

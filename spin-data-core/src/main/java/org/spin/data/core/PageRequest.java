@@ -16,12 +16,12 @@ public class PageRequest implements Serializable {
     /**
      * 分页页码，从1开始
      */
-    private int page = 1;
+    private int currentPage = 1;
 
     /**
      * 分页大小
      */
-    private int pageSize = 10000000;
+    private int pageSize = 10000;
 
     /**
      * 多个排序字段用,隔开
@@ -38,11 +38,11 @@ public class PageRequest implements Serializable {
     /**
      * 创建一个新的{@link PageRequest}, 分页参数索引从1开始
      *
-     * @param page     zero-based page index.
+     * @param currentPage     zero-based page index.
      * @param pageSize the pageSize of the page to be returned.
      */
-    public PageRequest(int page, int pageSize) {
-        if (page < 1) {
+    public PageRequest(int currentPage, int pageSize) {
+        if (currentPage < 1) {
             throw new IllegalArgumentException("Page index must not be less than one!");
         }
 
@@ -50,7 +50,7 @@ public class PageRequest implements Serializable {
             throw new IllegalArgumentException("Page pageSize must not be less than zero!");
         }
 
-        this.page = page;
+        this.currentPage = currentPage;
         this.pageSize = pageSize;
     }
 
@@ -72,19 +72,19 @@ public class PageRequest implements Serializable {
      * @return 偏移量
      */
     public int getOffset() {
-        return (page - 1) * pageSize;
+        return (currentPage - 1) * pageSize;
     }
 
 
-    public int getPage() {
-        return page;
+    public int getCurrentPage() {
+        return currentPage;
     }
 
-    public void setPage(int page) {
-        if (page < 1) {
+    public void setCurrentPage(int currentPage) {
+        if (currentPage < 1) {
             throw new IllegalArgumentException("Page index must not be less than one!");
         }
-        this.page = page;
+        this.currentPage = currentPage;
     }
 
     public int getPageSize() {

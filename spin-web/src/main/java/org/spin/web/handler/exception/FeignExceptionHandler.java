@@ -23,7 +23,7 @@ public class FeignExceptionHandler implements WebExceptionHandler {
 
     @Override
     public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
-        logger.warn("远程调用失败: [{}]", e.getCause().getMessage());
+        logger.warn("远程调用失败: [{}]", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
         RestfulResponse<Void> res = ((FeignHttpException) e).toResponse();
         res.withPath(appName + request.getRequestURI() + " -> " + res.getPath());
         return res;

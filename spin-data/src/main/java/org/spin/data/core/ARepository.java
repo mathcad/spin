@@ -816,7 +816,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         List<T> res = BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
-        return new Page<>(res, total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
+        return new Page<>(res, cb.getPageRequest() == null ? 1L : cb.getPageRequest().getCurrentPage(), total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
     }
 
     /**
@@ -1247,6 +1247,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         if (wrap) {
             list = list.stream().map(BeanUtils::wrapperFlatMap).collect(Collectors.toList());
         }
-        return new Page<>(list, total, null == cb.getPageRequest() ? total.intValue() : cb.getPageRequest().getPageSize());
+        return new Page<>(list, null == cb.getPageRequest() ? 1L : cb.getPageRequest().getCurrentPage(), total, null == cb.getPageRequest() ? total.intValue() : cb.getPageRequest().getPageSize());
     }
 }

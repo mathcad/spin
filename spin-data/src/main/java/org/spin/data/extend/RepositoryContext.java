@@ -892,7 +892,10 @@ public class RepositoryContext {
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         List<T> res = BeanUtils.wrapperMapToBeanList(cb.getEnCls(), list);
-        return new Page<>(res, total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
+        return new Page<>(res,
+            cb.getPageRequest() == null ? 1L : cb.getPageRequest().getCurrentPage(),
+            total,
+            cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
     }
 
     /**

@@ -190,7 +190,7 @@ public class SQLManager {
 
         List<Map<String, Object>> res = executeQuery(connection, parsedPageSql, paramMap, DEFAULT_ROW_MAPPER);
         long total = total(connection, parsedSql, paramMap);
-        return new Page<>(res, total, pageRequest.getPageSize());
+        return new Page<>(res, pageRequest.getCurrentPage(), total, pageRequest.getPageSize());
     }
 
     /**
@@ -240,7 +240,7 @@ public class SQLManager {
 
         List<T> res = executeQuery(connection, parsedPageSql, paramMap, RowMappers.getMapper(TypeToken.get(entityClazz)));
         long total = total(connection, parsedSql, paramMap);
-        return new Page<>(res, total, pageRequest.getPageSize());
+        return new Page<>(res, pageRequest.getCurrentPage(), total, pageRequest.getPageSize());
     }
 
     /**

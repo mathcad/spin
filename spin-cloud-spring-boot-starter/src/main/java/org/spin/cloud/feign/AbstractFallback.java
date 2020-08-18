@@ -78,8 +78,8 @@ public abstract class AbstractFallback {
     }
 
     public void prepare(String method) {
-        logger.warn("-Feign客户端调用异常:  - {}", method);
-        logger.warn("|");
+        StringBuilder warnMsg = new StringBuilder();
+        warnMsg.append("\n-Feign客户端调用异常:  - ").append(method).append("\n|");
         if (cause instanceof DegradeException) {
             degrade = true;
             blocked = true;
@@ -117,22 +117,24 @@ public abstract class AbstractFallback {
                 } else if (status == 405) {
                     msg = "远程调用失败: 不支持的请求类型";
                 }
-                logger.warn("|--{}-{}", msg, cause.getMessage());
+                warnMsg.append("\n|--").append(msg).append("-").append(cause.getMessage());
+                logger.warn(warnMsg.toString(), cause);
                 throw new FeignHttpException(status,
                     ((FeignException) cause).hasRequest() ? ((FeignException) cause).request().url() : "",
                     cause.getMessage(), msg, cause);
             } else {
-                errorMsg = null;
-                logger.warn("|--远程服务调用出错: {}", cause.getMessage(), cause);
+                warnMsg.append("\n|--远程服务调用出错: ").append(cause.getMessage());
+                logger.warn(warnMsg.toString(), cause);
                 return;
             }
         } else {
-            errorMsg = null;
-            logger.warn("|--远程服务调用出错: {}", cause.getMessage(), cause);
+            warnMsg.append("\n|--远程服务调用出错: ").append(cause.getMessage());
+            logger.warn(warnMsg.toString(), cause);
             return;
         }
 
-        logger.warn("|--" + errorMsg);
+
+        logger.warn(warnMsg.append("\n|--").append(errorMsg).toString());
     }
 
     /**

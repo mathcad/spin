@@ -1,11 +1,10 @@
 package org.spin.core.retry;
 
 import org.spin.core.concurrent.Uninterruptibles;
-import org.spin.core.function.ExceptionalHandler;
+import org.spin.core.function.ExceptionalConsumer;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.Util;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,7 +29,7 @@ public final class Retries extends Util {
      * @param <T>      操作返回结果类型
      * @return 操作结果
      */
-    public static <T> T retry(Callable<T> callable) {
+    public static <T> T retry(Retriable<T> callable) {
         return retry(callable, 3, DEFAULT_RETRY_CONFIG);
     }
 
@@ -42,7 +41,7 @@ public final class Retries extends Util {
      * @param <T>         操作返回结果类型
      * @return 操作结果
      */
-    public static <T> T retry(Callable<T> callable, final int maxAttempts) {
+    public static <T> T retry(Retriable<T> callable, final int maxAttempts) {
         return retry(callable, maxAttempts, DEFAULT_RETRY_CONFIG);
     }
 
@@ -55,7 +54,7 @@ public final class Retries extends Util {
      * @param <T>         操作返回结果类型
      * @return 操作结果
      */
-    public static <T> T retry(Callable<T> callable, final int maxAttempts, RetryConfig<Object> retryConfig) {
+    public static <T> T retry(Retriable<T> callable, final int maxAttempts, RetryConfig<Object> retryConfig) {
         if (null == retryConfig) {
             retryConfig = DEFAULT_RETRY_CONFIG;
         }
@@ -63,7 +62,7 @@ public final class Retries extends Util {
         int i = 0;
         while (i <= maxAttempts) {
             try {
-                T result = callable.call();
+                T result = callable.apply(lastException);
                 if (retryConfig.checkResult(result)) {
                     return result;
                 }
@@ -88,7 +87,7 @@ public final class Retries extends Util {
      *
      * @param handler 操作
      */
-    public static void retry(ExceptionalHandler<Exception> handler) {
+    public static void retry(ExceptionalConsumer<Exception, Exception> handler) {
         retry(handler, 3, DEFAULT_RETRY_CONFIG);
     }
 
@@ -98,7 +97,7 @@ public final class Retries extends Util {
      * @param handler     操作
      * @param maxAttempts 最大重试次数
      */
-    public static void retry(ExceptionalHandler<Exception> handler, final int maxAttempts) {
+    public static void retry(ExceptionalConsumer<Exception, Exception> handler, final int maxAttempts) {
         retry(handler, maxAttempts, DEFAULT_RETRY_CONFIG);
     }
 
@@ -109,7 +108,7 @@ public final class Retries extends Util {
      * @param maxAttempts 最大重试次数
      * @param retryConfig 重试配置
      */
-    public static void retry(ExceptionalHandler<Exception> handler, final int maxAttempts, RetryConfig<Object> retryConfig) {
+    public static void retry(ExceptionalConsumer<Exception, Exception> handler, final int maxAttempts, RetryConfig<Object> retryConfig) {
         if (null == retryConfig) {
             retryConfig = DEFAULT_RETRY_CONFIG;
         }
@@ -117,7 +116,7 @@ public final class Retries extends Util {
         int i = 0;
         while (i <= maxAttempts) {
             try {
-                handler.handle();
+                handler.accept(lastException);
                 return;
             } catch (Exception e) {
                 lastException = e;
@@ -133,5 +132,10 @@ public final class Retries extends Util {
         }
 
         throw new SpinException("所有重试均已失败, " + "重试次数: " + i, lastException);
+    }
+
+    @FunctionalInterface
+    public interface Retriable<T> {
+        T apply(Exception exception) throws Exception;
     }
 }

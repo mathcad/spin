@@ -33,7 +33,7 @@ class UserAgentUtilTest {
     }
 
 
-    public static class LunarDate {
+    public static final class LunarDate {
 
         /**
          * 月份
@@ -62,6 +62,7 @@ class UserAgentUtilTest {
 
 
         private static final String[] CHINESE_TEN = {"初", "十", "廿", "三十"};
+
         /**
          * 基准日期 1900年1月31日
          */

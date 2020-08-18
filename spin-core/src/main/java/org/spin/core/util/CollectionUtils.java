@@ -409,6 +409,18 @@ public final class CollectionUtils extends Util {
         return null;
     }
 
+    public static <E> E detect(E[] array, Predicate<E> predicate) {
+        if (null == array || array.length == 0) {
+            return null;
+        }
+        for (E e : array) {
+            if (predicate.test(e)) {
+                return e;
+            }
+        }
+        return null;
+    }
+
     public static <T extends Collection<E>, E> E detect(T collection, Predicate<E> predicate) {
         if (null == collection || collection.isEmpty()) {
             return null;
@@ -743,6 +755,20 @@ public final class CollectionUtils extends Util {
         return res;
     }
 
+    public static <T> void divide(T[] array, int batchSize, ShardConsumer<T[]> consumer) {
+        if (null == array) {
+            return;
+        }
+        int shards = (int) Math.ceil(array.length * 1.0 / batchSize);
+        int idx = 0;
+        while (idx < array.length) {
+            int end = idx + batchSize;
+            end = Math.min(end, array.length);
+            consumer.accept(shards, idx, Arrays.copyOfRange(array, idx, end));
+            idx += batchSize;
+        }
+    }
+
     public static byte[][] divide(byte[] array, int batchSize) {
         if (null == array) {
             return null;
@@ -758,6 +784,20 @@ public final class CollectionUtils extends Util {
             ++group;
         }
         return res;
+    }
+
+    public static <T> void divide(byte[] array, int batchSize, ShardConsumer<byte[]> consumer) {
+        if (null == array) {
+            return;
+        }
+        int shards = (int) Math.ceil(array.length * 1.0 / batchSize);
+        int idx = 0;
+        while (idx < array.length) {
+            int end = idx + batchSize;
+            end = Math.min(end, array.length);
+            consumer.accept(shards, idx, Arrays.copyOfRange(array, idx, end));
+            idx += batchSize;
+        }
     }
 
     public static short[][] divide(short[] array, int batchSize) {
@@ -975,5 +1015,9 @@ public final class CollectionUtils extends Util {
         public void remove() {
             throw new UnsupportedOperationException("Not supported");
         }
+    }
+
+    public interface ShardConsumer<T> {
+        void accept(int shardCount, int shardIndex, T shard);
     }
 }

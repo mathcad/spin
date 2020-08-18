@@ -266,12 +266,13 @@ public final class HttpExecutor extends Util {
     /**
      * 执行自定义请求，并通过自定义方式转换请求结果
      *
-     * @param request    请求对象，可以通过Method枚举构造
-     * @param entityProc 请求结果处理器
-     * @param <T>        处理后的返回类型
+     * @param request             请求对象，可以通过Method枚举构造
+     * @param entityProc          请求结果处理器
+     * @param checkResponseStatus 是否检查响应状态
+     * @param <T>                 处理后的返回类型
      * @return 处理后的请求结果
      */
-    public static <T> T executeRequest(HttpUriRequest request, EntityProcessor<T> entityProc) {
+    public static <T> T executeRequest(HttpUriRequest request, EntityProcessor<T> entityProc, boolean checkResponseStatus) {
         initSync();
 
         CloseableHttpResponse response = null;
@@ -299,7 +300,7 @@ public final class HttpExecutor extends Util {
         }
 
         try {
-            if (code != 200) {
+            if ((2 != code / 100) && checkResponseStatus) {
                 throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity));
             }
             return Assert.notNull(entityProc, "请求结果处理器不能为空").process(entity);
@@ -317,18 +318,20 @@ public final class HttpExecutor extends Util {
     /**
      * 异步执行自定义请求，并通过自定义方式转换请求结果
      *
-     * @param request           请求对象，可以通过Method枚举构造
-     * @param entityProc        请求结果处理器
-     * @param completedCallback 请求成功时的回调
-     * @param failedCallback    请求失败时的回调
-     * @param cancelledCallback 请求取消后的回调
-     * @param <T>               处理后的返回类型
+     * @param request             请求对象，可以通过Method枚举构造
+     * @param entityProc          请求结果处理器
+     * @param completedCallback   请求成功时的回调
+     * @param failedCallback      请求失败时的回调
+     * @param cancelledCallback   请求取消后的回调
+     * @param checkResponseStatus 是否检查响应状态
+     * @param <T>                 处理后的返回类型
      * @return 包含请求结果的Future对象
      */
     public static <T> Future<HttpResponse> executeRequestAsync(HttpUriRequest request, EntityProcessor<T> entityProc,
                                                                FinalConsumer<T> completedCallback,
                                                                FinalConsumer<Exception> failedCallback,
-                                                               Handler cancelledCallback) {
+                                                               Handler cancelledCallback,
+                                                               boolean checkResponseStatus) {
         try {
             initAync();
             return HttpExecutorAsyncHolder.getClient().execute(request, new FutureCallback<HttpResponse>() {
@@ -336,7 +339,7 @@ public final class HttpExecutor extends Util {
                 public void completed(HttpResponse result) {
                     int code = result.getStatusLine().getStatusCode();
                     HttpEntity entity = result.getEntity();
-                    if (code != 200) {
+                    if ((2 != code / 100) && checkResponseStatus) {
                         failed(new SpinException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity)));
                     }
                     if (null != completedCallback) {

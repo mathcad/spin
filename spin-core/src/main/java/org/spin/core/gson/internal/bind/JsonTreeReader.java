@@ -335,7 +335,7 @@ public final class JsonTreeReader extends JsonReader {
         return result.toString();
     }
 
-    private String locationString() {
+    public String locationString() {
         return " at path " + getPath();
     }
 }
