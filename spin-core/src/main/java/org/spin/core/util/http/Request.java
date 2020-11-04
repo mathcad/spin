@@ -17,6 +17,7 @@ import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.Handler;
 import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.io.StreamProgress;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.DateUtils;
@@ -532,7 +533,20 @@ public class Request<T extends HttpRequestBase> {
     public Map<String, String> download(String savePath) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequest(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), checkFlag);
+        return HttpExecutor.executeRequest(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath, null), checkFlag);
+    }
+
+    /**
+     * 下载文件
+     *
+     * @param savePath 文件保存路径
+     * @param progress 进度条
+     * @return 下载的文件信息(扩展名与大小)
+     */
+    public Map<String, String> download(String savePath, StreamProgress progress) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequest(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath, progress), checkFlag);
     }
 
     /**
@@ -544,7 +558,7 @@ public class Request<T extends HttpRequestBase> {
     public Future<HttpResponse> downloadAsync(String savePath) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), null, null, null, checkFlag);
+        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath, null), null, null, null, checkFlag);
     }
 
     /**
@@ -558,7 +572,7 @@ public class Request<T extends HttpRequestBase> {
                                               FinalConsumer<Map<String, String>> completedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, null, null, checkFlag);
+        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath, null), completedCallback, null, null, checkFlag);
     }
 
     /**
@@ -574,7 +588,7 @@ public class Request<T extends HttpRequestBase> {
                                               FinalConsumer<Exception> failedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath), completedCallback, failedCallback, null, checkFlag);
+        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath, null), completedCallback, failedCallback, null, checkFlag);
     }
 
     // endregion

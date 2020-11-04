@@ -4,6 +4,7 @@ import org.spin.cloud.web.config.RequestMappingBeanValidator;
 import org.spin.cloud.web.handler.FieldPermissionReturnValueModifier;
 import org.spin.cloud.web.interceptor.CustomizeRouteInterceptor;
 import org.spin.cloud.web.interceptor.GrayInterceptor;
+import org.spin.cloud.web.interceptor.LinktraceInterceptor;
 import org.spin.cloud.web.interceptor.UserAuthInterceptor;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.StringUtils;
@@ -21,8 +22,10 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -46,7 +49,7 @@ import java.util.stream.Collectors;
  * @author wangy QQ 837195190
  * <p>Created by wangy on 2019/3/13.</p>
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ComponentScan(basePackages = {"org.spin.cloud.web.handler", "org.spin.web.handler", "org.spin.cloud.idempotent"})
 public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
@@ -59,10 +62,14 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
     }
 
     @Bean
+    @Primary
     @LoadBalanced
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(0, JSON_HTTP_MESSAGE_CONVERTER);
+        List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>(restTemplate.getInterceptors());
+        interceptors.add(new LinktraceInterceptor());
+        restTemplate.setInterceptors(interceptors);
         return restTemplate;
     }
 
@@ -92,6 +99,7 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addWebRequestInterceptor(new GrayInterceptor()).addPathPatterns("/**").order(Ordered.HIGHEST_PRECEDENCE);
+        registry.addWebRequestInterceptor(new LinktraceInterceptor()).addPathPatterns("/**").order(Ordered.HIGHEST_PRECEDENCE + 1);
 
         Set<String> profiles = StringUtils.splitToSet(StringUtils.trimToEmpty(environment.getProperty("spring.profiles.active")).toLowerCase(), ",");
 

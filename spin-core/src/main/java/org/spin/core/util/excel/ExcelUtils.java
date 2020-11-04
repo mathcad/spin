@@ -202,9 +202,6 @@ public final class ExcelUtils extends Util {
 
                 for (int i = 0; i < excelSheet.getColumns().size(); i++) {
                     GridColumn col = excelSheet.getColumns().get(i);
-                    if (excelSheet.getExcludeColumns().contains(col.getHeader())) {
-                        continue;
-                    }
                     if (col.getWidth() != null) {
                         sheet.setColumnWidth(i, (col.getWidth() * PIX_TO_WIDTH));
                     } else {
@@ -233,9 +230,6 @@ public final class ExcelUtils extends Util {
                         // 当行赋值
                         for (int c = 0; c < excelSheet.getColumns().size(); c++) {
                             GridColumn col = excelSheet.getColumns().get(c);
-                            if (excelSheet.getExcludeColumns().contains(col.getHeader())) {
-                                continue;
-                            }
                             cell = row.createCell(c);
 
                             setDataCellValue(robj, cell, col);

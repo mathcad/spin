@@ -30,7 +30,7 @@ public final class AsyncUtils extends Util {
     private static final String COMMON_POOL_NAME = "GlobalCommon";
     private static final ThreadFactory THREAD_FACTORY = Executors.defaultThreadFactory();
 
-    private static final Map<String, ThreadPoolWrapper> POOL_EXECUTOR_MAP = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, ThreadPoolWrapper> POOL_EXECUTOR_MAP = new ConcurrentHashMap<>();
 
     private static long poolTimeout = 1000L;
 
@@ -49,7 +49,7 @@ public final class AsyncUtils extends Util {
      * 初始化一个指定名称的线程池
      *
      * @param name     线程池名称
-     * @param poolSize 最大线程数
+     * @param poolSize 固定线程数
      */
     public static void initThreadPool(String name, int poolSize) {
         initThreadPool(name, poolSize, poolSize, 10000L, -1, new ThreadPoolExecutor.AbortPolicy());
@@ -81,15 +81,15 @@ public final class AsyncUtils extends Util {
         Assert.notEmpty(name, "线程池名称不能为空");
         Assert.notTrue(COMMON_POOL_NAME.equals(name), "公共线程池不允许用户创建");
 
+        Assert.gt(corePoolSize, 0, "核心线程数必须大于0");
+        Assert.ge(maxPoolSize, maxPoolSize, "最大线程数不能小于核心线程数");
+        Assert.gt(keepAliveTimeInMs, 0, "空闲线程存活时间必须大于0");
         ThreadPoolWrapper poolWrapper = new ThreadPoolWrapper(name, corePoolSize, maxPoolSize, keepAliveTimeInMs,
             TimeUnit.MILLISECONDS,
             queueSize,
             rejectedExecutionHandler);
 
-        if (POOL_EXECUTOR_MAP.containsKey(name)) {
-            throw new SpinException("线程池已经存在: " + name);
-        }
-        POOL_EXECUTOR_MAP.put(name, poolWrapper);
+        Assert.isTrue(null == POOL_EXECUTOR_MAP.putIfAbsent(name, poolWrapper), "线程池已经存在: " + name);
         POOL_EXECUTOR_MAP.get(name).init();
     }
 
@@ -108,10 +108,9 @@ public final class AsyncUtils extends Util {
      * 提交任务到公用线程池
      *
      * @param callable 任务
-     * @return Future结果
      */
-    public static Future<?> runAsync(ExceptionalHandler<Exception> callable) {
-        return submit(COMMON_POOL_NAME, callable);
+    public static void runAsync(ExceptionalHandler<Exception> callable) {
+        execute(COMMON_POOL_NAME, callable);
     }
 
     /**
@@ -119,10 +118,21 @@ public final class AsyncUtils extends Util {
      *
      * @param callable         任务
      * @param exceptionHandler 异常处理逻辑
+     * @param <V>              返回结果类型
      * @return Future结果
      */
-    public static Future<?> runAsync(ExceptionalHandler<Exception> callable, FinalConsumer<Exception> exceptionHandler) {
+    public static <V> Future<V> runAsync(Callable<V> callable, FinalConsumer<Exception> exceptionHandler) {
         return submit(COMMON_POOL_NAME, callable, exceptionHandler);
+    }
+
+    /**
+     * 提交任务到公用线程池
+     *
+     * @param callable         任务
+     * @param exceptionHandler 异常处理逻辑
+     */
+    public static void runAsync(ExceptionalHandler<Exception> callable, FinalConsumer<Exception> exceptionHandler) {
+        execute(COMMON_POOL_NAME, callable, exceptionHandler);
     }
 
     /**
@@ -134,47 +144,9 @@ public final class AsyncUtils extends Util {
      * @return Future结果
      */
     public static <V> Future<V> submit(String name, Callable<V> callable) {
-        ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
-        checkReady(poolWrapper);
-        final long task = poolWrapper.info.submitTask();
-        return poolWrapper.executor.submit(() -> {
-            poolWrapper.info.runTask(task);
-            V res;
-            try {
-                res = callable.call();
-            } catch (Exception e) {
-                poolWrapper.info.completeTask(task, false);
-                logger.error("任务执行异常[" + Thread.currentThread().getName() + "]", e);
-                throw new SpinException("任务执行异常[" + Thread.currentThread().getName() + "]", e);
-            }
-            poolWrapper.info.completeTask(task, true);
-            return res;
-        });
+        return submit(name, callable, null);
     }
 
-    /**
-     * 提交任务到指定线程池
-     *
-     * @param name     线程池名称
-     * @param callable 任务
-     * @return Future结果
-     */
-    public static Future<?> submit(String name, ExceptionalHandler<Exception> callable) {
-        ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
-        checkReady(poolWrapper);
-        final long task = poolWrapper.info.submitTask();
-        return poolWrapper.executor.submit(() -> {
-            poolWrapper.info.runTask(task);
-            try {
-                callable.handle();
-            } catch (Exception e) {
-                poolWrapper.info.completeTask(task, false);
-                logger.error("任务执行异常[" + Thread.currentThread().getName() + "]", e);
-                return;
-            }
-            poolWrapper.info.completeTask(task, true);
-        });
-    }
 
     /**
      * 提交任务到指定线程池
@@ -182,22 +154,26 @@ public final class AsyncUtils extends Util {
      * @param name             线程池名称
      * @param callable         任务
      * @param exceptionHandler 异常处理逻辑
+     * @param <V>              返回结果类型
      * @return Future结果
      */
-    public static Future<?> submit(String name, ExceptionalHandler<Exception> callable, FinalConsumer<Exception> exceptionHandler) {
+    public static <V> Future<V> submit(String name, Callable<V> callable, FinalConsumer<Exception> exceptionHandler) {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
         checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
         return poolWrapper.executor.submit(() -> {
             poolWrapper.info.runTask(task);
             try {
-                callable.handle();
+                V res = callable.call();
+                poolWrapper.info.completeTask(task, true);
+                return res;
             } catch (Exception e) {
                 poolWrapper.info.completeTask(task, false);
-                exceptionHandler.accept(e);
-                return;
+                if (null != exceptionHandler) {
+                    exceptionHandler.accept(e);
+                }
+                return null;
             }
-            poolWrapper.info.completeTask(task, true);
         });
     }
 
@@ -207,21 +183,8 @@ public final class AsyncUtils extends Util {
      * @param name     线程池名称
      * @param callable 任务
      */
-    public static void execute(String name, Runnable callable) {
-        ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
-        checkReady(poolWrapper);
-        final long task = poolWrapper.info.submitTask();
-        poolWrapper.executor.execute(() -> {
-            poolWrapper.info.runTask(task);
-            try {
-                callable.run();
-            } catch (Exception e) {
-                poolWrapper.info.completeTask(task, false);
-                logger.error("任务执行异常[" + Thread.currentThread().getName() + "]", e);
-                throw new SpinException("任务执行异常[" + Thread.currentThread().getName() + "]", e);
-            }
-            poolWrapper.info.completeTask(task, true);
-        });
+    public static void execute(String name, ExceptionalHandler<Exception> callable) {
+        execute(name, callable, null);
     }
 
     /**
@@ -241,7 +204,9 @@ public final class AsyncUtils extends Util {
                 callable.handle();
             } catch (Exception e) {
                 poolWrapper.info.completeTask(task, false);
-                exceptionHandler.accept(e);
+                if (null != exceptionHandler) {
+                    exceptionHandler.accept(e);
+                }
                 return;
             }
             poolWrapper.info.completeTask(task, true);
@@ -278,7 +243,23 @@ public final class AsyncUtils extends Util {
         return POOL_EXECUTOR_MAP.values().stream().map(ThreadPoolWrapper::getInfo).collect(Collectors.toList());
     }
 
-    private static ThreadFactory buildFactory(String name, Boolean daemon, Integer priority, Thread.UncaughtExceptionHandler uncaughtExceptionHandler) {
+    /**
+     * 将所有线程池统计信息输出到日志
+     */
+    public static void logPoolStatisticInfo() {
+        POOL_EXECUTOR_MAP.values().forEach(it -> logger.info("线程池[{}]当前状态: {}", it.name, it.getInfo().infoStr()));
+    }
+
+    /**
+     * 设置线程池就绪等待时间
+     *
+     * @param poolTimeout 等待时间
+     */
+    public static void setPoolTimeout(long poolTimeout) {
+        AsyncUtils.poolTimeout = poolTimeout;
+    }
+
+    public static ThreadFactory buildFactory(String name, Boolean daemon, Integer priority, Thread.UncaughtExceptionHandler uncaughtExceptionHandler) {
         final AtomicLong count = new AtomicLong(0);
         final String namePattern = "ThreadPool-%s-%d";
         return runnable -> {
@@ -361,6 +342,7 @@ public final class AsyncUtils extends Util {
                 synchronized (lock) {
                     if (ThreadPoolState.NEW == status) {
                         status = ThreadPoolState.PREPARING;
+                        logger.info("Initiating Thread Pool[{}]: CoreSize - {}, MaxSize - {}, QueueSize - {}", name, corePoolSize, maxPoolSize, queueSize);
                         this.executor = new ThreadPoolExecutor(corePoolSize, maxPoolSize, keepAliveTimeInMs,
                             timeUnit,
                             queueSize == 0 ? new SynchronousQueue<>() : new LinkedBlockingQueue<>(queueSize),
@@ -382,6 +364,7 @@ public final class AsyncUtils extends Util {
                 synchronized (lock) {
                     if (ThreadPoolState.READY == status) {
                         status = ThreadPoolState.STOPPING;
+                        logger.info("Terminating Thread Pool[{}]: CoreSize - {}, MaxSize - {}, QueueSize - {}", name, corePoolSize, maxPoolSize, queueSize);
                         executor.shutdown();
                     }
                 }
@@ -396,6 +379,7 @@ public final class AsyncUtils extends Util {
                 synchronized (lock) {
                     if (ThreadPoolState.READY == status) {
                         status = ThreadPoolState.STOPPING;
+                        logger.info("Terminating Thread Pool[{}] Right Now: CoreSize - {}, MaxSize - {}, QueueSize - {}", name, corePoolSize, maxPoolSize, queueSize);
                         return executor.shutdownNow();
                     }
                 }
@@ -634,6 +618,23 @@ public final class AsyncUtils extends Util {
                 ", maxWaitTime=" + maxWaitTime +
                 ", minWaitTime=" + minWaitTime +
                 '}';
+        }
+
+        public String infoStr() {
+            return " 核心线程数=" + coreSize +
+                " 最大线程数=" + maxSize +
+                " 阻塞队列长度=" + queueCapacity +
+                " 合计任务数=" + taskCnt +
+                " 正在运行任务数=" + runningTaskCnt +
+                " 阻塞任务数=" + blockedTaskCnt +
+                " 合计已完成任务数=" + completedTaskCnt +
+                " 合计正确完成任务数=" + correctCompletedCnt +
+                " 累计执行时间=" + accrueExecTime +
+                " 累计等待时间=" + accrueWaitTime +
+                " 任务最长执行时间=" + maxExecTime +
+                " 任务最短执行时间=" + minExecTime +
+                " 任务最长等待时间=" + maxWaitTime +
+                " 任务最短等待时间=" + minWaitTime;
         }
     }
 

@@ -72,7 +72,9 @@ public class GlobalExceptionAdvice {
             for (WebExceptionHandler handler : handlers) {
                 if (handler.support(cause)) {
                     res = handler.handler(appName, cause, request);
-                    res.setPath(request.getRequestURI());
+                    if (null == res.getPath()) {
+                        res.setPath(request.getRequestURI());
+                    }
                     if (isInternal) {
                         response.setStatus(res.getStatus() > 0 ? res.getStatus() : ErrorCode.INTERNAL_ERROR.getCode());
                     }

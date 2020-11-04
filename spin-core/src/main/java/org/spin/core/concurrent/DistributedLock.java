@@ -1,7 +1,7 @@
 package org.spin.core.concurrent;
 
 /**
- * 分布式锁顶级接口
+ * 分布式锁顶级接口. 该接口的实现均为非重入锁
  * 例如：
  * RETRY_TIMES=100，SLEEP_MILLIS=100
  * RETRY_TIMES * SLEEP_MILLIS = 10000 意味着如果一直获取不了锁，最长会等待10秒后抛超时异常
@@ -27,9 +27,9 @@ public interface DistributedLock {
      * 获取锁
      *
      * @param key key
-     * @return 成功/失败
+     * @return 加锁凭据
      */
-    default boolean lock(String key) {
+    default LockTicket lock(String key) {
         return lock(key, TIMEOUT_MILLIS, RETRY_TIMES, SLEEP_MILLIS);
     }
 
@@ -38,9 +38,9 @@ public interface DistributedLock {
      *
      * @param key        key
      * @param retryTimes 重试次数
-     * @return 成功/失败
+     * @return 加锁凭据
      */
-    default boolean lock(String key, int retryTimes) {
+    default LockTicket lock(String key, int retryTimes) {
         return lock(key, TIMEOUT_MILLIS, retryTimes, SLEEP_MILLIS);
     }
 
@@ -50,9 +50,9 @@ public interface DistributedLock {
      * @param key         key
      * @param retryTimes  重试次数
      * @param sleepMillis 获取锁失败的重试间隔
-     * @return 成功/失败
+     * @return 加锁凭据
      */
-    default boolean lock(String key, int retryTimes, long sleepMillis) {
+    default LockTicket lock(String key, int retryTimes, long sleepMillis) {
         return lock(key, TIMEOUT_MILLIS, retryTimes, sleepMillis);
     }
 
@@ -61,9 +61,9 @@ public interface DistributedLock {
      *
      * @param key    key
      * @param expire 获取锁超时时间
-     * @return 成功/失败
+     * @return 加锁凭据
      */
-    default boolean lock(String key, long expire) {
+    default LockTicket lock(String key, long expire) {
         return lock(key, expire, RETRY_TIMES, SLEEP_MILLIS);
     }
 
@@ -73,9 +73,9 @@ public interface DistributedLock {
      * @param key        key
      * @param expire     获取锁超时时间
      * @param retryTimes 重试次数
-     * @return 成功/失败
+     * @return 加锁凭据
      */
-    default boolean lock(String key, long expire, int retryTimes) {
+    default LockTicket lock(String key, long expire, int retryTimes) {
         return lock(key, expire, retryTimes, SLEEP_MILLIS);
     }
 
@@ -86,17 +86,17 @@ public interface DistributedLock {
      * @param expire      获取锁超时时间
      * @param retryTimes  重试次数
      * @param sleepMillis 获取锁失败的重试间隔
-     * @return 成功/失败
+     * @return 加锁凭据
      */
-    boolean lock(String key, long expire, int retryTimes, long sleepMillis);
+    LockTicket lock(String key, long expire, int retryTimes, long sleepMillis);
 
     /**
      * 尝试获取锁，如果失败不会重试
      *
      * @param key key
-     * @return 成功/失败
+     * @return 加锁凭据
      */
-    default boolean tryLock(String key) {
+    default LockTicket tryLock(String key) {
         return lock(key, TIMEOUT_MILLIS, 0, 0);
     }
 
@@ -105,9 +105,9 @@ public interface DistributedLock {
      *
      * @param key           key
      * @param timeoutMillis 超时时间
-     * @return 成功/失败
+     * @return 加锁凭据
      */
-    default boolean tryLock(String key, long timeoutMillis) {
+    default LockTicket tryLock(String key, long timeoutMillis) {
         return lock(key, timeoutMillis, 0, 0);
     }
 
@@ -115,7 +115,18 @@ public interface DistributedLock {
      * 释放锁
      *
      * @param key key值
-     * @return 释放结果
+     * @return 释放操作是否成功
      */
-    boolean releaseLock(String key);
+    default boolean releaseLock(String key) {
+        return releaseLock(key, null);
+    }
+
+    /**
+     * 释放锁
+     *
+     * @param key    key值
+     * @param ticket 凭据
+     * @return 释放操作是否成功
+     */
+    boolean releaseLock(String key, String ticket);
 }

@@ -8,4 +8,5 @@ org.spin.cloud.config.SentinelAutoConfiguration,\
 org.spin.cloud.config.SpinRedisAutoConfiguration,\
 org.spin.cloud.config.SpinRibbonClientConfiguration,\
 org.spin.cloud.config.Swagger2AutoConfiguration, \
-org.spin.cloud.config.WebMvcAutoConfiguration
+org.spin.cloud.config.WebMvcAutoConfiguration, \
+org.spin.cloud.seata.SeataAutoConfiguration

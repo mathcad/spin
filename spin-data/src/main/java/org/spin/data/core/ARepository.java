@@ -21,6 +21,7 @@ import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.AssertFailException;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
+import org.spin.core.util.LambdaUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.pk.generator.IdGenerator;
@@ -172,6 +173,63 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public T merge(final T entity) {
         //noinspection unchecked
         return (T) DataSourceContext.getSession().merge(entity);
+    }
+
+    /**
+     * 根据ID更新实体的指定字段，当字段列表为空时，更新所有字段
+     *
+     * @param entity 待更新的实体
+     * @param fields 需要更新的字段列表, 为空时与save操作结果相同
+     * @return 更新的行数
+     */
+    @SafeVarargs
+    public final int updateById(T entity, org.spin.core.function.serializable.Function<T, ?>... fields) {
+        if (null == entity.getId()) {
+            throw new SQLException(SQLError.ID_NOT_FOUND, "The Id field must be nonnull when execute update by Id");
+        }
+        if (null == fields || 0 == fields.length) {
+            return null == save(entity) ? 0 : 1;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("UPDATE ").append(entity.getClass().getSimpleName()).append(" t SET ");
+        for (org.spin.core.function.serializable.Function<T, ?> field : fields) {
+            String fieldName = BeanUtils.toFieldName(LambdaUtils.resolveLambda(field).getImplMethodName());
+            sb.append("t.").append(fieldName).append(" = :").append(fieldName).append(",");
+        }
+        sb.setLength(sb.length() - 1);
+        sb.append(" WHERE id = :id");
+        Query<?> query = DataSourceContext.getSession().createQuery(sb.toString());
+        query.setProperties(entity);
+        return query.executeUpdate();
+    }
+
+    /**
+     * 根据ID更新实体的指定字段，当字段列表为空时，更新所有字段
+     *
+     * @param entity 待更新的实体
+     * @param fields 需要更新的字段列表, 为空时与save操作结果相同
+     * @return 更新的行数
+     */
+    @SafeVarargs
+    public final int updateByField(T entity, org.spin.core.function.serializable.Function<T, ?> conditionField,
+                                   org.spin.core.function.serializable.Function<T, ?>... fields) {
+        if (null == entity.getId()) {
+            throw new SQLException(SQLError.ID_NOT_FOUND, "The Id field must be nonnull when execute update by Id");
+        }
+        if (null == fields || 0 == fields.length) {
+            return null == save(entity) ? 0 : 1;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("UPDATE ").append(entity.getClass().getSimpleName()).append(" t SET ");
+        for (org.spin.core.function.serializable.Function<T, ?> field : fields) {
+            String fieldName = BeanUtils.toFieldName(LambdaUtils.resolveLambda(field).getImplMethodName());
+            sb.append("t.").append(fieldName).append(" = :").append(fieldName).append(",");
+        }
+        sb.setLength(sb.length() - 1);
+        sb.append(" WHERE id = :id");
+        Query<?> query = DataSourceContext.getSession().createQuery(sb.toString());
+        query.setProperties(entity);
+        return query.executeUpdate();
     }
 
     /**
@@ -381,8 +439,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public void delete(String conditions) {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(this.entityClazz.getSimpleName()).append(" ");
-        if (StringUtils.isEmpty(conditions))
+        if (StringUtils.isEmpty(conditions)) {
             hql.append("where ").append(conditions);
+        }
         DataSourceContext.getSession().delete(hql);
     }
 

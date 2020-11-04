@@ -228,10 +228,10 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
         boolean needRelease = false;
 
         try {
+            String sequenceNodeName = lockNode.substring(ROOT_PATH.length() + key.length() + 2);
             while (!haveTheLock) {
                 //该方法实现获取locker节点下的所有顺序节点，并且从小到大排序
                 List<String> children = getSortedChildren(key);
-                String sequenceNodeName = lockNode.substring(ROOT_PATH.length() + key.length() + 2);
 
                 //计算刚才客户端创建的顺序节点在locker的所有子节点中排序位置，如果是排序为0，则表示获取到了锁
                 int lockIndex = children.indexOf(sequenceNodeName);
@@ -348,7 +348,7 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
                 | KeeperException.RequestTimeoutException ignore) {
                 // need to retry
             } catch (KeeperException.NoNodeException e) {
-                throw new NoSuchElementException("Node not existo");
+                throw new NoSuchElementException("Node not exist");
             } catch (KeeperException e) {
                 throw new ZookeeperException(e);
             } catch (InterruptedException e) {

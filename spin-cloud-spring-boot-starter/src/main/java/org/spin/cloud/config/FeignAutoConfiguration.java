@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
  * @author xuweinan
  * @version 1.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @AutoConfigureBefore(FeignClientsConfiguration.class)
 public class FeignAutoConfiguration {
 

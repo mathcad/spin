@@ -4,10 +4,10 @@ import org.spin.core.Assert;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Excel中的sheet
@@ -21,8 +21,8 @@ public class ExcelSheet implements Serializable {
     private static final long serialVersionUID = -7239641413329751595L;
 
     private String sheetName;
+    private List<GridHeader> headers = new LinkedList<>();
     private List<GridColumn> columns = new LinkedList<>();
-    private Set<String> excludeColumns = new HashSet<>();
 
     public ExcelSheet(String sheetName) {
         Assert.notEmpty(sheetName, "Sheet名称不能为空");
@@ -60,6 +60,14 @@ public class ExcelSheet implements Serializable {
         this.sheetName = sheetName;
     }
 
+    public List<GridHeader> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(List<GridHeader> headers) {
+        this.headers = headers;
+    }
+
     public List<GridColumn> getColumns() {
         return columns;
     }
@@ -68,11 +76,32 @@ public class ExcelSheet implements Serializable {
         this.columns = columns;
     }
 
-    public Set<String> getExcludeColumns() {
-        return excludeColumns;
-    }
+    public void validateHeader() {
+        Assert.notEmpty(headers, "表格[" + sheetName + "]未设置任何表头");
+        Map<Integer, Integer> additionalColNumber = new HashMap<>();
 
-    public void setExcludeColumns(Set<String> excludeColumns) {
-        this.excludeColumns = excludeColumns;
+        int nextAdditionalColNumber = 0;
+        int currentColNumber = 0;
+        int lastColNumber;
+        for (int h = 0; h < headers.size(); ++h) {
+            if (!additionalColNumber.containsKey(h)) {
+                additionalColNumber.put(h, 0);
+            }
+            lastColNumber = currentColNumber;
+            currentColNumber = nextAdditionalColNumber;
+            GridHeader header = Assert.notNull(headers.get(h), "表格[" + sheetName + "]的第" + (h + 1) + "行表头为空");
+            for (int i = 0; i < header.getColumns().size(); i++) {
+                GridColumn column = Assert.notNull(header.getColumns().get(i),
+                    "表格[" + sheetName + "]的第" + (h + 1) + "行表头的第" + (i + 1) + "列为空");
+                Assert.le(column.getRowspan(), headers.size(),
+                    "表格[" + sheetName + "]的第" + (h + 1) + "行表头的第" + (i + 1) + "列的跨行设置超出范围");
+                if (column.getRowspan() > 1) {
+                    nextAdditionalColNumber = nextAdditionalColNumber + column.getRowspan() - 1;
+                }
+                currentColNumber += column.getColspan();
+            }
+
+            Assert.isEquals(lastColNumber, currentColNumber, "表格[" + sheetName + "]的第" + (h + 1) + "行表头与上一行表头的列数不一致");
+        }
     }
 }

@@ -1,5 +1,6 @@
 package org.spin.cloud.sentinel;
 
+import com.alibaba.cloud.sentinel.feign.SentinelContractHolder;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.SphU;
@@ -54,18 +55,19 @@ public class SentinelInvocationHandler implements InvocationHandler {
     @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args)
         throws Throwable {
-        if ("equals".equals(method.getName())) {
-            try {
-                Object otherHandler = args.length > 0 && args[0] != null
-                    ? Proxy.getInvocationHandler(args[0]) : null;
-                return equals(otherHandler);
-            } catch (IllegalArgumentException e) {
-                return false;
-            }
-        } else if ("hashCode".equals(method.getName())) {
-            return hashCode();
-        } else if ("toString".equals(method.getName())) {
-            return toString();
+        switch (method.getName()) {
+            case "equals":
+                try {
+                    Object otherHandler = args.length > 0 && args[0] != null
+                        ? Proxy.getInvocationHandler(args[0]) : null;
+                    return equals(otherHandler);
+                } catch (IllegalArgumentException e) {
+                    return false;
+                }
+            case "hashCode":
+                return hashCode();
+            case "toString":
+                return toString();
         }
 
         Object result;
@@ -109,7 +111,7 @@ public class SentinelInvocationHandler implements InvocationHandler {
                             // interface
                             throw new AssertionError(e);
                         } catch (InvocationTargetException e) {
-                            throw new AssertionError(e.getCause());
+                            throw e.getCause();
                         }
                     } else {
                         // throw exception if fallbackFactory is null

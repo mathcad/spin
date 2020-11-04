@@ -6,6 +6,7 @@ import org.spin.data.util.EntityUtils;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Query;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 import java.io.Serializable;
@@ -112,8 +113,8 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * @param <E>   实体类型
      * @return DTO
      */
+    @SuppressWarnings("unchecked")
     public final <E extends AbstractEntity> E getDTO(final int depth) {
-        //noinspection unchecked
         return (E) EntityUtils.getDTO(this, depth);
     }
 

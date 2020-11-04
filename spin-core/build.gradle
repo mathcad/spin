@@ -3,8 +3,7 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.2.31-SNAPSHOT'
-def artifactId = 'spin-core'
+version = '2.3.0-SNAPSHOT'
 
 test {
     useJUnitPlatform()
@@ -12,32 +11,34 @@ test {
 
 jar {
     manifest {
-        attributes("Specification-Title": artifactId)
+        attributes("Specification-Title": project.getName())
         attributes("Specification-Vendor": "Mathcat")
-        attributes("Specification-Version": project.version)
-        attributes("Implementation-Title": artifactId)
+        attributes("Specification-Version": project.getVersion())
+        attributes("Implementation-Title": project.getName())
         attributes("Implementation-Vendor": "Mathcat")
-        attributes("Implementation-Version": project.version)
+        attributes("Implementation-Version": project.getVersion())
     }
 }
 
-install {
-    repositories.mavenInstaller {
-        pom.version = "$project.version"
-        pom.artifactId = "$artifactId"
-        pom.groupId = "$project.group"
-    }
-}
 
-uploadArchives {
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+//            artifact sourceJar
+            artifact javadocJar
+        }
+    }
+
     repositories {
-        mavenDeployer {
-            repository(url: repoSnapUrl) {
-                authentication(userName: repoUser, password: repoPasswd)
+        maven {
+            name = "mathcat"
+            url = version.endsWith("-SNAPSHOT") ? repoSnapUrl : repoReleaseUrl
+            allowInsecureProtocol = true
+            credentials {
+                username = repoUser
+                password = repoPasswd
             }
-            pom.groupId = "$project.group"
-            pom.artifactId = "$artifactId"
-            pom.version = "$project.version"
         }
     }
 }

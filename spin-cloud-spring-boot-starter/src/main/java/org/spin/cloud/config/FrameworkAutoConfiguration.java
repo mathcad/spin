@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
  * @author xuweinan
  * @version 1.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class FrameworkAutoConfiguration {
 
     static {

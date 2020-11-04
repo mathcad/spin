@@ -20,6 +20,7 @@ import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.Handler;
 import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.io.StreamProgress;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.IOUtils;
 import org.spin.core.util.JsonUtils;
@@ -53,11 +54,16 @@ public final class HttpExecutor extends Util {
     private static final int DEFAULT_MAX_TOTAL = 200;
     private static final int DEFAULT_MAX_PER_ROUTE = 40;
 
+    private static final int DEFAULT_BUFFER_SIZE = 4096;
+
+    private static final StreamProgress DEFAULT_PROGRESS = (p, r) -> System.out.println("Download Progress: " + p + "%");
+
     private static int socketTimeout = 60000;
     private static int connectTimeout = 60000;
 
     private static int maxTotal = DEFAULT_MAX_TOTAL;
     private static int maxPerRoute = DEFAULT_MAX_PER_ROUTE;
+
 
     private static volatile byte[] keyStore;
     private static volatile String keyStorePass;
@@ -405,22 +411,58 @@ public final class HttpExecutor extends Util {
         return JsonUtils.fromJson(toStringProc(entity), typeToken);
     }
 
-    public static Map<String, String> downloadProc(HttpEntity entity, String savePath) {
+    public static Map<String, String> downloadProc(HttpEntity entity, String savePath, StreamProgress progress) {
         Map<String, String> map = new HashMap<>();
         String saveFile = savePath;
         String contentType = entity.getContentType().getValue();
+        long contentLength = entity.getContentLength();
+        long inProgress = 0L;
         String extention = contentType.substring(contentType.indexOf('/') + 1);
-        if (StringUtils.isNotBlank(savePath))
+        if (StringUtils.isNotBlank(savePath)) {
             saveFile = savePath + "." + extention;
-        try (FileOutputStream fos = new FileOutputStream(saveFile)) {
-            byte[] bytes = EntityUtils.toByteArray(entity);
-            fos.write(bytes);
+        }
+        StreamProgress sp = null == progress ? DEFAULT_PROGRESS : progress;
+        sp.start();
+        try (InputStream inStream = entity.getContent(); FileOutputStream fos = new FileOutputStream(saveFile)) {
+            if (inStream != null) {
+                final byte[] tmp = new byte[DEFAULT_BUFFER_SIZE];
+                int l;
+                while ((l = inStream.read(tmp)) != -1) {
+                    fos.write(tmp, 0, l);
+                    inProgress += l;
+                    sp.progress(inProgress / contentLength);
+                }
+            }
+            fos.flush();
+
             map.put("extention", StringUtils.isBlank(extention) ? "" : "." + extention);
-            map.put("bytes", Integer.toString(bytes.length));
+            map.put("bytes", Long.toString(contentLength));
         } catch (IOException e) {
             throw new SpinException("无法保存文件:[" + saveFile + "]", e);
         }
+        sp.finish();
         return map;
+    }
+
+    public static void downloadProc(HttpEntity entity, StreamSliceConsumer slice) {
+        String contentType = entity.getContentType().getValue();
+        long contentLength = entity.getContentLength();
+        double inProgress = 0L;
+        slice.start(contentType, contentLength);
+        try (InputStream inStream = entity.getContent()) {
+            if (inStream != null) {
+                final byte[] tmp = new byte[DEFAULT_BUFFER_SIZE];
+                int l;
+                while ((l = inStream.read(tmp)) != -1) {
+                    inProgress += l;
+                    slice.accept(tmp, l, inProgress / contentLength);
+                }
+            }
+
+        } catch (IOException e) {
+            throw new SpinException("下载文件失败", e);
+        }
+        slice.finish();
     }
 
     private static String getContentCharSet(final HttpEntity entity) {

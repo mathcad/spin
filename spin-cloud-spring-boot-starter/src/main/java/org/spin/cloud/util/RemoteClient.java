@@ -21,6 +21,7 @@ import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.core.util.Util;
 import org.spin.core.util.http.Http;
@@ -31,6 +32,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -83,40 +85,8 @@ public final class RemoteClient extends Util {
             throw new BizException("发送的短信模板编码不能为空");
         }
 
-        Util.awaitUntilReady(RemoteClient.class);
-        Pair<Boolean, String> pair = fixUrl(MSG_SERVICE, "v1/sms/internal/constant");
-        try {
-            RestfulResponse<?> entity;
-            Triple<String, String, String> header = obtainHeader();
-            if (pair.c1) {
-                HttpEntity<SmsTemplateVo> requestEntity = createHttpEntity(header.c1, header.c2, header.c3, smsTemplateVo);
-                ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
-                entity = response.getBody();
-                if (!response.getStatusCode().is2xxSuccessful()) {
-                    logger.warn("远程调用错误, 短信发送失败:\n{}", response.getBody());
-                    if (null == entity) {
-                        entity = new RestfulResponse<>();
-                        entity.setCodeAndMsg(new ErrorCode(response.getStatusCodeValue(), "远程调用错误, 短信发送失败"));
-                        entity.setPath(pair.c2);
-                    }
-                    throw new FeignHttpException(entity.getStatus(), entity.getPath(), entity.getError(), entity.getMessage(), null);
-                }
-            } else {
-                entity = Http.POST.withUrl(pair.c2).withoutStatusCheck()
-                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1,
-                        GrayInterceptor.X_GRAY_INFO, header.c2, CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, header.c3)
-                    .withJsonBody(smsTemplateVo).execute(VOID_ENTITY);
-            }
-            checkResult(pair.c2, entity);
-        } catch (SimplifiedException e) {
-            throw e;
-        } catch (SpinException e) {
-            logger.warn("远程调用异常, 短信发送失败", e);
-            throw new FeignHttpException(e.getExceptionType().getCode(), pair.c2, e.getStackTrace()[0].toString(), "远程调用异常, 短信发送失败", e);
-        } catch (Exception e) {
-            logger.warn("远程调用异常, 短信发送失败", e);
-            throw new FeignHttpException(ErrorCode.OTHER.getCode(), pair.c2, e.getStackTrace()[0].toString(), "远程调用异常, 短信发送失败", e);
-        }
+        String errMsg = "远程调用异常, 短信发送失败";
+        rmi(MSG_SERVICE, "v1/sms/internal/constant", HttpMethod.POST, Http.POST, "远程调用异常, 短信发送失败", smsTemplateVo, VOID_ENTITY);
     }
 
     /**
@@ -133,6 +103,7 @@ public final class RemoteClient extends Util {
             throw new BizException("发送的短信模板编码不能为空");
         }
 
+        String errMsg = "远程调用错误, 变量短信发送失败";
         Util.awaitUntilReady(RemoteClient.class);
         Pair<Boolean, String> pair = fixUrl(MSG_SERVICE, "v1/sms/internal/variable");
         try {
@@ -140,13 +111,13 @@ public final class RemoteClient extends Util {
             Triple<String, String, String> header = obtainHeader();
             if (pair.c1) {
                 HttpEntity<SmsTemplateVariableVo> requestEntity = createHttpEntity(header.c1, header.c2, header.c3, templateVariableVo);
-                ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
+                ResponseEntity<RestfulResponse> response = restTemplate.exchange(pair.c2, HttpMethod.POST, requestEntity, RestfulResponse.class);
                 entity = response.getBody();
                 if (!response.getStatusCode().is2xxSuccessful()) {
-                    logger.warn("远程调用错误, 变量短信发送失败:\n{}", response.getBody());
+                    logger.warn(errMsg + ":\n{}", response.getBody());
                     if (null == entity) {
                         entity = new RestfulResponse<>();
-                        entity.setCodeAndMsg(new ErrorCode(response.getStatusCodeValue(), "远程调用错误, 变量短信发送失败"));
+                        entity.setCodeAndMsg(new ErrorCode(response.getStatusCodeValue(), errMsg));
                         entity.setPath(pair.c2);
                     }
                     throw new FeignHttpException(entity.getStatus(), entity.getPath(), entity.getError(), entity.getMessage(), null);
@@ -161,12 +132,20 @@ public final class RemoteClient extends Util {
             checkResult(pair.c2, entity);
         } catch (SimplifiedException e) {
             throw e;
+        } catch (HttpStatusCodeException e) {
+            try {
+                RestfulResponse<?> restfulResponse = JsonUtils.fromJson(e.getResponseBodyAsString(), RestfulResponse.class);
+                throw new FeignHttpException(restfulResponse.getStatus(), restfulResponse.getPath(), restfulResponse.getError(), restfulResponse.getMessage(), e);
+            } catch (Exception ignore) {
+                logger.warn(errMsg, e);
+                throw new FeignHttpException(e.getStatusCode().value(), pair.c2, e.getStackTrace()[0].toString(), errMsg, e);
+            }
         } catch (SpinException e) {
-            logger.warn("远程调用异常, 变量短信发送失败", e);
-            throw new FeignHttpException(e.getExceptionType().getCode(), pair.c2, e.getStackTrace()[0].toString(), "远程调用异常, 变量短信发送失败", e);
+            logger.warn(errMsg, e);
+            throw new FeignHttpException(e.getExceptionType().getCode(), pair.c2, e.getStackTrace()[0].toString(), errMsg, e);
         } catch (Exception e) {
-            logger.warn("远程调用异常, 变量短信发送失败", e);
-            throw new FeignHttpException(ErrorCode.OTHER.getCode(), pair.c2, e.getStackTrace()[0].toString(), "远程调用异常, 变量短信发送失败", e);
+            logger.warn(errMsg, e);
+            throw new FeignHttpException(ErrorCode.OTHER.getCode(), pair.c2, e.getStackTrace()[0].toString(), errMsg, e);
         }
     }
 
@@ -196,7 +175,7 @@ public final class RemoteClient extends Util {
             Triple<String, String, String> header = obtainHeader();
             if (pair.c1) {
                 HttpEntity<MailVo> requestEntity = createHttpEntity(header.c1, header.c2, header.c3, mailVo);
-                ResponseEntity<RestfulResponse> response = restTemplate.postForEntity(pair.c2, requestEntity, RestfulResponse.class);
+                ResponseEntity<RestfulResponse> response = restTemplate.exchange(pair.c2, HttpMethod.POST, requestEntity, RestfulResponse.class);
                 entity = response.getBody();
                 if (!response.getStatusCode().is2xxSuccessful()) {
                     logger.warn("远程调用错误, 邮件发送失败:\n{}", response.getBody());
@@ -385,6 +364,57 @@ public final class RemoteClient extends Util {
         }
         if (response.getStatus() != ErrorCode.OK.getCode()) {
             throw new FeignHttpException(response.getStatus(), response.getPath(), response.getError(), response.getMessage(), null);
+        }
+    }
+
+    private static <T> T rmi(String service, String url, HttpMethod method, Http<?> http, String errMsg, Object param, TypeToken<RestfulResponse<T>> typeToken) {
+        Util.awaitUntilReady(RemoteClient.class);
+        Pair<Boolean, String> pair = fixUrl(service, url);
+        try {
+            RestfulResponse<T> entity;
+            Triple<String, String, String> header = obtainHeader();
+            if (pair.c1) {
+                HttpEntity<Object> requestEntity = createHttpEntity(header.c1, header.c2, header.c3, param);
+                ResponseEntity<RestfulResponse> response = restTemplate.exchange(pair.c2, method, requestEntity, RestfulResponse.class);
+                entity = response.getBody();
+                if (!response.getStatusCode().is2xxSuccessful()) {
+                    logger.warn(errMsg + ":\n{}", response.getBody());
+                    if (null == entity) {
+                        entity = new RestfulResponse<>();
+                        entity.setCodeAndMsg(new ErrorCode(response.getStatusCodeValue(), errMsg));
+                        entity.setPath(pair.c2);
+                    }
+                    throw new FeignHttpException(entity.getStatus(), entity.getPath(), entity.getError(), entity.getMessage(), null);
+                }
+            } else {
+                entity = http.withUrl(pair.c2).withoutStatusCheck()
+                    .withHead(FeignInterceptor.X_APP_NAME, Env.getAppName(), HttpHeaders.FROM, header.c1,
+                        GrayInterceptor.X_GRAY_INFO, header.c2, CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, header.c3)
+                    .withJsonBody(param).execute(typeToken);
+            }
+            checkResult(pair.c2, entity);
+            return entity.getData();
+        } catch (SimplifiedException e) {
+            throw e;
+        } catch (HttpStatusCodeException e) {
+            RestfulResponse<?> restfulResponse;
+            try {
+                restfulResponse = JsonUtils.fromJson(e.getResponseBodyAsString(), RestfulResponse.class);
+            } catch (Exception ignore) {
+                logger.warn(errMsg, e);
+                restfulResponse = RestfulResponse.ok();
+                restfulResponse.setStatus(e.getStatusCode().value());
+                restfulResponse.setPath(pair.c2);
+                restfulResponse.setError(e.getStackTrace()[0].toString());
+                restfulResponse.setMessage(errMsg);
+            }
+            throw new FeignHttpException(restfulResponse.getStatus(), restfulResponse.getPath(), restfulResponse.getError(), restfulResponse.getMessage(), e);
+        } catch (SpinException e) {
+            logger.warn(errMsg, e);
+            throw new FeignHttpException(e.getExceptionType().getCode(), pair.c2, e.getStackTrace()[0].toString(), errMsg, e);
+        } catch (Exception e) {
+            logger.warn(errMsg, e);
+            throw new FeignHttpException(ErrorCode.OTHER.getCode(), pair.c2, e.getStackTrace()[0].toString(), errMsg, e);
         }
     }
 }

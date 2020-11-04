@@ -73,7 +73,7 @@ public class IdempotentAspect implements Ordered {
         String idempotentId = extractIdempotentId(joinPoint);
         if (StringUtils.isNotEmpty(idempotentId) && ready) {
             // 幂等处理
-            String key = IDENPOTENT_RESULT_CACHE_KEY + idempotentId + ":" + Env.getAppName();
+            String key = IDENPOTENT_RESULT_CACHE_KEY + Env.getAppName() + ":" + joinPoint.getSignature().toShortString() + "-" + idempotentId;
             logger.info("开始为接口 [{}] 进行幂等担保处理, 本次业务id: {}", joinPoint.getSignature().toLongString(), key);
 
             try {
@@ -126,18 +126,16 @@ public class IdempotentAspect implements Ordered {
     }
 
     private String extractIdempotentId(ProceedingJoinPoint joinPoint) {
-        String idempotentId = null;
+        String idempotentId;
 
         Method apiMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
         Idempotent idempotent = apiMethod.getAnnotation(Idempotent.class);
-        if (null != idempotent) {
-            idempotentId = idempotent.value();
-            if (StringUtils.isNotEmpty(idempotentId)) {
-                idempotentId = parseSpel(idempotentId, apiMethod, joinPoint.getArgs());
-                RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-                if (null != requestAttributes) {
-                    requestAttributes.setAttribute(IDEMPOTENT_ID, idempotentId, RequestAttributes.SCOPE_REQUEST);
-                }
+        idempotentId = idempotent.value();
+        if (StringUtils.isNotEmpty(idempotentId)) {
+            idempotentId = parseSpel(idempotentId, apiMethod, joinPoint.getArgs());
+            RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+            if (null != requestAttributes) {
+                requestAttributes.setAttribute(IDEMPOTENT_ID, idempotentId, RequestAttributes.SCOPE_REQUEST);
             }
         }
         if (StringUtils.isEmpty(idempotentId) && Objects.nonNull(RequestContextHolder.getRequestAttributes())) {

@@ -49,7 +49,7 @@ public class CriteriaBuilder<T extends IEntity<?>> {
 
     private volatile boolean projected = false;
 
-    private Set<String> condJoins = new HashSet<>();
+    private final Set<String> condJoins = new HashSet<>();
 
     private CriteriaBuilder() {
     }

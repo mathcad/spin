@@ -1,6 +1,6 @@
 package org.spin.mybatis.entity;
 
-import com.baomidou.mybatisplus.core.enums.IEnum;
+import com.baomidou.mybatisplus.annotation.IEnum;
 import org.spin.core.trait.FrendlyEnum;
 
 import java.io.Serializable;

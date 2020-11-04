@@ -28,13 +28,14 @@ public class GrayInterceptor implements WebRequestInterceptor {
     @Override
     public void preHandle(@NonNull WebRequest request) {
         String grayInfo = request.getHeader(X_GRAY_INFO);
-        if (StringUtils.isNotEmpty(grayInfo)) {
-            RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-            if (null == requestAttributes) {
-                RequestContextHolder.setRequestAttributes(request);
-                requestAttributes = request;
-            }
 
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (null == requestAttributes) {
+            RequestContextHolder.setRequestAttributes(request);
+            requestAttributes = request;
+        }
+
+        if (StringUtils.isNotEmpty(grayInfo)) {
             Map<String, String> grayInfoMap = Arrays.stream(StringUtils.urlDecode(grayInfo).split(";"))
                 .collect(Collectors.toMap(it -> StringUtils.trimToEmpty(it.substring(0, it.indexOf('='))),
                     it -> StringUtils.trimToEmpty(it.substring(it.indexOf('=')))));

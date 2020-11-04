@@ -642,7 +642,7 @@ public final class DateUtils extends Util {
     }
 
     /**
-     * 将时间段解析为毫秒最后一位区分单位
+     * 将时间段解析为毫秒, 最后一位区分单位
      * <pre>
      *     例：1d = 86,400,000
      *     如果没有单位，相当于{@code Long.parseLong(period)}
@@ -659,17 +659,18 @@ public final class DateUtils extends Util {
     public static Long periodToMs(String period) {
         try {
 
+            final long l = Long.parseLong(period.substring(0, period.length() - 1));
             switch (period.charAt(period.length() - 1)) {
                 case 'w':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 604800000;
+                    return l * 604800000;
                 case 'd':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 86400000;
+                    return l * 86400000;
                 case 'h':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 3600000;
+                    return l * 3600000;
                 case 'm':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 60000;
+                    return l * 60000;
                 case 's':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000;
+                    return l * 1000;
                 default:
                     return Long.parseLong(period);
             }

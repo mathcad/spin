@@ -25,7 +25,7 @@ import java.lang.reflect.Field;
  * @author xuweinan
  * @version 1.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(RibbonClientConfiguration.class)
 public class SpinRibbonClientConfiguration {
 

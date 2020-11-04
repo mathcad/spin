@@ -1,5 +1,6 @@
 package org.spin.cloud.web.handler;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -12,6 +13,50 @@ import java.util.List;
  */
 public interface UserVerifier {
 
+    class UserVerifyInfo implements Serializable {
+        private static final long serialVersionUID = 4508858068649633823L;
+
+        /**
+         * 唯一标识
+         */
+        private Long id;
+
+        /**
+         * 用户名称
+         */
+        private String name;
+
+        /**
+         * 可用企业列表
+         */
+        private List<Long> enterprises;
+
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public List<Long> getEnterprises() {
+            return enterprises;
+        }
+
+        public void setEnterprises(List<Long> enterprises) {
+            this.enterprises = enterprises;
+        }
+    }
+
     /**
      * 验证用户, 不通过时抛出异常
      *
@@ -22,7 +67,7 @@ public interface UserVerifier {
      * @param userType   业务用户类型
      * @return 用户可用的企业列表
      */
-    default List<Long> verify(String uid, String target, Integer clientType, boolean virtual, String userType) {
+    default UserVerifyInfo verify(String uid, String target, Integer clientType, boolean virtual, String userType) {
         return null;
     }
 }

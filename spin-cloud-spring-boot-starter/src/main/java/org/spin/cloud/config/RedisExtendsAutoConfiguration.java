@@ -22,7 +22,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @author xuweinan
  * @version 1.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(name = {"org.springframework.data.redis.core.StringRedisTemplate"})
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 public class RedisExtendsAutoConfiguration {

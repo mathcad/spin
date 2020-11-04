@@ -44,11 +44,10 @@ import java.util.regex.Pattern;
  *
  * @author xuweinan
  * @version 1.0
- *
  */
 class HttpUtilsTest {
 
-//    @Test
+    //    @Test
     public void test1() {
         String url = "http://192.168.12.54:9200/mall_goods/_analyze";
         Map<String, Object> param = MapUtils.ofMap("field", "ware_name", "text", "华为手机");
@@ -59,7 +58,7 @@ class HttpUtilsTest {
         System.out.println(s);
     }
 
-//    @Test
+    //    @Test
     public static void testM() throws InterruptedException {
         String url = "http://www.baidu.com";
         System.out.println(Http.GET.withUrl(url).execute());
@@ -112,7 +111,7 @@ class HttpUtilsTest {
         a.toString();
     }
 
-//    @Test
+    //    @Test
     public void testPost() {
         String url = "https://bizapi.jd.com/oauth2/access_token";
 
@@ -149,7 +148,7 @@ class HttpUtilsTest {
 //        System.out.println(execute);
     }
 
-//    @Test
+    //    @Test
     public void testRefund() throws IOException {
         String url = "https://api.mch.weixin.qq.com/secapi/pay/refund";
         String body = "<xml><refundFee>10</refundFee><nonce_str>1561452473</nonce_str><out_trade_no>20190621135913442141</out_trade_no><totalFee>10</totalFee><outTradeNo>20190621135913442141</outTradeNo><appid>wxfa3f617e8c84dc09</appid><total_fee>10</total_fee><refund_fee>10</refund_fee><sign>2F118B65923E01D425C2E26E3601A444</sign><mch_id>1530112491</mch_id></xml>";
@@ -306,7 +305,7 @@ class HttpUtilsTest {
         }
     }
 
-//    @Test
+    //    @Test
     void testJks() throws Exception {
         String key = "c:/Users/Mathcat/test.keystore";
         KeyStore keystore = KeyStore.getInstance("JKS");
@@ -344,7 +343,7 @@ class HttpUtilsTest {
         SSLContext sslc = SSLContext.getInstance("SSLv3");
     }
 
-//    @Test
+    //    @Test
     void testBiSsl() {
         try (InputStream is = new FileInputStream(new File("c:/Users/Mathcat/test.keystore"))) {
             Http.configure().withKeyStore(is, "123456", KeyStoreType.JKS, MapUtils.ofMap("test1", "123456", "testp12", "654321")).finishConfigure();
@@ -357,4 +356,13 @@ class HttpUtilsTest {
     }
 
 
+    @Test
+    void testDownload() {
+        Http.GET.withUrl("https://pay2live.oss-cn-shenzhen.aliyuncs.com/shanglike/202009241445369chP.png").execute(entity -> {
+            HttpExecutor.downloadProc(entity, (i, s, p) -> {
+                System.out.println(s + "," + p);
+            });
+            return null;
+        });
+    }
 }

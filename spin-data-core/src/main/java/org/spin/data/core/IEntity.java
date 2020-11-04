@@ -49,12 +49,12 @@ public interface IEntity<PK extends Serializable> extends Serializable {
      * @param <T>    目标对象类型
      * @return 拷贝属性后的目标对象
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     default <T> T copyTo(T target) {
         if (null != target) {
             if (target instanceof Map) {
                 ReflectionUtils.doWithFields(this.getClass(), field -> {
                     ReflectionUtils.makeAccessible(field);
-                    //noinspection unchecked
                     ((Map) target).put(field.getName(), ReflectionUtils.getField(field, this));
                 });
             } else {

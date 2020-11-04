@@ -22,7 +22,7 @@ public class GridColumn implements Serializable {
     private Integer width;
 
     /**
-     * 访问值
+     * 数据key
      */
     private String dataIndex;
 
@@ -30,6 +30,16 @@ public class GridColumn implements Serializable {
      * 数据类型
      */
     private String dataType;
+
+    /**
+     * 跨行
+     */
+    private int rowspan = 1;
+
+    /**
+     * 跨列
+     */
+    private int colspan = 1;
 
     public GridColumn() {
     }
@@ -94,5 +104,21 @@ public class GridColumn implements Serializable {
 
     public void setDataType(String dataType) {
         this.dataType = dataType;
+    }
+
+    public int getRowspan() {
+        return rowspan;
+    }
+
+    public void setRowspan(int rowspan) {
+        this.rowspan = rowspan;
+    }
+
+    public int getColspan() {
+        return colspan;
+    }
+
+    public void setColspan(int colspan) {
+        this.colspan = colspan;
     }
 }

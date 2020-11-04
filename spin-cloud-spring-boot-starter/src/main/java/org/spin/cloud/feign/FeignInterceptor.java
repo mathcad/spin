@@ -3,9 +3,12 @@ package org.spin.cloud.feign;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import org.spin.cloud.idempotent.IdempotentAspect;
+import org.spin.cloud.util.Linktrace;
 import org.spin.cloud.vo.CurrentUser;
+import org.spin.cloud.vo.LinktraceInfo;
 import org.spin.cloud.web.interceptor.CustomizeRouteInterceptor;
 import org.spin.cloud.web.interceptor.GrayInterceptor;
+import org.spin.cloud.web.interceptor.LinktraceInterceptor;
 import org.spin.core.util.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.context.request.RequestAttributes;
@@ -59,5 +62,12 @@ public class FeignInterceptor implements RequestInterceptor {
             }
         }
         template.header(IdempotentAspect.IDEMPOTENT_ID, idempotent.append(UUID.randomUUID().toString()).toString());
+
+        LinktraceInfo linktraceInfo = Linktrace.removeCurrentTraceInfo();
+        if (null != linktraceInfo) {
+            template.header(LinktraceInterceptor.X_TRACE_ID, linktraceInfo.getTraceId());
+            template.header(LinktraceInterceptor.X_PARENTSPAN_ID, linktraceInfo.getParentSpanId());
+            template.header(LinktraceInterceptor.X_SPAN_ID, linktraceInfo.getSpanId());
+        }
     }
 }

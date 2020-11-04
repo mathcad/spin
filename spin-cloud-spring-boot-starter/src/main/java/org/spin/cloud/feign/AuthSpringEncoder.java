@@ -20,8 +20,8 @@ import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.form.spring.SpringFormEncoder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.http.HttpHeaders;
@@ -55,7 +55,7 @@ import static org.spin.cloud.feign.FeignUtils.getHttpHeaders;
  */
 public class AuthSpringEncoder implements Encoder {
 
-    private static final Log log = LogFactory.getLog(AuthSpringEncoder.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthSpringEncoder.class);
 
     private final SpringFormEncoder springFormEncoder = new SpringFormEncoder();
 
@@ -92,13 +92,13 @@ public class AuthSpringEncoder implements Encoder {
             for (HttpMessageConverter<?> messageConverter : this.messageConverters
                 .getObject().getConverters()) {
                 if (messageConverter.canWrite(requestType, requestContentType)) {
-                    if (log.isDebugEnabled()) {
+                    if (logger.isDebugEnabled()) {
                         if (requestContentType != null) {
-                            log.debug("Writing [" + requestBody + "] as \""
+                            logger.debug("Writing [" + requestBody + "] as \""
                                 + requestContentType + "\" using [" + messageConverter
                                 + "]");
                         } else {
-                            log.debug("Writing [" + requestBody + "] using ["
+                            logger.debug("Writing [" + requestBody + "] using ["
                                 + messageConverter + "]");
                         }
 

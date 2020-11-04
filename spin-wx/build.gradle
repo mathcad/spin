@@ -3,30 +3,30 @@ plugins {
 }
 
 description = '微信模块'
-version = '2.2.31-SNAPSHOT'
-def artifactId = 'spin-wx'
+version = '2.3.0-SNAPSHOT'
 
 test {
     useJUnitPlatform()
 }
 
-install {
-    repositories.mavenInstaller {
-        pom.version = "$project.version"
-        pom.artifactId = "$artifactId"
-        pom.groupId = "$project.group"
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+//            artifact sourceJar
+            artifact javadocJar
+        }
     }
-}
 
-uploadArchives {
     repositories {
-        mavenDeployer {
-            repository(url: repoSnapUrl) {
-                authentication(userName: repoUser, password: repoPasswd)
+        maven {
+            name = "mathcat"
+            url = version.endsWith("-SNAPSHOT") ? repoSnapUrl : repoReleaseUrl
+            allowInsecureProtocol = true
+            credentials {
+                username = repoUser
+                password = repoPasswd
             }
-            pom.groupId = "$project.group"
-            pom.artifactId = "$artifactId"
-            pom.version = "$project.version"
         }
     }
 }

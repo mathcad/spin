@@ -16,9 +16,9 @@
 
 package org.spin.boot.datasource.filter;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.orm.hibernate5.SessionFactoryUtils;
 import org.springframework.orm.hibernate5.SessionHolder;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -42,7 +42,7 @@ import java.util.concurrent.Callable;
  */
 public class AsyncRequestInterceptor implements CallableProcessingInterceptor, DeferredResultProcessingInterceptor {
 
-	private static final Log logger = LogFactory.getLog(AsyncRequestInterceptor.class);
+	private static final Logger logger = LoggerFactory.getLogger(AsyncRequestInterceptor.class);
 
 	private final SessionFactory sessionFactory;
 

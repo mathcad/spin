@@ -3,30 +3,30 @@ plugins {
 }
 
 description = '数据访问模块核心依赖,脱离于具体的DAO层实现，只定义必须的接口与通用工具'
-version = '2.2.32-SNAPSHOT'
-def artifactId = 'spin-data-core'
+version = '2.3.0-SNAPSHOT'
 
 test {
     useJUnitPlatform()
 }
 
-install {
-    repositories.mavenInstaller {
-        pom.version = "$project.version"
-        pom.artifactId = "$artifactId"
-        pom.groupId = "$project.group"
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+//            artifact sourceJar
+            artifact javadocJar
+        }
     }
-}
 
-uploadArchives {
     repositories {
-        mavenDeployer {
-            repository(url: repoSnapUrl) {
-                authentication(userName: repoUser, password: repoPasswd)
+        maven {
+            name = "mathcat"
+            url = version.endsWith("-SNAPSHOT") ? repoSnapUrl : repoReleaseUrl
+            allowInsecureProtocol = true
+            credentials {
+                username = repoUser
+                password = repoPasswd
             }
-            pom.groupId = "$project.group"
-            pom.artifactId = "$artifactId"
-            pom.version = "$project.version"
         }
     }
 }
@@ -42,7 +42,7 @@ dependencies {
     testRuntimeOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion
     testRuntimeOnly group: 'org.xerial', name: 'sqlite-jdbc', version: sqliteVersion
 
-    api group: 'org.mathcat', name: 'spin-core', version: '2.2.31-SNAPSHOT'
+    api group: 'org.mathcat', name: 'spin-core', version: '2.3.0-SNAPSHOT'
 
     compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
     compileOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion

@@ -43,8 +43,9 @@ public final class JsonUtils extends Util {
     private static final Gson defaultGsonWithUnderscore;
 
     static {
-        defaultGson = buildGson(null);
-        defaultGsonWithUnderscore = buildGson(builder -> builder.setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES));
+        defaultGson = buildGson(b -> b.disableHtmlEscaping().serializeSpecialFloatingPointValues());
+        defaultGsonWithUnderscore = buildGson(b -> b.disableHtmlEscaping().enableComplexMapKeySerialization().serializeSpecialFloatingPointValues()
+            .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES));
     }
 
     private JsonUtils() {
@@ -398,25 +399,6 @@ public final class JsonUtils extends Util {
         return gsonBuilder.create();
     }
 
-//    private static Gson procGson(Gson gson) {
-//        try {
-//            Class<?> aClass = ReflectiveTypeAdapterFactory.class;
-//            Object[] factories = BeanUtils.getFieldValue(gson, "factories.list.elementData");
-//            if (null == factories) {
-//                return gson;
-//            }
-//            for (int i = factories.length - 1; i != -1; --i) {
-//                if (factories[i] instanceof ReflectiveTypeAdapterFactory) {
-//                    factories[i] = ConstructorUtils.invokeConstructor(aClass, factories[i]);
-//                    break;
-//                }
-//            }
-//            return gson;
-//        } catch (Exception ignore) {
-//            return gson;
-//        }
-//    }
-
     private static GsonBuilder baseBuilder(String[] pattern) {
         GsonBuilder builder = new GsonBuilder();
         String[] patterns = new String[3];
@@ -429,8 +411,8 @@ public final class JsonUtils extends Util {
         try {
             Class<?> queryParamCls = ClassUtils.getClass("org.spin.data.query.QueryParam");
             @SuppressWarnings("unchecked")
-            Class<InstanceCreator> instanceCreatorCls = (Class<InstanceCreator>) ClassUtils.getClass("org.spin.data.gson.adapter.QueryParamInstanceCreater");
-            InstanceCreator instanceCreator = instanceCreatorCls.newInstance();
+            Class<InstanceCreator<?>> instanceCreatorCls = (Class<InstanceCreator<?>>) ClassUtils.getClass("org.spin.data.gson.adapter.QueryParamInstanceCreater");
+            InstanceCreator<?> instanceCreator = instanceCreatorCls.newInstance();
             builder.registerTypeAdapter(queryParamCls, instanceCreator);
         } catch (Exception ignore) {
             logger.info("data module not imported");

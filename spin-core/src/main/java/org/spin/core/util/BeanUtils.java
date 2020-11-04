@@ -185,11 +185,10 @@ public final class BeanUtils extends Util {
                     bak = new HashMap<>();
                     work.put(propName[i], bak);
                     work = bak;
-                    ++i;
                 } else {
                     work.put(propName[i], entry.getValue());
-                    ++i;
                 }
+                ++i;
             }
         }
         return treeSightMap;
@@ -319,7 +318,6 @@ public final class BeanUtils extends Util {
                     }
                     o = ((List) o).get(idx);
                 } else if (o.getClass().isArray()) {
-                    @SuppressWarnings("ConstantConditions")
                     Object[] t = (Object[]) o;
                     if (t.length <= idx) {
                         throw new SpinException(idx + " 索引超出范围0-" + t.length);

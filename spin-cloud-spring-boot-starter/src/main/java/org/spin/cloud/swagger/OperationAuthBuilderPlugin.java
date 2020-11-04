@@ -9,9 +9,7 @@ import org.spin.web.AuthLevel;
 import org.spin.web.annotation.Auth;
 import org.spin.web.annotation.Author;
 import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.schema.ModelRef;
@@ -31,8 +29,6 @@ import java.util.List;
  * @author xuweinan
  * @version 1.0
  */
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE + 100)
 public class OperationAuthBuilderPlugin extends AbstractOperationBuilderPlugin {
 
     /***

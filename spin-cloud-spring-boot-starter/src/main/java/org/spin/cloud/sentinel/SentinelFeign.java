@@ -1,5 +1,6 @@
 package org.spin.cloud.sentinel;
 
+import com.alibaba.cloud.sentinel.feign.SentinelContractHolder;
 import feign.Contract;
 import feign.Feign;
 import feign.InvocationHandlerFactory;
