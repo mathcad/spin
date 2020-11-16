@@ -36,7 +36,7 @@ import static org.spin.cloud.feign.FeignUtils.getHttpHeaders;
 public class RestfulHandledDecoder implements Decoder {
     private static final Logger logger = LoggerFactory.getLogger(RestfulHandledDecoder.class);
 
-    private ObjectFactory<HttpMessageConverters> messageConverters;
+    private final ObjectFactory<HttpMessageConverters> messageConverters;
 
     public RestfulHandledDecoder(ObjectFactory<HttpMessageConverters> messageConverters) {
         this.messageConverters = messageConverters;

@@ -14,6 +14,7 @@ import feign.Target;
 import feign.hystrix.FallbackFactory;
 import org.spin.cloud.feign.AbstractFallback;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.throwable.SpinException;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -109,7 +110,7 @@ public class SentinelInvocationHandler implements InvocationHandler {
                         } catch (IllegalAccessException e) {
                             // shouldn't happen as method is public due to being an
                             // interface
-                            throw new AssertionError(e);
+                            throw new SpinException("Fallback Method access failed", e);
                         } catch (InvocationTargetException e) {
                             throw e.getCause();
                         }

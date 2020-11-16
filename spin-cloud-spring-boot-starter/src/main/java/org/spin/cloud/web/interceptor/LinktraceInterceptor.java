@@ -48,7 +48,8 @@ public class LinktraceInterceptor implements WebRequestInterceptor, ClientHttpRe
 
         String spanId = UUID.randomUUID().toString();
 
-        logger.info("Linktrace Info Entry - TraceId: {} ParentSpanId: {} SpanId: {}", traceId, parentSpanId, spanId);
+        logger.info("Linktrace Info Entry - TraceId: {} ParentSpanId: {} SpanId: {}\n  Request Info: {}", traceId, parentSpanId, spanId,
+            request.getDescription(false));
         Linktrace.setCurrentTraceInfo(new LinktraceInfo(traceId, parentSpanId, spanId));
     }
 
@@ -75,7 +76,7 @@ public class LinktraceInterceptor implements WebRequestInterceptor, ClientHttpRe
         throws IOException {
         HttpRequestWrapper requestWrapper = new HttpRequestWrapper(request);
 
-        LinktraceInfo linktraceInfo = Linktrace.removeCurrentTraceInfo();
+        LinktraceInfo linktraceInfo = Linktrace.getCurrentTraceInfo();
 
         if (null != linktraceInfo) {
             requestWrapper.getHeaders().add(LinktraceInterceptor.X_TRACE_ID, linktraceInfo.getTraceId());
