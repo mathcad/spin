@@ -6,13 +6,11 @@ import org.spin.core.ErrorCode;
 import org.spin.web.RestfulResponse;
 import org.spin.web.handler.WebExceptionHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.BindException;
-import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
-import java.util.List;
 
 /**
  * TITLE
@@ -29,11 +27,21 @@ public class JavaxValidationExceptionHandler implements WebExceptionHandler {
     @Override
     public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.warn("请求[{}]中携带参数校验不通过: \n  {}", request.getRequestURI(), e.getMessage());
-        List<ObjectError> errors = e instanceof BindException ? ((BindException) e).getAllErrors()
-            : ((MethodArgumentNotValidException) e).getBindingResult().getAllErrors();
 
-
-        return RestfulResponse.<Void>error(ErrorCode.INVALID_PARAM, e.getMessage())
+        StringBuilder msg = new StringBuilder();
+        if (e instanceof ConstraintViolationException) {
+            for (ConstraintViolation<?> constraintViolation : ((ConstraintViolationException) e).getConstraintViolations()) {
+                msg.append(constraintViolation.getMessage()).append(", ");
+            }
+            if (msg.length() > 2) {
+                msg.setLength(msg.length() - 2);
+            } else {
+                msg.append(e.getMessage());
+            }
+        } else {
+            msg.append(e.getMessage());
+        }
+        return RestfulResponse.<Void>error(ErrorCode.INVALID_PARAM, msg.toString())
             .withPath(appName + request.getRequestURI());
     }
 
