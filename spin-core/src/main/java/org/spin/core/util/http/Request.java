@@ -1,5 +1,6 @@
 package org.spin.core.util.http;
 
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
@@ -9,7 +10,10 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ByteArrayBody;
+import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicNameValuePair;
 import org.spin.core.Assert;
@@ -17,6 +21,7 @@ import org.spin.core.ErrorCode;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.Handler;
 import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.io.FastByteBuffer;
 import org.spin.core.io.StreamProgress;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
@@ -25,6 +30,7 @@ import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
 
 import java.io.File;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -53,7 +59,7 @@ public class Request<T extends HttpRequestBase> {
     private final RequestConfig.Builder configBuilder;
 
     private final Map<String, String> formData = new HashMap<>();
-    private final Map<String, File> multiPartFormData = new HashMap<>();
+    private final Map<String, Object> multiPartFormData = new HashMap<>();
     private volatile boolean formBuilt = true;
     private boolean checkFlag = true;
 
@@ -160,6 +166,60 @@ public class Request<T extends HttpRequestBase> {
     }
 
     /**
+     * 设置Authorization请求头部信息
+     * <pre>
+     *     再次设置相同的请求头，会覆盖之前的设置
+     * </pre>
+     *
+     * @param authorization Authorization头部信息
+     * @return 当前请求本身
+     */
+    public Request<T> withAuthorization(String authorization) {
+        if (null == authorization) {
+            request.removeHeaders(HttpHeaders.AUTHORIZATION);
+        } else {
+            request.setHeader(HttpHeaders.AUTHORIZATION, authorization);
+        }
+        return this;
+    }
+
+    /**
+     * 设置UserAgent请求头部信息
+     * <pre>
+     *     再次设置相同的请求头，会覆盖之前的设置
+     * </pre>
+     *
+     * @param userAgent UserAgent头部信息
+     * @return 当前请求本身
+     */
+    public Request<T> withUserAgent(String userAgent) {
+        if (null == userAgent) {
+            request.removeHeaders(HttpHeaders.USER_AGENT);
+        } else {
+            request.setHeader(HttpHeaders.USER_AGENT, userAgent);
+        }
+        return this;
+    }
+
+    /**
+     * 删除请求头部信息
+     * <pre>
+     *     删除所有指定的请求头部
+     * </pre>
+     *
+     * @param headers 请求头部
+     * @return 当前请求本身
+     */
+    public Request<T> withoutHeader(String... headers) {
+        if (null != headers) {
+            for (String header : headers) {
+                request.removeHeaders(header);
+            }
+        }
+        return this;
+    }
+
+    /**
      * 添加请求form表单信息
      * <pre>
      *     1.再次设置相同的表单项，会覆盖之前的表单项
@@ -181,7 +241,7 @@ public class Request<T extends HttpRequestBase> {
                 if (v instanceof CharSequence || v instanceof Number) {
                     this.formData.put(k, v.toString());
                 } else if (v instanceof File) {
-                    this.multiPartFormData.put(k, (File) v);
+                    this.multiPartFormData.put(k, v);
                 } else if (v instanceof Date) {
                     this.formData.put(k, DateUtils.formatDateForSecond((Date) v));
                 } else if (v instanceof TemporalAccessor) {
@@ -233,7 +293,61 @@ public class Request<T extends HttpRequestBase> {
      */
     public Request<T> withForm(String paramName, File param) {
         if (StringUtils.isNotEmpty(paramName) && null != param) {
-            multiPartFormData.put(paramName, param);
+            multiPartFormData.put(paramName + "%" + param.getName(), param);
+            formBuilt = false;
+        }
+        return this;
+    }
+
+    /**
+     * 添加请求multipart form表单信息
+     * <pre>
+     *     再次设置相同的表单项，会覆盖之前的表单项
+     * </pre>
+     *
+     * @param paramName 表单项名称
+     * @param param     表单项文件内容
+     * @return 当前请求本身
+     */
+    public Request<T> withForm(String paramName, String fileName, byte[] param) {
+        if (StringUtils.isNotEmpty(paramName) && null != param) {
+            multiPartFormData.put(paramName + "%" + StringUtils.trimToSpec(fileName, paramName), param);
+            formBuilt = false;
+        }
+        return this;
+    }
+
+    /**
+     * 添加请求multipart form表单信息
+     * <pre>
+     *     再次设置相同的表单项，会覆盖之前的表单项
+     * </pre>
+     *
+     * @param paramName 表单项名称
+     * @param param     表单项文件内容
+     * @return 当前请求本身
+     */
+    public Request<T> withForm(String paramName, String fileName, InputStream param) {
+        if (StringUtils.isNotEmpty(paramName) && null != param) {
+            multiPartFormData.put(paramName + "%" + StringUtils.trimToSpec(fileName, paramName), param);
+            formBuilt = false;
+        }
+        return this;
+    }
+
+    /**
+     * 添加请求multipart form表单信息
+     * <pre>
+     *     再次设置相同的表单项，会覆盖之前的表单项
+     * </pre>
+     *
+     * @param paramName 表单项名称
+     * @param param     表单项文件内容
+     * @return 当前请求本身
+     */
+    public Request<T> withForm(String paramName, String fileName, FastByteBuffer param) {
+        if (StringUtils.isNotEmpty(paramName) && null != param) {
+            multiPartFormData.put(paramName + "%" + StringUtils.trimToSpec(fileName, paramName), param);
             formBuilt = false;
         }
         return this;
@@ -620,9 +734,20 @@ public class Request<T extends HttpRequestBase> {
                     entityBuilder.addPart(entry.getKey(), formItem);
                 }
 
-                for (Map.Entry<String, File> fileEntry : multiPartFormData.entrySet()) {
-                    FileBody fileItem = new FileBody(fileEntry.getValue());
-                    entityBuilder.addPart(fileEntry.getKey(), fileItem);
+                for (Map.Entry<String, Object> fileEntry : multiPartFormData.entrySet()) {
+                    ContentBody contentBody;
+                    if (fileEntry.getValue() instanceof File) {
+                        contentBody = new FileBody((File) fileEntry.getValue());
+                    } else if (fileEntry.getValue() instanceof InputStream) {
+                        contentBody = new InputStreamBody((InputStream) fileEntry.getValue(), fileEntry.getKey().substring(fileEntry.getKey().indexOf('%') + 1));
+                    } else if (fileEntry.getValue() instanceof FastByteBuffer) {
+                        contentBody = new ByteArrayBody(((FastByteBuffer) fileEntry.getValue()).toArray(), fileEntry.getKey().substring(fileEntry.getKey().indexOf('%') + 1));
+                    } else if (fileEntry.getValue().getClass().isArray() && fileEntry.getValue().getClass().getComponentType().isPrimitive()) {
+                        contentBody = new ByteArrayBody((byte[]) fileEntry.getValue(), fileEntry.getKey().substring(fileEntry.getKey().indexOf('%') + 1));
+                    } else {
+                        throw new SpinException(ErrorCode.INVALID_PARAM, "不支持的表单项类型: " + fileEntry.getKey() + " - " + fileEntry.getValue().getClass());
+                    }
+                    entityBuilder.addPart(fileEntry.getKey().substring(0, fileEntry.getKey().indexOf('%')), contentBody);
                 }
 
                 entityBuilder.setContentType(ContentType.MULTIPART_FORM_DATA);
