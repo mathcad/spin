@@ -43,7 +43,7 @@ abstract class Symmetry extends ProviderDetector {
     protected final Cipher enCipher;
     protected final Cipher deCipher;
 
-    enum Algorithm {
+    public enum Algorithm {
         AES("AES", 16, l -> Assert.isTrue(l == 128 || l == 192 || l == 256, "密钥长度必须为128位, 192位或256位")),
         DES("DES", 8, l -> Assert.isTrue(l == 64, "密钥长度必须为64位")),
         DESEDE("DESede", 8, l -> Assert.isTrue(l == 192, "密钥长度必须为192位")),

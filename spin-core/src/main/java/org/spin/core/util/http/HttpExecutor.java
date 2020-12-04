@@ -1,8 +1,10 @@
 package org.spin.core.util.http;
 
+import org.apache.http.ContentTooLongException;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -11,7 +13,19 @@ import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URIUtils;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.entity.ContentType;
+import org.apache.http.nio.ContentDecoder;
+import org.apache.http.nio.IOControl;
+import org.apache.http.nio.client.methods.HttpAsyncMethods;
+import org.apache.http.nio.entity.ContentBufferEntity;
+import org.apache.http.nio.protocol.AbstractAsyncResponseConsumer;
+import org.apache.http.nio.util.HeapByteBufferAllocator;
+import org.apache.http.nio.util.SimpleInputBuffer;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.Args;
+import org.apache.http.util.Asserts;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +48,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.lang.reflect.Type;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.util.HashMap;
@@ -333,51 +348,17 @@ public final class HttpExecutor extends Util {
      * @param <T>                 处理后的返回类型
      * @return 包含请求结果的Future对象
      */
-    public static <T> Future<HttpResponse> executeRequestAsync(HttpUriRequest request, EntityProcessor<T> entityProc,
-                                                               FinalConsumer<T> completedCallback,
-                                                               FinalConsumer<Exception> failedCallback,
-                                                               Handler cancelledCallback,
-                                                               boolean checkResponseStatus) {
+    public static <T> Future<T> executeRequestAsync(HttpUriRequest request,
+                                                    EntityProcessor<T> entityProc,
+                                                    FinalConsumer<T> completedCallback,
+                                                    FinalConsumer<Exception> failedCallback,
+                                                    Handler cancelledCallback,
+                                                    boolean checkResponseStatus) {
         try {
             initAync();
-            return HttpExecutorAsyncHolder.getClient().execute(request, new FutureCallback<HttpResponse>() {
-                @Override
-                public void completed(HttpResponse result) {
-                    int code = result.getStatusLine().getStatusCode();
-                    HttpEntity entity = result.getEntity();
-                    if ((2 != code / 100) && checkResponseStatus) {
-                        failed(new SpinException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity)));
-                    }
-                    if (null != completedCallback) {
-                        try {
-                            T res = entityProc.process(entity);
-                            completedCallback.accept(res);
-                        } catch (Exception e) {
-                            failedCallback.accept(e);
-                        }
-                    } else {
-                        logger.info("请求[{}]执行成功:\n{}", request.getURI(), entity);
-                    }
-                }
-
-                @Override
-                public void failed(Exception ex) {
-                    if (null != failedCallback) {
-                        failedCallback.accept(ex);
-                    } else {
-                        logger.error(String.format("请求[%s]执行失败", request.getURI()), ex);
-                    }
-                }
-
-                @Override
-                public void cancelled() {
-                    if (null != failedCallback) {
-                        cancelledCallback.handle();
-                    } else {
-                        logger.error("请求[{}]被取消", request.getURI());
-                    }
-                }
-            });
+            return HttpExecutorAsyncHolder.getClient().execute(HttpAsyncMethods.create(determineTarget(request), request),
+                new BaseAsyncResponseConsumer<>(entityProc, checkResponseStatus),
+                new BasicFutureCallback<>(request, completedCallback, failedCallback, cancelledCallback));
         } catch (SpinException e) {
             throw e;
         } catch (Exception e) {
@@ -528,4 +509,115 @@ public final class HttpExecutor extends Util {
         }
     }
     // endregion
+
+    private static HttpHost determineTarget(final HttpUriRequest request) {
+        Args.notNull(request, "HTTP request");
+        // A null target may be acceptable if there is a default target.
+        // Otherwise, the null target is detected in the director.
+        HttpHost target = null;
+
+        final URI requestURI = request.getURI();
+        if (requestURI.isAbsolute()) {
+            target = URIUtils.extractHost(requestURI);
+            if (target == null) {
+                throw new SpinException(
+                    "URI does not specify a valid host name: " + requestURI);
+            }
+        }
+        return target;
+    }
+
+    private static class BasicFutureCallback<T> implements FutureCallback<T> {
+        private final HttpUriRequest request;
+        private final FinalConsumer<T> completedCallback;
+        private final FinalConsumer<Exception> failedCallback;
+        private final Handler cancelledCallback;
+
+        private BasicFutureCallback(HttpUriRequest request, FinalConsumer<T> completedCallback, FinalConsumer<Exception> failedCallback, Handler cancelledCallback) {
+            this.request = request;
+            this.completedCallback = completedCallback;
+            this.failedCallback = failedCallback;
+            this.cancelledCallback = cancelledCallback;
+        }
+
+        @Override
+        public void completed(T result) {
+            if (null != completedCallback) {
+                completedCallback.accept(result);
+            }
+        }
+
+        @Override
+        public void failed(Exception ex) {
+            if (null != failedCallback) {
+                failedCallback.accept(ex);
+            } else {
+                logger.error(String.format("请求[%s]执行失败", request.getURI()), ex);
+            }
+        }
+
+        @Override
+        public void cancelled() {
+            if (null != cancelledCallback) {
+                cancelledCallback.handle();
+            } else {
+                logger.error("请求[{}]被取消", request.getURI());
+            }
+        }
+    }
+
+    private static class BaseAsyncResponseConsumer<T> extends AbstractAsyncResponseConsumer<T> {
+        private static final int MAX_INITIAL_BUFFER_SIZE = 256 * 1024;
+
+        private volatile HttpResponse response;
+        private volatile SimpleInputBuffer buf;
+        private final boolean checkResponseStatus;
+        private final EntityProcessor<T> entityProc;
+
+        public BaseAsyncResponseConsumer(EntityProcessor<T> entityProc, boolean checkResponseStatus) {
+            this.checkResponseStatus = checkResponseStatus;
+            this.entityProc = entityProc;
+        }
+
+        @Override
+        protected void onResponseReceived(HttpResponse response) {
+            this.response = response;
+        }
+
+        @Override
+        protected void onContentReceived(ContentDecoder decoder, IOControl ioctrl) throws IOException {
+            Asserts.notNull(this.buf, "Content buffer");
+            this.buf.consumeContent(decoder);
+        }
+
+        @Override
+        protected void onEntityEnclosed(HttpEntity entity, ContentType contentType) throws IOException {
+            long len = entity.getContentLength();
+            if (len > Integer.MAX_VALUE) {
+                throw new ContentTooLongException("Entity content is too long: " + len);
+            }
+            if (len < 0) {
+                len = 4096;
+            }
+            final int initialBufferSize = Math.min((int) len, MAX_INITIAL_BUFFER_SIZE);
+            this.buf = new SimpleInputBuffer(initialBufferSize, new HeapByteBufferAllocator());
+            this.response.setEntity(new ContentBufferEntity(entity, this.buf));
+        }
+
+        @Override
+        protected T buildResult(HttpContext context) {
+            int code = response.getStatusLine().getStatusCode();
+            HttpEntity entity = response.getEntity();
+            if ((2 != code / 100) && checkResponseStatus) {
+                throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity));
+            }
+            return entityProc.process(entity);
+        }
+
+        @Override
+        protected void releaseResources() {
+            this.response = null;
+            this.buf = null;
+        }
+    }
 }

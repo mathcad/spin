@@ -5,7 +5,9 @@ import org.spin.core.ErrorCode;
 import org.spin.core.collection.Pair;
 import org.spin.core.collection.Tuple;
 import org.spin.core.io.FastByteBuffer;
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
+import org.spin.core.util.NumericUtils;
 import org.spin.core.util.SerializeUtils;
 import org.spin.core.util.StringUtils;
 
@@ -26,11 +28,14 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Set;
 
 
@@ -109,7 +114,7 @@ public class RSA extends ProviderDetector {
      * @param key 私钥字符串
      * @return 私钥
      */
-    public static PrivateKey getRSAPrivateKey(String key) {
+    public static PrivateKey getPrivateKey(String key) {
         KeyFactory keyFactory = getRSAKeyFactory();
         try {
             return Assert.notNull(keyFactory).generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(key)));
@@ -118,19 +123,85 @@ public class RSA extends ProviderDetector {
         }
     }
 
+    public static PrivateKey getPrivateKeyFromSshKey(String sshPrivateKey) {
+        sshPrivateKey = sshPrivateKey.replaceAll("\\s", "");
+        Assert.isTrue(sshPrivateKey.startsWith("-----BEGINRSAPRIVATEKEY-----"), "SSH私钥格式不合法");
+        Assert.isTrue(sshPrivateKey.endsWith("-----ENDRSAPRIVATEKEY-----"), "SSH私钥格式不合法");
+        sshPrivateKey = sshPrivateKey.substring(28);
+        sshPrivateKey = sshPrivateKey.substring(0, sshPrivateKey.length() - 26);
+        return getPrivateKey(sshPrivateKey);
+    }
+
     /**
      * 将字符串解析为公钥
      *
      * @param key 公钥字符串
      * @return 公钥
      */
-    public static PublicKey getRSAPublicKey(String key) {
+    public static PublicKey getPublicKey(String key) {
         KeyFactory keyFactory = getRSAKeyFactory();
         try {
             return Assert.notNull(keyFactory).generatePublic(new X509EncodedKeySpec(Base64.decode(key)));
         } catch (InvalidKeySpecException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
         }
+    }
+
+    public static PublicKey getPublicKeyFromSshKey(String sshPublicKey) {
+        String[] s = sshPublicKey.split(" ");
+        if (s.length != 3) {
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE);
+        }
+        Assert.isEquals(s[0], "ssh-rsa", "只支持RSA算法的公钥: " + s[0]);
+        sshPublicKey = s[1];
+        byte[] decode = Base64.decode(sshPublicKey);
+        int prefix = NumericUtils.compositeInt(decode, 0);
+        String alg = StringUtils.newStringUtf8(Arrays.copyOfRange(decode, 4, 4 + prefix));
+        Assert.isEquals(alg, "ssh-rsa", "只支持RSA算法的公钥: " + alg);
+        int exponentLen = NumericUtils.compositeInt(decode, 4 + prefix);
+        int modulusLen = NumericUtils.compositeInt(decode, 4 + prefix + 4 + exponentLen);
+        try {
+            return generateRSAPublicKey(Arrays.copyOfRange(decode, 4 + prefix + 4 + exponentLen + 4, 4 + prefix + 4 + exponentLen + 4 + modulusLen),
+                Arrays.copyOfRange(decode, 4 + prefix + 4, 4 + prefix + 4 + exponentLen));
+        } catch (InvalidKeySpecException e) {
+            throw new SimplifiedException(e);
+        }
+    }
+
+    /**
+     * 从X509证书中提取公钥
+     *
+     * @param cert 证书
+     * @return 公钥
+     */
+    public static PublicKey getPublicKeyFromCert(Certificate cert) {
+        // If the certificate is of type X509Certificate,
+        // we should check whether it has a Key Usage
+        // extension marked as critical.
+        //if (cert instanceof java.security.cert.X509Certificate) {
+        if (cert instanceof X509Certificate) {
+            // Check whether the cert has a key usage extension
+            // marked as a critical extension.
+            // The OID for KeyUsage extension is 2.5.29.15.
+            X509Certificate c = (X509Certificate) cert;
+            try {
+                c.checkValidity();
+            } catch (CertificateExpiredException e) {
+                throw new SpinException(ErrorCode.ENCRYPT_FAIL, "数字证书已经过期");
+            } catch (CertificateNotYetValidException e) {
+                throw new SpinException(ErrorCode.ENCRYPT_FAIL, "数字证书尚未生效");
+            }
+            Set<String> critSet = c.getCriticalExtensionOIDs();
+
+            if (critSet != null && !critSet.isEmpty()
+                && critSet.contains("2.5.29.15")) {
+                boolean[] keyUsageInfo = c.getKeyUsage();
+                // keyUsageInfo[0] is for digitalSignature.
+                if ((keyUsageInfo != null) && (!keyUsageInfo[0]))
+                    throw new SpinException(ErrorCode.ENCRYPT_FAIL, "证书不正确");
+            }
+        }
+        return cert.getPublicKey();
     }
 
     public static PublicKey generateRSAPublicKey(byte[] modulus, byte[] publicExponent) throws InvalidKeySpecException {
@@ -155,14 +226,20 @@ public class RSA extends ProviderDetector {
      */
     public static byte[] encrypt(PublicKey pk, byte[] data) {
         Cipher cipher;
+        int modLen = 117;
+        if (pk instanceof RSAPublicKey) {
+            modLen = ((RSAPublicKey) pk).getModulus().toByteArray().length;
+            modLen -= modLen % 8;
+            modLen -= 11;
+        }
         try {
-            cipher = Cipher.getInstance(RSA_ALGORITHMS);
+            cipher = Cipher.getInstance(RSA_ALGORITHMS + "/ECB/PKCS1Padding");
             cipher.init(Cipher.ENCRYPT_MODE, pk);
             FastByteBuffer byteBuffer = new FastByteBuffer();
             int offset = 0;
             while (offset < data.length) {
-                byteBuffer.append(cipher.doFinal(data, offset, Math.min(117, data.length - offset)));
-                offset += 117;
+                byteBuffer.append(cipher.doFinal(data, offset, Math.min(modLen, data.length - offset)));
+                offset += modLen;
             }
             return byteBuffer.toArray();
         } catch (NoSuchAlgorithmException e) {
@@ -184,13 +261,18 @@ public class RSA extends ProviderDetector {
     public static void encrypt(PublicKey pk, InputStream rawInput, OutputStream encryptedOutput) {
         Cipher cipher;
         try {
-            cipher = Cipher.getInstance(RSA_ALGORITHMS);
+            cipher = Cipher.getInstance(RSA_ALGORITHMS + "/ECB/PKCS1Padding");
             cipher.init(Cipher.ENCRYPT_MODE, pk);
-            byte[] work = new byte[128];
+            int modLen = 128;
+            if (pk instanceof RSAPublicKey) {
+                modLen = ((RSAPublicKey) pk).getModulus().toByteArray().length;
+                modLen -= modLen % 8;
+            }
+            byte[] work = new byte[modLen];
 
             int len;
             int resLen;
-            while ((len = rawInput.read(work, 0, 117)) != -1) {
+            while ((len = rawInput.read(work, 0, modLen - 11)) != -1) {
                 resLen = cipher.doFinal(work, 0, len, work);
                 encryptedOutput.write(work, 0, resLen);
             }
@@ -216,7 +298,7 @@ public class RSA extends ProviderDetector {
      * @return 密文字符串
      */
     public static String encrypt(String publicKey, String content) {
-        PublicKey key = getRSAPublicKey(publicKey);
+        PublicKey key = getPublicKey(publicKey);
         return Base64.encode(encrypt(key, StringUtils.getBytesUtf8(content)));
     }
 
@@ -241,14 +323,19 @@ public class RSA extends ProviderDetector {
     public static byte[] decrypt(PrivateKey pk, byte[] raw) {
         Cipher cipher;
         try {
-            cipher = Cipher.getInstance(RSA_ALGORITHMS);
+            cipher = Cipher.getInstance(RSA_ALGORITHMS + "/ECB/PKCS1Padding");
             cipher.init(Cipher.DECRYPT_MODE, pk);
 
+            int modLen = 128;
+            if (pk instanceof RSAPrivateKey) {
+                modLen = ((RSAPrivateKey) pk).getModulus().toByteArray().length;
+                modLen -= modLen % 8;
+            }
             FastByteBuffer byteBuffer = new FastByteBuffer();
             int offset = 0;
             while (offset < raw.length) {
-                byteBuffer.append(cipher.doFinal(raw, offset, Math.min(128, raw.length - offset)));
-                offset += 128;
+                byteBuffer.append(cipher.doFinal(raw, offset, Math.min(modLen, raw.length - offset)));
+                offset += modLen;
             }
             return byteBuffer.toArray();
         } catch (NoSuchAlgorithmException e) {
@@ -270,10 +357,14 @@ public class RSA extends ProviderDetector {
     public static void decrypt(PrivateKey pk, InputStream encrypteInput, OutputStream rawOutput) {
         Cipher cipher;
         try {
-            cipher = Cipher.getInstance(RSA_ALGORITHMS);
+            cipher = Cipher.getInstance(RSA_ALGORITHMS + "/ECB/PKCS1Padding");
             cipher.init(Cipher.DECRYPT_MODE, pk);
-
-            byte[] work = new byte[128];
+            int modLen = 128;
+            if (pk instanceof RSAPublicKey) {
+                modLen = ((RSAPublicKey) pk).getModulus().toByteArray().length;
+                modLen -= modLen % 8;
+            }
+            byte[] work = new byte[modLen];
 
             int len;
             int resLen;
@@ -303,7 +394,7 @@ public class RSA extends ProviderDetector {
      * @return 明文字符串
      */
     public static String decrypt(String privateKey, String content) {
-        PrivateKey key = getRSAPrivateKey(privateKey);
+        PrivateKey key = getPrivateKey(privateKey);
         return new String(decrypt(key, Base64.decode(content)), StandardCharsets.UTF_8);
     }
 
@@ -326,7 +417,7 @@ public class RSA extends ProviderDetector {
      * @return 签名
      */
     public static String sign(String content, String privateKey) {
-        PrivateKey priKey = getRSAPrivateKey(privateKey);
+        PrivateKey priKey = getPrivateKey(privateKey);
         return sign(content, priKey);
     }
 
@@ -363,7 +454,7 @@ public class RSA extends ProviderDetector {
      * @return 签名是否有效
      */
     public static boolean verify(String content, String sign, String publicKey) {
-        PublicKey pubKey = getRSAPublicKey(publicKey);
+        PublicKey pubKey = getPublicKey(publicKey);
         return verify(content, sign, pubKey);
     }
 
@@ -412,35 +503,4 @@ public class RSA extends ProviderDetector {
         }
         return keyFactory;
     }
-
-    private static PublicKey getPublicKeyFromCert(Certificate cert) {
-        // If the certificate is of type X509Certificate,
-        // we should check whether it has a Key Usage
-        // extension marked as critical.
-        //if (cert instanceof java.security.cert.X509Certificate) {
-        if (cert instanceof X509Certificate) {
-            // Check whether the cert has a key usage extension
-            // marked as a critical extension.
-            // The OID for KeyUsage extension is 2.5.29.15.
-            X509Certificate c = (X509Certificate) cert;
-            try {
-                c.checkValidity();
-            } catch (CertificateExpiredException e) {
-                throw new SpinException(ErrorCode.ENCRYPT_FAIL, "数字证书已经过期");
-            } catch (CertificateNotYetValidException e) {
-                throw new SpinException(ErrorCode.ENCRYPT_FAIL, "数字证书尚未生效");
-            }
-            Set<String> critSet = c.getCriticalExtensionOIDs();
-
-            if (critSet != null && !critSet.isEmpty()
-                && critSet.contains("2.5.29.15")) {
-                boolean[] keyUsageInfo = c.getKeyUsage();
-                // keyUsageInfo[0] is for digitalSignature.
-                if ((keyUsageInfo != null) && (!keyUsageInfo[0]))
-                    throw new SpinException(ErrorCode.ENCRYPT_FAIL, "证书不正确");
-            }
-        }
-        return cert.getPublicKey();
-    }
-
 }

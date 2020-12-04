@@ -308,7 +308,7 @@ public class CurrentUser extends SessionUser<Long> {
             if (s.startsWith(ent)) {
                 roleAndGroupsInEnt.add(s.substring(ent.length() + 1));
             } else if (s.equals(FULL_SUPER_AMIN_ROLE_CODE)) {
-                roleAndGroupsInEnt.add(SUPER_AMIN_ROLE_CODE.substring(2));
+                roleAndGroupsInEnt.add(SUPER_AMIN_ROLE_CODE);
             }
         }
         return roleAndGroupsInEnt;

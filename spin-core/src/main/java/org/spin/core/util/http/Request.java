@@ -1,7 +1,6 @@
 package org.spin.core.util.http;
 
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -306,6 +305,7 @@ public class Request<T extends HttpRequestBase> {
      * </pre>
      *
      * @param paramName 表单项名称
+     * @param fileName  文件名称
      * @param param     表单项文件内容
      * @return 当前请求本身
      */
@@ -324,6 +324,7 @@ public class Request<T extends HttpRequestBase> {
      * </pre>
      *
      * @param paramName 表单项名称
+     * @param fileName  文件名称
      * @param param     表单项文件内容
      * @return 当前请求本身
      */
@@ -342,6 +343,7 @@ public class Request<T extends HttpRequestBase> {
      * </pre>
      *
      * @param paramName 表单项名称
+     * @param fileName  文件名称
      * @param param     表单项文件内容
      * @return 当前请求本身
      */
@@ -531,10 +533,10 @@ public class Request<T extends HttpRequestBase> {
      * @param <E>               处理后的返回类型
      * @return 包含请求结果的Future对象
      */
-    public <E> Future<HttpResponse> executeAsync(EntityProcessor<E> entityProc,
-                                                 FinalConsumer<E> completedCallback,
-                                                 FinalConsumer<Exception> failedCallback,
-                                                 Handler cancelledCallback) {
+    public <E> Future<E> executeAsync(EntityProcessor<E> entityProc,
+                                      FinalConsumer<E> completedCallback,
+                                      FinalConsumer<Exception> failedCallback,
+                                      Handler cancelledCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, cancelledCallback, checkFlag);
@@ -544,34 +546,45 @@ public class Request<T extends HttpRequestBase> {
      * 异步执行自定义请求，并通过自定义方式转换请求结果
      *
      * @param entityProc        请求结果处理器
-     * @param completedCallback 请求成功时的回调
      * @param failedCallback    请求失败时的回调
+     * @param cancelledCallback 请求取消后的回调
      * @param <E>               处理后的返回类型
      * @return 包含请求结果的Future对象
      */
-    public <E> Future<HttpResponse> executeAsync(EntityProcessor<E> entityProc,
-                                                 FinalConsumer<E> completedCallback,
-                                                 FinalConsumer<Exception> failedCallback) {
+    public <E> Future<E> executeAsync(EntityProcessor<E> entityProc,
+                                      FinalConsumer<Exception> failedCallback,
+                                      Handler cancelledCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, entityProc, completedCallback, failedCallback, null, checkFlag);
+        return HttpExecutor.executeRequestAsync(request, entityProc, null, failedCallback, cancelledCallback, checkFlag);
     }
 
     /**
-     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     * 异步执行自定义请求，并通过自定义方式转换请求结果
      *
-     * @param clazz             结果转换类型
-     * @param completedCallback 请求成功时的回调
-     * @param failedCallback    请求失败时的回调
-     * @param <E>               处理后的返回类型
+     * @param entityProc     请求结果处理器
+     * @param failedCallback 请求失败时的回调
+     * @param <E>            处理后的返回类型
      * @return 包含请求结果的Future对象
      */
-    public <E> Future<HttpResponse> executeAsync(Class<E> clazz,
-                                                 FinalConsumer<E> completedCallback,
-                                                 FinalConsumer<Exception> failedCallback) {
+    public <E> Future<E> executeAsync(EntityProcessor<E> entityProc,
+                                      FinalConsumer<Exception> failedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, clazz), completedCallback, failedCallback, null, checkFlag);
+        return HttpExecutor.executeRequestAsync(request, entityProc, null, failedCallback, null, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并通过自定义方式转换请求结果
+     *
+     * @param entityProc 请求结果处理器
+     * @param <E>        处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(EntityProcessor<E> entityProc) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, entityProc, null, null, null, checkFlag);
     }
 
     /**
@@ -580,15 +593,127 @@ public class Request<T extends HttpRequestBase> {
      * @param type              结果转换类型
      * @param completedCallback 请求成功时的回调
      * @param failedCallback    请求失败时的回调
+     * @param cancelledCallback 请求取消后的回调
      * @param <E>               处理后的返回类型
      * @return 包含请求结果的Future对象
      */
-    public <E> Future<HttpResponse> executeAsync(Type type,
-                                                 FinalConsumer<E> completedCallback,
-                                                 FinalConsumer<Exception> failedCallback) {
+    public <E> Future<E> executeAsync(Type type,
+                                      FinalConsumer<E> completedCallback,
+                                      FinalConsumer<Exception> failedCallback,
+                                      Handler cancelledCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), completedCallback, failedCallback, null, checkFlag);
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), completedCallback, failedCallback, cancelledCallback, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param type              结果转换类型
+     * @param failedCallback    请求失败时的回调
+     * @param cancelledCallback 请求取消后的回调
+     * @param <E>               处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(Type type,
+                                      FinalConsumer<Exception> failedCallback,
+                                      Handler cancelledCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), null, failedCallback, cancelledCallback, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param type           结果转换类型
+     * @param failedCallback 请求失败时的回调
+     * @param <E>            处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(Type type,
+                                      FinalConsumer<Exception> failedCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), null, failedCallback, null, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param type 结果转换类型
+     * @param <E>  处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(Type type) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), null, null, null, checkFlag);
+    }
+
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param type              结果转换类型
+     * @param completedCallback 请求成功时的回调
+     * @param failedCallback    请求失败时的回调
+     * @param cancelledCallback 请求取消后的回调
+     * @param <E>               处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(Class<E> type,
+                                      FinalConsumer<E> completedCallback,
+                                      FinalConsumer<Exception> failedCallback,
+                                      Handler cancelledCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), completedCallback, failedCallback, cancelledCallback, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param type              结果转换类型
+     * @param failedCallback    请求失败时的回调
+     * @param cancelledCallback 请求取消后的回调
+     * @param <E>               处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(Class<E> type,
+                                      FinalConsumer<Exception> failedCallback,
+                                      Handler cancelledCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), null, failedCallback, cancelledCallback, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param type           结果转换类型
+     * @param failedCallback 请求失败时的回调
+     * @param <E>            处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(Class<E> type,
+                                      FinalConsumer<Exception> failedCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), null, failedCallback, null, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param type 结果转换类型
+     * @param <E>  处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(Class<E> type) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, type), null, null, null, checkFlag);
     }
 
     /**
@@ -597,15 +722,62 @@ public class Request<T extends HttpRequestBase> {
      * @param typeToken         结果转换类型
      * @param completedCallback 请求成功时的回调
      * @param failedCallback    请求失败时的回调
+     * @param cancelledCallback 请求取消后的回调
      * @param <E>               处理后的返回类型
      * @return 包含请求结果的Future对象
      */
-    public <E> Future<HttpResponse> executeAsync(TypeToken<E> typeToken,
-                                                 FinalConsumer<E> completedCallback,
-                                                 FinalConsumer<Exception> failedCallback) {
+    public <E> Future<E> executeAsync(TypeToken<E> typeToken,
+                                      FinalConsumer<E> completedCallback,
+                                      FinalConsumer<Exception> failedCallback,
+                                      Handler cancelledCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, typeToken), completedCallback, failedCallback, null, checkFlag);
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, typeToken), completedCallback, failedCallback, cancelledCallback, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param typeToken         结果转换类型
+     * @param failedCallback    请求失败时的回调
+     * @param cancelledCallback 请求取消后的回调
+     * @param <E>               处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(TypeToken<E> typeToken,
+                                      FinalConsumer<Exception> failedCallback,
+                                      Handler cancelledCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, typeToken), null, failedCallback, cancelledCallback, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param typeToken      结果转换类型
+     * @param failedCallback 请求失败时的回调
+     * @param <E>            处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(TypeToken<E> typeToken,
+                                      FinalConsumer<Exception> failedCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, typeToken), null, failedCallback, null, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并将相应结果Json反序列化成指定类型对象
+     *
+     * @param typeToken 结果转换类型
+     * @param <E>       处理后的返回类型
+     * @return 包含请求结果的Future对象
+     */
+    public <E> Future<E> executeAsync(TypeToken<E> typeToken) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, e -> HttpExecutor.toObjectProc(e, typeToken), null, null, null, checkFlag);
     }
 
     /**
@@ -616,9 +788,9 @@ public class Request<T extends HttpRequestBase> {
      * @param cancelledCallback 请求取消后的回调
      * @return 包含请求结果的Future对象
      */
-    public Future<HttpResponse> executeAsync(FinalConsumer<String> completedCallback,
-                                             FinalConsumer<Exception> failedCallback,
-                                             Handler cancelledCallback) {
+    public Future<String> executeAsyncAsString(FinalConsumer<String> completedCallback,
+                                               FinalConsumer<Exception> failedCallback,
+                                               Handler cancelledCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, cancelledCallback, checkFlag);
@@ -627,15 +799,38 @@ public class Request<T extends HttpRequestBase> {
     /**
      * 异步执行自定义请求，并通过自定义方式转换请求结果
      *
-     * @param completedCallback 请求成功时的回调
      * @param failedCallback    请求失败时的回调
+     * @param cancelledCallback 请求取消后的回调
      * @return 包含请求结果的Future对象
      */
-    public Future<HttpResponse> executeAsync(FinalConsumer<String> completedCallback,
-                                             FinalConsumer<Exception> failedCallback) {
+    public Future<String> executeAsyncAsString(FinalConsumer<Exception> failedCallback,
+                                               Handler cancelledCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
-        return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, completedCallback, failedCallback, null, checkFlag);
+        return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, null, failedCallback, cancelledCallback, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并通过自定义方式转换请求结果
+     *
+     * @param failedCallback 请求失败时的回调
+     * @return 包含请求结果的Future对象
+     */
+    public Future<String> executeAsyncAsString(FinalConsumer<Exception> failedCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, null, failedCallback, null, checkFlag);
+    }
+
+    /**
+     * 异步执行自定义请求，并通过自定义方式转换请求结果
+     *
+     * @return 包含请求结果的Future对象
+     */
+    public Future<String> executeAsyncAsString() {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, HttpExecutor::toStringProc, null, null, null, checkFlag);
     }
 
     /**
@@ -669,7 +864,7 @@ public class Request<T extends HttpRequestBase> {
      * @param savePath 文件保存路径
      * @return 包含请求结果的Future对象
      */
-    public Future<HttpResponse> downloadAsync(String savePath) {
+    public Future<Map<String, String>> downloadAsync(String savePath) {
         buildForm();
         request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath, null), null, null, null, checkFlag);
@@ -682,8 +877,8 @@ public class Request<T extends HttpRequestBase> {
      * @param completedCallback 文件下载完成后的回调
      * @return 包含请求结果的Future对象
      */
-    public Future<HttpResponse> downloadAsync(String savePath,
-                                              FinalConsumer<Map<String, String>> completedCallback) {
+    public Future<Map<String, String>> downloadAsync(String savePath,
+                                                     FinalConsumer<Map<String, String>> completedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath, null), completedCallback, null, null, checkFlag);
@@ -697,12 +892,30 @@ public class Request<T extends HttpRequestBase> {
      * @param failedCallback    文件下载失败后的回调
      * @return 包含请求结果的Future对象
      */
-    public Future<HttpResponse> downloadAsync(String savePath,
-                                              FinalConsumer<Map<String, String>> completedCallback,
-                                              FinalConsumer<Exception> failedCallback) {
+    public Future<Map<String, String>> downloadAsync(String savePath,
+                                                     FinalConsumer<Map<String, String>> completedCallback,
+                                                     FinalConsumer<Exception> failedCallback) {
         buildForm();
         request.setConfig(configBuilder.build());
         return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath, null), completedCallback, failedCallback, null, checkFlag);
+    }
+
+    /**
+     * 异步下载文件
+     *
+     * @param savePath          文件保存路径
+     * @param completedCallback 文件下载完成后的回调
+     * @param failedCallback    文件下载失败后的回调
+     * @param cancelledCallback 文件下载取消后的回调
+     * @return 包含请求结果的Future对象
+     */
+    public Future<Map<String, String>> downloadAsync(String savePath,
+                                                     FinalConsumer<Map<String, String>> completedCallback,
+                                                     FinalConsumer<Exception> failedCallback,
+                                                     Handler cancelledCallback) {
+        buildForm();
+        request.setConfig(configBuilder.build());
+        return HttpExecutor.executeRequestAsync(request, httpEntity -> HttpExecutor.downloadProc(httpEntity, savePath, null), completedCallback, failedCallback, cancelledCallback, checkFlag);
     }
 
     // endregion

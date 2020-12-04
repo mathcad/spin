@@ -1,5 +1,6 @@
 package org.spin.core.util;
 
+import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SpinException;
 
@@ -521,6 +522,48 @@ public final class NumericUtils extends Util {
             return false;
         }
     }
+
+    public static short compositeShort(byte[] bytes, int from) {
+        return compositeShort(bytes, from, 2);
+    }
+
+    public static short compositeShort(byte[] bytes, int from, int len) {
+        Assert.inclusiveBetween(1, 2, len, "短整型的长度必须在1-2之间");
+        return (short) compositeInt(bytes, from, len);
+    }
+
+    public static int compositeInt(byte[] bytes, int from) {
+        return compositeInt(bytes, from, 4);
+    }
+
+    public static int compositeInt(byte[] bytes, int from, int len) {
+        Assert.inclusiveBetween(0, bytes.length, from, "from索引超出范围: " + 0 + " - " + bytes.length);
+        Assert.inclusiveBetween(1, 4, len, "整型的长度必须在1-4之间");
+        Assert.isTrue(bytes.length - from >= len, "数据不合法");
+        int mask = 8 * (len - 1);
+        int res = 0;
+        while (--len != -1) {
+            res = res | (bytes[from + len] << (mask - len * 8));
+        }
+        return res;
+    }
+
+    public static long compositeLong(byte[] bytes, int from) {
+        return compositeLong(bytes, from, 4);
+    }
+
+    public static long compositeLong(byte[] bytes, int from, int len) {
+        Assert.inclusiveBetween(0, bytes.length, from, "from索引超出范围: " + 0 + " - " + bytes.length);
+        Assert.inclusiveBetween(1, 8, len, "长整型的长度必须在1-8之间");
+        Assert.isTrue(bytes.length - from >= len, "数据不合法");
+        int mask = 8 * (len - 1);
+        long res = 0;
+        while (--len != -1) {
+            res = res | (bytes[from + len] << (mask - len * 8));
+        }
+        return res;
+    }
+
 
     private static Long decodeNum(String n) {
         if (pureNum.matcher(n).matches())
