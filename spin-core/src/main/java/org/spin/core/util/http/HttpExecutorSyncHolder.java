@@ -1,6 +1,8 @@
 package org.spin.core.util.http;
 
 import org.apache.http.client.HttpRequestRetryHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
@@ -13,6 +15,7 @@ import org.apache.http.ssl.SSLContexts;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.StringUtils;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.KeyStoreBuilderParameters;
 import javax.net.ssl.SSLContext;
@@ -40,14 +43,11 @@ import java.util.Map;
 class HttpExecutorSyncHolder {
     private static volatile CloseableHttpClient httpClient;
 
-    static CloseableHttpClient getClient() {
-        return httpClient;
-    }
-
     static void initSync(int maxTotal, int maxPerRoute, HttpRequestRetryHandler defaultHttpRetryHandler,
                          byte[] keyStore, String keyStorePass, KeyStoreType keyStoreType,
                          Map<String, KeyStore.ProtectionParameter> keysPass,
-                         byte[] trustStore, String trustStorePass, KeyStoreType trustStoreType) {
+                         byte[] trustStore, String trustStorePass, KeyStoreType trustStoreType,
+                         HostnameVerifier hostnameVerifier) {
         SSLConnectionSocketFactory sslConnectionSocketFactory = null;
         if (null != keyStore && null != keyStoreType || null != trustStore && null != trustStoreType) {
             try {
@@ -55,7 +55,7 @@ class HttpExecutorSyncHolder {
                     trustStore, trustStorePass, trustStoreType);
                 sslConnectionSocketFactory = new SSLConnectionSocketFactory(
                     sslContext.getSocketFactory(), new String[]{"TLSv1.2", "TLSv1.1", "TLSv1"}, null,
-                    SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+                    null == hostnameVerifier ? SSLConnectionSocketFactory.getDefaultHostnameVerifier() : hostnameVerifier);
             } catch (Exception e) {
                 throw new SpinException("构建SSL安全上下文失败", e);
             }
@@ -70,6 +70,10 @@ class HttpExecutorSyncHolder {
         connectionManager.setDefaultMaxPerRoute(maxPerRoute);
         httpClient = HttpClients.custom().setRetryHandler(defaultHttpRetryHandler).setConnectionManager(connectionManager)
             .build();
+    }
+
+    static CloseableHttpResponse execute(HttpUriRequest request) throws IOException {
+        return httpClient.execute(request);
     }
 
     static SSLContext buildSSLContext(byte[] keyStoreContent, String keyStorePass, KeyStoreType keyStoreType,
