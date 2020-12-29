@@ -23,4 +23,18 @@ public @interface Idempotent {
      * @return 标识符
      */
     String value() default "";
+
+    /**
+     * 是否允许重入, 关闭后, 重复请求将会返回错误(默认为true)
+     *
+     * @return 是/否
+     */
+    boolean reentrantable() default true;
+
+    /**
+     * 重复请求返回的错误信息
+     *
+     * @return 错误信息
+     */
+    String errorMessage() default "请勿重复请求";
 }

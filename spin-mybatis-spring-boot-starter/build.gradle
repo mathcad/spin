@@ -3,7 +3,7 @@ plugins {
 }
 
 description 'mybatis plus的starter'
-version '2.3.0-SNAPSHOT'
+version '2.4.0-SNAPSHOT'
 
 test {
     useJUnitPlatform()
@@ -40,7 +40,7 @@ dependencies {
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
 
-    api group: 'org.mathcat', name: 'spin-data-core', version: '2.3.0-SNAPSHOT'
+    api group: 'org.mathcat', name: 'spin-data-core', version: '2.4.0-SNAPSHOT'
 
     api group: 'org.springframework.boot', name: 'spring-boot', version: springBootVersion
     api group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: springBootVersion
@@ -48,6 +48,6 @@ dependencies {
         exclude(group: 'org.springframework.boot')
     }
 
-    compileOnly group: 'org.mathcat', name: 'spin-cloud-spring-boot-starter', version: '2.3.0-SNAPSHOT'
+    compileOnly group: 'org.mathcat', name: 'spin-cloud-spring-boot-starter', version: '2.4.0-SNAPSHOT'
     compileOnly group: 'io.springfox', name: 'springfox-swagger2', version: swaggerVersion
 }

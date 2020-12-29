@@ -83,6 +83,15 @@ public class MessageHeader {
         return new MessageHeader().withType(MessageType.TIP);
     }
 
+    /**
+     * 创建一个用户消息
+     *
+     * @return 消息头
+     */
+    public static MessageHeader aMsg() {
+        return new MessageHeader().withType(MessageType.MSG);
+    }
+
     public MessageHeader withRecipient(Set<String> recipient) {
         this.recipient = recipient;
         return this;

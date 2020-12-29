@@ -25,7 +25,7 @@ public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
     public void insertFill(MetaObject metaObject) {
         setFieldValByName("createTime", LocalDateTime.now(), metaObject);
         setFieldValByName("updateTime", LocalDateTime.now(), metaObject);
-        SessionUser currentUser = SessionUser.getCurrent();
+        SessionUser<?> currentUser = SessionUser.getCurrent();
 
         if (null != currentUser) {
             setFieldValByName("createBy", currentUser.getId(), metaObject);
@@ -39,7 +39,7 @@ public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void updateFill(MetaObject metaObject) {
         setFieldValByName("updateTime", LocalDateTime.now(), metaObject);
-        SessionUser currentUser = SessionUser.getCurrent();
+        SessionUser<?> currentUser = SessionUser.getCurrent();
         if (null != currentUser) {
             setFieldValByName("updateBy", currentUser.getId(), metaObject);
             setFieldValByName("updateUsername", currentUser.getName(), metaObject);

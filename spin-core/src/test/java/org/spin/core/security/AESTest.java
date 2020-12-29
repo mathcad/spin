@@ -33,20 +33,24 @@ class AESTest extends ProviderDetector {
 
     @Test
     public void testAes() {
-        Blowfish aes = Blowfish.newInstance(Mode.CBC, Padding.PKCS7Padding).withKey(key, 1, StringUtils.getBytesUtf8(key));
-        String encrypt = aes.encrypt("message你1");
-        System.out.println(encrypt);
-        System.out.println(aes.decrypt(encrypt));
+//        Blowfish aes = Blowfish.newInstance(Mode.CBC, Padding.PKCS7Padding).withKey(key, 1, StringUtils.getBytesUtf8(key));
+//        String encrypt = aes.encrypt("message你1");
+//        System.out.println(encrypt);
+//        System.out.println(aes.decrypt(encrypt));
+//
+//        encrypt = aes.encrypt("message你2");
+//        System.out.println(encrypt);
+//        System.out.println(aes.decrypt(encrypt));
+//
+//        aes.withIv(new byte[16]);
+//        encrypt = aes.encrypt("message你2");
+//        System.out.println(encrypt);
+//        System.out.println(aes.decrypt(encrypt));
+//        assertTrue(true);
 
-        encrypt = aes.encrypt("message你2");
-        System.out.println(encrypt);
-        System.out.println(aes.decrypt(encrypt));
 
-        aes.withIv(new byte[16]);
-        encrypt = aes.encrypt("message你2");
-        System.out.println(encrypt);
-        System.out.println(aes.decrypt(encrypt));
-        assertTrue(true);
+        AES aes1 = AES.newInstance(Mode.CBC, Padding.PKCS7Padding).withKey("12345678123456781234567812345678".getBytes()).withIv("1234567812345678".getBytes());
+        System.out.println(aes1.encrypt("abcdef"));
     }
 
     @Test

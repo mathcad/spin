@@ -29,4 +29,9 @@ public enum MessageType {
      * 提示
      */
     TIP,
+
+    /**
+     * 消息
+     */
+    MSG,
 }

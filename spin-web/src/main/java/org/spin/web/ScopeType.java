@@ -11,17 +11,27 @@ package org.spin.web;
 public enum ScopeType {
 
     /**
-     * 公开
+     * 开放
      */
-    OPEN,
+    OPEN("开放"),
 
     /**
      * 仅内部
      */
-    INTERNAL,
+    INTERNAL("仅内部"),
 
     /**
-     * 公开，且内部访问无需认证
+     * 开放，且内部访问无需认证
      */
-    OPEN_UNAUTH
+    OPEN_UNAUTH("开放(内部访问无需认证)");
+
+    private final String desc;
+
+    ScopeType(String desc) {
+        this.desc = desc;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
 }

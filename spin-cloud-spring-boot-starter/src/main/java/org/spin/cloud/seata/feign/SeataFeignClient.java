@@ -4,8 +4,8 @@ import feign.Client;
 import feign.Request;
 import feign.Response;
 import io.seata.core.context.RootContext;
+import org.spin.core.util.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;

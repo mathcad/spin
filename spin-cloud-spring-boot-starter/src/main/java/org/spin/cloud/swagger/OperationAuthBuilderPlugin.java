@@ -11,9 +11,10 @@ import org.spin.web.annotation.Author;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.method.HandlerMethod;
-import springfox.documentation.builders.ParameterBuilder;
-import springfox.documentation.schema.ModelRef;
-import springfox.documentation.service.Parameter;
+import springfox.documentation.builders.RequestParameterBuilder;
+import springfox.documentation.schema.ScalarType;
+import springfox.documentation.service.ParameterType;
+import springfox.documentation.service.RequestParameter;
 import springfox.documentation.service.StringVendorExtension;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.OperationContext;
@@ -37,7 +38,7 @@ public class OperationAuthBuilderPlugin extends AbstractOperationBuilderPlugin {
      */
     @Override
     public void apply(OperationContext context) {
-        List<Parameter> additionalParameters = new LinkedList<>();
+        List<RequestParameter> additionalParameters = new LinkedList<>();
 
         HandlerMethod handlerMethod = BeanUtils.getFieldValue(context, "requestContext.handler.handlerMethod");
         Author authorAnno = handlerMethod.getMethodAnnotation(Author.class);
@@ -63,7 +64,7 @@ public class OperationAuthBuilderPlugin extends AbstractOperationBuilderPlugin {
         Auth authAnno = handlerMethod.getMethodAnnotation(Auth.class);
         if (null != authAnno) {
             context.operationBuilder().extensions(Lists.newArrayList(new StringVendorExtension("x-auth", authAnno.value().getDesc())));
-            context.operationBuilder().extensions(Lists.newArrayList(new StringVendorExtension("x-scope", authAnno.scope().name())));
+            context.operationBuilder().extensions(Lists.newArrayList(new StringVendorExtension("x-scope", authAnno.scope().getDesc())));
             String authName = authAnno.name();
             if (StringUtils.isEmpty(authName) && authAnno.value() == AuthLevel.AUTHORIZE) {
                 authName = handlerMethod.getBeanType().getName() + "-" + handlerMethod.getMethod().getName();
@@ -75,19 +76,19 @@ public class OperationAuthBuilderPlugin extends AbstractOperationBuilderPlugin {
             }
 
             if (AuthLevel.NONE != authAnno.value()) {
-                additionalParameters.add(new ParameterBuilder()
-                    .parameterType("header")
+                additionalParameters.add(new RequestParameterBuilder()
+                    .name(HttpHeaders.AUTHORIZATION)
+                    .in(ParameterType.HEADER)
                     .description("访问凭证")
-                    .modelRef(new ModelRef("String"))
                     .required(true)
-                    .allowEmptyValue(false)
-                    .order(Ordered.HIGHEST_PRECEDENCE + 1)
-                    .name(HttpHeaders.AUTHORIZATION).build());
+                    .query(q -> q.model(m -> m.scalarModel(ScalarType.STRING)))
+                    .parameterIndex(Ordered.HIGHEST_PRECEDENCE + 1)
+                    .build());
             }
         }
 
         if (!additionalParameters.isEmpty()) {
-            context.operationBuilder().parameters(additionalParameters);
+            context.operationBuilder().requestParameters(additionalParameters);
         }
     }
 

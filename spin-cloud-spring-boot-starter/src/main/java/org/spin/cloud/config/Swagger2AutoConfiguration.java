@@ -1,34 +1,34 @@
 package org.spin.cloud.config;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j;
-
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.spin.cloud.config.properties.Swagger2Properties;
 import org.spin.cloud.swagger.OperationAuthBuilderPlugin;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.core.annotation.Order;
 import springfox.documentation.builders.ApiInfoBuilder;
-import springfox.documentation.builders.ParameterBuilder;
+import springfox.documentation.builders.ExampleBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.schema.ModelRef;
+import springfox.documentation.builders.RequestParameterBuilder;
+import springfox.documentation.schema.ScalarType;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.Contact;
-import springfox.documentation.service.Parameter;
+import springfox.documentation.service.ParameterStyle;
+import springfox.documentation.service.ParameterType;
+import springfox.documentation.service.RequestParameter;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * description swagger2 Configuration
@@ -54,14 +54,14 @@ public class Swagger2AutoConfiguration {
 
     @Bean
     public Docket restApiDocket(Swagger2Properties swagger2Properties) {
-        List<Parameter> parameters = Collections.singletonList(
-            new ParameterBuilder().name("Client-Info")
+        List<RequestParameter> parameters = Collections.singletonList(
+            new RequestParameterBuilder().name("Client-Info")
                 .description("客户端信息")
-                .modelRef(new ModelRef("String"))
-                .defaultValue("")
-                .parameterType("header")
-                .order(Ordered.HIGHEST_PRECEDENCE)
+                .example(new ExampleBuilder().value("").build())
+                .in(ParameterType.HEADER)
                 .required(false)
+                .query(q -> q.style(ParameterStyle.SIMPLE).model(m -> m.scalarModel(ScalarType.STRING)))
+                .parameterIndex(Ordered.HIGHEST_PRECEDENCE)
                 .build()
         );
 
@@ -73,7 +73,7 @@ public class Swagger2AutoConfiguration {
             .apis(RequestHandlerSelectors.withMethodAnnotation(ApiOperation.class))
             .paths(PathSelectors.any())
             .build()
-            .globalOperationParameters(parameters);
+            .globalRequestParameters(parameters);
     }
 
     private ApiInfo apiInfo(Swagger2Properties swagger2Properties) {

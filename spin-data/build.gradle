@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '数据访问模块, 基于Hibernate的实现'
-version = '2.3.0-SNAPSHOT'
+version = '2.4.0-SNAPSHOT'
 
 test {
     useJUnitPlatform()

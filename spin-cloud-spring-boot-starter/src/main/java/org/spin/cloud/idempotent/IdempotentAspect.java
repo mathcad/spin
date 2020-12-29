@@ -44,7 +44,7 @@ public class IdempotentAspect implements Ordered {
     private static final Logger logger = LoggerFactory.getLogger(IdempotentAspect.class);
     private static final String IDENPOTENT_RESULT_CACHE_KEY = "IDENPOTENT_RESULT_CACHE:";
 
-    public static final String IDEMPOTENT_ID = "X-Idempotent-Id";
+    public static final String IDEMPOTENT_ID = "X-Request-Id";
 
     private final DistributedLock distributedLock;
     private final RedisTemplate<Object, Object> redisTemplate;
@@ -70,14 +70,18 @@ public class IdempotentAspect implements Ordered {
     public Object idenpotentProxy(ProceedingJoinPoint joinPoint) throws Throwable {
         IdempotentResult cache;
 
+        Method apiMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
+        Idempotent idempotent = apiMethod.getAnnotation(Idempotent.class);
         String idempotentId = extractIdempotentId(joinPoint);
         if (StringUtils.isNotEmpty(idempotentId) && ready) {
             // 幂等处理
             String key = IDENPOTENT_RESULT_CACHE_KEY + Env.getAppName() + ":" + joinPoint.getSignature().toShortString() + "-" + idempotentId;
             logger.info("开始为接口 [{}] 进行幂等担保处理, 本次业务id: {}", joinPoint.getSignature().toLongString(), key);
 
+
             try {
-                boolean locked = distributedLock.lock(key, guaranteeTime, (int) guaranteeTime / 200, 200L);
+                boolean locked = (idempotent.reentrantable() ? distributedLock.lock(key, guaranteeTime, (int) guaranteeTime / 200, 200L)
+                    : distributedLock.lock(key, 100, 0, 0L));
                 if (locked) {
                     cache = (IdempotentResult) redisTemplate.opsForValue().get(key);
                     if (null == cache) {
@@ -93,9 +97,13 @@ public class IdempotentAspect implements Ordered {
                         }
                     }
                 } else {
-                    logger.error("幂等担保代理无法获取[ {} ]上的分布式锁, 担保失败. 即将进行物理操作. 本次业务id: {}", joinPoint.getSignature().toLongString(), key);
-                    cache = doActualInvoke(joinPoint);
-                    redisTemplate.opsForValue().set(key, cache, guaranteeTime, TimeUnit.MILLISECONDS);
+                    if (idempotent.reentrantable()) {
+                        logger.error("幂等担保代理无法获取[ {} ]上的分布式锁, 担保失败. 即将进行物理操作. 本次业务id: {}", joinPoint.getSignature().toLongString(), key);
+                        cache = doActualInvoke(joinPoint);
+                        redisTemplate.opsForValue().set(key, cache, guaranteeTime, TimeUnit.MILLISECONDS);
+                    } else {
+                        throw new BizException(idempotent.errorMessage());
+                    }
                 }
             } finally {
                 distributedLock.releaseLock(key);

@@ -2,8 +2,9 @@ package org.spin.data.util;
 
 import org.spin.core.function.BoolConsumer;
 import org.spin.core.function.Handler;
+import org.spin.core.util.Util;
 import org.springframework.lang.Nullable;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.function.IntConsumer;
@@ -14,7 +15,10 @@ import java.util.function.IntConsumer;
  *
  * @author xuweinan
  */
-public class TransactionSyncUtils {
+public final class TransactionSyncUtils extends Util {
+
+    private TransactionSyncUtils() {
+    }
 
     /**
      * 返回当前事务的隔离级别（如果有的话）。当准备一个新建的资源（例如 JDBC 连接）时由资源管理代码调用
@@ -52,7 +56,7 @@ public class TransactionSyncUtils {
      */
     public static void beforeCommit(final BoolConsumer body, final int order) {
         if (isActualTransactionActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void beforeCommit(boolean readOnly) {
                     body.accept(readOnly);
@@ -76,7 +80,7 @@ public class TransactionSyncUtils {
      */
     public static void beforeCompletion(final Handler body, final int order) {
         if (isActualTransactionActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void beforeCompletion() {
                     body.handle();
@@ -100,7 +104,7 @@ public class TransactionSyncUtils {
      */
     public static void afterCommit(final Handler body, final int order) {
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
                     body.handle();
@@ -124,7 +128,7 @@ public class TransactionSyncUtils {
      */
     public static void afterCompletion(final IntConsumer body, final int order) {
         if (isActualTransactionActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCompletion(int status) {
                     body.accept(status);

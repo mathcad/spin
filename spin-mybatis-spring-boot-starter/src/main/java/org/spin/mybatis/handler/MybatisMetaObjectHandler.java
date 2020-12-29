@@ -17,13 +17,7 @@ public abstract class MybatisMetaObjectHandler implements MetaObjectHandler {
     }
 
     @Override
-    public final boolean compatibleFillId() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public final boolean openUpdateFill() {
         throw new UnsupportedOperationException();
     }
-
 }

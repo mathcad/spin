@@ -6,9 +6,7 @@ import org.spin.core.util.IOUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 
@@ -32,7 +30,7 @@ public class RSATest {
 
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        RSA.encrypt(RSA.getRSAPublicKey(publicKey), byteArrayInputStream, os);
+        RSA.encrypt(RSA.getPublicKey(publicKey), byteArrayInputStream, os);
 
 
         String encode = Base64.encode(os.toByteArray());
@@ -40,16 +38,16 @@ public class RSATest {
 
         byteArrayInputStream = new ByteArrayInputStream(Base64.decode(encode));
         os = new ByteArrayOutputStream();
-        RSA.decrypt(RSA.getRSAPrivateKey(privateKey), byteArrayInputStream, os);
+        RSA.decrypt(RSA.getPrivateKey(privateKey), byteArrayInputStream, os);
         System.out.println(new String(os.toByteArray(), StandardCharsets.UTF_8));
         assertTrue(true);
     }
 
-//    @Test
+    //    @Test
     void testKey() throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         FileInputStream fis = new FileInputStream("F:\\cert\\ca.crt");
-        Certificate c=cf.generateCertificate(fis);
+        Certificate c = cf.generateCertificate(fis);
 //        KeyStore ks = KeyStore.getInstance("JKS");
 //        ks.load(fis, null);
 //        Certificate c = ks.getCertificate("alias");//alias为条目的别名
@@ -58,13 +56,11 @@ public class RSATest {
 
 //    @Test
     void testSsh() throws Exception {
-        String pub = IOUtils.copyToString(new FileInputStream("F:\\id_rsa.pub"), StandardCharsets.UTF_8).split(" ")[1];
+        String pub = IOUtils.copyToString(new FileInputStream("F:\\id_rsa.pub"), StandardCharsets.UTF_8);
         String pri = IOUtils.copyToString(new FileInputStream("F:\\id_rsa"), StandardCharsets.UTF_8);
-        pri = pri.replaceAll("\n", "").substring(31);
-        pri = pri.substring(0, pri.length() - 29);
 
-        System.out.println(RSA.encrypt(pub, "abcd"));
-        System.out.println(RSA.decrypt(pri, "abcd"));
-        System.out.println("1");
+        String encrypt = RSA.encrypt(RSA.getPublicKeyFromSshKey(pub), "这是一段需要加密的字符串");
+        System.out.println(encrypt);
+        System.out.println(RSA.decrypt(RSA.getPrivateKeyFromSshKey(pri), encrypt));
     }
 }

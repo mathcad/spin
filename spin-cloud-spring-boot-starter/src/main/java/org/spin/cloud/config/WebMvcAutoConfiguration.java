@@ -15,10 +15,12 @@ import org.spin.web.handler.RequestResponseBodyModifier;
 import org.spin.web.handler.WrappedRequestResponseBodyProcessor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClientConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -51,6 +53,7 @@ import java.util.stream.Collectors;
  */
 @Configuration(proxyBeanMethods = false)
 @ComponentScan(basePackages = {"org.spin.cloud.web.handler", "org.spin.web.handler", "org.spin.cloud.idempotent"})
+@AutoConfigureBefore(LoadBalancerClientConfiguration.class)
 public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
     private static final JsonHttpMessageConverter JSON_HTTP_MESSAGE_CONVERTER = new JsonHttpMessageConverter();

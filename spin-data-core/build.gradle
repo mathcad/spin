@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '数据访问模块核心依赖,脱离于具体的DAO层实现，只定义必须的接口与通用工具'
-version = '2.3.0-SNAPSHOT'
+version = '2.4.0-SNAPSHOT'
 
 test {
     useJUnitPlatform()
@@ -42,7 +42,7 @@ dependencies {
     testRuntimeOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion
     testRuntimeOnly group: 'org.xerial', name: 'sqlite-jdbc', version: sqliteVersion
 
-    api group: 'org.mathcat', name: 'spin-core', version: '2.3.0-SNAPSHOT'
+    api group: 'org.mathcat', name: 'spin-core', version: '2.4.0-SNAPSHOT'
 
     compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
     compileOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion

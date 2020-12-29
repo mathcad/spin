@@ -11,10 +11,10 @@ import feign.Feign;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.MethodMetadata;
 import feign.Target;
-import feign.hystrix.FallbackFactory;
 import org.spin.cloud.feign.AbstractFallback;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
+import org.springframework.cloud.openfeign.FallbackFactory;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;

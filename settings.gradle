@@ -1,11 +1,22 @@
-rootProject.name = 'spin'
-include 'spin-cloud-spring-boot-starter'
-include 'spin-core'
-include 'spin-data'
-include 'spin-data-core'
-include 'spin-data-spring-boot-starter'
-include 'spin-enhance'
-include 'spin-mybatis-spring-boot-starter'
-include 'spin-web'
-include 'spin-wx'
-include 'test'
+pluginManagement {
+    repositories {
+        mavenLocal()
+        maven {
+            url = "http://60.169.170.69:8081/repository/mathcat/"
+            allowInsecureProtocol = true
+        }
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = "spin"
+include "spin-cloud-spring-boot-starter"
+include "spin-core"
+include "spin-data"
+include "spin-data-core"
+include "spin-data-spring-boot-starter"
+include "spin-enhance"
+include "spin-mybatis-spring-boot-starter"
+include "spin-web"
+include "spin-wx"
+include "test"

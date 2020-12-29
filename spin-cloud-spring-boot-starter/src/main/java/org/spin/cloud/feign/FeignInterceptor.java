@@ -63,7 +63,7 @@ public class FeignInterceptor implements RequestInterceptor {
         }
         template.header(IdempotentAspect.IDEMPOTENT_ID, idempotent.append(UUID.randomUUID().toString()).toString());
 
-        LinktraceInfo linktraceInfo = Linktrace.removeCurrentTraceInfo();
+        LinktraceInfo linktraceInfo = Linktrace.getCurrentTraceInfo();
         if (null != linktraceInfo) {
             template.header(LinktraceInterceptor.X_TRACE_ID, linktraceInfo.getTraceId());
             template.header(LinktraceInterceptor.X_PARENTSPAN_ID, linktraceInfo.getParentSpanId());

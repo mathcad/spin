@@ -6,8 +6,8 @@ import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
-import com.netflix.client.ClientException;
 import feign.FeignException;
+import feign.RetryableException;
 import feign.codec.DecodeException;
 import feign.codec.EncodeException;
 import org.slf4j.Logger;
@@ -18,6 +18,7 @@ import org.spin.core.util.BeanUtils;
 import org.spin.core.util.ExceptionUtils;
 import org.spin.web.throwable.FeignHttpException;
 
+import java.net.UnknownHostException;
 import java.util.function.Supplier;
 
 /**
@@ -70,7 +71,6 @@ public abstract class AbstractFallback {
 
         Throwable ex = ExceptionUtils.getCause(cause,
             BlockException.class,
-            ClientException.class,
             FeignException.class);
         this.cause = null == ex ? cause : ex;
 
@@ -103,9 +103,6 @@ public abstract class AbstractFallback {
         } else if (cause instanceof BlockException) {
             blocked = true;
             errorMsg = String.format("由于服务调控, 对资源[%s]的请求已被拒绝", ((BlockException) cause).getRuleLimitApp());
-        } else if (cause instanceof ClientException) {
-            errorMsg = String.format("远程调用异常: 错误类型[%s]-%s-%s", ((ClientException) cause).getErrorType(),
-                ((ClientException) cause).getErrorCode(), ((ClientException) cause).getErrorMessage());
         } else if (cause instanceof FeignException) {
             int status = BeanUtils.getFieldValue(cause, "status");
             if (status >= 400) {
@@ -123,9 +120,18 @@ public abstract class AbstractFallback {
                     ((FeignException) cause).hasRequest() ? ((FeignException) cause).request().url() : "",
                     cause.getMessage(), msg, cause);
             } else {
-                warnMsg.append("\n|--远程服务调用出错: ").append(cause.getMessage());
-                logger.warn(warnMsg.toString(), cause);
-                return;
+                Throwable e = cause;
+                if (e instanceof RetryableException) {
+                    logger.warn("请求重试后仍然失败");
+                    e = cause.getCause();
+                }
+                if (e instanceof UnknownHostException) {
+                    errorMsg = String.format("网络中找不到的主机名: %s", e.getMessage());
+                } else {
+                    warnMsg.append("\n|--远程服务调用出错: ").append(e.getMessage());
+                    logger.warn(warnMsg.toString(), cause);
+                    return;
+                }
             }
         } else {
             warnMsg.append("\n|--远程服务调用出错: ").append(cause.getMessage());

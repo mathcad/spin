@@ -23,11 +23,11 @@ public class BoundingBox implements Serializable {
     /**
      * 最小经度
      */
-    private double minLon;
+    private double minLng;
     /**
      * 最大经度
      */
-    private double maxLon;
+    private double maxLng;
 
     /**
      * 构造
@@ -42,20 +42,20 @@ public class BoundingBox implements Serializable {
     /**
      * 构造
      *
-     * @param latitude1   纬度1
-     * @param latitude2   纬度2
-     * @param longitude1  经度1
-     * @param longgitude2 经度2
+     * @param latitude1  纬度1
+     * @param latitude2  纬度2
+     * @param longitude1 经度1
+     * @param longitude2 经度2
      */
-    public BoundingBox(double latitude1, double latitude2, double longitude1, double longgitude2) {
+    public BoundingBox(double latitude1, double latitude2, double longitude1, double longitude2) {
         minLat = Math.min(latitude1, latitude2);
         maxLat = Math.max(latitude1, latitude2);
-        minLon = Math.min(longgitude2, longgitude2);
-        maxLon = Math.max(longitude1, longgitude2);
+        minLng = Math.min(longitude1, longitude2);
+        maxLng = Math.max(longitude1, longitude2);
     }
 
     public BoundingBox(BoundingBox that) {
-        this(that.minLat, that.maxLat, that.minLon, that.maxLon);
+        this(that.minLat, that.maxLat, that.minLng, that.maxLng);
     }
 
     /**
@@ -67,8 +67,8 @@ public class BoundingBox implements Serializable {
     public boolean contains(Coordinate point) {
         double latitude = point.getLatitude();
         double longitude = point.getLongitude();
-        return (latitude >= minLat) && (longitude >= minLon) //
-            && (latitude <= maxLat) && (longitude <= maxLon);
+        return (latitude >= minLat) && (longitude >= minLng) //
+            && (latitude <= maxLat) && (longitude <= maxLng);
     }
 
     /**
@@ -78,7 +78,7 @@ public class BoundingBox implements Serializable {
      * @return 是否有交集
      */
     public boolean intersects(BoundingBox other) {
-        return !(other.minLon > maxLon || other.maxLon < minLon || other.minLat > maxLat || other.maxLat < minLat);
+        return !(other.minLng > maxLng || other.maxLng < minLng || other.minLat > maxLat || other.maxLat < minLat);
     }
 
     /**
@@ -88,7 +88,7 @@ public class BoundingBox implements Serializable {
      */
     public Coordinate getCenterPoint() {
         double centerLatitude = (minLat + maxLat) / 2;
-        double centerLongitude = (minLon + maxLon) / 2;
+        double centerLongitude = (minLng + maxLng) / 2;
         return new Coordinate(centerLatitude, centerLongitude);
     }
 
@@ -98,11 +98,11 @@ public class BoundingBox implements Serializable {
      * @param other 其它矩形区域
      */
     public void expandToInclude(BoundingBox other) {
-        if (other.minLon < minLon) {
-            minLon = other.minLon;
+        if (other.minLng < minLng) {
+            minLng = other.minLng;
         }
-        if (other.maxLon > maxLon) {
-            maxLon = other.maxLon;
+        if (other.maxLng > maxLng) {
+            maxLng = other.maxLng;
         }
         if (other.minLat < minLat) {
             minLat = other.minLat;
@@ -122,8 +122,8 @@ public class BoundingBox implements Serializable {
     /**
      * @return 最小经度
      */
-    public double getMinLon() {
-        return minLon;
+    public double getMinLng() {
+        return minLng;
     }
 
     /**
@@ -136,8 +136,8 @@ public class BoundingBox implements Serializable {
     /**
      * @return 最大经度
      */
-    public double getMaxLon() {
-        return maxLon;
+    public double getMaxLng() {
+        return maxLng;
     }
 
     /**
@@ -145,8 +145,8 @@ public class BoundingBox implements Serializable {
      *
      * @return 左上角坐标
      */
-    public Coordinate getUpperLeft() {
-        return new Coordinate(maxLat, minLon);
+    public Coordinate getUpLeft() {
+        return new Coordinate(maxLat, minLng);
     }
 
     /**
@@ -154,8 +154,8 @@ public class BoundingBox implements Serializable {
      *
      * @return 右下角坐标
      */
-    public Coordinate getLowerRight() {
-        return new Coordinate(minLat, maxLon);
+    public Coordinate getLowRight() {
+        return new Coordinate(minLat, maxLng);
     }
 
     /**
@@ -173,7 +173,7 @@ public class BoundingBox implements Serializable {
      * @return 经度差
      */
     public double getLongitudeSize() {
-        return maxLon - minLon;
+        return maxLng - minLng;
     }
 
     @Override
@@ -184,9 +184,9 @@ public class BoundingBox implements Serializable {
         if (obj instanceof BoundingBox) {
             BoundingBox other = (BoundingBox) obj;
             return Double.valueOf(minLat).equals(other.minLat)
-                && Double.valueOf(minLon).equals(other.minLon)
+                && Double.valueOf(minLng).equals(other.minLng)
                 && Double.valueOf(maxLat).equals(other.maxLat)
-                && Double.valueOf(maxLon).equals(other.maxLon);
+                && Double.valueOf(maxLng).equals(other.maxLng);
         } else {
             return false;
         }
@@ -197,8 +197,8 @@ public class BoundingBox implements Serializable {
         int result = 17;
         result = 37 * result + hashCode(minLat);
         result = 37 * result + hashCode(maxLat);
-        result = 37 * result + hashCode(minLon);
-        result = 37 * result + hashCode(maxLon);
+        result = 37 * result + hashCode(minLng);
+        result = 37 * result + hashCode(maxLng);
         return result;
     }
 
@@ -215,6 +215,6 @@ public class BoundingBox implements Serializable {
 
     @Override
     public String toString() {
-        return getUpperLeft() + " -> " + getLowerRight();
+        return getUpLeft() + " -> " + getLowRight();
     }
 }

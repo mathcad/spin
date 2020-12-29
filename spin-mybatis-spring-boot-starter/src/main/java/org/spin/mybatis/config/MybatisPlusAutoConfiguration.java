@@ -1,7 +1,8 @@
 package org.spin.mybatis.config;
 
-import com.baomidou.mybatisplus.extension.plugins.OptimisticLockerInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import org.spin.mybatis.DataPermissionInterceptor;
 import org.spin.mybatis.handler.MybatisMetaObjectHandler;
 import org.spin.mybatis.handler.MybatisPlusMetaObjectHandler;
@@ -18,15 +19,14 @@ import java.util.List;
 @ConditionalOnProperty("mybatis-plus.mapper-locations")
 public class MybatisPlusAutoConfiguration {
 
-    /**
-     * 分页插件
-     *
-     * @return PaginationInterceptor
-     */
     @Bean
-    public PaginationInterceptor paginationInterceptor() {
-        return new PaginationInterceptor();
+    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
+        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+        return interceptor;
     }
+
 
     /**
      * 数据权限控制插件
@@ -37,16 +37,6 @@ public class MybatisPlusAutoConfiguration {
     @ConditionalOnClass(name = "org.spin.cloud.vo.CurrentUser")
     public DataPermissionInterceptor dataPermissionInterceptor() {
         return new DataPermissionInterceptor();
-    }
-
-    /**
-     * 乐观锁
-     *
-     * @return optimisticLockerInterceptor
-     */
-    @Bean
-    public OptimisticLockerInterceptor optimisticLockerInterceptor() {
-        return new OptimisticLockerInterceptor();
     }
 
     @Bean

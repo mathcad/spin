@@ -21,6 +21,11 @@ public class MessageContent {
     private String title;
 
     /**
+     * 消息子类型，由业务自行确定
+     */
+    private Integer subType;
+
+    /**
      * 图标
      */
     private String icon;
@@ -71,8 +76,22 @@ public class MessageContent {
         return new MessageContent().withType(MessageType.TIP);
     }
 
+    /**
+     * 创建一个用户消息
+     *
+     * @return 消息内容
+     */
+    public static MessageContent aMsg() {
+        return new MessageContent().withType(MessageType.MSG);
+    }
+
     public MessageContent withTitle(String title) {
         this.title = title;
+        return this;
+    }
+
+    public MessageContent withSubType(Integer subType) {
+        this.subType = subType;
         return this;
     }
 
@@ -105,6 +124,14 @@ public class MessageContent {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public Integer getSubType() {
+        return subType;
+    }
+
+    public void setSubType(Integer subType) {
+        this.subType = subType;
     }
 
     public String getIcon() {

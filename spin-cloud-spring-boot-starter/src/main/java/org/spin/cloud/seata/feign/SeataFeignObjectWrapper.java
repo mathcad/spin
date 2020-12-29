@@ -3,58 +3,76 @@ package org.spin.cloud.seata.feign;
 import feign.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerProperties;
 import org.springframework.cloud.loadbalancer.blocking.client.BlockingLoadBalancerClient;
-import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
+import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
-import org.springframework.cloud.openfeign.ribbon.CachingSpringLoadBalancerFactory;
-import org.springframework.cloud.openfeign.ribbon.LoadBalancerFeignClient;
 
 public class SeataFeignObjectWrapper {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SeataFeignObjectWrapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(SeataFeignObjectWrapper.class);
 
     private final BeanFactory beanFactory;
 
-    private CachingSpringLoadBalancerFactory cachingSpringLoadBalancerFactory;
+    private LoadBalancerClientFactory loadBalancerClientFactory;
+    private LoadBalancerProperties properties;
+//
+//    private SpringClientFactory springClientFactory;
 
-    private SpringClientFactory springClientFactory;
+    private boolean continued = true;
 
     public SeataFeignObjectWrapper(BeanFactory beanFactory) {
         this.beanFactory = beanFactory;
     }
 
     Object wrap(Object bean) {
-        if (bean instanceof Client && !(bean instanceof SeataFeignClient)) {
-            if (bean instanceof LoadBalancerFeignClient) {
-                LoadBalancerFeignClient client = ((LoadBalancerFeignClient) bean);
-                return new SeataLoadBalancerFeignClient(client.getDelegate(), factory(),
-                    clientFactory(), this);
-            }
+        if (continued && bean instanceof Client && !(bean instanceof SeataFeignClient)) {
             if (bean instanceof FeignBlockingLoadBalancerClient) {
                 FeignBlockingLoadBalancerClient client = (FeignBlockingLoadBalancerClient) bean;
-                return new SeataFeignBlockingLoadBalancerClient(client.getDelegate(),
-                    beanFactory.getBean(BlockingLoadBalancerClient.class), this);
+                try {
+                    return new SeataFeignBlockingLoadBalancerClient(client.getDelegate(), beanFactory.getBean(BlockingLoadBalancerClient.class),
+                        this, properties(), factory());
+                } catch (BeansException ignore) {
+                    logger.warn("Seata Feign初始化异常");
+                    continued = false;
+                    return bean;
+                }
             }
             return new SeataFeignClient(this.beanFactory, (Client) bean);
         }
         return bean;
     }
 
-    CachingSpringLoadBalancerFactory factory() {
-        if (this.cachingSpringLoadBalancerFactory == null) {
-            this.cachingSpringLoadBalancerFactory = this.beanFactory
-                .getBean(CachingSpringLoadBalancerFactory.class);
+    LoadBalancerClientFactory factory() {
+        if (loadBalancerClientFactory == null) {
+            try {
+                loadBalancerClientFactory = beanFactory.getBean(LoadBalancerClientFactory.class);
+            } catch (BeansException ignore) {
+                // ignore
+            }
         }
-        return this.cachingSpringLoadBalancerFactory;
+        return loadBalancerClientFactory;
     }
 
-    SpringClientFactory clientFactory() {
-        if (this.springClientFactory == null) {
-            this.springClientFactory = this.beanFactory
-                .getBean(SpringClientFactory.class);
+    LoadBalancerProperties properties() {
+        if (properties == null) {
+            try {
+                properties = beanFactory.getBean(LoadBalancerProperties.class);
+            } catch (BeansException ignore) {
+                // ignore
+            }
         }
-        return this.springClientFactory;
+
+        return properties;
     }
+
+//    SpringClientFactory clientFactory() {
+//        if (this.springClientFactory == null) {
+//            this.springClientFactory = this.beanFactory
+//                .getBean(SpringClientFactory.class);
+//        }
+//        return this.springClientFactory;
+//    }
 
 }
