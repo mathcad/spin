@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * @version 1.1
  * @see org.spin.mybatis.entity.BasicEntity BasicEntity
  */
-public abstract class AbstractEntity extends BasicEntity {
+public abstract class AbstractEntity<T extends AbstractEntity<T>> extends BasicEntity<T> {
 
     /**
      * 创建人ID
@@ -61,7 +61,7 @@ public abstract class AbstractEntity extends BasicEntity {
      */
     @TableLogic(value = "1", delval = "0")
     @TableField
-    private Byte valid = 1;
+    private Boolean valid = true;
 
     /**
      * 备注
@@ -117,11 +117,11 @@ public abstract class AbstractEntity extends BasicEntity {
         this.updateTime = updateTime;
     }
 
-    public Byte getValid() {
+    public Boolean getValid() {
         return valid;
     }
 
-    public void setValid(Byte valid) {
+    public void setValid(Boolean valid) {
         this.valid = valid;
     }
 

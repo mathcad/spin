@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * @author xuweinan
  */
-public class MapEntityConverter<E extends IEntity<?>> implements EntityConverter<Map<String, Object>, E> {
+public class MapEntityConverter<E extends IEntity<?, E>> implements EntityConverter<Map<String, Object>, E> {
 
     @Override
     public E parseToEntity(Class<E> entityClazz, Map<String, Object> value) {

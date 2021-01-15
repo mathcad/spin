@@ -1,5 +1,6 @@
 package org.spin.mybatis;
 
+import com.baomidou.mybatisplus.core.conditions.AbstractLambdaWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -31,17 +32,17 @@ public interface QueryBuilder {
         return Wrappers.emptyWrapper();
     }
 
-    static <T extends AbstractDataPermEntity> LambdaQueryWrapper<T> lambdaDataPermQuery() {
+    static <T extends AbstractDataPermEntity<T>> LambdaQueryWrapper<T> lambdaDataPermQuery() {
         QueryWrapper<T> queryWrapper = new QueryWrapper<>();
         return withDataPermission(queryWrapper.lambda());
     }
 
-    static <T extends AbstractDataPermEntity> QueryWrapper<T> dataPermQuery() {
-        return withDataPermission(Wrappers.emptyWrapper());
-
+    static <T extends AbstractDataPermEntity<T>> QueryWrapper<T> dataPermQuery() {
+        QueryWrapper<T> queryWrapper = new QueryWrapper<>();
+        return withDataPermission(queryWrapper);
     }
 
-    static <T extends AbstractDataPermEntity> QueryWrapper<T> withDataPermission(QueryWrapper<T> queryWrapper) {
+    static <T extends AbstractDataPermEntity<T>> QueryWrapper<T> withDataPermission(QueryWrapper<T> queryWrapper) {
         DataPermInfo dataPermInfo = CurrentUser.getCurrentNonNull().getDataPermInfo();
         if (null == dataPermInfo) {
             return queryWrapper;
@@ -59,7 +60,7 @@ public interface QueryBuilder {
         return queryWrapper;
     }
 
-    static <T extends AbstractDataPermEntity> LambdaQueryWrapper<T> withDataPermission(LambdaQueryWrapper<T> queryWrapper) {
+    static <E extends AbstractDataPermEntity<E>, T extends AbstractLambdaWrapper<E, T>> T withDataPermission(T queryWrapper) {
         DataPermInfo dataPermInfo = CurrentUser.getCurrentNonNull().getDataPermInfo();
         if (null == dataPermInfo) {
             return queryWrapper;

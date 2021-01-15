@@ -32,8 +32,8 @@ public final class SerializeUtils extends Util {
      */
     public static byte[] serialize(Object object) {
         FixedVector<byte[]> bytes = new FixedVector<>(1);
-        serialize(object, ByteArrayOutputStream::new, os -> bytes.put(os.toByteArray()));
-        return bytes.get();
+        serialize(object, ByteArrayOutputStream::new, os -> bytes.push(os.toByteArray()));
+        return bytes.pop();
     }
 
     /**

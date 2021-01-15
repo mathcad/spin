@@ -47,7 +47,7 @@ public class DistributedIdGenerator implements IdGenerator<Long, DistributedId> 
         machineIdProvider = BeanUtils.instantiateClass(idGeneratorConfig.getProviderType());
         machineIdProvider.init(idGeneratorConfig.getInitParams());
 
-        if (machineIdProvider.getMachineId() < 0) {
+        if (machineIdProvider.resolveMachineId() < 0) {
             logger.error("The machine Id is not configured properly so that Vesta Service refuses to start.");
             throw new IllegalStateException("The machine Id is not configured properly so that Vesta Service refuses to start.");
         }
@@ -93,7 +93,7 @@ public class DistributedIdGenerator implements IdGenerator<Long, DistributedId> 
     }
 
     public long makeId(long time, long seq) {
-        return makeId(time, seq, machineIdProvider.getMachineId());
+        return makeId(time, seq, machineIdProvider.resolveMachineId());
     }
 
     public long makeId(long time, long seq, long machine) {
@@ -169,7 +169,7 @@ public class DistributedIdGenerator implements IdGenerator<Long, DistributedId> 
                 sequence = 0;
             }
 
-            id.setMachine(machineIdProvider.getMachineId());
+            id.setMachine(machineIdProvider.resolveMachineId());
             id.setSeq(sequence);
             id.setTime(timestamp);
             return idConverter.convert(id);
@@ -192,7 +192,7 @@ public class DistributedIdGenerator implements IdGenerator<Long, DistributedId> 
     private long tillNextTimeUnit(final long lastTimestamp) {
         if (logger.isInfoEnabled()) {
             logger.info(String.format("Ids are used out during %d in machine %d. Waiting till next %s.",
-                lastTimestamp, machineIdProvider.getMachineId(), idType == IdTypeE.MAX_PEAK.getValue() ? "second" : "milisecond"));
+                lastTimestamp, machineIdProvider.resolveMachineId(), idType == IdTypeE.MAX_PEAK.getValue() ? "second" : "milisecond"));
         }
         long timestamp = this.genTime();
         while (timestamp <= lastTimestamp) {

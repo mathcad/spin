@@ -16,11 +16,11 @@
 
 package org.spin.core.gson;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
 import org.spin.core.gson.internal.$Gson$Preconditions;
 import org.spin.core.gson.internal.LazilyParsedNumber;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * A class representing a Json primitive value. A primitive value
@@ -32,11 +32,7 @@ import org.spin.core.gson.internal.LazilyParsedNumber;
  */
 public final class JsonPrimitive extends JsonElement {
 
-    private static final Class<?>[] PRIMITIVE_TYPES = {int.class, long.class, short.class,
-        float.class, double.class, byte.class, boolean.class, char.class, Integer.class, Long.class,
-        Short.class, Float.class, Double.class, Byte.class, Boolean.class, Character.class};
-
-    private Object value;
+    private final Object value;
 
     /**
      * Create a primitive containing a boolean value.
@@ -44,7 +40,7 @@ public final class JsonPrimitive extends JsonElement {
      * @param bool the value to create the primitive with.
      */
     public JsonPrimitive(Boolean bool) {
-        setValue(bool);
+        value = $Gson$Preconditions.checkNotNull(bool);
     }
 
     /**
@@ -53,7 +49,7 @@ public final class JsonPrimitive extends JsonElement {
      * @param number the value to create the primitive with.
      */
     public JsonPrimitive(Number number) {
-        setValue(number);
+        value = $Gson$Preconditions.checkNotNull(number);
     }
 
     /**
@@ -62,7 +58,7 @@ public final class JsonPrimitive extends JsonElement {
      * @param string the value to create the primitive with.
      */
     public JsonPrimitive(String string) {
-        setValue(string);
+        value = $Gson$Preconditions.checkNotNull(string);
     }
 
     /**
@@ -72,17 +68,9 @@ public final class JsonPrimitive extends JsonElement {
      * @param c the value to create the primitive with.
      */
     public JsonPrimitive(Character c) {
-        setValue(c);
-    }
-
-    /**
-     * Create a primitive using the specified Object. It must be an instance of {@link Number}, a
-     * Java primitive type, or a String.
-     *
-     * @param primitive the value to create the primitive with.
-     */
-    JsonPrimitive(Object primitive) {
-        setValue(primitive);
+        // convert characters to strings since in JSON, characters are represented as a single
+        // character string
+        value = $Gson$Preconditions.checkNotNull(c).toString();
     }
 
     /**
@@ -95,19 +83,6 @@ public final class JsonPrimitive extends JsonElement {
         return this;
     }
 
-    void setValue(Object primitive) {
-        if (primitive instanceof Character) {
-            // convert characters to strings since in JSON, characters are represented as a single
-            // character string
-            char c = ((Character) primitive).charValue();
-            this.value = String.valueOf(c);
-        } else {
-            $Gson$Preconditions.checkArgument(primitive instanceof Number
-                || isPrimitiveOrString(primitive));
-            this.value = primitive;
-        }
-    }
-
     /**
      * Check whether this primitive contains a boolean value.
      *
@@ -118,16 +93,6 @@ public final class JsonPrimitive extends JsonElement {
     }
 
     /**
-     * convenience method to get this element as a {@link Boolean}.
-     *
-     * @return get this element as a {@link Boolean}.
-     */
-    @Override
-    Boolean getAsBooleanWrapper() {
-        return (Boolean) value;
-    }
-
-    /**
      * convenience method to get this element as a boolean value.
      *
      * @return get this element as a primitive boolean value.
@@ -135,11 +100,10 @@ public final class JsonPrimitive extends JsonElement {
     @Override
     public boolean getAsBoolean() {
         if (isBoolean()) {
-            return getAsBooleanWrapper().booleanValue();
-        } else {
-            // Check to see if the value as a String is "true" in any case.
-            return Boolean.parseBoolean(getAsString());
+            return ((Boolean) value).booleanValue();
         }
+        // Check to see if the value as a String is "true" in any case.
+        return Boolean.parseBoolean(getAsString());
     }
 
     /**
@@ -181,7 +145,7 @@ public final class JsonPrimitive extends JsonElement {
         if (isNumber()) {
             return getAsNumber().toString();
         } else if (isBoolean()) {
-            return getAsBooleanWrapper().toString();
+            return ((Boolean) value).toString();
         } else {
             return (String) value;
         }
@@ -273,20 +237,6 @@ public final class JsonPrimitive extends JsonElement {
     @Override
     public char getAsCharacter() {
         return getAsString().charAt(0);
-    }
-
-    private static boolean isPrimitiveOrString(Object target) {
-        if (target instanceof String) {
-            return true;
-        }
-
-        Class<?> classOfPrimitive = target.getClass();
-        for (Class<?> standardPrimitive : PRIMITIVE_TYPES) {
-            if (standardPrimitive.isAssignableFrom(classOfPrimitive)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override

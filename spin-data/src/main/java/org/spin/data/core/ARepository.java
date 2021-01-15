@@ -69,7 +69,7 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version V1.6
  */
-public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
+public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
     private static final String ORDER_ENTRIES = "orderEntries";
     private static final int MAX_RECORDS = 100000000;

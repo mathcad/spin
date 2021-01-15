@@ -48,5 +48,5 @@ dependencies {
     api group: 'org.springframework', name: 'spring-oxm', version: springVersion
     api group: 'org.springframework', name: 'spring-tx', version: springVersion
     api group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
-    api group: 'javax.transaction', name: 'javax.transaction-api', version: transactionApiVersion
+//    api group: 'javax.transaction', name: 'javax.transaction-api', version: '1.3'
 }

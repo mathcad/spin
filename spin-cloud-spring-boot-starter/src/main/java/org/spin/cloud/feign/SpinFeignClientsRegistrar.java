@@ -16,6 +16,10 @@
 
 package org.spin.cloud.feign;
 
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.spin.core.inspection.BytesClassLoader;
 import org.spin.core.util.StringUtils;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
@@ -60,10 +64,13 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
 
     // patterned after Spring Integration IntegrationComponentScanRegistrar
     // and RibbonClientsConfigurationRegistgrar
+    private static final BytesClassLoader CLASS_LOADER = new BytesClassLoader(Thread.currentThread().getContextClassLoader());
 
     private ResourceLoader resourceLoader;
 
     private Environment environment;
+
+    private boolean handleDefaultFallack;
 
     SpinFeignClientsRegistrar() {
     }
@@ -141,14 +148,17 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
     private void registerDefaultConfiguration(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
         Map<String, Object> defaultAttrs = metadata.getAnnotationAttributes(EnableSpinFeignClients.class.getName(), true);
 
-        if (defaultAttrs != null && defaultAttrs.containsKey("defaultConfiguration")) {
-            String name;
-            if (metadata.hasEnclosingClass()) {
-                name = "default." + metadata.getEnclosingClassName();
-            } else {
-                name = "default." + metadata.getClassName();
+        if (null != defaultAttrs) {
+            handleDefaultFallack = (boolean) defaultAttrs.get("handleDefaultFallack");
+            if (defaultAttrs.containsKey("defaultConfiguration")) {
+                String name;
+                if (metadata.hasEnclosingClass()) {
+                    name = "default." + metadata.getEnclosingClassName();
+                } else {
+                    name = "default." + metadata.getClassName();
+                }
+                registerClientConfiguration(registry, name, defaultAttrs.get("defaultConfiguration"));
             }
-            registerClientConfiguration(registry, name, defaultAttrs.get("defaultConfiguration"));
         }
     }
 
@@ -201,6 +211,8 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
         String defUrl = FeignResolver.getUrl(name);
         String url = getUrl(attributes);
 
+        Class<?> fallbackFactory = analysisFallbackFactory(className, registry, (Class<?>) attributes.get("fallbackFactory"));
+
         definition.addPropertyValue("url", StringUtils.isEmpty(url) ? defUrl : url);
         definition.addPropertyValue("path", getPath(attributes));
         definition.addPropertyValue("name", name);
@@ -209,7 +221,7 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
         definition.addPropertyValue("type", className);
         definition.addPropertyValue("decode404", attributes.get("decode404"));
         definition.addPropertyValue("fallback", attributes.get("fallback"));
-        definition.addPropertyValue("fallbackFactory", attributes.get("fallbackFactory"));
+        definition.addPropertyValue("fallbackFactory", fallbackFactory);
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
 
         String alias = contextId + "FeignClient";
@@ -358,6 +370,51 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
         builder.addConstructorArgValue(configuration);
         registry.registerBeanDefinition(name + "." + FeignClientSpecification.class.getSimpleName(),
             builder.getBeanDefinition());
+    }
+
+    private Class<?> analysisFallbackFactory(String clientName, BeanDefinitionRegistry registry, Class<?> fallbackFactory) {
+        if (handleDefaultFallack && fallbackFactory == void.class) {
+            fallbackFactory = SpinFallbackFactory.class;
+        }
+        if (!(SpinFallbackFactory.class == fallbackFactory)) {
+            return fallbackFactory;
+        }
+
+        Class<?> fallbackFactoryClass = generateFallbackFactoryClass(clientName);
+        BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(fallbackFactoryClass);
+        registry.registerBeanDefinition(StringUtils.uncapitalize(fallbackFactoryClass.getSimpleName()), bdb.getBeanDefinition());
+
+        return fallbackFactoryClass;
+    }
+
+    private <T, F extends SpinFallbackFactory<T, AbstractFallback>> Class<F> generateFallbackFactoryClass(String feignType) {
+        int idx = feignType.lastIndexOf('$');
+        if (idx < 0) {
+            idx = feignType.lastIndexOf('.');
+        }
+        ++idx;
+        String name = (1 >= idx ? "org/spin/cloud/feign/internal/" : feignType.substring(0, idx)).replaceAll("\\.", "/") + feignType.substring(idx) + "FallbackFactory";
+        String gInfo = "L" + feignType.replaceAll("\\.", "/") + ";";
+        ClassWriter cw = new ClassWriter(0);
+        cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC,
+            name,
+            "Lorg/spin/cloud/feign/SpinFallbackFactory<" + gInfo + "Lorg/spin/cloud/feign/AbstractFallback;>;",
+            "org/spin/cloud/feign/SpinFallbackFactory",
+            null
+        );
+
+        MethodVisitor mw = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
+        mw.visitVarInsn(Opcodes.ALOAD, 0);
+        mw.visitMethodInsn(Opcodes.INVOKESPECIAL, "org/spin/cloud/feign/SpinFallbackFactory", "<init>", "()V", false);
+        mw.visitInsn(Opcodes.RETURN);
+        mw.visitMaxs(1, 1);
+        mw.visitEnd();
+
+        cw.visitEnd();
+        byte[] bytes = cw.toByteArray();
+        @SuppressWarnings("unchecked")
+        Class<F> mClass = (Class<F>) CLASS_LOADER.defineClass(name.replaceAll("/", "."), bytes);
+        return mClass;
     }
 
     @Override

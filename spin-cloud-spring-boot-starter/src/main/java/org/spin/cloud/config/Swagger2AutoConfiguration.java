@@ -13,19 +13,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import springfox.documentation.builders.ApiInfoBuilder;
-import springfox.documentation.builders.ExampleBuilder;
+import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.builders.RequestParameterBuilder;
-import springfox.documentation.schema.ScalarType;
+import springfox.documentation.schema.ModelRef;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.Contact;
-import springfox.documentation.service.ParameterStyle;
-import springfox.documentation.service.ParameterType;
-import springfox.documentation.service.RequestParameter;
+import springfox.documentation.service.Parameter;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
+import springfox.documentation.swagger2.annotations.EnableSwagger2WebMvc;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +34,7 @@ import java.util.List;
  * <p>Created by wangy on 2019/3/13.</p>
  */
 @Configuration
-@EnableSwagger2
+@EnableSwagger2WebMvc
 @EnableKnife4j
 @ConditionalOnProperty(prefix = "swagger2", value = {"enable"}, havingValue = "true")
 @EnableConfigurationProperties(Swagger2Properties.class)
@@ -54,14 +51,14 @@ public class Swagger2AutoConfiguration {
 
     @Bean
     public Docket restApiDocket(Swagger2Properties swagger2Properties) {
-        List<RequestParameter> parameters = Collections.singletonList(
-            new RequestParameterBuilder().name("Client-Info")
+        List<Parameter> parameters = Collections.singletonList(
+            new ParameterBuilder().name("Client-Info")
                 .description("客户端信息")
-                .example(new ExampleBuilder().value("").build())
-                .in(ParameterType.HEADER)
+                .modelRef(new ModelRef("String"))
+                .defaultValue("")
+                .parameterType("header")
+                .order(Ordered.HIGHEST_PRECEDENCE)
                 .required(false)
-                .query(q -> q.style(ParameterStyle.SIMPLE).model(m -> m.scalarModel(ScalarType.STRING)))
-                .parameterIndex(Ordered.HIGHEST_PRECEDENCE)
                 .build()
         );
 
@@ -73,7 +70,7 @@ public class Swagger2AutoConfiguration {
             .apis(RequestHandlerSelectors.withMethodAnnotation(ApiOperation.class))
             .paths(PathSelectors.any())
             .build()
-            .globalRequestParameters(parameters);
+            .globalOperationParameters(parameters);
     }
 
     private ApiInfo apiInfo(Swagger2Properties swagger2Properties) {

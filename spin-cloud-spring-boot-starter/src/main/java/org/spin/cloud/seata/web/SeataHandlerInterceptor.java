@@ -48,7 +48,7 @@ public class SeataHandlerInterceptor implements HandlerInterceptor {
         if (RootContext.inGlobalTransaction()) {
             String rpcXid = request.getHeader(RootContext.KEY_XID);
 
-            if (StringUtils.isEmpty(rpcXid)) {
+            if (!StringUtils.hasLength(rpcXid)) {
                 return;
             }
 

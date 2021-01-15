@@ -1,12 +1,16 @@
 package org.spin.mybatis.config;
 
+import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import org.spin.data.pk.generator.DistributedIdGenerator;
 import org.spin.mybatis.DataPermissionInterceptor;
+import org.spin.mybatis.entity.SfIdGenerator;
 import org.spin.mybatis.handler.MybatisMetaObjectHandler;
 import org.spin.mybatis.handler.MybatisPlusMetaObjectHandler;
 import org.spin.mybatis.handler.PermissionDataMetaObjectHandler;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +29,12 @@ public class MybatisPlusAutoConfiguration {
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
         return interceptor;
+    }
+
+    @Bean
+    @ConditionalOnBean(DistributedIdGenerator.class)
+    public IdentifierGenerator sfIdGenerator(DistributedIdGenerator idGenerator) {
+        return new SfIdGenerator(idGenerator);
     }
 
 

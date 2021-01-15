@@ -12,10 +12,11 @@ import java.util.Map;
  * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @param <PK> 主键类型
+ * @param <E>  实际实体类型
  * @author xuweinan
  * @version 1.1
  */
-public interface IEntity<PK extends Serializable> extends Serializable {
+public interface IEntity<PK extends Serializable, E extends IEntity<PK, E>> extends Serializable {
 
     PK getId();
 
@@ -32,12 +33,11 @@ public interface IEntity<PK extends Serializable> extends Serializable {
     /**
      * 为当前实体指定ID并返回当前实体
      *
-     * @param id  id
-     * @param <E> 当前实体类型
+     * @param id id
      * @return 当前实体
      */
     @SuppressWarnings("unchecked")
-    default <E extends IEntity<PK>> E withId(PK id) {
+    default E withId(PK id) {
         this.setId(id);
         return (E) this;
     }
@@ -65,6 +65,32 @@ public interface IEntity<PK extends Serializable> extends Serializable {
     }
 
     /**
+     * 将指定对象中的所有属性copy到当前对象中(所有存在于当前对象中的属性)
+     *
+     * @param source 源对象
+     * @param <T>    源对象类型
+     * @return 当前对象
+     */
+    @SuppressWarnings("unchecked")
+    default <T> E apply(T source) {
+        BeanUtils.copyTo(source, this, null, (f, v) -> null != v, null);
+        return (E) this;
+    }
+
+    /**
+     * 将指定对象中的所有非空属性copy到当前对象中(所有存在于当前对象中的属性)
+     *
+     * @param source 源对象
+     * @param <T>    源对象类型
+     * @return 当前对象
+     */
+    @SuppressWarnings("unchecked")
+    default <T> E merge(T source) {
+        BeanUtils.copyTo(source, this);
+        return (E) this;
+    }
+
+    /**
      * 根据id,获取一个持有该id的指定类型的DTO对象
      *
      * @param entityCls 实体类型
@@ -73,7 +99,7 @@ public interface IEntity<PK extends Serializable> extends Serializable {
      * @param <E>       实体类型泛型参数
      * @return 持有指定id的DTO对象
      */
-    static <PK extends Serializable, E extends IEntity<PK>> E ref(Class<E> entityCls, PK id) {
+    static <PK extends Serializable, E extends IEntity<PK, E>> E ref(Class<E> entityCls, PK id) {
         E entity;
         entity = BeanUtils.instantiateClass(entityCls);
         entity.setId(id);

@@ -34,7 +34,7 @@ public class IdGeneratorTest {
 
         idProvider.init("");
 
-        System.out.println(idProvider.getMachineId());
+        System.out.println(idProvider.resolveMachineId());
     }
 
 

@@ -12,7 +12,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "sys_file")
-public class File extends AbstractEntity {
+public class File extends AbstractEntity<File> {
     private static final long serialVersionUID = 5524987141178520509L;
 
     /**

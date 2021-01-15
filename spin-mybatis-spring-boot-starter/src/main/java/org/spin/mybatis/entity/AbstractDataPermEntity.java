@@ -2,7 +2,6 @@ package org.spin.mybatis.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
-import org.spin.mybatis.entity.AbstractEntity;
 
 /**
  * description 相关机构 系统数据权限
@@ -10,7 +9,7 @@ import org.spin.mybatis.entity.AbstractEntity;
  * @author wangy QQ 837195190
  * <p>Created by wangy on 2020/4/1.</p >
  */
-public abstract class AbstractDataPermEntity extends AbstractEntity {
+public abstract class AbstractDataPermEntity<T extends AbstractDataPermEntity<T>> extends AbstractEntity<T> {
 
     /**
      * 部门ID

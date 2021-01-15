@@ -18,9 +18,6 @@ package org.spin.core.gson.internal;
 
 
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Contains static utility methods pertaining to primitive types and their
@@ -30,43 +27,6 @@ import java.util.Map;
  */
 public final class Primitives {
     private Primitives() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * A map from primitive types to their corresponding wrapper types.
-     */
-    private static final Map<Type, Class<?>> PRIMITIVE_TO_WRAPPER_TYPE;
-
-    /**
-     * A map from wrapper types to their corresponding primitive types.
-     */
-    private static final Map<Type, Class<?>> WRAPPER_TO_PRIMITIVE_TYPE;
-
-    // Sad that we can't use a BiMap. :(
-
-    static {
-        Map<Class<?>, Class<?>> primToWrap = new HashMap<>(16);
-        Map<Class<?>, Class<?>> wrapToPrim = new HashMap<>(16);
-
-        add(primToWrap, wrapToPrim, boolean.class, Boolean.class);
-        add(primToWrap, wrapToPrim, byte.class, Byte.class);
-        add(primToWrap, wrapToPrim, char.class, Character.class);
-        add(primToWrap, wrapToPrim, double.class, Double.class);
-        add(primToWrap, wrapToPrim, float.class, Float.class);
-        add(primToWrap, wrapToPrim, int.class, Integer.class);
-        add(primToWrap, wrapToPrim, long.class, Long.class);
-        add(primToWrap, wrapToPrim, short.class, Short.class);
-        add(primToWrap, wrapToPrim, void.class, Void.class);
-
-        PRIMITIVE_TO_WRAPPER_TYPE = Collections.unmodifiableMap(primToWrap);
-        WRAPPER_TO_PRIMITIVE_TYPE = Collections.unmodifiableMap(wrapToPrim);
-    }
-
-    private static void add(Map<Class<?>, Class<?>> forward,
-                            Map<Class<?>, Class<?>> backward, Class<?> key, Class<?> value) {
-        forward.put(key, value);
-        backward.put(value, key);
     }
 
     /**
@@ -76,7 +36,7 @@ public final class Primitives {
      * @return true if type is primitive
      */
     public static boolean isPrimitive(Type type) {
-        return PRIMITIVE_TO_WRAPPER_TYPE.containsKey(type);
+        return type instanceof Class<?> && ((Class<?>) type).isPrimitive();
     }
 
     /**
@@ -88,8 +48,15 @@ public final class Primitives {
      * @see Class#isPrimitive
      */
     public static boolean isWrapperType(Type type) {
-        return WRAPPER_TO_PRIMITIVE_TYPE.containsKey(
-            $Gson$Preconditions.checkNotNull(type));
+        return type == Integer.class
+            || type == Float.class
+            || type == Byte.class
+            || type == Double.class
+            || type == Long.class
+            || type == Character.class
+            || type == Boolean.class
+            || type == Short.class
+            || type == Void.class;
     }
 
     /**
@@ -106,11 +73,16 @@ public final class Primitives {
      * @return corresponding wrapper type if type is primitive
      */
     public static <T> Class<T> wrap(Class<T> type) {
-        // cast is safe: long.class and Long.class are both of type Class<Long>
-        @SuppressWarnings("unchecked")
-        Class<T> wrapped = (Class<T>) PRIMITIVE_TO_WRAPPER_TYPE.get(
-            $Gson$Preconditions.checkNotNull(type));
-        return (wrapped == null) ? type : wrapped;
+        if (type == int.class) return (Class<T>) Integer.class;
+        if (type == float.class) return (Class<T>) Float.class;
+        if (type == byte.class) return (Class<T>) Byte.class;
+        if (type == double.class) return (Class<T>) Double.class;
+        if (type == long.class) return (Class<T>) Long.class;
+        if (type == char.class) return (Class<T>) Character.class;
+        if (type == boolean.class) return (Class<T>) Boolean.class;
+        if (type == short.class) return (Class<T>) Short.class;
+        if (type == void.class) return (Class<T>) Void.class;
+        return type;
     }
 
     /**
@@ -127,10 +99,15 @@ public final class Primitives {
      * @return primitive class
      */
     public static <T> Class<T> unwrap(Class<T> type) {
-        // cast is safe: long.class and Long.class are both of type Class<Long>
-        @SuppressWarnings("unchecked")
-        Class<T> unwrapped = (Class<T>) WRAPPER_TO_PRIMITIVE_TYPE.get(
-            $Gson$Preconditions.checkNotNull(type));
-        return (unwrapped == null) ? type : unwrapped;
+        if (type == Integer.class) return (Class<T>) int.class;
+        if (type == Float.class) return (Class<T>) float.class;
+        if (type == Byte.class) return (Class<T>) byte.class;
+        if (type == Double.class) return (Class<T>) double.class;
+        if (type == Long.class) return (Class<T>) long.class;
+        if (type == Character.class) return (Class<T>) char.class;
+        if (type == Boolean.class) return (Class<T>) boolean.class;
+        if (type == Short.class) return (Class<T>) short.class;
+        if (type == Void.class) return (Class<T>) void.class;
+        return type;
     }
 }

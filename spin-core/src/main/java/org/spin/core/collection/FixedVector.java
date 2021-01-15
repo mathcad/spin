@@ -1,9 +1,14 @@
 package org.spin.core.collection;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.lang.reflect.Array;
+import java.util.AbstractList;
+import java.util.ConcurrentModificationException;
+import java.util.Deque;
 import java.util.Iterator;
-import java.util.function.Consumer;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.RandomAccess;
 
 /**
  * 固定大小的向量，放入元素超过容器大小后会循环覆盖
@@ -11,190 +16,467 @@ import java.util.function.Consumer;
  *
  * @author xuweinan
  */
-public class FixedVector<T> implements Collection<T> {
+public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAccess, Deque<E>, Cloneable, java.io.Serializable {
 
-    private transient final Object[] elementData;
+    private transient final E[] elementData;
 
-    private int size;
-    private int base;
-    private int cursor;
+    private final int compacity;
+    private int head;
+    private int next;
 
-    public static <T> FixedVector<T> of(T t1) {
-        FixedVector<T> v = new FixedVector<>(1);
-        v.put(t1);
-        return v;
+    @SafeVarargs
+    public static <E> FixedVector<E> of(E... elements) {
+        return new FixedVector<>(elements.length, elements);
     }
 
-    public FixedVector(int size) {
-        this.size = ++size;
-        this.elementData = new Object[this.size];
-        base = 0;
-        cursor = 0;
-    }
+    @SafeVarargs
+    public FixedVector(int compacity, E... elements) {
+        if (compacity <= 0) {
+            throw new IllegalStateException("Illegal compacity declared, must be a positive number: " + compacity);
+        }
+        if (null == elements) {
+            throw new IllegalArgumentException("elements should not be null");
+        }
+        this.compacity = compacity + 1;
+        //noinspection unchecked
+        elementData = (elements.getClass() == Object[].class) ?
+            (E[]) new Object[this.compacity] :
+            (E[]) Array.newInstance(elements.getClass().getComponentType(), this.compacity);
+        head = 0;
+        if (elements.length == 0) {
+            next = 0;
+        } else {
+            if (elements.length > compacity) {
+                System.arraycopy(elements, elements.length - compacity, elementData, 0, compacity);
+                next = compacity;
+            } else {
+                System.arraycopy(elements, 0, elementData, 0, elements.length);
+                next = elements.length;
+            }
 
-    public void put(T element) {
-        elementData[cursor] = element;
-        cursor = ++cursor;
-        if (cursor >= size) {
-            cursor %= size;
-            base = ++base % size;
         }
     }
 
-    /**
-     * 获取第一个元素
-     *
-     * @return 队首元素
-     */
-    public T get() {
-        //noinspection unchecked
-        return base == cursor ? null : (T) elementData[base];
-    }
-
-    public T get(int index) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException();
+    @Override
+    public void addFirst(E e) {
+        if (compacity() == 0) {
+            throw new IllegalStateException("No available space to store element, compacity is: " + compacity());
         }
-        //noinspection unchecked
-        return base == cursor ? null : (T) elementData[(base + index) % size];
-    }
+        head = (head == 0 ? compacity : head) - 1;
+        elementData[head] = e;
 
-    /**
-     * 获取最后一个元素
-     *
-     * @return 栈顶元素
-     */
-    public T peek() {
-        return get(cursor - 1);
-    }
-
-    /**
-     * 将最后一个元素出栈
-     *
-     * @return 栈顶元素
-     */
-    public T pop() {
-        if (base == cursor) {
-            throw new IllegalStateException("Vector is empty");
+        if (head == next) {
+            // full abandon tail
+            next = (next == 0 ? compacity : next) - 1;
         }
-        cursor = (--cursor + size) % size;
-        //noinspection unchecked
-        return (T) elementData[cursor];
     }
 
     @Override
-    public void clear() {
-        base = 0;
-        cursor = 0;
+    public void addLast(E e) {
+        if (compacity() == 0) {
+            throw new IllegalStateException("No available space to store element, compacity is: " + compacity());
+        }
+        elementData[next] = e;
+        next = ++next % compacity;
+
+        if (next == head) {
+            // full, abandon head
+            head = ++head % compacity;
+        }
     }
 
     @Override
-    public int size() {
-        return size - 1;
-    }
-
-    public int length() {
-        return (cursor - base + size) % size;
+    public boolean offerFirst(E e) {
+        addFirst(e);
+        return true;
     }
 
     @Override
-    public boolean isEmpty() {
-        return base != cursor;
+    public boolean offerLast(E e) {
+        addLast(e);
+        return true;
     }
 
     @Override
-    public boolean contains(Object o) {
+    public E removeFirst() {
+        if (isEmpty()) {
+            throw new NoSuchElementException("FixedVector is empty");
+        } else {
+            modCount++;
+            E e = elementData[head];
+            elementData[head] = null;
+            head = ++head % compacity;
+            return e;
+        }
+    }
+
+    @Override
+    public E removeLast() {
+        if (isEmpty()) {
+            throw new NoSuchElementException("FixedVector is empty");
+        } else {
+            modCount++;
+            next = (next == 0 ? compacity : next) - 1;
+            E e = elementData[next];
+            elementData[next] = null;
+            return e;
+        }
+    }
+
+    @Override
+    public E pollFirst() {
+        if (isEmpty()) {
+            return null;
+        } else {
+            modCount++;
+            E e = elementData[head];
+            elementData[head] = null;
+            head = ++head % compacity;
+            return e;
+        }
+    }
+
+    @Override
+    public E pollLast() {
+        if (isEmpty()) {
+            return null;
+        } else {
+            modCount++;
+            next = (next == 0 ? compacity : next) - 1;
+            E e = elementData[next];
+            elementData[next] = null;
+            return e;
+        }
+    }
+
+    @Override
+    public E getFirst() {
+        if (head == next) {
+            throw new NoSuchElementException("FixedVector is empty");
+        } else {
+            return elementData[head];
+        }
+    }
+
+    @Override
+    public E getLast() {
+        if (head == next) {
+            throw new NoSuchElementException("FixedVector is empty");
+        } else {
+            return elementData[(next == 0 ? compacity : next) - 1];
+        }
+    }
+
+    @Override
+    public E peekFirst() {
+        return head == next ? null : elementData[head];
+    }
+
+    @Override
+    public E peekLast() {
+        return head == next ? null : elementData[(next == 0 ? compacity : next) - 1];
+    }
+
+    @Override
+    public boolean removeFirstOccurrence(Object o) {
+        int i = indexOf(o);
+        if (i >= 0) {
+            remove(i);
+            return true;
+        }
         return false;
     }
 
     @Override
-    public Iterator<T> iterator() {
-        return new VectorItr();
-    }
-
-    @Override
-    public Object[] toArray() {
-        return Arrays.copyOf(elementData, size - 1);
-    }
-
-    @Override
-    public <E> E[] toArray(E[] a) {
-        if (a.length < size - 1)
-            //noinspection unchecked
-            return (E[]) Arrays.copyOf(elementData, size - 1, a.getClass());
-        //noinspection SuspiciousSystemArraycopy
-        System.arraycopy(elementData, 0, a, 0, size);
-        if (a.length > size)
-            a[size] = null;
-        return a;
-    }
-
-    @Override
-    public boolean add(T element) {
-        elementData[cursor] = element;
-        cursor = ++cursor;
-        if (cursor >= size) {
-            cursor %= size;
-            base = ++base % size;
+    public boolean removeLastOccurrence(Object o) {
+        int i = lastIndexOf(o);
+        if (i >= 0) {
+            remove(i);
+            return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean add(E e) {
+        return offerLast(e);
+    }
+
+    @Override
+    public boolean offer(E e) {
+        return offerLast(e);
+    }
+
+    @Override
+    public E remove() {
+        return removeFirst();
+    }
+
+    @Override
+    public E poll() {
+        return pollFirst();
+    }
+
+    @Override
+    public E element() {
+        return getFirst();
+    }
+
+    @Override
+    public E peek() {
+        return peekFirst();
+    }
+
+
+    @Override
+    public void push(E e) {
+        addFirst(e);
+    }
+
+    @Override
+    public E pop() {
+        return removeFirst();
     }
 
     @Override
     public boolean remove(Object o) {
-        throw new UnsupportedOperationException();
+        return removeFirstOccurrence(o);
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
-        throw new UnsupportedOperationException();
+    public boolean contains(Object o) {
+        int i = indexOf(o);
+        return i >= 0;
     }
 
     @Override
-    public boolean addAll(Collection<? extends T> c) {
-        throw new UnsupportedOperationException();
+    public int size() {
+        return (next - head + compacity) % compacity;
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
-        throw new UnsupportedOperationException();
+    public Iterator<E> descendingIterator() {
+        return new DescItr();
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
-        throw new UnsupportedOperationException();
+    public E get(int index) {
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+        }
+        return elementData[(head + index) % compacity];
     }
 
-    private class VectorItr implements Iterator<T> {
-        // TODO: 需要实现迭代器
-        int cursor;       // index of next element to return
-        int lastRet = -1; // index of last element returned; -1 if no such
+    @Override
+    public E set(int index, E element) {
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+        }
+        index = (head + index) % compacity;
+        E previous = elementData[index];
+        elementData[index] = element;
+        return previous;
+    }
 
-        @Override
+    @Override
+    public void add(int index, E element) {
+        if (index < 0 || index > size()) {
+            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+        }
+        if (index == size()) {
+            // tail
+            addLast(element);
+            return;
+        }
+        if (index == 0) {
+            // head
+            addFirst(element);
+            return;
+        }
+
+        // actual idx
+        index = (head + index) % compacity;
+        if (index < next) {
+            // ahead of cursor
+            System.arraycopy(elementData, index, elementData, index + 1, next - index);
+            elementData[index] = element;
+            next = ++next % compacity;
+            if (next == head) {
+                // full, abandon head
+                head = ++head % compacity;
+            }
+            return;
+        }
+
+        // after base
+        if (next > 0) {
+            System.arraycopy(elementData, 0, elementData, 1, next);
+        }
+        next = ++next % compacity;
+        if (next == head) {
+            // full, abandon head
+            head = ++head % compacity;
+        }
+        elementData[0] = elementData[compacity - 1];
+        System.arraycopy(elementData, index, elementData, index + 1, compacity - index - 1);
+        elementData[index] = element;
+    }
+
+    @Override
+    public E remove(int index) {
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+        }
+        modCount++;
+        if (index == size() - 1) {
+            // tail
+            return removeLast();
+        }
+        if (index == 0) {
+            // head
+            return removeFirst();
+        }
+
+        // actual idx
+        index = (head + index) % compacity;
+        E e = elementData[index];
+        if (index < next) {
+            System.arraycopy(elementData, index + 1, elementData, index, next - index - 1);
+            --next;
+        } else {
+            System.arraycopy(elementData, index + 1, elementData, index, compacity - index - 1);
+            if (next > 0) {
+                elementData[compacity - 1] = elementData[0];
+                if (next > 1) {
+                    System.arraycopy(elementData, 1, elementData, 0, compacity - index - 1);
+                }
+                --next;
+            } else {
+                next = compacity - 1;
+            }
+        }
+        elementData[next] = null;
+        return e;
+    }
+
+    @Override
+    public int indexOf(Object o) {
+        int idx = 0;
+        while (idx != size()) {
+            if (Objects.equals(o, elementData[(head + idx) % compacity])) {
+                return idx;
+            }
+            idx = ++idx;
+        }
+
+        return -1;
+    }
+
+    @Override
+    public int lastIndexOf(Object o) {
+        int idx = size() - 1;
+        while (idx != -1) {
+            if (Objects.equals(o, elementData[(head + idx) % compacity])) {
+                return idx;
+            }
+            idx = --idx;
+        }
+
+        return -1;
+    }
+
+    @Override
+    public void clear() {
+        modCount++;
+        head = 0;
+        next = 0;
+        // clear to let GC do its work
+        for (int i = 0; i < compacity; i++)
+            elementData[i] = null;
+    }
+
+    public int compacity() {
+        return compacity - 1;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return head == next;
+    }
+
+
+    @Override
+    public Object[] toArray() {
+        Object[] dest = new Object[0];
+        return toArray(dest);
+    }
+
+    @Override
+    public <T> T[] toArray(T[] a) {
+        if (size() == 0) {
+            return a;
+        }
+        if (a.length < size()) {
+            //noinspection unchecked
+            a = (a.getClass() == Object[].class) ? (T[]) new Object[size()] : (T[]) Array.newInstance(a.getClass().getComponentType(), size());
+        }
+        if (head < next) {
+            System.arraycopy(elementData, head, a, 0, next - head);
+        } else {
+            System.arraycopy(elementData, head, a, 0, compacity - head);
+            if (next > 0) {
+                System.arraycopy(elementData, 0, a, compacity - head, next);
+            }
+        }
+        return a;
+    }
+
+    private String outOfBoundsMsg(int index) {
+        return "Index: " + index + ", Size: " + compacity + ", Length: " + size();
+    }
+
+    private class DescItr implements Iterator<E> {
+        int cursor = size() - 1;
+        int lastRet = -1;
+        int expectedModCount = modCount;
+
         public boolean hasNext() {
-            return false;
+            return cursor != 0;
         }
 
-        @Override
-        public T next() {
-            return null;
+        public E next() {
+            checkForComodification();
+            try {
+                int i = cursor;
+                E next = get((i + head) % compacity);
+                lastRet = i;
+                cursor = i - 1;
+                return next;
+            } catch (IndexOutOfBoundsException e) {
+                checkForComodification();
+                throw new NoSuchElementException();
+            }
         }
 
-        @Override
         public void remove() {
+            if (lastRet < 0)
+                throw new IllegalStateException();
+            checkForComodification();
 
+            try {
+                FixedVector.this.remove(lastRet);
+                if (lastRet < cursor)
+                    cursor--;
+                lastRet = -1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException e) {
+                throw new ConcurrentModificationException();
+            }
         }
 
-        @Override
-        public void forEachRemaining(Consumer<? super T> action) {
-
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
         }
-    }
-
-    @Override
-    public String toString() {
-        return "FixedVector{" +
-            "elementData=" + Arrays.toString(elementData) +
-            '}';
     }
 }

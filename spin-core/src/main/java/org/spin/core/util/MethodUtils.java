@@ -1244,7 +1244,7 @@ public final class MethodUtils extends Util {
         }
 
         try {
-            cr.accept(new ClassVisitor(Opcodes.ASM8) {
+            cr.accept(new ClassVisitor(Opcodes.ASM9) {
                 @Override
                 public MethodVisitor visitMethod(final int access, final String name, final String desc, final String signature, final String[] exceptions) {
                     final Type[] args = Type.getArgumentTypes(desc);
@@ -1264,7 +1264,7 @@ public final class MethodUtils extends Util {
                         }
                         paramMapping.put(++mapping, i);
                     }
-                    return new MethodVisitor(Opcodes.ASM8, v) {
+                    return new MethodVisitor(Opcodes.ASM9, v) {
                         @Override
                         public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
                             if (paramMapping.containsKey(index)) {

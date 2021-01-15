@@ -16,10 +16,15 @@
 
 package org.spin.cloud.feign;
 
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Import;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * 扫描指定包下的Feign客户端接口({@link org.springframework.cloud.openfeign.FeignClient} <code>@FeignClient</code>).
@@ -85,4 +90,10 @@ public @interface EnableSpinFeignClients {
      */
     Class<?>[] clients() default {};
 
+    /**
+     * apply framework circuit breaker processor on the default {@link FeignClient} fallbackFactory(void.class)
+     *
+     * @return default is true
+     */
+    boolean handleDefaultFallack() default true;
 }

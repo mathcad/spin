@@ -914,6 +914,50 @@ public final class ClassUtils extends Util {
         return cls1 == cls2 || null != cls1 && null != cls2 && cls1.getName().equals(cls2.getName()) && cls1.getClassLoader() == cls2.getClassLoader();
     }
 
+    public static String getTypeDescriptor(Class<?> cls) {
+        if (cls == int.class) {
+            return "I";
+        }
+
+        if (cls == void.class) {
+            return "V";
+        }
+
+        if (cls == boolean.class) {
+            return "Z";
+        }
+
+        if (cls == byte.class) {
+            return "B";
+        }
+
+        if (cls == char.class) {
+            return "C";
+        }
+
+        if (cls == short.class) {
+            return "S";
+        }
+
+        if (cls == Double.class) {
+            return "D";
+        }
+
+        if (cls == float.class) {
+            return "F";
+        }
+
+        if (cls == long.class) {
+            return "J";
+        }
+
+        if (cls.isArray()) {
+            return "[" + getTypeDescriptor(cls.getComponentType());
+        }
+
+        return "L" + cls.getName().replaceAll("\\.", "/") + ";";
+    }
+
     /**
      * <p>
      * Converts a given name of class into canonical format. If name of class is

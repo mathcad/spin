@@ -1,5 +1,8 @@
 package org.spin.data.pk.generator.provider;
 
+import org.spin.core.util.NumericUtils;
+import org.spin.core.util.StringUtils;
+
 /**
  * 机器ID提供者
  * <p>机器ID由10bit表示，最多可以有1024个机器id(0-1023)</p>
@@ -9,6 +12,8 @@ package org.spin.data.pk.generator.provider;
  * @version 1.0
  */
 public interface MachineIdProvider {
+
+    long DEFAULT_MACHINE_ID = NumericUtils.toLong(StringUtils.isEmpty(System.getenv("MACHINE_ID")) ? System.getProperty("MACHINE_ID") : System.getenv("MACHINE_ID"), -1);
 
     /**
      * 初始化
@@ -23,4 +28,11 @@ public interface MachineIdProvider {
      * @return 机器ID
      */
     long getMachineId();
+
+    default long resolveMachineId() {
+        if (0 < DEFAULT_MACHINE_ID) {
+            return getMachineId();
+        }
+        return DEFAULT_MACHINE_ID;
+    }
 }

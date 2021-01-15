@@ -18,9 +18,9 @@ package org.spin.cloud.feign;
 
 import org.springframework.http.HttpHeaders;
 
-import java.util.*;
-
-import static java.util.Optional.ofNullable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author Spencer Gibb

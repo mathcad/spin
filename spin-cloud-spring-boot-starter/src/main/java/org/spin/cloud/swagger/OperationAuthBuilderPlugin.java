@@ -11,10 +11,9 @@ import org.spin.web.annotation.Author;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.method.HandlerMethod;
-import springfox.documentation.builders.RequestParameterBuilder;
-import springfox.documentation.schema.ScalarType;
-import springfox.documentation.service.ParameterType;
-import springfox.documentation.service.RequestParameter;
+import springfox.documentation.builders.ParameterBuilder;
+import springfox.documentation.schema.ModelRef;
+import springfox.documentation.service.Parameter;
 import springfox.documentation.service.StringVendorExtension;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.OperationContext;
@@ -38,7 +37,7 @@ public class OperationAuthBuilderPlugin extends AbstractOperationBuilderPlugin {
      */
     @Override
     public void apply(OperationContext context) {
-        List<RequestParameter> additionalParameters = new LinkedList<>();
+        List<Parameter> additionalParameters = new LinkedList<>();
 
         HandlerMethod handlerMethod = BeanUtils.getFieldValue(context, "requestContext.handler.handlerMethod");
         Author authorAnno = handlerMethod.getMethodAnnotation(Author.class);
@@ -76,19 +75,19 @@ public class OperationAuthBuilderPlugin extends AbstractOperationBuilderPlugin {
             }
 
             if (AuthLevel.NONE != authAnno.value()) {
-                additionalParameters.add(new RequestParameterBuilder()
-                    .name(HttpHeaders.AUTHORIZATION)
-                    .in(ParameterType.HEADER)
+                additionalParameters.add(new ParameterBuilder()
+                    .parameterType("header")
                     .description("访问凭证")
+                    .modelRef(new ModelRef("String"))
                     .required(true)
-                    .query(q -> q.model(m -> m.scalarModel(ScalarType.STRING)))
-                    .parameterIndex(Ordered.HIGHEST_PRECEDENCE + 1)
-                    .build());
+                    .allowEmptyValue(false)
+                    .order(Ordered.HIGHEST_PRECEDENCE + 1)
+                    .name(HttpHeaders.AUTHORIZATION).build());
             }
         }
 
         if (!additionalParameters.isEmpty()) {
-            context.operationBuilder().requestParameters(additionalParameters);
+            context.operationBuilder().parameters(additionalParameters);
         }
     }
 

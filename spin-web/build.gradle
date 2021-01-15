@@ -45,11 +45,12 @@ dependencies {
     api group: 'org.springframework', name: 'spring-context-support', version: springVersion
     api group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     api group: 'org.springframework', name: 'spring-aspects', version: springVersion
-    api group: 'javax.validation', name: 'validation-api', version: validationVersion
+    api group: 'jakarta.validation', name: 'jakarta.validation-api', version: validationApiVersion
+    api group: 'jakarta.annotation', name: 'jakarta.annotation-api', version: annotationVersion
     api group: 'io.springfox', name: 'springfox-swagger2', version: swaggerVersion
-    api group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
 
     compileOnly group: 'com.itextpdf', name: 'itextpdf', version: itextpdfVersion
     compileOnly group: 'org.springframework', name: 'spring-orm', version: springVersion
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: servletVersion
+//    compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '5.0.0'
 }

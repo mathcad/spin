@@ -6,7 +6,6 @@ import org.spin.data.util.EntityUtils;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.Query;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 import java.io.Serializable;
@@ -22,7 +21,7 @@ import java.util.Objects;
  * @version 1.2
  */
 @MappedSuperclass
-public abstract class AbstractEntity implements IEntity<Long>, Serializable {
+public abstract class AbstractEntity<T extends IEntity<Long, T>> implements IEntity<Long, T>, Serializable {
     private static final long serialVersionUID = -6820468799272316789L;
 
     /**

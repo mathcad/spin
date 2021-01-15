@@ -6,6 +6,7 @@ import org.spin.cloud.annotation.UtilClass;
 import org.spin.cloud.throwable.BizException;
 import org.spin.cloud.util.Env;
 import org.spin.core.Assert;
+import org.spin.core.function.ExceptionalHandler;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.security.Base64;
 import org.spin.core.session.SessionUser;
@@ -15,6 +16,7 @@ import org.spin.core.util.EnumUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.core.util.SystemUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -65,6 +68,7 @@ public class CurrentUser extends SessionUser<Long> {
     private static final String SUPER_AMIN_ROLE_CODE = "SUPER_ADMIN";
     private static final String FULL_SUPER_AMIN_ROLE_CODE = "0:SUPER_ADMIN";
     private static final String ENT_AMIN_ROLE_CODE = "ENT_ADMIN";
+    private static final CurrentUser SUPER_ADMIN_USER = new CurrentUser("MDolRTglQjYlODUlRTclQkElQTclRTclQUUlQTElRTclOTAlODYlRTUlOTElOTg6MjowOjEyNy4wLjAuMTow");
 
     @SuppressWarnings("rawtypes")
     private static final DefaultRedisScript<List> ALL_CHILDREN_SCRIPT = new DefaultRedisScript<>();
@@ -677,6 +681,67 @@ public class CurrentUser extends SessionUser<Long> {
             }
         }
         return userActualRoles;
+    }
+
+    /**
+     * 使用超级管理员身份运行指定逻辑
+     *
+     * @param handler 处理逻辑
+     * @param <E>     异常类型
+     */
+    public static <E extends Exception> void runAs(ExceptionalHandler<E> handler) {
+        CurrentUser current = getCurrent();
+        setCurrent(SUPER_ADMIN_USER);
+        long nanoTime = System.nanoTime();
+        try {
+            String runningMethodInfo = SystemUtils.getRunningMethodInfo();
+            logger.info("{} 进行了权限提升操作 编号 {}", runningMethodInfo, nanoTime);
+            handler.handle();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new IllegalStateException(e);
+            }
+        } finally {
+            if (null == current) {
+                clearCurrent();
+            } else {
+                setCurrent(current);
+            }
+            logger.info("权限提升操作完成 总计耗时 {}ms 编号 {}", (System.nanoTime() - nanoTime) / 1000000L, nanoTime);
+        }
+    }
+
+    /**
+     * 使用超级管理员身份运行指定逻辑
+     *
+     * @param callable 处理逻辑
+     * @param <T>      返回结果类型
+     * @return 操作结果
+     */
+    public static <T> T callAs(Callable<T> callable) {
+        CurrentUser current = getCurrent();
+        setCurrent(SUPER_ADMIN_USER);
+        long nanoTime = System.nanoTime();
+        try {
+            String runningMethodInfo = SystemUtils.getRunningMethodInfo();
+            logger.info("{} 进行了权限提升操作 编号 {}", runningMethodInfo, nanoTime);
+            return callable.call();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new IllegalStateException(e);
+            }
+        } finally {
+            if (null == current) {
+                clearCurrent();
+            } else {
+                setCurrent(current);
+            }
+            logger.info("权限提升操作完成 总计耗时 {}ms 编号 {}", (System.nanoTime() - nanoTime) / 1000000L, nanoTime);
+        }
     }
 
     private static Set<Long> getAllChildren(String rootKey, long enterpriseId, Set<Long> current) {

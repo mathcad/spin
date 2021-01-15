@@ -30,7 +30,7 @@ public abstract class DataPermUtils {
      * @param <T>    实体类型参数
      * @return 实体
      */
-    public static <T extends AbstractDataPermEntity> T validatePerm(T entity, String msg) {
+    public static <T extends AbstractDataPermEntity<T>> T validatePerm(T entity, String msg) {
         CurrentUser currentUser = CurrentUser.getCurrentNonNull();
         DataPermInfo permInfo = currentUser.getDataPermInfo();
         if (permInfo.isHasDataLimit()) {

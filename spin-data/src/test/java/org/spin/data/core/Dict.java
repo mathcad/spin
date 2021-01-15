@@ -14,7 +14,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "sys_dict")
-public class Dict extends AbstractEntity {
+public class Dict extends AbstractEntity<Dict> {
     private static final long serialVersionUID = 8647552774673463154L;
 
     @Column(length = 64)
