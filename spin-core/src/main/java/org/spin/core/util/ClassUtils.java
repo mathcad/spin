@@ -914,48 +914,65 @@ public final class ClassUtils extends Util {
         return cls1 == cls2 || null != cls1 && null != cls2 && cls1.getName().equals(cls2.getName()) && cls1.getClassLoader() == cls2.getClassLoader();
     }
 
+    /**
+     * Returns the internal name of the given class. The internal name of a class is its fully
+     * qualified name, as returned by Class.getName(), where '.' are replaced by '/'.
+     *
+     * @param clazz an object or array class.
+     * @return the internal name of the given class.
+     */
+    public static String getInternalName(final Class<?> clazz) {
+        return clazz.getName().replace('.', '/');
+    }
+
     public static String getTypeDescriptor(Class<?> cls) {
-        if (cls == int.class) {
-            return "I";
+        if (null == cls) {
+            return null;
         }
 
-        if (cls == void.class) {
-            return "V";
+        if (cls.isPrimitive()) {
+            if (cls == int.class) {
+                return "I";
+            }
+
+            if (cls == void.class) {
+                return "V";
+            }
+
+            if (cls == boolean.class) {
+                return "Z";
+            }
+
+            if (cls == byte.class) {
+                return "B";
+            }
+
+            if (cls == char.class) {
+                return "C";
+            }
+
+            if (cls == short.class) {
+                return "S";
+            }
+
+            if (cls == double.class) {
+                return "D";
+            }
+
+            if (cls == float.class) {
+                return "F";
+            }
+
+            if (cls == long.class) {
+                return "J";
+            }
         }
 
-        if (cls == boolean.class) {
-            return "Z";
+        if (!cls.isArray()) {
+            return "L" + getInternalName(cls) + ";";
         }
-
-        if (cls == byte.class) {
-            return "B";
-        }
-
-        if (cls == char.class) {
-            return "C";
-        }
-
-        if (cls == short.class) {
-            return "S";
-        }
-
-        if (cls == Double.class) {
-            return "D";
-        }
-
-        if (cls == float.class) {
-            return "F";
-        }
-
-        if (cls == long.class) {
-            return "J";
-        }
-
-        if (cls.isArray()) {
-            return "[" + getTypeDescriptor(cls.getComponentType());
-        }
-
-        return "L" + cls.getName().replaceAll("\\.", "/") + ";";
+        
+        return "[" + getTypeDescriptor(cls.getComponentType());
     }
 
     /**

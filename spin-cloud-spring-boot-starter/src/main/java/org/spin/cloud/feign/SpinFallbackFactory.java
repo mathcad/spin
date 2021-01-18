@@ -103,18 +103,18 @@ public abstract class SpinFallbackFactory<T, F extends AbstractFallback> impleme
         boolean full = targetClass == AbstractFallback.class;
         if (!full) {
             Assert.isTrue(targetClass.getSuperclass() == AbstractFallback.class, "Fallback类的直接父类必须是AbstractFallback");
-            Assert.isTrue(targetClass.getInterfaces().length == 1, "Fallback类必须直接实现" + clientClass.getName() + "接口");
+            Assert.isTrue(targetClass.getInterfaces().length == 1, "Fallback类仅能实现" + clientClass.getName() + "接口");
             Assert.isTrue(targetClass.getInterfaces()[0] == clientClass, "Fallback类必须直接实现" + clientClass.getName() + "接口");
         }
 
-        String name = clientClass.getPackage().getName().replaceAll("\\.", "/") + "/" + clientClass.getSimpleName() + "Fallback";
-        String superName = targetClass.getName().replaceAll("\\.", "/");
-        String intfName = clientClass.getName().replaceAll("\\.", "/");
+        String name = clientClass.getPackage().getName().replace('.', '/') + "/" + clientClass.getSimpleName() + "Fallback";
+        String superName = ClassUtils.getInternalName(targetClass);
+        String intfName = ClassUtils.getInternalName(clientClass);
         String[] intfs = {intfName};
         ClassWriter cw = new ClassWriter(0);
         cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC,
             name,
-            "L" + superName + ";L" + intfName + ";",
+            "L" + superName + ";" + (full ? "L" + intfName + ";" : ""),
             superName,
             full ? intfs : null
         );
@@ -134,7 +134,7 @@ public abstract class SpinFallbackFactory<T, F extends AbstractFallback> impleme
             Collections.addAll(methods, clientClass.getMethods());
             Arrays.stream(clientClass.getMethods()).filter(m -> !Modifier.isStatic(m.getModifiers()) && Modifier.isPublic(m.getModifiers())).forEach(methods::add);
         } else {
-            Arrays.stream(targetClass.getMethods()).filter(m -> Modifier.isAbstract(m.getModifiers()) && Modifier.isPublic(m.getModifiers())).forEach(methods::add);
+            Arrays.stream(targetClass.getMethods()).filter(m -> Modifier.isAbstract(m.getModifiers())).forEach(methods::add);
         }
 
         for (Method method : methods) {
@@ -158,7 +158,7 @@ public abstract class SpinFallbackFactory<T, F extends AbstractFallback> impleme
             Class<?>[] exceptionTypes = method.getExceptionTypes();
             String[] exceptions = 0 == exceptionTypes.length ? null : new String[exceptionTypes.length];
             for (int i = 0, exceptionTypesLength = exceptionTypes.length; i < exceptionTypesLength; i++) {
-                exceptions[i] = org.objectweb.asm.Type.getInternalName(exceptionTypes[i]);
+                exceptions[i] = ClassUtils.getInternalName(exceptionTypes[i]);
             }
 
             mw = cw.visitMethod(Opcodes.ACC_PUBLIC, method.getName(), descriptor.toString(), BeanUtils.getFieldValue(method, "signature"), exceptions);
@@ -169,7 +169,7 @@ public abstract class SpinFallbackFactory<T, F extends AbstractFallback> impleme
                 mw.visitInsn(Opcodes.POP);
                 mw.visitInsn(Opcodes.RETURN);
             } else {
-                mw.visitTypeInsn(Opcodes.CHECKCAST, ClassUtils.primitiveToWrapper(returnType).getName().replaceAll("\\.", "/"));
+                mw.visitTypeInsn(Opcodes.CHECKCAST, ClassUtils.getInternalName(ClassUtils.primitiveToWrapper(returnType)));
                 if (returnType.isPrimitive()) {
                     switch (returnType.getName()) {
                         case "boolean":
