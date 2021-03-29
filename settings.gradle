@@ -15,8 +15,11 @@ include "spin-core"
 include "spin-data"
 include "spin-data-core"
 include "spin-data-spring-boot-starter"
+include 'spin-datasource-spring-boot-starter'
 include "spin-enhance"
+include 'spin-jpa-spring-boot-starter'
 include "spin-mybatis-spring-boot-starter"
 include "spin-web"
 include "spin-wx"
 include "test"
+
