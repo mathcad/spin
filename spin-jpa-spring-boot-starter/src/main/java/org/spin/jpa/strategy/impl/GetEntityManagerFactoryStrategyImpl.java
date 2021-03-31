@@ -7,10 +7,6 @@ import org.springframework.stereotype.Component;
 import javax.persistence.EntityManagerFactory;
 import java.util.List;
 
-/**
- * @author Kevin Yang (mailto:muxiangqiu@gmail.com)
- * @since 2017年11月16日
- */
 @Component
 public class GetEntityManagerFactoryStrategyImpl implements GetEntityManagerFactoryStrategy {
 
@@ -19,7 +15,6 @@ public class GetEntityManagerFactoryStrategyImpl implements GetEntityManagerFact
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
-
 
     @Override
     public EntityManagerFactory getEntityManagerFactory(Class<?> domainClass) {

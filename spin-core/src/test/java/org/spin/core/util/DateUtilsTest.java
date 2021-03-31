@@ -88,6 +88,7 @@ public class DateUtilsTest {
 
     @Test
     public void testSame() {
+        System.out.println(DateUtils.formatDateForSecond(new Date(System.currentTimeMillis() / 86400_000L * 86400_00L)));
         System.out.println(DateUtils.isSameDay(LocalDate.now(), DateUtils.toLocalDateTime("2019-02-25 00:12:47")));
     }
 

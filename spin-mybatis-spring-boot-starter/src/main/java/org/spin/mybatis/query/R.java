@@ -31,6 +31,7 @@ public class R extends ClassLoader {
 
     private static final ConcurrentHashMap<String, BaseMapper<?>> MAPPERS = new ConcurrentHashMap<>();
     private static final Map<String, BaseMapper<?>> CUSTOMER_MAPPERS = new HashMap<>();
+    private static final String[] MYBATIS_PLUS_BASE_MAPPER_INTFS = {"com/baomidou/mybatisplus/core/mapper/BaseMapper"};
 
     private static volatile boolean parsed = false;
 
@@ -108,13 +109,12 @@ public class R extends ClassLoader {
     @SuppressWarnings("unchecked")
     private static <E, M extends BaseMapper<E>> Class<M> generateMapperClass(SqlSessionFactory sessionFactory, Class<E> eClass) {
         String name = "org/spin/mybatis/mapper/internal/" + eClass.getSimpleName() + "Mapper";
-        String[] intfs = {"com/baomidou/mybatisplus/core/mapper/BaseMapper"};
         ClassWriter cw = new ClassWriter(0);
         cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC + Opcodes.ACC_ABSTRACT + Opcodes.ACC_INTERFACE,
             "org/spin/mybatis/mapper/internal/" + eClass.getSimpleName() + "Mapper",
             "Ljava/lang/Object;Lcom/baomidou/mybatisplus/core/mapper/BaseMapper<L" + eClass.getName().replaceAll("\\.", "/") + ";>;",
             "java/lang/Object",
-            intfs
+            MYBATIS_PLUS_BASE_MAPPER_INTFS
         );
         cw.visitEnd();
         byte[] bytes = cw.toByteArray();

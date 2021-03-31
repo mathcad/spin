@@ -116,7 +116,7 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
     public T save(final T entity, boolean saveWithPk) {
         Assert.notNull(entity, "The entity to save MUST NOT be NULL");
         if (entity instanceof AbstractEntity) {
-            AbstractEntity aEn = (AbstractEntity) entity;
+            AbstractEntity<?> aEn = (AbstractEntity<?>) entity;
             SessionUser<Long> user = SessionUser.getCurrent();
             aEn.setUpdateTime(LocalDateTime.now());
             aEn.setUpdateBy(user == null ? null : user.getId());

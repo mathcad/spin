@@ -1,11 +1,13 @@
 package com.shipping.domain.biz
 
+import kotlinx.serialization.Serializable
 import org.spin.data.core.AbstractEntity
 import javax.persistence.*
 
 @Entity
 @Table(name = "biz_order")
-class Order : AbstractEntity() {
+@Serializable
+class Order : AbstractEntity<Order>() {
 
 
     /**

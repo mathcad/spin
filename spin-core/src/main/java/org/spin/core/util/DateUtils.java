@@ -7,9 +7,14 @@ import org.spin.core.throwable.SpinException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.chrono.ChronoLocalDate;
+import java.time.chrono.ChronoLocalDateTime;
+import java.time.chrono.ChronoZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
@@ -191,8 +196,27 @@ public final class DateUtils extends Util {
      * @return Date
      */
     public static Date toDate(TemporalAccessor date) {
+        if (null == date) {
+            return null;
+        }
         try {
-            return null == date ? null : millSecSdf.get().parse(millSecDtf.format(date));
+            if (date instanceof ChronoLocalDateTime) {
+                return new Date(((ChronoLocalDateTime<?>) date).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            }
+
+            if (date instanceof ChronoLocalDate) {
+                return new Date(((ChronoLocalDate) date).atTime(LocalTime.MIN).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            }
+
+            if (date instanceof LocalTime) {
+                return new Date(((LocalTime) date).atDate(LocalDate.now()).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            }
+
+            if (date instanceof ChronoZonedDateTime) {
+                return new Date(((ChronoZonedDateTime<?>) date).toEpochSecond());
+            }
+
+            return millSecSdf.get().parse(millSecDtf.format(date));
         } catch (ParseException e) {
             throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "时间转换失败", e);
         }

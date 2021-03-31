@@ -1,8 +1,14 @@
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
+import org.spin.core.gson.annotation.PreventOverflow
 import org.spin.core.security.AES
+import org.spin.core.util.JsonUtils
 import org.spin.core.util.MapUtils
 import org.spin.data.sql.dbtype.MySQLDatabaseType
-import org.spin.data.sql.loader.ArchiveMdLoader
 import org.spin.data.sql.loader.FileSystemMdLoader
 import org.spin.data.sql.resolver.BeetlResolver
 
@@ -36,4 +42,38 @@ class SqlLoaderTest {
         println(AES.newInstance().withKey("c4b2a7d36f9a2e61").encrypt("admin"))
         println(AES.newInstance().withKey("c4b2a7d36f9a2e61").decrypt("Dx1rlLOAicWyJ+8tlWKFTg=="))
     }
+
+    @Test
+    fun testJson() {
+        val order = Box()
+        order.apply {
+            id = 1264752392881049602L
+            name = "a"
+        }
+        println(JsonUtils.toJson(order))
+    }
+
+    @Test
+    fun testEq() {
+        val o1 = null
+        val o2 = Any()
+//        o1.equals(o2)
+
+        // == equals
+        // === ==
+        if (o1 != o2) {
+            println("success")
+        }
+    }
+}
+
+@Serializable
+class Box : AbEn() {
+    var name: String? = null
+}
+
+@Serializable
+open class AbEn {
+    @PreventOverflow
+    var id: Long? = null
 }

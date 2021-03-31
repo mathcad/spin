@@ -4,8 +4,6 @@ import com.shipping.domain.biz.Order
 import com.shipping.domain.biz.Port
 import com.shipping.service.biz.OrderService
 import com.shipping.service.biz.PortService
-import org.spin.boot.datasource.annotation.Ds
-import org.spin.boot.datasource.filter.OpenSessionInViewFilter
 import org.spin.web.RestfulResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
@@ -36,7 +34,6 @@ class OrderController {
      * @return
      */
     @PostMapping(path = ["/add"])
-    @Ds(openSession = true)
     fun add(senderName: String?,
             senderMobile: String?, senderPortName: String): RestfulResponse<*> {
         val order = Order()

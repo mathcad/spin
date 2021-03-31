@@ -112,7 +112,7 @@ public abstract class BasicEntity<T extends BasicEntity<T>> implements IEntity<L
     public T getById() {
         @SuppressWarnings("unchecked")
         T e = (T) this;
-        e.apply(repo().selectById(Assert.notNull(e.getId(), "ID不能为空")));
+        e.mergeAll(repo().selectById(Assert.notNull(e.getId(), "ID不能为空")));
         return e;
     }
 

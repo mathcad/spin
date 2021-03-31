@@ -23,7 +23,7 @@ class Role(
         @ManyToMany(fetch = FetchType.LAZY)
         @JoinTable(name = "sys_role_permission", joinColumns = [JoinColumn(name = "role_id")], inverseJoinColumns = [JoinColumn(name = "permission_id")])
         var permissions: MutableList<Permission> = ArrayList()
-) : AbstractEntity() {
+) : AbstractEntity<Role>() {
     companion object {
         private const val serialVersionUID = 8934787783435264166L
     }

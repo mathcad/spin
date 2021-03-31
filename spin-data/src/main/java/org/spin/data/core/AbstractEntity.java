@@ -21,7 +21,7 @@ import java.util.Objects;
  * @version 1.2
  */
 @MappedSuperclass
-public abstract class AbstractEntity<T extends IEntity<Long, T>> implements IEntity<Long, T>, Serializable {
+public abstract class AbstractEntity<T extends AbstractEntity<T>> implements IEntity<Long, T>, Serializable {
     private static final long serialVersionUID = -6820468799272316789L;
 
     /**
@@ -113,7 +113,7 @@ public abstract class AbstractEntity<T extends IEntity<Long, T>> implements IEnt
      * @return DTO
      */
     @SuppressWarnings("unchecked")
-    public final <E extends AbstractEntity> E getDTO(final int depth) {
+    public final <E extends AbstractEntity<E>> E getDTO(final int depth) {
         return (E) EntityUtils.getDTO(this, depth);
     }
 

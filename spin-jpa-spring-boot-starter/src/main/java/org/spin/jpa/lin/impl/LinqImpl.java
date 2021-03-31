@@ -1,7 +1,13 @@
 package org.spin.jpa.lin.impl;
 
+import org.spin.core.Assert;
+import org.spin.core.util.BeanUtils;
+import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.ConstructorUtils;
+import org.spin.core.util.LambdaUtils;
 import org.spin.core.util.ReflectionUtils;
-import org.spin.jpa.JpaUtil;
+import org.spin.jpa.Prop;
+import org.spin.jpa.PropImpl;
 import org.spin.jpa.lin.Linq;
 import org.spin.jpa.transform.ResultTransformer;
 import org.spin.jpa.transform.impl.Transformers;
@@ -10,10 +16,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.query.QueryUtils;
-import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.AbstractQuery;
@@ -21,21 +26,23 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.SingularAttribute;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
-/**
- * @author Kevin Yang (mailto:kevin.yang@bstek.com)
- * @since 2016年1月31日
- */
-public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
+public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>> implements Linq<R, LinqImpl<R>> {
 
     protected List<Order> orders = new ArrayList<>();
     protected boolean distinct;
@@ -54,12 +61,12 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
         resultClass = domainClass;
     }
 
-    public LinqImpl(Class<?> domainClass, Class<?> resultClass) {
+    public LinqImpl(Class<?> domainClass, Class<R> resultClass) {
         this(domainClass, resultClass, null);
     }
 
     @SuppressWarnings("rawtypes")
-    public LinqImpl(Class<?> domainClass, Class<?> resultClass, EntityManager entityManager) {
+    public LinqImpl(Class<?> domainClass, Class<R> resultClass, EntityManager entityManager) {
         super(domainClass, entityManager);
         if (Tuple.class.isAssignableFrom(resultClass)) {
             criteria = cb.createTupleQuery();
@@ -83,24 +90,183 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
         this.resultClass = resultClass;
     }
 
-    public LinqImpl(Linq parent, Class<?> domainClass) {
+    public LinqImpl(LinqImpl<R> parent, Class<?> domainClass) {
         super(parent, domainClass);
     }
 
     @Override
-    public Linq selectAll() {
-        List<String> selections = new LinkedList<>();
+    public LinqImpl<R> selectAll() {
+        if (!beforeMethodInvoke()) {
+            return this;
+        }
+
+        if (resultClass == Map.class || resultClass == Tuple.class) {
+            return this;
+        }
+
+        List<Selection<?>> selections = new LinkedList<>();
         ReflectionUtils.doWithFields(resultClass, field -> {
             if (!Modifier.isTransient(field.getModifiers())) {
-                selections.add(field.getName());
+                parseSelectionStr(selections, field.getName());
             }
         });
 
-        return select(selections.toArray(new String[0]));
+        return select(selections.toArray(new Selection<?>[0]));
+    }
+
+
+    @Override
+    public LinqImpl<R> selectId() {
+        return select(org.spin.jpa.R.getIdName(domainClass));
     }
 
     @Override
-    public Linq distinct() {
+    public LinqImpl<R> select(String... selections) {
+        if (!beforeMethodInvoke()) {
+            return this;
+        }
+        List<Selection<?>> list = new ArrayList<>(selections.length);
+        for (String selection : selections) {
+            parseSelectionStr(list, selection);
+        }
+        select(list.toArray(new Selection<?>[0]));
+        return this;
+    }
+
+    @Override
+    public LinqImpl<R> selectExclude(String... exclusion) {
+        if (!beforeMethodInvoke()) {
+            return this;
+        }
+        HashSet<String> strings = org.spin.core.util.CollectionUtils.ofHashSet(exclusion);
+        List<Selection<?>> selections = new LinkedList<>();
+        ReflectionUtils.doWithFields(resultClass, field -> {
+            if (!Modifier.isTransient(field.getModifiers()) && !strings.contains(field.getName())) {
+                parseSelectionStr(selections, field.getName());
+            }
+        });
+        return select(selections.toArray(new Selection<?>[0]));
+    }
+
+    @SafeVarargs
+    public final LinqImpl<R> selectExclude(Prop<R, ?>... exclusion) {
+        @SuppressWarnings("unchecked")
+        String[] exclusions = Arrays.stream(exclusion).map(it -> it instanceof PropImpl ? ((PropImpl<R>) it).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(it).getImplMethodName())).toArray(String[]::new);
+
+        return select(exclusions);
+    }
+
+    @SafeVarargs
+    @SuppressWarnings("unchecked")
+    public final LinqImpl<R> select(Prop<R, ?>... selections) {
+        if (!beforeMethodInvoke()) {
+            return this;
+        }
+        List<Selection<?>> list = new ArrayList<>(selections.length);
+        for (Prop<R, ?> selection : selections) {
+            parseSelectionStr(list, selection instanceof PropImpl ?
+                ((PropImpl<R>) selection).apply(null) :
+                BeanUtils.toFieldName(LambdaUtils.resolveLambda(selection).getImplMethodName()));
+        }
+        select(list.toArray(new Selection<?>[0]));
+        return this;
+    }
+
+    @Override
+    public LinqImpl<R> select(Object... selections) {
+        if (!beforeMethodInvoke()) {
+            return this;
+        }
+        List<Selection<?>> list = new ArrayList<>(selections.length);
+        for (Object selection : selections) {
+            if (selection instanceof String) {
+                parseSelectionStr(list, (String) selection);
+            } else if (selection instanceof Selection) {
+                list.add((Selection<?>) selection);
+            }
+        }
+        select(list.toArray(new Selection<?>[0]));
+        return this;
+    }
+
+    @Override
+    @SuppressWarnings({"rawtypes", "ConstantConditions", "unchecked"})
+    public final LinqImpl<R> select(Selection<?>... selections) {
+        if (!beforeMethodInvoke()) {
+            return this;
+        }
+
+        Assert.isTrue(sq == null || selections.length == 1, "selections can only have one in subquery! ");
+        Assert.isTrue(sq == null || selections[0] instanceof Expression, "Elements in the selections must implement the " + Expression.class.getName() + " interface in subquery! ");
+        Assert.isTrue(sq != null || criteria instanceof CriteriaQuery, "Not supported!");
+        if (sq == null) {
+            ((CriteriaQuery) criteria).multiselect(selections);
+        } else {
+            sq.select((Expression) selections[0]);
+        }
+        for (Selection<?> selection : selections) {
+            aliases.add(selection.getAlias());
+        }
+
+        return this;
+    }
+
+    @Override
+    public boolean exist() {
+        if (parent != null) {
+            applyPredicateToCriteria(sq);
+            return parent.exist();
+        }
+        return count() > 0;
+    }
+
+    @Override
+    public LinqImpl<R> exists(Class<?> domainClass) {
+        if (!beforeMethodInvoke()) {
+            return this;
+        }
+        LinqImpl<R> lin = createChild(domainClass);
+        lin.select(lin.root());
+        add(cb.exists(lin.getSubquery()));
+        return lin;
+    }
+
+    @Override
+    public LinqImpl<R> notExists(Class<?> domainClass) {
+        if (!beforeMethodInvoke()) {
+            return this;
+        }
+        LinqImpl<R> lin = createChild(domainClass);
+        lin.select(lin.root());
+        add(cb.not(cb.exists(lin.getSubquery())));
+        return lin;
+    }
+
+    private void parseSelectionStr(List<Selection<?>> result, String selection) {
+        String[] ps = selection.split("\\s*,\\s*");
+        for (String p : ps) {
+            String alias = p.trim();
+            String[] pa = alias.split("\\s+[aA][sS]\\s+");
+            if (pa.length > 1) {
+                alias = pa[1];
+            } else {
+                pa = alias.split("\\s+");
+                if (pa.length > 1) {
+                    alias = pa[1];
+                }
+            }
+            String[] paths = ps[0].split("\\.");
+            Path<?> s = root.get(paths[0]);
+            for (int i = 1; i < paths.length; i++) {
+                s = s.get(paths[i]);
+            }
+            result.add(s.alias(alias));
+        }
+    }
+
+    @Override
+    public LinqImpl<R> distinct() {
         if (!beforeMethodInvoke()) {
             return this;
         }
@@ -109,7 +275,7 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
     }
 
     @Override
-    public Linq groupBy(String... grouping) {
+    public LinqImpl<R> groupBy(String... grouping) {
         if (!beforeMethodInvoke()) {
             return this;
         }
@@ -126,7 +292,7 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
     }
 
     @Override
-    public Linq desc(String... properties) {
+    public LinqImpl<R> desc(String... properties) {
         if (!beforeMethodInvoke()) {
             return this;
         }
@@ -137,7 +303,7 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
     }
 
     @Override
-    public Linq desc(Expression<?>... expressions) {
+    public LinqImpl<R> desc(Expression<?>... expressions) {
         if (!beforeMethodInvoke()) {
             return this;
         }
@@ -148,7 +314,7 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
     }
 
     @Override
-    public Linq asc(String... properties) {
+    public LinqImpl<R> asc(String... properties) {
         if (!beforeMethodInvoke()) {
             return this;
         }
@@ -159,7 +325,7 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
     }
 
     @Override
-    public Linq asc(Expression<?>... expressions) {
+    public LinqImpl<R> asc(Expression<?>... expressions) {
         if (!beforeMethodInvoke()) {
             return this;
         }
@@ -170,33 +336,51 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
     }
 
     @Override
-    public <T> T findOne() {
+    public Optional<R> findOne() {
         if (parent != null) {
             applyPredicateToCriteria(sq);
             return parent.findOne();
         }
         applyPredicateToCriteria(criteria);
-        List<T> list = transform(em.createQuery(criteria), true);
-        return list.get(0);
+        TypedQuery<?> query = createQuery();
+        query.setMaxResults(2);
+        List<R> list = transform(query, false);
+        if (list.size() > 1) {
+            throw new NonUniqueResultException("唯一查询的结果数量超过1条");
+        }
+        return Optional.ofNullable(CollectionUtils.first(list));
     }
 
     @Override
-    public <T> List<T> list() {
+    public Optional<R> findFirst() {
+        if (parent != null) {
+            applyPredicateToCriteria(sq);
+            return parent.findOne();
+        }
+        applyPredicateToCriteria(criteria);
+        TypedQuery<?> query = createQuery();
+        query.setMaxResults(1);
+        List<R> list = transform(query, false);
+        return Optional.ofNullable(CollectionUtils.first(list));
+    }
+
+    @Override
+    public List<R> list() {
         if (parent != null) {
             applyPredicateToCriteria(sq);
             return parent.list();
         }
         applyPredicateToCriteria(criteria);
-        return transform(em.createQuery(criteria), false);
+        return transform(createQuery(), false);
     }
 
     @Override
-    public <T> Page<T> paging(Pageable pageable) {
+    public Page<R> paging(Pageable pageable) {
         if (parent != null) {
             applyPredicateToCriteria(sq);
             return parent.paging(pageable);
         }
-        List<T> list;
+        List<R> list;
         if (pageable == null) {
             list = list();
             return new PageImpl<>(list);
@@ -206,13 +390,13 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
                 orders.addAll(QueryUtils.toOrders(sort, root, cb));
             }
             applyPredicateToCriteria(criteria);
-            TypedQuery<?> query = em.createQuery(criteria);
+            TypedQuery<?> query = createQuery();
             long offset = pageable.getOffset();
             query.setFirstResult((int) offset);
             query.setMaxResults(pageable.getPageSize());
 
-            Long total = JpaUtil.count(criteria);
-            List<T> content = Collections.emptyList();
+            Long total = org.spin.jpa.R.count(criteria);
+            List<R> content = Collections.emptyList();
             if (total > pageable.getOffset()) {
                 content = transform(query, false);
             }
@@ -222,7 +406,7 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
     }
 
     @Override
-    public <T> List<T> list(Pageable pageable) {
+    public List<R> list(Pageable pageable) {
         if (parent != null) {
             applyPredicateToCriteria(sq);
             return parent.list(pageable);
@@ -233,7 +417,7 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
             Sort sort = pageable.getSort();
             orders.addAll(QueryUtils.toOrders(sort, root, cb));
             applyPredicateToCriteria(criteria);
-            TypedQuery<?> query = em.createQuery(criteria);
+            TypedQuery<?> query = createQuery();
 
             long offset = pageable.getOffset();
             query.setFirstResult((int) offset);
@@ -244,18 +428,45 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
     }
 
     @Override
-    public <T> List<T> list(int page, int size) {
+    public List<R> list(int page, int size) {
         if (parent != null) {
             applyPredicateToCriteria(sq);
             return parent.list(page, size);
         }
         applyPredicateToCriteria(criteria);
-        TypedQuery<?> query = em.createQuery(criteria);
+        TypedQuery<?> query = createQuery();
 
         query.setFirstResult(page * size);
         query.setMaxResults(size);
 
         return transform(query, false);
+    }
+
+    private TypedQuery<?> createQuery() {
+
+        try {
+            Selection<?> selection = BeanUtils.getFieldValue(criteria, "queryStructure.selection");
+            List<Selection<?>> selections;
+            if (selection.isCompoundSelection()) {
+                selections = selection.getCompoundSelectionItems();
+            } else {
+                selections = CollectionUtils.ofArrayList(selection);
+            }
+
+            Class<?>[] typeClass = new Class[selections.size()];
+            for (int i = 0; i < selections.size(); i++) {
+                typeClass[i] = selections.get(i).getJavaType();
+            }
+
+            Constructor<?> accessibleConstructor = ConstructorUtils.getAccessibleConstructor(resultClass, typeClass);
+            if (null == accessibleConstructor) {
+                BeanUtils.setFieldValue(criteria, "queryStructure.selection.isConstructor", false);
+            }
+        } catch (Exception ignore) {
+            // do nothing
+        }
+
+        return em.createQuery(criteria);
     }
 
     @Override
@@ -265,15 +476,6 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
             return parent.count();
         }
         return executeCountQuery(getCountQuery());
-    }
-
-    @Override
-    public boolean exists() {
-        if (parent != null) {
-            applyPredicateToCriteria(sq);
-            return parent.exists();
-        }
-        return count() > 0;
     }
 
     protected Long executeCountQuery(TypedQuery<Long> query) {
@@ -306,7 +508,6 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
     }
 
     protected void applyPredicateToCriteria(AbstractQuery<?> query) {
-
         Predicate predicate = parsePredicate(junction);
         if (predicate != null) {
             query.where(predicate);
@@ -347,66 +548,87 @@ public class LinqImpl extends LinImpl<Linq, CriteriaQuery<?>> implements Linq {
                 }
             }
         } else {
+            List tuples;
             if (single) {
-                result = new ArrayList<>(1);
-                result.add((T) query.getSingleResult());
+                tuples = new ArrayList<>(1);
+                tuples.add(query.getSingleResult());
             } else {
-                result = (List<T>) query.getResultList();
+                tuples = query.getResultList();
+            }
+
+            if (tuples.isEmpty() || resultClass.isInstance(tuples.get(0))) {
+                return tuples;
+            } else {
+                result = new ArrayList<>(tuples.size());
+                String[] aliases = this.aliases.toArray(new String[0]);
+                resultTransformer = Transformers.aliasToBean(resultClass);
+                for (Object tuple : tuples) {
+                    if (tuple != null) {
+                        if (tuple.getClass().isArray()) {
+                            result.add((T) resultTransformer.transformTuple((Object[]) tuple, aliases));
+                        } else {
+                            result.add((T) resultTransformer.transformTuple(new Object[]{tuple}, aliases));
+                        }
+                    }
+                }
             }
         }
         return result;
-
     }
 
     @Override
-    public Linq createChild(Class<?> domainClass) {
-        return new LinqImpl(this, domainClass);
+    public LinqImpl<R> createChild(Class<?> domainClass) {
+        return new LinqImpl<>(this, domainClass);
     }
 
     @Override
-    public Linq aliasToBean() {
+    @SuppressWarnings("unchecked")
+    public <T> LinqImpl<T> aliasToBean() {
         if (!beforeMethodInvoke()) {
-            return this;
+            return (LinqImpl<T>) this;
         }
         criteria = cb.createQuery(Object[].class);
         root = criteria.from(domainClass);
         resultTransformer = Transformers.aliasToBean(domainClass);
-        return this;
+        return (LinqImpl<T>) this;
     }
 
     @Override
-    public Linq aliasToBean(Class<?> resultClass) {
+    @SuppressWarnings("unchecked")
+    public <T> LinqImpl<T> aliasToBean(Class<T> resultClass) {
         if (!beforeMethodInvoke()) {
-            return this;
+            return (LinqImpl<T>) this;
         }
         criteria = cb.createQuery(Object[].class);
         root = criteria.from(domainClass);
         this.resultClass = resultClass;
         resultTransformer = Transformers.aliasToBean(resultClass);
-        return this;
+        return (LinqImpl<T>) this;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Linq aliasToMap() {
+    public LinqImpl<Map<String, Object>> aliasToMap() {
         if (!beforeMethodInvoke()) {
-            return this;
+            return (LinqImpl<Map<String, Object>>) this;
         }
         criteria = cb.createQuery(Object[].class);
         root = criteria.from(domainClass);
         this.resultClass = Map.class;
         resultTransformer = Transformers.ALIAS_TO_MAP;
-        return this;
+        return (LinqImpl<Map<String, Object>>) this;
     }
 
     @Override
-    public Linq aliasToTuple() {
+    @SuppressWarnings("unchecked")
+    public LinqImpl<Tuple> aliasToTuple() {
         if (!beforeMethodInvoke()) {
-            return this;
+            return (LinqImpl<Tuple>) this;
         }
         criteria = cb.createTupleQuery();
         root = criteria.from(domainClass);
         resultClass = Tuple.class;
-        return this;
+        return (LinqImpl<Tuple>) this;
     }
 
 

@@ -1,5 +1,7 @@
 package org.spin.jpa.lin;
 
+import org.spin.jpa.Prop;
+
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
@@ -7,11 +9,13 @@ import javax.persistence.metamodel.SingularAttribute;
 
 /**
  * 语言集成更新
+ * <p>DESCRIPTION</p>
+ * <p>Created by xuweinan on 2021/3/29</p>
  *
- * @author Kevin Yang (mailto:muxiangqiu@gmail.com)
- * @since 2017年11月16日
+ * @author xuweinan
+ * @version 1.0
  */
-public interface Linu extends Lin<Linu, CriteriaUpdate<?>> {
+public interface Linu<T> extends Lin<Linu<T>, CriteriaUpdate<?>> {
 
     /**
      * 批量更新
@@ -28,7 +32,7 @@ public interface Linu extends Lin<Linu, CriteriaUpdate<?>> {
      * @param <Y>       范型
      * @return 本身
      */
-    <Y> Linu set(Path<Y> attribute, Expression<? extends Y> value);
+    <Y> Linu<T> set(Path<Y> attribute, Expression<? extends Y> value);
 
     /**
      * 设置更新值
@@ -37,7 +41,9 @@ public interface Linu extends Lin<Linu, CriteriaUpdate<?>> {
      * @param value         值
      * @return 本身
      */
-    Linu set(String attributeName, Object value);
+    Linu<T> set(String attributeName, Object value);
+
+    Linu<T> set(Prop<T, ?> attribute, Object value);
 
     /**
      * 设置更新值
@@ -48,7 +54,7 @@ public interface Linu extends Lin<Linu, CriteriaUpdate<?>> {
      * @param <X>       值范型
      * @return 本身
      */
-    <Y, X extends Y> Linu set(Path<Y> attribute, X value);
+    <Y, X extends Y> Linu<T> set(Path<Y> attribute, X value);
 
     /**
      * 设置更新值
@@ -59,7 +65,7 @@ public interface Linu extends Lin<Linu, CriteriaUpdate<?>> {
      * @param <X>       值范型
      * @return 本身
      */
-    <Y, X extends Y> Linu set(SingularAttribute<? super Object, Y> attribute, X value);
+    <Y, X extends Y> Linu<T> set(SingularAttribute<? super Object, Y> attribute, X value);
 
     /**
      * 设置更新值
@@ -69,6 +75,5 @@ public interface Linu extends Lin<Linu, CriteriaUpdate<?>> {
      * @param <Y>       属性范型
      * @return 本身
      */
-    <Y> Linu set(SingularAttribute<? super Object, Y> attribute, Expression<? extends Y> value);
-
+    <Y> Linu<T> set(SingularAttribute<? super Object, Y> attribute, Expression<? extends Y> value);
 }

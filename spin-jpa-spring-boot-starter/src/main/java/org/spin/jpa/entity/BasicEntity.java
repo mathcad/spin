@@ -34,7 +34,7 @@ public abstract class BasicEntity<T extends BasicEntity<T>> implements IEntity<L
      * 版本号用于并发控制
      */
     @Version
-    private Integer version = 0;
+    private Integer version;
 
     @Override
     public Long getId() {

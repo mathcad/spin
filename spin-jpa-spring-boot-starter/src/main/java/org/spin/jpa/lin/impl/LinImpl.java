@@ -3,24 +3,19 @@ package org.spin.jpa.lin.impl;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.LambdaUtils;
 import org.spin.jpa.And;
-import org.spin.jpa.JpaUtil;
 import org.spin.jpa.Junction;
 import org.spin.jpa.Or;
 import org.spin.jpa.Prop;
 import org.spin.jpa.PropImpl;
 import org.spin.jpa.lin.Lin;
-import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CommonAbstractCriteria;
 import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,11 +23,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
-
-/**
- * @author Kevin Yang (mailto:kevin.yang@bstek.com)
- * @since 2016年1月31日
- */
 @SuppressWarnings("unchecked")
 public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> implements Lin<T, Q> {
 
@@ -47,7 +37,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     protected T parent;
     protected Junction having;
     protected List<String> aliases = new ArrayList<>();
-    private Stack<Boolean> ifResult = new Stack<>();
+    private final Stack<Boolean> ifResult = new Stack<>();
 
 
     public LinImpl(Class<?> domainClass) {
@@ -58,7 +48,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         this.domainClass = domainClass;
         em = entityManager;
         if (entityManager == null) {
-            em = JpaUtil.getEntityManager(domainClass);
+            em = org.spin.jpa.R.getEntityManager(domainClass);
         }
         cb = em.getCriteriaBuilder();
         junction = new And();
@@ -86,7 +76,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         } else if (target instanceof Collection) {
             result = !CollectionUtils.isEmpty((Collection<?>) target);
         } else {
-            result = !StringUtils.isEmpty(target);
+            result = target != null && !"".equals(target);
         }
         ifResult.push(result);
         return (T) this;
@@ -100,7 +90,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         } else if (target instanceof Collection) {
             result = CollectionUtils.isEmpty((Collection<?>) target);
         } else {
-            result = StringUtils.isEmpty(target);
+            result = target == null || "".equals(target);
         }
         ifResult.push(result);
         return (T) this;
@@ -119,94 +109,6 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
             }
         }
         return true;
-    }
-
-    @Override
-    public T selectId() {
-        return select(JpaUtil.getIdName(domainClass));
-    }
-
-    @Override
-    public T select(String... selections) {
-        if (!beforeMethodInvoke()) {
-            return (T) this;
-        }
-        List<Selection<?>> list = new ArrayList<>(selections.length);
-        for (String selection : selections) {
-            parseSelectionStr(list, selection);
-        }
-        select(list.toArray(new Selection<?>[0]));
-        return (T) this;
-    }
-
-    @Override
-    public <D> T select(Prop<D, ?>... selections) {
-        if (!beforeMethodInvoke()) {
-            return (T) this;
-        }
-        List<Selection<?>> list = new ArrayList<>(selections.length);
-        for (Prop<D, ?> selection : selections) {
-            parseSelectionStr(list, selection instanceof PropImpl ?
-                ((PropImpl<D>) selection).apply(null) :
-                BeanUtils.toFieldName(LambdaUtils.resolveLambda(selection).getImplMethodName()));
-        }
-        select(list.toArray(new Selection<?>[0]));
-        return (T) this;
-    }
-
-    @Override
-    public T select(Object... selections) {
-        if (!beforeMethodInvoke()) {
-            return (T) this;
-        }
-        List<Selection<?>> list = new ArrayList<>(selections.length);
-        for (Object selection : selections) {
-            if (selection instanceof String) {
-                parseSelectionStr(list, (String) selection);
-            } else if (selection instanceof Selection) {
-                list.add((Selection<?>) selection);
-            }
-        }
-        select(list.toArray(new Selection<?>[0]));
-        return (T) this;
-    }
-
-    private void parseSelectionStr(List<Selection<?>> result, String selection) {
-        String[] ps = selection.split("\\s*,\\s*");
-        for (String p : ps) {
-            String alias = p.trim();
-            String[] pa = alias.split("\\s+[aA][sS]\\s+");
-            if (pa.length > 1) {
-                alias = pa[1];
-            } else {
-                pa = alias.split("\\s+");
-                if (pa.length > 1) {
-                    alias = pa[1];
-                }
-            }
-            result.add(root.get(ps[0]).alias(alias));
-        }
-    }
-
-    @Override
-    @SuppressWarnings("rawtypes")
-    public T select(Selection<?>... selections) {
-        if (!beforeMethodInvoke()) {
-            return (T) this;
-        }
-        Assert.isTrue(sq == null || selections.length == 1, "selections can only have one in subquery! ");
-        Assert.isTrue(sq == null || selections[0] instanceof Expression, "Elements in the selections must implement the " + Expression.class.getName() + " interface in subquery! ");
-        Assert.isTrue(sq != null || criteria instanceof CriteriaQuery, "Not supported!");
-        if (sq == null) {
-            ((CriteriaQuery) criteria).multiselect(selections);
-        } else {
-            sq.select((Expression) selections[0]);
-        }
-        for (Selection<?> selection : selections) {
-            aliases.add(selection.getAlias());
-        }
-
-        return (T) this;
     }
 
     @Override
@@ -253,6 +155,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R, Y extends Comparable<? super Y>> T between(Prop<R, Y> v, Y x, Y y) {
+        String p = v instanceof PropImpl ?
+            ((PropImpl<R>) v).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(v).getImplMethodName());
+        return between(p, x, y);
+    }
+
+    @Override
     public <Y extends Comparable<? super Y>> T between(Expression<? extends Y> v, Expression<? extends Y> x, Expression<? extends Y> y) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -272,7 +182,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
 
     @Override
     public T idEqual(Object id) {
-        return equal(JpaUtil.getIdName(domainClass), id);
+        return equal(org.spin.jpa.R.getIdName(domainClass), id);
     }
 
     @Override
@@ -282,6 +192,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         }
         add(cb.equal(root.get(x), y));
         return (T) this;
+    }
+
+    @Override
+    public <R> T equal(Prop<R, ?> x, Object y) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return equal(p, y);
     }
 
     @Override
@@ -316,34 +234,20 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
-    public T exists(Class<?> domainClass) {
-        if (!beforeMethodInvoke()) {
-            return (T) this;
-        }
-        T lin = createChild(domainClass);
-        lin.select(lin.root());
-        add(cb.exists(lin.getSubquery()));
-        return lin;
-    }
-
-    @Override
-    public T notExists(Class<?> domainClass) {
-        if (!beforeMethodInvoke()) {
-            return (T) this;
-        }
-        T lin = createChild(domainClass);
-        lin.select(lin.root());
-        add(cb.not(cb.exists(lin.getSubquery())));
-        return lin;
-    }
-
-    @Override
     public T ge(String x, Number y) {
         if (!beforeMethodInvoke()) {
             return (T) this;
         }
         add(cb.ge(root.get(x), y));
         return (T) this;
+    }
+
+    @Override
+    public <R> T ge(Prop<R, ?> x, Number y) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return ge(p, y);
     }
 
     @Override
@@ -381,6 +285,17 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         return (T) this;
     }
 
+    @Override
+    public <R> T ge(Prop<R, ?> property, Prop<R, ?> otherProperty) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        String ap = otherProperty instanceof PropImpl ?
+            ((PropImpl<R>) otherProperty).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(otherProperty).getImplMethodName());
+        return ge(p, ap);
+    }
+
     @SuppressWarnings("rawtypes")
     @Override
     public T greaterThanProperty(String property, String otherProperty) {
@@ -400,6 +315,17 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T greaterThanProperty(Prop<R, ?> property, Prop<R, ?> otherProperty) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        String ap = otherProperty instanceof PropImpl ?
+            ((PropImpl<R>) otherProperty).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(otherProperty).getImplMethodName());
+        return greaterThanProperty(p, ap);
+    }
+
+    @Override
     public <Y extends Comparable<? super Y>> T greaterThan(String x, Y y) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -407,6 +333,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         Expression<Y> xe = root.get(x);
         add(cb.greaterThan(xe, y));
         return (T) this;
+    }
+
+    @Override
+    public <R, Y extends Comparable<? super Y>> T greaterThan(Prop<R, ?> x, Y y) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return greaterThan(p, y);
     }
 
     @Override
@@ -446,6 +380,17 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T greaterThanOrEqualToProperty(Prop<R, ?> property, Prop<R, ?> otherProperty) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        String ap = otherProperty instanceof PropImpl ?
+            ((PropImpl<R>) otherProperty).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(otherProperty).getImplMethodName());
+        return greaterThanOrEqualToProperty(p, ap);
+    }
+
+    @Override
     public <Y extends Comparable<? super Y>> T greaterThanOrEqualTo(String x, Y y) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -453,6 +398,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         Expression<Y> xe = root.get(x);
         add(cb.greaterThanOrEqualTo(xe, y));
         return (T) this;
+    }
+
+    @Override
+    public <R, Y extends Comparable<? super Y>> T greaterThanOrEqualTo(Prop<R, ?> x, Y y) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return greaterThanOrEqualTo(p, y);
     }
 
     @Override
@@ -481,6 +434,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         Expression<Y> xe = root.get(x);
         add(cb.gt(xe, y));
         return (T) this;
+    }
+
+    @Override
+    public <R, Y extends Number> T gt(Prop<R, ?> x, Y y) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return gt(p, y);
     }
 
     @Override
@@ -519,6 +480,17 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T gt(Prop<R, ?> property, Prop<R, ?> otherProperty) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        String ap = otherProperty instanceof PropImpl ?
+            ((PropImpl<R>) otherProperty).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(otherProperty).getImplMethodName());
+        return gt(p, ap);
+    }
+
+    @Override
     public T in(String property, Class<?> domainClass) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -530,11 +502,19 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T in(Prop<R, ?> property, Class<?> domainClass) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return in(p, domainClass);
+    }
+
+    @Override
     public T in(Class<?> domainClass) {
         if (!beforeMethodInvoke()) {
             return (T) this;
         }
-        Expression<?> e = root.get(JpaUtil.getIdName(this.domainClass));
+        Expression<?> e = root.get(org.spin.jpa.R.getIdName(this.domainClass));
         T lin = createChild(domainClass);
         add(cb.in(e).value(lin.getSubquery()));
         return lin;
@@ -546,6 +526,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T in(Prop<R, ?> property, Set<?> values) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return in(p, values);
+    }
+
+    @Override
     public T in(String property, Object... values) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -553,6 +541,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         Expression<?> e = root.get(property);
         add(e.in(values));
         return (T) this;
+    }
+
+    @Override
+    public <R> T in(Prop<R, ?> property, Object... values) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return in(p, values);
     }
 
     @Override
@@ -575,6 +571,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T in(Prop<R, ?> property, Expression<Collection<?>> values) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return in(p, values);
+    }
+
+    @Override
     public T in(Expression<?> expression, Expression<Collection<?>> values) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -594,6 +598,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T in(Prop<R, ?> property, Expression<?>... values) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return in(p, values);
+    }
+
+    @Override
     public <E> T in(Expression<E> expression, Expression<?>... values) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -608,6 +620,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T notIn(Prop<R, ?> property, Set<?> values) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return notIn(p, values);
+    }
+
+    @Override
     public T notIn(String property, Object... values) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -618,6 +638,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T notIn(Prop<R, ?> property, Object... values) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return notIn(p, values);
+    }
+
+    @Override
     public T notIn(String property, Expression<Collection<?>> values) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -625,6 +653,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         Expression<?> e = root.get(property);
         add(cb.not(e.in(values)));
         return (T) this;
+    }
+
+    @Override
+    public <R> T notIn(Prop<R, ?> property, Expression<Collection<?>> values) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return notIn(p, values);
     }
 
     @Override
@@ -656,6 +692,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T notIn(Prop<R, ?> property, Expression<?>... values) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return notIn(p, values);
+    }
+
+    @Override
     public <E> T notIn(Expression<E> expression, Expression<?>... values) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -676,6 +720,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T isEmpty(Prop<R, ?> property) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return isEmpty(p);
+    }
+
+    @Override
     public <C extends Collection<?>> T isEmpty(Expression<C> collection) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -692,6 +744,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         Expression<Boolean> e = root.get(property);
         add(cb.isFalse(e));
         return (T) this;
+    }
+
+    @Override
+    public <R> T isFalse(Prop<R, ?> property) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return isFalse(p);
     }
 
     @Override
@@ -716,6 +776,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T isMember(Prop<R, ?> elem, String collection) {
+        String p = elem instanceof PropImpl ?
+            ((PropImpl<R>) elem).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(elem).getImplMethodName());
+        return isMember(p, collection);
+    }
+
+    @Override
     public <E, C extends Collection<E>> T isMember(Expression<E> elem, Expression<C> collection) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -733,6 +801,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         Expression collectionE = root.get(collection);
         add(cb.isNotEmpty(collectionE));
         return (T) this;
+    }
+
+    @Override
+    public <R> T isNotEmpty(Prop<R, ?> collection) {
+        String p = collection instanceof PropImpl ?
+            ((PropImpl<R>) collection).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(collection).getImplMethodName());
+        return isNotEmpty(p);
     }
 
     @Override
@@ -757,6 +833,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T isNotMember(Prop<R, ?> elem, String collection) {
+        String p = elem instanceof PropImpl ?
+            ((PropImpl<R>) elem).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(elem).getImplMethodName());
+        return isNotMember(p, collection);
+    }
+
+    @Override
     public <E, C extends Collection<E>> T isNotMember(Expression<E> elem, Expression<C> collection) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -775,6 +859,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T isNull(Prop<R, ?> property) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return isNull(p);
+    }
+
+    @Override
     public T isNull(Expression<?> expression) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -790,6 +882,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         }
         add(cb.isNotNull(root.get(property)));
         return (T) this;
+    }
+
+    @Override
+    public <R> T isNotNull(Prop<R, ?> property) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return isNotNull(p);
     }
 
     @Override
@@ -812,6 +912,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T isTrue(Prop<R, ?> property) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<?>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        return isTrue(p);
+    }
+
+    @Override
     public T isTrue(Expression<Boolean> expression) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -831,6 +939,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R, Y extends Number> T le(Prop<R, ?> x, Y y) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return le(p, y);
+    }
+
+    @Override
     public T le(String property, String otherProperty) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -845,6 +961,17 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
             le(x, y);
         }
         return (T) this;
+    }
+
+    @Override
+    public <R> T le(Prop<R, ?> property, Prop<R, ?> otherProperty) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        String ap = otherProperty instanceof PropImpl ?
+            ((PropImpl<R>) otherProperty).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(otherProperty).getImplMethodName());
+        return le(p, ap);
     }
 
     @Override
@@ -876,6 +1003,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R, Y extends Number> T lt(Prop<R, ?> x, Y y) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return lt(p, y);
+    }
+
+    @Override
     public T lt(String property, String otherProperty) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -890,6 +1025,17 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
             lt(x, y);
         }
         return (T) this;
+    }
+
+    @Override
+    public <R> T lt(Prop<R, ?> property, Prop<R, ?> otherProperty) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        String ap = otherProperty instanceof PropImpl ?
+            ((PropImpl<R>) otherProperty).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(otherProperty).getImplMethodName());
+        return lt(p, ap);
     }
 
     @Override
@@ -920,6 +1066,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         return (T) this;
     }
 
+    @Override
+    public <R, Y extends Comparable<? super Y>> T lessThan(Prop<R, ?> x, Y y) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return lessThan(p, y);
+    }
+
     @SuppressWarnings("rawtypes")
     @Override
     public T lessThanProperty(String property, String otherProperty) {
@@ -936,6 +1090,17 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
             lessThan(x, y);
         }
         return (T) this;
+    }
+
+    @Override
+    public <R> T lessThanProperty(Prop<R, ?> property, Prop<R, ?> otherProperty) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        String ap = otherProperty instanceof PropImpl ?
+            ((PropImpl<R>) otherProperty).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(otherProperty).getImplMethodName());
+        return lessThanProperty(p, ap);
     }
 
     @Override
@@ -975,6 +1140,17 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T lessThanOrEqualToProperty(Prop<R, ?> property, Prop<R, ?> otherProperty) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        String ap = otherProperty instanceof PropImpl ?
+            ((PropImpl<R>) otherProperty).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(otherProperty).getImplMethodName());
+        return lessThanOrEqualToProperty(p, ap);
+    }
+
+    @Override
     public <Y extends Comparable<? super Y>> T lessThanOrEqualTo(String x, Y y) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -982,6 +1158,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         Expression<Y> xe = root.get(x);
         add(cb.lessThanOrEqualTo(xe, y));
         return (T) this;
+    }
+
+    @Override
+    public <R, Y extends Comparable<? super Y>> T lessThanOrEqualTo(Prop<R, ?> x, Y y) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return lessThanOrEqualTo(p, y);
     }
 
     @Override
@@ -1028,6 +1212,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         Expression<String> xe = root.get(x);
         add(cb.like(xe, pattern));
         return (T) this;
+    }
+
+    @Override
+    public <R> T like(Prop<R, ?> x, String pattern) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return like(p, pattern);
     }
 
     @Override
@@ -1095,6 +1287,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T notLike(Prop<R, ?> x, String pattern) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return notLike(p, pattern);
+    }
+
+    @Override
     public T notLike(Expression<String> x, Expression<String> pattern, char escapeChar) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -1149,6 +1349,14 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T notEqual(Prop<R, ?> x, Object y) {
+        String p = x instanceof PropImpl ?
+            ((PropImpl<R>) x).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(x).getImplMethodName());
+        return notEqual(p, y);
+    }
+
+    @Override
     public T notEqual(Expression<?> x, Object y) {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -1172,6 +1380,17 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
             notEqual(x, y);
         }
         return (T) this;
+    }
+
+    @Override
+    public <R> T notEqualProperty(Prop<R, ?> property, Prop<R, ?> otherProperty) {
+        String p = property instanceof PropImpl ?
+            ((PropImpl<R>) property).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(property).getImplMethodName());
+        String ap = otherProperty instanceof PropImpl ?
+            ((PropImpl<R>) otherProperty).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(otherProperty).getImplMethodName());
+        return notEqualProperty(p, ap);
     }
 
     @Override
@@ -1221,6 +1440,76 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     @Override
+    public <R> T groupBy(Prop<R, ?> grouping) {
+        String p = grouping instanceof PropImpl ?
+            ((PropImpl<R>) grouping).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping).getImplMethodName());
+        return groupBy(p);
+    }
+
+    @Override
+    public <R> T groupBy(Prop<R, ?> grouping1, Prop<R, ?> grouping2) {
+        String p1 = grouping1 instanceof PropImpl ?
+            ((PropImpl<R>) grouping1).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping1).getImplMethodName());
+        String p2 = grouping2 instanceof PropImpl ?
+            ((PropImpl<R>) grouping2).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping2).getImplMethodName());
+        return groupBy(p1, p2);
+    }
+
+    @Override
+    public <R> T groupBy(Prop<R, ?> grouping1, Prop<R, ?> grouping2, Prop<R, ?> grouping3) {
+        String p1 = grouping1 instanceof PropImpl ?
+            ((PropImpl<R>) grouping1).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping1).getImplMethodName());
+        String p2 = grouping2 instanceof PropImpl ?
+            ((PropImpl<R>) grouping2).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping2).getImplMethodName());
+        String p3 = grouping3 instanceof PropImpl ?
+            ((PropImpl<R>) grouping3).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping3).getImplMethodName());
+        return groupBy(p1, p2, p3);
+    }
+
+    @Override
+    public <R> T groupBy(Prop<R, ?> grouping1, Prop<R, ?> grouping2, Prop<R, ?> grouping3, Prop<R, ?> grouping4) {
+        String p1 = grouping1 instanceof PropImpl ?
+            ((PropImpl<R>) grouping1).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping1).getImplMethodName());
+        String p2 = grouping2 instanceof PropImpl ?
+            ((PropImpl<R>) grouping2).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping2).getImplMethodName());
+        String p3 = grouping3 instanceof PropImpl ?
+            ((PropImpl<R>) grouping3).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping3).getImplMethodName());
+        String p4 = grouping4 instanceof PropImpl ?
+            ((PropImpl<R>) grouping4).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping4).getImplMethodName());
+        return groupBy(p1, p2, p3, p4);
+    }
+
+    @Override
+    public <R> T groupBy(Prop<R, ?> grouping1, Prop<R, ?> grouping2, Prop<R, ?> grouping3, Prop<R, ?> grouping4, Prop<R, ?> grouping5) {
+        String p1 = grouping1 instanceof PropImpl ?
+            ((PropImpl<R>) grouping1).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping1).getImplMethodName());
+        String p2 = grouping2 instanceof PropImpl ?
+            ((PropImpl<R>) grouping2).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping2).getImplMethodName());
+        String p3 = grouping3 instanceof PropImpl ?
+            ((PropImpl<R>) grouping3).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping3).getImplMethodName());
+        String p4 = grouping4 instanceof PropImpl ?
+            ((PropImpl<R>) grouping4).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping4).getImplMethodName());
+        String p5 = grouping5 instanceof PropImpl ?
+            ((PropImpl<R>) grouping5).apply(null) :
+            BeanUtils.toFieldName(LambdaUtils.resolveLambda(grouping5).getImplMethodName());
+        return groupBy(p1, p2, p3, p4, p5);
+    }
+
+    @Override
     public T having() {
         if (!beforeMethodInvoke()) {
             return (T) this;
@@ -1236,7 +1525,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         } else if (predicate instanceof Junction) {
             Junction junction = (Junction) predicate;
             if (!CollectionUtils.isEmpty(junction.getPredicates())) {
-                List<Predicate> predicates = new ArrayList<Predicate>();
+                List<Predicate> predicates = new ArrayList<>();
                 for (Object p : junction.getPredicates()) {
                     Predicate result = parsePredicate(p);
                     if (result != null) {
@@ -1297,6 +1586,4 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     public <E> Root<E> root() {
         return (Root<E>) root;
     }
-
-
 }

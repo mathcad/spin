@@ -26,13 +26,13 @@ public abstract class AbstractEntity<T extends AbstractEntity<T>> extends BasicE
      */
     @Column
     @PreventOverflow
-    private Long createBy = 0L;
+    private Long createBy;
 
     /**
      * 记录创建者用户名
      */
     @Column(length = 32)
-    private String createUsername = "";
+    private String createUsername;
 
     /**
      * 创建时间，禁止更改
@@ -45,13 +45,13 @@ public abstract class AbstractEntity<T extends AbstractEntity<T>> extends BasicE
      */
     @Column
     @PreventOverflow
-    private Long updateBy = 0L;
+    private Long updateBy;
 
     /**
      * 记录更新者用户名
      */
     @Column(length = 32)
-    private String updateUsername = "";
+    private String updateUsername;
 
     /**
      * 最后更新时间
@@ -63,7 +63,7 @@ public abstract class AbstractEntity<T extends AbstractEntity<T>> extends BasicE
      * 标记逻辑删除
      */
     @Column
-    private Boolean valid = true;
+    private Boolean valid;
 
     /**
      * 备注

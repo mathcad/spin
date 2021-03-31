@@ -13,9 +13,6 @@ import java.util.List;
 
 /**
  * 模块配置类
- *
- * @author Kevin Yang (mailto:muxiangqiu@gmail.com)
- * @since 2017年11月16日
  */
 @Configuration
 @ComponentScan(basePackages = {"org.spin.jpa"})

@@ -60,7 +60,7 @@ dependencies {
     testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
     testRuntimeOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
     testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
-    testRuntimeOnly group: 'org.jsoup', name: 'jsoup', version: '1.12.1'
+    testImplementation group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
     testRuntimeOnly group: 'com.google.zxing', name: 'core', version: zxingVersion
 
 //    core

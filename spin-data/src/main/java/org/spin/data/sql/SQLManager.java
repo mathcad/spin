@@ -104,7 +104,7 @@ public class SQLManager {
     public SQLManager(DataSourceConfig dsConfig, Class<? extends SQLLoader> loaderClass, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
         String name = dsConfig.getName();
         if (StringUtils.isEmpty(name)) {
-            name = "main";
+            name = "primary";
             dsConfig.setName(name);
         }
         DataSourceContext.setPrimaryDataSourceName(name);

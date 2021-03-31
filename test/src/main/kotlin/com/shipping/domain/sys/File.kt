@@ -63,7 +63,7 @@ class File(
      */
     @Column
     var isPriv: Boolean = false
-) : AbstractEntity() {
+) : AbstractEntity<File>() {
     companion object {
         private const val serialVersionUID = 5524987141178520509L
     }

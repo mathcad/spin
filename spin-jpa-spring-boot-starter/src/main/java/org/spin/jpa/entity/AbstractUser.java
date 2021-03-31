@@ -40,7 +40,7 @@ public abstract class AbstractUser<T extends AbstractUser<T>> extends AbstractEn
      * 是否有效
      */
     @Column
-    private boolean active = true;
+    private Boolean active;
 
     public String getUserName() {
         return userName;
@@ -70,11 +70,11 @@ public abstract class AbstractUser<T extends AbstractUser<T>> extends AbstractEn
         this.salt = salt;
     }
 
-    public boolean isActive() {
+    public Boolean getActive() {
         return active;
     }
 
-    public void setActive(boolean active) {
+    public void setActive(Boolean active) {
         this.active = active;
     }
 

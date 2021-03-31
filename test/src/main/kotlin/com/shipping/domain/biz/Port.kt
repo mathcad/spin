@@ -1,5 +1,6 @@
 package com.shipping.domain.biz
 
+import kotlinx.serialization.Serializable
 import org.spin.data.core.AbstractEntity
 
 import javax.persistence.Column
@@ -8,7 +9,8 @@ import javax.persistence.Table
 
 @Entity
 @Table(name = "biz_port")
-class Port : AbstractEntity() {
+@Serializable
+class Port : AbstractEntity<Port>() {
 
     /**
      * 港口名称

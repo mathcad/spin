@@ -499,7 +499,7 @@ public final class StringUtils extends Util {
 
     /**
      * 删除字符串开头与结尾处的不可见的控制字符(char &lt;= 32)
-     * <p>如果字符串为<code>null</code>，返回<code>null</code></p>
+     * <p>如果字符串为<code>null</code>或纯空白字符构成，返回<code>null</code></p>
      * <p>通过 {@link String#trim()}实现.</p>
      * <pre>
      * StringUtils.trimToNull(null)          = null
@@ -513,7 +513,8 @@ public final class StringUtils extends Util {
      * @return trim后的字符串
      */
     public static String trimToNull(String str) {
-        return str == null ? null : str.trim();
+        str =  str == null ? null : str.trim();
+        return null == str || str.length() == 0 ? null : str;
     }
 
     /**

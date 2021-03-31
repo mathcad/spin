@@ -1,10 +1,11 @@
 package org.spin.core.util.http;
 
-import org.apache.http.HttpEntity;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 import org.spin.core.collection.Pair;
 import org.spin.core.collection.Tuple;
-import org.spin.core.function.Handler;
 import org.spin.core.function.serializable.Function;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SimplifiedException;
@@ -28,15 +29,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509ExtendedKeyManager;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.HttpURLConnection;
@@ -120,14 +113,6 @@ class HttpUtilsTest {
     }
 
     public void t() {
-        EntityProcessor<String> a = new EntityProcessor<String>() {
-            @Override
-            public String process(HttpEntity entity) {
-                return null;
-            }
-        };
-
-        a.toString();
     }
 
     //    @Test
@@ -247,6 +232,33 @@ class HttpUtilsTest {
 //    private String novelId = "0_794";
     private String novelId = "0_92";
     private int titlePrefix = 0;
+
+
+    @Test
+    void testAa() {
+        int b = 24058;
+        int e = 24111;
+        String url = "http://m.yidudu1.org/archive.php?aid=%d";
+
+        try (FileWriter os = new FileWriter(("D:\\b.log"))) {
+            for (int i = b; i <= e; ++i) {
+                Document document = Jsoup.parse(new URL(String.format(url, i)).openStream(), "GBK", url);
+                Elements detail = document.getElementsByClass("detail");
+                detail.get(0).children().stream().map(it -> StringUtils.trimToEmpty(it.text())).filter(StringUtils::isNotBlank).forEach(it -> {
+                    try {
+                        os.write(it);
+                        os.write("\n");
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                });
+                os.write("\n--------------------------------------------\n");
+            }
+        } catch (IOException ignore) {
+
+        }
+
+    }
 
 //    @Test
 //    void testNovel() {
@@ -394,12 +406,6 @@ class HttpUtilsTest {
 
     @Test
     void testDownload() {
-        Http.GET.withUrl("https://pay2live.oss-cn-shenzhen.aliyuncs.com/shanglike/202009241445369chP.png").execute(entity -> {
-            HttpExecutor.downloadProc(entity, (i, s, p) -> {
-                System.out.println(s + "," + p);
-            });
-            return null;
-        });
     }
 
 

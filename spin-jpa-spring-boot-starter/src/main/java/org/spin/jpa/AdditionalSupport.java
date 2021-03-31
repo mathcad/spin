@@ -2,10 +2,6 @@ package org.spin.jpa;
 
 import javax.persistence.Transient;
 
-/**
- * @author Kevin Yang (mailto:muxiangqiu@gmail.com)
- * @since 2017年11月16日
- */
 public class AdditionalSupport {
 
     @Transient

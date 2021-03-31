@@ -429,21 +429,32 @@ public final class NumericUtils extends Util {
     }
 
     /**
-     * 判断value1与value2形成的闭区间是否与value3与value4形成的闭区间相交
+     * 判断interval_1_1与interval_1_2形成的闭区间是否与interval_2_1与interval_2_2形成的闭区间相交
      * <p>区间的端点不需要保证有序，所有端点都不允许为空</p>
      *
-     * @param value1 区间1的端点1
-     * @param value2 区间1的端点2
-     * @param value3 区间2的端点1
-     * @param value4 区间2的端点2
+     * @param interval_1_1 区间1的端点1
+     * @param interval_1_2 区间1的端点2
+     * @param interval_2_1 区间2的端点1
+     * @param interval_2_2 区间2的端点2
+     * @param <T> 类型
      * @return 是否相交
      */
-    public static boolean interact(Number value1, Number value2, Number value3, Number value4) {
-        double v1 = value1.doubleValue();
-        double v2 = value2.doubleValue();
-        double v3 = value3.doubleValue();
-        double v4 = value4.doubleValue();
-        return !(v1 < v3 && v1 < v4 && v2 < v3 && v2 < v4 || v3 < v1 && v3 < v2 && v4 < v1 && v4 < v2);
+    public static <T extends Comparable<T>> boolean interact(T interval_1_1, T interval_1_2, T interval_2_1, T interval_2_2) {
+        T tmp;
+
+        if (Assert.notNull(interval_1_1, "interval_1_1不能为空").compareTo(Assert.notNull(interval_1_2, "interval_1_2不能为空")) > 0) {
+            tmp = interval_1_1;
+            interval_1_1 = interval_1_2;
+            interval_1_2 = tmp;
+        }
+
+        if (Assert.notNull(interval_2_1, "interval_2_1不能为空").compareTo(Assert.notNull(interval_2_2, "interval_2_2不能为空")) > 0) {
+            tmp = interval_2_1;
+            interval_2_1 = interval_2_2;
+            interval_2_2 = tmp;
+        }
+
+        return !(interval_2_1.compareTo(interval_1_2) > 0 || interval_2_2.compareTo(interval_1_1) < 0);
     }
 
     /**
@@ -540,7 +551,7 @@ public final class NumericUtils extends Util {
         Assert.inclusiveBetween(0, bytes.length, from, "from索引超出范围: " + 0 + " - " + bytes.length);
         Assert.inclusiveBetween(1, 4, len, "整型的长度必须在1-4之间");
         Assert.isTrue(bytes.length - from >= len, "数据不合法");
-        int mask = 8 * (len - 1);
+        int mask = (len - 1) << 3;
         int res = 0;
         while (--len != -1) {
             res = res | (bytes[from + len] << (mask - len * 8));
@@ -549,14 +560,14 @@ public final class NumericUtils extends Util {
     }
 
     public static long compositeLong(byte[] bytes, int from) {
-        return compositeLong(bytes, from, 4);
+        return compositeLong(bytes, from, 8);
     }
 
     public static long compositeLong(byte[] bytes, int from, int len) {
         Assert.inclusiveBetween(0, bytes.length, from, "from索引超出范围: " + 0 + " - " + bytes.length);
         Assert.inclusiveBetween(1, 8, len, "长整型的长度必须在1-8之间");
         Assert.isTrue(bytes.length - from >= len, "数据不合法");
-        int mask = 8 * (len - 1);
+        int mask = (len - 1) << 3;
         long res = 0;
         while (--len != -1) {
             res = res | (bytes[from + len] << (mask - len * 8));

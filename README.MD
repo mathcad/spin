@@ -8,7 +8,9 @@
 |   spin-data   |   2.4.0-SNAPSHOT   | 基于Hibernate二次开发的ORM框架，同时支持类MyBatis的复杂sql执行能力 | spin-data-core |
 |   spin-data-core   |  2.4.0-SNAPSHOT    | 数据访问框架核心依赖，定义了通用接口与一些ORM无关的工具(分布式锁, 分布式主键生成等) | spin-core |
 |   spin-data-spring-boot-starter   |  2.4.0-SNAPSHOT    | 基于spin-data的spring boot 快速启动模块 | spin-data, spin-web* |
+|   spin-datasource-srping-boot-starter   |  2.4.0-SNAPSHOT    | 基于dynamic-source-spring-boot-starter(3.3.1)改造的多数据源方案 | spin-core |
 |   spin-enhance   |   2.4.0-SNAPSHOT   | 增强工具类 | spin-core
+|   spin-jpa-spring-boot-starter   |    2.4.0-SNAPSHOT  | 基于spring data jpa的spring boot 快速启动模块 | spin-data-core |
 |   spin-mybatis-spring-boot-starter   |    2.4.0-SNAPSHOT  | 基于mybatis的spring boot 快速启动模块 | spin-data-core |
 |   spin-web   |    2.4.0-SNAPSHOT  | 基于spring的web增强模块 | spin-core |
 |   spin-wx   |    2.4.0-SNAPSHOT  | 微信封装模块 | spin-core |

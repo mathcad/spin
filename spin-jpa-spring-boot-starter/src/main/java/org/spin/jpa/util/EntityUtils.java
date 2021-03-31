@@ -50,6 +50,7 @@ public abstract class EntityUtils {
      * @param <T>    实体类型
      * @return 返回一个实体
      */
+    @SuppressWarnings("unchecked")
     public static <T> T getDTO(final T entity, final int depth) {
         if (entity == null) {
             return null;
@@ -92,7 +93,7 @@ public abstract class EntityUtils {
                     if (d instanceof PersistentBag) {
                         PersistentBag bag = (PersistentBag) d;
                         bag.clearDirty();
-                        List list = (List) JsonUtils.fromJson("[]", f.getType());
+                        List<Object> list = (List<Object>) JsonUtils.fromJson("[]", f.getType());
                         //noinspection unchecked
                         bag.forEach(obj -> list.add(getDTO(obj, depth - 1)));
                         setMethod.invoke(target, list);
@@ -100,7 +101,7 @@ public abstract class EntityUtils {
                         PersistentList bag = (PersistentList) d;
                         bag.clearDirty();
 
-                        List list = (List) JsonUtils.fromJson("[]", f.getType());
+                        List<Object> list = (List<Object>) JsonUtils.fromJson("[]", f.getType());
                         //noinspection unchecked
                         bag.forEach(obj -> list.add(getDTO(obj, depth - 1)));
                         setMethod.invoke(target, list);
@@ -112,7 +113,7 @@ public abstract class EntityUtils {
                     if (d instanceof PersistentSet) {
                         PersistentSet pSet = (PersistentSet) d;
                         pSet.clearDirty();
-                        Set set = (Set) JsonUtils.fromJson("[]", f.getType());
+                        Set<Object> set = (Set<Object>) JsonUtils.fromJson("[]", f.getType());
                         //noinspection unchecked
                         pSet.forEach(obj -> set.add(getDTO(obj, depth - 1)));
                         setMethod.invoke(target, set);
@@ -136,7 +137,7 @@ public abstract class EntityUtils {
      * @param entityClass 实体类
      * @return 主键字段
      */
-    public static Field getPKField(Class entityClass) {
+    public static Field getPKField(Class<?> entityClass) {
         final Field[] fs = new Field[1];
         ReflectionUtils.doWithFields(entityClass, f -> {
             if (f.getAnnotation(Id.class) != null)
@@ -166,7 +167,7 @@ public abstract class EntityUtils {
      * @param <T> 实体类型
      * @return 复制后的对象
      */
-    public static <T extends IEntity> T copy(T src) {
+    public static <T extends IEntity<?, T>> T copy(T src) {
         try {
             @SuppressWarnings("unchecked")
             Class<T> clazz = (Class<T>) src.getClass();
@@ -184,7 +185,7 @@ public abstract class EntityUtils {
      * @param entityClazz 实体类型
      * @return 映射到数据库的字段名集合
      */
-    public static Set<String> parseEntityColumns(Class entityClazz) {
+    public static Set<String> parseEntityColumns(Class<?> entityClazz) {
         if (SpinContext.ENTITY_COLUMNS.containsKey(entityClazz.getName()))
             return SpinContext.ENTITY_COLUMNS.get(entityClazz.getName());
 
@@ -205,7 +206,7 @@ public abstract class EntityUtils {
      * @param cls 对象类型
      * @return 字段列表
      */
-    public static Map<String, Field> getJoinFields(final Class cls) {
+    public static Map<String, Field> getJoinFields(final Class<?> cls) {
         String clsName = cls.getName();
         if (!SpinContext.ENTITY_SOMETOONE_JOIN_FIELDS.containsKey(clsName)) {
             Map<String, Field> referJoinFields = new HashMap<>();

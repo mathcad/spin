@@ -22,7 +22,7 @@ class Permission(
         @Column(length = 64, unique = true)
         var code: String = ""
 
-) : AbstractEntity() {
+) : AbstractEntity<Permission>() {
     companion object {
         private const val serialVersionUID = -724121483134748879L
     }

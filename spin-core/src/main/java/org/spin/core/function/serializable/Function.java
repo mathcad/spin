@@ -1,5 +1,8 @@
 package org.spin.core.function.serializable;
 
+import org.spin.core.util.BeanUtils;
+import org.spin.core.util.LambdaUtils;
+
 import java.io.Serializable;
 
 /**
@@ -14,4 +17,7 @@ import java.io.Serializable;
  */
 @FunctionalInterface
 public interface Function<T, R> extends java.util.function.Function<T, R>, Serializable {
+    default String name() {
+        return BeanUtils.toFieldName(LambdaUtils.resolveLambda(this).getImplMethodName());
+    }
 }

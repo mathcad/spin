@@ -7,7 +7,6 @@ import javax.persistence.criteria.CommonAbstractCriteria;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import java.util.Collection;
 import java.util.Set;
@@ -18,8 +17,6 @@ import java.util.Set;
  *
  * @param <T> 具体语言集成操作类型，如语言集成查询（{@link Linq}）
  * @param <Q> JPA的{@link CommonAbstractCriteria}的类型
- * @author Kevin Yang (mailto:muxiangqiu@gmail.com)
- * @since 2017年11月16日
  */
 public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
@@ -97,43 +94,6 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
      */
     <E> Subquery<E> getSubquery();
 
-    /**
-     * 查询结果投影为主键设置<br>
-     * 例如：<br>
-     * 领域类的主键属性是id，selectId()相当于select("id")
-     *
-     * @return 自身
-     */
-    T selectId();
-
-    /**
-     * 查询结果投影设置<br>
-     * 例如：<br>
-     * ...select("id", "name", ...) 等价于 select id, name, ... from ...<br>
-     * 其中第一个id和name为实体类的属性名，第二个id和name为实体类对应表的字段名
-     *
-     * @param selections 实体属性名数组
-     * @return 自身
-     */
-    T select(String... selections);
-
-    <D> T select(Prop<D, ?>... selections);
-
-    /**
-     * 查询结果投影设置
-     *
-     * @param selections 可以是String或者JPA标准{@link Selection}
-     * @return 自身
-     */
-    T select(Object... selections);
-
-    /**
-     * 查询结果投影设置
-     *
-     * @param selections JPA标准{@link Selection}
-     * @return 自身
-     */
-    T select(Selection<?>... selections);
 
     /**
      * 并且联合条件（支持递归定义）
@@ -153,6 +113,8 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
     <Y extends Comparable<? super Y>> T between(String v, Y x, Y y);
 
+    <R, Y extends Comparable<? super Y>> T between(Prop<R, Y> v, Y x, Y y);
+
     <Y extends Comparable<? super Y>> T between(Expression<? extends Y> v, Expression<? extends Y> x,
                                                 Expression<? extends Y> y);
 
@@ -162,23 +124,29 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
     T equal(String x, Object y);
 
+    <R> T equal(Prop<R, ?> x, Object y);
+
     T equal(Expression<?> x, Object y);
 
     T equal(Expression<?> x, Expression<?> y);
 
-    T exists(Class<?> domainClass);
-
     T ge(String x, Number y);
+
+    <R> T ge(Prop<R, ?> x, Number y);
 
     T ge(Expression<? extends Number> x, Number y);
 
     <Y extends Comparable<? super Y>> T greaterThan(String x, Y y);
+
+    <R, Y extends Comparable<? super Y>> T greaterThan(Prop<R, ?> x, Y y);
 
     <Y extends Comparable<? super Y>> T greaterThan(Expression<? extends Y> x, Y y);
 
     <Y extends Comparable<? super Y>> T greaterThan(Expression<? extends Y> x, Expression<? extends Y> y);
 
     <Y extends Comparable<? super Y>> T greaterThanOrEqualTo(String x, Y y);
+
+    <R, Y extends Comparable<? super Y>> T greaterThanOrEqualTo(Prop<R, ?> x, Y y);
 
     <Y extends Comparable<? super Y>> T greaterThanOrEqualTo(Expression<? extends Y> x, Y y);
 
@@ -187,13 +155,19 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
     <Y extends Number> T gt(String x, Y y);
 
+    <R, Y extends Number> T gt(Prop<R, ?> x, Y y);
+
     <Y extends Number> T gt(Expression<? extends Y> x, Y y);
 
     <Y extends Number> T gt(Expression<? extends Y> x, Expression<? extends Y> y);
 
     T in(String property, Object... values);
 
+    <R> T in(Prop<R, ?> property, Object... values);
+
     T in(String property, Expression<Collection<?>> values);
+
+    <R> T in(Prop<R, ?> property, Expression<Collection<?>> values);
 
     T in(Expression<?> expression, Expression<Collection<?>> values);
 
@@ -201,11 +175,17 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
     T in(String property, Expression<?>... values);
 
+    <R> T in(Prop<R, ?> property, Expression<?>... values);
+
     <E> T in(Expression<E> expression, Expression<?>... values);
 
     T notIn(String property, Object... values);
 
+    <R> T notIn(Prop<R, ?> property, Object... values);
+
     T notIn(String property, Expression<Collection<?>> values);
+
+    <R> T notIn(Prop<R, ?> property, Expression<Collection<?>> values);
 
     <E> T notIn(Expression<E> expression, Expression<Collection<?>> values);
 
@@ -213,43 +193,65 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
     T notIn(String property, Expression<?>... values);
 
+    <R> T notIn(Prop<R, ?> property, Expression<?>... values);
+
     <E> T notIn(Expression<E> expression, Expression<?>... values);
 
     T isEmpty(String property);
+
+    <R> T isEmpty(Prop<R, ?> property);
 
     <C extends Collection<?>> T isEmpty(Expression<C> collection);
 
     T isFalse(String property);
 
+    <R> T isFalse(Prop<R, ?> property);
+
     T isFalse(Expression<Boolean> expression);
 
     T isMember(String elem, String collection);
+
+    <R> T isMember(Prop<R, ?> elem, String collection);
 
     <E, C extends Collection<E>> T isMember(Expression<E> elem, Expression<C> collection);
 
     T isNotEmpty(String collection);
 
+    <R> T isNotEmpty(Prop<R, ?> collection);
+
     <C extends Collection<?>> T isNotEmpty(Expression<C> collection);
 
     T isNotMember(String elem, String collection);
+
+    <R> T isNotMember(Prop<R, ?> elem, String collection);
 
     <E, C extends Collection<E>> T isNotMember(Expression<E> elem, Expression<C> collection);
 
     T isNull(String property);
 
+    <R> T isNull(Prop<R, ?> property);
+
     T isNull(Expression<?> expression);
 
     T isNotNull(String property);
+
+    <R> T isNotNull(Prop<R, ?> property);
 
     T isNotNull(Expression<?> expression);
 
     T isTrue(String property);
 
+    <R> T isTrue(Prop<R, ?> property);
+
     T isTrue(Expression<Boolean> expression);
 
     <Y extends Number> T le(String x, Y y);
 
+    <R, Y extends Number> T le(Prop<R, ?> x, Y y);
+
     T le(String property, String otherProperty);
+
+    <R> T le(Prop<R, ?> property, Prop<R, ?> otherProperty);
 
     <Y extends Number> T le(Expression<? extends Y> x, Y y);
 
@@ -257,7 +259,11 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
     <Y extends Number> T lt(String x, Y y);
 
+    <R, Y extends Number> T lt(Prop<R, ?> x, Y y);
+
     T lt(String property, String otherProperty);
+
+    <R> T lt(Prop<R, ?> property, Prop<R, ?> otherProperty);
 
     <Y extends Number> T lt(Expression<? extends Y> x, Y y);
 
@@ -265,11 +271,15 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
     <Y extends Comparable<? super Y>> T lessThan(String x, Y y);
 
+    <R, Y extends Comparable<? super Y>> T lessThan(Prop<R, ?> x, Y y);
+
     <Y extends Comparable<? super Y>> T lessThan(Expression<? extends Y> x, Y y);
 
     <Y extends Comparable<? super Y>> T lessThan(Expression<? extends Y> x, Expression<? extends Y> y);
 
     <Y extends Comparable<? super Y>> T lessThanOrEqualTo(String x, Y y);
+
+    <R, Y extends Comparable<? super Y>> T lessThanOrEqualTo(Prop<R, ?> x, Y y);
 
     <Y extends Comparable<? super Y>> T lessThanOrEqualTo(Expression<? extends Y> x, Y y);
 
@@ -280,6 +290,8 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
     T like(Expression<String> x, Expression<String> pattern);
 
     T like(String x, String pattern);
+
+    <R> T like(Prop<R, ?> x, String pattern);
 
     T like(Expression<String> x, Expression<String> pattern, char escapeChar);
 
@@ -297,6 +309,8 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
     T notLike(String x, String pattern);
 
+    <R> T notLike(Prop<R, ?> x, String pattern);
+
     T notLike(Expression<String> x, Expression<String> pattern,
               char escapeChar);
 
@@ -312,6 +326,8 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
     T notEqual(String x, Object y);
 
+    <R> T notEqual(Prop<R, ?> x, Object y);
+
     T notEqual(Expression<?> x, Object y);
 
     T notEqual(Expression<?> x, Expression<?> y);
@@ -325,6 +341,16 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
     T end();
 
     T groupBy(String... grouping);
+
+    <R> T groupBy(Prop<R, ?> grouping);
+
+    <R> T groupBy(Prop<R, ?> grouping1, Prop<R, ?> grouping2);
+
+    <R> T groupBy(Prop<R, ?> grouping1, Prop<R, ?> grouping2, Prop<R, ?> grouping3);
+
+    <R> T groupBy(Prop<R, ?> grouping1, Prop<R, ?> grouping2, Prop<R, ?> grouping3, Prop<R, ?> grouping4);
+
+    <R> T groupBy(Prop<R, ?> grouping1, Prop<R, ?> grouping2, Prop<R, ?> grouping3, Prop<R, ?> grouping4, Prop<R, ?> grouping5);
 
     /**
      * 领域类（实体类）
@@ -349,26 +375,44 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
 
     T ge(String property, String otherProperty);
 
+    <R> T ge(Prop<R, ?> property, Prop<R, ?> otherProperty);
+
     T gt(String property, String otherProperty);
+
+    <R> T gt(Prop<R, ?> property, Prop<R, ?> otherProperty);
 
     T lessThanProperty(String property, String otherProperty);
 
+    <R> T lessThanProperty(Prop<R, ?> property, Prop<R, ?> otherProperty);
+
     T greaterThanProperty(String property, String otherProperty);
+
+    <R> T greaterThanProperty(Prop<R, ?> property, Prop<R, ?> otherProperty);
 
     T greaterThanOrEqualToProperty(String property, String otherProperty);
 
+    <R> T greaterThanOrEqualToProperty(Prop<R, ?> property, Prop<R, ?> otherProperty);
+
     T lessThanOrEqualToProperty(String property, String otherProperty);
+
+    <R> T lessThanOrEqualToProperty(Prop<R, ?> property, Prop<R, ?> otherProperty);
 
     T notEqualProperty(String property, String otherProperty);
 
-    T notExists(Class<?> domainClass);
+    <R> T notEqualProperty(Prop<R, ?> property, Prop<R, ?> otherProperty);
 
     T in(String property, Class<?> domainClass);
+
+    <R> T in(Prop<R, ?> property, Class<?> domainClass);
 
     T in(Class<?> domainClass);
 
     T in(String property, Set<?> values);
 
+    <R> T in(Prop<R, ?> property, Set<?> values);
+
     T notIn(String property, Set<?> values);
+
+    <R> T notIn(Prop<R, ?> property, Set<?> values);
 
 }

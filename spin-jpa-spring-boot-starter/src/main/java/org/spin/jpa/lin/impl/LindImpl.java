@@ -6,10 +6,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.Predicate;
 
-/**
- * @author Kevin Yang (mailto:kevin.yang@bstek.com)
- * @since 2016年2月20日
- */
 public class LindImpl extends LinImpl<Lind, CriteriaDelete<?>> implements Lind {
 
     public LindImpl(Class<?> domainClass) {
@@ -23,12 +19,12 @@ public class LindImpl extends LinImpl<Lind, CriteriaDelete<?>> implements Lind {
         root = criteria.from((Class) domainClass);
     }
 
-    public LindImpl(Lind parent, Class<?> domainClass) {
+    public LindImpl(LindImpl parent, Class<?> domainClass) {
         super(parent, domainClass);
     }
 
     @Override
-    public Lind createChild(Class<?> domainClass) {
+    public LindImpl createChild(Class<?> domainClass) {
         return new LindImpl(this, domainClass);
     }
 
