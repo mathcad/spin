@@ -6,26 +6,26 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.Predicate;
 
-public class LindImpl extends LinImpl<Lind, CriteriaDelete<?>> implements Lind {
+public class LindImpl<D> extends LinImpl<Lind<D>, CriteriaDelete<?>> implements Lind<D> {
 
-    public LindImpl(Class<?> domainClass) {
+    public LindImpl(Class<D> domainClass) {
         this(domainClass, null);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public LindImpl(Class<?> domainClass, EntityManager entityManager) {
+    public LindImpl(Class<D> domainClass, EntityManager entityManager) {
         super(domainClass, entityManager);
-        criteria = cb.createCriteriaDelete(domainClass);
-        root = criteria.from((Class) domainClass);
+        CriteriaDelete<D> criteriaDelete = cb.createCriteriaDelete(domainClass);
+        criteria = criteriaDelete;
+        root = criteriaDelete.from(domainClass);
     }
 
-    public LindImpl(LindImpl parent, Class<?> domainClass) {
+    public LindImpl(LindImpl<D> parent, Class<?> domainClass) {
         super(parent, domainClass);
     }
 
     @Override
-    public LindImpl createChild(Class<?> domainClass) {
-        return new LindImpl(this, domainClass);
+    public LindImpl<D> createChild(Class<?> domainClass) {
+        return new LindImpl<>(this, domainClass);
     }
 
     @Override

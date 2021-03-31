@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+//@SuppressWarnings("unchecked")
 public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>> implements Linq<R, LinqImpl<R>> {
 
     protected List<Order> orders = new ArrayList<>();

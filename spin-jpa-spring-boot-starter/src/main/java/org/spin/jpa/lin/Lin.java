@@ -10,6 +10,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import java.util.Collection;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * 语言集成抽象接口<br>
@@ -34,6 +35,10 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
      */
     T addIf(Object target);
 
+    T addIf(Boolean condition);
+
+    T addIf(Supplier<Boolean> condition);
+
     /**
      * 与addIf功能类似，只是规则相反
      *
@@ -41,6 +46,18 @@ public interface Lin<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> {
      * @return 自身
      */
     T addIfNot(Object target);
+
+    T addIfNot(Boolean condition);
+
+    T addIfNot(Supplier<Boolean> condition);
+
+    T elseIf(Object target);
+
+    T elseIf(Boolean condition);
+
+    T elseIf(Supplier<Boolean> condition);
+
+    T elseThen();
 
     /**
      * 动态添加条件结束

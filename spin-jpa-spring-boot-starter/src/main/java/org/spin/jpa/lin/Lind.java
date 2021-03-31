@@ -5,7 +5,7 @@ import javax.persistence.criteria.CriteriaDelete;
 /**
  * 语言集成删除
  */
-public interface Lind extends Lin<Lind, CriteriaDelete<?>> {
+public interface Lind<D> extends Lin<Lind<D>, CriteriaDelete<?>> {
 
     /**
      * 批量删除

@@ -1,8 +1,10 @@
 package org.spin.jpa.lin.impl;
 
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.LambdaUtils;
 import org.spin.jpa.And;
+import org.spin.jpa.Condition;
 import org.spin.jpa.Junction;
 import org.spin.jpa.Or;
 import org.spin.jpa.Prop;
@@ -17,11 +19,14 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unchecked")
 public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCriteria> implements Lin<T, Q> {
@@ -37,8 +42,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     protected T parent;
     protected Junction having;
     protected List<String> aliases = new ArrayList<>();
-    private final Stack<Boolean> ifResult = new Stack<>();
-
+    private final Deque<Condition> ifResult = new ArrayDeque<>();
 
     public LinImpl(Class<?> domainClass) {
         this(domainClass, null);
@@ -78,7 +82,19 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         } else {
             result = target != null && !"".equals(target);
         }
-        ifResult.push(result);
+        ifResult.push(new Condition(result, false, false));
+        return (T) this;
+    }
+
+    @Override
+    public T addIf(Boolean condition) {
+        ifResult.push(new Condition(Boolean.TRUE.equals(condition), false, false));
+        return (T) this;
+    }
+
+    @Override
+    public T addIf(Supplier<Boolean> condition) {
+        ifResult.push(new Condition(Boolean.TRUE.equals(condition.get()), false, false));
         return (T) this;
     }
 
@@ -92,7 +108,69 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         } else {
             result = target == null || "".equals(target);
         }
-        ifResult.push(result);
+        ifResult.push(new Condition(result, false, false));
+        return (T) this;
+    }
+
+    @Override
+    public T addIfNot(Boolean condition) {
+        ifResult.push(new Condition(!Boolean.TRUE.equals(condition), false, false));
+        return (T) this;
+    }
+
+    @Override
+    public T addIfNot(Supplier<Boolean> condition) {
+        ifResult.push(new Condition(!Boolean.TRUE.equals(condition.get()), false, false));
+        return (T) this;
+    }
+
+    @Override
+    public T elseIf(Object target) {
+        Condition current = ifResult.peek();
+        if (null == current) {
+            throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
+        }
+        current.setOnElse(true);
+        if (target instanceof Boolean) {
+            current.setElseIfResult((boolean) target);
+        } else if (target instanceof Collection) {
+            current.setElseIfResult(!CollectionUtils.isEmpty((Collection<?>) target));
+        } else {
+            current.setElseIfResult(target != null && !"".equals(target));
+        }
+        return (T) this;
+    }
+
+    @Override
+    public T elseIf(Boolean condition) {
+        Condition current = ifResult.peek();
+        if (null == current) {
+            throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
+        }
+        current.setOnElse(true);
+        current.setElseIfResult(Boolean.TRUE.equals(condition));
+        return (T) this;
+    }
+
+    @Override
+    public T elseIf(Supplier<Boolean> condition) {
+        Condition current = ifResult.peek();
+        if (null == current) {
+            throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
+        }
+        current.setOnElse(true);
+        current.setElseIfResult(Boolean.TRUE.equals(condition.get()));
+        return (T) this;
+    }
+
+    @Override
+    public T elseThen() {
+        Condition current = ifResult.peek();
+        if (null == current) {
+            throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
+        }
+        current.setOnElse(true);
+        current.setElseIfResult(true);
         return (T) this;
     }
 
@@ -103,8 +181,15 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     protected boolean beforeMethodInvoke() {
-        for (Boolean r : ifResult) {
-            if (!r) {
+        int i = 0;
+        for (Condition r : ifResult) {
+            if (!r.isIfResult() && !r.isOnElse()) {
+                return false;
+            }
+            if (r.isIfResult() && r.isOnElse()) {
+                return false;
+            }
+            if (!r.isIfResult() && r.isOnElse() && !r.isElseIfResult()) {
                 return false;
             }
         }
