@@ -82,19 +82,19 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         } else {
             result = target != null && !"".equals(target);
         }
-        ifResult.push(new Condition(result, false, false));
+        ifResult.push(new Condition(result));
         return (T) this;
     }
 
     @Override
     public T addIf(Boolean condition) {
-        ifResult.push(new Condition(Boolean.TRUE.equals(condition), false, false));
+        ifResult.push(new Condition(Boolean.TRUE.equals(condition)));
         return (T) this;
     }
 
     @Override
     public T addIf(Supplier<Boolean> condition) {
-        ifResult.push(new Condition(Boolean.TRUE.equals(condition.get()), false, false));
+        ifResult.push(new Condition(Boolean.TRUE.equals(condition.get())));
         return (T) this;
     }
 
@@ -108,19 +108,19 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         } else {
             result = target == null || "".equals(target);
         }
-        ifResult.push(new Condition(result, false, false));
+        ifResult.push(new Condition(result));
         return (T) this;
     }
 
     @Override
     public T addIfNot(Boolean condition) {
-        ifResult.push(new Condition(!Boolean.TRUE.equals(condition), false, false));
+        ifResult.push(new Condition(!Boolean.TRUE.equals(condition)));
         return (T) this;
     }
 
     @Override
     public T addIfNot(Supplier<Boolean> condition) {
-        ifResult.push(new Condition(!Boolean.TRUE.equals(condition.get()), false, false));
+        ifResult.push(new Condition(!Boolean.TRUE.equals(condition.get())));
         return (T) this;
     }
 
@@ -130,13 +130,12 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         if (null == current) {
             throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
         }
-        current.setOnElse(true);
         if (target instanceof Boolean) {
-            current.setElseIfResult((boolean) target);
+            current.addElseResult((boolean) target);
         } else if (target instanceof Collection) {
-            current.setElseIfResult(!CollectionUtils.isEmpty((Collection<?>) target));
+            current.addElseResult(!CollectionUtils.isEmpty((Collection<?>) target));
         } else {
-            current.setElseIfResult(target != null && !"".equals(target));
+            current.addElseResult(target != null && !"".equals(target));
         }
         return (T) this;
     }
@@ -147,8 +146,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         if (null == current) {
             throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
         }
-        current.setOnElse(true);
-        current.setElseIfResult(Boolean.TRUE.equals(condition));
+        current.addElseResult(Boolean.TRUE.equals(condition));
         return (T) this;
     }
 
@@ -158,8 +156,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         if (null == current) {
             throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
         }
-        current.setOnElse(true);
-        current.setElseIfResult(Boolean.TRUE.equals(condition.get()));
+        current.addElseResult(Boolean.TRUE.equals(condition.get()));
         return (T) this;
     }
 
@@ -169,8 +166,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
         if (null == current) {
             throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
         }
-        current.setOnElse(true);
-        current.setElseIfResult(true);
+        current.addElseResult(true);
         return (T) this;
     }
 
@@ -181,7 +177,6 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     }
 
     protected boolean beforeMethodInvoke() {
-        int i = 0;
         for (Condition r : ifResult) {
             if (!r.isIfResult() && !r.isOnElse()) {
                 return false;
@@ -189,7 +184,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
             if (r.isIfResult() && r.isOnElse()) {
                 return false;
             }
-            if (!r.isIfResult() && r.isOnElse() && !r.isElseIfResult()) {
+            if (!r.isIfResult() && r.isOnElse() && !r.getLastElseResult()) {
                 return false;
             }
         }

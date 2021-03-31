@@ -1,5 +1,8 @@
 package org.spin.jpa;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * TITLE
  * <p>DESCRIPTION</p>
@@ -11,38 +14,40 @@ package org.spin.jpa;
 public class Condition {
     private boolean ifResult;
     private boolean onElse;
-    private boolean elseIfResult;
+    private int elseIfPos = -1;
+    private final List<Boolean> elseIfResult = new ArrayList<>();
 
     public Condition() {
     }
 
-    public Condition(boolean ifResult, boolean onElse, boolean elseIfResult) {
+    public Condition(boolean ifResult) {
         this.ifResult = ifResult;
-        this.onElse = onElse;
-        this.elseIfResult = elseIfResult;
+        this.onElse = false;
+    }
+
+    public void addElseResult(boolean elseIf) {
+        onElse = true;
+        elseIfResult.add((-1 == elseIfPos || !getLastElseResult()) && elseIf);
+        ++elseIfPos;
     }
 
     public boolean isIfResult() {
         return ifResult;
     }
 
-    public void setIfResult(boolean ifResult) {
-        this.ifResult = ifResult;
-    }
-
     public boolean isOnElse() {
         return onElse;
     }
 
-    public void setOnElse(boolean onElse) {
-        this.onElse = onElse;
+    public int getElseIfPos() {
+        return elseIfPos;
     }
 
-    public boolean isElseIfResult() {
+    public List<Boolean> getElseIfResult() {
         return elseIfResult;
     }
 
-    public void setElseIfResult(boolean elseIfResult) {
-        this.elseIfResult = elseIfResult;
+    public boolean getLastElseResult() {
+        return elseIfResult.get(elseIfPos);
     }
 }
