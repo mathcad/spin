@@ -36,14 +36,17 @@ public abstract class BasicEntity<T extends BasicEntity<T>> implements IEntity<L
     @Version
     private Integer version;
 
-    @Override
     public Long getId() {
         return id;
     }
 
-    @Override
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @Override
+    public Long id() {
+        return id;
     }
 
     @Override

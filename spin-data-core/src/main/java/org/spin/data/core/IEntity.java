@@ -18,29 +18,40 @@ import java.util.Map;
  */
 public interface IEntity<PK extends Serializable, E extends IEntity<PK, E>> extends Serializable {
 
-    PK getId();
-
-    void setId(PK id);
-
-    Integer getVersion();
-
-    void setVersion(Integer version);
-
-    Boolean getValid();
-
-    void setValid(Boolean valid);
+    /**
+     * 主键
+     *
+     * @return 主键
+     */
+    PK id();
 
     /**
-     * 为当前实体指定ID并返回当前实体
+     * 数据版本 乐观锁
      *
-     * @param id id
-     * @return 当前实体
+     * @return 数据版本
      */
-    @SuppressWarnings("unchecked")
-    default E withId(PK id) {
-        this.setId(id);
-        return (E) this;
-    }
+    Integer getVersion();
+
+    /**
+     * 数据版本 乐观锁
+     *
+     * @param version 数据版本
+     */
+    void setVersion(Integer version);
+
+    /**
+     * 是否有效 逻辑删除标记
+     *
+     * @return 是否有效
+     */
+    Boolean getValid();
+
+    /**
+     * 是否有效 逻辑删除标记
+     *
+     * @param valid 是否有效
+     */
+    void setValid(Boolean valid);
 
     /**
      * 将当前实体中的属性copy到目标对象中(所有存在于目标中的属性)
@@ -88,21 +99,5 @@ public interface IEntity<PK extends Serializable, E extends IEntity<PK, E>> exte
     default <T> E mergeAll(T source) {
         BeanUtils.copyTo(source, this);
         return (E) this;
-    }
-
-    /**
-     * 根据id,获取一个持有该id的指定类型的DTO对象
-     *
-     * @param entityCls 实体类型
-     * @param id        id
-     * @param <PK>      主键类型泛型参数
-     * @param <E>       实体类型泛型参数
-     * @return 持有指定id的DTO对象
-     */
-    static <PK extends Serializable, E extends IEntity<PK, E>> E ref(Class<E> entityCls, PK id) {
-        E entity;
-        entity = BeanUtils.instantiateClass(entityCls);
-        entity.setId(id);
-        return entity;
     }
 }

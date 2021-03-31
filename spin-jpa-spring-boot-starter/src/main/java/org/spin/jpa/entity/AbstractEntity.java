@@ -68,7 +68,7 @@ public abstract class AbstractEntity<T extends AbstractEntity<T>> extends BasicE
     /**
      * 备注
      */
-    @Column(length = 120)
+    @Column
     private String remark;
 
     /**

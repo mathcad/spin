@@ -125,9 +125,9 @@ public abstract class R {
      * @return Lind
      */
     @SafeVarargs
-    public static <T> LindImpl lind(T... ignore) {
+    public static <T> LindImpl<T> lind(T... ignore) {
         Class<T> domainClass = ArrayUtils.resolveArrayCompType(ignore);
-        return new LindImpl(domainClass);
+        return new LindImpl<>(domainClass);
     }
 
     /**
@@ -139,9 +139,9 @@ public abstract class R {
      * @return Lind
      */
     @SafeVarargs
-    public static <T> LindImpl lind(EntityManager entityManager, T... ignore) {
+    public static <T> LindImpl<T> lind(EntityManager entityManager, T... ignore) {
         Class<T> domainClass = ArrayUtils.resolveArrayCompType(ignore);
-        return new LindImpl(domainClass, entityManager);
+        return new LindImpl<>(domainClass, entityManager);
     }
 
     /**
