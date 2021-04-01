@@ -128,9 +128,9 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
             }
         }
         try {
-            if (null == entity.getId() || saveWithPk) {
-                if (null != idGenerator && null == entity.getId()) {
-                    entity.setId(idGenerator.genId());
+            if (null == entity.id() || saveWithPk) {
+                if (null != idGenerator && null == entity.id()) {
+                    entity.id(idGenerator.genId());
                 }
                 DataSourceContext.getSession().save(entity);
             } else {
@@ -139,7 +139,7 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
         } catch (OptimisticLockingFailureException ope) {
             throw new SimplifiedException("The entity is expired", ope);
         }
-        return get(entity.getId());
+        return get(entity.id());
     }
 
     /**
@@ -184,7 +184,7 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
      */
     @SafeVarargs
     public final int updateById(T entity, org.spin.core.function.serializable.Function<T, ?>... fields) {
-        if (null == entity.getId()) {
+        if (null == entity.id()) {
             throw new SQLException(SQLError.ID_NOT_FOUND, "The Id field must be nonnull when execute update by Id");
         }
         if (null == fields || 0 == fields.length) {

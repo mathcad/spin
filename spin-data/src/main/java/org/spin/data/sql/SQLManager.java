@@ -72,9 +72,8 @@ public class SQLManager {
      * @param loaderClass SQLLoader类
      * @param rootUri     sql文件根路径
      * @param resolver    sql模板解析器
-     * @throws ClassNotFoundException 当sql加载器不存在时抛出
      */
-    public SQLManager(MultiDataSourceConfig<?> dsConfigs, Class<? extends SQLLoader> loaderClass, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
+    public SQLManager(MultiDataSourceConfig<?> dsConfigs, Class<? extends SQLLoader> loaderClass, String rootUri, TemplateResolver resolver) {
         DataSourceContext.setPrimaryDataSourceName(dsConfigs.getPrimaryDataSource());
         dsConfigs.getDataSources().forEach((name, config) -> {
             try {
@@ -99,9 +98,8 @@ public class SQLManager {
      * @param loaderClass SQLLoader类
      * @param rootUri     sql文件根路径
      * @param resolver    sql模板解析器
-     * @throws ClassNotFoundException 当sql加载器不存在时抛出
      */
-    public SQLManager(DataSourceConfig dsConfig, Class<? extends SQLLoader> loaderClass, String rootUri, TemplateResolver resolver) throws ClassNotFoundException {
+    public SQLManager(DataSourceConfig dsConfig, Class<? extends SQLLoader> loaderClass, String rootUri, TemplateResolver resolver) {
         String name = dsConfig.getName();
         if (StringUtils.isEmpty(name)) {
             name = "primary";

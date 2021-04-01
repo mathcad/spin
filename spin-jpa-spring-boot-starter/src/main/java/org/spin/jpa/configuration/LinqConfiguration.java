@@ -1,4 +1,4 @@
-package org.spin.jpa;
+package org.spin.jpa.configuration;
 
 import org.spin.jpa.initiator.JpaUtilAble;
 import org.spin.jpa.initiator.JpaUtilInitiator;

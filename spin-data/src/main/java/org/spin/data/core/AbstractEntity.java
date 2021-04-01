@@ -154,11 +154,19 @@ public abstract class AbstractEntity<T extends AbstractEntity<T>> implements IEn
     }
 
     @Override
-    public Long getId() {
+    public Long id() {
         return id;
     }
 
     @Override
+    public void id(Long id) {
+        this.id = id;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }

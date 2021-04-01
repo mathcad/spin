@@ -3,6 +3,7 @@ package org.spin.core.trait;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 业务枚举定义，包含一个value与描述
@@ -27,13 +28,13 @@ public interface FrendlyEnum<T extends Serializable> extends Evaluatable<T> {
         return "";
     }
 
-    static <E extends Serializable, T extends FrendlyEnum<E>> T valueOf(Class<T> clazz, E value) {
+    static <E extends Serializable, T extends FrendlyEnum<E>> Optional<T> valueOf(Class<T> clazz, E value) {
         for (T enumConstant : clazz.getEnumConstants()) {
             if (enumConstant.getValue().equals(value)) {
-                return enumConstant;
+                return Optional.of(enumConstant);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     static <E extends Serializable, T extends FrendlyEnum<E>> Map<E, String> toMap(Class<T> enumClass) {

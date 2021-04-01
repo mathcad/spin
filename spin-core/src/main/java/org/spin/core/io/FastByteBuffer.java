@@ -236,6 +236,10 @@ public class FastByteBuffer {
 
     /**
      * 返回快速缓冲中的数据
+     *
+     * @param off offset
+     * @param b   dest
+     * @return actual length
      */
     public int copyToArray(int off, byte[] b) {
         int len = b.length + off > size ? (size - off) : b.length;
@@ -244,6 +248,11 @@ public class FastByteBuffer {
 
     /**
      * 返回快速缓冲中的数据
+     *
+     * @param off offset
+     * @param len length
+     * @param b   dest
+     * @return actual length
      */
     public int copyToArray(int off, int len, byte[] b) {
         return copyToArray(off, len, b, 0);
@@ -251,6 +260,12 @@ public class FastByteBuffer {
 
     /**
      * 返回快速缓冲中的数据
+     *
+     * @param off  offset
+     * @param len  length
+     * @param b    dest
+     * @param bOff dest offset
+     * @return actual length
      */
     public int copyToArray(int off, int len, byte[] b, int bOff) {
         if (b == null) {

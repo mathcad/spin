@@ -18,7 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NonUniqueResultException;
+import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.AbstractQuery;
@@ -203,6 +203,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         Assert.isTrue(sq != null || criteria instanceof CriteriaQuery, "Not supported!");
         if (sq == null) {
             ((CriteriaQuery) criteria).multiselect(selections);
+            aliases.clear();
         } else {
             sq.select((Expression) selections[0]);
         }
@@ -344,11 +345,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         }
         applyPredicateToCriteria(criteria);
         TypedQuery<?> query = createQuery();
-        query.setMaxResults(2);
-        List<R> list = transform(query, false);
-        if (list.size() > 1) {
-            throw new NonUniqueResultException("唯一查询的结果数量超过1条");
-        }
+        List<R> list = transform(query, 1);
         return Optional.ofNullable(CollectionUtils.first(list));
     }
 
@@ -360,8 +357,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         }
         applyPredicateToCriteria(criteria);
         TypedQuery<?> query = createQuery();
-        query.setMaxResults(1);
-        List<R> list = transform(query, false);
+        List<R> list = transform(query, 2);
         return Optional.ofNullable(CollectionUtils.first(list));
     }
 
@@ -372,7 +368,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
             return parent.list();
         }
         applyPredicateToCriteria(criteria);
-        return transform(createQuery(), false);
+        return transform(createQuery(), 0);
     }
 
     @Override
@@ -399,7 +395,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
             Long total = org.spin.jpa.R.count(criteria);
             List<R> content = Collections.emptyList();
             if (total > pageable.getOffset()) {
-                content = transform(query, false);
+                content = transform(query, 0);
             }
 
             return new PageImpl<>(content, pageable, total);
@@ -424,7 +420,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
             query.setFirstResult((int) offset);
             query.setMaxResults(pageable.getPageSize());
 
-            return transform(query, false);
+            return transform(query, 0);
         }
     }
 
@@ -440,7 +436,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         query.setFirstResult(page * size);
         query.setMaxResults(size);
 
-        return transform(query, false);
+        return transform(query, 0);
     }
 
     private TypedQuery<?> createQuery() {
@@ -476,21 +472,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
             applyPredicateToCriteria(sq);
             return parent.count();
         }
-        return executeCountQuery(getCountQuery());
-    }
-
-    protected Long executeCountQuery(TypedQuery<Long> query) {
-
-        Assert.notNull(query, "query can not be null.");
-
-        List<Long> totals = query.getResultList();
-        long total = 0L;
-
-        for (Long element : totals) {
-            total += element == null ? 0 : element;
-        }
-
-        return total;
+        return org.spin.jpa.R.executeCountQuery(getCountQuery());
     }
 
     protected TypedQuery<Long> getCountQuery() {
@@ -526,50 +508,44 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         }
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    protected <T> List<T> transform(TypedQuery<?> query, boolean single) {
+    /**
+     * 获取查询结果并转换
+     *
+     * @param query  查询
+     * @param single 0-多条 1-唯一 2-第一条
+     * @param <T>    结果泛型
+     * @return 结果列表
+     */
+    @SuppressWarnings({"unchecked"})
+    protected <T> List<T> transform(Query query, int single) {
         List<T> result;
-        if (resultTransformer != null) {
-            List tuples;
-            if (single) {
-                tuples = new ArrayList(1);
-                tuples.add(query.getSingleResult());
-            } else {
-                tuples = query.getResultList();
-            }
+        @SuppressWarnings("rawtypes")
+        List tuples;
+        if (Assert.inclusiveBetween(0, 2, single, "single不合法") > 0) {
+            tuples = new ArrayList<>(1);
+            query.setMaxResults(3 - single);
+            tuples.add(1 == single ? query.getSingleResult() : CollectionUtils.first(query.getResultList()));
+        } else {
+            tuples = query.getResultList();
+        }
+        if (tuples.isEmpty() || resultClass.isInstance(tuples.get(0))) {
+            return tuples;
+        } else {
             result = new ArrayList<>(tuples.size());
             String[] aliases = this.aliases.toArray(new String[0]);
+            if (resultTransformer == null) {
+                if (resultClass == Map.class) {
+                    resultTransformer = Transformers.ALIAS_TO_MAP;
+                } else {
+                    resultTransformer = Transformers.aliasToBean(resultClass);
+                }
+            }
             for (Object tuple : tuples) {
                 if (tuple != null) {
                     if (tuple.getClass().isArray()) {
                         result.add((T) resultTransformer.transformTuple((Object[]) tuple, aliases));
                     } else {
                         result.add((T) resultTransformer.transformTuple(new Object[]{tuple}, aliases));
-                    }
-                }
-            }
-        } else {
-            List tuples;
-            if (single) {
-                tuples = new ArrayList<>(1);
-                tuples.add(query.getSingleResult());
-            } else {
-                tuples = query.getResultList();
-            }
-
-            if (tuples.isEmpty() || resultClass.isInstance(tuples.get(0))) {
-                return tuples;
-            } else {
-                result = new ArrayList<>(tuples.size());
-                String[] aliases = this.aliases.toArray(new String[0]);
-                resultTransformer = Transformers.aliasToBean(resultClass);
-                for (Object tuple : tuples) {
-                    if (tuple != null) {
-                        if (tuple.getClass().isArray()) {
-                            result.add((T) resultTransformer.transformTuple((Object[]) tuple, aliases));
-                        } else {
-                            result.add((T) resultTransformer.transformTuple(new Object[]{tuple}, aliases));
-                        }
                     }
                 }
             }
@@ -631,6 +607,4 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         resultClass = Tuple.class;
         return (LinqImpl<Tuple>) this;
     }
-
-
 }

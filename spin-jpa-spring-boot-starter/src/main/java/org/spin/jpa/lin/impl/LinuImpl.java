@@ -1,9 +1,11 @@
 package org.spin.jpa.lin.impl;
 
+import org.spin.core.session.SessionUser;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.LambdaUtils;
 import org.spin.jpa.Prop;
 import org.spin.jpa.PropImpl;
+import org.spin.jpa.entity.AbstractEntity;
 import org.spin.jpa.lin.Linu;
 
 import javax.persistence.EntityManager;
@@ -12,6 +14,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.SingularAttribute;
+import java.time.LocalDateTime;
 
 public class LinuImpl<T> extends LinImpl<Linu<T>, CriteriaUpdate<?>> implements Linu<T> {
 
@@ -91,6 +94,12 @@ public class LinuImpl<T> extends LinImpl<Linu<T>, CriteriaUpdate<?>> implements 
 
     @Override
     public int update() {
+        if (AbstractEntity.class.isAssignableFrom(domainClass)) {
+            SessionUser<Long> user = SessionUser.getCurrent();
+            criteria.set("updateBy", null == user ? -1 : user.getId());
+            criteria.set("updateUsername", null == user ? -1 : user.getName());
+            criteria.set("updateTime", LocalDateTime.now());
+        }
         if (parent != null) {
             applyPredicateToCriteria();
             return parent.update();

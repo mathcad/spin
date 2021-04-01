@@ -80,7 +80,7 @@ public abstract class AbstractUser<T extends AbstractUser<T>> extends AbstractEn
 
     @Override
     public String toString() {
-        return super.toString() + " <=> AbstractUser(" + getClass().getSimpleName() + "){" +
+        return super.toString() + " => AbstractUser(" + getClass().getSimpleName() + "){" +
             "userName='" + userName + '\'' +
             ", salt='" + salt + '\'' +
             ", active=" + active +

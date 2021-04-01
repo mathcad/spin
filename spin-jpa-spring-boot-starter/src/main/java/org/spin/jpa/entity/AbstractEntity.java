@@ -103,7 +103,7 @@ public abstract class AbstractEntity<T extends AbstractEntity<T>> extends BasicE
 
     @Override
     public String toString() {
-        return super.toString() + " <=> AbstractEntity(" + getClass().getSimpleName() + "){" +
+        return super.toString() + " => AbstractEntity(" + getClass().getSimpleName() + "){" +
             ", createBy=" + createBy +
             ", createUsername=" + createUsername +
             ", createTime=" + createTime +

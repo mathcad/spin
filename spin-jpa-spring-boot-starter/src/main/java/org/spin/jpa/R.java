@@ -1,8 +1,21 @@
 package org.spin.jpa;
 
+import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
+import org.spin.core.session.SessionUser;
+import org.spin.core.throwable.AssertFailException;
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.LambdaUtils;
+import org.spin.core.util.StreamUtils;
+import org.spin.data.core.IEntity;
 import org.spin.data.core.IVo;
+import org.spin.data.pk.generator.IdGenerator;
+import org.spin.data.throwable.SQLError;
+import org.spin.data.throwable.SQLException;
+import org.spin.jpa.entity.AbstractEntity;
 import org.spin.jpa.lin.Linu;
 import org.spin.jpa.lin.impl.LindImpl;
 import org.spin.jpa.lin.impl.LinqImpl;
@@ -12,6 +25,7 @@ import org.spin.jpa.util.ArrayUtils;
 import org.spin.jpa.vo.VoEntityMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +36,7 @@ import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.LockModeType;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
@@ -32,17 +47,11 @@ import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.SingularAttribute;
 import java.beans.PropertyDescriptor;
+import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static org.springframework.data.jpa.repository.query.QueryUtils.DELETE_ALL_QUERY_STRING;
 import static org.springframework.data.jpa.repository.query.QueryUtils.getQueryString;
@@ -53,9 +62,16 @@ import static org.springframework.data.jpa.repository.query.QueryUtils.getQueryS
  * @author xuweinan
  */
 public abstract class R {
+    private static final Logger logger = LoggerFactory.getLogger(R.class);
 
     protected static GetEntityManagerFactoryStrategy getEntityManagerFactoryStrategy;
     protected static ApplicationContext applicationContext;
+
+    private static IdGenerator<?, ?> idGenerator;
+
+    public static void registerIdGenerator(IdGenerator<?, ?> idGenerator) {
+        R.idGenerator = idGenerator;
+    }
 
     /**
      * 创建Linq
@@ -172,6 +188,29 @@ public abstract class R {
     }
 
     /**
+     * 创建Linu
+     *
+     * @param domainClass 领域类
+     * @param <T>         领域类（实体类）范型
+     * @return Linu
+     */
+    public static <T> Linu<T> linu(Class<T> domainClass) {
+        return new LinuImpl<>(domainClass);
+    }
+
+    /**
+     * 创建Linu
+     *
+     * @param entityManager 实体类管理器
+     * @param domainClass   领域类
+     * @param <T>           领域类（实体类）范型
+     * @return Linu
+     */
+    public static <T> Linu<T> linu(EntityManager entityManager, Class<T> domainClass) {
+        return new LinuImpl<>(domainClass, entityManager);
+    }
+
+    /**
      * 创建命名查询
      *
      * @param name 查询的名称
@@ -275,6 +314,106 @@ public abstract class R {
     }
 
     /**
+     * 根据主键查询数据
+     *
+     * @param id       主键ID
+     * @param lockMode 锁定模式
+     * @param ignore   无
+     * @param <T>      领域类（实体类）范型
+     * @return 实体对象
+     */
+    @SafeVarargs
+    public static <T> Optional<T> findById(Object id, LockModeType lockMode, T... ignore) {
+        Class<T> domainClass = ArrayUtils.resolveArrayCompType(ignore);
+        EntityManager em = getEntityManager(domainClass);
+        if (null == lockMode) {
+            return Optional.ofNullable(em.find(domainClass, id));
+        } else {
+            return Optional.ofNullable(em.find(domainClass, id, lockMode));
+        }
+    }
+
+    public static <PK extends Serializable, T extends IEntity<PK, T>> T save(T entity) {
+        return save(entity, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <PK extends Serializable, T extends IEntity<PK, T>> T save(T entity, boolean saveWithPk) {
+        Assert.notNull(entity, "The entity to save MUST NOT be NULL");
+        if (entity instanceof AbstractEntity) {
+            AbstractEntity<?> aEn = (AbstractEntity<?>) entity;
+            SessionUser<Long> user = SessionUser.getCurrent();
+            aEn.setUpdateTime(LocalDateTime.now());
+            aEn.setUpdateBy(user == null ? -1 : user.getId());
+            aEn.setUpdateUsername(user == null ? "" : user.getName());
+            if (null == aEn.getId() || saveWithPk) {
+                aEn.setCreateTime(LocalDateTime.now());
+                aEn.setCreateBy(user == null ? -1 : user.getId());
+                aEn.setCreateUsername(user == null ? "" : user.getName());
+            }
+        }
+        try {
+            if (null == entity.id() || saveWithPk) {
+                if (null != idGenerator && null == entity.id()) {
+                    try {
+                        entity.id((PK) idGenerator.genId());
+                    } catch (ClassCastException e) {
+                        logger.warn("ID生成器类生成的数据类型与主键类型不匹配: {}", e.getMessage());
+                    }
+                }
+                ((Session) getEntityManager()).save(entity);
+            } else {
+                ((Session) getEntityManager()).update(entity);
+            }
+        } catch (OptimisticLockingFailureException ope) {
+            throw new SimplifiedException("The entity is expired", ope);
+        }
+        return entity;
+    }
+
+    @SafeVarargs
+    public static <PK extends Serializable, T extends IEntity<PK, T>> int updateById(T entity, Prop<T, ?>... fields) {
+        if (null == entity.id()) {
+            throw new SQLException(SQLError.ID_NOT_FOUND, "The Id field must be nonnull when execute update by Id");
+        }
+        SessionUser<Long> user = SessionUser.getCurrent();
+        if (entity instanceof AbstractEntity) {
+            AbstractEntity<?> aEn = (AbstractEntity<?>) entity;
+            aEn.setUpdateBy(null == user ? -1 : user.getId());
+            aEn.setUpdateUsername(null == user ? "" : user.getName());
+            aEn.setUpdateTime(LocalDateTime.now());
+        }
+
+        if (null == fields || 0 == fields.length) {
+            persist(entity);
+            return 1;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("UPDATE ").append(entity.getClass().getSimpleName()).append(" t SET ");
+        Map<String, Object> parameter = new HashMap<>();
+        for (Prop<T, ?> field : fields) {
+            String fieldName = org.spin.core.util.BeanUtils.toFieldName(LambdaUtils.resolveLambda(field).getImplMethodName());
+            sb.append("t.").append(fieldName).append(" = :").append(fieldName).append(",");
+            parameter.put(fieldName, org.spin.core.util.BeanUtils.getFieldValue(entity, fieldName));
+        }
+        if (entity instanceof AbstractEntity) {
+            sb.append("t.").append("updateBy").append(" = :").append("updateBy").append(",");
+            parameter.put("updateBy", org.spin.core.util.BeanUtils.getFieldValue(entity, "updateBy"));
+
+            sb.append("t.").append("updateUsername").append(" = :").append("updateUsername").append(",");
+            parameter.put("updateUsername", org.spin.core.util.BeanUtils.getFieldValue(entity, "updateUsername"));
+
+            sb.append("t.").append("updateTime").append(" = :").append("updateTime").append(",");
+            parameter.put("updateTime", org.spin.core.util.BeanUtils.getFieldValue(entity, "updateTime"));
+        }
+        sb.setLength(sb.length() - 1);
+        sb.append(" WHERE id = :id");
+        Query query = getEntityManager().createQuery(sb.toString());
+        parameter.forEach(query::setParameter);
+        return query.executeUpdate();
+    }
+
+    /**
      * 持久化实体对象
      *
      * @param entity 实体对象
@@ -285,18 +424,6 @@ public abstract class R {
         EntityManager em = getEntityManager(entity);
         em.persist(entity);
         return entity;
-    }
-
-    /**
-     * 更新实体对象
-     *
-     * @param entity 实体对象
-     * @param <T>    领域类（实体类）范型
-     * @return 托管实体类对象
-     */
-    public static <T> T merge(T entity) {
-        EntityManager em = getEntityManager(entity);
-        return em.merge(entity);
     }
 
     /**
@@ -318,6 +445,18 @@ public abstract class R {
         }
 
         return result;
+    }
+
+    /**
+     * 更新实体对象
+     *
+     * @param entity 实体对象
+     * @param <T>    领域类（实体类）范型
+     * @return 托管实体类对象
+     */
+    public static <T> T merge(T entity) {
+        EntityManager em = getEntityManager(entity);
+        return em.merge(entity);
     }
 
     /**
@@ -367,6 +506,55 @@ public abstract class R {
         flush(entity);
 
         return result;
+    }
+
+    /**
+     * 刷新指定持久化对象的状态
+     *
+     * @param entity 待刷新的持久化对象
+     * @param <T>    实体泛型
+     * @see EntityManager#refresh(Object)
+     */
+    public static <T> void refresh(final T entity) {
+        refresh(entity, null);
+    }
+
+    /**
+     * 刷新指定持久化对象的状态，并获取该实体上的锁
+     *
+     * @param entity   待刷新的持久化对象
+     * @param lockMode 需要获取的锁
+     * @param <T>      实体泛型
+     * @see EntityManager#refresh(Object, LockModeType)
+     */
+    public static <T> void refresh(final T entity, final LockModeType lockMode) {
+        if (lockMode != null) {
+            getEntityManager().refresh(entity, lockMode);
+        } else {
+            getEntityManager().refresh(entity);
+        }
+    }
+
+    /**
+     * 将当前实体从EM缓存中剔除。对实体的改动将会被丢弃，不会同步到数据库中。如果实体的关联属性映射为
+     * {@code cascade="evict"}，该操作将会级联剔除所有的关联实体
+     *
+     * @param entity 需要剔除的实体
+     * @param <T>    实体泛型
+     */
+    public static <T> void detach(T entity) {
+        if (Objects.nonNull(entity)) {
+            getEntityManager().detach(entity);
+        }
+    }
+
+    /**
+     * 从EM上下文缓存中移除所有持久化对象，并取消所有已挂起的保存，更新和删除操作
+     *
+     * @see EntityManager#clear
+     */
+    public void clear() {
+        getEntityManager().clear();
     }
 
     /**
@@ -421,6 +609,86 @@ public abstract class R {
     public static <T> void removeAllInBatch(Class<T> domainClass) {
         EntityManager em = getEntityManager(domainClass);
         em.createQuery(getQueryString(DELETE_ALL_QUERY_STRING, em.getMetamodel().entity(domainClass).getName())).executeUpdate();
+    }
+
+    /**
+     * 逻辑删除指定实体
+     *
+     * @param entity 待删除实体
+     * @param <PK>   主键泛型
+     * @param <T>    实体泛型
+     * @throws AssertFailException 当待删除的实体为{@literal null}时抛出该异常
+     */
+    public static <PK extends Serializable, T extends IEntity<PK, T>> void logicDelete(T entity) {
+        Assert.notNull(entity, "The entity to be deleted is null");
+        if (entity instanceof AbstractEntity) {
+            entity.setValid(false);
+            merge(entity);
+        }
+    }
+
+    /**
+     * 通过ID逻辑删除指定实体
+     *
+     * @param pk     待删除主键
+     * @param ignore 无
+     * @param <PK>   主键泛型
+     * @param <T>    实体泛型
+     * @throws AssertFailException 当待删除的{@code id}为{@literal null}时抛出该异常
+     */
+    @SafeVarargs
+    public static <PK extends Serializable, T extends IEntity<PK, T>> void logicDelete(PK pk, T... ignore) {
+        Assert.notNull(pk, "The given id must not be null!");
+        Class<T> domainClass = ArrayUtils.resolveArrayCompType(ignore);
+        T entity = getEntityManager().find(domainClass, pk);
+        Assert.notNull(entity, "Entity not found, or was deleted: [" + domainClass.getSimpleName() + "|" + pk + "]");
+        if (entity instanceof AbstractEntity) {
+            entity.setValid(false);
+            merge(entity);
+        }
+    }
+
+    /**
+     * 通过ID集合逻辑删除指定实体
+     *
+     * @param pks    待删除主键集合
+     * @param ignore 无
+     * @param <PK>   主键泛型
+     * @param <T>    实体泛型
+     * @return 删除行数
+     * @throws AssertFailException 当待删除的{@code ids}为{@literal null}时抛出该异常
+     */
+    @SafeVarargs
+    public static <PK extends Serializable, T extends IEntity<PK, T>> int logicDelete(Iterable<PK> pks, T... ignore) {
+        if (null == pks || !pks.iterator().hasNext()) {
+            return 0;
+        }
+        Class<T> domainClass = ArrayUtils.resolveArrayCompType(ignore);
+        return linu(domainClass)
+            .in("id", StreamUtils.stream(pks).toArray())
+            .set(IEntity::getValid, false)
+            .update();
+    }
+
+    /**
+     * 逻辑删除指定实体
+     *
+     * @param entities 实体集合
+     * @param <PK>     主键泛型
+     * @param <T>      实体泛型
+     * @return 删除行数
+     * @throws AssertFailException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
+     */
+    public static <PK extends Serializable, T extends IEntity<PK, T>> int logicDelete(Iterable<T> entities) {
+        if (null == entities || !entities.iterator().hasNext()) {
+            return 0;
+        }
+        @SuppressWarnings("unchecked")
+        Class<T> domainClass = (Class<T>) entities.iterator().next().getClass();
+        return linu(domainClass)
+            .in("id", StreamUtils.stream(entities).map(IEntity::id).toArray())
+            .set(IEntity::getValid, false)
+            .update();
     }
 
     /**

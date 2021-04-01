@@ -26,6 +26,13 @@ public interface IEntity<PK extends Serializable, E extends IEntity<PK, E>> exte
     PK id();
 
     /**
+     * 主键
+     *
+     * @param id 主键
+     */
+    void id(PK id);
+
+    /**
      * 数据版本 乐观锁
      *
      * @return 数据版本

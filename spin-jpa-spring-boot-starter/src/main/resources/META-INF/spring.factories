@@ -1,3 +1,4 @@
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.spin.jpa.LinqConfiguration
+org.spin.jpa.configuration.LinqConfiguration, \
+org.spin.jpa.configuration.DistributeIdGenConfiguration

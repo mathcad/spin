@@ -128,7 +128,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     public T elseIf(Object target) {
         Condition current = ifResult.peek();
         if (null == current) {
-            throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
+            throw new SimplifiedException("Must add an \"if\" condidtion before call \"elseIf\" method");
         }
         if (target instanceof Boolean) {
             current.addElseResult((boolean) target);
@@ -144,7 +144,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     public T elseIf(Boolean condition) {
         Condition current = ifResult.peek();
         if (null == current) {
-            throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
+            throw new SimplifiedException("Must add an \"if\" condidtion before call \"elseIf\" method");
         }
         current.addElseResult(Boolean.TRUE.equals(condition));
         return (T) this;
@@ -154,7 +154,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     public T elseIf(Supplier<Boolean> condition) {
         Condition current = ifResult.peek();
         if (null == current) {
-            throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
+            throw new SimplifiedException("Must add an \"if\" condidtion before call \"elseIf\" method");
         }
         current.addElseResult(Boolean.TRUE.equals(condition.get()));
         return (T) this;
@@ -164,7 +164,7 @@ public abstract class LinImpl<T extends Lin<T, Q>, Q extends CommonAbstractCrite
     public T elseThen() {
         Condition current = ifResult.peek();
         if (null == current) {
-            throw new SimplifiedException("Must add an \"if\" condidtion before call \"else\" method");
+            throw new SimplifiedException("Must add an \"if\" condidtion before call \"elseThen\" method");
         }
         current.addElseResult(true);
         return (T) this;
