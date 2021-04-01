@@ -615,11 +615,10 @@ public abstract class R {
      * 逻辑删除指定实体
      *
      * @param entity 待删除实体
-     * @param <PK>   主键泛型
      * @param <T>    实体泛型
      * @throws AssertFailException 当待删除的实体为{@literal null}时抛出该异常
      */
-    public static <PK extends Serializable, T extends IEntity<PK, T>> void logicDelete(T entity) {
+    public static <T extends IEntity<? extends Serializable, T>> void logicDelete(T entity) {
         Assert.notNull(entity, "The entity to be deleted is null");
         if (entity instanceof AbstractEntity) {
             entity.setValid(false);
@@ -632,12 +631,11 @@ public abstract class R {
      *
      * @param pk     待删除主键
      * @param ignore 无
-     * @param <PK>   主键泛型
      * @param <T>    实体泛型
      * @throws AssertFailException 当待删除的{@code id}为{@literal null}时抛出该异常
      */
     @SafeVarargs
-    public static <PK extends Serializable, T extends IEntity<PK, T>> void logicDelete(PK pk, T... ignore) {
+    public static <T extends IEntity<? extends Serializable, T>> void logicDelete(Serializable pk, T... ignore) {
         Assert.notNull(pk, "The given id must not be null!");
         Class<T> domainClass = ArrayUtils.resolveArrayCompType(ignore);
         T entity = getEntityManager().find(domainClass, pk);
@@ -653,13 +651,12 @@ public abstract class R {
      *
      * @param pks    待删除主键集合
      * @param ignore 无
-     * @param <PK>   主键泛型
      * @param <T>    实体泛型
      * @return 删除行数
      * @throws AssertFailException 当待删除的{@code ids}为{@literal null}时抛出该异常
      */
     @SafeVarargs
-    public static <PK extends Serializable, T extends IEntity<PK, T>> int logicDelete(Iterable<PK> pks, T... ignore) {
+    public static <T extends IEntity<? extends Serializable, T>> int logicDelete(Iterable<? extends Serializable> pks, T... ignore) {
         if (null == pks || !pks.iterator().hasNext()) {
             return 0;
         }
@@ -674,12 +671,11 @@ public abstract class R {
      * 逻辑删除指定实体
      *
      * @param entities 实体集合
-     * @param <PK>     主键泛型
      * @param <T>      实体泛型
      * @return 删除行数
      * @throws AssertFailException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
      */
-    public static <PK extends Serializable, T extends IEntity<PK, T>> int logicDelete(Iterable<T> entities) {
+    public static <T extends IEntity<?  extends Serializable, T>> int logicDelete(Iterable<T> entities) {
         if (null == entities || !entities.iterator().hasNext()) {
             return 0;
         }

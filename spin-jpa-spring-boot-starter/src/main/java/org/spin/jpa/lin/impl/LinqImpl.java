@@ -42,7 +42,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-//@SuppressWarnings("unchecked")
 public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>> implements Linq<R, LinqImpl<R>> {
 
     protected List<Order> orders = new ArrayList<>();
@@ -372,6 +371,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
     }
 
     @Override
+    @SuppressWarnings({"ConstantConditions"})
     public Page<R> paging(Pageable pageable) {
         if (parent != null) {
             applyPredicateToCriteria(sq);
