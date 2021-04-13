@@ -2,10 +2,14 @@ package org.spin.data.sql;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.Assert;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.NumericUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.data.core.DatabaseType;
+import org.spin.data.sql.dbtype.DbTypes;
 import org.spin.data.sql.param.SqlParameter;
+import org.spin.data.throwable.SQLError;
 
 import java.io.StringReader;
 import java.math.BigDecimal;
@@ -99,6 +103,15 @@ public abstract class JdbcUtils {
             setNull(ps, paramIndex, sqlTypeToUse, typeNameToUse);
         } else {
             setValue(ps, paramIndex, sqlTypeToUse, null, inValue);
+        }
+    }
+
+    public static DatabaseType getDbType(Connection connection) {
+        try {
+            String databaseProductName = connection.getMetaData().getDatabaseProductName().toLowerCase();
+            return Assert.notNull(DbTypes.get(databaseProductName), "暂不支持的数据库类型");
+        } catch (SQLException throwables) {
+            throw new org.spin.data.throwable.SQLException(SQLError.SQL_EXCEPTION, "数据库信息获取失败");
         }
     }
 

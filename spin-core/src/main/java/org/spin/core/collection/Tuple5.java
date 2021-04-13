@@ -1,6 +1,6 @@
 package org.spin.core.collection;
 
-import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.ArrayUtils;
 import org.spin.core.util.ObjectUtils;
 
 import java.util.function.BiConsumer;
@@ -35,7 +35,7 @@ public class Tuple5<A, B, C, D, E> implements Tuple<Tuple5<E, D, C, B, A>> {
 
     @Override
     public Object[] toArray() {
-        return CollectionUtils.ofArray(c1, c2, c3, c4, c5);
+        return ArrayUtils.ofArray(c1, c2, c3, c4, c5);
     }
 
     @Override

@@ -1,8 +1,8 @@
 package org.spin.mybatis;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.spin.core.util.ArrayUtils;
 import org.spin.mybatis.query.LambdaQueryExecutor;
-import org.spin.mybatis.util.ArrayUtils;
 
 /**
  * Mybatis Plus的Mapper扩展

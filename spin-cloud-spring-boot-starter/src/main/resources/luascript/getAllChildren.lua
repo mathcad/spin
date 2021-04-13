@@ -1,5 +1,3 @@
-local rootKey = KEYS[1]
-local parent = ARGV
 local depth = 0
 
 local function getAllChild(currentNode, res)
@@ -15,7 +13,7 @@ local function getAllChild(currentNode, res)
         local nodeJson
         local node
         for _, val in pairs(currentNode) do
-            nodeJson = redis.call("HGET", rootKey, val)
+            nodeJson = redis.call("HGET", KEYS[1], val)
             if nodeJson then
                 node = cjson.decode(nodeJson)
                 table.insert(res, nodeJson)
@@ -36,8 +34,8 @@ local function getAllChild(currentNode, res)
     return getAllChild(nextNode, res)
 end
 
-if rootKey and parent and table.getn(parent) then
-    return getAllChild(parent, {})
+if KEYS[1] and ARGV and table.getn(ARGV) then
+    return getAllChild(ARGV, {})
 end
 
 return {}

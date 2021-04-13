@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.annotation.Idempotent;
 import org.spin.cloud.throwable.BizException;
+import org.spin.cloud.util.CloudInfrasContext;
 import org.spin.cloud.util.Env;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.core.concurrent.DistributedLock;
@@ -23,8 +24,6 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -141,14 +140,10 @@ public class IdempotentAspect implements Ordered {
         idempotentId = idempotent.value();
         if (StringUtils.isNotEmpty(idempotentId)) {
             idempotentId = parseSpel(idempotentId, apiMethod, joinPoint.getArgs());
-            RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-            if (null != requestAttributes) {
-                requestAttributes.setAttribute(IDEMPOTENT_ID, idempotentId, RequestAttributes.SCOPE_REQUEST);
-            }
+            CloudInfrasContext.setIdempotentInfo(idempotentId);
         }
-        if (StringUtils.isEmpty(idempotentId) && Objects.nonNull(RequestContextHolder.getRequestAttributes())) {
-            idempotentId = StringUtils.toString(RequestContextHolder.getRequestAttributes()
-                .getAttribute(IDEMPOTENT_ID, RequestAttributes.SCOPE_REQUEST));
+        if (StringUtils.isEmpty(idempotentId)) {
+            idempotentId = CloudInfrasContext.getIdempotentInfo();
         }
         return idempotentId;
     }

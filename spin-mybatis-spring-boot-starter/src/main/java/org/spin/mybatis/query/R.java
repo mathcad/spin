@@ -8,8 +8,8 @@ import org.objectweb.asm.Opcodes;
 import org.spin.cloud.util.BeanHolder;
 import org.spin.core.Assert;
 import org.spin.core.inspection.BytesClassLoader;
+import org.spin.core.util.ArrayUtils;
 import org.spin.core.util.ClassUtils;
-import org.spin.mybatis.util.ArrayUtils;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;

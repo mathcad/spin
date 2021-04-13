@@ -7,6 +7,7 @@ import org.spin.core.Assert;
 import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.AssertFailException;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.ArrayUtils;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.LambdaUtils;
 import org.spin.core.util.StreamUtils;
@@ -21,7 +22,6 @@ import org.spin.jpa.lin.impl.LindImpl;
 import org.spin.jpa.lin.impl.LinqImpl;
 import org.spin.jpa.lin.impl.LinuImpl;
 import org.spin.jpa.strategy.GetEntityManagerFactoryStrategy;
-import org.spin.jpa.util.ArrayUtils;
 import org.spin.jpa.vo.VoEntityMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContext;
@@ -675,7 +675,7 @@ public abstract class R {
      * @return 删除行数
      * @throws AssertFailException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
      */
-    public static <T extends IEntity<?  extends Serializable, T>> int logicDelete(Iterable<T> entities) {
+    public static <T extends IEntity<? extends Serializable, T>> int logicDelete(Iterable<T> entities) {
         if (null == entities || !entities.iterator().hasNext()) {
             return 0;
         }
@@ -1131,9 +1131,12 @@ public abstract class R {
         } else if (obj != null) {
             PropertyDescriptor pd = BeanUtils.getPropertyDescriptor(obj.getClass(), propertyName);
             try {
+                if (null == pd) {
+                    return null;
+                }
                 return pd.getReadMethod().invoke(obj);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.warn("Read propname [{}] of [{}] failed", propertyName, obj.getClass().getName());
             }
         }
         return null;

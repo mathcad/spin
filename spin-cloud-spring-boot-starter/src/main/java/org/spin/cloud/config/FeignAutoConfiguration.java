@@ -12,7 +12,6 @@ import org.spin.cloud.feign.RestfulHandledDecoder;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -40,6 +39,10 @@ import static feign.form.ContentType.MULTIPART;
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureBefore(FeignClientsConfiguration.class)
 public class FeignAutoConfiguration {
+
+    static {
+        new SpinCloudAsyncInterceptor().register();
+    }
 
     @Autowired
     private ObjectFactory<HttpMessageConverters> messageConverters;
@@ -103,8 +106,8 @@ public class FeignAutoConfiguration {
 //    }
 
     @Bean
-    public RequestInterceptor feignInterceptor(@Value("${spring.application.name:}") String appName) {
-        return new FeignInterceptor(appName);
+    public RequestInterceptor feignInterceptor() {
+        return new FeignInterceptor();
     }
 
 //    @Bean

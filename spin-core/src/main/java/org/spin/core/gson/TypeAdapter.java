@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.Field;
 
 /**
  * Converts Java objects to and from JSON.
@@ -128,6 +129,10 @@ public abstract class TypeAdapter<T> {
      * @throws IOException IO Exception
      */
     public abstract void write(JsonWriter out, T value) throws IOException;
+
+    public void write(JsonWriter out, T value, Field field) throws IOException {
+        write(out, value);
+    }
 
     /**
      * Converts {@code value} to a JSON document and writes it to {@code out}.
@@ -258,6 +263,10 @@ public abstract class TypeAdapter<T> {
      * @throws IOException IO Exception
      */
     public abstract T read(JsonReader in) throws IOException;
+
+    public T read(JsonReader in, Field field) throws IOException {
+        return read(in);
+    }
 
     /**
      * Converts the JSON document in {@code in} to a Java object. Unlike Gson's

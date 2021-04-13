@@ -6,11 +6,11 @@ import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 import org.spin.core.collection.Pair;
 import org.spin.core.collection.Tuple;
+import org.spin.core.concurrent.Async;
 import org.spin.core.function.serializable.Function;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
-import org.spin.core.util.AsyncUtils;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.DateUtils;
@@ -86,7 +86,7 @@ class HttpUtilsTest {
         List<Long> times = new ArrayList<>(10);
 
         for (int i = 0; i != 10; ++i) {
-            AsyncUtils.runAsync(() -> {
+            Async.run(() -> {
                 long si = System.currentTimeMillis();
                 Http.GET.withUrl(url).execute();
                 long ei = System.currentTimeMillis();
@@ -100,7 +100,7 @@ class HttpUtilsTest {
         times.clear();
         CountDownLatch latch2 = new CountDownLatch(10);
         for (int i = 0; i != 10; ++i) {
-            AsyncUtils.runAsync(() -> {
+            Async.run(() -> {
                 long si = System.currentTimeMillis();
                 Http.GET.withUrl(url).execute();
                 long ei = System.currentTimeMillis();

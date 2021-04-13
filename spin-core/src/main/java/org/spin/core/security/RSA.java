@@ -48,9 +48,9 @@ import java.util.Set;
  */
 public class RSA extends ProviderDetector {
     private static final int DEFAULT_KEY_SIZE = 1024;
+    private static final String RSA_ALGORITHM = "RSA";
     private static final String SIGN_ALGORITHMS = "SHA256withRSA";
-    private static final String RSA_ALGORITHMS = "RSA";
-    private static final String KEY_INVALIE = "密钥不合法";
+    private static final String KEY_INVALID = "密钥不合法";
     private static final String NO_SUCH_ALGORITHM = "加密算法不存在";
 
     private RSA() {
@@ -59,16 +59,17 @@ public class RSA extends ProviderDetector {
     /**
      * 生成随机密钥对
      *
+     * @param keySize 密钥长度
      * @return 密钥对
      */
-    public static KeyPair generateKeyPair() {
+    public static KeyPair generateKeyPair(int keySize) {
         KeyPairGenerator keyPairGen;
         try {
-            keyPairGen = KeyPairGenerator.getInstance(RSA_ALGORITHMS);
+            keyPairGen = KeyPairGenerator.getInstance(RSA_ALGORITHM);
         } catch (NoSuchAlgorithmException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL);
         }
-        keyPairGen.initialize(DEFAULT_KEY_SIZE, new SecureRandom());
+        keyPairGen.initialize(keySize, new SecureRandom());
         return keyPairGen.generateKeyPair();
     }
 
@@ -78,7 +79,7 @@ public class RSA extends ProviderDetector {
      * @return BASE64格式的公钥与私钥对
      */
     public static Pair<String, String> generateSerializedKeyPair() {
-        KeyPair keyPair = generateKeyPair();
+        KeyPair keyPair = generateKeyPair(DEFAULT_KEY_SIZE);
         return Tuple.of(Base64.encode(keyPair.getPublic().getEncoded()), Base64.encode(keyPair.getPrivate().getEncoded()));
     }
 
@@ -119,7 +120,7 @@ public class RSA extends ProviderDetector {
         try {
             return Assert.notNull(keyFactory).generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(key)));
         } catch (InvalidKeySpecException e) {
-            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALID, e);
         }
     }
 
@@ -143,14 +144,14 @@ public class RSA extends ProviderDetector {
         try {
             return Assert.notNull(keyFactory).generatePublic(new X509EncodedKeySpec(Base64.decode(key)));
         } catch (InvalidKeySpecException e) {
-            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALID, e);
         }
     }
 
     public static PublicKey getPublicKeyFromSshKey(String sshPublicKey) {
         String[] s = sshPublicKey.split(" ");
         if (s.length != 3) {
-            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALID);
         }
         Assert.isEquals(s[0], "ssh-rsa", "只支持RSA算法的公钥: " + s[0]);
         sshPublicKey = s[1];
@@ -233,7 +234,7 @@ public class RSA extends ProviderDetector {
             modLen -= 11;
         }
         try {
-            cipher = Cipher.getInstance(RSA_ALGORITHMS + "/ECB/PKCS1Padding");
+            cipher = Cipher.getInstance(RSA_ALGORITHM + "/ECB/PKCS1Padding");
             cipher.init(Cipher.ENCRYPT_MODE, pk);
             FastByteBuffer byteBuffer = new FastByteBuffer();
             int offset = 0;
@@ -247,7 +248,7 @@ public class RSA extends ProviderDetector {
         } catch (NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
         } catch (InvalidKeyException e) {
-            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALID, e);
         }
     }
 
@@ -261,7 +262,7 @@ public class RSA extends ProviderDetector {
     public static void encrypt(PublicKey pk, InputStream rawInput, OutputStream encryptedOutput) {
         Cipher cipher;
         try {
-            cipher = Cipher.getInstance(RSA_ALGORITHMS + "/ECB/PKCS1Padding");
+            cipher = Cipher.getInstance(RSA_ALGORITHM + "/ECB/PKCS1Padding");
             cipher.init(Cipher.ENCRYPT_MODE, pk);
             int modLen = 128;
             if (pk instanceof RSAPublicKey) {
@@ -282,7 +283,7 @@ public class RSA extends ProviderDetector {
         } catch (NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, "加密失败", e);
         } catch (InvalidKeyException e) {
-            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALID, e);
         } catch (IOException e) {
             throw new SpinException(ErrorCode.IO_FAIL, "IO异常, 加密失败", e);
         } catch (ShortBufferException ignore) {
@@ -323,7 +324,7 @@ public class RSA extends ProviderDetector {
     public static byte[] decrypt(PrivateKey pk, byte[] raw) {
         Cipher cipher;
         try {
-            cipher = Cipher.getInstance(RSA_ALGORITHMS + "/ECB/PKCS1Padding");
+            cipher = Cipher.getInstance(RSA_ALGORITHM + "/ECB/PKCS1Padding");
             cipher.init(Cipher.DECRYPT_MODE, pk);
 
             int modLen = 128;
@@ -343,7 +344,7 @@ public class RSA extends ProviderDetector {
         } catch (BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
         } catch (InvalidKeyException e) {
-            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALID, e);
         }
     }
 
@@ -357,7 +358,7 @@ public class RSA extends ProviderDetector {
     public static void decrypt(PrivateKey pk, InputStream encrypteInput, OutputStream rawOutput) {
         Cipher cipher;
         try {
-            cipher = Cipher.getInstance(RSA_ALGORITHMS + "/ECB/PKCS1Padding");
+            cipher = Cipher.getInstance(RSA_ALGORITHM + "/ECB/PKCS1Padding");
             cipher.init(Cipher.DECRYPT_MODE, pk);
             int modLen = 128;
             if (pk instanceof RSAPublicKey) {
@@ -378,7 +379,7 @@ public class RSA extends ProviderDetector {
         } catch (BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, "解密失败", e);
         } catch (InvalidKeyException e) {
-            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALID, e);
         } catch (IOException e) {
             throw new SpinException(ErrorCode.IO_FAIL, "IO异常, 解密失败", e);
         } catch (ShortBufferException ignore) {
@@ -441,7 +442,7 @@ public class RSA extends ProviderDetector {
         } catch (SignatureException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, "签名失败", e);
         } catch (InvalidKeyException e) {
-            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALID, e);
         }
     }
 
@@ -490,14 +491,14 @@ public class RSA extends ProviderDetector {
         } catch (SignatureException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, "签名校验失败", e);
         } catch (InvalidKeyException e) {
-            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALIE, e);
+            throw new SpinException(ErrorCode.ENCRYPT_FAIL, KEY_INVALID, e);
         }
     }
 
     private static KeyFactory getRSAKeyFactory() {
         KeyFactory keyFactory;
         try {
-            keyFactory = KeyFactory.getInstance(RSA_ALGORITHMS);
+            keyFactory = KeyFactory.getInstance(RSA_ALGORITHM);
         } catch (NoSuchAlgorithmException e) {
             throw new SpinException(ErrorCode.ENCRYPT_FAIL, NO_SUCH_ALGORITHM, e);
         }

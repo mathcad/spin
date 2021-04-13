@@ -2,7 +2,8 @@ package org.spin.data.sql.resolver.freemarker;
 
 import freemarker.template.TemplateMethodModelEx;
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.data.core.UserEnumColumn;
+import org.spin.core.trait.FriendlyEnum;
+import org.spin.core.util.ClassUtils;
 
 import java.util.List;
 
@@ -29,11 +30,14 @@ public class EnumValueFunc implements TemplateMethodModelEx {
         } catch (ClassNotFoundException e) {
             throw new SimplifiedException("解析枚举出错" + enumName, e);
         }
-        if (cls.isEnum() && UserEnumColumn.class.isAssignableFrom(cls)) {
+        if (cls.isEnum() && FriendlyEnum.class.isAssignableFrom(cls)) {
             for (Object o : cls.getEnumConstants()) {
-                String name = o.toString();
-                int value = ((UserEnumColumn) o).getValue();
-                sb.append(" WHEN ").append(field).append("=").append(value).append(" THEN '").append(name).append("'");
+                String name = ((FriendlyEnum<?>) o).getDescription();
+                Object value = ((FriendlyEnum<?>) o).getValue();
+                if (ClassUtils.wrapperToPrimitive(value.getClass()) == null || value instanceof Character) {
+                    value = "'" + value.toString() + "'";
+                }
+                sb.append(" WHEN ").append(field).append(" = ").append(value).append(" THEN '").append(name).append("'");
             }
         } else {
             throw new SimplifiedException(enumName + "不是有效的枚举类型(请检查是否实现了UserEnumColumn接口)");

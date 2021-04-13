@@ -1,6 +1,7 @@
 package org.spin.core.security;
 
 import org.junit.jupiter.api.Test;
+import org.spin.core.collection.Pair;
 import org.spin.core.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
@@ -54,7 +55,7 @@ public class RSATest {
         System.out.println("ss");
     }
 
-//    @Test
+    //    @Test
     void testSsh() throws Exception {
         String pub = IOUtils.copyToString(new FileInputStream("F:\\id_rsa.pub"), StandardCharsets.UTF_8);
         String pri = IOUtils.copyToString(new FileInputStream("F:\\id_rsa"), StandardCharsets.UTF_8);
@@ -62,5 +63,32 @@ public class RSATest {
         String encrypt = RSA.encrypt(RSA.getPublicKeyFromSshKey(pub), "这是一段需要加密的字符串");
         System.out.println(encrypt);
         System.out.println(RSA.decrypt(RSA.getPrivateKeyFromSshKey(pri), encrypt));
+    }
+
+    private static final String tex = "中文xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+    @Test
+    void testEcc() {
+        String text = tex + tex + tex + tex + tex + tex + tex + tex + tex + tex;
+        Pair<String, String> key = ECC.generateSerializedKeyPair();
+        String privKey = key.c2;
+        String pubKey = key.c1;
+
+        System.out.println("私钥：" + privKey);
+
+        System.out.println("公钥：" + pubKey);
+
+        String str = ECC.encrypt(pubKey, text);
+        System.out.println("密文：" + str);
+        String outputStr = ECC.decrypt(privKey, str);
+        System.out.println("原始文本：" + text);
+        System.out.println("解密文本：" + outputStr);
+
+
+        String sign = ECC.sign(text, ECC.getPrivateKey(privKey));
+        System.out.println("签名: " + sign);
+
+        boolean verify = ECC.verify(text, sign, pubKey);
+        System.out.println("验证结果:" + verify);
     }
 }

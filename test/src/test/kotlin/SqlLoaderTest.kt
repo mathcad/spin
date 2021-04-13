@@ -1,14 +1,9 @@
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import org.spin.core.gson.annotation.PreventOverflow
 import org.spin.core.security.AES
 import org.spin.core.util.JsonUtils
 import org.spin.core.util.MapUtils
-import org.spin.data.sql.dbtype.MySQLDatabaseType
 import org.spin.data.sql.loader.FileSystemMdLoader
 import org.spin.data.sql.resolver.BeetlResolver
 
@@ -23,7 +18,6 @@ class SqlLoaderTest {
     fun test() {
         val loader = FileSystemMdLoader()
         loader.templateResolver = BeetlResolver()
-        loader.dbType = MySQLDatabaseType()
         val start = System.currentTimeMillis()
         val s = loader.getSQL("biz/example.test", MapUtils.ofMap("value", 3, "flag", true))
         val end = System.currentTimeMillis()

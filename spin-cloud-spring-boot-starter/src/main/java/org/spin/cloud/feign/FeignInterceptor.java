@@ -3,6 +3,8 @@ package org.spin.cloud.feign;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import org.spin.cloud.idempotent.IdempotentAspect;
+import org.spin.cloud.util.CloudInfrasContext;
+import org.spin.cloud.util.Env;
 import org.spin.cloud.util.Linktrace;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.cloud.vo.LinktraceInfo;
@@ -11,8 +13,6 @@ import org.spin.cloud.web.interceptor.GrayInterceptor;
 import org.spin.cloud.web.interceptor.LinktraceInterceptor;
 import org.spin.core.util.StringUtils;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
 
 import java.util.UUID;
 
@@ -26,40 +26,33 @@ import java.util.UUID;
  */
 public class FeignInterceptor implements RequestInterceptor {
     public static final String X_APP_NAME = "X-App-Name";
-
-    private final String appName;
-
-    public FeignInterceptor(String appName) {
-        this.appName = appName;
-    }
+    public static final String X_APP_PROFILE = "X-App-Profile";
 
     @Override
     public void apply(RequestTemplate template) {
-        if (StringUtils.isNotEmpty(appName)) {
-            template.header(X_APP_NAME, appName);
+        if (StringUtils.isNotEmpty(Env.getAppName())) {
+            template.header(X_APP_NAME, Env.getAppName());
+        }
+        if (StringUtils.isNotEmpty(Env.getActiveProfiles())) {
+            template.header(X_APP_PROFILE, Env.getActiveProfiles());
         }
 
         if (null != CurrentUser.getCurrent()) {
             template.header(HttpHeaders.FROM, CurrentUser.getCurrent().toString());
         }
 
-        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (null != CloudInfrasContext.getGrayInfo()) {
+            template.header(GrayInterceptor.X_GRAY_INFO, CloudInfrasContext.getGrayInfo().c1);
+        }
+
+        if (null != CloudInfrasContext.getCustomizeRoute()) {
+            template.header(CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, CloudInfrasContext.getCustomizeRoute().c1);
+        }
+
         StringBuilder idempotent = new StringBuilder();
-        if (null != requestAttributes) {
-            String grayInfo = (String) requestAttributes.getAttribute(GrayInterceptor.X_GRAY_INFO_STR, RequestAttributes.SCOPE_REQUEST);
-            if (null != grayInfo) {
-                template.header(GrayInterceptor.X_GRAY_INFO, grayInfo);
-            }
-
-            String customizeRoutes = (String) requestAttributes.getAttribute(CustomizeRouteInterceptor.CUSTOMIZE_ROUTE_STR, RequestAttributes.SCOPE_REQUEST);
-            if (null != customizeRoutes) {
-                template.header(CustomizeRouteInterceptor.CUSTOMIZE_ROUTE, customizeRoutes);
-            }
-
-            idempotent.append(StringUtils.toStringEmpty(requestAttributes.getAttribute(IdempotentAspect.IDEMPOTENT_ID, RequestAttributes.SCOPE_REQUEST)));
-            if (idempotent.length() > 0) {
-                idempotent.append(";");
-            }
+        idempotent.append(StringUtils.toStringEmpty(CloudInfrasContext.getIdempotentInfo()));
+        if (idempotent.length() > 0) {
+            idempotent.append(";");
         }
         template.header(IdempotentAspect.IDEMPOTENT_ID, idempotent.append(UUID.randomUUID().toString()).toString());
 

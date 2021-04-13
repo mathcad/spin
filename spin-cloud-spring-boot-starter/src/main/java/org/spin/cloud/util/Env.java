@@ -5,8 +5,6 @@ import org.spin.core.util.StringUtils;
 import org.spin.core.util.Util;
 import org.springframework.core.env.Environment;
 
-import java.util.Set;
-
 /**
  * 环境信息
  * <p>DESCRIPTION</p>
@@ -17,11 +15,10 @@ import java.util.Set;
  */
 @UtilClass
 public final class Env extends Util {
-    private static final String ACTIVE_PROFILE = "spring.profiles.active";
     private static final String APP_NAME = "spring.application.name";
 
     private static Environment environment;
-    private static Set<String> activeProfiles;
+    private static String activeProfiles;
     private static String appName;
 
     private static final ThreadLocal<String> CURRENT_API_CODE = new ThreadLocal<>();
@@ -32,32 +29,32 @@ public final class Env extends Util {
 
     public static void init(Environment environment) {
         Env.environment = environment;
-        activeProfiles = StringUtils.splitToSet(StringUtils.trimToEmpty(environment.getProperty(ACTIVE_PROFILE)).toLowerCase(), ",");
+        activeProfiles = StringUtils.join(environment.getActiveProfiles(), ',').toUpperCase();
         appName = environment.getProperty(APP_NAME);
         Util.ready(Env.class);
     }
 
     public static boolean isDev() {
         Util.awaitUntilReady(Env.class);
-        return activeProfiles.contains("dev");
+        return activeProfiles.startsWith("DEV");
     }
 
     public static boolean isTest() {
         Util.awaitUntilReady(Env.class);
-        return activeProfiles.contains("fat");
+        return activeProfiles.startsWith("FAT");
     }
 
     public static boolean isBeta() {
         Util.awaitUntilReady(Env.class);
-        return activeProfiles.contains("uat");
+        return activeProfiles.startsWith("UAT");
     }
 
     public static boolean isProd() {
         Util.awaitUntilReady(Env.class);
-        return activeProfiles.contains("pro");
+        return activeProfiles.startsWith("PRO");
     }
 
-    public static Set<String> getActiveProfiles() {
+    public static String getActiveProfiles() {
         Util.awaitUntilReady(Env.class);
         return activeProfiles;
     }

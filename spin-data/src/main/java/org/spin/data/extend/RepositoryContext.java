@@ -49,6 +49,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -492,7 +493,7 @@ public class RepositoryContext {
         Criteria ct = dc.getExecutableCriteria(sess);
         if (null != pr && pr.length > 0 && null != pr[0]) {
             ct.setFirstResult(pr[0].getOffset());
-            ct.setMaxResults(pr[0].getPageSize());
+            ct.setMaxResults(pr[0].getSize());
         }
         ct.setCacheable(true);
         ct.setCacheMode(CacheMode.NORMAL);
@@ -882,7 +883,7 @@ public class RepositoryContext {
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         if (cb.getPageRequest() != null) {
             ct.setFirstResult(cb.getPageRequest().getOffset());
-            ct.setMaxResults(cb.getPageRequest().getPageSize());
+            ct.setMaxResults(cb.getPageRequest().getSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
@@ -893,9 +894,9 @@ public class RepositoryContext {
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         List<T> res = BeanUtils.wrapperMapToBeanList(cb.getEnCls(), list);
         return new Page<>(res,
-            cb.getPageRequest() == null ? 1L : cb.getPageRequest().getCurrentPage(),
+            cb.getPageRequest() == null ? 1L : cb.getPageRequest().getCurrent(),
             total,
-            cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
+            cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getSize());
     }
 
     /**
@@ -1056,11 +1057,11 @@ public class RepositoryContext {
 
 
     /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */
-    public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
+    public Optional<Map<String, Object>> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
         return doReturningWork(connection -> sqlManager.findOneAsMap(connection, sqlId, paramMap));
     }
 
-    public <T extends IEntity<P, T>, P extends Serializable> T findOneBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap) {
+    public <T extends IEntity<P, T>, P extends Serializable> Optional<T> findOneBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap) {
         return doReturningWork(connection -> sqlManager.findOne(connection, sqlId, entityClazz, paramMap));
     }
 

@@ -1,6 +1,8 @@
 package org.spin.cloud.web.interceptor;
 
 import org.spin.cloud.idempotent.IdempotentAspect;
+import org.spin.cloud.util.CloudInfrasContext;
+import org.spin.core.collection.Pair;
 import org.spin.core.util.StringUtils;
 import org.springframework.lang.NonNull;
 import org.springframework.ui.ModelMap;
@@ -22,14 +24,12 @@ import java.util.Map;
  */
 public class CustomizeRouteInterceptor implements WebRequestInterceptor {
     public static final String CUSTOMIZE_ROUTE = "X-Customize-Route";
-    public static final String CUSTOMIZE_ROUTE_STR = "X-Customize-Route-Str";
 
     @Override
     public void preHandle(@NonNull WebRequest request) {
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         if (null == requestAttributes) {
             RequestContextHolder.setRequestAttributes(request);
-            requestAttributes = request;
         }
 
         String customizeRoutesStr = request.getHeader(CUSTOMIZE_ROUTE);
@@ -44,24 +44,19 @@ public class CustomizeRouteInterceptor implements WebRequestInterceptor {
                 }
             }
 
-            requestAttributes.setAttribute(CUSTOMIZE_ROUTE, customizeRoutes, RequestAttributes.SCOPE_REQUEST);
-            requestAttributes.setAttribute(CUSTOMIZE_ROUTE_STR, customizeRoutesStr, RequestAttributes.SCOPE_REQUEST);
+            CloudInfrasContext.setCustomizeRoute(Pair.of(customizeRoutesStr, customizeRoutes));
         }
 
         String idempotentId = request.getHeader(IdempotentAspect.IDEMPOTENT_ID);
         if (StringUtils.isNotEmpty(idempotentId)) {
-            requestAttributes.setAttribute(IdempotentAspect.IDEMPOTENT_ID, idempotentId, RequestAttributes.SCOPE_REQUEST);
+            CloudInfrasContext.setIdempotentInfo(idempotentId);
         }
     }
 
     @Override
     public void postHandle(@NonNull WebRequest request, ModelMap model) {
-        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-        if (null != requestAttributes) {
-            requestAttributes.removeAttribute(CUSTOMIZE_ROUTE, RequestAttributes.SCOPE_REQUEST);
-            requestAttributes.removeAttribute(CUSTOMIZE_ROUTE_STR, RequestAttributes.SCOPE_REQUEST);
-            requestAttributes.removeAttribute(IdempotentAspect.IDEMPOTENT_ID, RequestAttributes.SCOPE_REQUEST);
-        }
+        CloudInfrasContext.removeCustomizeRoute();
+        CloudInfrasContext.removeIdempotentInfo();
     }
 
     @Override

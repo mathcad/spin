@@ -3284,7 +3284,7 @@ public final class StringUtils extends Util {
             return null;
         }
         if (isEmpty(regex)) {
-            return CollectionUtils.ofArray(toSplit);
+            return ArrayUtils.ofArray(toSplit);
         }
         return toSplit.split(regex);
     }

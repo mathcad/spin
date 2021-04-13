@@ -15,10 +15,6 @@ import java.util.Map;
  */
 public interface SQLLoader {
 
-    DatabaseType getDbType();
-
-    void setDbType(DatabaseType dbType);
-
     /**
      * 加载参数化的SQL语句
      *
@@ -31,12 +27,13 @@ public interface SQLLoader {
     /**
      * 加载分页的参数化SQL语句
      *
+     * @param dbType      数据库类型
      * @param id          sql的path
      * @param model       参数
      * @param pageRequest 分页参数
      * @return 参数化的sql
      */
-    SqlSource getPagedSQL(String id, Map<String, ?> model, PageRequest pageRequest);
+    SqlSource getPagedSQL(DatabaseType dbType, String id, Map<String, ?> model, PageRequest pageRequest);
 
     /**
      * 加载SQL模板

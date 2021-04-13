@@ -1,5 +1,7 @@
 package org.spin.cloud.web.interceptor;
 
+import org.spin.cloud.util.CloudInfrasContext;
+import org.spin.core.collection.Pair;
 import org.spin.core.util.StringUtils;
 import org.springframework.lang.NonNull;
 import org.springframework.ui.ModelMap;
@@ -23,34 +25,27 @@ import java.util.stream.Collectors;
 public class GrayInterceptor implements WebRequestInterceptor {
 
     public static final String X_GRAY_INFO = "X-Gray-Info";
-    public static final String X_GRAY_INFO_STR = "X-Gray-Info-Str";
 
     @Override
     public void preHandle(@NonNull WebRequest request) {
-        String grayInfo = request.getHeader(X_GRAY_INFO);
-
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         if (null == requestAttributes) {
             RequestContextHolder.setRequestAttributes(request);
-            requestAttributes = request;
         }
+
+        String grayInfo = request.getHeader(X_GRAY_INFO);
 
         if (StringUtils.isNotEmpty(grayInfo)) {
             Map<String, String> grayInfoMap = Arrays.stream(StringUtils.urlDecode(grayInfo).split(";"))
                 .collect(Collectors.toMap(it -> StringUtils.trimToEmpty(it.substring(0, it.indexOf('='))),
                     it -> StringUtils.trimToEmpty(it.substring(it.indexOf('=')))));
-            requestAttributes.setAttribute(X_GRAY_INFO, grayInfoMap, RequestAttributes.SCOPE_REQUEST);
-            requestAttributes.setAttribute(X_GRAY_INFO_STR, grayInfo, RequestAttributes.SCOPE_REQUEST);
+            CloudInfrasContext.setGrayInfo(Pair.of(grayInfo, grayInfoMap));
         }
     }
 
     @Override
     public void postHandle(@NonNull WebRequest request, ModelMap model) {
-        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-        if (null != requestAttributes) {
-            requestAttributes.removeAttribute(X_GRAY_INFO, RequestAttributes.SCOPE_REQUEST);
-            requestAttributes.removeAttribute(X_GRAY_INFO_STR, RequestAttributes.SCOPE_REQUEST);
-        }
+        CloudInfrasContext.removeGrayInfo();
     }
 
     @Override

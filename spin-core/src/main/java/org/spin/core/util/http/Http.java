@@ -22,21 +22,24 @@ import java.util.function.Function;
  */
 public final class Http<T extends HttpRequestBase> {
 
-    private Function<URI, T> requestSuppiler;
+    private final Function<URI, T> requestSuppiler;
+    private final String method;
 
-    public static final Http<HttpGet> GET = new Http<>(HttpGet::new);
-    public static final Http<HttpPost> POST = new Http<>(HttpPost::new);
-    public static final Http<HttpDelete> DELETE = new Http<>(HttpDelete::new);
-    public static final Http<HttpPut> PUT = new Http<>(HttpPut::new);
-    public static final Http<HttpHead> HEAD = new Http<>(HttpHead::new);
-    public static final Http<HttpOptions> OPTIONS = new Http<>(HttpOptions::new);
-    public static final Http<HttpTrace> TRACE = new Http<>(HttpTrace::new);
-    public static final Http<HttpPatch> PATCH = new Http<>(HttpPatch::new);
+    public static final Http<HttpGet> GET = new Http<>(HttpGet::new, "GET");
+    public static final Http<HttpPost> POST = new Http<>(HttpPost::new, "POST");
+    public static final Http<HttpDelete> DELETE = new Http<>(HttpDelete::new, "DELETE");
+    public static final Http<HttpPut> PUT = new Http<>(HttpPut::new, "PUT");
+    public static final Http<HttpHead> HEAD = new Http<>(HttpHead::new, "HEAD");
+    public static final Http<HttpOptions> OPTIONS = new Http<>(HttpOptions::new, "OPTIONS");
+    public static final Http<HttpTrace> TRACE = new Http<>(HttpTrace::new, "TRACE");
+    public static final Http<HttpPatch> PATCH = new Http<>(HttpPatch::new, "PATCH");
 
     private static final String SCHEMA = "http://";
 
-    private Http(Function<URI, T> requestSuppiler) {
+    private Http(Function<URI, T> requestSuppiler, String method) {
         this.requestSuppiler = requestSuppiler;
+        this.method = method;
+
     }
 
     // region init and getter/setter
@@ -119,6 +122,11 @@ public final class Http<T extends HttpRequestBase> {
     }
 
     // endregion
+
+
+    public String getMethod() {
+        return method;
+    }
 
     private String fixUrl(String url) {
         return url.toLowerCase().startsWith("http") ? url : SCHEMA + url;

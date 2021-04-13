@@ -14,4 +14,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface PreventOverflow {
+
+    /**
+     * @return 是否仅在溢出时转换为String
+     */
+    boolean onlyOverflow() default true;
 }

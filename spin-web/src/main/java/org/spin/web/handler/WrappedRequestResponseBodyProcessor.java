@@ -51,8 +51,8 @@ public class WrappedRequestResponseBodyProcessor implements HandlerMethodReturnV
     private static final Logger logger = LoggerFactory.getLogger(WrappedRequestResponseBodyProcessor.class);
     private static Method writeWithMessageConverters;
 
-    private RequestResponseBodyMethodProcessor target;
-    private List<HttpMessageConverter<?>> messageConverters;
+    private final RequestResponseBodyMethodProcessor target;
+    private final List<HttpMessageConverter<?>> messageConverters;
     private final List<MediaType> allSupportedMediaTypes;
     private final List<RequestResponseBodyModifier> modifiers;
 

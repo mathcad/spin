@@ -50,6 +50,7 @@ final class TypeAdapterRuntimeTypeWrapper<T> extends TypeAdapter<T> {
         }
     }
 
+    @Override
     public T read(JsonReader in, Field field) throws IOException {
         if (delegate instanceof MatchableTypeAdapter) {
             return ((MatchableTypeAdapter<T>) delegate).read(in, typeToken, field);
@@ -63,6 +64,7 @@ final class TypeAdapterRuntimeTypeWrapper<T> extends TypeAdapter<T> {
         write(out, value, null);
     }
 
+    @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void write(JsonWriter out, T value, Field field) throws IOException {
         // Order of preference for choosing type adapters
@@ -87,11 +89,7 @@ final class TypeAdapterRuntimeTypeWrapper<T> extends TypeAdapter<T> {
                 chosen = runtimeTypeAdapter;
             }
         }
-        if (chosen instanceof MatchableTypeAdapter) {
-            ((MatchableTypeAdapter) chosen).write(out, value, field);
-        } else {
-            chosen.write(out, value);
-        }
+        chosen.write(out, value, field);
     }
 
     /**

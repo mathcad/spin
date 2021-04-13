@@ -1,7 +1,7 @@
 package org.spin.jpa.entity;
 
 import org.spin.core.throwable.SimplifiedException;
-import org.spin.core.trait.FrendlyEnum;
+import org.spin.core.trait.FriendlyEnum;
 
 import javax.persistence.AttributeConverter;
 import java.io.Serializable;
@@ -17,7 +17,7 @@ import java.lang.reflect.Type;
  * @version 1.0
  */
 
-public abstract class JpaEnumConverter<E extends FrendlyEnum<V>, V extends Serializable> implements AttributeConverter<E, V> {
+public abstract class JpaEnumConverter<E extends FriendlyEnum<V>, V extends Serializable> implements AttributeConverter<E, V> {
 
     private final Class<E> enumClass;
 
@@ -53,6 +53,6 @@ public abstract class JpaEnumConverter<E extends FrendlyEnum<V>, V extends Seria
 
     @Override
     public E convertToEntityAttribute(V dbData) {
-        return null == dbData ? null : FrendlyEnum.valueOf(enumClass, dbData).orElse(null);
+        return null == dbData ? null : FriendlyEnum.valueOf(enumClass, dbData).orElse(null);
     }
 }

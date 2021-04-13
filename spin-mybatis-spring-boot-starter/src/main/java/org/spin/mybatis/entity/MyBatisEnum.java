@@ -1,7 +1,7 @@
 package org.spin.mybatis.entity;
 
 import com.baomidou.mybatisplus.annotation.IEnum;
-import org.spin.core.trait.FrendlyEnum;
+import org.spin.core.trait.FriendlyEnum;
 
 import java.io.Serializable;
 
@@ -13,5 +13,5 @@ import java.io.Serializable;
  * @author xuweinan
  * @version 1.0
  */
-public interface MyBatisEnum<T extends Serializable> extends IEnum<T>, FrendlyEnum<T> {
+public interface MyBatisEnum<T extends Serializable> extends IEnum<T>, FriendlyEnum<T> {
 }

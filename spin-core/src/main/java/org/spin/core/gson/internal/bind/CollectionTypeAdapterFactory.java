@@ -28,6 +28,7 @@ import org.spin.core.gson.stream.JsonToken;
 import org.spin.core.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Collection;
 
@@ -73,6 +74,11 @@ public final class CollectionTypeAdapterFactory implements TypeAdapterFactory {
 
         @Override
         public Collection<E> read(JsonReader in) throws IOException {
+            return read(in, null);
+        }
+
+        @Override
+        public Collection<E> read(JsonReader in, Field field) throws IOException {
             if (in.peek() == JsonToken.NULL) {
                 in.nextNull();
                 return null;
@@ -81,7 +87,7 @@ public final class CollectionTypeAdapterFactory implements TypeAdapterFactory {
             Collection<E> collection = constructor.construct();
             in.beginArray();
             while (in.hasNext()) {
-                E instance = elementTypeAdapter.read(in);
+                E instance = elementTypeAdapter.read(in, field);
                 collection.add(instance);
             }
             in.endArray();
@@ -90,6 +96,11 @@ public final class CollectionTypeAdapterFactory implements TypeAdapterFactory {
 
         @Override
         public void write(JsonWriter out, Collection<E> collection) throws IOException {
+            write(out, collection, null);
+        }
+
+        @Override
+        public void write(JsonWriter out, Collection<E> collection, Field field) throws IOException {
             if (collection == null) {
                 out.nullValue();
                 return;
@@ -97,7 +108,7 @@ public final class CollectionTypeAdapterFactory implements TypeAdapterFactory {
 
             out.beginArray();
             for (E element : collection) {
-                elementTypeAdapter.write(out, element);
+                elementTypeAdapter.write(out, element, field);
             }
             out.endArray();
         }

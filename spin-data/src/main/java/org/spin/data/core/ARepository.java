@@ -45,6 +45,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -496,7 +497,7 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
         Criteria ct = dc.getExecutableCriteria(sess);
         if (null != pr && pr.length > 0 && null != pr[0]) {
             ct.setFirstResult(pr[0].getOffset());
-            ct.setMaxResults(pr[0].getPageSize());
+            ct.setMaxResults(pr[0].getSize());
         }
         ct.setCacheable(true);
         ct.setCacheMode(CacheMode.NORMAL);
@@ -836,7 +837,7 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         if (cb.getPageRequest() != null) {
             ct.setFirstResult(cb.getPageRequest().getOffset());
-            ct.setMaxResults(cb.getPageRequest().getPageSize());
+            ct.setMaxResults(cb.getPageRequest().getSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
@@ -846,7 +847,7 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         List<T> res = BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
-        return new Page<>(res, cb.getPageRequest() == null ? 1L : cb.getPageRequest().getCurrentPage(), total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
+        return new Page<>(res, cb.getPageRequest() == null ? 1L : cb.getPageRequest().getCurrent(), total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getSize());
     }
 
     /**
@@ -976,11 +977,11 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
     }
 
     /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */
-    public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
+    public Optional<Map<String, Object>> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
         return doReturningWork(connection -> sqlManager.findOneAsMap(connection, sqlId, paramMap));
     }
 
-    public T findOneBySql(String sqlId, Map<String, ?> paramMap) {
+    public Optional<T> findOneBySql(String sqlId, Map<String, ?> paramMap) {
         return doReturningWork(connection -> sqlManager.findOne(connection, sqlId, entityClazz, paramMap));
     }
 
@@ -1235,7 +1236,7 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         if (cb.getPageRequest() != null) {
             ct.setFirstResult(cb.getPageRequest().getOffset());
-            ct.setMaxResults(cb.getPageRequest().getPageSize());
+            ct.setMaxResults(cb.getPageRequest().getSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
@@ -1262,7 +1263,7 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         if (null != cb.getPageRequest()) {
             ct.setFirstResult(cb.getPageRequest().getOffset());
-            ct.setMaxResults(cb.getPageRequest().getPageSize());
+            ct.setMaxResults(cb.getPageRequest().getSize());
         }
 
         @SuppressWarnings("unchecked")
@@ -1277,6 +1278,6 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
         if (wrap) {
             list = list.stream().map(BeanUtils::wrapperFlatMap).collect(Collectors.toList());
         }
-        return new Page<>(list, null == cb.getPageRequest() ? 1L : cb.getPageRequest().getCurrentPage(), total, null == cb.getPageRequest() ? total.intValue() : cb.getPageRequest().getPageSize());
+        return new Page<>(list, null == cb.getPageRequest() ? 1L : cb.getPageRequest().getCurrent(), total, null == cb.getPageRequest() ? total.intValue() : cb.getPageRequest().getSize());
     }
 }

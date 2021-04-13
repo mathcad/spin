@@ -85,11 +85,35 @@ public class JsonUtilsTest {
         System.out.println(JsonUtils.toJson(vo2));
 
         byte[] array = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-        System.out.println(JsonUtils.toJson(CollectionUtils.divide(array, 7)));
+        System.out.println(JsonUtils.toJson(ArrayUtils.divide(array, 7)));
     }
 
 
+    @Test
+    void testSetLong() {
+        Long[] values = ArrayUtils.ofArray(1321645046073704449L, 1L, 2L, 1321645046916759554L);
 
+        De de = new De();
+        de.setVals(values);
+
+
+        System.out.println(JsonUtils.toJson(de));
+
+    }
+
+    public static class De {
+
+        @PreventOverflow
+        Long[] vals;
+
+        public Long[] getVals() {
+            return vals;
+        }
+
+        public void setVals(Long[] vals) {
+            this.vals = vals;
+        }
+    }
 
     String json = "[\n" +
         "    {\n" +
@@ -920,7 +944,8 @@ public class JsonUtilsTest {
 
     @Test
     void testaaaa() {
-        List<Map<String, Object>> stringObjectMap = JsonUtils.fromJson(json, new TypeToken<List<Map<String, Object>>>(){});
+        List<Map<String, Object>> stringObjectMap = JsonUtils.fromJson(json, new TypeToken<List<Map<String, Object>>>() {
+        });
         System.out.println(stringObjectMap.size());
 
         Set<String> companyOpenId = stringObjectMap.stream().map(it -> it.get("companyOpenId").toString()).collect(Collectors.toSet());

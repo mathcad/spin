@@ -25,7 +25,7 @@ public class PostgreSQLDatabaseType implements DatabaseType {
         String pagedSql = String.format("SELECT * FROM (%s) AS out_alias %s LIMIT %d OFFSET %d",
             sqlSource.getSql(),
             StringUtils.isBlank(order) ? "" : order,
-            pageRequest.getPageSize(),
+            pageRequest.getSize(),
             pageRequest.getOffset());
         return new SqlSource(sqlSource.getId(), pagedSql);
     }

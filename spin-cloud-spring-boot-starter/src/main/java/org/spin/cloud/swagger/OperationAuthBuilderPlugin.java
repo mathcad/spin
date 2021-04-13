@@ -2,8 +2,8 @@ package org.spin.cloud.swagger;
 
 import com.github.xiaoymin.knife4j.spring.plugin.AbstractOperationBuilderPlugin;
 import com.google.common.collect.Lists;
+import org.spin.core.util.ArrayUtils;
 import org.spin.core.util.BeanUtils;
-import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.web.AuthLevel;
 import org.spin.web.annotation.Auth;
@@ -43,7 +43,7 @@ public class OperationAuthBuilderPlugin extends AbstractOperationBuilderPlugin {
         Author authorAnno = handlerMethod.getMethodAnnotation(Author.class);
         if (null != authorAnno) {
             StringBuilder sb = new StringBuilder();
-            if (!CollectionUtils.isEmpty(authorAnno.value())) {
+            if (!ArrayUtils.isEmpty(authorAnno.value())) {
                 sb.append(StringUtils.join(authorAnno.value(), ","));
             } else {
                 sb.append("未知");
@@ -70,7 +70,7 @@ public class OperationAuthBuilderPlugin extends AbstractOperationBuilderPlugin {
             }
             context.operationBuilder().extensions(Lists.newArrayList(new StringVendorExtension("x-authName", authName)));
 
-            if (!CollectionUtils.isEmpty(authAnno.roles())) {
+            if (!ArrayUtils.isEmpty(authAnno.roles())) {
                 context.operationBuilder().extensions(Lists.newArrayList(new StringVendorExtension("x-roles", StringUtils.join(authAnno.roles(), ","))));
             }
 

@@ -1,17 +1,16 @@
 package org.spin.cloud;
 
 import org.junit.jupiter.api.Test;
-import org.spin.cloud.vo.MailReceiverVo;
-import org.spin.cloud.vo.MailVo;
-import org.spin.cloud.web.handler.FieldPermissionReturnValueModifier;
-import org.spin.core.util.JsonUtils;
+import org.spin.core.util.DateUtils;
 import org.spin.core.util.SystemUtils;
-import org.spin.data.core.Page;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.LinkedList;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.Properties;
 
 /**
@@ -104,6 +103,14 @@ class AnnotationTest {
 //
 //        FieldPermissionReturnValueModifier.setFieldValue(page, "rows[*].receivers[*].receiver");
 //        System.out.println(JsonUtils.toJson(page));
+
+    }
+
+    @Test
+    void testDate() {
+        long l = System.currentTimeMillis();
+        System.out.println(DateUtils.formatDateForSecond(new Date(l)));
+        System.out.println(DateUtils.formatDateForSecond(LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.systemDefault())));
 
     }
 }

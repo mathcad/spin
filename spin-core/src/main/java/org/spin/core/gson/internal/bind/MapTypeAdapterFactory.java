@@ -33,6 +33,7 @@ import org.spin.core.gson.stream.JsonToken;
 import org.spin.core.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -130,7 +131,7 @@ public final class MapTypeAdapterFactory implements TypeAdapterFactory {
 
         @SuppressWarnings({"unchecked", "rawtypes"})
         // we don't define a type parameter for the key or value types
-            TypeAdapter<T> result = new Adapter(gson, keyAndValueTypes[0], keyAdapter,
+        TypeAdapter<T> result = new Adapter(gson, keyAndValueTypes[0], keyAdapter,
             keyAndValueTypes[1], valueAdapter, constructor);
         return result;
     }
@@ -161,6 +162,11 @@ public final class MapTypeAdapterFactory implements TypeAdapterFactory {
 
         @Override
         public Map<K, V> read(JsonReader in) throws IOException {
+            return read(in, null);
+        }
+
+        @Override
+        public Map<K, V> read(JsonReader in, Field field) throws IOException {
             JsonToken peek = in.peek();
             if (peek == JsonToken.NULL) {
                 in.nextNull();
@@ -173,8 +179,8 @@ public final class MapTypeAdapterFactory implements TypeAdapterFactory {
                 in.beginArray();
                 while (in.hasNext()) {
                     in.beginArray(); // entry array
-                    K key = keyTypeAdapter.read(in);
-                    V value = valueTypeAdapter.read(in);
+                    K key = keyTypeAdapter.read(in, field);
+                    V value = valueTypeAdapter.read(in, field);
                     V replaced = map.put(key, value);
                     if (replaced != null) {
                         throw new JsonSyntaxException("duplicate key: " + key);
@@ -186,8 +192,8 @@ public final class MapTypeAdapterFactory implements TypeAdapterFactory {
                 in.beginObject();
                 while (in.hasNext()) {
                     JsonReaderInternalAccess.INSTANCE.promoteNameToValue(in);
-                    K key = keyTypeAdapter.read(in);
-                    V value = valueTypeAdapter.read(in);
+                    K key = keyTypeAdapter.read(in, field);
+                    V value = valueTypeAdapter.read(in, field);
                     V replaced = map.put(key, value);
                     if (replaced != null) {
                         throw new JsonSyntaxException("duplicate key: " + key);
@@ -198,8 +204,12 @@ public final class MapTypeAdapterFactory implements TypeAdapterFactory {
             return map;
         }
 
-        @Override
         public void write(JsonWriter out, Map<K, V> map) throws IOException {
+            write(out, map, null);
+        }
+
+        @Override
+        public void write(JsonWriter out, Map<K, V> map, Field field) throws IOException {
             if (map == null) {
                 out.nullValue();
                 return;
@@ -209,7 +219,7 @@ public final class MapTypeAdapterFactory implements TypeAdapterFactory {
                 out.beginObject();
                 for (Map.Entry<K, V> entry : map.entrySet()) {
                     out.name(String.valueOf(entry.getKey()));
-                    valueTypeAdapter.write(out, entry.getValue());
+                    valueTypeAdapter.write(out, entry.getValue(), field);
                 }
                 out.endObject();
                 return;
@@ -231,7 +241,7 @@ public final class MapTypeAdapterFactory implements TypeAdapterFactory {
                 for (int i = 0, size = keys.size(); i < size; i++) {
                     out.beginArray(); // entry array
                     Streams.write(keys.get(i), out);
-                    valueTypeAdapter.write(out, values.get(i));
+                    valueTypeAdapter.write(out, values.get(i), field);
                     out.endArray();
                 }
                 out.endArray();
@@ -240,7 +250,7 @@ public final class MapTypeAdapterFactory implements TypeAdapterFactory {
                 for (int i = 0, size = keys.size(); i < size; i++) {
                     JsonElement keyElement = keys.get(i);
                     out.name(keyToString(keyElement));
-                    valueTypeAdapter.write(out, values.get(i));
+                    valueTypeAdapter.write(out, values.get(i), field);
                 }
                 out.endObject();
             }

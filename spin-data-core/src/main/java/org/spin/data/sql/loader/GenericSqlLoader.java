@@ -30,7 +30,6 @@ public abstract class GenericSqlLoader implements SQLLoader {
 
     private final Object mutex = new Object();
     private TemplateResolver resolver;
-    private DatabaseType dbType;
 
     /**
      * sql资源根路径
@@ -47,23 +46,13 @@ public abstract class GenericSqlLoader implements SQLLoader {
             resolver = new SimpleResolver();
         }
         // 模板解析
-        String sql = resolver.resolve(id, getSqlTemplateSrc(id), model, dbType);
+        String sql = resolver.resolve(id, getSqlTemplateSrc(id), model);
         return new SqlSource(id, sql);
     }
 
     @Override
-    public SqlSource getPagedSQL(String id, Map<String, ?> model, PageRequest pageRequest) {
+    public SqlSource getPagedSQL(DatabaseType dbType, String id, Map<String, ?> model, PageRequest pageRequest) {
         return dbType.getPagedSQL(getSQL(id, model), pageRequest);
-    }
-
-    @Override
-    public DatabaseType getDbType() {
-        return dbType;
-    }
-
-    @Override
-    public void setDbType(DatabaseType dbType) {
-        this.dbType = dbType;
     }
 
     @Override

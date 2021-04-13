@@ -7,20 +7,11 @@ import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.data.core.DataSourceContext;
-import org.spin.data.core.DatabaseType;
 import org.spin.data.core.Page;
 import org.spin.data.core.PageRequest;
-import org.spin.data.extend.DataSourceConfig;
-import org.spin.data.extend.MultiDataSourceConfig;
 import org.spin.data.rs.MapRowMapper;
 import org.spin.data.rs.RowMapper;
 import org.spin.data.rs.RowMappers;
-import org.spin.data.sql.dbtype.MySQLDatabaseType;
-import org.spin.data.sql.dbtype.OracleDatabaseType;
-import org.spin.data.sql.dbtype.PostgreSQLDatabaseType;
-import org.spin.data.sql.dbtype.SQLServerDatabaseType;
-import org.spin.data.sql.dbtype.SQLiteDatabaseType;
 import org.spin.data.sql.param.ParameterizedSql;
 import org.spin.data.sql.resolver.TemplateResolver;
 
@@ -28,19 +19,17 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Optional;
 
 /**
  * SQL支撑管理类
  * <p>Created by xuweinan on 2016/8/14.</p>
  *
  * @author xuweinan
- * @version 1.4
+ * @version 1.5
  */
 public class SQLManager {
     private static final Logger logger = LoggerFactory.getLogger(SQLManager.class);
@@ -63,61 +52,26 @@ public class SQLManager {
                 return size() > cacheLimit;
             }
         };
-    private final Map<String, SQLLoader> loaderMap = new HashMap<>();
+    private final SQLLoader sqlLoader;
 
     /**
-     * 多数据源时的构造方法
+     * 构造方法
      *
-     * @param dsConfigs   多数据源配置
      * @param loaderClass SQLLoader类
      * @param rootUri     sql文件根路径
      * @param resolver    sql模板解析器
      */
-    public SQLManager(MultiDataSourceConfig<?> dsConfigs, Class<? extends SQLLoader> loaderClass, String rootUri, TemplateResolver resolver) {
-        DataSourceContext.setPrimaryDataSourceName(dsConfigs.getPrimaryDataSource());
-        dsConfigs.getDataSources().forEach((name, config) -> {
-            try {
-                SQLLoader loader = loaderClass.getDeclaredConstructor().newInstance();
-                if (StringUtils.isNotEmpty(rootUri)) {
-                    loader.setRootUri(rootUri);
-                }
-                loader.setTemplateResolver(resolver);
-                loader.setDbType(getDbType(config.getVenderName()));
-                loaderMap.put(name, loader);
-            } catch (Exception e) {
-                throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClass.getName());
-            }
-        });
-        DataSourceContext.usePrimaryDataSource();
-    }
-
-    /**
-     * 单数据源时的构造方法
-     *
-     * @param dsConfig    单数据源配置
-     * @param loaderClass SQLLoader类
-     * @param rootUri     sql文件根路径
-     * @param resolver    sql模板解析器
-     */
-    public SQLManager(DataSourceConfig dsConfig, Class<? extends SQLLoader> loaderClass, String rootUri, TemplateResolver resolver) {
-        String name = dsConfig.getName();
-        if (StringUtils.isEmpty(name)) {
-            name = "primary";
-            dsConfig.setName(name);
-        }
-        DataSourceContext.setPrimaryDataSourceName(name);
+    public SQLManager(Class<? extends SQLLoader> loaderClass, String rootUri, TemplateResolver resolver) {
         try {
             SQLLoader loader = loaderClass.getDeclaredConstructor().newInstance();
-            if (StringUtils.isEmpty(rootUri)) {
+            if (StringUtils.isNotEmpty(rootUri)) {
                 loader.setRootUri(rootUri);
             }
             loader.setTemplateResolver(resolver);
-            loader.setDbType(getDbType(dsConfig.getVenderName()));
-            loaderMap.put(name, loader);
+            sqlLoader = loader;
         } catch (Exception e) {
             throw new SimplifiedException("Can not create SQLLoader instance:" + loaderClass.getName());
         }
-        DataSourceContext.usePrimaryDataSource();
     }
 
     /**
@@ -128,8 +82,8 @@ public class SQLManager {
      * @param paramMap   命名参数
      * @return 查询结果
      */
-    public Map<String, Object> findOneAsMap(Connection connection, String sqlId, Map<String, ?> paramMap) {
-        ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
+    public Optional<Map<String, Object>> findOneAsMap(Connection connection, String sqlId, Map<String, ?> paramMap) {
+        ParameterizedSql parsedSql = getParsedSql(sqlLoader.getSQL(sqlId, paramMap));
         return executeQueryForOneRow(connection, parsedSql, paramMap, DEFAULT_ROW_MAPPER);
     }
 
@@ -143,8 +97,8 @@ public class SQLManager {
      * @param <T>         实体类型
      * @return 查询结果
      */
-    public <T> T findOne(Connection connection, String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
-        ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
+    public <T> Optional<T> findOne(Connection connection, String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
+        ParameterizedSql parsedSql = getParsedSql(sqlLoader.getSQL(sqlId, paramMap));
         return executeQueryForOneRow(connection, parsedSql, paramMap, RowMappers.getMapper(TypeToken.get(entityClazz)));
     }
 
@@ -169,7 +123,7 @@ public class SQLManager {
      * @return 查询结果
      */
     public List<Map<String, Object>> listAsMap(Connection connection, String sqlId, Map<String, ?> paramMap) {
-        ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
+        ParameterizedSql parsedSql = getParsedSql(sqlLoader.getSQL(sqlId, paramMap));
         return executeQuery(connection, parsedSql, paramMap, DEFAULT_ROW_MAPPER);
     }
 
@@ -183,12 +137,31 @@ public class SQLManager {
      * @return 查询结果
      */
     public Page<Map<String, Object>> listAsPageMap(Connection connection, String sqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
-        ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
-        ParameterizedSql parsedPageSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getPagedSQL(sqlId, paramMap, pageRequest)));
+        ParameterizedSql parsedPageSql = getParsedSql(sqlLoader.getPagedSQL(JdbcUtils.getDbType(connection), sqlId, paramMap, pageRequest));
+        ParameterizedSql countSql = getParsedSql(sqlLoader.getSQL(sqlId, paramMap));
 
         List<Map<String, Object>> res = executeQuery(connection, parsedPageSql, paramMap, DEFAULT_ROW_MAPPER);
-        long total = total(connection, parsedSql, paramMap);
-        return new Page<>(res, pageRequest.getCurrentPage(), total, pageRequest.getPageSize());
+        long total = total(connection, countSql, paramMap, false);
+        return new Page<>(res, pageRequest.getCurrent(), total, pageRequest.getSize());
+    }
+
+    /**
+     * 分页查询
+     *
+     * @param connection  jdbc连接
+     * @param sqlId       sqlId
+     * @param countSqlId  总数查询sqlId
+     * @param paramMap    命名参数
+     * @param pageRequest 分页参数
+     * @return 查询结果
+     */
+    public Page<Map<String, Object>> listAsPageMap(Connection connection, String sqlId, String countSqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
+        ParameterizedSql parsedPageSql = getParsedSql(sqlLoader.getPagedSQL(JdbcUtils.getDbType(connection), sqlId, paramMap, pageRequest));
+        ParameterizedSql countSql = getParsedSql(sqlLoader.getSQL(countSqlId, paramMap));
+
+        List<Map<String, Object>> res = executeQuery(connection, parsedPageSql, paramMap, DEFAULT_ROW_MAPPER);
+        long total = total(connection, countSql, paramMap, true);
+        return new Page<>(res, pageRequest.getCurrent(), total, pageRequest.getSize());
     }
 
     /**
@@ -216,7 +189,7 @@ public class SQLManager {
      * @return 查询结果
      */
     public <T> List<T> list(Connection connection, String sqlId, Class<T> entityClazz, Map<String, ?> paramMap) {
-        ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
+        ParameterizedSql parsedSql = getParsedSql(sqlLoader.getSQL(sqlId, paramMap));
 
         return executeQuery(connection, parsedSql, paramMap, RowMappers.getMapper(TypeToken.get(entityClazz)));
     }
@@ -233,12 +206,33 @@ public class SQLManager {
      * @return 查询结果
      */
     public <T> Page<T> listAsPage(Connection connection, String sqlId, Class<T> entityClazz, Map<String, ?> paramMap, PageRequest pageRequest) {
-        ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
-        ParameterizedSql parsedPageSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getPagedSQL(sqlId, paramMap, pageRequest)));
+        ParameterizedSql parsedSql = getParsedSql(sqlLoader.getSQL(sqlId, paramMap));
+        ParameterizedSql parsedPageSql = getParsedSql(sqlLoader.getPagedSQL(JdbcUtils.getDbType(connection), sqlId, paramMap, pageRequest));
 
         List<T> res = executeQuery(connection, parsedPageSql, paramMap, RowMappers.getMapper(TypeToken.get(entityClazz)));
-        long total = total(connection, parsedSql, paramMap);
-        return new Page<>(res, pageRequest.getCurrentPage(), total, pageRequest.getPageSize());
+        long total = total(connection, parsedSql, paramMap, false);
+        return new Page<>(res, pageRequest.getCurrent(), total, pageRequest.getSize());
+    }
+
+    /**
+     * 分页查询
+     *
+     * @param connection  jdbc连接
+     * @param sqlId       sqlId
+     * @param countSqlId  总数查询sqlId
+     * @param entityClazz 查询实体类型
+     * @param paramMap    命名参数
+     * @param pageRequest 分页参数
+     * @param <T>         实体类型
+     * @return 查询结果
+     */
+    public <T> Page<T> listAsPage(Connection connection, String sqlId, String countSqlId, Class<T> entityClazz, Map<String, ?> paramMap, PageRequest pageRequest) {
+        ParameterizedSql parsedSql = getParsedSql(sqlLoader.getSQL(countSqlId, paramMap));
+        ParameterizedSql parsedPageSql = getParsedSql(sqlLoader.getPagedSQL(JdbcUtils.getDbType(connection), sqlId, paramMap, pageRequest));
+
+        List<T> res = executeQuery(connection, parsedPageSql, paramMap, RowMappers.getMapper(TypeToken.get(entityClazz)));
+        long total = total(connection, parsedSql, paramMap, true);
+        return new Page<>(res, pageRequest.getCurrent(), total, pageRequest.getSize());
     }
 
     /**
@@ -250,12 +244,8 @@ public class SQLManager {
      * @return 记录总数
      */
     public Long count(Connection connection, String sqlId, Map<String, ?> paramMap) {
-        ParameterizedSql parsedSql = getParsedSql(wrapCountSql(getCurrentSqlLoader().getSQL(sqlId, paramMap)));
-        Long cnt = executeQueryForOneRow(connection, parsedSql, paramMap, (k, v, c, r) -> (Long) v[0]);
-        if (null == cnt) {
-            throw new org.spin.data.throwable.SQLException(org.spin.data.throwable.SQLError.NOT_UNIQUE_ERROR, "执行查询失败");
-        }
-        return cnt;
+        ParameterizedSql parsedSql = getParsedSql(sqlLoader.getSQL(sqlId, paramMap));
+        return total(connection, parsedSql, paramMap, false);
     }
 
     /**
@@ -267,7 +257,7 @@ public class SQLManager {
      * @return 受影响行数
      */
     public int executeCUD(Connection connection, String sqlId, Map<String, ?> paramMap) {
-        ParameterizedSql parsedSql = getParsedSql(getCurrentSqlLoader().getSQL(sqlId, paramMap));
+        ParameterizedSql parsedSql = getParsedSql(sqlLoader.getSQL(sqlId, paramMap));
         if (logger.isDebugEnabled()) {
             logger.debug(String.format(SQL_LOG, sqlId, parsedSql.getActualSql()));
         }
@@ -288,7 +278,7 @@ public class SQLManager {
      * @return 受影响行数
      */
     public int[] executeBatch(Connection connection, String sqlId, List<Map<String, ?>> paramMaps) {
-        ParameterizedSql parsedSql = getParsedSql(getCurrentSqlLoader().getSQL(sqlId, null));
+        ParameterizedSql parsedSql = getParsedSql(sqlLoader.getSQL(sqlId, null));
 
         if (logger.isDebugEnabled()) {
             logger.debug(String.format(SQL_LOG, sqlId, parsedSql.getActualSql()));
@@ -319,32 +309,6 @@ public class SQLManager {
 
     public void setCacheLimit(int cacheLimit) {
         this.cacheLimit = cacheLimit;
-    }
-
-    private SQLLoader getCurrentSqlLoader() {
-        return loaderMap.get(DataSourceContext.getCurrentDataSourceName());
-    }
-
-    private DatabaseType getDbType(String vender) {
-        switch (vender) {
-            case "MYSQL":
-                return new MySQLDatabaseType();
-            case "ORACLE":
-                return new OracleDatabaseType();
-            case "MICROSOFT":
-            case "SQLSERVER":
-                return new SQLServerDatabaseType();
-            case "POSTGRESQL":
-                return new PostgreSQLDatabaseType();
-            case "SQLITE":
-                return new SQLiteDatabaseType();
-            default:
-                throw new SimplifiedException("Unsupported Database vender:" + vender);
-        }
-    }
-
-    private SqlSource wrapCountSql(SqlSource originSql) {
-        return new SqlSource(originSql.getId(), String.format(COUNT_SQL, originSql.getSql()));
     }
 
     /**
@@ -379,7 +343,7 @@ public class SQLManager {
      * @param mapper     数据转换器
      * @return 第一条数据
      */
-    private <T> T executeQueryForOneRow(Connection connection, ParameterizedSql parsedSql, Map<String, ?> paramMap, RowMapper<T> mapper) {
+    private <T> Optional<T> executeQueryForOneRow(Connection connection, ParameterizedSql parsedSql, Map<String, ?> paramMap, RowMapper<T> mapper) {
         if (logger.isDebugEnabled()) {
             logger.debug(String.format(SQL_LOG, parsedSql.getId(), parsedSql.getActualSql()));
         }
@@ -388,9 +352,9 @@ public class SQLManager {
             try (ResultSet rs = ps.executeQuery()) {
                 List<T> tList = mapper.extractData(rs, 1);
                 if (CollectionUtils.isEmpty(tList)) {
-                    return null;
+                    return Optional.empty();
                 } else {
-                    return tList.get(0);
+                    return Optional.ofNullable(tList.get(0));
                 }
             }
         } catch (SQLException e) {
@@ -421,24 +385,8 @@ public class SQLManager {
         return parsedSql;
     }
 
-    private String removeLastOrderBy(String sql) {
-        int sortStart = -1;
-        int sortEnd = 0;
-        String patter = "(order\\s+by[^)]+)";
-        Pattern p = Pattern.compile(patter, Pattern.CASE_INSENSITIVE);
-        Matcher m = p.matcher(sql);
-        while (m.find()) {
-            sortStart = m.start(0);
-            sortEnd = m.end(0);
-        }
-        if (sortStart > -1 && sortEnd == sql.length()) {
-            sql = sql.substring(0, sortStart);
-        }
-        return sql;
-    }
-
-    private long total(Connection connection, ParameterizedSql parsedSql, Map<String, ?> paramMap) {
-        String totalSqlTxt = String.format(COUNT_SQL, parsedSql.getActualSql().getSql());
+    private long total(Connection connection, ParameterizedSql parsedSql, Map<String, ?> paramMap, boolean isCntSql) {
+        String totalSqlTxt = isCntSql ? parsedSql.getActualSql().getSql() : String.format(COUNT_SQL, parsedSql.getActualSql().getSql());
         try (PreparedStatement ps = connection.prepareStatement(totalSqlTxt)) {
             JdbcUtils.setParameterValues(ps, parsedSql.getNamedParameters(), paramMap);
             try (ResultSet rs = ps.executeQuery()) {

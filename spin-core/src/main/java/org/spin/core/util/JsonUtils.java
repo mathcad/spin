@@ -392,7 +392,7 @@ public final class JsonUtils extends Util {
      * @return Gson对象
      */
     public static Gson buildGson(FinalConsumer<GsonBuilder> builderConfigure) {
-        GsonBuilder gsonBuilder = baseBuilder(CollectionUtils.ofArray(DEFAULT_DATE_PATTERN, DEFAULT_LOCAL_DATE_PATTERN, DEFAULT_LOCAL_TIME_PATTERN));
+        GsonBuilder gsonBuilder = baseBuilder(ArrayUtils.ofArray(DEFAULT_DATE_PATTERN, DEFAULT_LOCAL_DATE_PATTERN, DEFAULT_LOCAL_TIME_PATTERN));
         if (null != builderConfigure) {
             builderConfigure.accept(gsonBuilder);
         }

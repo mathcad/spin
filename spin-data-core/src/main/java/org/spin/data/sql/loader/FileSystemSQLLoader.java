@@ -37,7 +37,7 @@ public abstract class FileSystemSQLLoader extends GenericSqlLoader {
      */
     protected File getFile(String id) {
         String cmdFileName = id.substring(0, id.lastIndexOf('.'));
-        String pathDbSep = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + fileDelimiter)) + this.getDbType().getProductName() + fileDelimiter + cmdFileName + getExtension();
+        String pathDbSep = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + fileDelimiter)) + cmdFileName + getExtension();
         String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + fileDelimiter)) + cmdFileName + getExtension();
         try {
             if (absolutePath) {

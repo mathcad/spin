@@ -3,9 +3,7 @@ package org.spin.cloud.feign;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.Target;
-import org.spin.cloud.web.interceptor.CustomizeRouteInterceptor;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
+import org.spin.cloud.util.CloudInfrasContext;
 
 import java.util.Map;
 
@@ -24,11 +22,8 @@ public class HardCodedTarget<T> extends Target.HardCodedTarget<T> {
         if (input.url().indexOf("http") != 0) {
 
             String targetUrl = url();
-            RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-            if (null != requestAttributes) {
-                @SuppressWarnings("unchecked")
-                Map<String, String> routes = (Map<String, String>) requestAttributes.getAttribute(CustomizeRouteInterceptor.CUSTOMIZE_ROUTE,
-                    RequestAttributes.SCOPE_REQUEST);
+            if (null != CloudInfrasContext.getCustomizeRoute()) {
+                Map<String, String> routes = CloudInfrasContext.getCustomizeRoute().c2;
                 if (null != routes && routes.containsKey(name().toUpperCase())) {
                     targetUrl = routes.get(name());
                 }

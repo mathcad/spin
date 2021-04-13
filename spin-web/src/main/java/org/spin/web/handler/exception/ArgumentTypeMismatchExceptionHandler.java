@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
-import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.ArrayUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.web.RestfulResponse;
 import org.spin.web.handler.WebExceptionHandler;
@@ -47,12 +47,7 @@ public class ArgumentTypeMismatchExceptionHandler implements WebExceptionHandler
                 if (null == apiImplicitParams || apiImplicitParams.value().length == 0) {
                     argName = null;
                 } else {
-                    apiImplicitParam = CollectionUtils.detect(apiImplicitParams.value(), it -> name.equals(it.name()));
-                    if (null == apiImplicitParam) {
-                        argName = null;
-                    } else {
-                        argName = apiImplicitParam.value();
-                    }
+                    argName = ArrayUtils.detect(apiImplicitParams.value(), it -> name.equals(it.name())).map(ApiImplicitParam::value).orElse(null);
                 }
             } else {
                 argName = apiImplicitParam.value();

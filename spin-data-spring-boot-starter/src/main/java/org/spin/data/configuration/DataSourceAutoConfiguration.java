@@ -1,21 +1,21 @@
 package org.spin.data.configuration;
 
 import org.hibernate.SessionFactory;
-import org.spin.data.bean.DbInit;
-import org.spin.data.filter.OpenSessionInViewFilter;
-import org.spin.data.property.SpinDataProperties;
-import org.spin.data.DataSourceBuilder;
-import org.spin.data.Multipal;
-import org.spin.data.Singleton;
-import org.spin.data.TransactionModel;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.core.util.SystemUtils;
+import org.spin.data.DataSourceBuilder;
+import org.spin.data.Multipal;
+import org.spin.data.Singleton;
+import org.spin.data.TransactionModel;
+import org.spin.data.bean.DbInit;
 import org.spin.data.core.DataSourceContext;
 import org.spin.data.extend.DataSourceConfig;
 import org.spin.data.extend.MultiDataSourceConfig;
 import org.spin.data.extend.RepositoryContext;
+import org.spin.data.filter.OpenSessionInViewFilter;
+import org.spin.data.property.SpinDataProperties;
 import org.spin.data.query.QueryParamParser;
 import org.spin.data.sql.SQLManager;
 import org.springframework.beans.factory.BeanCreationException;
@@ -66,7 +66,7 @@ import java.util.Properties;
     org.springframework.boot.autoconfigure.jdbc.XADataSourceAutoConfiguration.class,
     org.springframework.boot.autoconfigure.transaction.jta.JtaAutoConfiguration.class
 }, name = {
-    "org.springframework.boot.autoconfigure.transaction.jta.AtomikosJtaConfiguration","org.springframework.boot.autoconfigure.jdbc.DataSourceConfiguration.Hikari"
+    "org.springframework.boot.autoconfigure.transaction.jta.AtomikosJtaConfiguration", "org.springframework.boot.autoconfigure.jdbc.DataSourceConfiguration.Hikari"
 })
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableTransactionManagement(proxyTargetClass = true)
@@ -135,12 +135,8 @@ public class DataSourceAutoConfiguration {
 
     @Bean
     @ConditionalOnBean({DbInit.class})
-    public SQLManager sqlManager(DbInit dbInit, TransactionModel model) throws ClassNotFoundException {
-        if (model instanceof Multipal) {
-            return new SQLManager(dsConfigs, dataProperties.getSqlLoader(), dataProperties.getSqlUri(), dataProperties.getResolverObj());
-        } else {
-            return new SQLManager(dsConfigs.getPrimaryDataSourceConfig(), dataProperties.getSqlLoader(), dataProperties.getSqlUri(), dataProperties.getResolverObj());
-        }
+    public SQLManager sqlManager(DbInit dbInit, TransactionModel model) {
+        return new SQLManager(dataProperties.getSqlLoader(), dataProperties.getSqlUri(), dataProperties.getResolverObj());
     }
 
     @Bean

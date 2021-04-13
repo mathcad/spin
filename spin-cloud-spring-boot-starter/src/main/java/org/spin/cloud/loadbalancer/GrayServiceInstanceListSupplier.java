@@ -1,12 +1,10 @@
 package org.spin.cloud.loadbalancer;
 
-import org.spin.cloud.web.interceptor.GrayInterceptor;
+import org.spin.cloud.util.CloudInfrasContext;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.StringUtils;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -36,11 +34,8 @@ public class GrayServiceInstanceListSupplier implements ServiceInstanceListSuppl
     @Override
     public Flux<List<ServiceInstance>> get() {
 
-        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-        if (null != requestAttributes) {
-            @SuppressWarnings("unchecked")
-            Map<String, String> grayInfo = (Map<String, String>) requestAttributes.getAttribute(GrayInterceptor.X_GRAY_INFO,
-                RequestAttributes.SCOPE_REQUEST);
+        if (null != CloudInfrasContext.getGrayInfo()) {
+            Map<String, String> grayInfo = CloudInfrasContext.getGrayInfo().c2;
             if (null != grayInfo) {
                 String version = grayInfo.get(StringUtils.trimToEmpty(StringUtils.toUpperCase(getServiceId())));
                 return delegate.get().map(l -> CollectionUtils.select(l, i -> "true".equals(i.getMetadata().get("grayEnable"))

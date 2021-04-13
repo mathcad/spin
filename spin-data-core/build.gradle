@@ -41,8 +41,10 @@ dependencies {
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
     testImplementation group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion
     testRuntimeOnly group: 'org.xerial', name: 'sqlite-jdbc', version: sqliteVersion
+    testRuntimeOnly group: 'com.ibeetl', name: 'beetl', version: beetlVersion
 
     api group: 'org.mathcat', name: 'spin-core', version: '2.4.0-SNAPSHOT'
+    api group: 'cglib', name: 'cglib', version: '3.3.0'
 
     compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
     compileOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion

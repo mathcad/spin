@@ -1,7 +1,7 @@
 package org.spin.data.sql;
 
 import org.junit.jupiter.api.Test;
-import org.spin.core.trait.IntEvaluatable;
+import org.spin.core.trait.FriendlyEnum;
 import org.spin.core.util.MapUtils;
 import org.spin.data.sql.resolver.BeetlResolver;
 import org.spin.data.sql.resolver.TemplateResolver;
@@ -28,27 +28,33 @@ public class BeetlTest {
             "}\n" +
             "```\n" +
             "select\n" +
-            "  ${enum('org.spin.data.sql.BeetlTest$Type', 'a.type', 'type')}\n" +
+            "    ${enum('org.spin.data.sql.BeetlTest$Type', 'a.type', 'type')}\n" +
             "from ${table} t\n" +
             "where 1=1\n" +
-            "  ${valid(table, \"and t.name like '\" + table + \"'\")}\n" +
-            "  ${has(flag) ? \"and t.flag = \" + flag}\n";
+            "    ${valid(table, \"and t.name like '\" + table + \"'\")}\n" +
+            "    ${has(flag) ? \"and t.flag = \" + flag}\n" +
+            "    @var a = [1,2,3];\n" +
+            "    ${valid(a, 'and t.id in (')}\n" +
+            "    @for(var i=0;i<a.~size;i++){\n" +
+            "        ${a[i]},\n" +
+            "    @}\n" +
+            "    ${valid(a, ')')}";
         System.out.println(template);
         TemplateResolver resolver = new BeetlResolver();
-        System.out.println(resolver.resolve("1", template, MapUtils.ofMap("value", 3, "flag", true), null));
+        System.out.println(resolver.resolve("1", template, MapUtils.ofMap("value", 3, "flag", true)));
     }
 
-    public enum Type implements IntEvaluatable {
-        C(1), D(2);
+    public enum Type implements FriendlyEnum<String> {
+        C("1"), D("2");
 
-        private int value;
+        private String value;
 
-        Type(int value) {
+        Type(String value) {
             this.value = value;
         }
 
         @Override
-        public int intValue() {
+        public String getValue() {
             return value;
         }
     }

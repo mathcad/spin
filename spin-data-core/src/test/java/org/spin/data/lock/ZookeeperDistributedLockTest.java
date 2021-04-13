@@ -1,6 +1,7 @@
 package org.spin.data.lock;
 
-import org.spin.core.util.AsyncUtils;
+
+import org.spin.core.concurrent.Async;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -20,7 +21,7 @@ class ZookeeperDistributedLockTest {
         CountDownLatch latch = new CountDownLatch(1);
         if (test) {
             System.out.println("主线程加锁成功");
-            AsyncUtils.runAsync(() -> {
+            Async.run(() -> {
                 System.out.println("子线程开始");
                 if (lock.lock("test", 1020L)) {
                     System.out.println("子线程加锁成功");

@@ -1,4 +1,4 @@
-package org.spin.core.util;
+package org.spin.core.concurrent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,8 +6,12 @@ import org.spin.core.Assert;
 import org.spin.core.function.ExceptionalHandler;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.throwable.SpinException;
+import org.spin.core.trait.Order;
+import org.spin.core.util.Util;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -17,20 +21,23 @@ import java.util.concurrent.atomic.LongAccumulator;
 import java.util.stream.Collectors;
 
 /**
- * 线程池工具类
+ * 线程池工具
  * <p>提供全局的异步调用与线程池工具</p>
  * <p>Created by xuweinan on 2019/2/19</p>
  *
  * @author xuweinan
  * @version 1.0
  */
-public final class AsyncUtils extends Util {
-    private static final Logger logger = LoggerFactory.getLogger(AsyncUtils.class);
+public final class Async extends Util {
+    private static final Logger logger = LoggerFactory.getLogger(Async.class);
 
+    private static final String GLOBAL_INTERCEPTOR = "ALL";
     private static final String COMMON_POOL_NAME = "GlobalCommon";
     private static final ThreadFactory THREAD_FACTORY = Executors.defaultThreadFactory();
 
     private static final ConcurrentHashMap<String, ThreadPoolWrapper> POOL_EXECUTOR_MAP = new ConcurrentHashMap<>();
+
+    private static final ConcurrentHashMap<String, List<AsyncInterceptor>> INTERCEPTORS = new ConcurrentHashMap<>();
 
     private static long poolTimeout = 1000L;
 
@@ -42,7 +49,21 @@ public final class AsyncUtils extends Util {
         POOL_EXECUTOR_MAP.get(COMMON_POOL_NAME).init();
     }
 
-    private AsyncUtils() {
+    private Async() {
+    }
+
+    static void registerInterceptor(AsyncInterceptor interceptor) {
+        String poolName = interceptor.getPoolName();
+        List<AsyncInterceptor> list = INTERCEPTORS.get(poolName);
+        if (null == list) {
+            list = new ArrayList<>();
+        } else {
+            list = new ArrayList<>(list);
+        }
+
+        list.add(interceptor);
+        list.sort(Comparator.comparingInt(Order::getOrder));
+        INTERCEPTORS.put(poolName, list);
     }
 
     /**
@@ -100,7 +121,7 @@ public final class AsyncUtils extends Util {
      * @param <V>      返回结果类型
      * @return Future结果
      */
-    public static <V> Future<V> runAsync(Callable<V> callable) {
+    public static <V> Future<V> run(Callable<V> callable) {
         return submit(COMMON_POOL_NAME, callable);
     }
 
@@ -109,7 +130,7 @@ public final class AsyncUtils extends Util {
      *
      * @param callable 任务
      */
-    public static void runAsync(ExceptionalHandler<Exception> callable) {
+    public static void run(ExceptionalHandler<Exception> callable) {
         execute(COMMON_POOL_NAME, callable);
     }
 
@@ -121,7 +142,7 @@ public final class AsyncUtils extends Util {
      * @param <V>              返回结果类型
      * @return Future结果
      */
-    public static <V> Future<V> runAsync(Callable<V> callable, FinalConsumer<Exception> exceptionHandler) {
+    public static <V> Future<V> run(Callable<V> callable, FinalConsumer<Exception> exceptionHandler) {
         return submit(COMMON_POOL_NAME, callable, exceptionHandler);
     }
 
@@ -131,7 +152,7 @@ public final class AsyncUtils extends Util {
      * @param callable         任务
      * @param exceptionHandler 异常处理逻辑
      */
-    public static void runAsync(ExceptionalHandler<Exception> callable, FinalConsumer<Exception> exceptionHandler) {
+    public static void run(ExceptionalHandler<Exception> callable, FinalConsumer<Exception> exceptionHandler) {
         execute(COMMON_POOL_NAME, callable, exceptionHandler);
     }
 
@@ -161,7 +182,15 @@ public final class AsyncUtils extends Util {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
         checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
-        return poolWrapper.executor.submit(() -> {
+        // beforeAsync
+        AsyncContext context = new AsyncContext();
+        intercept(GLOBAL_INTERCEPTOR, context, 1);
+        intercept(name, context, 1);
+        Future<V> result = poolWrapper.executor.submit(() -> {
+            logger.info("Task Schdule from : {}", context.getSchduleThreadName());
+            // beforeExecute
+            intercept(GLOBAL_INTERCEPTOR, context, 2);
+            intercept(name, context, 2);
             poolWrapper.info.runTask(task);
             try {
                 V res = callable.call();
@@ -173,8 +202,17 @@ public final class AsyncUtils extends Util {
                     exceptionHandler.accept(e);
                 }
                 return null;
+            } finally {
+                // afterExecute
+                intercept(GLOBAL_INTERCEPTOR, context, 3);
+                intercept(name, context, 3);
             }
         });
+
+        // afterAsync
+        intercept(GLOBAL_INTERCEPTOR, context, 4);
+        intercept(name, context, 4);
+        return result;
     }
 
     /**
@@ -198,7 +236,15 @@ public final class AsyncUtils extends Util {
         ThreadPoolWrapper poolWrapper = Assert.notNull(POOL_EXECUTOR_MAP.get(name), "指定的线程池不存在: " + name);
         checkReady(poolWrapper);
         final long task = poolWrapper.info.submitTask();
+        // beforeAsync
+        AsyncContext context = new AsyncContext();
+        intercept(GLOBAL_INTERCEPTOR, context, 1);
+        intercept(name, context, 1);
         poolWrapper.executor.execute(() -> {
+            logger.info("Task Schdule from : {}", context.getSchduleThreadName());
+            // beforeExecute
+            intercept(GLOBAL_INTERCEPTOR, context, 2);
+            intercept(name, context, 2);
             poolWrapper.info.runTask(task);
             try {
                 callable.handle();
@@ -208,9 +254,16 @@ public final class AsyncUtils extends Util {
                     exceptionHandler.accept(e);
                 }
                 return;
+            } finally {
+                // afterExecute
+                intercept(GLOBAL_INTERCEPTOR, context, 3);
+                intercept(name, context, 3);
             }
             poolWrapper.info.completeTask(task, true);
         });
+        // afterAsync
+        intercept(GLOBAL_INTERCEPTOR, context, 4);
+        intercept(name, context, 4);
     }
 
     /**
@@ -256,7 +309,7 @@ public final class AsyncUtils extends Util {
      * @param poolTimeout 等待时间
      */
     public static void setPoolTimeout(long poolTimeout) {
-        AsyncUtils.poolTimeout = poolTimeout;
+        Async.poolTimeout = poolTimeout;
     }
 
     public static ThreadFactory buildFactory(String name, Boolean daemon, Integer priority, Thread.UncaughtExceptionHandler uncaughtExceptionHandler) {
@@ -286,6 +339,32 @@ public final class AsyncUtils extends Util {
                 throw new SpinException("动作超时，线程池尚未就绪");
             }
             Thread.yield();
+        }
+    }
+
+    private static void intercept(String poolName, AsyncContext context, int step) {
+        if (INTERCEPTORS.containsKey(poolName)) {
+            List<AsyncInterceptor> interceptors = INTERCEPTORS.get(poolName);
+            for (AsyncInterceptor interceptor : interceptors) {
+                try {
+                    switch (step) {
+                        case 1:
+                            interceptor.preAsync(context);
+                            break;
+                        case 2:
+                            interceptor.onReady(context);
+                            break;
+                        case 3:
+                            interceptor.onFinish(context);
+                            break;
+                        case 4:
+                            interceptor.afterAsync(context);
+                            break;
+                    }
+                } catch (Exception e) {
+                    logger.error("AsyncInterceptor执行异常[" + poolName + "]: ", e);
+                }
+            }
         }
     }
 

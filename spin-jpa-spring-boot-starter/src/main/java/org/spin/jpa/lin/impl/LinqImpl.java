@@ -6,11 +6,11 @@ import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.ConstructorUtils;
 import org.spin.core.util.LambdaUtils;
 import org.spin.core.util.ReflectionUtils;
+import org.spin.data.rs.RowMapper;
+import org.spin.data.rs.RowMappers;
 import org.spin.jpa.Prop;
 import org.spin.jpa.PropImpl;
 import org.spin.jpa.lin.Linq;
-import org.spin.jpa.transform.ResultTransformer;
-import org.spin.jpa.transform.impl.Transformers;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +47,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
     protected List<Order> orders = new ArrayList<>();
     protected boolean distinct;
     protected Class<?> resultClass;
-    protected ResultTransformer resultTransformer;
+    protected RowMapper<?> rowMapper;
 
 
     public LinqImpl(Class<?> domainClass) {
@@ -74,7 +74,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         } else if (Map.class.isAssignableFrom(resultClass)) {
             criteria = cb.createQuery(Object[].class);
             root = criteria.from(domainClass);
-            resultTransformer = Transformers.ALIAS_TO_MAP;
+            rowMapper = RowMappers.getMapRowMapper();
             Set<?> attrs = em.getMetamodel().entity(domainClass).getDeclaredSingularAttributes();
             String[] selections = new String[attrs.size()];
             int i = 0;
@@ -533,19 +533,20 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         } else {
             result = new ArrayList<>(tuples.size());
             String[] aliases = this.aliases.toArray(new String[0]);
-            if (resultTransformer == null) {
+            if (rowMapper == null) {
                 if (resultClass == Map.class) {
-                    resultTransformer = Transformers.ALIAS_TO_MAP;
+                    rowMapper = RowMappers.getMapRowMapper();
                 } else {
-                    resultTransformer = Transformers.aliasToBean(resultClass);
+                    rowMapper = RowMappers.getMapper(resultClass);
                 }
             }
-            for (Object tuple : tuples) {
+            for (int i = 0; i < tuples.size(); i++) {
+                Object tuple = tuples.get(i);
                 if (tuple != null) {
                     if (tuple.getClass().isArray()) {
-                        result.add((T) resultTransformer.transformTuple((Object[]) tuple, aliases));
+                        result.add((T) rowMapper.apply(aliases, (Object[]) tuple, ((Object[]) tuple).length, i));
                     } else {
-                        result.add((T) resultTransformer.transformTuple(new Object[]{tuple}, aliases));
+                        result.add((T) rowMapper.apply(aliases, new Object[]{tuple}, 1, i));
                     }
                 }
             }
@@ -566,7 +567,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         }
         criteria = cb.createQuery(Object[].class);
         root = criteria.from(domainClass);
-        resultTransformer = Transformers.aliasToBean(domainClass);
+        rowMapper = RowMappers.getMapper(domainClass);
         return (LinqImpl<T>) this;
     }
 
@@ -579,7 +580,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         criteria = cb.createQuery(Object[].class);
         root = criteria.from(domainClass);
         this.resultClass = resultClass;
-        resultTransformer = Transformers.aliasToBean(resultClass);
+        rowMapper = RowMappers.getMapper(resultClass);
         return (LinqImpl<T>) this;
     }
 
@@ -592,7 +593,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
         criteria = cb.createQuery(Object[].class);
         root = criteria.from(domainClass);
         this.resultClass = Map.class;
-        resultTransformer = Transformers.ALIAS_TO_MAP;
+        rowMapper = RowMappers.getMapRowMapper();
         return (LinqImpl<Map<String, Object>>) this;
     }
 

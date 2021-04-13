@@ -86,7 +86,7 @@ public class JsonUtilsTest {
         d.put("name", "sb");
         d.put("time", LocalDateTime.now());
         r.add(d);
-        p.setRows(r);
+        p.setRecords(r);
         System.out.println(JsonUtils.toJson(p));
     }
 

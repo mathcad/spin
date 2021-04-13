@@ -11,7 +11,6 @@ import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.security.Base64;
 import org.spin.core.session.SessionUser;
 import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.DateUtils;
 import org.spin.core.util.EnumUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.MapUtils;
@@ -23,10 +22,11 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scripting.support.ResourceScriptSource;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +68,7 @@ public class CurrentUser extends SessionUser<Long> {
     private static final String SUPER_AMIN_ROLE_CODE = "SUPER_ADMIN";
     private static final String FULL_SUPER_AMIN_ROLE_CODE = "0:SUPER_ADMIN";
     private static final String ENT_AMIN_ROLE_CODE = "ENT_ADMIN";
-    private static final CurrentUser SUPER_ADMIN_USER = new CurrentUser("MDolRTglQjYlODUlRTclQkElQTclRTclQUUlQTElRTclOTAlODYlRTUlOTElOTg6MjowOjEyNy4wLjAuMTow");
+    private static final CurrentUser SUPER_ADMIN_USER = new CurrentUser("MDolRTglQjYlODUlRTclQkElQTclRTclQUUlQTElRTclOTAlODYlRTUlOTElOTg6MjowOjEyNy4wLjAuMTpJTlRFUk5BTDow");
 
     @SuppressWarnings("rawtypes")
     private static final DefaultRedisScript<List> ALL_CHILDREN_SCRIPT = new DefaultRedisScript<>();
@@ -85,6 +85,7 @@ public class CurrentUser extends SessionUser<Long> {
     private final String sid;
     private final LocalDateTime loginTime;
     private final String loginIp;
+    private final String clientType;
 
     private final String originData;
 
@@ -106,7 +107,7 @@ public class CurrentUser extends SessionUser<Long> {
         try {
             String user = Base64.decodeWithUtf8(encodedFromStr);
             String[] split = user.split(":");
-            if (split.length != 6) {
+            if (split.length != 7) {
                 logger.warn("非法的用户信息: {}", user);
                 throw new BizException("非法的用户信息: " + user);
             }
@@ -114,9 +115,10 @@ public class CurrentUser extends SessionUser<Long> {
             this.id = Long.parseLong(split[0]);
             this.name = StringUtils.trimToNull(StringUtils.urlDecode(split[1]));
             this.expireType = TokenExpireType.getByValue(split[2]);
-            this.loginTime = DateUtils.toLocalDateTime(new Date(Long.parseLong(split[3])));
+            this.loginTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(Long.parseLong(split[3])), ZoneId.systemDefault());
             this.loginIp = split[4];
-            this.sid = split[5];
+            this.clientType = split[5];
+            this.sid = split[6];
         } catch (Exception e) {
             logger.warn("非法的用户信息: {}", e.getMessage());
             throw new BizException("非法的用户信息", e);
@@ -237,6 +239,10 @@ public class CurrentUser extends SessionUser<Long> {
     @Override
     public String getLoginIp() {
         return loginIp;
+    }
+
+    public String getClientType() {
+        return clientType;
     }
 
     /**

@@ -58,7 +58,7 @@ dependencies {
     }
     testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
     testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
-    testRuntimeOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
+    testImplementation group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
     testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
     testImplementation group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
     testRuntimeOnly group: 'com.google.zxing', name: 'core', version: zxingVersion

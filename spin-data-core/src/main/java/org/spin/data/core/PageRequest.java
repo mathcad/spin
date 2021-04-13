@@ -1,8 +1,9 @@
 package org.spin.data.core;
 
-import org.spin.core.util.StringUtils;
+import org.spin.core.util.CollectionUtils;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 分页参数，索引从1开始
@@ -16,18 +17,23 @@ public class PageRequest implements Serializable {
     /**
      * 分页页码，从1开始
      */
-    private int currentPage = 1;
+    private int current = 1;
 
     /**
      * 分页大小
      */
-    private int pageSize = 10000;
+    private int size = 10000;
+
+    /**
+     * 是否进行count查询
+     */
+    private boolean searchCount = true;
 
     /**
      * 多个排序字段用,隔开
      * name desc,id desc
      */
-    private String sort;
+    private List<Order> sort;
 
     /**
      * 创建一个默认的{@link PageRequest}, 分页参数索引从1开始
@@ -38,20 +44,20 @@ public class PageRequest implements Serializable {
     /**
      * 创建一个新的{@link PageRequest}, 分页参数索引从1开始
      *
-     * @param currentPage     zero-based page index.
-     * @param pageSize the pageSize of the page to be returned.
+     * @param current one-based page index.
+     * @param size    the pageSize of the page to be returned.
      */
-    public PageRequest(int currentPage, int pageSize) {
-        if (currentPage < 1) {
+    public PageRequest(int current, int size) {
+        if (current < 1) {
             throw new IllegalArgumentException("Page index must not be less than one!");
         }
 
-        if (pageSize < 0) {
+        if (size < 0) {
             throw new IllegalArgumentException("Page pageSize must not be less than zero!");
         }
 
-        this.currentPage = currentPage;
-        this.pageSize = pageSize;
+        this.current = current;
+        this.size = size;
     }
 
     /**
@@ -61,9 +67,15 @@ public class PageRequest implements Serializable {
      * @return {@link String} 查询语句
      */
     public String parseOrder(String tableAlias) {
-        return StringUtils.isNotEmpty(sort) ?
-            "ORDER BY " + tableAlias + "." + sort.replaceAll(",\\s*", ", " + tableAlias + ".")
-            : "";
+        if (CollectionUtils.isNotEmpty(sort)) {
+            StringBuilder sb = new StringBuilder("ORDER BY ");
+            for (Order order : sort) {
+                sb.append(tableAlias).append(".").append(order.toString()).append(",");
+            }
+
+            return sb.substring(0, sb.length() - 1);
+        }
+        return "";
     }
 
     /**
@@ -72,37 +84,45 @@ public class PageRequest implements Serializable {
      * @return 偏移量
      */
     public int getOffset() {
-        return (currentPage - 1) * pageSize;
+        return (current - 1) * size;
     }
 
 
-    public int getCurrentPage() {
-        return currentPage;
+    public int getCurrent() {
+        return current;
     }
 
-    public void setCurrentPage(int currentPage) {
-        if (currentPage < 1) {
+    public void setCurrent(int current) {
+        if (current < 1) {
             throw new IllegalArgumentException("Page index must not be less than one!");
         }
-        this.currentPage = currentPage;
+        this.current = current;
     }
 
-    public int getPageSize() {
-        return pageSize;
+    public int getSize() {
+        return size;
     }
 
-    public void setPageSize(int pageSize) {
-        if (pageSize < 0) {
+    public void setSize(int size) {
+        if (size < 0) {
             throw new IllegalArgumentException("Page pageSize must not be less than zero!");
         }
-        this.pageSize = pageSize;
+        this.size = size;
     }
 
-    public String getSort() {
+    public boolean isSearchCount() {
+        return searchCount;
+    }
+
+    public void setSearchCount(boolean searchCount) {
+        this.searchCount = searchCount;
+    }
+
+    public List<Order> getSort() {
         return sort;
     }
 
-    public void setSort(String sort) {
+    public void setSort(List<Order> sort) {
         this.sort = sort;
     }
 }

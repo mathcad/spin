@@ -25,6 +25,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 /**
  * 用户权限拦截器
@@ -43,6 +44,19 @@ public class UserAuthInterceptor implements HandlerInterceptor, Ordered {
         // 是否调用方法
         if (!(handler instanceof HandlerMethod)) {
             return true;
+        }
+
+        // 环境检测
+        String profile = request.getHeader(FeignInterceptor.X_APP_PROFILE);
+        if (StringUtils.isNotEmpty(profile)) {
+            if (!Objects.equals(profile, Env.getActiveProfiles())) {
+                logger.error("禁止跨环境的服务调用 源环境: {}[{}], 目标环境: {}[{}]",
+                    StringUtils.trimToSpec(request.getHeader(FeignInterceptor.X_APP_NAME), "GATEWAY"),
+                    profile,
+                    Env.getAppName(),
+                    Env.getActiveProfiles());
+                return false;
+            }
         }
 
         // 认证信息判断

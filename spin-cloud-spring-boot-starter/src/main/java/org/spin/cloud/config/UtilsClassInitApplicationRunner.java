@@ -3,7 +3,7 @@ package org.spin.cloud.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.annotation.UtilClass;
-import org.spin.core.util.AsyncUtils;
+import org.spin.core.concurrent.Async;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.PackageUtils;
 import org.spin.core.util.ReflectionUtils;
@@ -37,7 +37,7 @@ public class UtilsClassInitApplicationRunner implements ApplicationRunner, Appli
 
     @Override
     public void run(ApplicationArguments args) {
-        AsyncUtils.runAsync(this::procUtilClasses);
+        Async.run(this::procUtilClasses);
     }
 
     private void procUtilClasses() {

@@ -1,6 +1,7 @@
 package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
+import org.spin.core.concurrent.Async;
 import org.spin.core.concurrent.Uninterruptibles;
 import org.spin.core.throwable.SpinException;
 
@@ -18,14 +19,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author xuweinan
  * @version 1.0
  */
-class AsyncUtilsTest {
+class AsyncTest {
 //    private static final Thread BACK_STATIS_WORKER;
 
     static {
 //        BACK_STATIS_WORKER = new Thread(() -> {
-//            AsyncUtils.initThreadPool("test", 20);
+//            Async.initThreadPool("test", 20);
 //            while (true) {
-//                System.out.println(AsyncUtils.statistic().get(0).toString());
+//                System.out.println(Async.statistic().get(0).toString());
 //                try {
 //                    Thread.sleep(200L);
 //                } catch (InterruptedException ignore) {
@@ -45,7 +46,7 @@ class AsyncUtilsTest {
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(5, 10, 1000,
             TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(5),
-            AsyncUtils.buildFactory(name, true, null, (thread, throwable) -> {
+            Async.buildFactory(name, true, null, (thread, throwable) -> {
             }),
             new ThreadPoolExecutor.AbortPolicy());
 
@@ -66,19 +67,19 @@ class AsyncUtilsTest {
     void runAsync() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(13);
         Thread.sleep(10L);
-        AsyncUtils.execute("test", () -> t(1, countDownLatch));
-        AsyncUtils.execute("test", () -> t(2, countDownLatch));
-        AsyncUtils.execute("test", () -> t(3, countDownLatch));
-        AsyncUtils.execute("test", () -> t(4, countDownLatch));
-        AsyncUtils.runAsync(() -> t(5, countDownLatch));
-        AsyncUtils.runAsync(() -> t(6, countDownLatch));
-        AsyncUtils.runAsync(() -> t(7, countDownLatch));
-        AsyncUtils.runAsync(() -> t(8, countDownLatch));
-        AsyncUtils.runAsync(() -> t(9, countDownLatch));
-        AsyncUtils.runAsync(() -> t(10, countDownLatch));
-        AsyncUtils.runAsync(() -> t(11, countDownLatch));
-        AsyncUtils.runAsync(() -> t(12, countDownLatch));
-        AsyncUtils.runAsync(() -> t(13, countDownLatch));
+        Async.execute("test", () -> t(1, countDownLatch));
+        Async.execute("test", () -> t(2, countDownLatch));
+        Async.execute("test", () -> t(3, countDownLatch));
+        Async.execute("test", () -> t(4, countDownLatch));
+        Async.run(() -> t(5, countDownLatch));
+        Async.run(() -> t(6, countDownLatch));
+        Async.run(() -> t(7, countDownLatch));
+        Async.run(() -> t(8, countDownLatch));
+        Async.run(() -> t(9, countDownLatch));
+        Async.run(() -> t(10, countDownLatch));
+        Async.run(() -> t(11, countDownLatch));
+        Async.run(() -> t(12, countDownLatch));
+        Async.run(() -> t(13, countDownLatch));
         countDownLatch.await();
     }
 

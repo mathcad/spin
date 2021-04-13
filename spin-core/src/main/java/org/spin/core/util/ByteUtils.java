@@ -137,8 +137,8 @@ public final class ByteUtils extends Util {
      * Return a clone of the given byte array (performs null check beforehand).
      *
      * @param array the array to clone
-     * @return the clone of the given array, or <tt>null</tt> if the array is
-     * <tt>null</tt>
+     * @return the clone of the given array, or <code>null</code> if the array is
+     * <code>null</code>
      */
     public static byte[] clone(byte[] array) {
         if (array == null) {
@@ -224,14 +224,14 @@ public final class ByteUtils extends Util {
     }
 
     /**
-     * Split a byte array <tt>input</tt> into two arrays at <tt>index</tt>,
-     * i.e. the first array will have the lower <tt>index</tt> bytes, the
-     * second one the higher <tt>input.length - index</tt> bytes.
+     * Split a byte array <code>input</code> into two arrays at <code>index</code>,
+     * i.e. the first array will have the lower <code>index</code> bytes, the
+     * second one the higher <code>input.length - index</code> bytes.
      *
      * @param input the byte array to be split
      * @param index the index where the byte array is split
      * @return the splitted input array as an array of two byte arrays
-     * @throws ArrayIndexOutOfBoundsException if <tt>index</tt> is out of bounds
+     * @throws ArrayIndexOutOfBoundsException if <code>index</code> is out of bounds
      */
     public static byte[][] split(byte[] input, int index)
         throws ArrayIndexOutOfBoundsException {
@@ -252,8 +252,8 @@ public final class ByteUtils extends Util {
      * @param input the input byte array
      * @param start the start index
      * @param end   the end index
-     * @return a subarray of <tt>input</tt>, ranging from <tt>start</tt>
-     * (inclusively) to <tt>end</tt> (exclusively)
+     * @return a subarray of <code>input</code>, ranging from <code>start</code>
+     * (inclusively) to <code>end</code> (exclusively)
      */
     public static byte[] subArray(byte[] input, int start, int end) {
         byte[] result = new byte[end - start];
@@ -266,7 +266,7 @@ public final class ByteUtils extends Util {
      *
      * @param input the input byte array
      * @param start the start index
-     * @return a subarray of <tt>input</tt>, ranging from <tt>start</tt> to
+     * @return a subarray of <code>input</code>, ranging from <code>start</code> to
      * the end of the array
      */
     public static byte[] subArray(byte[] input, int start) {

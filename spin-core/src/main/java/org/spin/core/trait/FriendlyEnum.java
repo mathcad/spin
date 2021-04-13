@@ -13,7 +13,7 @@ import java.util.Optional;
  * @author xuweinan
  * @version 1.0
  */
-public interface FrendlyEnum<T extends Serializable> extends Evaluatable<T> {
+public interface FriendlyEnum<T extends Serializable> extends Evaluatable<T> {
 
     /**
      * 获取枚举描述
@@ -28,7 +28,7 @@ public interface FrendlyEnum<T extends Serializable> extends Evaluatable<T> {
         return "";
     }
 
-    static <E extends Serializable, T extends FrendlyEnum<E>> Optional<T> valueOf(Class<T> clazz, E value) {
+    static <E extends Serializable, T extends FriendlyEnum<E>> Optional<T> valueOf(Class<T> clazz, E value) {
         for (T enumConstant : clazz.getEnumConstants()) {
             if (enumConstant.getValue().equals(value)) {
                 return Optional.of(enumConstant);
@@ -37,10 +37,10 @@ public interface FrendlyEnum<T extends Serializable> extends Evaluatable<T> {
         return Optional.empty();
     }
 
-    static <E extends Serializable, T extends FrendlyEnum<E>> Map<E, String> toMap(Class<T> enumClass) {
-        FrendlyEnum<E>[] enumConstants = enumClass.getEnumConstants();
+    static <E extends Serializable, T extends FriendlyEnum<E>> Map<E, String> toMap(Class<T> enumClass) {
+        FriendlyEnum<E>[] enumConstants = enumClass.getEnumConstants();
         Map<E, String> res = new HashMap<>(enumConstants.length);
-        for (FrendlyEnum<E> enumConstant : enumConstants) {
+        for (FriendlyEnum<E> enumConstant : enumConstants) {
             res.put(enumConstant.getValue(), enumConstant.getDescription());
         }
 
