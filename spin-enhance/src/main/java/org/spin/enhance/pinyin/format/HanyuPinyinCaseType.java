@@ -21,19 +21,21 @@ package org.spin.enhance.pinyin.format;
  * <p>
  * This class provides several options for outputted cases of Hanyu Pinyin
  * string, which are listed below. For example, Chinese character '民'
+ * </p>
  *
- * <table summary="">
+ * <table>
+ * <caption>Examples</caption>
  * <tr>
  * <th>Options</th>
  * <th>Output</th>
  * </tr>
  * <tr>
  * <td>LOWERCASE</td>
- * <td align = "center">min2</td>
+ * <td>min2</td>
  * </tr>
  * <tr>
  * <td>UPPERCASE</td>
- * <td align = "center">MIN2</td>
+ * <td>MIN2</td>
  * </tr>
  * </table>
  *

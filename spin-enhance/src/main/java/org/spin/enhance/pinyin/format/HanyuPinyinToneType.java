@@ -27,22 +27,23 @@ package org.spin.enhance.pinyin.format;
  * This class provides several options for output of Chinese tones, which are
  * listed below. For example, Chinese character '打'
  *
- * <table summary="">
+ * <table>
+ * <caption>Examples</caption>
  * <tr>
  * <th>Options</th>
  * <th>Output</th>
  * </tr>
  * <tr>
  * <td>WITH_TONE_NUMBER</td>
- * <td align = "center">da3</td>
+ * <td>da3</td>
  * </tr>
  * <tr>
  * <td>WITHOUT_TONE</td>
- * <td align = "center">da</td>
+ * <td>da</td>
  * </tr>
  * <tr>
  * <td>WITH_TONE_MARK</td>
- * <td align = "center">dǎ</td>
+ * <td>dǎ</td>
  * </tr>
  * </table>
  *
