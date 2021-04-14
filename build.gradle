@@ -83,7 +83,6 @@ subprojects {
         springCloudVersion = "3.0.2"
         springKafkaVersion = "2.6.7"
         sentinelStarterVersion = "2.2.5.RELEASE"
-        apolloVersion = "1.6.1.1"
         knife4jVersion = "2.0.8"
         p6spyVersion = "3.9.1"
         feignHttpVersion = "11.1"

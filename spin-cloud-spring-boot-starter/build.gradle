@@ -60,7 +60,6 @@ dependencies {
 
     api group: 'com.alibaba.cloud', name: 'spring-cloud-starter-alibaba-sentinel', version: sentinelStarterVersion
 
-    api group: 'com.ctrip.framework.apollo', name: 'apollo-client', version: apolloVersion
     api group: 'com.github.xiaoymin', name: 'knife4j-spring-boot-autoconfigure', version: knife4jVersion
     api group: 'p6spy', name: 'p6spy', version: p6spyVersion
     api group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
