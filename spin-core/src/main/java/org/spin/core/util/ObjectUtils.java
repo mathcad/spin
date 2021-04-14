@@ -1,21 +1,10 @@
 package org.spin.core.util;
 
-import org.spin.core.trait.BooleanEvaluatable;
-import org.spin.core.trait.ByteEvaluatable;
-import org.spin.core.trait.DoubleEvaluatable;
-import org.spin.core.trait.Evaluatable;
-import org.spin.core.trait.FloatEvaluatable;
-import org.spin.core.trait.IntEvaluatable;
-import org.spin.core.trait.LongEvaluatable;
-import org.spin.core.trait.ShortEvaluatable;
+import org.spin.core.trait.*;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * object 工具类
@@ -161,7 +150,7 @@ public final class ObjectUtils extends Util {
             }
         }
         Class<?> targetType = target.getClass();
-        if (type == targetType || ClassUtils.isAssignable(type, targetType, true)) {
+        if (type == targetType || ClassUtils.isAssignable(targetType, type, true)) {
             return (T) target;
         } else if (BigDecimal.class.equals(type)) {
             return (T) new BigDecimal(target.toString());

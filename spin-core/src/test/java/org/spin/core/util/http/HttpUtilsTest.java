@@ -11,13 +11,7 @@ import org.spin.core.function.serializable.Function;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
-import org.spin.core.util.BeanUtils;
-import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.DateUtils;
-import org.spin.core.util.ImageUtils;
-import org.spin.core.util.JsonUtils;
-import org.spin.core.util.MapUtils;
-import org.spin.core.util.StringUtils;
+import org.spin.core.util.*;
 import org.spin.core.util.file.FileType;
 
 import javax.imageio.ImageIO;
@@ -587,6 +581,11 @@ class HttpUtilsTest {
         public void setEmployeeCode(String employeeCode) {
             this.employeeCode = employeeCode;
         }
+    }
+
+    @Test
+    void testConvert() {
+        ObjectUtils.convert(List.class, new ArrayList<>());
     }
 
 }
