@@ -10,7 +10,9 @@ import org.spin.core.Assert;
 import org.spin.core.inspection.BytesClassLoader;
 import org.spin.core.util.ArrayUtils;
 import org.spin.core.util.ClassUtils;
+import org.spin.data.core.IEntity;
 
+import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
@@ -38,6 +40,61 @@ public class R extends ClassLoader {
     private static final BytesClassLoader CLASS_LOADER = new BytesClassLoader(Thread.currentThread().getContextClassLoader());
 
     private R() {
+    }
+
+    /**
+     * 保存实体
+     *
+     * @param entity 实体
+     * @param <E>    实体类型
+     * @return 影响行数
+     */
+    @SuppressWarnings("unchecked")
+    public static <E> int insert(E entity) {
+        Assert.notNull(entity, "新增的实体不能为null");
+        return getMapper((Class<E>) entity.getClass()).insert(entity);
+    }
+
+    /**
+     * 根据ID删除实体
+     *
+     * @param id     id
+     * @param ignore 无
+     * @param <E>    实体类型
+     * @return 影响行数
+     */
+    @SafeVarargs
+    public static <E> int delete(Serializable id, E... ignore) {
+        Class<E> type = ArrayUtils.resolveArrayCompType(ignore);
+        return getMapper(type).deleteById(id);
+    }
+
+    /**
+     * 根据ID删除实体
+     *
+     * @param entity 实体
+     * @param <E>    实体类型
+     * @return 影响行数
+     */
+    @SuppressWarnings("unchecked")
+    public static <E extends IEntity<?, E>> int delete(E entity) {
+        Assert.notNull(entity, "删除的实体不能为null");
+        Assert.notNull(entity.id(), "删除的实体ID不能为null");
+        return getMapper((Class<E>) entity.getClass()).deleteById(entity.id());
+    }
+
+    /**
+     * 根据ID更新
+     *
+     * @param entity 实体
+     * @param <E>    实体类型
+     * @return 影响行数
+     */
+    @SuppressWarnings("unchecked")
+    public static <E extends IEntity<?, E>> int update(E entity) {
+        Assert.notNull(entity, "更新的实体不能为null");
+        Assert.notNull(entity.id(), "更新的实体ID不能为null");
+        return getMapper((Class<E>) entity.getClass()).updateById(entity);
     }
 
     /**
