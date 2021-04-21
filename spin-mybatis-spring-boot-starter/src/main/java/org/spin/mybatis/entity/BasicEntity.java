@@ -7,6 +7,7 @@ import org.spin.core.Assert;
 import org.spin.core.gson.annotation.PreventOverflow;
 import org.spin.core.util.BeanUtils;
 import org.spin.data.core.IEntity;
+import org.spin.data.rs.AffectedRows;
 import org.spin.mybatis.query.LambdaQueryExecutor;
 import org.spin.mybatis.query.R;
 
@@ -78,49 +79,61 @@ public abstract class BasicEntity<T extends BasicEntity<T>> implements IEntity<L
     /**
      * 将当前实体新增至数据库
      *
+     * @param failMsg 失败的错误提示
      * @return 当前对象本身
      */
-    public T insert() {
+    public T insert(String... failMsg) {
         @SuppressWarnings("unchecked")
         T e = (T) this;
         int cnt = repo().insert(e);
-        Assert.isEquals(cnt, 1, "新增失败");
+        if (null != failMsg && failMsg.length > 0) {
+            Assert.isEquals(cnt, 1, failMsg[0]);
+        }
         return e;
     }
 
     /**
      * 根据ID将当前实体更新到数据库
      *
+     * @param failMsg 失败的错误提示
      * @return 当前对象本身
      */
-    public T updateById() {
+    public T updateById(String... failMsg) {
         @SuppressWarnings("unchecked")
         T e = (T) this;
         Assert.notNull(e.getId(), "ID不能为空");
         int cnt = repo().updateById(e);
-        Assert.isEquals(cnt, 1, "更新失败");
+        if (null != failMsg && failMsg.length > 0) {
+            Assert.isEquals(cnt, 1, failMsg[0]);
+        }
         return e;
     }
 
     /**
      * 根据ID将当前实体从数据库删除
+     *
+     * @return 影响行数
      */
-    public void deleteById() {
+    public AffectedRows deleteById() {
         @SuppressWarnings("unchecked")
         T e = (T) this;
-        int cnt = repo().deleteById(Assert.notNull(e.getId(), "ID不能为空"));
-        Assert.isEquals(cnt, 1, "删除失败");
+        return AffectedRows.of(repo().deleteById(Assert.notNull(e.getId(), "ID不能为空")));
     }
 
     /**
      * 根据ID查询数据库实体
      *
+     * @param failMsg 失败的错误提示
      * @return 实体
      */
-    public T getById() {
+    public T getById(String... failMsg) {
         @SuppressWarnings("unchecked")
         T e = (T) this;
-        e.mergeAll(repo().selectById(Assert.notNull(e.getId(), "ID不能为空")));
+        T inDb = repo().selectById(Assert.notNull(e.getId(), "ID不能为空"));
+        if (null != failMsg && failMsg.length > 0) {
+            Assert.notNull(inDb, failMsg[0]);
+        }
+        e.mergeAll(inDb);
         return e;
     }
 

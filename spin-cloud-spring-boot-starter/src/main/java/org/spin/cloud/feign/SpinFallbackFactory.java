@@ -131,7 +131,6 @@ public abstract class SpinFallbackFactory<T, F extends AbstractFallback> impleme
         // 实现抽象方法
         List<Method> methods = new LinkedList<>();
         if (full) {
-            Collections.addAll(methods, clientClass.getMethods());
             Arrays.stream(clientClass.getMethods()).filter(m -> !Modifier.isStatic(m.getModifiers()) && Modifier.isPublic(m.getModifiers())).forEach(methods::add);
         } else {
             Arrays.stream(targetClass.getMethods()).filter(m -> Modifier.isAbstract(m.getModifiers())).forEach(methods::add);

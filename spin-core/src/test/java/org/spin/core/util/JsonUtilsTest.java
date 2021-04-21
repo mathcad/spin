@@ -91,26 +91,28 @@ public class JsonUtilsTest {
 
     @Test
     void testSetLong() {
-        Long[] values = ArrayUtils.ofArray(1321645046073704449L, 1L, 2L, 1321645046916759554L);
+        Set<Long> values = CollectionUtils.ofHashSet(1321645046073704449L, 1L, 2L, 1321645046916759554L);
 
         De de = new De();
         de.setVals(values);
 
 
         System.out.println(JsonUtils.toJson(de));
+        System.out.println(JsonUtils.getDefaultGson().toJson(de));
+        System.out.println(JsonUtils.toJson(values));
 
     }
 
     public static class De {
 
-        @PreventOverflow
-        Long[] vals;
+//        @PreventOverflow
+        private Set<Long> vals;
 
-        public Long[] getVals() {
+        public Set<Long> getVals() {
             return vals;
         }
 
-        public void setVals(Long[] vals) {
+        public void setVals(Set<Long> vals) {
             this.vals = vals;
         }
     }

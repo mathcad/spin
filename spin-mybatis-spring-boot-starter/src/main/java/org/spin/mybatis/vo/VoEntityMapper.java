@@ -6,7 +6,7 @@ import org.spin.mybatis.entity.BasicEntity;
 import java.io.Serializable;
 import java.util.function.Supplier;
 
-public interface VoEntityMapper<V, T extends BasicEntity> extends Serializable {
+public interface VoEntityMapper<V, T extends BasicEntity<T>> extends Serializable {
 
     /**
      * 将目标实体中的字段copy到当前vo
@@ -31,18 +31,32 @@ public interface VoEntityMapper<V, T extends BasicEntity> extends Serializable {
         return entity;
     }
 
+    default T mergeToEntity(T entity) {
+        BeanUtils.copyTo(this, entity, null, (f, v) -> null != v, null);
+        return entity;
+    }
+
     /**
      * 将当前Vo对象中的属性复制到实体(属性copy，不能做类型转换)
      *
      * @param entitySupplier 实体提供者
      * @return 拷贝属性后的实体
      */
-    default T copyToEntity(Supplier<T> entitySupplier) {
+    default T toEntity(Supplier<T> entitySupplier) {
         if (null == entitySupplier) {
             return null;
         }
         T entity = entitySupplier.get();
         BeanUtils.copyTo(this, entity);
+        return entity;
+    }
+
+    default T mergeToEntity(Supplier<T> entitySupplier) {
+        if (null == entitySupplier) {
+            return null;
+        }
+        T entity = entitySupplier.get();
+        BeanUtils.copyTo(this, entity, null, (f, v) -> null != v, null);
         return entity;
     }
 }

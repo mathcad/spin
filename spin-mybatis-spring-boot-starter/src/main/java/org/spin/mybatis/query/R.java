@@ -11,6 +11,7 @@ import org.spin.core.inspection.BytesClassLoader;
 import org.spin.core.util.ArrayUtils;
 import org.spin.core.util.ClassUtils;
 import org.spin.data.core.IEntity;
+import org.spin.data.rs.AffectedRows;
 
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
@@ -19,6 +20,7 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -50,9 +52,9 @@ public class R extends ClassLoader {
      * @return 影响行数
      */
     @SuppressWarnings("unchecked")
-    public static <E> int insert(E entity) {
+    public static <E> AffectedRows insert(E entity) {
         Assert.notNull(entity, "新增的实体不能为null");
-        return getMapper((Class<E>) entity.getClass()).insert(entity);
+        return AffectedRows.of(getMapper((Class<E>) entity.getClass()).insert(entity));
     }
 
     /**
@@ -64,9 +66,10 @@ public class R extends ClassLoader {
      * @return 影响行数
      */
     @SafeVarargs
-    public static <E> int delete(Serializable id, E... ignore) {
+    public static <E> AffectedRows delete(Serializable id, E... ignore) {
+        Assert.notNull(id, "ID不能为null");
         Class<E> type = ArrayUtils.resolveArrayCompType(ignore);
-        return getMapper(type).deleteById(id);
+        return AffectedRows.of(getMapper(type).deleteById(id));
     }
 
     /**
@@ -77,10 +80,10 @@ public class R extends ClassLoader {
      * @return 影响行数
      */
     @SuppressWarnings("unchecked")
-    public static <E extends IEntity<?, E>> int delete(E entity) {
+    public static <E extends IEntity<?, E>> AffectedRows delete(E entity) {
         Assert.notNull(entity, "删除的实体不能为null");
         Assert.notNull(entity.id(), "删除的实体ID不能为null");
-        return getMapper((Class<E>) entity.getClass()).deleteById(entity.id());
+        return AffectedRows.of(getMapper((Class<E>) entity.getClass()).deleteById(entity.id()));
     }
 
     /**
@@ -91,10 +94,25 @@ public class R extends ClassLoader {
      * @return 影响行数
      */
     @SuppressWarnings("unchecked")
-    public static <E extends IEntity<?, E>> int update(E entity) {
+    public static <E extends IEntity<?, E>> AffectedRows update(E entity) {
         Assert.notNull(entity, "更新的实体不能为null");
         Assert.notNull(entity.id(), "更新的实体ID不能为null");
-        return getMapper((Class<E>) entity.getClass()).updateById(entity);
+        return AffectedRows.of(getMapper((Class<E>) entity.getClass()).updateById(entity));
+    }
+
+    /**
+     * 根据主键查询实体
+     *
+     * @param id     主键
+     * @param ignore 无
+     * @param <E>    实体类型
+     * @return 实体
+     */
+    @SafeVarargs
+    public static <E extends IEntity<?, E>> Optional<E> getById(Serializable id, E... ignore) {
+        Assert.notNull(id, "ID不能为null");
+        Class<E> type = ArrayUtils.resolveArrayCompType(ignore);
+        return Optional.ofNullable(getMapper(type).selectById(id));
     }
 
     /**

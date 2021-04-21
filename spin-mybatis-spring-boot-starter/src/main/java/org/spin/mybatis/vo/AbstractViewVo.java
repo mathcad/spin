@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * @author xuweinan
  * @version 1.0
  */
-public abstract class AbstractViewVo<T, E extends AbstractEntity> implements VoEntityMapper<T, E>, Serializable {
+public abstract class AbstractViewVo<T, E extends AbstractEntity<E>> implements VoEntityMapper<T, E>, Serializable {
 
     @ApiModelProperty(value = "ID", example = "1")
     @PreventOverflow

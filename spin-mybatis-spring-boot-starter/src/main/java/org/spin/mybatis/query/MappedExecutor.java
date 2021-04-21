@@ -7,9 +7,11 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.data.rs.AffectedRows;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * MyBatis条件执行器
@@ -59,16 +61,16 @@ public interface MappedExecutor<E, M extends BaseMapper<E>> {
      *
      * @return 实体(可能为null)
      */
-    default E single() {
+    default Optional<E> single() {
         List<E> list = list();
         if (CollectionUtils.isNotEmpty(list)) {
             int size = list.size();
             if (size > 1) {
                 logger.warn(String.format("Warn: execute Method There are  %s results.", size));
             }
-            return list.get(0);
+            return Optional.ofNullable(list.get(0));
         }
-        return null;
+        return Optional.empty();
     }
 
     /**
@@ -76,8 +78,8 @@ public interface MappedExecutor<E, M extends BaseMapper<E>> {
      *
      * @return 实体(可能为null)
      */
-    default E unique() {
-        return repo().selectOne(getQuery());
+    default Optional<E> unique() {
+        return Optional.ofNullable(repo().selectOne(getQuery()));
     }
 
     /**
@@ -85,8 +87,8 @@ public interface MappedExecutor<E, M extends BaseMapper<E>> {
      *
      * @return 删除数量
      */
-    default int delete() {
-        return repo().delete(getQuery());
+    default AffectedRows delete() {
+        return AffectedRows.of(repo().delete(getQuery()));
     }
 
     /**
@@ -95,8 +97,8 @@ public interface MappedExecutor<E, M extends BaseMapper<E>> {
      * @param entity 更新内容
      * @return 影响行数
      */
-    default int update(E entity) {
-        return repo().update(entity, getQuery());
+    default AffectedRows update(E entity) {
+        return AffectedRows.of(repo().update(entity, getQuery()));
     }
 
     /**

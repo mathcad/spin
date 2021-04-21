@@ -35,12 +35,16 @@ public class LongTypeAdapter extends MatchableTypeAdapter<Long> {
 
     @Override
     public void write(JsonWriter out, Long value, Field field) throws IOException {
-        if (null == value || null == field) {
+        if (null == value) {
             out.nullValue();
         } else {
-            PreventOverflow annotation = field.getAnnotation(PreventOverflow.class);
-            if (null != annotation && (value > 9007199254740992L || !annotation.onlyOverflow())) {
-                out.value(value.toString());
+            if (null != field) {
+                PreventOverflow annotation = field.getAnnotation(PreventOverflow.class);
+                if (null != annotation && (value > 9007199254740992L || !annotation.onlyOverflow())) {
+                    out.value(value.toString());
+                } else {
+                    out.value(value);
+                }
             } else {
                 out.value(value);
             }

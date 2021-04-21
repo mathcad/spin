@@ -18,9 +18,9 @@ public class StaticTest extends ClassLoader {
 
     @Test
     void testA() {
-        A res = R.<A>query().or(a -> a.like(A::getName, "1")).or(a -> a.like(A::getPhone, "1")).unique();
+        A res = R.<A>query().or(a -> a.like(A::getName, "1")).or(a -> a.like(A::getPhone, "1")).unique().orElse(null);
 
-        res = R.<A>query().dataPerm().or(a -> a.like(A::getName, "1")).or(a -> a.like(A::getPhone, "1")).single();
+        res = R.<A>query().dataPerm().or(a -> a.like(A::getName, "1")).or(a -> a.like(A::getPhone, "1")).single().orElse(null);
         System.out.println(A.<A>refId(1L));
     }
 
