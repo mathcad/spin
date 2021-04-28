@@ -42,4 +42,5 @@ dependencies {
 
     api group: 'org.mathcat', name: 'spin-data-core', version: '2.4.0-SNAPSHOT'
     api group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: springBootVersion
+    compileOnly group: 'org.mathcat', name: 'spin-datasource-spring-boot-starter', version: '2.4.0-SNAPSHOT'
 }

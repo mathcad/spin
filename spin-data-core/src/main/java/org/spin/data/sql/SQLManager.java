@@ -44,7 +44,7 @@ public class SQLManager {
      */
     private volatile int cacheLimit = DEFAULT_CACHE_LIMIT;
     private final Map<String, ParameterizedSql> parsedSqlCache =
-        new LinkedHashMap<String, ParameterizedSql>(DEFAULT_CACHE_LIMIT, 0.75f, true) {
+        new LinkedHashMap<>(DEFAULT_CACHE_LIMIT, 0.75f, true) {
             private static final long serialVersionUID = 3202723764687686913L;
 
             @Override

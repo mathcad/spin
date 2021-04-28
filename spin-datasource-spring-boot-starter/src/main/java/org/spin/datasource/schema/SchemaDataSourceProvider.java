@@ -9,5 +9,5 @@ package org.spin.datasource.schema;
  * @version 1.0
  */
 public interface SchemaDataSourceProvider {
-    String determinDataSource(String schema);
+    String determineDataSource(String schema);
 }

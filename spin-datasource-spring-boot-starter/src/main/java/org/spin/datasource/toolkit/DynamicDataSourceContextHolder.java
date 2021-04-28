@@ -90,14 +90,14 @@ public final class DynamicDataSourceContextHolder {
                 throw e;
             }
         } else {
-            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            if (TransactionSynchronizationManager.isActualTransactionActive() && !peek.getDatasource().equals(ds.getDatasource())) {
                 // 在Spring的JDBC事务上下文中切换数据源会破坏事务一致性
-                logger.warn("*** Current DataSource [{}] is CHANGING to [{}] in a JDBC Transaction, Consistency might be broken!!! ***",
-                    peek.toString(), ds.toString());
+                logger.warn("*** Current DataSource [{}] is CHANGING to [{}] in a JDBC Transaction, It would not be EFFECTIVE or Consistency might be broken!!! ***",
+                    peek, ds);
             }
         }
 
-        logger.info("**************** 数据源已切换至 {} ****************", ds.toString());
+        logger.info("**************** 数据源已切换至 {} ****************", ds);
     }
 
     /**

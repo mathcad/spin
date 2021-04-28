@@ -1,8 +1,10 @@
 package org.spin.mybatis.query;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionTemplate;
+import org.mybatis.spring.SqlSessionUtils;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.spin.cloud.util.BeanHolder;
@@ -10,17 +12,23 @@ import org.spin.core.Assert;
 import org.spin.core.inspection.BytesClassLoader;
 import org.spin.core.util.ArrayUtils;
 import org.spin.core.util.ClassUtils;
+import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.ObjectUtils;
 import org.spin.data.core.IEntity;
 import org.spin.data.rs.AffectedRows;
+import org.spin.data.rs.RowMapper;
+import org.spin.data.rs.RowMappers;
+import org.spin.data.throwable.SQLError;
 
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -40,6 +48,8 @@ public class R extends ClassLoader {
     private static volatile boolean parsed = false;
 
     private static final BytesClassLoader CLASS_LOADER = new BytesClassLoader(Thread.currentThread().getContextClassLoader());
+
+    private static SqlSessionTemplate sqlSessionTemplate;
 
     private R() {
     }
@@ -166,6 +176,97 @@ public class R extends ClassLoader {
             initMapperBeans();
         }
         return Assert.notNull((M) CUSTOMER_MAPPERS.get(type.getName()), () -> "不存在类型为" + type.getSimpleName() + "的Mapper");
+    }
+
+    /**
+     * 执行SQL并返回结果
+     *
+     * @param sql    sql
+     * @param ignore 无
+     * @param <E>    查询结果泛型
+     * @return 查询结果
+     */
+    @SafeVarargs
+    public static <E> Optional<E> executeForSingle(String sql, E... ignore) {
+        if (null == sqlSessionTemplate) {
+            sqlSessionTemplate = BeanHolder.getApplicationContext().getBean(SqlSessionTemplate.class);
+        }
+        SqlSession sqlSession = SqlSessionUtils.getSqlSession(sqlSessionTemplate.getSqlSessionFactory(),
+            sqlSessionTemplate.getExecutorType(), sqlSessionTemplate.getPersistenceExceptionTranslator());
+        try (PreparedStatement ps = sqlSession.getConnection().prepareStatement(sql)) {
+            boolean isResultSet = ps.execute();
+
+            Class<E> resultType = ArrayUtils.resolveArrayCompType(ignore);
+            if (Void.class == resultType) {
+                return Optional.empty();
+            }
+
+            if (isResultSet) {
+                RowMapper<E> mapper = null;
+                if (ClassUtils.wrapperToPrimitive(resultType) == null) {
+                    mapper = RowMappers.getMapper(resultType);
+                }
+                try (ResultSet rs = ps.getResultSet()) {
+                    if (null != mapper) {
+                        List<E> tList = mapper.extractData(rs, 1);
+                        if (CollectionUtils.isEmpty(tList)) {
+                            return Optional.empty();
+                        } else {
+                            return Optional.ofNullable(tList.get(0));
+                        }
+                    } else {
+                        boolean next = rs.next();
+                        if (next) {
+                            long aLong = rs.getLong(1);
+                            return Optional.ofNullable(ObjectUtils.convert(resultType, aLong));
+                        } else {
+                            return Optional.empty();
+                        }
+                    }
+                }
+            } else {
+                if (ClassUtils.wrapperToPrimitive(resultType) == null) {
+                    throw new org.spin.data.throwable.SQLException(SQLError.MAPPING_ERROR, "CUD语句不支持返回结果映射");
+                }
+                int updateCount = ps.getUpdateCount();
+                return Optional.ofNullable(ObjectUtils.convert(resultType, updateCount));
+            }
+
+        } catch (SQLException e) {
+            throw new org.spin.data.throwable.SQLException(SQLError.SQL_EXCEPTION, e);
+        }
+    }
+
+    /**
+     * 执行SQL并返回结果
+     *
+     * @param sql    sql
+     * @param ignore 无
+     * @param <E>    查询结果泛型
+     * @return 查询结果
+     */
+    @SafeVarargs
+    public static <E> List<E> executeQuery(String sql, E... ignore) {
+        if (null == sqlSessionTemplate) {
+            sqlSessionTemplate = BeanHolder.getApplicationContext().getBean(SqlSessionTemplate.class);
+        }
+        SqlSession sqlSession = SqlSessionUtils.getSqlSession(sqlSessionTemplate.getSqlSessionFactory(),
+            sqlSessionTemplate.getExecutorType(), sqlSessionTemplate.getPersistenceExceptionTranslator());
+        try (PreparedStatement ps = sqlSession.getConnection().prepareStatement(sql)) {
+
+            Class<E> resultType = ArrayUtils.resolveArrayCompType(ignore);
+            if (Void.class == resultType) {
+                return Collections.emptyList();
+            }
+
+            RowMapper<E> mapper = RowMappers.getMapper(resultType);
+            try (ResultSet rs = ps.executeQuery()) {
+                return mapper.extractData(rs);
+            }
+
+        } catch (SQLException e) {
+            throw new org.spin.data.throwable.SQLException(SQLError.SQL_EXCEPTION, e);
+        }
     }
 
     @SuppressWarnings("unchecked")

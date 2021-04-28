@@ -6,6 +6,7 @@ import org.spin.data.throwable.SQLError;
 import org.spin.data.throwable.SQLException;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -23,7 +24,7 @@ public class RowMappers {
         MAPPERS.put(JsonUtils.MAP_TYPE_TOKEN, new MapRowMapper());
     }
 
-    public static <T> void registMapper(TypeToken<T> typeToken, RowMapper<T> mapper) {
+    public static <T> void registerMapper(TypeToken<T> typeToken, RowMapper<T> mapper) {
         MAPPERS.put(typeToken, mapper);
     }
 
@@ -38,6 +39,9 @@ public class RowMappers {
         } else {
             Type actType = typeToken.getType();
             if (actType instanceof Class) {
+                if (Object.class == actType || Map.class == actType) {
+                    return (RowMapper<T>) getMapRowMapper();
+                }
                 EntityRowMapper<?> erm = new EntityRowMapper<>((Class<?>) actType);
                 MAPPERS.put(typeToken, erm);
                 return (RowMapper<T>) erm;

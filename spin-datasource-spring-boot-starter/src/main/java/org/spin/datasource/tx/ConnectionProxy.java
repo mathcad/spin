@@ -39,17 +39,17 @@ public class ConnectionProxy implements Connection {
 
     @Override
     public void commit() throws SQLException {
-        // connection.commit();
+         connection.commit();
     }
 
     @Override
     public void rollback() throws SQLException {
-        // connection.rollback();
+         connection.rollback();
     }
 
     @Override
     public void close() throws SQLException {
-        // connection.close();
+         connection.close();
     }
 
     @Override

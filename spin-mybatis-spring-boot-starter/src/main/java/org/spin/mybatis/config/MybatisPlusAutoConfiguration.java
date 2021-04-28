@@ -4,12 +4,17 @@ import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import org.apache.ibatis.session.SqlSession;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.mybatis.spring.SqlSessionUtils;
 import org.spin.data.pk.generator.DistributedIdGenerator;
+import org.spin.datasource.schema.Schema;
 import org.spin.mybatis.DataPermissionInterceptor;
 import org.spin.mybatis.entity.SfIdGenerator;
 import org.spin.mybatis.handler.MybatisMetaObjectHandler;
 import org.spin.mybatis.handler.MybatisPlusMetaObjectHandler;
 import org.spin.mybatis.handler.PermissionDataMetaObjectHandler;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -58,5 +63,23 @@ public class MybatisPlusAutoConfiguration {
     @Primary
     public MybatisPlusMetaObjectHandler mybatisPlusMetaObjectHandler(List<MybatisMetaObjectHandler> mybatisMetaObjectHandlers) {
         return new MybatisPlusMetaObjectHandler(mybatisMetaObjectHandlers);
+    }
+
+    @Bean
+    @ConditionalOnClass(name = "org.spin.datasource.schema.Schema")
+    @ConditionalOnBean(SqlSessionTemplate.class)
+    public InitializingBean initMybatisConnectionProvider(SqlSessionTemplate sqlSessionTemplate) {
+        return () -> {
+            try {
+                Class.forName("org.spin.datasource.schema.Schema");
+                Schema.setTransactionSyncConnectionProvider(() -> {
+                    SqlSession sqlSession = SqlSessionUtils.getSqlSession(sqlSessionTemplate.getSqlSessionFactory(),
+                        sqlSessionTemplate.getExecutorType(), sqlSessionTemplate.getPersistenceExceptionTranslator());
+                    return sqlSession.getConnection();
+                });
+            } catch (ClassNotFoundException e) {
+                // do nothing
+            }
+        };
     }
 }

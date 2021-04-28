@@ -49,5 +49,6 @@ dependencies {
     }
 
     compileOnly group: 'org.mathcat', name: 'spin-cloud-spring-boot-starter', version: '2.4.0-SNAPSHOT'
+    compileOnly group: 'org.mathcat', name: 'spin-datasource-spring-boot-starter', version: '2.4.0-SNAPSHOT'
     compileOnly group: 'io.springfox', name: 'springfox-swagger2', version: swaggerVersion
 }
