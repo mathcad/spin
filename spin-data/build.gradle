@@ -3,35 +3,40 @@ plugins {
 }
 
 description = '数据访问模块, 基于Hibernate的实现'
-version = '2.2.25-SNAPSHOT'
-def artifactId = 'spin-data'
+version = '2.4.0-SNAPSHOT'
 
 test {
     useJUnitPlatform()
 }
 
-install {
-    repositories.mavenInstaller {
-        pom.version = "$project.version"
-        pom.artifactId = "$artifactId"
-        pom.groupId = "$project.group"
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+//            artifact sourceJar
+            artifact javadocJar
+        }
     }
-}
 
-uploadArchives {
     repositories {
-        mavenDeployer {
-            repository(url: repoSnapUrl) {
-                authentication(userName: repoUser, password: repoPasswd)
+        maven {
+            name = "mathcat"
+            url = version.endsWith("-SNAPSHOT") ? repoSnapUrl : repoReleaseUrl
+            allowInsecureProtocol = true
+            credentials {
+                username = repoUser
+                password = repoPasswd
             }
-            pom.groupId = "$project.group"
-            pom.artifactId = "$artifactId"
-            pom.version = "$project.version"
         }
     }
 }
 
 dependencies {
+    // additional for Intellij
+    testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: junitLauncherVersion
+    testRuntimeOnly group: 'org.junit.vintage', name: 'junit-vintage-engine', version: junitJupiterVersion
+
+    // test runtime
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
 
@@ -43,5 +48,5 @@ dependencies {
     api group: 'org.springframework', name: 'spring-oxm', version: springVersion
     api group: 'org.springframework', name: 'spring-tx', version: springVersion
     api group: 'org.hibernate', name: 'hibernate-core', version: hibernateVersion
-    api group: 'javax.transaction', name: 'javax.transaction-api', version: transactionApiVersion
+//    api group: 'javax.transaction', name: 'javax.transaction-api', version: '1.3'
 }

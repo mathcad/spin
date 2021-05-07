@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * TITLE
+ * 标记Controller方法，用来指示当前请求的数据源
  * <p>DESCRIPTION</p>
  * <p>Created by xuweinan on 2020/3/27</p>
  *

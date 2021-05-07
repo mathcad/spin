@@ -224,38 +224,83 @@ public class FastByteBuffer {
     /**
      * 返回快速缓冲中的数据
      *
-     * @param start 逻辑起始位置
-     * @param len   逻辑字节长
+     * @param off 逻辑起始位置
+     * @param len 逻辑字节长
      * @return 快速缓冲中的数据
      */
-    public byte[] toArray(int start, int len) {
-        int remaining = len;
-        int pos = 0;
+    public byte[] toArray(int off, int len) {
         byte[] array = new byte[len];
+        copyToArray(off, len, array);
+        return array;
+    }
+
+    /**
+     * 返回快速缓冲中的数据
+     *
+     * @param off offset
+     * @param b   dest
+     * @return actual length
+     */
+    public int copyToArray(int off, byte[] b) {
+        int len = b.length + off > size ? (size - off) : b.length;
+        return copyToArray(off, len, b);
+    }
+
+    /**
+     * 返回快速缓冲中的数据
+     *
+     * @param off offset
+     * @param len length
+     * @param b   dest
+     * @return actual length
+     */
+    public int copyToArray(int off, int len, byte[] b) {
+        return copyToArray(off, len, b, 0);
+    }
+
+    /**
+     * 返回快速缓冲中的数据
+     *
+     * @param off  offset
+     * @param len  length
+     * @param b    dest
+     * @param bOff dest offset
+     * @return actual length
+     */
+    public int copyToArray(int off, int len, byte[] b, int bOff) {
+        if (b == null) {
+            throw new NullPointerException();
+        } else if (off < 0 || len < 0 || bOff < 0 || len > b.length - bOff) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        int remaining = Math.min(size - off, len);
+        int r = remaining;
+        int pos = bOff;
 
         if (len == 0) {
-            return array;
+            return 0;
         }
 
         int i = 0;
-        while (start >= buffers[i].length) {
-            start -= buffers[i].length;
+        while (off >= buffers[i].length) {
+            off -= buffers[i].length;
             i++;
         }
 
         while (i < buffersCount) {
             byte[] buf = buffers[i];
-            int c = Math.min(buf.length - start, remaining);
-            System.arraycopy(buf, start, array, pos, c);
+            int c = Math.min(buf.length - off, remaining);
+            System.arraycopy(buf, off, b, pos, c);
             pos += c;
             remaining -= c;
             if (remaining == 0) {
                 break;
             }
-            start = 0;
+            off = 0;
             i++;
         }
-        return array;
+        return r;
     }
 
     /**

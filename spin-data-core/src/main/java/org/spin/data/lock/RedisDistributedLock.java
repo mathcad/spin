@@ -3,15 +3,16 @@ package org.spin.data.lock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.concurrent.DistributedLock;
+import org.spin.core.concurrent.LockTicket;
+import org.spin.core.concurrent.Uninterruptibles;
 import org.spin.core.util.StringUtils;
+import org.spin.data.throwable.DistributedLockException;
 import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.connection.ReturnType;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.types.Expiration;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 基于Redis的分布式锁实现
@@ -21,25 +22,24 @@ import java.util.UUID;
  * @author xuweinan
  * @version 1.0
  */
-public class RedisDistributedLock implements DistributedLock {
+public class RedisDistributedLock extends DistributedLock {
     private static final Logger logger = LoggerFactory.getLogger(RedisDistributedLock.class);
+    private static final String SPIN_REDIS_LOCKS = "SPIN_REDIS_LOCKS:";
     private static final String REDIS_UNLOCK_SCRIPT;
 
-    private StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
-    private ThreadLocal<String> lockFlag = new ThreadLocal<>();
-
-
-    /*
-     * 通过lua脚本释放锁,来达到释放锁的原子操作
-     */
     static {
-        REDIS_UNLOCK_SCRIPT = "if redis.call(\"get\",KEYS[1]) == ARGV[1] " +
-            "then " +
-            "    return redis.call(\"del\",KEYS[1]) " +
-            "else " +
-            "    return 0 " +
-            "end ";
+        REDIS_UNLOCK_SCRIPT = "local val = redis.call(\"get\", KEYS[1])\n" +
+            "if val then\n" +
+            "    if val == ARGV[1] then\n" +
+            "        return redis.call(\"del\", KEYS[1])\n" +
+            "    else\n" +
+            "        return -1\n" +
+            "    end\n" +
+            "else\n" +
+            "    return 0\n" +
+            "end";
     }
 
     public RedisDistributedLock(StringRedisTemplate redisTemplate) {
@@ -48,56 +48,51 @@ public class RedisDistributedLock implements DistributedLock {
     }
 
     @Override
-    public boolean lock(String key, long expire, int retryTimes, long sleepMillis) {
-        boolean result = setRedis(key, expire);
-        // 如果获取锁失败，按照传入的重试次数进行重试
+    public LockTicket lock(String key, long expire, int retryTimes, long sleepMillis) {
+        String lockKey = SPIN_REDIS_LOCKS + key;
+        String ticket = UUID.randomUUID().toString();
+        boolean result = setRedisLock(lockKey, ticket, expire);
         while ((!result) && retryTimes-- > 0) {
-            try {
-                logger.debug("get redisDistributeLock failed, retrying...{}", retryTimes);
-                Thread.sleep(sleepMillis);
-            } catch (InterruptedException e) {
-                logger.warn("Interrupted!", e);
-                Thread.currentThread().interrupt();
-            }
-            result = setRedis(key, expire);
+            logger.debug("Get RedisDistributeLock failed, retrying...{}", retryTimes);
+            Uninterruptibles.sleepUninterruptibly(sleepMillis, TimeUnit.MILLISECONDS);
+            result = setRedisLock(lockKey, ticket, expire);
         }
-        return result;
+        return new LockTicket(result, ticket, key, this);
     }
 
-
     @Override
-    public boolean releaseLock(String key) {
-        // 释放锁的时候，有可能因为持锁之后方法执行时间大于锁的有效期，此时有可能已经被另外一个线程持有锁，所以不能直接删除
+    protected boolean releaseLock(String key, String ticket) {
+        String lockKey = SPIN_REDIS_LOCKS + key;
+        Long result;
         try {
-            Long result = redisTemplate.execute((RedisConnection connection) -> connection.eval(
+            result = redisTemplate.execute((RedisConnection connection) -> connection.eval(
                 REDIS_UNLOCK_SCRIPT.getBytes(),
                 ReturnType.INTEGER,
                 1,
-                StringUtils.getBytesUtf8(key),
-                StringUtils.getBytesUtf8(lockFlag.get()))
+                StringUtils.getBytesUtf8(lockKey),
+                StringUtils.getBytesUtf8(ticket))
             );
-
-            return result != null && result > 0;
         } catch (Exception e) {
-            logger.error("release redisDistributeLock occured an exception", e);
-        } finally {
-            lockFlag.remove();
+            logger.error("Release RedisDistributeLock [" + key + "] occurred an exception", e);
+            return false;
         }
-        return false;
+
+        if (null == result) {
+            logger.error("Release RedisDistributeLock [" + key + "] error, return null");
+            return false;
+        }
+        if (result == -1L) {
+            throw new DistributedLockException("Release RedisDistributeLock [" + key + "] error, ticket not correct");
+        }
+        return result > 0;
     }
 
-    private boolean setRedis(final String key, final long expire) {
+    private boolean setRedisLock(final String key, final String ticket, final long expire) {
         try {
-            Boolean status = redisTemplate.execute((RedisCallback<Boolean>) connection -> {
-                String uuid = UUID.randomUUID().toString();
-                lockFlag.set(uuid);
-                return connection.set(StringUtils.getBytesUtf8(key), uuid.getBytes(),
-                    Expiration.milliseconds(expire),
-                    RedisStringCommands.SetOption.SET_IF_ABSENT);
-            });
+            Boolean status = redisTemplate.opsForValue().setIfAbsent(key, ticket, expire, TimeUnit.MILLISECONDS);
             return status != null && status;
         } catch (Exception e) {
-            logger.error("set redisDistributeLock occured an exception", e);
+            logger.error("Operate RedisDistributeLock [" + key + "] occurred an exception", e);
         }
         return false;
     }

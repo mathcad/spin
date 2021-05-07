@@ -44,16 +44,16 @@ public class FtpConnection implements AutoCloseable {
     private static final Pattern PROTOCAL_PATTERN = Pattern.compile("^(ftp[s]?)://(.+:.+@)?([^:]+)(:\\d{2,5})?$", Pattern.CASE_INSENSITIVE);
 
     private String name;
-    private boolean secure;
-    private String protocal;
-    private String userName;
-    private String password;
-    private String host;
-    private int port;
+    private final boolean secure;
+    private final String protocal;
+    private final String userName;
+    private final String password;
+    private final String host;
+    private final int port;
 
     private Charset serverCharset = Charset.forName("GBK");
 
-    private FTPClient client;
+    private final FTPClient client;
 
     /**
      * 创建FTP客户端

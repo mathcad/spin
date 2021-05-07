@@ -22,6 +22,16 @@ public class IdMeta {
 
     private byte versionBits;
 
+    /**
+     * 定义ID结构
+     *
+     * @param machineBits   机器码位数
+     * @param seqBits       序列号位数
+     * @param timeBits      时间戳位数
+     * @param genMethodBits 生成方式位数
+     * @param typeBits      类型位数
+     * @param versionBits   版本位数
+     */
     public IdMeta(byte machineBits, byte seqBits, byte timeBits, byte genMethodBits, byte typeBits, byte versionBits) {
         this.machineBits = machineBits;
         this.seqBits = seqBits;

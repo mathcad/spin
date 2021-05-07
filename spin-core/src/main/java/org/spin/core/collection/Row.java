@@ -17,21 +17,21 @@ public interface Row<E> {
 
     /**
      * Returns the number of elements in this list.  If this list contains
-     * more than <tt>Integer.MAX_VALUE</tt> elements, returns
-     * <tt>Integer.MAX_VALUE</tt>.
+     * more than <code>Integer.MAX_VALUE</code> elements, returns
+     * <code>Integer.MAX_VALUE</code>.
      *
      * @return the number of elements in this list
      */
     int size();
 
     /**
-     * Returns <tt>true</tt> if this list contains the specified element.
-     * More formally, returns <tt>true</tt> if and only if this list contains
-     * at least one element <tt>e</tt> such that
-     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+     * Returns <code>true</code> if this list contains the specified element.
+     * More formally, returns <code>true</code> if and only if this list contains
+     * at least one element <code>e</code> such that
+     * <code>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</code>.
      *
      * @param o element whose presence in this list is to be tested
-     * @return <tt>true</tt> if this list contains the specified element
+     * @return <code>true</code> if this list contains the specified element
      * @throws ClassCastException   if the type of the specified element
      *                              is incompatible with this list
      *                              (<a href="Collection.html#optional-restrictions">optional</a>)
@@ -44,8 +44,8 @@ public interface Row<E> {
     /**
      * Returns the index of the first occurrence of the specified element
      * in this list, or -1 if this list does not contain the element.
-     * More formally, returns the lowest index <tt>i</tt> such that
-     * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
+     * More formally, returns the lowest index <code>i</code> such that
+     * <code>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</code>,
      * or -1 if there is no such index.
      *
      * @param o element to search for
@@ -73,7 +73,7 @@ public interface Row<E> {
      * @param index index of the element to return
      * @return the element at the specified position in this list
      * @throws IndexOutOfBoundsException if the index is out of range
-     *                                   (<tt>index &lt; 0 || index &gt;= size()</tt>)
+     *                                   (<code>index &lt; 0 || index &gt;= size()</code>)
      */
     E get(int index);
 
@@ -84,7 +84,7 @@ public interface Row<E> {
      * @param index   index of the element to replace
      * @param element element to be stored at the specified position
      * @return the element previously at the specified position
-     * @throws UnsupportedOperationException if the <tt>set</tt> operation
+     * @throws UnsupportedOperationException if the <code>set</code> operation
      *                                       is not supported by this list
      * @throws ClassCastException            if the class of the specified element
      *                                       prevents it from being added to this list
@@ -93,7 +93,7 @@ public interface Row<E> {
      * @throws IllegalArgumentException      if some property of the specified
      *                                       element prevents it from being added to this list
      * @throws IndexOutOfBoundsException     if the index is out of range
-     *                                       (<tt>index &lt; 0 || index &gt;= size()</tt>)
+     *                                       (<code>index &lt; 0 || index &gt;= size()</code>)
      */
     E set(int index, E element);
 
@@ -105,10 +105,10 @@ public interface Row<E> {
      *
      * @param index the index of the element to be removed
      * @return the element previously at the specified position
-     * @throws UnsupportedOperationException if the <tt>remove</tt> operation
+     * @throws UnsupportedOperationException if the <code>remove</code> operation
      *                                       is not supported by this list
      * @throws IndexOutOfBoundsException     if the index is out of range
-     *                                       (<tt>index &lt; 0 || index &gt;= size()</tt>)
+     *                                       (<code>index &lt; 0 || index &gt;= size()</code>)
      */
     default E setNull(int index) {
         return set(index, null);
@@ -118,7 +118,7 @@ public interface Row<E> {
      * Removes all of the elements from this list (optional operation).
      * The list will be empty after this call returns.
      *
-     * @throws UnsupportedOperationException if the <tt>clear</tt> operation
+     * @throws UnsupportedOperationException if the <code>clear</code> operation
      *                                       is not supported by this list
      */
     void clear();

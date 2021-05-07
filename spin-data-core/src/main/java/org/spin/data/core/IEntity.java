@@ -12,35 +12,53 @@ import java.util.Map;
  * <p>Created by xuweinan on 2016/10/5.</p>
  *
  * @param <PK> 主键类型
+ * @param <E>  实际实体类型
  * @author xuweinan
  * @version 1.1
  */
-public interface IEntity<PK extends Serializable> extends Serializable {
-
-    PK getId();
-
-    void setId(PK id);
-
-    Integer getVersion();
-
-    void setVersion(Integer version);
-
-    Boolean getValid();
-
-    void setValid(Boolean valid);
+public interface IEntity<PK extends Serializable, E extends IEntity<PK, E>> extends Serializable {
 
     /**
-     * 为当前实体指定ID并返回当前实体
+     * 主键
      *
-     * @param id  id
-     * @param <E> 当前实体类型
-     * @return 当前实体
+     * @return 主键
      */
-    @SuppressWarnings("unchecked")
-    default <E extends IEntity<PK>> E withId(PK id) {
-        this.setId(id);
-        return (E) this;
-    }
+    PK id();
+
+    /**
+     * 主键
+     *
+     * @param id 主键
+     */
+    void id(PK id);
+
+    /**
+     * 数据版本 乐观锁
+     *
+     * @return 数据版本
+     */
+    Integer getVersion();
+
+    /**
+     * 数据版本 乐观锁
+     *
+     * @param version 数据版本
+     */
+    void setVersion(Integer version);
+
+    /**
+     * 是否有效 逻辑删除标记
+     *
+     * @return 是否有效
+     */
+    Boolean getValid();
+
+    /**
+     * 是否有效 逻辑删除标记
+     *
+     * @param valid 是否有效
+     */
+    void setValid(Boolean valid);
 
     /**
      * 将当前实体中的属性copy到目标对象中(所有存在于目标中的属性)
@@ -49,12 +67,12 @@ public interface IEntity<PK extends Serializable> extends Serializable {
      * @param <T>    目标对象类型
      * @return 拷贝属性后的目标对象
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     default <T> T copyTo(T target) {
         if (null != target) {
             if (target instanceof Map) {
                 ReflectionUtils.doWithFields(this.getClass(), field -> {
                     ReflectionUtils.makeAccessible(field);
-                    //noinspection unchecked
                     ((Map) target).put(field.getName(), ReflectionUtils.getField(field, this));
                 });
             } else {
@@ -65,18 +83,28 @@ public interface IEntity<PK extends Serializable> extends Serializable {
     }
 
     /**
-     * 根据id,获取一个持有该id的指定类型的DTO对象
+     * 将指定对象中的所有非空属性copy到当前对象中(所有存在于当前对象中的属性)
      *
-     * @param entityCls 实体类型
-     * @param id        id
-     * @param <PK>      主键类型泛型参数
-     * @param <E>       实体类型泛型参数
-     * @return 持有指定id的DTO对象
+     * @param source 源对象
+     * @param <T>    源对象类型
+     * @return 当前对象
      */
-    static <PK extends Serializable, E extends IEntity<PK>> E ref(Class<E> entityCls, PK id) {
-        E entity;
-        entity = BeanUtils.instantiateClass(entityCls);
-        entity.setId(id);
-        return entity;
+    @SuppressWarnings("unchecked")
+    default <T> E merge(T source) {
+        BeanUtils.copyTo(source, this, null, (f, v) -> null != v, null);
+        return (E) this;
+    }
+
+    /**
+     * 将指定对象中的所有属性copy到当前对象中(所有存在于当前对象中的属性)
+     *
+     * @param source 源对象
+     * @param <T>    源对象类型
+     * @return 当前对象
+     */
+    @SuppressWarnings("unchecked")
+    default <T> E mergeAll(T source) {
+        BeanUtils.copyTo(source, this);
+        return (E) this;
     }
 }

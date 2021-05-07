@@ -14,7 +14,7 @@ import java.security.Security;
  * @author xuweinan
  * @version 1.0
  */
-public class ProviderDetector {
+public abstract class ProviderDetector {
     private static Provider provider;
 
     static {

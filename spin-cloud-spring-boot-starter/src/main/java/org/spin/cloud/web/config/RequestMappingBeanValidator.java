@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.vo.RequestMappingInfoWrapper;
 import org.spin.cloud.vo.ServiceRequestInfo;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.web.AuthLevel;
@@ -29,7 +30,11 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -88,14 +93,19 @@ public class RequestMappingBeanValidator implements ApplicationContextAware, App
                     RequestMappingInfo requestMappingInfo = requestMappingInfoHandlerMethodEntry.getKey();
                     HandlerMethod handlerMethod = requestMappingInfoHandlerMethodEntry.getValue();
 
-                    RequestMappingInfoWrapper mappingInfoWrapper = new RequestMappingInfoWrapper(requestMappingInfo, handlerMethod);
+                    RequestMappingInfoWrapper mappingInfoWrapper = null;
+                    try {
+                        mappingInfoWrapper = new RequestMappingInfoWrapper(requestMappingInfo, handlerMethod);
+                    } catch (SpinException e) {
+                        errMsg.add(e.getSimpleMessage());
+                    }
                     requestMappingInfoWrappers.add(mappingInfoWrapper);
 
                     if (needValidate(packages, handlerMethod.getMethod().getDeclaringClass())) {
                         Auth authAnnotation = AnnotatedElementUtils.getMergedAnnotation(handlerMethod.getMethod(), Auth.class);
-                        if (null == authAnnotation) {
+                        if (null != mappingInfoWrapper && null == authAnnotation) {
                             errMsg.add("Web接口" + mappingInfoWrapper.getBeanType() + "." + mappingInfoWrapper.getMethodName() + "[" + StringUtils.join(mappingInfoWrapper.getUrlPatterns(), ",") + "]未控制权限，存在安全隐患");
-                        } else if (mappingInfoWrapper.getAuth() != AuthLevel.NONE) {
+                        } else if (null != mappingInfoWrapper && mappingInfoWrapper.getAuth() != AuthLevel.NONE) {
                             if (authNames.contains(mappingInfoWrapper.getAuthName())) {
                                 errMsg.add("Web接口" + mappingInfoWrapper.getBeanType() + "[" + mappingInfoWrapper.getMethodName() + "]在当前Controller中使用了重复的权限名称，无法唯一标识");
                             }

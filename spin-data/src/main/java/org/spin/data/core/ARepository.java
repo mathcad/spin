@@ -21,6 +21,7 @@ import org.spin.core.session.SessionUser;
 import org.spin.core.throwable.AssertFailException;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.BeanUtils;
+import org.spin.core.util.LambdaUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.pk.generator.IdGenerator;
@@ -44,6 +45,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -68,7 +70,7 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version V1.6
  */
-public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
+public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
     private static final String ORDER_ENTRIES = "orderEntries";
     private static final int MAX_RECORDS = 100000000;
@@ -115,7 +117,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public T save(final T entity, boolean saveWithPk) {
         Assert.notNull(entity, "The entity to save MUST NOT be NULL");
         if (entity instanceof AbstractEntity) {
-            AbstractEntity aEn = (AbstractEntity) entity;
+            AbstractEntity<?> aEn = (AbstractEntity<?>) entity;
             SessionUser<Long> user = SessionUser.getCurrent();
             aEn.setUpdateTime(LocalDateTime.now());
             aEn.setUpdateBy(user == null ? null : user.getId());
@@ -127,9 +129,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
             }
         }
         try {
-            if (null == entity.getId() || saveWithPk) {
-                if (null != idGenerator && null == entity.getId()) {
-                    entity.setId(idGenerator.genId());
+            if (null == entity.id() || saveWithPk) {
+                if (null != idGenerator && null == entity.id()) {
+                    entity.id(idGenerator.genId());
                 }
                 DataSourceContext.getSession().save(entity);
             } else {
@@ -138,7 +140,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         } catch (OptimisticLockingFailureException ope) {
             throw new SimplifiedException("The entity is expired", ope);
         }
-        return get(entity.getId());
+        return get(entity.id());
     }
 
     /**
@@ -172,6 +174,34 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public T merge(final T entity) {
         //noinspection unchecked
         return (T) DataSourceContext.getSession().merge(entity);
+    }
+
+    /**
+     * 根据ID更新实体的指定字段，当字段列表为空时，更新所有字段
+     *
+     * @param entity 待更新的实体
+     * @param fields 需要更新的字段列表, 为空时与save操作结果相同
+     * @return 更新的行数
+     */
+    @SafeVarargs
+    public final int updateById(T entity, org.spin.core.function.serializable.Function<T, ?>... fields) {
+        if (null == entity.id()) {
+            throw new SQLException(SQLError.ID_NOT_FOUND, "The Id field must be nonnull when execute update by Id");
+        }
+        if (null == fields || 0 == fields.length) {
+            return null == save(entity) ? 0 : 1;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("UPDATE ").append(entity.getClass().getSimpleName()).append(" t SET ");
+        for (org.spin.core.function.serializable.Function<T, ?> field : fields) {
+            String fieldName = BeanUtils.toFieldName(LambdaUtils.resolveLambda(field).getImplMethodName());
+            sb.append("t.").append(fieldName).append(" = :").append(fieldName).append(",");
+        }
+        sb.setLength(sb.length() - 1);
+        sb.append(" WHERE id = :id");
+        Query<?> query = DataSourceContext.getSession().createQuery(sb.toString());
+        query.setProperties(entity);
+        return query.executeUpdate();
     }
 
     /**
@@ -381,8 +411,9 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     public void delete(String conditions) {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(this.entityClazz.getSimpleName()).append(" ");
-        if (StringUtils.isEmpty(conditions))
+        if (StringUtils.isEmpty(conditions)) {
             hql.append("where ").append(conditions);
+        }
         DataSourceContext.getSession().delete(hql);
     }
 
@@ -466,7 +497,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         Criteria ct = dc.getExecutableCriteria(sess);
         if (null != pr && pr.length > 0 && null != pr[0]) {
             ct.setFirstResult(pr[0].getOffset());
-            ct.setMaxResults(pr[0].getPageSize());
+            ct.setMaxResults(pr[0].getSize());
         }
         ct.setCacheable(true);
         ct.setCacheMode(CacheMode.NORMAL);
@@ -806,7 +837,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         if (cb.getPageRequest() != null) {
             ct.setFirstResult(cb.getPageRequest().getOffset());
-            ct.setMaxResults(cb.getPageRequest().getPageSize());
+            ct.setMaxResults(cb.getPageRequest().getSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
@@ -816,7 +847,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         List<T> res = BeanUtils.wrapperMapToBeanList(this.entityClazz, list);
-        return new Page<>(res, total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
+        return new Page<>(res, cb.getPageRequest() == null ? 1L : cb.getPageRequest().getCurrent(), total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getSize());
     }
 
     /**
@@ -946,11 +977,11 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
     }
 
     /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */
-    public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
+    public Optional<Map<String, Object>> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
         return doReturningWork(connection -> sqlManager.findOneAsMap(connection, sqlId, paramMap));
     }
 
-    public T findOneBySql(String sqlId, Map<String, ?> paramMap) {
+    public Optional<T> findOneBySql(String sqlId, Map<String, ?> paramMap) {
         return doReturningWork(connection -> sqlManager.findOne(connection, sqlId, entityClazz, paramMap));
     }
 
@@ -1205,7 +1236,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         if (cb.getPageRequest() != null) {
             ct.setFirstResult(cb.getPageRequest().getOffset());
-            ct.setMaxResults(cb.getPageRequest().getPageSize());
+            ct.setMaxResults(cb.getPageRequest().getSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
@@ -1232,7 +1263,7 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         if (null != cb.getPageRequest()) {
             ct.setFirstResult(cb.getPageRequest().getOffset());
-            ct.setMaxResults(cb.getPageRequest().getPageSize());
+            ct.setMaxResults(cb.getPageRequest().getSize());
         }
 
         @SuppressWarnings("unchecked")
@@ -1247,6 +1278,6 @@ public class ARepository<T extends IEntity<PK>, PK extends Serializable> {
         if (wrap) {
             list = list.stream().map(BeanUtils::wrapperFlatMap).collect(Collectors.toList());
         }
-        return new Page<>(list, total, null == cb.getPageRequest() ? total.intValue() : cb.getPageRequest().getPageSize());
+        return new Page<>(list, null == cb.getPageRequest() ? 1L : cb.getPageRequest().getCurrent(), total, null == cb.getPageRequest() ? total.intValue() : cb.getPageRequest().getSize());
     }
 }

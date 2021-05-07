@@ -3,7 +3,7 @@ package org.spin.data.pk.generator.provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.util.NetUtils;
-import org.springframework.util.StringUtils;
+import org.spin.core.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +21,7 @@ public class IpConfigurableMachineIdProvider implements MachineIdProvider {
 
     private long machineId;
 
-    private Map<String, Long> ipsMap = new HashMap<>();
+    private final Map<String, Long> ipsMap = new HashMap<>();
 
     @Override
     public void init(String initParams) {
@@ -48,6 +48,11 @@ public class IpConfigurableMachineIdProvider implements MachineIdProvider {
         logger.info("IpConfigurableMachineIdProvider.init ip {} id {}", ip, machineId);
     }
 
+    @Override
+    public long getMachineId() {
+        return machineId;
+    }
+
     public void setIps(String ips) {
         logger.debug("IpConfigurableMachineIdProvider ips {}", ips);
         if (!StringUtils.isEmpty(ips)) {
@@ -57,14 +62,5 @@ public class IpConfigurableMachineIdProvider implements MachineIdProvider {
                 ipsMap.put(ipArray[i], (long) i);
             }
         }
-    }
-
-    @Override
-    public long getMachineId() {
-        return machineId;
-    }
-
-    public void setMachineId(long machineId) {
-        this.machineId = machineId;
     }
 }

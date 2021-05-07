@@ -1,5 +1,6 @@
 package org.spin.core.util;
 
+import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SpinException;
 
@@ -16,7 +17,7 @@ import java.util.regex.Pattern;
  *
  * @author xuweinan
  */
-public abstract class NumericUtils {
+public final class NumericUtils extends Util {
     private static final String UNKNOW_NUM = "无法识别的数字格式";
     private static final Pattern numPattern = Pattern.compile("^([-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]+)[^-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]{0,2}$");
     private static final Pattern pureNum = Pattern.compile("^-?\\d+(\\.\\d+)?$");
@@ -60,6 +61,174 @@ public abstract class NumericUtils {
     }
 
     private NumericUtils() {
+    }
+
+    public static byte toByte(Object value, int... defaultValue) {
+        if (value instanceof Byte) {
+            return (byte) value;
+        }
+
+        if (null == value) {
+            if (defaultValue != null && defaultValue.length > 0) {
+                return (byte) defaultValue[0];
+            } else {
+                throw new NumberFormatException("null不是合法的数字");
+            }
+        }
+
+        if (value instanceof CharSequence && isNum(value)) {
+            value = toBigDeciaml(value);
+        }
+
+        if (value instanceof Number) {
+            return ((Number) value).byteValue();
+        }
+
+        if (defaultValue != null && defaultValue.length > 0) {
+            return (byte) defaultValue[0];
+        } else {
+            throw new NumberFormatException(value.toString() + "不是合法的数字");
+        }
+    }
+
+    public static short toShort(Object value, int... defaultValue) {
+        if (value instanceof Short) {
+            return (short) value;
+        }
+
+        if (null == value) {
+            if (defaultValue != null && defaultValue.length > 0) {
+                return (short) defaultValue[0];
+            } else {
+                throw new NumberFormatException("null不是合法的数字");
+            }
+        }
+
+        if (value instanceof CharSequence && isNum(value)) {
+            value = toBigDeciaml(value);
+        }
+
+        if (value instanceof Number) {
+            return ((Number) value).shortValue();
+        }
+
+        if (defaultValue != null && defaultValue.length > 0) {
+            return (short) defaultValue[0];
+        } else {
+            throw new NumberFormatException(value.toString() + "不是合法的数字");
+        }
+    }
+
+    public static int toInt(Object value, int... defaultValue) {
+        if (value instanceof Integer) {
+            return (int) value;
+        }
+
+        if (null == value) {
+            if (defaultValue != null && defaultValue.length > 0) {
+                return defaultValue[0];
+            } else {
+                throw new NumberFormatException("null不是合法的数字");
+            }
+        }
+
+        if (value instanceof CharSequence && isNum(value)) {
+            value = toBigDeciaml(value);
+        }
+
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+
+        if (defaultValue != null && defaultValue.length > 0) {
+            return defaultValue[0];
+        } else {
+            throw new NumberFormatException(value.toString() + "不是合法的数字");
+        }
+    }
+
+    public static float toFloat(Object value, float... defaultValue) {
+        if (value instanceof Float) {
+            return (float) value;
+        }
+
+        if (null == value) {
+            if (defaultValue != null && defaultValue.length > 0) {
+                return defaultValue[0];
+            } else {
+                throw new NumberFormatException("null不是合法的数字");
+            }
+        }
+
+        if (value instanceof CharSequence && isNum(value)) {
+            value = toBigDeciaml(value);
+        }
+
+        if (value instanceof Number) {
+            return ((Number) value).floatValue();
+        }
+
+        if (defaultValue != null && defaultValue.length > 0) {
+            return defaultValue[0];
+        } else {
+            throw new NumberFormatException(value.toString() + "不是合法的数字");
+        }
+    }
+
+    public static long toLong(Object value, long... defaultValue) {
+        if (value instanceof Long) {
+            return (long) value;
+        }
+
+        if (null == value) {
+            if (defaultValue != null && defaultValue.length > 0) {
+                return defaultValue[0];
+            } else {
+                throw new NumberFormatException("null不是合法的数字");
+            }
+        }
+
+        if (value instanceof CharSequence && isNum(value)) {
+            value = toBigDeciaml(value);
+        }
+
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+
+        if (defaultValue != null && defaultValue.length > 0) {
+            return defaultValue[0];
+        } else {
+            throw new NumberFormatException(value.toString() + "不是合法的数字");
+        }
+    }
+
+    public static double toDouble(Object value, double... defaultValue) {
+        if (value instanceof Double) {
+            return (double) value;
+        }
+
+        if (null == value) {
+            if (defaultValue != null && defaultValue.length > 0) {
+                return defaultValue[0];
+            } else {
+                throw new NumberFormatException("null不是合法的数字");
+            }
+        }
+
+        if (value instanceof CharSequence && isNum(value)) {
+            value = toBigDeciaml(value);
+        }
+
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+
+        if (defaultValue != null && defaultValue.length > 0) {
+            return defaultValue[0];
+        } else {
+            throw new NumberFormatException(value.toString() + "不是合法的数字");
+        }
     }
 
     /**
@@ -260,21 +429,32 @@ public abstract class NumericUtils {
     }
 
     /**
-     * 判断value1与value2形成的闭区间是否与value3与value4形成的闭区间相交
+     * 判断interval_1_1与interval_1_2形成的闭区间是否与interval_2_1与interval_2_2形成的闭区间相交
      * <p>区间的端点不需要保证有序，所有端点都不允许为空</p>
      *
-     * @param value1 区间1的端点1
-     * @param value2 区间1的端点2
-     * @param value3 区间2的端点1
-     * @param value4 区间2的端点2
+     * @param interval_1_1 区间1的端点1
+     * @param interval_1_2 区间1的端点2
+     * @param interval_2_1 区间2的端点1
+     * @param interval_2_2 区间2的端点2
+     * @param <T> 类型
      * @return 是否相交
      */
-    public static boolean interact(Number value1, Number value2, Number value3, Number value4) {
-        double v1 = value1.doubleValue();
-        double v2 = value2.doubleValue();
-        double v3 = value3.doubleValue();
-        double v4 = value4.doubleValue();
-        return !(v1 < v3 && v1 < v4 && v2 < v3 && v2 < v4 || v3 < v1 && v3 < v2 && v4 < v1 && v4 < v2);
+    public static <T extends Comparable<T>> boolean interact(T interval_1_1, T interval_1_2, T interval_2_1, T interval_2_2) {
+        T tmp;
+
+        if (Assert.notNull(interval_1_1, "interval_1_1不能为空").compareTo(Assert.notNull(interval_1_2, "interval_1_2不能为空")) > 0) {
+            tmp = interval_1_1;
+            interval_1_1 = interval_1_2;
+            interval_1_2 = tmp;
+        }
+
+        if (Assert.notNull(interval_2_1, "interval_2_1不能为空").compareTo(Assert.notNull(interval_2_2, "interval_2_2不能为空")) > 0) {
+            tmp = interval_2_1;
+            interval_2_1 = interval_2_2;
+            interval_2_2 = tmp;
+        }
+
+        return !(interval_2_1.compareTo(interval_1_2) > 0 || interval_2_2.compareTo(interval_1_1) < 0);
     }
 
     /**
@@ -286,13 +466,15 @@ public abstract class NumericUtils {
      */
     public static String analysisNumber(String str) {
         Matcher matcher = numPattern.matcher(str.trim());
-        if (!matcher.matches())
-            throw new SpinException("无法识别的数字格式，个数字不能包括“负-0123456789零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.”以外的字符");
+        if (!matcher.matches()) {
+            throw new SpinException("无法识别的数字格式，数字不能包括“负-0123456789零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.”以外的字符");
+        }
         String tmp = matcher.group(1);
         // 本身是合法数字直接return
         if (pureNum.matcher(tmp).matches()) {
-            if (tmp.charAt(tmp.length() - 1) == '.')
+            if (tmp.charAt(tmp.length() - 1) == '.') {
                 throw new SpinException("无法识别的数字格式，数字不能以.结尾");
+            }
             return tmp;
         }
 
@@ -302,8 +484,9 @@ public abstract class NumericUtils {
             sign = "-";
             tmp = tmp.substring(1);
             for (char c : tmp.toCharArray()) {
-                if (c == '负' || c == '-')
+                if (c == '负' || c == '-') {
                     throw new SpinException("无法识别的数字格式，符号位只能出现在数字起始部位");
+                }
             }
         }
 
@@ -325,8 +508,9 @@ public abstract class NumericUtils {
         if (d != null) {
             resD = new StringBuilder();
             for (int i = 0; i != d.length(); ++i) {
-                if (!numMap.containsKey(String.valueOf(d.charAt(i))))
+                if (!numMap.containsKey(String.valueOf(d.charAt(i)))) {
                     throw new SpinException("无法识别的数字格式，小数部分不正确");
+                }
                 resD.append(numMap.get(String.valueOf(d.charAt(i))));
             }
         }
@@ -350,6 +534,48 @@ public abstract class NumericUtils {
         }
     }
 
+    public static short compositeShort(byte[] bytes, int from) {
+        return compositeShort(bytes, from, 2);
+    }
+
+    public static short compositeShort(byte[] bytes, int from, int len) {
+        Assert.inclusiveBetween(1, 2, len, "短整型的长度必须在1-2之间");
+        return (short) compositeInt(bytes, from, len);
+    }
+
+    public static int compositeInt(byte[] bytes, int from) {
+        return compositeInt(bytes, from, 4);
+    }
+
+    public static int compositeInt(byte[] bytes, int from, int len) {
+        Assert.inclusiveBetween(0, bytes.length, from, "from索引超出范围: " + 0 + " - " + bytes.length);
+        Assert.inclusiveBetween(1, 4, len, "整型的长度必须在1-4之间");
+        Assert.isTrue(bytes.length - from >= len, "数据不合法");
+        int mask = (len - 1) << 3;
+        int res = 0;
+        while (--len != -1) {
+            res = res | (bytes[from + len] << (mask - len * 8));
+        }
+        return res;
+    }
+
+    public static long compositeLong(byte[] bytes, int from) {
+        return compositeLong(bytes, from, 8);
+    }
+
+    public static long compositeLong(byte[] bytes, int from, int len) {
+        Assert.inclusiveBetween(0, bytes.length, from, "from索引超出范围: " + 0 + " - " + bytes.length);
+        Assert.inclusiveBetween(1, 8, len, "长整型的长度必须在1-8之间");
+        Assert.isTrue(bytes.length - from >= len, "数据不合法");
+        int mask = (len - 1) << 3;
+        long res = 0;
+        while (--len != -1) {
+            res = res | (bytes[from + len] << (mask - len * 8));
+        }
+        return res;
+    }
+
+
     private static Long decodeNum(String n) {
         if (pureNum.matcher(n).matches())
             return Long.parseLong(n);
@@ -362,16 +588,18 @@ public abstract class NumericUtils {
             switch (scale) {
                 case "亿":
                     parts = tmp.split(scale);
-                    if (parts.length > 2)
+                    if (parts.length > 2) {
                         throw new SpinException(UNKNOW_NUM);
+                    }
                     h = decodeNum(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 100000000L;
                     break;
                 case "万":
                     parts = tmp.split(scale);
-                    if (parts.length > 2)
+                    if (parts.length > 2) {
                         throw new SpinException(UNKNOW_NUM);
+                    }
                     h = decodeNum(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 10000L;
@@ -379,8 +607,9 @@ public abstract class NumericUtils {
                 case "千":
                 case "仟":
                     parts = tmp.split(scale);
-                    if (parts.length > 2)
+                    if (parts.length > 2) {
                         throw new SpinException(UNKNOW_NUM);
+                    }
                     h = parts[0].length() > 1 ? Long.parseLong(parts[0]) : numMap.get(parts[0]);
 
                     tmp = parts.length > 1 ? parts[1] : null;
@@ -389,8 +618,9 @@ public abstract class NumericUtils {
                 case "百":
                 case "佰":
                     parts = tmp.split(scale);
-                    if (parts.length > 2)
+                    if (parts.length > 2) {
                         throw new SpinException(UNKNOW_NUM);
+                    }
                     h = parts[0].length() > 1L ? Long.parseLong(parts[0]) : numMap.get(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 100L;
@@ -398,15 +628,17 @@ public abstract class NumericUtils {
                 case "十":
                 case "拾":
                     parts = tmp.split(scale);
-                    if (parts.length > 2)
+                    if (parts.length > 2) {
                         throw new SpinException(UNKNOW_NUM);
+                    }
                     h = tmp.startsWith("十") ? 1L : (parts[0].length() > 1 ? Long.parseLong(parts[0]) : numMap.get(parts[0]));
                     tmp = parts.length > 1 ? parts[1] : null;
                     resN += h * 10L;
                     break;
                 default:
-                    if (!numMap.containsKey(tmp))
+                    if (!numMap.containsKey(tmp)) {
                         throw new SpinException(UNKNOW_NUM);
+                    }
                     resN += numMap.get(tmp);
                     tmp = null;
             }
@@ -416,8 +648,9 @@ public abstract class NumericUtils {
 
     private static String lookupScale(String numU) {
         for (String s : scales) {
-            if (numU.contains(s))
+            if (numU.contains(s)) {
                 return s;
+            }
         }
         return "";
     }

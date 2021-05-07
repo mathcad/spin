@@ -1,6 +1,7 @@
 package org.spin.core.util;
 
-import org.spin.core.throwable.SpinException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 异常工具类
@@ -10,13 +11,12 @@ import org.spin.core.throwable.SpinException;
  * @author xuweinan
  * @version 1.0
  */
-public abstract class ExceptionUtils {
+public final class ExceptionUtils extends Util {
     private ExceptionUtils() {
-        throw new SpinException("工具类禁止实例化");
     }
 
     /**
-     * 从异常链中解析出指定异常(如果存在的话)，不存在时返回null
+     * 从异常链中解析出指定异常(如果存在的话)，不存在时返回null. 可以正确处理循环引用的情况
      *
      * @param throwable    异常对象
      * @param exceptionCls 需要的异常类型
@@ -25,7 +25,9 @@ public abstract class ExceptionUtils {
      */
     public static <T extends Throwable> T getCause(Throwable throwable, Class... exceptionCls) {
         Throwable cause = throwable;
-        while (null != cause && !isAssignable(cause.getClass(), exceptionCls)) {
+        Set<Integer> resolved = new HashSet<>();
+        while (null != cause && !isAssignable(cause.getClass(), exceptionCls) && !resolved.contains(cause.hashCode())) {
+            resolved.add(cause.hashCode());
             cause = cause.getCause();
         }
 

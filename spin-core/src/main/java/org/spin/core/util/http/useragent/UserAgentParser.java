@@ -1,12 +1,17 @@
 package org.spin.core.util.http.useragent;
 
+import org.spin.core.util.Util;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * User-Agent解析器
  */
-public class UserAgentParser {
+public final class UserAgentParser extends Util {
+
+    private UserAgentParser() {
+    }
 
     /**
      * 解析User-Agent

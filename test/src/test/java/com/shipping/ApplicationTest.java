@@ -3,8 +3,7 @@ package com.shipping;
 import com.alibaba.druid.filter.config.ConfigTools;
 import org.junit.jupiter.api.Test;
 import org.spin.core.security.AES;
-import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.DigestUtils;
+import org.spin.core.util.ArrayUtils;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,7 +24,7 @@ public class ApplicationTest {
     @Test
     public void testPassword() throws Exception {
 //        System.out.println(DigestUtils.sha256Hex("123" + "xP8F4vjKSYQladtp"));
-        ConfigTools.main(CollectionUtils.ofArray("admin"));
+        ConfigTools.main(ArrayUtils.ofArray("admin"));
         assertTrue(true);
     }
 }

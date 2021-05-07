@@ -10,7 +10,7 @@ import java.io.File;
  *
  * @author xuweinan
  */
-public abstract class SystemUtils {
+public final class SystemUtils extends Util {
 
     private static final Logger logger = LoggerFactory.getLogger(SystemUtils.class);
 

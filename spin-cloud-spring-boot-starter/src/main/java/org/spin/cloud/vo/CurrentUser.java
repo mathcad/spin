@@ -4,20 +4,37 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.annotation.UtilClass;
 import org.spin.cloud.throwable.BizException;
+import org.spin.cloud.util.Env;
 import org.spin.core.Assert;
-import org.spin.core.collection.Pair;
-import org.spin.core.collection.Triple;
-import org.spin.core.collection.Tuple;
+import org.spin.core.function.ExceptionalHandler;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.security.Base64;
 import org.spin.core.session.SessionUser;
-import org.spin.core.util.*;
+import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.EnumUtils;
+import org.spin.core.util.JsonUtils;
+import org.spin.core.util.MapUtils;
+import org.spin.core.util.StringUtils;
+import org.spin.core.util.SystemUtils;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.scripting.support.ResourceScriptSource;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.time.ZoneId;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 当前用户
@@ -32,7 +49,9 @@ public class CurrentUser extends SessionUser<Long> {
     private static final Logger logger = LoggerFactory.getLogger(CurrentUser.class);
     private static final TypeToken<Map<String, Set<String>>> STRING_SETSTR_MAP_TOKEN = new TypeToken<Map<String, Set<String>>>() {
     };
-    private static Pair<Long, Long> NON_ENTERPRISE = Tuple.of(0L, 0L);
+
+    private static final TypeToken<Set<RolePermission>> PERM_TYPE_TOKEN = new TypeToken<Set<RolePermission>>() {
+    };
 
     private static final String REDIS_NOT_PREPARED = "CurrentUser未能顺利初始化, 无法访问Redis";
     private static final String REDIS_SESSION_KEY = "ALL_SESSION:";
@@ -40,26 +59,55 @@ public class CurrentUser extends SessionUser<Long> {
     private static final String SESSION_ENTERPRISE_REDIS_KEY = "SESSION_ENTERPRISE:";
     private static final String USER_ROLE_AND_GROUP_REDIS_KEY = "USER_ROLE_AND_GROUP:";
     private static final String SYS_ROLE_INFO_REDIS_KEY = "SYS_ROLE_INFO";
+    private static final String SYS_ROLE_PERM_REDIS_KEY = "SYS_ROLE_PERMISSION";
 
-    private static final String SUPER_AMIN_ROLE_CODE = "0:SUPER_ADMIN";
+    private static final String ENTERPRISE_DETP_CACHE_KEY = "ENTERPRISE_DETP_CACHE:";
+    private static final String ENTERPRISE_STATION_CACHE_KEY = "ENTERPRISE_STATIONS_CACHE:";
+    private static final String ENTERPRISE_CUSTOM_ORG_CACHE_KEY = "ENTERPRISE_CUSTOM_ORG_CACHE:";
+
+    private static final String SUPER_AMIN_ROLE_CODE = "SUPER_ADMIN";
+    private static final String FULL_SUPER_AMIN_ROLE_CODE = "0:SUPER_ADMIN";
+    private static final String ENT_AMIN_ROLE_CODE = "ENT_ADMIN";
+    private static final CurrentUser SUPER_ADMIN_USER = new CurrentUser("MDolRTglQjYlODUlRTclQkElQTclRTclQUUlQTElRTclOTAlODYlRTUlOTElOTg6MjowOjEyNy4wLjAuMTpJTlRFUk5BTDow");
+
+    @SuppressWarnings("rawtypes")
+    private static final DefaultRedisScript<List> ALL_CHILDREN_SCRIPT = new DefaultRedisScript<>();
+    @SuppressWarnings("rawtypes")
+    private static final DefaultRedisScript<List> ALL_BROTHERS_SCRIPT = new DefaultRedisScript<>();
+    private static final ThreadLocal<CurrentUser> CURRENT = new ThreadLocal<>();
+
     private static StringRedisTemplate redisTemplate;
 
+    // region 内容
     private final long id;
     private final String name;
     private final TokenExpireType expireType;
     private final String sid;
     private final LocalDateTime loginTime;
     private final String loginIp;
+    private final String clientType;
 
     private final String originData;
 
-    private static final ThreadLocal<CurrentUser> CURRENT = new ThreadLocal<>();
+    private SessionEmpInfo currentEmp = null;
+    private Set<String> userRoleAndGroups = null;
+    private Set<String> userActualRoles = null;
+    private Set<RolePermission> allPermsInEnt = null;
+    // endregion
+
+    static {
+        ALL_CHILDREN_SCRIPT.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getAllChildren.lua")));
+        ALL_CHILDREN_SCRIPT.setResultType(List.class);
+
+        ALL_BROTHERS_SCRIPT.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getBrother.lua")));
+        ALL_BROTHERS_SCRIPT.setResultType(List.class);
+    }
 
     private CurrentUser(String encodedFromStr) {
         try {
             String user = Base64.decodeWithUtf8(encodedFromStr);
             String[] split = user.split(":");
-            if (split.length != 6) {
+            if (split.length != 7) {
                 logger.warn("非法的用户信息: {}", user);
                 throw new BizException("非法的用户信息: " + user);
             }
@@ -67,9 +115,10 @@ public class CurrentUser extends SessionUser<Long> {
             this.id = Long.parseLong(split[0]);
             this.name = StringUtils.trimToNull(StringUtils.urlDecode(split[1]));
             this.expireType = TokenExpireType.getByValue(split[2]);
-            this.loginTime = DateUtils.toLocalDateTime(new Date(Long.parseLong(split[3])));
+            this.loginTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(Long.parseLong(split[3])), ZoneId.systemDefault());
             this.loginIp = split[4];
-            this.sid = split[5];
+            this.clientType = split[5];
+            this.sid = split[6];
         } catch (Exception e) {
             logger.warn("非法的用户信息: {}", e.getMessage());
             throw new BizException("非法的用户信息", e);
@@ -106,19 +155,19 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     /**
+     * 清除线程上绑定的当前用户
+     */
+    public static void clearCurrent() {
+        CURRENT.remove();
+    }
+
+    /**
      * 绑定指定用户到当前线程上
      *
      * @param current 当前用户
      */
     public static void setCurrent(CurrentUser current) {
         CURRENT.set(Assert.notNull(current, "当前用户不能为空"));
-    }
-
-    /**
-     * 清除线程上绑定的当前用户
-     */
-    public static void clearCurrent() {
-        CURRENT.remove();
     }
 
     /**
@@ -139,15 +188,14 @@ public class CurrentUser extends SessionUser<Long> {
     }
 
     /**
-     * 获取用户当前Session上设置的企业
-     * 如果非企业员工，返回(用户ID, 0, 0)
+     * 获取用户当前Session上设置的员工企业信息
+     * 如果非企业员工，返回的企业id与员工id均为0
      *
-     * @return 当前用户ID, 当前员工ID, 当前企业ID
+     * @return 员工企业信息
      */
-    public static Triple<Long, Long, Long> getEnterpriseInfo() {
+    public static SessionEmpInfo getCurrentEmpInfo() {
         CurrentUser current = getCurrentNonNull();
-        Pair<Long, Long> enterprise = current.getSessionEnterprise();
-        return Tuple.of(current.getId(), enterprise.c1, enterprise.c2);
+        return current.getSessionEmpInfo();
     }
 
     @Override
@@ -193,50 +241,27 @@ public class CurrentUser extends SessionUser<Long> {
         return loginIp;
     }
 
+    public String getClientType() {
+        return clientType;
+    }
+
     /**
-     * 获取用户当前Session上设置的企业
+     * 获取用户当前Session上设置的员工企业信息
      * 如果非企业员工，返回(0, 0)
      *
-     * @return 当前员工ID, 当前企业ID
+     * @return 员工企业信息
      */
-    public Pair<Long, Long> getSessionEnterprise() {
-        String s = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(SESSION_ENTERPRISE_REDIS_KEY + sid);
-        if (null == s) {
-            return NON_ENTERPRISE;
+    public SessionEmpInfo getSessionEmpInfo() {
+        if (null == currentEmp) {
+            String s = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(SESSION_ENTERPRISE_REDIS_KEY + sid);
+            if (null == s) {
+                currentEmp = SessionEmpInfo.newNonEntUser(this.id);
+            } else {
+                currentEmp = JsonUtils.fromJson(s, SessionEmpInfo.class);
+            }
         }
-        int i = s.indexOf(':');
-        return Tuple.of(Long.parseLong(s.substring(0, i)), Long.parseLong(s.substring(i + 1)));
-    }
 
-    /**
-     * 设置用户当前Session上的企业
-     *
-     * @param empId        员工id
-     * @param enterpriseId 企业id
-     * @param expireTime   过期时间
-     * @param timeUnit     时间单位
-     */
-    public void setSessionEnterprise(long empId, long enterpriseId, long expireTime, TimeUnit timeUnit) {
-        Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue()
-            .set(SESSION_ENTERPRISE_REDIS_KEY + sid, empId + ":" + enterpriseId, expireTime, timeUnit);
-    }
-
-    /**
-     * 设置用户当前Session上的企业
-     * <p>
-     * 更新旧的当前企业，数据有效期不变，如果没有旧值，更新失败
-     * </p>
-     *
-     * @param empId        员工id
-     * @param enterpriseId 企业id
-     */
-    public void setSessionEnterprise(long empId, long enterpriseId) {
-        Boolean hasKey = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).hasKey(SESSION_ENTERPRISE_REDIS_KEY + sid);
-        if (null != hasKey && hasKey) {
-            redisTemplate.opsForValue().set(SESSION_ENTERPRISE_REDIS_KEY + sid, empId + ":" + enterpriseId);
-        } else {
-            throw new BizException("用户当前会话未设置过当前企业");
-        }
+        return currentEmp;
     }
 
     /**
@@ -245,13 +270,16 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 是/否
      */
     public boolean isSuperAdmin() {
-        Boolean exist = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).hasKey(USER_ROLE_AND_GROUP_REDIS_KEY + id);
-        if (Boolean.TRUE.equals(exist)) {
-            String cache = redisTemplate.opsForValue().get(USER_ROLE_AND_GROUP_REDIS_KEY + id);
-            return Arrays.asList(StringUtils.trimToEmpty(cache).split(",")).contains(SUPER_AMIN_ROLE_CODE);
-        }
-        logger.warn("获取用户角色缓存失败,");
-        return false;
+        return getRoleAndGroups().contains(SUPER_AMIN_ROLE_CODE);
+    }
+
+    /**
+     * 用户是否是企业管理员
+     *
+     * @return 是/否
+     */
+    public boolean isEnterpriseAdmin() {
+        return getRoleAndGroups().contains(ENT_AMIN_ROLE_CODE);
     }
 
     /**
@@ -260,9 +288,9 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 角色与用户组边码列表(用户组编码以GROUP : 开头)
      */
     public Set<String> getRoleAndGroups() {
-        Pair<Long, Long> sessionEnterprise = getSessionEnterprise();
+        SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
         if (null != sessionEnterprise) {
-            return getRoleAndGroups(sessionEnterprise.c2);
+            return getRoleAndGroups(sessionEnterprise.getEnterpriseId());
         }
 
         return Collections.emptySet();
@@ -272,32 +300,28 @@ public class CurrentUser extends SessionUser<Long> {
      * 用户在指定企业下的角色与用户组信息
      *
      * @param enterpriseId 企业id
-     * @return 角色与用户组边码列表(用户组编码以GROUP : 开头)
+     * @return 角色与用户组边码列表(用户组编码以 " GROUP : " 开头)
      */
     public Set<String> getRoleAndGroups(long enterpriseId) {
         String ent = Long.toString(enterpriseId);
-        String cache = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(USER_ROLE_AND_GROUP_REDIS_KEY);
-        if (StringUtils.isNotEmpty(cache)) {
-            Set<String> roleAndGroups = new HashSet<>(cache.length());
-            String[] tmp = StringUtils.trimToEmpty(cache).split(",");
-            for (String s : tmp) {
-                if (s.startsWith("GROUP:")) {
-                    if (s.startsWith("GROUP:" + ent + ":")) {
-                        roleAndGroups.add(s.substring(7 + ent.length()));
-                    }
-                } else {
-                    if (s.startsWith(ent + ":")) {
-                        roleAndGroups.add(s.substring(ent.length() + 1));
-                    } else if (s.equals(SUPER_AMIN_ROLE_CODE)) {
-                        roleAndGroups.add(SUPER_AMIN_ROLE_CODE.substring(2));
-                    }
-                }
+        if (null == userRoleAndGroups) {
+            String cache = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForValue().get(USER_ROLE_AND_GROUP_REDIS_KEY + id);
+            if (StringUtils.isNotEmpty(cache)) {
+                userRoleAndGroups = StringUtils.splitToSet(cache, ",", StringUtils::trimToEmpty);
+            } else {
+                userRoleAndGroups = Collections.emptySet();
             }
-
-            return roleAndGroups;
-        } else {
-            return Collections.emptySet();
         }
+
+        Set<String> roleAndGroupsInEnt = new HashSet<>();
+        for (String s : userRoleAndGroups) {
+            if (s.startsWith(ent)) {
+                roleAndGroupsInEnt.add(s.substring(ent.length() + 1));
+            } else if (s.equals(FULL_SUPER_AMIN_ROLE_CODE)) {
+                roleAndGroupsInEnt.add(SUPER_AMIN_ROLE_CODE);
+            }
+        }
+        return roleAndGroupsInEnt;
     }
 
     /**
@@ -306,12 +330,14 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 角色列表(编码)
      */
     public Set<String> getActualRoles() {
-        Pair<Long, Long> sessionEnterprise = getSessionEnterprise();
-        if (null != sessionEnterprise) {
-            return getActualRoles(sessionEnterprise.c2);
+        if (null == userActualRoles) {
+            SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
+            if (null != sessionEnterprise) {
+                userActualRoles = getActualRoles(sessionEnterprise.getEnterpriseId());
+            }
         }
 
-        return Collections.emptySet();
+        return userActualRoles;
     }
 
     /**
@@ -323,7 +349,7 @@ public class CurrentUser extends SessionUser<Long> {
     public Set<String> getActualRoles(long enterpriseId) {
         Set<String> roleAndGroups = getRoleAndGroups(enterpriseId);
 
-        return getActualRoles(roleAndGroups);
+        return getActualRoles(roleAndGroups, Long.toString(enterpriseId));
     }
 
     /**
@@ -333,9 +359,9 @@ public class CurrentUser extends SessionUser<Long> {
      * @return 是/否
      */
     public boolean hasRole(String roleCode) {
-        Pair<Long, Long> sessionEnterprise = getSessionEnterprise();
+        SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
         if (null != sessionEnterprise) {
-            return hasRole(sessionEnterprise.c2, roleCode);
+            return hasRole(sessionEnterprise.getEnterpriseId(), roleCode);
         }
         return false;
     }
@@ -351,7 +377,7 @@ public class CurrentUser extends SessionUser<Long> {
         Set<String> roleAndGroups = getRoleAndGroups(enterpriseId);
         boolean contains = roleAndGroups.contains(roleCode);
         if (!contains) {
-            return getActualRoles(roleAndGroups).contains(roleCode);
+            return getActualRoles(roleAndGroups, Long.toString(enterpriseId)).contains(roleCode);
         }
         return true;
     }
@@ -463,43 +489,286 @@ public class CurrentUser extends SessionUser<Long> {
         Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).opsForHash().delete(sessionKey, keys.toArray());
     }
 
-    private Set<String> getActualRoles(Set<String> roleAndGroups) {
+    /**
+     * 获取一个用户在当前企业拥有的全部权限
+     *
+     * @return 权限列表
+     */
+    public Set<RolePermission> getAllPermissions() {
+        if (null == allPermsInEnt) {
+            Set<String> actualRoles = getActualRoles().stream().map(it -> getSessionEmpInfo().getEnterpriseId() + ":" + it).collect(Collectors.toSet());
+            allPermsInEnt = redisTemplate.<String, String>opsForHash().multiGet(SYS_ROLE_PERM_REDIS_KEY, actualRoles).stream()
+                .filter(StringUtils::isNotEmpty)
+                .map(it -> Optional.ofNullable(JsonUtils.fromJson(it, PERM_TYPE_TOKEN)).orElse(Collections.emptySet()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+        }
+
+        return allPermsInEnt;
+    }
+
+    /**
+     * 获取一个用户在指定企业下拥有的全部权限
+     *
+     * @param enterpriseId 企业ID
+     * @return 权限列表
+     */
+    public Set<RolePermission> getAllPermissions(long enterpriseId) {
+        if (null != allPermsInEnt && enterpriseId == getSessionEmpInfo().getEnterpriseId()) {
+            return allPermsInEnt;
+        }
+
+        Set<String> actualRoles = getActualRoles(enterpriseId).stream().map(it -> getSessionEmpInfo().getEnterpriseId() + ":" + it).collect(Collectors.toSet());
+        return redisTemplate.<String, String>opsForHash().multiGet(SYS_ROLE_PERM_REDIS_KEY, actualRoles).stream()
+            .filter(StringUtils::isNotEmpty)
+            .map(it -> Optional.ofNullable(JsonUtils.fromJson(it, PERM_TYPE_TOKEN)).orElse(Collections.emptySet()))
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
+    }
+
+    /**
+     * 判断用户在当前企业是否拥有指定权限
+     *
+     * @param permissionCode 权限编码
+     * @return 是否拥有权限
+     */
+    public boolean hasPermission(String permissionCode) {
+        if (StringUtils.isEmpty(permissionCode)) {
+            return false;
+        }
+        return getAllPermissions().stream().map(RolePermission::getPermissionCode).anyMatch(permissionCode::equals);
+    }
+
+    /**
+     * 判断用户在制定企业下是否拥有指定权限
+     *
+     * @param permissionCode 权限编码
+     * @param enterpriseId   企业ID
+     * @return 是否拥有权限
+     */
+    public boolean hasPermission(String permissionCode, long enterpriseId) {
+        if (StringUtils.isEmpty(permissionCode)) {
+            return false;
+        }
+        return getAllPermissions(enterpriseId).stream().map(RolePermission::getPermissionCode).anyMatch(permissionCode::equals);
+    }
+
+    /**
+     * 查询当前用户在当前接口上的数据权限
+     *
+     * @return 数据权限信息
+     */
+    public DataPermInfo getDataPermInfo() {
+        String apiCode = Env.getCurrentApiCode();
+        DataPermInfo info = new DataPermInfo();
+
+        if (StringUtils.isEmpty(apiCode) || isSuperAdmin()) {
+            info.setHasDataLimit(false);
+            return info;
+        }
+        SessionEmpInfo sessionEnterprise = getSessionEmpInfo();
+
+        DataLevel dataLevel = getAllPermissions().stream()
+            .filter(it -> it.getPermissionCode().equals("DATA" + apiCode.substring(3)))
+            .map(RolePermission::getAdditionalAttr)
+            .map(Integer::parseInt)
+            .min(Integer::compareTo)
+            .map(it -> EnumUtils.getEnum(DataLevel.class, it))
+            .orElse(DataLevel.ALL_DEPT);
+
+        switch (dataLevel) {
+            case ALL_DEPT:
+            case ALL_STATION:
+                info.setHasDataLimit(false);
+                break;
+            case CURRENT_LOWER:
+                // 查询所有下级部门
+                Set<Long> allChildren = getAllChildren(ENTERPRISE_DETP_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getDepts());
+                info.setDeptIds(allChildren);
+                CollectionUtils.mergeIntoLeft(info.getDeptIds(), sessionEnterprise.getDepts());
+                if (CollectionUtils.isNotEmpty(info.getDeptIds())) {
+                    info.setHimself(false);
+                }
+                break;
+            case LOWER:
+                // 查询所有下级部门
+                allChildren = getAllChildren(ENTERPRISE_DETP_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getDepts());
+                info.setDeptIds(allChildren);
+                break;
+            case CURRENT_DEPT:
+                info.setDeptIds(sessionEnterprise.getDepts());
+                if (CollectionUtils.isNotEmpty(info.getDeptIds())) {
+                    info.setHimself(false);
+                }
+                break;
+            case HIMSELF:
+                info.setHimself(true);
+                break;
+            case COORDINATE_LOWER:
+                // 查询同级岗位及所有下级岗位
+                Set<Long> allBrothers = getAllBrothers(ENTERPRISE_STATION_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getStations());
+                info.setStationIds(allBrothers);
+                allChildren = getAllChildren(ENTERPRISE_STATION_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getDepts());
+                CollectionUtils.mergeIntoLeft(info.getStationIds(), allChildren);
+                if (CollectionUtils.isNotEmpty(info.getStationIds())) {
+                    info.setHimself(false);
+                }
+                break;
+            case COORDINATE:
+                // 查询同级岗位
+                allBrothers = getAllBrothers(ENTERPRISE_STATION_CACHE_KEY, sessionEnterprise.getEnterpriseId(), sessionEnterprise.getStations());
+                info.setStationIds(allBrothers);
+                if (CollectionUtils.isNotEmpty(info.getStationIds())) {
+                    info.setHimself(false);
+                }
+                break;
+            case CURRENT_STATION:
+                info.setStationIds(sessionEnterprise.getStations());
+                if (CollectionUtils.isNotEmpty(info.getStationIds())) {
+                    info.setHimself(false);
+                }
+                break;
+        }
+        return info;
+    }
+
+    /**
+     * 查询当前用户指定的字段权限信息
+     *
+     * @param fieldPermCode 字段权限编码
+     * @return 当前用户拥有的字段权限列表, null表示无需控制字段权限
+     */
+    public Set<String> getFieldPermInfo(String fieldPermCode) {
+        if (StringUtils.isEmpty(fieldPermCode) || isSuperAdmin()) {
+            return null;
+        }
+
+        return getAllPermissions().stream()
+            .filter(it -> it.getPermissionCode().equals(fieldPermCode))
+            .map(RolePermission::getAdditionalAttr)
+            .filter(StringUtils::isNotBlank)
+            .flatMap(it -> StringUtils.splitToSet(it, ",").stream()).collect(Collectors.toSet());
+    }
+
+    public static Set<String> getActualRoles(Set<String> roleAndGroups, String enterpriseId) {
         if (CollectionUtils.isEmpty(roleAndGroups)) {
-            return roleAndGroups;
+            return Collections.emptySet();
         }
 
         List<String> res = Assert.notNull(redisTemplate, REDIS_NOT_PREPARED).<String, String>opsForHash().multiGet(SYS_ROLE_INFO_REDIS_KEY,
             CollectionUtils.ofArrayList("GROUP_ROLE", "ROLE_INHERITANCE"));
 
-        // 角色-组合的的其他角色
-        Map<String, Set<String>> roleInheritance = res.size() > 0 ? JsonUtils.fromJson(res.get(0), STRING_SETSTR_MAP_TOKEN) : Collections.emptyMap();
-
         // 用户组-组合的的其他角色
-        Map<String, Set<String>> userGroupRole = res.size() > 1 ? JsonUtils.fromJson(res.get(1), STRING_SETSTR_MAP_TOKEN) : Collections.emptyMap();
+        Map<String, Set<String>> userGroupRole = res.size() > 0 ? JsonUtils.fromJson(res.get(0), STRING_SETSTR_MAP_TOKEN) : Collections.emptyMap();
 
-        Set<String> actualRoles = new HashSet<>();
+        // 角色-组合的的其他角色
+        Map<String, Set<String>> roleInheritance = res.size() > 1 ? JsonUtils.fromJson(res.get(1), STRING_SETSTR_MAP_TOKEN) : Collections.emptyMap();
 
-        roleAndGroups.forEach(it -> {
-            if (it.startsWith("GROUP:")) {
-                Set<String> rs = userGroupRole.get(it.substring(6));
+        Set<String> userActualRoles = new HashSet<>();
+        for (String roleOrGroup : roleAndGroups) {
+            if (roleOrGroup.startsWith("GROUP:")) {
+                Set<String> rs = userGroupRole.get(enterpriseId + ":" + roleOrGroup.substring(6));
                 if (null != rs) {
                     for (String r : rs) {
-                        actualRoles.add(r);
-                        Set<String> tmp = roleInheritance.get(r);
+                        userActualRoles.add(r);
+                        Set<String> tmp = roleInheritance.get(enterpriseId + ":" + r);
                         if (!CollectionUtils.isEmpty(tmp)) {
-                            actualRoles.addAll(tmp);
+                            userActualRoles.addAll(tmp);
                         }
                     }
                 }
             } else {
-                actualRoles.add(it);
-                Set<String> tmp = roleInheritance.get(it);
+                userActualRoles.add(roleOrGroup);
+                String r = enterpriseId + ":" + roleOrGroup;
+                Set<String> tmp = roleInheritance.get(r);
                 if (!CollectionUtils.isEmpty(tmp)) {
-                    actualRoles.addAll(tmp);
+                    userActualRoles.addAll(tmp);
                 }
             }
-        });
-        return actualRoles;
+        }
+        return userActualRoles;
+    }
+
+    /**
+     * 使用超级管理员身份运行指定逻辑
+     *
+     * @param handler 处理逻辑
+     * @param <E>     异常类型
+     */
+    public static <E extends Exception> void runAs(ExceptionalHandler<E> handler) {
+        CurrentUser current = getCurrent();
+        setCurrent(SUPER_ADMIN_USER);
+        long nanoTime = System.nanoTime();
+        try {
+            String runningMethodInfo = SystemUtils.getRunningMethodInfo();
+            logger.info("{} 进行了权限提升操作 编号 {}", runningMethodInfo, nanoTime);
+            handler.handle();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new IllegalStateException(e);
+            }
+        } finally {
+            if (null == current) {
+                clearCurrent();
+            } else {
+                setCurrent(current);
+            }
+            logger.info("权限提升操作完成 总计耗时 {}ms 编号 {}", (System.nanoTime() - nanoTime) / 1000000L, nanoTime);
+        }
+    }
+
+    /**
+     * 使用超级管理员身份运行指定逻辑
+     *
+     * @param callable 处理逻辑
+     * @param <T>      返回结果类型
+     * @return 操作结果
+     */
+    public static <T> T callAs(Callable<T> callable) {
+        CurrentUser current = getCurrent();
+        setCurrent(SUPER_ADMIN_USER);
+        long nanoTime = System.nanoTime();
+        try {
+            String runningMethodInfo = SystemUtils.getRunningMethodInfo();
+            logger.info("{} 进行了权限提升操作 编号 {}", runningMethodInfo, nanoTime);
+            return callable.call();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new IllegalStateException(e);
+            }
+        } finally {
+            if (null == current) {
+                clearCurrent();
+            } else {
+                setCurrent(current);
+            }
+            logger.info("权限提升操作完成 总计耗时 {}ms 编号 {}", (System.nanoTime() - nanoTime) / 1000000L, nanoTime);
+        }
+    }
+
+    private static Set<Long> getAllChildren(String rootKey, long enterpriseId, Set<Long> current) {
+        return executeLua(rootKey, enterpriseId, current, ALL_CHILDREN_SCRIPT);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static Set<Long> getAllBrothers(String rootKey, long enterpriseId, Set<Long> current) {
+        return executeLua(rootKey, enterpriseId, current, ALL_BROTHERS_SCRIPT);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static Set<Long> executeLua(String rootKey, long enterpriseId, Set<Long> current, DefaultRedisScript<List> script) {
+        if (CollectionUtils.isNotEmpty(current)) {
+            List<?> children = redisTemplate.execute(script, Collections.singletonList(rootKey + enterpriseId),
+                current.stream().map(StringUtils::toString).toArray());
+            return Optional.ofNullable(children).orElse(CollectionUtils.ofLinkedList()).stream().map(Object::toString)
+                .map(d -> JsonUtils.fromJson(d, OrganVo.class)).map(OrganVo::getId).map(Long::valueOf).collect(Collectors.toSet());
+        } else {
+            return CollectionUtils.ofHashSet();
+        }
     }
 
     @Override

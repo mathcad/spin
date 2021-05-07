@@ -4,7 +4,6 @@ import org.spin.core.Assert;
 import org.spin.core.function.FinalConsumer;
 import org.spin.core.throwable.SpinException;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
@@ -14,12 +13,11 @@ import java.util.stream.Stream;
 /**
  * 集合工具类
  */
-public abstract class CollectionUtils {
+public final class CollectionUtils extends Util {
 
     private static final long PARALLEL_FACTORY = 10000L;
 
     private CollectionUtils() {
-        throw new UnsupportedOperationException("工具类不允许实例化");
     }
 
     // region 集合检查
@@ -32,17 +30,6 @@ public abstract class CollectionUtils {
      */
     public static boolean isEmpty(Iterable<?> collection) {
         return (collection == null || !collection.iterator().hasNext());
-    }
-
-    /**
-     * 判断数组是否为空或{@code null}
-     *
-     * @param array 待检查数组
-     * @param <T>   数组的类型参数
-     * @return 是否为空
-     */
-    public static <T> boolean isEmpty(T[] array) {
-        return (array == null || array.length == 0);
     }
 
     /**
@@ -64,17 +51,6 @@ public abstract class CollectionUtils {
      */
     public static boolean isNotEmpty(Iterable<?> collection) {
         return (collection != null && collection.iterator().hasNext());
-    }
-
-    /**
-     * 判断数组是否不为空
-     *
-     * @param array 待检查数组
-     * @param <T>   数组的类型参数
-     * @return 是否不为空
-     */
-    public static <T> boolean isNotEmpty(T[] array) {
-        return (array != null && array.length != 0);
     }
 
     /**
@@ -151,23 +127,6 @@ public abstract class CollectionUtils {
         return JsonUtils.fromJson("[]", (Class<T>) collection.getClass());
     }
 
-
-    /**
-     * 将枚举类型的所有枚举值包装成为一个数组
-     *
-     * @param enumeration 枚举
-     * @param array       存放枚举常量的容器
-     * @param <E>         枚举类型
-     * @return 枚举常量数组
-     */
-    public static <E> E[] toArray(Enumeration<E> enumeration, E[] array) {
-        ArrayList<E> elements = new ArrayList<>();
-        while (enumeration.hasMoreElements()) {
-            elements.add(enumeration.nextElement());
-        }
-        return elements.toArray(array);
-    }
-
     /**
      * 获取枚举类型的迭代器
      *
@@ -177,11 +136,6 @@ public abstract class CollectionUtils {
      */
     public static <E> Iterator<E> toIterator(Enumeration<E> enumeration) {
         return new EnumerationIterator<>(enumeration);
-    }
-
-    @SafeVarargs
-    public static <E> E[] ofArray(E... elements) {
-        return elements;
     }
 
     @SafeVarargs
@@ -711,7 +665,6 @@ public abstract class CollectionUtils {
         }
     }
 
-
     public static <T> void forEach(Iterable<T> collection, BiConsumer<Integer, T> consumer, Predicate<T> filter) {
         if (null == collection || null == consumer) {
             return;
@@ -724,143 +677,6 @@ public abstract class CollectionUtils {
             }
             ++i;
         }
-    }
-
-    public static <T> T[][] divide(T[] array, int batchSize) {
-        if (null == array) {
-            return null;
-        }
-        @SuppressWarnings("unchecked")
-        T[][] res = (T[][]) Array.newInstance(array.getClass(), (int) Math.ceil(array.length * 1.0 / batchSize));
-        int idx = 0;
-        int group = 0;
-        while (idx < array.length) {
-            int end = idx + batchSize;
-            end = Math.min(end, array.length);
-            res[group] = Arrays.copyOfRange(array, idx, end);
-            idx += batchSize;
-            ++group;
-        }
-        return res;
-    }
-
-    public static byte[][] divide(byte[] array, int batchSize) {
-        if (null == array) {
-            return null;
-        }
-        byte[][] res = new byte[(int) Math.ceil(array.length * 1.0 / batchSize)][];
-        int idx = 0;
-        int group = 0;
-        while (idx < array.length) {
-            int end = idx + batchSize;
-            end = Math.min(end, array.length);
-            res[group] = Arrays.copyOfRange(array, idx, end);
-            idx += batchSize;
-            ++group;
-        }
-        return res;
-    }
-
-    public static short[][] divide(short[] array, int batchSize) {
-        if (null == array) {
-            return null;
-        }
-        short[][] res = new short[(int) Math.ceil(array.length * 1.0 / batchSize)][];
-        int idx = 0;
-        int group = 0;
-        while (idx < array.length) {
-            int end = idx + batchSize;
-            end = Math.min(end, array.length);
-            res[group] = Arrays.copyOfRange(array, idx, end);
-            idx += batchSize;
-            ++group;
-        }
-        return res;
-    }
-
-    public static int[][] divide(int[] array, int batchSize) {
-        if (null == array) {
-            return null;
-        }
-        int[][] res = new int[(int) Math.ceil(array.length * 1.0 / batchSize)][];
-        int idx = 0;
-        int group = 0;
-        while (idx < array.length) {
-            int end = idx + batchSize;
-            end = Math.min(end, array.length);
-            res[group] = Arrays.copyOfRange(array, idx, end);
-            idx += batchSize;
-            ++group;
-        }
-        return res;
-    }
-
-    public static char[][] divide(char[] array, int batchSize) {
-        if (null == array) {
-            return null;
-        }
-        char[][] res = new char[(int) Math.ceil(array.length * 1.0 / batchSize)][];
-        int idx = 0;
-        int group = 0;
-        while (idx < array.length) {
-            int end = idx + batchSize;
-            end = Math.min(end, array.length);
-            res[group] = Arrays.copyOfRange(array, idx, end);
-            idx += batchSize;
-            ++group;
-        }
-        return res;
-    }
-
-    public static float[][] divide(float[] array, int batchSize) {
-        if (null == array) {
-            return null;
-        }
-        float[][] res = new float[(int) Math.ceil(array.length * 1.0 / batchSize)][];
-        int idx = 0;
-        int group = 0;
-        while (idx < array.length) {
-            int end = idx + batchSize;
-            end = Math.min(end, array.length);
-            res[group] = Arrays.copyOfRange(array, idx, end);
-            idx += batchSize;
-            ++group;
-        }
-        return res;
-    }
-
-    public static double[][] divide(double[] array, int batchSize) {
-        if (null == array) {
-            return null;
-        }
-        double[][] res = new double[(int) Math.ceil(array.length * 1.0 / batchSize)][];
-        int idx = 0;
-        int group = 0;
-        while (idx < array.length) {
-            int end = idx + batchSize;
-            end = Math.min(end, array.length);
-            res[group] = Arrays.copyOfRange(array, idx, end);
-            idx += batchSize;
-            ++group;
-        }
-        return res;
-    }
-
-    public static long[][] divide(long[] array, int batchSize) {
-        if (null == array) {
-            return null;
-        }
-        long[][] res = new long[(int) Math.ceil(array.length * 1.0 / batchSize)][];
-        int idx = 0;
-        int group = 0;
-        while (idx < array.length) {
-            int end = idx + batchSize;
-            end = Math.min(end, array.length);
-            res[group] = Arrays.copyOfRange(array, idx, end);
-            idx += batchSize;
-            ++group;
-        }
-        return res;
     }
 
     public static <T> List<List<T>> divide(List<T> list, int batchSize) {
@@ -976,5 +792,9 @@ public abstract class CollectionUtils {
         public void remove() {
             throw new UnsupportedOperationException("Not supported");
         }
+    }
+
+    public interface ShardConsumer<T> {
+        void accept(int shardCount, int shardIndex, T shard);
     }
 }

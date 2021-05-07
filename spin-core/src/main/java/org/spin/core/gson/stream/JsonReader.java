@@ -23,6 +23,7 @@ import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Arrays;
 
 /**
  * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
@@ -170,7 +171,7 @@ import java.io.Reader;
  * precision loss, extremely large values should be written and read as strings
  * in JSON.
  *
- * <h3><a name="nonexecuteprefix">Non-Execute Prefix</a></h3>
+ * <a id="nonexecuteprefix"></a><h3>Non-Execute Prefix</h3>
  * Web servers that serve private data using JSON may be vulnerable to <a
  * href="http://en.wikipedia.org/wiki/JSON#Cross-site_request_forgery">Cross-site
  * request forgery</a> attacks. In such an attack, a malicious site gains access
@@ -180,19 +181,15 @@ import java.io.Reader;
  * by {@code <script>} tags, disarming the attack. Since the prefix is malformed
  * JSON, strict parsing fails when it is encountered. This class permits the
  * non-execute prefix when {@link #setLenient(boolean) lenient parsing} is
- * enabled.
+ * enabled.</p>
  *
  * <p>Each {@code JsonReader} may be used to read a single JSON stream. Instances
- * of this class are not thread safe.
+ * of this class are not thread safe.</p>
  *
  * @author Jesse Wilson
  * @since 1.6
  */
 public class JsonReader implements Closeable {
-    /**
-     * The only non-execute prefix this parser permits
-     */
-    private static final char[] NON_EXECUTE_PREFIX = ")]}'\n".toCharArray();
     private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
 
     private static final int PEEKED_NONE = 0;
@@ -1307,15 +1304,10 @@ public class JsonReader implements Closeable {
 
     private void push(int newTop) {
         if (stackSize == stack.length) {
-            int[] newStack = new int[stackSize * 2];
-            int[] newPathIndices = new int[stackSize * 2];
-            String[] newPathNames = new String[stackSize * 2];
-            System.arraycopy(stack, 0, newStack, 0, stackSize);
-            System.arraycopy(pathIndices, 0, newPathIndices, 0, stackSize);
-            System.arraycopy(pathNames, 0, newPathNames, 0, stackSize);
-            stack = newStack;
-            pathIndices = newPathIndices;
-            pathNames = newPathNames;
+            int newLength = stackSize * 2;
+            stack = Arrays.copyOf(stack, newLength);
+            pathIndices = Arrays.copyOf(pathIndices, newLength);
+            pathNames = Arrays.copyOf(pathNames, newLength);
         }
         stack[stackSize++] = newTop;
     }
@@ -1507,7 +1499,7 @@ public class JsonReader implements Closeable {
         return getClass().getSimpleName() + locationString();
     }
 
-    String locationString() {
+    public String locationString() {
         int line = lineNumber + 1;
         int column = pos - lineStart + 1;
         return " at line " + line + " column " + column + " path " + getPath();
@@ -1631,18 +1623,18 @@ public class JsonReader implements Closeable {
         nextNonWhitespace(true);
         pos--;
 
-        if (pos + NON_EXECUTE_PREFIX.length > limit && !fillBuffer(NON_EXECUTE_PREFIX.length)) {
+        int p = pos;
+        if (p + 5 > limit && !fillBuffer(5)) {
             return;
         }
 
-        for (int i = 0; i < NON_EXECUTE_PREFIX.length; i++) {
-            if (buffer[pos + i] != NON_EXECUTE_PREFIX[i]) {
-                return; // not a security token!
-            }
+        char[] buf = buffer;
+        if (buf[p] != ')' || buf[p + 1] != ']' || buf[p + 2] != '}' || buf[p + 3] != '\'' || buf[p + 4] != '\n') {
+            return; // not a security token!
         }
 
         // we consumed a security token!
-        pos += NON_EXECUTE_PREFIX.length;
+        pos += 5;
     }
 
     static {

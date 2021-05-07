@@ -15,61 +15,61 @@ import javax.persistence.*
 @Entity
 @Table(name = "sys_organ")
 class Organization(
-        /**
-         * 名称
-         */
-        @Column(length = 64, unique = true)
-        var name: String = "",
+    /**
+     * 名称
+     */
+    @Column(length = 64, unique = true)
+    var name: String = "",
 
-        /**
-         * 编码
-         */
-        @Column(length = 64, unique = true)
-        var code: String? = null,
+    /**
+     * 编码
+     */
+    @Column(length = 64, unique = true)
+    var code: String? = null,
 
-        /**
-         * 简称
-         */
-        @Column(length = 16)
-        var alias: String? = null,
+    /**
+     * 简称
+     */
+    @Column(length = 16)
+    var alias: String? = null,
 
-        /**
-         * 联系方式
-         */
-        @Column(length = 32)
-        var tel: String? = null,
+    /**
+     * 联系方式
+     */
+    @Column(length = 32)
+    var tel: String? = null,
 
-        /**
-         * 地址
-         */
-        @Column(length = 128)
-        var address: String? = null,
+    /**
+     * 地址
+     */
+    @Column(length = 128)
+    var address: String? = null,
 
-        /**
-         * 类型
-         */
-        @Type(type = "org.spin.data.extend.UserEnumType")
-        var type: OrganizationTypeE? = null,
+    /**
+     * 类型
+     */
+    @Type(type = "org.spin.data.extend.UserEnumType")
+    var type: OrganizationTypeE? = null,
 
-        /**
-         * 上级机构
-         */
-        @ManyToOne(fetch = FetchType.LAZY)
-        var parent: Organization? = null,
+    /**
+     * 上级机构
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    var parent: Organization? = null,
 
-        /**
-         * id线索
-         */
-        @Column
-        var idPath: String = "",
+    /**
+     * id线索
+     */
+    @Column
+    var idPath: String = "",
 
-        /**
-         * 是否叶子节点(用于加速查找)
-         */
-        @Column
-        var isLeaf: Boolean = true
+    /**
+     * 是否叶子节点(用于加速查找)
+     */
+    @Column
+    var isLeaf: Boolean = true
 
-) : AbstractEntity() {
+) : AbstractEntity<Organization>() {
     companion object {
         private const val serialVersionUID = 8610089447094514827L
     }

@@ -1,15 +1,14 @@
 package org.spin.data.sql.resolver;
 
-import org.spin.data.core.DatabaseType;
-import org.spin.data.sql.resolver.freemarker.ConcurrentStrTemplateLoader;
-import org.spin.data.sql.resolver.freemarker.EnumValueFunc;
-import org.spin.data.sql.resolver.freemarker.ValidValueFunc;
-import org.spin.core.throwable.SimplifiedException;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.data.sql.resolver.freemarker.ConcurrentStrTemplateLoader;
+import org.spin.data.sql.resolver.freemarker.EnumValueFunc;
+import org.spin.data.sql.resolver.freemarker.ValidValueFunc;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -26,8 +25,8 @@ import java.util.Map;
 public class FreemarkerResolver implements TemplateResolver {
     private static final Logger logger = LoggerFactory.getLogger(FreemarkerResolver.class);
     private String charset = "UTF-8";
-    private Configuration configuration;
-    private ConcurrentStrTemplateLoader strTemplateLoader;
+    private final Configuration configuration;
+    private final ConcurrentStrTemplateLoader strTemplateLoader;
 
     public FreemarkerResolver() {
         this.configuration = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
@@ -40,7 +39,7 @@ public class FreemarkerResolver implements TemplateResolver {
     }
 
     @Override
-    public String resolve(String id, String templateSrc, Map<String, ?> model, DatabaseType dbType) {
+    public String resolve(String id, String templateSrc, Map<String, ?> model) {
         this.strTemplateLoader.putTemplate(id, templateSrc);
         Template template;
         try {

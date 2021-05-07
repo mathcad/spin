@@ -71,6 +71,11 @@
       "description": "应用版本"
     },
     {
+      "name": "app.buildVersion",
+      "type": "java.lang.String",
+      "description": "构建版"
+    },
+    {
       "name": "app.contextPath",
       "type": "java.lang.String",
       "description": "应用相对路径, 默认为server.servlet.contextPath"

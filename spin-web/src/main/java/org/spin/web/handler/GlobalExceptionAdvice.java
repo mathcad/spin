@@ -66,13 +66,15 @@ public class GlobalExceptionAdvice {
         Throwable cause = e;
         int depth = 0;
         RestfulResponse<Void> res;
-        boolean isInternal = StringUtils.isNotEmpty(request.getHeader("X-APP-NAME"));
+        boolean isInternal = StringUtils.isNotEmpty(request.getHeader("X-App-Name"));
         while (cause != null && depth < 30) {
             ++depth;
             for (WebExceptionHandler handler : handlers) {
                 if (handler.support(cause)) {
                     res = handler.handler(appName, cause, request);
-                    res.setPath(request.getRequestURI());
+                    if (null == res.getPath()) {
+                        res.setPath(request.getRequestURI());
+                    }
                     if (isInternal) {
                         response.setStatus(res.getStatus() > 0 ? res.getStatus() : ErrorCode.INTERNAL_ERROR.getCode());
                     }

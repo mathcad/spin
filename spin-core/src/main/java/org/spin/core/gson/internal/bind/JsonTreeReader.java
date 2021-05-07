@@ -26,6 +26,7 @@ import org.spin.core.gson.stream.JsonToken;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -302,15 +303,10 @@ public final class JsonTreeReader extends JsonReader {
 
     private void push(Object newTop) {
         if (stackSize == stack.length) {
-            Object[] newStack = new Object[stackSize * 2];
-            int[] newPathIndices = new int[stackSize * 2];
-            String[] newPathNames = new String[stackSize * 2];
-            System.arraycopy(stack, 0, newStack, 0, stackSize);
-            System.arraycopy(pathIndices, 0, newPathIndices, 0, stackSize);
-            System.arraycopy(pathNames, 0, newPathNames, 0, stackSize);
-            stack = newStack;
-            pathIndices = newPathIndices;
-            pathNames = newPathNames;
+            int newLength = stackSize * 2;
+            stack = Arrays.copyOf(stack, newLength);
+            pathIndices = Arrays.copyOf(pathIndices, newLength);
+            pathNames = Arrays.copyOf(pathNames, newLength);
         }
         stack[stackSize++] = newTop;
     }
@@ -335,7 +331,7 @@ public final class JsonTreeReader extends JsonReader {
         return result.toString();
     }
 
-    private String locationString() {
+    public String locationString() {
         return " at path " + getPath();
     }
 }

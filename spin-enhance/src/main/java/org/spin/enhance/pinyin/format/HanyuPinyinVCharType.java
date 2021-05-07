@@ -27,22 +27,23 @@ package org.spin.enhance.pinyin.format;
  * This class provides several options for output of 'ü', which are listed
  * below.
  *
- * <table summary="">
+ * <table>
+ * <caption>Examples</caption>
  * <tr>
  * <th>Options</th>
  * <th>Output</th>
  * </tr>
  * <tr>
  * <td>WITH_U_AND_COLON</td>
- * <td align = "center">u:</td>
+ * <td>u:</td>
  * </tr>
  * <tr>
  * <td>WITH_V</td>
- * <td align = "center">v</td>
+ * <td>v</td>
  * </tr>
  * <tr>
  * <td>WITH_U_UNICODE</td>
- * <td align = "center">ü</td>
+ * <td>ü</td>
  * </tr>
  * </table>
  *

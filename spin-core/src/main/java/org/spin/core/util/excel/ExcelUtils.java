@@ -16,6 +16,7 @@ import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
+import org.spin.core.util.Util;
 import org.spin.core.util.file.FileType;
 import org.spin.core.util.file.FileTypeUtils;
 
@@ -38,7 +39,7 @@ import java.util.Objects;
  * @author wangy QQ 837195190
  * <p>Created by thinkpad on 2018/5/4.</p>
  */
-public abstract class ExcelUtils {
+public final class ExcelUtils extends Util {
 
     /*******************************************************************************
      EXCEL的行高度和列宽度单位是不一样的
@@ -201,9 +202,6 @@ public abstract class ExcelUtils {
 
                 for (int i = 0; i < excelSheet.getColumns().size(); i++) {
                     GridColumn col = excelSheet.getColumns().get(i);
-                    if (excelSheet.getExcludeColumns().contains(col.getHeader())) {
-                        continue;
-                    }
                     if (col.getWidth() != null) {
                         sheet.setColumnWidth(i, (col.getWidth() * PIX_TO_WIDTH));
                     } else {
@@ -232,9 +230,6 @@ public abstract class ExcelUtils {
                         // 当行赋值
                         for (int c = 0; c < excelSheet.getColumns().size(); c++) {
                             GridColumn col = excelSheet.getColumns().get(c);
-                            if (excelSheet.getExcludeColumns().contains(col.getHeader())) {
-                                continue;
-                            }
                             cell = row.createCell(c);
 
                             setDataCellValue(robj, cell, col);

@@ -13,9 +13,5 @@ public class EntityTest {
 
     @Test
     public void testRef() {
-        File f = IEntity.ref(File.class, 1L);
-//        Dict d = IEntity.ref(Dict.class, "aa");
-        f = new File().withId(2L);
-        assertTrue(true);
     }
 }

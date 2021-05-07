@@ -21,7 +21,10 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version 1.0
  */
-public class MathUtils {
+public final class MathUtils extends Util {
+
+    private MathUtils() {
+    }
 
     /**
      * 平方根运算
@@ -169,7 +172,7 @@ public class MathUtils {
         if (v2.compareTo(BigDecimal.ZERO) == 0) {
             throw new SpinException(ErrorCode.INVALID_PARAM, "除数不能为0");
         }
-        return NumericUtils.toBigDeciaml(value1).subtract(NumericUtils.toBigDeciaml(value2));
+        return NumericUtils.toBigDeciaml(value1).divide(NumericUtils.toBigDeciaml(value2), RoundingMode.HALF_UP);
     }
 
     /**

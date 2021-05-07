@@ -1,17 +1,10 @@
-buildscript {
-    repositories {
-        mavenLocal()
-        maven { url "http://60.169.170.69:8081/repository/mathcat/" }
-        mavenCentral()
-    }
-}
-
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.3.71'
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.3.71'
-    id 'org.jetbrains.kotlin.plugin.noarg' version '1.3.71'
-    id 'org.springframework.boot' version '2.2.5.RELEASE'
-    id "com.google.cloud.tools.jib" version "2.1.0"
+    id 'org.jetbrains.kotlin.jvm' version '1.4.32'
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.4.32'
+    id 'org.jetbrains.kotlin.plugin.noarg' version '1.4.32'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.4.32'
+    id "org.springframework.boot" version "2.4.4"
+    id "com.google.cloud.tools.jib" version "3.0.0"
 }
 
 description '测试项目'
@@ -32,7 +25,7 @@ jib {
             username = 'robot$publisher'
             password = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NzMyNjQ3MjcsImlhdCI6MTU3MDY3MjcyNywiaXNzIjoiaGFyYm9yLXRva2VuLWlzc3VlciIsImlkIjoyLCJwaWQiOjEsImFjY2VzcyI6W3siUmVzb3VyY2UiOiIvcHJvamVjdC8xL3JlcG9zaXRvcnkiLCJBY3Rpb24iOiJwdXNoIiwiRWZmZWN0IjoiIn1dfQ.n2GWC9bT7NlSAfEgpSaHkAqk1Xm4JHjIdhEPaHP8XpqIIQd6TUWWbDHTLo2tL7fgPE8om6pjwQ2MELLy-GcesSTZh1-LeNrUYpTbzexomvdVTg99xMAnDPKHHJJOpxFW3VKWt7Ufjx0FpBpmbxZvUiQCMP1far_46URskBH1zMkNnQc6zjmPaZOHCOQ6BmtFH8Z0xJNO8N1iDdj0RGCiz-VF45uve0pC2VlR2q4IixUl_Jh0xj2oxYfeswJg8RgoQQFmqI3DIBh2Pgc7LiAvPU3Sz3KnoeGGUnaeSyeW2EliMV8jOoXAZSI5kMPEe9f-ZaE-r8yi_VPFfjnZb9khgmtmEb8z0w4ZHpgXQ0yyTU4s5n8tXjNtoC7cKSovCCLVIrx2CzIQpmiqSpY86IuiagXf-_skjzIt0xN1xIUpWnFG_TtA8i9ylquXFFv7PkQsPVDjSkzHXpzCAtwSFaKkV2TdyhgMxxL21rKVHP7oxv_5XR3mgyymB16fDYiE7j-5wizELNfIWxk7C-zaSACnmtiaTMCRPba6vqe-PwZsXUCvmz3HxYOE1QivdTC-4_HwJlzcFI5t7fHhqEDGb3NJurlg9tgOFFsyAXwRGz_DwVfxMJ-TPAzl1N8AR98y4IUNI4Ns-pPzHrvd9iQUTtqCPukudWXOspp2BKPY_QNL1P0'
         }
-        tags = [version]
+        tags = [version] as Set<String>
         credHelper = 'osxkeychain'
     }
     container {
@@ -67,28 +60,36 @@ task createKotlinDirs {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8
 }
 
 dependencies {
-    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
-    testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
-    testCompile(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
+    // additional for Intellij
+    testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: junitLauncherVersion
+    testRuntimeOnly group: 'org.junit.vintage', name: 'junit-vintage-engine', version: junitJupiterVersion
+
+    // test runtime
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
+    testImplementation(group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion) {
         exclude(module: 'commons-logging')
     }
-    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: "$kotlinVersion"
-    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlinVersion
-    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '1.2.1'
+    testImplementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-serialization-json', version: '1.1.0'
 
-    implementation group: 'io.github.microutils', name: 'kotlin-logging', version: '1.6.26'
+    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: kotlinVersion
+    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlinVersion
+    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '1.4.3'
+    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-serialization-json', version: '1.1.0'
+
+    implementation group: 'io.github.microutils', name: 'kotlin-logging', version: '2.0.6'
 
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
     implementation group: 'org.springframework.boot', name: 'spring-boot-devtools', version: springBootVersion
-    implementation group: 'com.alibaba', name: 'druid', version: '1.1.19'
+    implementation group: 'com.alibaba', name: 'druid', version: '1.2.5'
 //    implementation group: 'com.atomikos', name: 'transactions-hibernate4', version: '5.0.0'
 //    implementation group: 'com.atomikos', name: 'transactions-api', version: '5.0.0'
 
@@ -96,10 +97,10 @@ dependencies {
 //    implementation group: 'com.atomikos', name: 'transactions', version: '5.0.0'
 //    implementation group: 'com.atomikos', name: 'transactions-jta', version: '5.0.0'
 
-    implementation group: 'org.mathcat', name: 'spin-data-spring-boot-starter', version: '2.2.25-SNAPSHOT'
-    implementation group: 'org.mathcat', name: 'spin-web', version: '2.2.27-SNAPSHOT'
-    implementation group: 'org.mathcat', name: 'spin-wx', version: '2.2.25-SNAPSHOT'
-    implementation group: 'com.ibeetl', name: 'beetl', version: '3.0.10.RELEASE'
+    implementation group: 'org.mathcat', name: 'spin-data-spring-boot-starter', version: '2.4.0-SNAPSHOT'
+    implementation group: 'org.mathcat', name: 'spin-web', version: '2.4.0-SNAPSHOT'
+    implementation group: 'org.mathcat', name: 'spin-wx', version: '2.4.0-SNAPSHOT'
+    implementation group: 'com.ibeetl', name: 'beetl', version: beetlVersion
 
-    implementation group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
+    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.22'
 }

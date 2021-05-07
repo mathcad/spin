@@ -3,7 +3,7 @@ package org.spin.core.util;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public abstract class CnyUtils {
+public final class CnyUtils extends Util {
 
     /**
      * 汉语中数字大写

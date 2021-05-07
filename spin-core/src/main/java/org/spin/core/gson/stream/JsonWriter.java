@@ -20,6 +20,7 @@ import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 
 import static org.spin.core.gson.stream.JsonScope.*;
 
@@ -296,7 +297,7 @@ public class JsonWriter implements Closeable, Flushable {
      */
     public JsonWriter beginArray() throws IOException {
         writeDeferredName();
-        return open(EMPTY_ARRAY, "[");
+        return open(EMPTY_ARRAY, '[');
     }
 
     /**
@@ -306,7 +307,7 @@ public class JsonWriter implements Closeable, Flushable {
      * @throws IOException IO Exception
      */
     public JsonWriter endArray() throws IOException {
-        return close(EMPTY_ARRAY, NONEMPTY_ARRAY, "]");
+        return close(EMPTY_ARRAY, NONEMPTY_ARRAY, ']');
     }
 
     /**
@@ -318,7 +319,7 @@ public class JsonWriter implements Closeable, Flushable {
      */
     public JsonWriter beginObject() throws IOException {
         writeDeferredName();
-        return open(EMPTY_OBJECT, "{");
+        return open(EMPTY_OBJECT, '{');
     }
 
     /**
@@ -328,14 +329,14 @@ public class JsonWriter implements Closeable, Flushable {
      * @throws IOException IO Exception
      */
     public JsonWriter endObject() throws IOException {
-        return close(EMPTY_OBJECT, NONEMPTY_OBJECT, "}");
+        return close(EMPTY_OBJECT, NONEMPTY_OBJECT, '}');
     }
 
     /**
      * Enters a new scope by appending any necessary whitespace and the given
      * bracket.
      */
-    private JsonWriter open(int empty, String openBracket) throws IOException {
+    private JsonWriter open(int empty, char openBracket) throws IOException {
         beforeValue();
         push(empty);
         out.write(openBracket);
@@ -346,7 +347,7 @@ public class JsonWriter implements Closeable, Flushable {
      * Closes the current scope by appending any necessary whitespace and the
      * given bracket.
      */
-    private JsonWriter close(int empty, int nonempty, String closeBracket)
+    private JsonWriter close(int empty, int nonempty, char closeBracket)
         throws IOException {
         int context = peek();
         if (context != nonempty && context != empty) {
@@ -366,9 +367,7 @@ public class JsonWriter implements Closeable, Flushable {
 
     private void push(int newTop) {
         if (stackSize == stack.length) {
-            int[] newStack = new int[stackSize * 2];
-            System.arraycopy(stack, 0, newStack, 0, stackSize);
-            stack = newStack;
+            stack = Arrays.copyOf(stack, stackSize * 2);
         }
         stack[stackSize++] = newTop;
     }
@@ -589,7 +588,7 @@ public class JsonWriter implements Closeable, Flushable {
 
     private void string(String value) throws IOException {
         String[] replacements = htmlSafe ? HTML_SAFE_REPLACEMENT_CHARS : REPLACEMENT_CHARS;
-        out.write("\"");
+        out.write('\"');
         int last = 0;
         int length = value.length();
         for (int i = 0; i < length; i++) {
@@ -616,7 +615,7 @@ public class JsonWriter implements Closeable, Flushable {
         if (last < length) {
             out.write(value, last, length - last);
         }
-        out.write("\"");
+        out.write('\"');
     }
 
     private void newline() throws IOException {
@@ -624,7 +623,7 @@ public class JsonWriter implements Closeable, Flushable {
             return;
         }
 
-        out.write("\n");
+        out.write('\n');
         for (int i = 1, size = stackSize; i < size; i++) {
             out.write(indent);
         }

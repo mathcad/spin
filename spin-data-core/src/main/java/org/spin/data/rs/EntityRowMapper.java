@@ -1,11 +1,14 @@
 package org.spin.data.rs;
 
+import net.sf.cglib.beans.BeanMap;
 import org.spin.core.util.BeanUtils;
 import org.spin.core.util.ConstructorUtils;
 import org.spin.data.throwable.SQLError;
 import org.spin.data.throwable.SQLException;
 
 import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * ResultSet到实体的转换器
@@ -18,7 +21,6 @@ import java.lang.reflect.Constructor;
 public class EntityRowMapper<E> implements RowMapper<E> {
 
     private static final Class<?>[] CONSTRUCTOR_ARGS = new Class[0];
-    private final Class<E> type;
     private final Constructor<E> accessibleConstructor;
 
     public EntityRowMapper(Class<E> type) {
@@ -26,19 +28,48 @@ public class EntityRowMapper<E> implements RowMapper<E> {
         if (null == accessibleConstructor) {
             throw new SQLException(SQLError.OBJECT_INSTANCE_ERROR, "指定的实体类型没有默认构造方法");
         }
-        this.type = type;
         this.accessibleConstructor = accessibleConstructor;
     }
 
     @Override
     public E apply(String[] columnNames, Object[] columns, int columnCount, int rowIdx) {
-        E entity;
+        E result;
         try {
-            entity = accessibleConstructor.newInstance();
+            result = accessibleConstructor.newInstance();
         } catch (Exception e) {
             throw new SQLException(SQLError.OBJECT_INSTANCE_ERROR);
         }
-        BeanUtils.applyProperties(entity, columnNames, columns);
-        return entity;
+        BeanMap rootBeanMap = BeanMap.create(result);
+
+        Map<String, BeanMap> beanMapMap = new HashMap<>();
+
+        for (int i = 0; i < columnNames.length; i++) {
+            String alias = columnNames[i];
+            if (alias != null) {
+                String[] ap = alias.split("\\.");
+                if (ap.length > 1) {
+                    BeanMap work = rootBeanMap;
+                    for (int j = 0; j < ap.length - 1; j++) {
+                        if (!beanMapMap.containsKey(ap[j])) {
+                            Class<?> propertyType = (j == 0 ? rootBeanMap : beanMapMap.get(ap[j - 1])).getPropertyType(ap[j]);
+                            Object o = BeanUtils.instantiateClass(propertyType);
+                            int t = 0;
+                            int idx = alias.indexOf('.');
+                            while (t++ <= j) {
+                                idx = alias.indexOf('.', idx);
+                            }
+                            String p = alias.substring(0, idx);
+                            work.put(p, o);
+                            beanMapMap.put(p, BeanMap.create(o));
+                        }
+                        work = beanMapMap.get(ap[j]);
+                    }
+                    work.put(ap[ap.length - 1], columns[i]);
+                } else {
+                    rootBeanMap.put(alias, columns[i]);
+                }
+            }
+        }
+        return result;
     }
 }

@@ -1,6 +1,6 @@
 import com.shipping.ShippingApplication
 import com.shipping.service.TestService
-import org.junit.Assert.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired

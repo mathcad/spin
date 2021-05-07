@@ -16,8 +16,14 @@
 
 package org.spin.cloud.feign;
 
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.spin.core.inspection.BytesClassLoader;
 import org.spin.core.util.StringUtils;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
+import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
@@ -33,22 +39,19 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.core.type.ClassMetadata;
-import org.springframework.core.type.classreading.MetadataReader;
-import org.springframework.core.type.classreading.MetadataReaderFactory;
-import org.springframework.core.type.filter.AbstractClassTestingTypeFilter;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Spencer Gibb
@@ -57,15 +60,17 @@ import java.util.*;
  * @author Gang Li
  * @author xuweinan
  */
-class SpinFeignClientsRegistrar
-    implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, EnvironmentAware {
+class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, EnvironmentAware {
 
     // patterned after Spring Integration IntegrationComponentScanRegistrar
     // and RibbonClientsConfigurationRegistgrar
+    private static final BytesClassLoader CLASS_LOADER = new BytesClassLoader(Thread.currentThread().getContextClassLoader());
 
     private ResourceLoader resourceLoader;
 
     private Environment environment;
+
+    private boolean handleDefaultFallack;
 
     SpinFeignClientsRegistrar() {
     }
@@ -135,78 +140,64 @@ class SpinFeignClientsRegistrar
     }
 
     @Override
-    public void registerBeanDefinitions(@NonNull AnnotationMetadata metadata,
-                                        @NonNull BeanDefinitionRegistry registry) {
+    public void registerBeanDefinitions(@NonNull AnnotationMetadata metadata, @NonNull BeanDefinitionRegistry registry) {
         registerDefaultConfiguration(metadata, registry);
         registerFeignClients(metadata, registry);
     }
 
-    private void registerDefaultConfiguration(AnnotationMetadata metadata,
-                                              BeanDefinitionRegistry registry) {
-        Map<String, Object> defaultAttrs = metadata
-            .getAnnotationAttributes(EnableSpinFeignClients.class.getName(), true);
+    private void registerDefaultConfiguration(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
+        Map<String, Object> defaultAttrs = metadata.getAnnotationAttributes(EnableSpinFeignClients.class.getName(), true);
 
-        if (defaultAttrs != null && defaultAttrs.containsKey("defaultConfiguration")) {
-            String name;
-            if (metadata.hasEnclosingClass()) {
-                name = "default." + metadata.getEnclosingClassName();
-            } else {
-                name = "default." + metadata.getClassName();
+        if (null != defaultAttrs) {
+            handleDefaultFallack = (boolean) defaultAttrs.get("handleDefaultFallack");
+            if (defaultAttrs.containsKey("defaultConfiguration")) {
+                String name;
+                if (metadata.hasEnclosingClass()) {
+                    name = "default." + metadata.getEnclosingClassName();
+                } else {
+                    name = "default." + metadata.getClassName();
+                }
+                registerClientConfiguration(registry, name, defaultAttrs.get("defaultConfiguration"));
             }
-            registerClientConfiguration(registry, name,
-                defaultAttrs.get("defaultConfiguration"));
         }
     }
 
     private void registerFeignClients(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
-        ClassPathScanningCandidateComponentProvider scanner = getScanner();
-        scanner.setResourceLoader(this.resourceLoader);
 
-        Set<String> basePackages;
-
+        LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet<>();
         Map<String, Object> attrs = metadata.getAnnotationAttributes(EnableSpinFeignClients.class.getName());
         AnnotationTypeFilter annotationTypeFilter = new AnnotationTypeFilter(FeignClient.class);
         final Class<?>[] clients = attrs == null ? null : (Class<?>[]) attrs.get("clients");
-
         if (clients == null || clients.length == 0) {
+            ClassPathScanningCandidateComponentProvider scanner = getScanner();
+            scanner.setResourceLoader(this.resourceLoader);
             scanner.addIncludeFilter(annotationTypeFilter);
-            basePackages = getBasePackages(metadata);
-        } else {
-            final Set<String> clientClasses = new HashSet<>();
-            basePackages = new HashSet<>();
-            for (Class<?> clazz : clients) {
-                basePackages.add(ClassUtils.getPackageName(clazz));
-                clientClasses.add(clazz.getCanonicalName());
+            Set<String> basePackages = getBasePackages(metadata);
+            for (String basePackage : basePackages) {
+                candidateComponents.addAll(scanner.findCandidateComponents(basePackage));
             }
-            AbstractClassTestingTypeFilter filter = new AbstractClassTestingTypeFilter() {
-                @Override
-                protected boolean match(ClassMetadata metadata) {
-                    String cleaned = metadata.getClassName().replaceAll("\\$", ".");
-                    return clientClasses.contains(cleaned);
-                }
-            };
-            scanner.addIncludeFilter(new AllTypeFilter(Arrays.asList(filter, annotationTypeFilter)));
+        } else {
+            for (Class<?> clazz : clients) {
+                candidateComponents.add(new AnnotatedGenericBeanDefinition(clazz));
+            }
         }
 
-        for (String basePackage : basePackages) {
-            Set<BeanDefinition> candidateComponents = scanner.findCandidateComponents(basePackage);
-            for (BeanDefinition candidateComponent : candidateComponents) {
-                if (candidateComponent instanceof AnnotatedBeanDefinition) {
-                    // verify annotated class is an interface
-                    AnnotatedBeanDefinition beanDefinition = (AnnotatedBeanDefinition) candidateComponent;
-                    AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
-                    Assert.isTrue(annotationMetadata.isInterface(), "@FeignClient can only be specified on an interface");
+        for (BeanDefinition candidateComponent : candidateComponents) {
+            if (candidateComponent instanceof AnnotatedBeanDefinition) {
+                // verify annotated class is an interface
+                AnnotatedBeanDefinition beanDefinition = (AnnotatedBeanDefinition) candidateComponent;
+                AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
+                Assert.isTrue(annotationMetadata.isInterface(), "@FeignClient can only be specified on an interface");
 
-                    Map<String, Object> attributes = annotationMetadata.getAnnotationAttributes(FeignClient.class.getCanonicalName());
+                Map<String, Object> attributes = annotationMetadata.getAnnotationAttributes(FeignClient.class.getCanonicalName());
 
-                    if (null == attributes) {
-                        continue;
-                    }
-                    String name = getClientName(attributes);
-                    registerClientConfiguration(registry, name, attributes.get("configuration"));
-
-                    registerFeignClient(registry, annotationMetadata, attributes);
+                if (null == attributes) {
+                    continue;
                 }
+                String name = getClientName(attributes);
+                registerClientConfiguration(registry, name, attributes.get("configuration"));
+
+                registerFeignClient(registry, annotationMetadata, attributes);
             }
         }
     }
@@ -215,9 +206,13 @@ class SpinFeignClientsRegistrar
         String className = annotationMetadata.getClassName();
         BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(FeignClientFactoryBean.class);
         validate(attributes);
+
         String name = getName(attributes);
         String defUrl = FeignResolver.getUrl(name);
         String url = getUrl(attributes);
+
+        Class<?> fallbackFactory = analysisFallbackFactory(className, registry, (Class<?>) attributes.get("fallbackFactory"));
+
         definition.addPropertyValue("url", StringUtils.isEmpty(url) ? defUrl : url);
         definition.addPropertyValue("path", getPath(attributes));
         definition.addPropertyValue("name", name);
@@ -226,14 +221,15 @@ class SpinFeignClientsRegistrar
         definition.addPropertyValue("type", className);
         definition.addPropertyValue("decode404", attributes.get("decode404"));
         definition.addPropertyValue("fallback", attributes.get("fallback"));
-        definition.addPropertyValue("fallbackFactory", attributes.get("fallbackFactory"));
+        definition.addPropertyValue("fallbackFactory", fallbackFactory);
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
 
         String alias = contextId + "FeignClient";
         AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
+        beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, className);
 
-        boolean primary = (Boolean) attributes.get("primary"); // has a default, won't be
-        // null
+        // has a default, won't be null
+        boolean primary = (Boolean) attributes.get("primary");
 
         beanDefinition.setPrimary(primary);
 
@@ -242,8 +238,7 @@ class SpinFeignClientsRegistrar
             alias = qualifier;
         }
 
-        BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className,
-            new String[]{alias});
+        BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, new String[]{alias});
         BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
     }
 
@@ -298,8 +293,7 @@ class SpinFeignClientsRegistrar
     private ClassPathScanningCandidateComponentProvider getScanner() {
         return new ClassPathScanningCandidateComponentProvider(false, this.environment) {
             @Override
-            protected boolean isCandidateComponent(
-                AnnotatedBeanDefinition beanDefinition) {
+            protected boolean isCandidateComponent(@NonNull AnnotatedBeanDefinition beanDefinition) {
                 boolean isCandidate = false;
                 if (beanDefinition.getMetadata().isIndependent()) {
                     if (!beanDefinition.getMetadata().isAnnotation()) {
@@ -371,54 +365,62 @@ class SpinFeignClientsRegistrar
     }
 
     private void registerClientConfiguration(BeanDefinitionRegistry registry, Object name, Object configuration) {
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder
-            .genericBeanDefinition(FeignClientSpecification.class);
+        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(FeignClientSpecification.class);
         builder.addConstructorArgValue(name);
         builder.addConstructorArgValue(configuration);
-        registry.registerBeanDefinition(
-            name + "." + FeignClientSpecification.class.getSimpleName(),
+        registry.registerBeanDefinition(name + "." + FeignClientSpecification.class.getSimpleName(),
             builder.getBeanDefinition());
+    }
+
+    private Class<?> analysisFallbackFactory(String clientName, BeanDefinitionRegistry registry, Class<?> fallbackFactory) {
+        if (handleDefaultFallack && fallbackFactory == void.class) {
+            fallbackFactory = SpinFallbackFactory.class;
+        }
+        if (!(SpinFallbackFactory.class == fallbackFactory)) {
+            return fallbackFactory;
+        }
+
+        Class<?> fallbackFactoryClass = generateFallbackFactoryClass(clientName);
+        BeanDefinitionBuilder bdb = BeanDefinitionBuilder.rootBeanDefinition(fallbackFactoryClass);
+        registry.registerBeanDefinition(StringUtils.uncapitalize(fallbackFactoryClass.getSimpleName()), bdb.getBeanDefinition());
+
+        return fallbackFactoryClass;
+    }
+
+    private <T, F extends SpinFallbackFactory<T, AbstractFallback>> Class<F> generateFallbackFactoryClass(String feignType) {
+        int idx = feignType.lastIndexOf('$');
+        if (idx < 0) {
+            idx = feignType.lastIndexOf('.');
+        }
+        ++idx;
+        String name = (1 >= idx ? "org/spin/cloud/feign/internal/" : feignType.substring(0, idx)).replaceAll("\\.", "/") + feignType.substring(idx) + "FallbackFactory";
+        String gInfo = "L" + feignType.replaceAll("\\.", "/") + ";";
+        ClassWriter cw = new ClassWriter(0);
+        cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC,
+            name,
+            "Lorg/spin/cloud/feign/SpinFallbackFactory<" + gInfo + "Lorg/spin/cloud/feign/AbstractFallback;>;",
+            "org/spin/cloud/feign/SpinFallbackFactory",
+            null
+        );
+
+        MethodVisitor mw = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
+        mw.visitVarInsn(Opcodes.ALOAD, 0);
+        mw.visitMethodInsn(Opcodes.INVOKESPECIAL, "org/spin/cloud/feign/SpinFallbackFactory", "<init>", "()V", false);
+        mw.visitInsn(Opcodes.RETURN);
+        mw.visitMaxs(1, 1);
+        mw.visitEnd();
+
+        cw.visitEnd();
+        byte[] bytes = cw.toByteArray();
+        @SuppressWarnings("unchecked")
+        Class<F> mClass = (Class<F>) CLASS_LOADER.defineClass(name.replaceAll("/", "."), bytes);
+        return mClass;
     }
 
     @Override
     public void setEnvironment(@NonNull Environment environment) {
         this.environment = environment;
         FeignResolver.init(environment);
-    }
-
-    /**
-     * Helper class to create a {@link TypeFilter} that matches if all the delegates
-     * match.
-     *
-     * @author Oliver Gierke
-     */
-    private static class AllTypeFilter implements TypeFilter {
-
-        private final List<TypeFilter> delegates;
-
-        /**
-         * Creates a new {@link AllTypeFilter} to match if all the given delegates match.
-         *
-         * @param delegates must not be {@literal null}.
-         */
-        AllTypeFilter(List<TypeFilter> delegates) {
-            Assert.notNull(delegates, "This argument is required, it must not be null");
-            this.delegates = delegates;
-        }
-
-        @Override
-        public boolean match(@NonNull MetadataReader metadataReader,
-                             @NonNull MetadataReaderFactory metadataReaderFactory) throws IOException {
-
-            for (TypeFilter filter : this.delegates) {
-                if (!filter.match(metadataReader, metadataReaderFactory)) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
     }
 
 }

@@ -2,11 +2,14 @@ package org.spin.cloud.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.cloud.annotation.UtilClass;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.cloud.vo.LogInfoVo;
+import org.spin.cloud.vo.SessionEmpInfo;
 import org.spin.core.Assert;
-import org.spin.core.collection.Pair;
 import org.spin.core.util.JsonUtils;
+import org.spin.core.util.Util;
+import org.springframework.context.ApplicationContext;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.lang.NonNull;
@@ -23,8 +26,9 @@ import java.time.LocalDateTime;
  * @author xuweinan
  * @version 1.0
  */
+@UtilClass
 @SuppressWarnings("unchecked")
-public class SysLogPublisher {
+public final class SysLogPublisher extends Util {
     public static final String LOG_DEST = "platform.log";
     private static final Logger logger = LoggerFactory.getLogger(SysLogPublisher.class);
 
@@ -43,14 +47,20 @@ public class SysLogPublisher {
     private static KafkaTemplate<String, String> kafkaTemplate;
 
     static {
+        Util.registerLatch(SysLogPublisher.class);
+    }
+
+    private static void init(ApplicationContext applicationContext) {
         try {
-            SysLogPublisher.kafkaTemplate = BeanHolder.getApplicationContext().getBean(KafkaTemplate.class);
+            SysLogPublisher.kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
         } catch (Exception ignore) {
             logger.warn("系统上下文中没有启用Kafka, 日志功能将被禁用");
         }
+        Util.ready(SysLogPublisher.class);
     }
 
     public static void publish(LogInfoVo infoVo) {
+        Util.awaitUntilReady(SysLogPublisher.class);
         if (null == kafkaTemplate) {
             throw new UnsupportedOperationException("由于未启用Kafka, 平台日志发送功能无法使用");
         }
@@ -61,11 +71,11 @@ public class SysLogPublisher {
         CurrentUser currentUser = CurrentUser.getCurrent();
         infoVo.setAppName(Env.getAppName());
         if (null != currentUser) {
-            Pair<Long, Long> enterprise = currentUser.getSessionEnterprise();
+            SessionEmpInfo enterprise = currentUser.getSessionEmpInfo();
             infoVo.setUserId(currentUser.getId());
             infoVo.setRealName(currentUser.getName());
             if (null != enterprise) {
-                infoVo.setEnterpriseId(enterprise.c2);
+                infoVo.setEnterpriseId(enterprise.getEnterpriseId());
             } else {
                 infoVo.setEnterpriseId(0L);
             }

@@ -18,7 +18,7 @@ import java.util.List;
  * @version 1.0
  */
 public class FileSystemXmlLoader extends FileSystemSQLLoader {
-    private SAXReader reader = new SAXReader();
+    private final SAXReader reader = new SAXReader();
 
     @Override
     public String getSqlTemplateSrc(String id) {

@@ -49,6 +49,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -90,7 +91,7 @@ public class RepositoryContext {
      * @return 对应实体的持久化操作对象
      */
     @SuppressWarnings("unchecked")
-    public <T extends IEntity<P>, P extends Serializable> ARepository<T, P> getRepo(Class<T> cls) {
+    public <T extends IEntity<P, T>, P extends Serializable> ARepository<T, P> getRepo(Class<T> cls) {
         Assert.notNull(cls, "请指定要查询实体类型");
         final String beanName = cls.getName() + "ARepository";
         if (repositoryCache.containsKey(beanName)) {
@@ -128,7 +129,7 @@ public class RepositoryContext {
      * @param <P>    实体主键类型
      * @return 保存后的实体(has id)
      */
-    public <T extends IEntity<P>, P extends Serializable> T save(final T entity) {
+    public <T extends IEntity<P, T>, P extends Serializable> T save(final T entity) {
         //noinspection unchecked
         return (T) getRepo(entity.getClass()).save(entity, false);
     }
@@ -142,7 +143,7 @@ public class RepositoryContext {
      * @param <P>        实体主键类型
      * @return 保存后的实体(has id)
      */
-    public <T extends IEntity<P>, P extends Serializable> T save(final T entity, boolean saveWithPk) {
+    public <T extends IEntity<P, T>, P extends Serializable> T save(final T entity, boolean saveWithPk) {
         //noinspection unchecked
         return (T) getRepo(entity.getClass()).save(entity, saveWithPk);
     }
@@ -155,7 +156,7 @@ public class RepositoryContext {
      * @param <P>      实体主键类型
      * @return 保存后的实体
      */
-    public <T extends IEntity<P>, P extends Serializable> List<T> save(Iterable<T> entities) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> save(Iterable<T> entities) {
         List<T> result = new ArrayList<>();
         if (entities == null) {
             return result;
@@ -179,7 +180,7 @@ public class RepositoryContext {
      * @param <P>    实体主键类型
      * @return 更新后的持久化对象
      */
-    public <T extends IEntity<P>, P extends Serializable> T merge(final T entity) {
+    public <T extends IEntity<P, T>, P extends Serializable> T merge(final T entity) {
         //noinspection unchecked
         return (T) getRepo(entity.getClass()).merge(entity);
     }
@@ -193,7 +194,7 @@ public class RepositoryContext {
      * @param <P>             实体主键类型
      * @see Session#replicate(Object, ReplicationMode)
      */
-    public <T extends IEntity<P>, P extends Serializable> void replicate(final T entity, final ReplicationMode replicationMode) {
+    public <T extends IEntity<P, T>, P extends Serializable> void replicate(final T entity, final ReplicationMode replicationMode) {
         //noinspection unchecked
         getRepo(entity.getClass()).replicate(entity, replicationMode);
     }
@@ -210,7 +211,7 @@ public class RepositoryContext {
      * @return 持久化对象, 或 {@code null}
      * @see Session#get(Class, Serializable)
      */
-    public <T extends IEntity<P>, P extends Serializable> T get(Class<T> entityClazz, final P id) {
+    public <T extends IEntity<P, T>, P extends Serializable> T get(Class<T> entityClazz, final P id) {
         return getRepo(entityClazz).get(id);
     }
 
@@ -227,7 +228,7 @@ public class RepositoryContext {
      * @return 持久化对象, 或 {@code null}
      * @see Session#get(Class, Serializable, LockMode)
      */
-    public <T extends IEntity<P>, P extends Serializable> T get(Class<T> entityClazz, final P id, final LockMode lockMode) {
+    public <T extends IEntity<P, T>, P extends Serializable> T get(Class<T> entityClazz, final P id, final LockMode lockMode) {
         return getRepo(entityClazz).get(id, lockMode);
     }
 
@@ -240,7 +241,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 持久化对象
      */
-    public <T extends IEntity<P>, P extends Serializable> T getWithLock(Class<T> entityClazz, final P id) {
+    public <T extends IEntity<P, T>, P extends Serializable> T getWithLock(Class<T> entityClazz, final P id) {
         return getRepo(entityClazz).getWithLock(id);
     }
 
@@ -255,7 +256,7 @@ public class RepositoryContext {
      * @throws org.springframework.orm.ObjectRetrievalFailureException 如果id不存在则抛出该异常
      * @see Session#load(Class, Serializable)
      */
-    public <T extends IEntity<P>, P extends Serializable> T load(Class<T> entityClazz, final P id) {
+    public <T extends IEntity<P, T>, P extends Serializable> T load(Class<T> entityClazz, final P id) {
         return getRepo(entityClazz).load(id);
     }
 
@@ -272,7 +273,7 @@ public class RepositoryContext {
      * @throws org.springframework.orm.ObjectRetrievalFailureException 如果id不存在则抛出该异常
      * @see Session#load(Class, Serializable)
      */
-    public <T extends IEntity<P>, P extends Serializable> T load(Class<T> entityClazz, final P id, final LockMode lockMode) {
+    public <T extends IEntity<P, T>, P extends Serializable> T load(Class<T> entityClazz, final P id, final LockMode lockMode) {
         return getRepo(entityClazz).load(id, lockMode);
     }
 
@@ -286,7 +287,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 瞬态DTO对象
      */
-    public <T extends IEntity<P>, P extends Serializable> T getDto(Class<T> entityClazz, final P id, int depth) {
+    public <T extends IEntity<P, T>, P extends Serializable> T getDto(Class<T> entityClazz, final P id, int depth) {
         return getRepo(entityClazz).getDto(id, depth);
     }
 
@@ -298,7 +299,7 @@ public class RepositoryContext {
      * @param <P>    实体主键类型
      * @see Session#refresh(Object)
      */
-    public <T extends IEntity<P>, P extends Serializable> void refresh(final T entity) {
+    public <T extends IEntity<P, T>, P extends Serializable> void refresh(final T entity) {
         //noinspection unchecked
         getRepo(entity.getClass()).refresh(entity, null);
     }
@@ -312,7 +313,7 @@ public class RepositoryContext {
      * @param <P>      实体主键类型
      * @see Session#refresh(Object, LockMode)
      */
-    public <T extends IEntity<P>, P extends Serializable> void refresh(final T entity, final LockMode lockMode) {
+    public <T extends IEntity<P, T>, P extends Serializable> void refresh(final T entity, final LockMode lockMode) {
         //noinspection unchecked
         getRepo(entity.getClass()).refresh(entity, lockMode);
     }
@@ -326,7 +327,7 @@ public class RepositoryContext {
      * @return 是否存在
      * @see Session#contains
      */
-    public <T extends IEntity<P>, P extends Serializable> boolean contains(final T entity) {
+    public <T extends IEntity<P, T>, P extends Serializable> boolean contains(final T entity) {
         //noinspection unchecked
         return getRepo(entity.getClass()).contains(entity);
     }
@@ -339,7 +340,7 @@ public class RepositoryContext {
      * @param <P>    实体主键类型
      * @throws AssertFailException 当待删除的实体为{@literal null}时抛出该异常
      */
-    public <T extends IEntity<P>, P extends Serializable> void delete(T entity) {
+    public <T extends IEntity<P, T>, P extends Serializable> void delete(T entity) {
         //noinspection unchecked
         getRepo(entity.getClass()).delete(entity);
     }
@@ -353,7 +354,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @throws AssertFailException 当待删除的{@code id}为{@literal null}时抛出该异常
      */
-    public <T extends IEntity<P>, P extends Serializable> void delete(Class<T> entityClazz, P id) {
+    public <T extends IEntity<P, T>, P extends Serializable> void delete(Class<T> entityClazz, P id) {
         getRepo(entityClazz).delete(id);
     }
 
@@ -366,7 +367,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @throws AssertFailException 当待删除的{@code ids}为{@literal null}时抛出该异常
      */
-    public <T extends IEntity<P>, P extends Serializable> void delete(Class<T> entityClazz, Iterator<P> ids) {
+    public <T extends IEntity<P, T>, P extends Serializable> void delete(Class<T> entityClazz, Iterator<P> ids) {
         getRepo(entityClazz).delete(ids);
     }
 
@@ -378,7 +379,7 @@ public class RepositoryContext {
      * @param <P>      实体主键类型
      * @throws AssertFailException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
      */
-    public <T extends IEntity<P>, P extends Serializable> void delete(Iterable<? extends T> entities) {
+    public <T extends IEntity<P, T>, P extends Serializable> void delete(Iterable<? extends T> entities) {
         Assert.notNull(entities, "The given Iterable of entities not be null!");
         for (T entity : entities) {
             delete(entity);
@@ -394,7 +395,7 @@ public class RepositoryContext {
      * @param <T>         实体类型
      * @param <P>         实体主键类型
      */
-    public <T extends IEntity<P>, P extends Serializable> void delete(Class<T> entityClazz, Criterion... cs) {
+    public <T extends IEntity<P, T>, P extends Serializable> void delete(Class<T> entityClazz, Criterion... cs) {
         getRepo(entityClazz).delete(cs);
     }
 
@@ -407,7 +408,7 @@ public class RepositoryContext {
      * @param <T>         实体类型
      * @param <P>         实体主键类型
      */
-    public <T extends IEntity<P>, P extends Serializable> void delete(Class<T> entityClazz, String conditions) {
+    public <T extends IEntity<P, T>, P extends Serializable> void delete(Class<T> entityClazz, String conditions) {
         getRepo(entityClazz).delete(conditions);
     }
 
@@ -419,7 +420,7 @@ public class RepositoryContext {
      * @param <P>    实体主键类型
      * @throws AssertFailException 当待删除的实体为{@literal null}时抛出该异常
      */
-    public <T extends IEntity<P>, P extends Serializable> void logicDelete(T entity) {
+    public <T extends IEntity<P, T>, P extends Serializable> void logicDelete(T entity) {
         //noinspection unchecked
         getRepo(entity.getClass()).logicDelete(entity);
     }
@@ -433,7 +434,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @throws AssertFailException 当待删除的{@code id}为{@literal null}时抛出该异常
      */
-    public <T extends IEntity<P>, P extends Serializable> void logicDelete(Class<T> entityClazz, P id) {
+    public <T extends IEntity<P, T>, P extends Serializable> void logicDelete(Class<T> entityClazz, P id) {
         getRepo(entityClazz).logicDelete(id);
     }
 
@@ -446,7 +447,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @throws AssertFailException 当待删除的{@code ids}为{@literal null}时抛出该异常
      */
-    public <T extends IEntity<P>, P extends Serializable> void logicDelete(Class<T> entityClazz, Iterator<P> ids) {
+    public <T extends IEntity<P, T>, P extends Serializable> void logicDelete(Class<T> entityClazz, Iterator<P> ids) {
         getRepo(entityClazz).logicDelete(ids);
     }
 
@@ -458,7 +459,7 @@ public class RepositoryContext {
      * @param <P>      实体主键类型
      * @throws AssertFailException 当待删除的{@link Iterable}为{@literal null}时抛出该异常
      */
-    public <T extends IEntity<P>, P extends Serializable> void logicDelete(Iterable<? extends T> entities) {
+    public <T extends IEntity<P, T>, P extends Serializable> void logicDelete(Iterable<? extends T> entities) {
         Assert.notNull(entities, "The given Iterable of entities not be null!");
         for (T entity : entities) {
             logicDelete(entity);
@@ -474,7 +475,7 @@ public class RepositoryContext {
      * @param <T>         实体类型
      * @param <P>         实体主键类型
      */
-    public <T extends IEntity<P>, P extends Serializable> void logicDelete(Class<T> entityClazz, Criterion... cs) {
+    public <T extends IEntity<P, T>, P extends Serializable> void logicDelete(Class<T> entityClazz, Criterion... cs) {
         getRepo(entityClazz).logicDelete(cs);
     }
 
@@ -487,12 +488,12 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<T> find(DetachedCriteria dc, PageRequest... pr) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> find(DetachedCriteria dc, PageRequest... pr) {
         Session sess = DataSourceContext.getSession();
         Criteria ct = dc.getExecutableCriteria(sess);
         if (null != pr && pr.length > 0 && null != pr[0]) {
             ct.setFirstResult(pr[0].getOffset());
-            ct.setMaxResults(pr[0].getPageSize());
+            ct.setMaxResults(pr[0].getSize());
         }
         ct.setCacheable(true);
         ct.setCacheMode(CacheMode.NORMAL);
@@ -509,7 +510,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<T> find(Class<T> entityClazz, Criterion... cs) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> find(Class<T> entityClazz, Criterion... cs) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
         DetachedCriteria dc = DetachedCriteria.forClass(entityClazz);
         for (Criterion c : cs) {
@@ -528,7 +529,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<T> find(CriteriaBuilder<T> cb) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> find(CriteriaBuilder<T> cb) {
         checkCriteriaBuilder(cb);
         DetachedCriteria detachedCriteria = cb.buildDeCriteria(false);
         return find(detachedCriteria, cb.getPageRequest());
@@ -542,7 +543,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<T> find(QueryParam qp) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> find(QueryParam qp) {
         //noinspection unchecked
         return getRepo((Class<T>) checkQueryParam(qp)).find(qp);
     }
@@ -557,7 +558,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<T> find(Class<T> entityClazz, String hql, Object... args) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> find(Class<T> entityClazz, String hql, Object... args) {
         Session sess = DataSourceContext.getSession();
         Query<T> q = sess.createQuery(hql, entityClazz);
         if (args != null && args.length > 0) {
@@ -576,7 +577,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 结果数据
      */
-    public <T extends IEntity<P>, P extends Serializable> List<T> findAll(Class<T> entityClazz) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> findAll(Class<T> entityClazz) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
         Session sess = DataSourceContext.getSession();
         Criteria ct = DetachedCriteria.forClass(entityClazz).getExecutableCriteria(sess);
@@ -594,7 +595,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询到的实体
      */
-    public <T extends IEntity<P>, P extends Serializable> T unique(CriteriaBuilder<T> cb) {
+    public <T extends IEntity<P, T>, P extends Serializable> T unique(CriteriaBuilder<T> cb) {
         checkCriteriaBuilder(cb);
         DetachedCriteria dc = cb.buildDeCriteria(false);
         Session sess = DataSourceContext.getSession();
@@ -621,7 +622,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 查询到的实体
      */
-    public <T extends IEntity<P>, P extends Serializable> T unique(Class<T> entityClazz, Criterion... cts) {
+    public <T extends IEntity<P, T>, P extends Serializable> T unique(Class<T> entityClazz, Criterion... cts) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
         return unique(CriteriaBuilder.forClass(entityClazz).addCriterion(cts));
     }
@@ -637,7 +638,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 查询到的实体
      */
-    public <T extends IEntity<P>, P extends Serializable> T unique(Class<T> entityClazz, String prop, Object value) {
+    public <T extends IEntity<P, T>, P extends Serializable> T unique(Class<T> entityClazz, String prop, Object value) {
         return unique(entityClazz, Restrictions.eq(prop, value));
     }
 
@@ -652,7 +653,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 查询到的实体
      */
-    public <T extends IEntity<P>, P extends Serializable> T uniqueWithLock(Class<T> entityClazz, String prop, Object value) {
+    public <T extends IEntity<P, T>, P extends Serializable> T uniqueWithLock(Class<T> entityClazz, String prop, Object value) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
         Session sess = DataSourceContext.getSession();
         DetachedCriteria dc = DetachedCriteria.forClass(entityClazz);
@@ -684,7 +685,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> T findOne(CriteriaBuilder<T> cb) {
+    public <T extends IEntity<P, T>, P extends Serializable> T findOne(CriteriaBuilder<T> cb) {
         checkCriteriaBuilder(cb);
         DetachedCriteria dc = cb.buildDeCriteria(false);
         Session sess = DataSourceContext.getSession();
@@ -708,7 +709,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> T findOne(Class<T> entityClazz, Criterion... cts) {
+    public <T extends IEntity<P, T>, P extends Serializable> T findOne(Class<T> entityClazz, Criterion... cts) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
         return findOne(CriteriaBuilder.forClass(entityClazz).addCriterion(cts));
     }
@@ -724,7 +725,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 查询到的实体
      */
-    public <T extends IEntity<P>, P extends Serializable> T findOne(Class<T> entityClazz, String prop, Object value) {
+    public <T extends IEntity<P, T>, P extends Serializable> T findOne(Class<T> entityClazz, String prop, Object value) {
         return findOne(entityClazz, Restrictions.eq(prop, value));
     }
 
@@ -738,7 +739,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 查询到的实体
      */
-    public <T extends IEntity<P>, P extends Serializable> T findOneWithLock(Class<T> entityClazz, String prop, Object value) {
+    public <T extends IEntity<P, T>, P extends Serializable> T findOneWithLock(Class<T> entityClazz, String prop, Object value) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
         Session sess = DataSourceContext.getSession();
         DetachedCriteria dc = DetachedCriteria.forClass(entityClazz);
@@ -769,7 +770,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 是/否
      */
-    public <T extends IEntity<P>, P extends Serializable> boolean exist(Class<T> entityClazz, P id) {
+    public <T extends IEntity<P, T>, P extends Serializable> boolean exist(Class<T> entityClazz, P id) {
         if (id == null) {
             return false;
         }
@@ -787,7 +788,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 是/否
      */
-    public <T extends IEntity<P>, P extends Serializable> boolean exist(Class<T> entityClazz, Map<String, Object> params) {
+    public <T extends IEntity<P, T>, P extends Serializable> boolean exist(Class<T> entityClazz, Map<String, Object> params) {
         return exist(entityClazz, params, null, true);
     }
 
@@ -801,7 +802,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 是/否
      */
-    public <T extends IEntity<P>, P extends Serializable> boolean exist(Class<T> entityClazz, Map<String, Object> params, P notId) {
+    public <T extends IEntity<P, T>, P extends Serializable> boolean exist(Class<T> entityClazz, Map<String, Object> params, P notId) {
         return exist(entityClazz, params, notId, true);
     }
 
@@ -816,7 +817,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 是/否
      */
-    public <T extends IEntity<P>, P extends Serializable> boolean exist(Class<T> entityClazz, Map<String, Object> params, P notId, boolean isAnd) {
+    public <T extends IEntity<P, T>, P extends Serializable> boolean exist(Class<T> entityClazz, Map<String, Object> params, P notId, boolean isAnd) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
         DetachedCriteria dc = DetachedCriteria.forClass(entityClazz);
         List<Criterion> criteriaList = params.entrySet().stream().filter(e -> e.getValue() != null)
@@ -848,7 +849,7 @@ public class RepositoryContext {
      * @param <P>   实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> boolean exist(CriteriaBuilder<T> cb, P notId) {
+    public <T extends IEntity<P, T>, P extends Serializable> boolean exist(CriteriaBuilder<T> cb, P notId) {
         checkCriteriaBuilder(cb);
         if (notId != null)
             cb.notEq("id", notId);
@@ -874,7 +875,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> Page<T> page(CriteriaBuilder<T> cb) {
+    public <T extends IEntity<P, T>, P extends Serializable> Page<T> page(CriteriaBuilder<T> cb) {
         checkCriteriaBuilder(cb);
         Session sess = DataSourceContext.getSession();
         Criteria ct = cb.buildDeCriteria(true).getExecutableCriteria(sess);
@@ -882,7 +883,7 @@ public class RepositoryContext {
         ct.setResultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP);
         if (cb.getPageRequest() != null) {
             ct.setFirstResult(cb.getPageRequest().getOffset());
-            ct.setMaxResults(cb.getPageRequest().getPageSize());
+            ct.setMaxResults(cb.getPageRequest().getSize());
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = ct.list();
@@ -892,7 +893,10 @@ public class RepositoryContext {
         orderEntries.clear();
         Long total = (Long) ct.setProjection(Projections.rowCount()).uniqueResult();
         List<T> res = BeanUtils.wrapperMapToBeanList(cb.getEnCls(), list);
-        return new Page<>(res, total, cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getPageSize());
+        return new Page<>(res,
+            cb.getPageRequest() == null ? 1L : cb.getPageRequest().getCurrent(),
+            total,
+            cb.getPageRequest() == null ? total.intValue() : cb.getPageRequest().getSize());
     }
 
     /**
@@ -903,7 +907,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> Page<T> page(QueryParam qp) {
+    public <T extends IEntity<P, T>, P extends Serializable> Page<T> page(QueryParam qp) {
         //noinspection unchecked
         return getRepo((Class<T>) checkQueryParam(qp)).page(qp);
     }
@@ -916,7 +920,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> Page<Map<String, Object>> pageFlatMap(CriteriaBuilder<T> cb) {
+    public <T extends IEntity<P, T>, P extends Serializable> Page<Map<String, Object>> pageFlatMap(CriteriaBuilder<T> cb) {
         return getRepo(cb.getEnCls()).pageFlatMap(cb);
     }
 
@@ -928,7 +932,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> Page<Map<String, Object>> pageFlatMap(QueryParam qp) {
+    public <T extends IEntity<P, T>, P extends Serializable> Page<Map<String, Object>> pageFlatMap(QueryParam qp) {
         //noinspection unchecked
         return getRepo((Class<T>) checkQueryParam(qp)).pageFlatMap(qp);
     }
@@ -941,7 +945,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> Page<Map<String, Object>> pageMap(CriteriaBuilder<T> cb) {
+    public <T extends IEntity<P, T>, P extends Serializable> Page<Map<String, Object>> pageMap(CriteriaBuilder<T> cb) {
         return getRepo(cb.getEnCls()).pageMap(cb);
     }
 
@@ -953,7 +957,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> Page<Map<String, Object>> pageMap(QueryParam qp) {
+    public <T extends IEntity<P, T>, P extends Serializable> Page<Map<String, Object>> pageMap(QueryParam qp) {
         //noinspection unchecked
         return getRepo((Class<T>) checkQueryParam(qp)).pageMap(qp);
     }
@@ -968,7 +972,7 @@ public class RepositoryContext {
      * @param <P>         实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<T> list(Class<T> entityClazz, Map<String, Object> map) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> list(Class<T> entityClazz, Map<String, Object> map) {
         Assert.notNull(entityClazz, ENTITY_CLS_LOST);
         CriteriaBuilder<T> cb = CriteriaBuilder.forClass(entityClazz)
             .addCriterion(map.entrySet().stream().map(entry -> Restrictions.eq(entry.getKey(), entry.getValue())).collect(Collectors.toList()));
@@ -983,7 +987,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<T> list(CriteriaBuilder<T> cb) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> list(CriteriaBuilder<T> cb) {
         List<Map<String, Object>> list = listFlatMap(cb);
         return BeanUtils.wrapperMapToBeanList(cb.getEnCls(), list);
     }
@@ -996,7 +1000,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<T> list(QueryParam qp) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> list(QueryParam qp) {
         //noinspection unchecked
         return getRepo((Class<T>) checkQueryParam(qp)).list(qp);
     }
@@ -1009,7 +1013,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listFlatMap(CriteriaBuilder<T> cb) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<Map<String, Object>> listFlatMap(CriteriaBuilder<T> cb) {
         return listMap(cb, false);
     }
 
@@ -1021,7 +1025,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listFlatMap(QueryParam qp) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<Map<String, Object>> listFlatMap(QueryParam qp) {
         //noinspection unchecked
         return getRepo((Class<T>) checkQueryParam(qp)).listFlatMap(qp);
     }
@@ -1034,7 +1038,7 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listMap(CriteriaBuilder<T> cb) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<Map<String, Object>> listMap(CriteriaBuilder<T> cb) {
         return listMap(cb, true);
     }
 
@@ -1046,26 +1050,26 @@ public class RepositoryContext {
      * @param <P> 实体主键类型
      * @return 查询结果
      */
-    public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listMap(QueryParam qp) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<Map<String, Object>> listMap(QueryParam qp) {
         //noinspection unchecked
         return getRepo((Class<T>) checkQueryParam(qp)).listMap(qp);
     }
 
 
     /* ---BEGING---***********************委托SQLManager执行SQL语句**************************** */
-    public Map<String, Object> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
+    public Optional<Map<String, Object>> findOneAsMapBySql(String sqlId, Map<String, ?> paramMap) {
         return doReturningWork(connection -> sqlManager.findOneAsMap(connection, sqlId, paramMap));
     }
 
-    public <T extends IEntity<P>, P extends Serializable> T findOneBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap) {
+    public <T extends IEntity<P, T>, P extends Serializable> Optional<T> findOneBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap) {
         return doReturningWork(connection -> sqlManager.findOne(connection, sqlId, entityClazz, paramMap));
     }
 
-    public <T extends IEntity<P>, P extends Serializable> List<T> listBySql(Class<T> entityClazz, String sqlId, Object... mapParams) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> listBySql(Class<T> entityClazz, String sqlId, Object... mapParams) {
         return doReturningWork(connection -> sqlManager.list(connection, sqlId, entityClazz, mapParams));
     }
 
-    public <T extends IEntity<P>, P extends Serializable> List<T> listBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<T> listBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap) {
         return doReturningWork(connection -> sqlManager.list(connection, sqlId, entityClazz, paramMap));
     }
 
@@ -1077,7 +1081,7 @@ public class RepositoryContext {
         return doReturningWork(connection -> sqlManager.listAsMap(connection, sqlId, paramMap));
     }
 
-    public <T extends IEntity<P>, P extends Serializable> Page<T> pageBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
+    public <T extends IEntity<P, T>, P extends Serializable> Page<T> pageBySql(Class<T> entityClazz, String sqlId, Map<String, ?> paramMap, PageRequest pageRequest) {
         return doReturningWork(connection -> sqlManager.listAsPage(connection, sqlId, entityClazz, paramMap, pageRequest));
     }
 
@@ -1120,7 +1124,7 @@ public class RepositoryContext {
      * @param <T>    实体类型
      * @param <P>    实体主键类型
      */
-    public <T extends IEntity<P>, P extends Serializable> void evict(T entity) {
+    public <T extends IEntity<P, T>, P extends Serializable> void evict(T entity) {
         if (Objects.nonNull(entity)) {
             DataSourceContext.getSession().evict(entity);
         }
@@ -1208,7 +1212,7 @@ public class RepositoryContext {
      * @param <P>  实体主键类型
      * @return 查询到的DTO
      */
-    public <T extends IEntity<P>, P extends Serializable> List<Map<String, Object>> listMap(CriteriaBuilder<T> cb, boolean wrap) {
+    public <T extends IEntity<P, T>, P extends Serializable> List<Map<String, Object>> listMap(CriteriaBuilder<T> cb, boolean wrap) {
         return getRepo(cb.getEnCls()).listMap(cb, wrap);
     }
 

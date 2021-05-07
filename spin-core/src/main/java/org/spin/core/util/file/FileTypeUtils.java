@@ -3,6 +3,7 @@ package org.spin.core.util.file;
 import org.spin.core.ErrorCode;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.HexUtils;
+import org.spin.core.util.Util;
 import org.spin.core.util.file.FileType.Document;
 import org.spin.core.util.file.FileType.Image;
 
@@ -20,7 +21,7 @@ import java.util.List;
  *
  * @author xuweinan
  */
-public abstract class FileTypeUtils {
+public final class FileTypeUtils extends Util {
     private static final List<Trait> traits = new ArrayList<>();
     private static final int TRAIT_LEN = 16;
 

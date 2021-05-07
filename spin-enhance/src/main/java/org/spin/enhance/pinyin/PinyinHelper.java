@@ -15,11 +15,15 @@
 
 package org.spin.enhance.pinyin;
 
+import org.spin.core.util.StringUtils;
+import org.spin.enhance.ip.Util;
 import org.spin.enhance.pinyin.format.HanyuPinyinOutputFormat;
 import org.spin.enhance.pinyin.format.HanyuPinyinToneType;
 import org.spin.enhance.pinyin.format.HanyuPinyinVCharType;
 import org.spin.enhance.pinyin.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.spin.enhance.pinyin.multipinyin.Trie;
+
+import java.util.Optional;
 
 /**
  * A class provides several utility functions to convert Chinese characters
@@ -28,7 +32,7 @@ import org.spin.enhance.pinyin.multipinyin.Trie;
  *
  * @author Li Min (xmlerlimin@gmail.com)
  */
-public class PinyinHelper {
+public final class PinyinHelper extends Util {
 
     private static final String[] ARR_EMPTY = {};
     private static final HanyuPinyinOutputFormat formatParam = new HanyuPinyinOutputFormat();
@@ -267,6 +271,10 @@ public class PinyinHelper {
      */
     public static String toHanYuPinyinString(String str, HanyuPinyinOutputFormat outputFormat,
                                              String separate, boolean retain, boolean isHead) throws BadHanyuPinyinOutputFormatCombination {
+        if (StringUtils.isEmpty(str)) {
+            return null;
+        }
+
         ChineseToPinyinResource resource = ChineseToPinyinResource.getInstance();
         StringBuilder resultPinyinStrBuf = new StringBuilder();
 
@@ -330,6 +338,19 @@ public class PinyinHelper {
     public static String toHanYuPinyinString(String str,
                                              String separate, boolean isHead) throws BadHanyuPinyinOutputFormatCombination {
         return toHanYuPinyinString(str, formatParam, separate, true, isHead);
+    }
+
+    public static String toHanYuPinyinHeadString(String str) throws BadHanyuPinyinOutputFormatCombination {
+        return Optional.ofNullable(toHanYuPinyinString(str, formatParam, "", true, true)).map(it -> it.substring(0, 1)).orElse(null);
+    }
+
+    public static String toHanYuPinyinHeadString(String str, boolean uppercase) throws BadHanyuPinyinOutputFormatCombination {
+        String head = Optional.ofNullable(toHanYuPinyinString(str, formatParam, "", true, true)).map(it -> it.substring(0, 1)).orElse(null);
+        if (uppercase) {
+            return StringUtils.toUpperCase(head);
+        }
+
+        return head;
     }
 
     // ! Hidden constructor

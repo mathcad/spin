@@ -1,6 +1,7 @@
 package org.spin.core.util;
 
 import org.spin.core.Assert;
+import org.spin.core.collection.ConcurrentLinkedHashMap;
 import org.spin.core.collection.ConcurrentReferenceHashMap;
 import org.spin.core.function.ExceptionalConsumer;
 
@@ -34,7 +35,7 @@ import java.util.function.Predicate;
  * @author xuweinan
  * @since 1.2.3
  */
-public abstract class ReflectionUtils {
+public final class ReflectionUtils extends Util {
 
     /**
      * Naming prefix for CGLIB-renamed methods.
@@ -48,6 +49,10 @@ public abstract class ReflectionUtils {
     private static final Method[] NO_METHODS = {};
 
     private static final Field[] NO_FIELDS = {};
+
+    private static final ConcurrentLinkedHashMap<String, Method> METHOD_CACHE = new ConcurrentLinkedHashMap.Builder<String, Method>()
+        .initialCapacity(1024).maximumWeightedCapacity(1024)
+        .build();
 
 
     /**
@@ -82,6 +87,8 @@ public abstract class ReflectionUtils {
      */
     public static final Predicate<Method> USER_DECLARED_METHODS = method -> (!method.isBridge() && method.getDeclaringClass() != Object.class);
 
+    private ReflectionUtils() {
+    }
 
     /**
      * 尝试在指定类中查找名称为{@code name}的字段, 如果当前类中不存在, 则向上递归搜索所有父类直到{@link Object}
@@ -184,19 +191,6 @@ public abstract class ReflectionUtils {
 
     /**
      * Attempt to find a {@link Method} on the supplied class with the supplied name
-     * and no parameters. Searches all superclasses up to {@code Object}.
-     * <p>Returns {@code null} if no {@link Method} can be found.
-     *
-     * @param clazz the class to introspect
-     * @param name  the name of the method
-     * @return the Method object, or {@code null} if none found
-     */
-    public static Method findMethod(Class<?> clazz, String name) {
-        return findMethod(clazz, name, EMPTY_METHOD_PARAM);
-    }
-
-    /**
-     * Attempt to find a {@link Method} on the supplied class with the supplied name
      * and parameter types. Searches all superclasses up to {@code Object}.
      * <p>Returns {@code null} if no {@link Method} can be found.
      *
@@ -209,12 +203,22 @@ public abstract class ReflectionUtils {
     public static Method findMethod(Class<?> clazz, String name, Class<?>... paramTypes) {
         Assert.notNull(clazz, "Class must not be null");
         Assert.notNull(name, "Method name must not be null");
+
+        if (null == paramTypes) {
+            paramTypes = EMPTY_METHOD_PARAM;
+        }
+        String uid = clazz.getName() + "." + name + Arrays.toString(paramTypes);
+
+        if (METHOD_CACHE.containsKey(uid)) {
+            return METHOD_CACHE.get(uid);
+        }
+
         Class<?> searchType = clazz;
         while (searchType != null) {
             Method[] methods = (searchType.isInterface() ? searchType.getMethods() : getDeclaredMethods(searchType));
             for (Method method : methods) {
-                if (name.equals(method.getName()) &&
-                    (paramTypes == null || Arrays.equals(paramTypes, method.getParameterTypes()))) {
+                if (name.equals(method.getName()) && Arrays.equals(paramTypes, method.getParameterTypes())) {
+                    METHOD_CACHE.put(uid, method);
                     return method;
                 }
             }

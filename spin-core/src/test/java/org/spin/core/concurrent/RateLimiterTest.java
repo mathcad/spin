@@ -5,6 +5,8 @@ import org.spin.core.base.Stopwatch;
 import org.spin.core.util.DateUtils;
 
 import java.util.Date;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TITLE
@@ -15,12 +17,12 @@ import java.util.Date;
  */
 public class RateLimiterTest {
 
-    static RateLimiter limiter = RateLimiter.create(10);
+    static RateLimiter limiter = RateLimiter.create(1);
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         int i = 0;
         limiter.acquire();
-        Thread.sleep(1000);
+        Uninterruptibles.sleepUninterruptibly(10L, TimeUnit.SECONDS);
         while (i < 60) {
 //            boolean b = limiter.tryAcquire();
 //            if (!b) {
@@ -34,6 +36,18 @@ public class RateLimiterTest {
             ++i;
         }
 
+    }
+
+    @Test
+    void testCdl() throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(0);
+
+        countDownLatch.countDown();
+        countDownLatch.await();
+        countDownLatch.await();
+        countDownLatch.await();
+        countDownLatch.await();
+        countDownLatch.await();
     }
 
 

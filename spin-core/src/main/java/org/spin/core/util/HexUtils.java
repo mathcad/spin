@@ -10,7 +10,7 @@ import java.nio.charset.Charset;
  *
  * @author xuweinan
  */
-public abstract class HexUtils {
+public final class HexUtils extends Util {
 
     /**
      * Used to build output as HexUtils

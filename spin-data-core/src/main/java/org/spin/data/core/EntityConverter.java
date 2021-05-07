@@ -6,7 +6,7 @@ package org.spin.data.core;
  *
  * @author xuweinan
  */
-public interface EntityConverter<T, E extends IEntity<?>> {
+public interface EntityConverter<T, E extends IEntity<?, E>> {
 
     /**
      * 将用户自定义类型转换为实体

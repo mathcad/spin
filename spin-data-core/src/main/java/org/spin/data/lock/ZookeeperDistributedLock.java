@@ -1,32 +1,24 @@
 package org.spin.data.lock;
 
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
 import org.spin.core.concurrent.DistributedLock;
+import org.spin.core.concurrent.LockTicket;
+import org.spin.core.concurrent.Uninterruptibles;
 import org.spin.core.function.ExceptionalHandler;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
+import org.spin.data.throwable.DistributedLockException;
 import org.spin.data.throwable.ZookeeperException;
 
 import javax.security.auth.login.Configuration;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -43,7 +35,7 @@ import java.util.function.Consumer;
  * @author xuweinan
  * @version 1.0
  */
-public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoCloseable {
+public class ZookeeperDistributedLock extends DistributedLock implements Watcher {
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperDistributedLock.class);
     private static final int DEFAULT_SESSION_TIMEOUT = 30000;
     private static final ConcurrentHashMap<String, Consumer<String>> DELETE_LISTENER_MAP = new ConcurrentHashMap<>();
@@ -65,7 +57,7 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
     private final String zkServers;
     private final int sessionTimeOut;
     private final long operationRetryTimeoutInMillis;
-    private boolean zkSaslEnabled = isZkSaslEnabled();
+    private final boolean zkSaslEnabled = isZkSaslEnabled();
 
     private ZooKeeper zooKeeper;
     private final ReentrantLock zookeeperLock = new ReentrantLock();
@@ -73,13 +65,8 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
     private Event.KeeperState currentState;
     private final ZkEventLock eventLock = new ZkEventLock();
 
-    /**
-     * 当前线程上的锁实例
-     */
-    private ThreadLocal<Map<String, String>> currentLock = ThreadLocal.withInitial(HashMap::new);
-
     public ZookeeperDistributedLock(String zkServers) {
-        this(zkServers, Integer.MAX_VALUE);
+        this(zkServers, 10000);
     }
 
     public ZookeeperDistributedLock(String zkServers, int connectionTimeOut) {
@@ -101,17 +88,29 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
         createPersistentIfNotExist(ROOT_PATH);
     }
 
+    /**
+     * 获取锁
+     *
+     * <p>
+     * 锁超时时间(无效参数), 重试{@code retryTimes}次, 重试等待{@code sleepMillis}毫秒
+     * </p>
+     *
+     * @param key         key
+     * @param expire      获取锁超时时间(无效参数)
+     * @param retryTimes  重试次数
+     * @param sleepMillis 获取锁失败的重试间隔
+     * @return 锁凭据
+     */
     @Override
-    public boolean lock(String key, long expire, int retryTimes, long sleepMillis) {
-        return attemptLock(key, expire, retryTimes);
+    public LockTicket lock(String key, long expire, int retryTimes, long sleepMillis) {
+        return attemptLock(key, retryTimes, sleepMillis);
     }
 
     @Override
-    public boolean releaseLock(String key) {
-        String removeKey = currentLock.get().remove(key);
-        if (null != removeKey) {
+    protected boolean releaseLock(String key, String ticket) {
+        if (null != ticket) {
             try {
-                retryUntilConnected(() -> zooKeeper.delete(removeKey, -1));
+                retryUntilConnected(() -> zooKeeper.delete(ticket, -1));
                 return true;
             } catch (NoSuchElementException e) {
                 return false;
@@ -143,8 +142,7 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
         }
     }
 
-    @Override
-    public void close() {
+    public void destroy() {
         zookeeperLock.lock();
         try {
             if (zooKeeper != null) {
@@ -162,41 +160,47 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
     /**
      * 尝试获取锁
      *
-     * @param key    锁的key
-     * @param expire 超时时间
-     * @return 是否获得锁
+     * @param key         锁的key
+     * @param retryTimes  重试次数
+     * @param sleepMillis 重试等待时间
+     * @return 锁凭据
      */
-    private boolean attemptLock(String key, long expire, int retryTimes) {
-        final long startMillis = System.currentTimeMillis();
-        final Long millisToWait = expire > 0 ? expire : null;
+    private LockTicket attemptLock(String key, int retryTimes, long sleepMillis) {
+        final Long millisToWait = sleepMillis > 0 ? sleepMillis : null;
 
-        boolean hasTheLock = false;
+        boolean hasTheLock;
         boolean isDone = false;
-
-        //网络闪断需要重试一试
+        boolean retried = false;
+        LockTicket ticket = null;
+        long startMillis;
+        //网络闪断需要重试一次
         while (!isDone) {
             isDone = true;
-
             try {
                 //createLockNode用于在locker（basePath持久节点）下创建客户端要获取锁的[临时]顺序节点
                 String lockNode = createLockNode(key);
-                currentLock.get().put(key, lockNode);
+                startMillis = System.currentTimeMillis();
                 /*
                  * 该方法用于判断自己是否获取到了锁，即自己创建的顺序节点在locker的所有子节点中是否最小
                  * 如果没有获取到锁，则等待其它客户端锁的释放，并且稍后重试直到获取到锁或者超时
                  */
-                hasTheLock = waitToLock(key, lockNode, startMillis, millisToWait);
-
+                hasTheLock = waitToLock(key, lockNode, startMillis, retryTimes, millisToWait);
+                ticket = new LockTicket(hasTheLock, lockNode, key, this);
+                if (hasTheLock) {
+                    return ticket;
+                }
             } catch (NoSuchElementException e) {
-                if (retryTimes-- > -1) {
+                if (!retried) {
+                    retried = true;
                     isDone = false;
+                    logger.debug("Get ZookeeperDistributeLock failed, retrying...{}", sleepMillis);
+                    Uninterruptibles.sleepUninterruptibly(sleepMillis, TimeUnit.MILLISECONDS);
                 } else {
                     throw e;
                 }
             }
         }
-
-        return hasTheLock;
+        return ticket;
     }
 
     /**
@@ -222,67 +226,62 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
      * @param millisToWait 等待时间
      * @return 是否获得锁
      */
-    private boolean waitToLock(String key, String lockNode, long startMillis, Long millisToWait) {
-
-        boolean haveTheLock = false;
+    private boolean waitToLock(String key, String lockNode, long startMillis, long retryTimes, Long millisToWait) {
         boolean needRelease = false;
 
+        String sequenceNodeName = lockNode.substring(ROOT_PATH.length() + key.length() + 2);
         try {
-            while (!haveTheLock) {
-                //该方法实现获取locker节点下的所有顺序节点，并且从小到大排序
-                List<String> children = getSortedChildren(key);
-                String sequenceNodeName = lockNode.substring(ROOT_PATH.length() + key.length() + 2);
+            //该方法实现获取locker节点下的所有顺序节点，并且从小到大排序
+            List<String> children = getSortedChildren(key);
+            //计算刚才客户端创建的顺序节点在locker的所有子节点中排序位置，如果是排序为0，则表示获取到了锁
+            int lockIndex = children.indexOf(sequenceNodeName);
 
-                //计算刚才客户端创建的顺序节点在locker的所有子节点中排序位置，如果是排序为0，则表示获取到了锁
-                int lockIndex = children.indexOf(sequenceNodeName);
-
-                /*如果在getSortedChildren中没有找到之前创建的[临时]顺序节点，这表示可能由于网络闪断而导致
-                 *Zookeeper认为连接断开而删除了我们创建的节点，此时需要抛出异常，让上一级去处理
-                 *上一级的做法是捕获该异常，并且执行重试指定的次数 见后面的 attemptLock方法 */
-                if (lockIndex < 0) {
-                    throw new NoSuchElementException("节点没有找到: " + sequenceNodeName);
-                }
-
-                //如果当前客户端创建的节点在locker子节点列表中位置大于0，表示其它客户端已经获取了锁
-                //此时当前客户端需要等待其它客户端释放锁，
-                boolean isGetTheLock = lockIndex == 0;
-
-                //如何判断其它客户端是否已经释放了锁？从子节点列表中获取到比自己次小的哪个节点，并对其建立监听
-                String lockToWait = isGetTheLock ? null : children.get(lockIndex - 1);
-
-                if (isGetTheLock) {
-                    haveTheLock = true;
-                } else {
-
-                    //如果次小的节点被删除了，则表示当前客户端的节点应该是最小的了，所以使用CountDownLatch来实现等待
-                    final CountDownLatch latch = new CountDownLatch(1);
-
-                    try {
-                        //次小节点删除事件发生时，让countDownLatch结束等待
-                        //此时还需要重新让程序回到while，重新判断一次
-                        watchOnDelete(ROOT_PATH + DELIMITER + key + DELIMITER + lockToWait, path -> latch.countDown());
-
-                        if (millisToWait != null) {
-                            millisToWait -= (System.currentTimeMillis() - startMillis);
-                            startMillis = System.currentTimeMillis();
-                            if (millisToWait <= 0) {
-                                needRelease = true;
-                                break;
-                            }
-                            if (!latch.await(millisToWait, TimeUnit.MILLISECONDS)) {
-                                unwatchOnDelete(ROOT_PATH + DELIMITER + key + DELIMITER + lockToWait);
-                                needRelease = true;
-                                break;
-                            }
-                        } else {
-                            latch.await();
-                        }
-
-                    } catch (NoSuchElementException e) {
-                        // ignore
-                    }
-                }
+            /*如果在getSortedChildren中没有找到之前创建的[临时]顺序节点，这表示可能由于网络闪断而导致
+             *Zookeeper认为连接断开而删除了我们创建的节点，此时需要抛出异常，让上一级去处理
+             *上一级的做法是捕获该异常，并且执行重试指定的次数 见后面的 attemptLock方法 */
+            if (lockIndex < 0) {
+                throw new NoSuchElementException("节点没有找到: " + sequenceNodeName);
             }
+
+            if (lockIndex == 0) {
+                return true;
+            }
+
+            // 不等待, 快速失败
+            if (null == millisToWait) {
+                return false;
+            }
+
+            //如果当前客户端创建的节点在locker子节点列表中位置大于0，表示其它客户端已经获取了锁
+            //此时当前客户端需要等待其它客户端释放锁，
+            //如何判断其它客户端是否已经释放了锁？从子节点列表中获取到比自己次小的哪个节点，并对其建立监听
+            String lockToWait = children.get(lockIndex - 1);
+
+            //如果次小的节点被删除了，则表示当前客户端的节点应该是最小的了，所以使用CountDownLatch来实现等待
+            final CountDownLatch latch = new CountDownLatch(1);
+
+            try {
+                //次小节点删除事件发生时，让countDownLatch结束等待
+                //此时还需要重新让程序回到while，重新判断一次
+                watchOnDelete(ROOT_PATH + DELIMITER + key + DELIMITER + lockToWait, path -> latch.countDown());
+
+                millisToWait = Math.max(10L, millisToWait - 5L);
+                long timeToWait = millisToWait - (System.currentTimeMillis() - startMillis);
+                timeToWait = timeToWait <= 0L ? 10L : timeToWait;
+                do {
+                    if (latch.await(timeToWait, TimeUnit.MILLISECONDS)) {
+                        return true;
+                    }
+                    timeToWait = millisToWait;
+                } while (retryTimes-- > 0);
+
+                unwatchOnDelete(ROOT_PATH + DELIMITER + key + DELIMITER + lockToWait);
+                needRelease = true;
+            } catch (NoSuchElementException e) {
+                // ignore
+            }
+        } catch (NoSuchElementException e) {
+            throw e;
         } catch (Exception e) {
             //发生异常需要删除节点
             needRelease = true;
@@ -290,10 +289,10 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
         } finally {
             //如果需要删除节点
             if (needRelease) {
-                releaseLock(key);
+                releaseLock(key, lockNode);
             }
         }
-        return haveTheLock;
+        return false;
     }
 
     /**
@@ -348,7 +347,7 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
                 | KeeperException.RequestTimeoutException ignore) {
                 // need to retry
             } catch (KeeperException.NoNodeException e) {
-                throw new NoSuchElementException("Node not existo");
+                throw new NoSuchElementException("Node not exist");
             } catch (KeeperException e) {
                 throw new ZookeeperException(e);
             } catch (InterruptedException e) {
@@ -449,7 +448,7 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
     private void reconnect() {
         eventLock.lock();
         try {
-            close();
+            destroy();
             connect();
         } finally {
             eventLock.unlock();
@@ -460,10 +459,10 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
         zookeeperLock.lock();
         try {
             if (zooKeeper != null) {
-                throw new IllegalStateException("zk client has already been started");
+                throw new IllegalStateException("zookeeper client has already been started");
             }
             try {
-                logger.debug("Creating new ZookKeeper instance to connect to {}.", zkServers);
+                logger.debug("Creating new Zookeeper instance to connect to {}.", zkServers);
                 zooKeeper = new ZooKeeper(zkServers, sessionTimeOut, this);
             } catch (IOException e) {
                 throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "Unable to connect to " + zkServers, e);
@@ -527,10 +526,16 @@ public class ZookeeperDistributedLock implements DistributedLock, Watcher, AutoC
 
     private void watchOnDelete(String path, Consumer<String> handler) {
         if (DELETE_LISTENER_MAP.containsKey(path)) {
-            throw new SpinException("该路径已经被其他锁监听");
+            throw new DistributedLockException("路径[" + path + "]已经被其他锁监听");
         }
         DELETE_LISTENER_MAP.put(path, handler);
-        retryUntilConnected(() -> zooKeeper.exists(path, true));
+        Stat stat = retryUntilConnected(() -> zooKeeper.exists(path, true));
+
+        // 节点不存在, 则认为已经被删除, 自动触发动作
+        if (null == stat) {
+            DELETE_LISTENER_MAP.remove(path);
+        }
+        handler.accept(path);
     }
 
     private void unwatchOnDelete(String path) {

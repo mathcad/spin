@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * @author xuweinan
  * @since 1.0
  */
-public abstract class MapUtils {
+public final class MapUtils extends Util {
     private static final Logger logger = LoggerFactory.getLogger(MapUtils.class);
 
     private MapUtils() {

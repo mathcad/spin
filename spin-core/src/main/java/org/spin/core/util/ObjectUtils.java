@@ -1,21 +1,10 @@
 package org.spin.core.util;
 
-import org.spin.core.trait.BooleanEvaluatable;
-import org.spin.core.trait.ByteEvaluatable;
-import org.spin.core.trait.DoubleEvaluatable;
-import org.spin.core.trait.Evaluatable;
-import org.spin.core.trait.FloatEvaluatable;
-import org.spin.core.trait.IntEvaluatable;
-import org.spin.core.trait.LongEvaluatable;
-import org.spin.core.trait.ShortEvaluatable;
+import org.spin.core.trait.*;
 
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * object 工具类
@@ -25,7 +14,7 @@ import java.util.Map;
  * @see CollectionUtils
  * @see StringUtils
  */
-public abstract class ObjectUtils {
+public final class ObjectUtils extends Util {
 
     private static final int INITIAL_HASH = 7;
     private static final int MULTIPLIER = 31;
@@ -153,11 +142,19 @@ public abstract class ObjectUtils {
         if (null == type) {
             throw new IllegalArgumentException("The type witch convert to can not be null");
         }
-        if (target != null && (type.isInstance(target) || ClassUtils.isAssignable(type, target.getClass(), true))) {
+        if (null == target) {
+            if (type.isPrimitive()) {
+                throw new ClassCastException("Can not cast null to base type:" + type.getName());
+            } else {
+                return null;
+            }
+        }
+        Class<?> targetType = target.getClass();
+        if (type == targetType || ClassUtils.isAssignable(targetType, type, true)) {
             return (T) target;
         } else if (BigDecimal.class.equals(type)) {
-            return target == null ? null : (T) new BigDecimal(target.toString());
-        } else if (target != null && type.isEnum() &&
+            return (T) new BigDecimal(target.toString());
+        } else if (type.isEnum() &&
             (Evaluatable.class.isAssignableFrom(type)
                 || IntEvaluatable.class.isAssignableFrom(type)
                 || LongEvaluatable.class.isAssignableFrom(type)
@@ -169,12 +166,6 @@ public abstract class ObjectUtils {
             return (T) EnumUtils.getEnum((Class<Enum>) type, target);
         } else {
             Class<?> typePrimitive = ClassUtils.wrapperToPrimitive(type);
-            if (null == target) {
-                if (type.isPrimitive())
-                    throw new ClassCastException("Can not cast null to base type:" + type.getName());
-                else
-                    return null;
-            }
             if (null != typePrimitive) {
                 if (typePrimitive.equals(short.class))
                     return (T) Short.valueOf(target.toString());
@@ -196,7 +187,7 @@ public abstract class ObjectUtils {
                     return (T) toString(target, null);
             }
         }
-        throw new ClassCastException("Can not cast target:" + target + "[" + target.getClass().getName() + "] to type:" + type.getName());
+        throw new ClassCastException("Can not cast target:" + target + "[" + targetType.getName() + "] to type:" + type.getName());
     }
 
     /**

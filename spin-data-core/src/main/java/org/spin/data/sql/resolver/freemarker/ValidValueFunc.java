@@ -35,8 +35,9 @@ public class ValidValueFunc implements TemplateMethodModelEx {
                 valid = false;
             else if (o instanceof Boolean) {
                 valid = (Boolean) o;
-            } else
+            } else {
                 valid = !(o instanceof String) || StringUtils.isNotEmpty((String) o);
+            }
         } else if (arguments.size() == 2) {
             String o1 = arguments.get(1) == null ? null : arguments.get(1).toString();
             if (o == null)

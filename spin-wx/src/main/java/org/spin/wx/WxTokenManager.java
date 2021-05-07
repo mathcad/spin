@@ -23,9 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WxTokenManager {
     private static final Logger logger = LoggerFactory.getLogger(WxTokenManager.class);
 
-    private static Map<String, AccessToken> tokenInstances = new ConcurrentHashMap<>();
-    private static Map<String, AccessToken> oauthTokenInstances = new ConcurrentHashMap<>();
-    private static Map<String, ApiTicket> ticketInstances = new ConcurrentHashMap<>();
+    private static final Map<String, AccessToken> tokenInstances = new ConcurrentHashMap<>();
+    private static final Map<String, AccessToken> oauthTokenInstances = new ConcurrentHashMap<>();
+    private static final Map<String, ApiTicket> ticketInstances = new ConcurrentHashMap<>();
 
     private static final Object tokenLock = new Object();
     private static final Object tokenLockWithCode = new Object();
@@ -61,8 +61,9 @@ public class WxTokenManager {
      * @return AccessToken
      */
     public static AccessToken getToken(String configName) {
-        WxConfigInfo info = WxConfigManager.getConfig(configName);
-        return getToken(configName, info.getAppId(), info.getAppSecret(), null, AccessToken.TokenType.NORMAL);
+        String actualName = WxConfigManager.parseAlias(configName);
+        WxConfigInfo info = WxConfigManager.getConfig(actualName);
+        return getToken(actualName, info.getAppId(), info.getAppSecret(), null, AccessToken.TokenType.NORMAL);
     }
 
     /**
@@ -73,9 +74,10 @@ public class WxTokenManager {
      * @return AccessToken
      */
     public static AccessToken getOAuthToken(String configName, String... code) {
-        WxConfigInfo info = WxConfigManager.getConfig(configName);
+        String actualName = WxConfigManager.parseAlias(configName);
+        WxConfigInfo info = WxConfigManager.getConfig(actualName);
         String c = (null == code || code.length == 0) ? "" : code[0];
-        return getToken(configName, info.getAppId(), info.getAppSecret(), c, AccessToken.TokenType.OAUTH);
+        return getToken(actualName, info.getAppId(), info.getAppSecret(), c, AccessToken.TokenType.OAUTH);
     }
 
     /**
@@ -89,7 +91,7 @@ public class WxTokenManager {
      * @return AccessToken
      */
     public static AccessToken getToken(String configName, String appId, String appSecret, String code, AccessToken.TokenType type) {
-        logger.info("getInstance({}, {}, {}, {})", configName, appId, appSecret, code);
+        logger.info("Wechat AccessToken getInstance ({}, {}, {}, {})", configName, appId, appSecret, code);
 
         AccessToken token = null;
         switch (type) {
@@ -160,20 +162,21 @@ public class WxTokenManager {
      * @return jsapi ticket
      */
     public static ApiTicket getTicket(String configName) {
-        ApiTicket ticket = ticketInstances.get(configName);
+        String actualName = WxConfigManager.parseAlias(configName);
+        ApiTicket ticket = ticketInstances.get(actualName);
         if (ticket == null || StringUtils.isEmpty(ticket.getTicket()) || System.currentTimeMillis() > ticket.getExpiredSince()) {
             synchronized (ticketLock) {
-                ticket = ticketInstances.get(configName);
+                ticket = ticketInstances.get(actualName);
                 if (ticket == null || StringUtils.isEmpty(ticket.getTicket()) || System.currentTimeMillis() > ticket.getExpiredSince()) {
                     String result;
                     try {
-                        String token = getToken(configName).getToken();
+                        String token = getToken(actualName).getToken();
                         result = Http.GET.withUrl(WxUrl.API_TICKET.getUrl(token)).execute();
                     } catch (Exception e) {
                         throw new SimplifiedException("获取access_token失败", e);
                     }
                     ticket = new ApiTicket(result);
-                    ticketInstances.put(configName, ticket);
+                    ticketInstances.put(actualName, ticket);
                 }
             }
         }

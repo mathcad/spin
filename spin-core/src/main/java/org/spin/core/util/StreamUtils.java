@@ -1,9 +1,6 @@
 package org.spin.core.util;
 
-import org.spin.core.collection.Pair;
-
 import java.util.Enumeration;
-import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
@@ -16,7 +13,10 @@ import java.util.stream.StreamSupport;
  *
  * @author xuweinan
  */
-public interface StreamUtils {
+public final class StreamUtils extends Util {
+
+    private StreamUtils() {
+    }
 
     /**
      * 将enumeration转换为流
@@ -25,7 +25,7 @@ public interface StreamUtils {
      * @param <T> 对象类型
      * @return 流
      */
-    static <T> Stream<T> stream(Enumeration<T> e) {
+    public static <T> Stream<T> stream(Enumeration<T> e) {
         return StreamSupport.stream(new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED) {
 
             @Override
@@ -46,8 +46,7 @@ public interface StreamUtils {
      * @param <T>      对象类型
      * @return 流
      */
-    static <T> Stream<T> stream(Iterable<T> iterable) {
+    public static <T> Stream<T> stream(Iterable<T> iterable) {
         return StreamSupport.stream(iterable.spliterator(), false);
     }
-
 }

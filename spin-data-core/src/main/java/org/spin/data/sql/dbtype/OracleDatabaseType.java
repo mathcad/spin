@@ -28,7 +28,7 @@ public class OracleDatabaseType implements DatabaseType {
         pagedSql = String.format("SELECT * FROM (SELECT O.*, ROWNUM RN FROM (%s) O WHERE ROWNUM > %d) WHERE RN <= %d",
             sql,
             pageRequest.getOffset(),
-            pageRequest.getOffset() + pageRequest.getPageSize());
+            pageRequest.getOffset() + pageRequest.getSize());
         return new SqlSource(sqlSource.getId(), pagedSql);
     }
 }

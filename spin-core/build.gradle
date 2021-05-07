@@ -3,8 +3,7 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.2.25-SNAPSHOT'
-def artifactId = 'spin-core'
+version = '2.4.0-SNAPSHOT'
 
 test {
     useJUnitPlatform()
@@ -12,37 +11,44 @@ test {
 
 jar {
     manifest {
-        attributes("Specification-Title": artifactId)
+        attributes("Specification-Title": project.getName())
         attributes("Specification-Vendor": "Mathcat")
-        attributes("Specification-Version": project.version)
-        attributes("Implementation-Title": artifactId)
+        attributes("Specification-Version": project.getVersion())
+        attributes("Implementation-Title": project.getName())
         attributes("Implementation-Vendor": "Mathcat")
-        attributes("Implementation-Version": project.version)
+        attributes("Implementation-Version": project.getVersion())
     }
 }
 
-install {
-    repositories.mavenInstaller {
-        pom.version = "$project.version"
-        pom.artifactId = "$artifactId"
-        pom.groupId = "$project.group"
-    }
-}
 
-uploadArchives {
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+//            artifact sourceJar
+            artifact javadocJar
+        }
+    }
+
     repositories {
-        mavenDeployer {
-            repository(url: repoSnapUrl) {
-                authentication(userName: repoUser, password: repoPasswd)
+        maven {
+            name = "mathcat"
+            url = version.endsWith("-SNAPSHOT") ? repoSnapUrl : repoReleaseUrl
+            allowInsecureProtocol = true
+            credentials {
+                username = repoUser
+                password = repoPasswd
             }
-            pom.groupId = "$project.group"
-            pom.artifactId = "$artifactId"
-            pom.version = "$project.version"
         }
     }
 }
 
 dependencies {
+    // additional for Intellij
+    testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: junitLauncherVersion
+    testRuntimeOnly group: 'org.junit.vintage', name: 'junit-vintage-engine', version: junitJupiterVersion
+
+    // test runtime
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
 
@@ -52,9 +58,9 @@ dependencies {
     }
     testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
     testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
-    testRuntimeOnly group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
+    testImplementation group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
     testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
-    testRuntimeOnly group: 'org.jsoup', name: 'jsoup', version: '1.12.1'
+    testImplementation group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
     testRuntimeOnly group: 'com.google.zxing', name: 'core', version: zxingVersion
 
 //    core

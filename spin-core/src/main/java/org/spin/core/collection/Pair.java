@@ -1,6 +1,6 @@
 package org.spin.core.collection;
 
-import org.spin.core.util.CollectionUtils;
+import org.spin.core.util.ArrayUtils;
 import org.spin.core.util.ObjectUtils;
 
 import java.util.function.BiConsumer;
@@ -29,7 +29,7 @@ public class Pair<A, B> implements Tuple<Pair<B, A>> {
 
     @Override
     public Object[] toArray() {
-        return CollectionUtils.ofArray(c1, c2);
+        return ArrayUtils.ofArray(c1, c2);
     }
 
     @Override

@@ -42,7 +42,8 @@ package org.spin.enhance.pinyin.format;
  * The combination of different output format options are listed below. For
  * example, '吕'
  *
- * <table border="1" summary="">
+ * <table border="1">
+ * <caption>Examples</caption>
  * <tr>
  * <th colspan="4"> LOWERCASE </th>
  * </tr>
@@ -66,13 +67,14 @@ package org.spin.enhance.pinyin.format;
  * </tr>
  * <tr>
  * <th>WITH_TONE_MARK</th>
- * <td><font>throw exception</font></td>
- * <td><font>throw exception</font></td>
+ * <td>throw exception</td>
+ * <td>throw exception</td>
  * <td>lǚ</td>
  * </tr>
  * </table>
  *
- * <table border="1" summary="">
+ * <table border="1">
+ * <caption>Examples</caption>
  * <tr>
  * <th colspan="4"> UPPERCASE </th>
  * </tr>
@@ -96,8 +98,8 @@ package org.spin.enhance.pinyin.format;
  * </tr>
  * <tr>
  * <th>WITH_TONE_MARK</th>
- * <td><font>throw exception</font></td>
- * <td><font>throw exception</font></td>
+ * <td>throw exception</td>
+ * <td>throw exception</td>
  * <td>LǙ</td>
  * </tr>
  * </table>

@@ -10,7 +10,10 @@ import java.util.function.Supplier;
  *
  * @author xuweinan
  */
-public interface BooleanExt {
+public final class BooleanExt extends Util {
+
+    private BooleanExt() {
+    }
 
     /**
      * 从一个Bool值创建具有返回值的操作链
@@ -18,7 +21,7 @@ public interface BooleanExt {
      * @param value bool值
      * @return Boolean操作链
      */
-    static ExtAny ofAny(boolean value) {
+    public static ExtAny ofAny(boolean value) {
         ExtAny instance = new ExtAny();
         instance.value = value;
         return instance;
@@ -30,7 +33,7 @@ public interface BooleanExt {
      * @param value bool值
      * @return Boolean操作链
      */
-    static ExtNothing of(boolean value) {
+    public static ExtNothing of(boolean value) {
         ExtNothing instance = new ExtNothing();
         instance.value = value;
         return instance;
@@ -40,7 +43,7 @@ public interface BooleanExt {
     /**
      * 带有返回值的bool处理逻辑
      */
-    class ExtAny {
+    public static class ExtAny {
         private boolean value;
 
         /**
@@ -77,7 +80,7 @@ public interface BooleanExt {
     /**
      * 没有返回值的bool处理逻辑
      */
-    class ExtNothing {
+    public static class ExtNothing {
         private boolean value;
 
         /**
@@ -122,8 +125,8 @@ public interface BooleanExt {
         void otherwise(Handler body);
     }
 
-    class YesMoreThen<E> implements OtherwiseMore<E> {
-        private boolean value;
+    public static class YesMoreThen<E> implements OtherwiseMore<E> {
+        private final boolean value;
         private E result;
 
         public YesMoreThen(E result, boolean value) {
@@ -145,8 +148,8 @@ public interface BooleanExt {
         }
     }
 
-    class YesThen implements Otherwise {
-        private boolean value;
+    public static class YesThen implements Otherwise {
+        private final boolean value;
 
         public YesThen(boolean value) {
             this.value = value;
@@ -160,8 +163,8 @@ public interface BooleanExt {
         }
     }
 
-    class NoMoreThen<E> implements OtherwiseMore<E> {
-        private boolean value;
+    public static class NoMoreThen<E> implements OtherwiseMore<E> {
+        private final boolean value;
         private E result;
 
         public NoMoreThen(E result, boolean value) {
@@ -183,8 +186,8 @@ public interface BooleanExt {
         }
     }
 
-    class NoThen implements Otherwise {
-        private boolean value;
+    public static class NoThen implements Otherwise {
+        private final boolean value;
 
         public NoThen(boolean value) {
             this.value = value;

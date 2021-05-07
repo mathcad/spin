@@ -27,6 +27,7 @@ import org.spin.core.gson.stream.JsonWriter;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -63,6 +64,11 @@ public final class ArrayTypeAdapter<E> extends TypeAdapter<Object> {
 
     @Override
     public Object read(JsonReader in) throws IOException {
+        return read(in, null);
+    }
+
+    @Override
+    public Object read(JsonReader in, Field field) throws IOException {
         if (in.peek() == JsonToken.NULL) {
             in.nextNull();
             return null;
@@ -71,7 +77,7 @@ public final class ArrayTypeAdapter<E> extends TypeAdapter<Object> {
         List<E> list = new ArrayList<>();
         in.beginArray();
         while (in.hasNext()) {
-            E instance = componentTypeAdapter.read(in);
+            E instance = componentTypeAdapter.read(in, field);
             list.add(instance);
         }
         in.endArray();
@@ -84,9 +90,14 @@ public final class ArrayTypeAdapter<E> extends TypeAdapter<Object> {
         return array;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void write(JsonWriter out, Object array) throws IOException {
+        write(out, array, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void write(JsonWriter out, Object array, Field field) throws IOException {
         if (array == null) {
             out.nullValue();
             return;
@@ -95,7 +106,7 @@ public final class ArrayTypeAdapter<E> extends TypeAdapter<Object> {
         out.beginArray();
         for (int i = 0, length = Array.getLength(array); i < length; i++) {
             E value = (E) Array.get(array, i);
-            componentTypeAdapter.write(out, value);
+            componentTypeAdapter.write(out, value, field);
         }
         out.endArray();
     }

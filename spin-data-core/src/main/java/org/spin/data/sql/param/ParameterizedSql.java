@@ -28,11 +28,11 @@ public class ParameterizedSql implements Serializable {
         }
     }
 
-    private SqlSource originalSql;
+    private final SqlSource originalSql;
 
     private SqlSource actualSql;
 
-    private List<SqlParameter> namedParameters = new LinkedList<>();
+    private final List<SqlParameter> namedParameters = new LinkedList<>();
 
     private int namedParameterCount;
 

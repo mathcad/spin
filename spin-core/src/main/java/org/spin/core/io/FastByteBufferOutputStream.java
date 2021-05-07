@@ -65,6 +65,10 @@ public class FastByteBufferOutputStream extends OutputStream {
         return buffer.toArray();
     }
 
+    public FastByteBufferInputStream toInputStream() {
+        return new FastByteBufferInputStream(buffer);
+    }
+
     @Override
     public String toString() {
         return new String(toByteArray());

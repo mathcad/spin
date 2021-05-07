@@ -18,7 +18,7 @@ import java.util.Date;
  * @author wangy QQ 837195190
  * <p>Created by wangy on 2019/3/13.</p>
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ConverterAutoConfiguration {
 
     @Bean

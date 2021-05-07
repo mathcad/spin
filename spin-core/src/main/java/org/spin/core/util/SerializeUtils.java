@@ -19,7 +19,10 @@ import java.util.function.Supplier;
  *
  * @author xuweinan
  */
-public interface SerializeUtils {
+public final class SerializeUtils extends Util {
+
+    private SerializeUtils() {
+    }
 
     /**
      * 将对象序列化为字节数组
@@ -27,10 +30,10 @@ public interface SerializeUtils {
      * @param object 对象
      * @return 字节数组
      */
-    static byte[] serialize(Object object) {
+    public static byte[] serialize(Object object) {
         FixedVector<byte[]> bytes = new FixedVector<>(1);
-        serialize(object, ByteArrayOutputStream::new, os -> bytes.put(os.toByteArray()));
-        return bytes.get();
+        serialize(object, ByteArrayOutputStream::new, os -> bytes.push(os.toByteArray()));
+        return bytes.pop();
     }
 
     /**
@@ -39,7 +42,7 @@ public interface SerializeUtils {
      * @param object 对象
      * @param output 输出流提供者
      */
-    static void serialize(Object object, Supplier<OutputStream> output) {
+    public static void serialize(Object object, Supplier<OutputStream> output) {
         OutputStream os = output.get();
         try (ObjectOutputStream oos = os instanceof ObjectOutputStream ? (ObjectOutputStream) os : new ObjectOutputStream(os)) {
             oos.writeObject(object);
@@ -56,7 +59,7 @@ public interface SerializeUtils {
      * @param proc   自定义处理逻辑
      * @param <T>    输出流类型参数
      */
-    static <T extends OutputStream> void serialize(Object object, Supplier<T> output, Consumer<T> proc) {
+    public static <T extends OutputStream> void serialize(Object object, Supplier<T> output, Consumer<T> proc) {
         T os = output.get();
         try (ObjectOutputStream oos = os instanceof ObjectOutputStream ? (ObjectOutputStream) os : new ObjectOutputStream(os)) {
             oos.writeObject(object);
@@ -73,7 +76,7 @@ public interface SerializeUtils {
      * @param <T>   类型参数
      * @return 反序列化的对象
      */
-    static <T> T deserialize(byte[] bytes) {
+    public static <T> T deserialize(byte[] bytes) {
         if (bytes == null) {
             return null;
         }
@@ -87,7 +90,7 @@ public interface SerializeUtils {
      * @param <T>   对象类型参数
      * @return 反序列化的对象
      */
-    static <T> T deserialize(Supplier<InputStream> input) {
+    public static <T> T deserialize(Supplier<InputStream> input) {
         if (null == input) {
             return null;
         }

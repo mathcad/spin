@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 /**
  * 网络相关工具类
  */
-public abstract class NetUtils {
+public final class NetUtils extends Util {
     public static final String LOCAL_IP_V4 = "127.0.0.1";
     public static final String LOCAL_IPV6 = "0:0:0:0:0:0:0:1";
     public static final String PRIVATE_IPV6 = "FEC0::/48";
@@ -66,7 +66,6 @@ public abstract class NetUtils {
     };
 
     private NetUtils() {
-        throw new SpinException("Cound not create an instance of util class: " + this.getClass().getName());
     }
 
     /**

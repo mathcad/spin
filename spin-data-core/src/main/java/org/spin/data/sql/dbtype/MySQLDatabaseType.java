@@ -26,7 +26,7 @@ public class MySQLDatabaseType implements DatabaseType {
             sqlSource.getSql(),
             StringUtils.isBlank(order) ? "" : order,
             pageRequest.getOffset(),
-            pageRequest.getPageSize());
+            pageRequest.getSize());
         return new SqlSource(sqlSource.getId(), pagedSql);
     }
 }

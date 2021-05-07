@@ -19,7 +19,7 @@ public abstract class ArchiveSQLLoader extends GenericSqlLoader {
 
     protected InputStream getInputStream(String id) {
         String cmdFileName = id.substring(0, id.lastIndexOf('.'));
-        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + fileDelimiter)) + this.getDbType().getProductName() + fileDelimiter + cmdFileName + getExtension();
+        String path = (StringUtils.isEmpty(this.getRootUri()) ? "" : (this.getRootUri() + fileDelimiter)) + cmdFileName + getExtension();
         try {
             InputStream is = this.getClass().getResourceAsStream(path);
             if (null == is) {

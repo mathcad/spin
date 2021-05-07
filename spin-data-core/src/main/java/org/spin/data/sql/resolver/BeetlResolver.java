@@ -8,11 +8,12 @@ import org.beetl.core.resource.StringTemplateResourceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.trait.FriendlyEnum;
+import org.spin.core.util.ClassUtils;
 import org.spin.core.util.StringUtils;
-import org.spin.data.core.DatabaseType;
-import org.spin.data.core.UserEnumColumn;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.Map;
 
 /**
@@ -25,8 +26,8 @@ import java.util.Map;
 public class BeetlResolver implements TemplateResolver {
     private static final Logger logger = LoggerFactory.getLogger(BeetlResolver.class);
     private String charset = "UTF-8";
-    private Configuration configuration;
-    private GroupTemplate groupTemplate;
+    private final Configuration configuration;
+    private final GroupTemplate groupTemplate;
 
     public BeetlResolver() {
         StringTemplateResourceLoader resourceLoader = new StringTemplateResourceLoader();
@@ -39,6 +40,7 @@ public class BeetlResolver implements TemplateResolver {
         configuration.setCharset(charset);
         configuration.setStatementStart("```js");
         configuration.setStatementEnd("```");
+        configuration.setStatementStart2("@");
         groupTemplate = new GroupTemplate(resourceLoader, configuration);
 
         groupTemplate.registerFunction("valid", (params, contex) -> {
@@ -57,6 +59,13 @@ public class BeetlResolver implements TemplateResolver {
             if (cond instanceof Boolean) {
                 return ((Boolean) cond) ? yes : no;
             }
+            if (cond.getClass().isArray()) {
+                return Array.getLength(cond) > 0 ? yes : no;
+            }
+            if (cond instanceof Iterable) {
+                return ((Iterable<?>) cond).iterator().hasNext() ? yes : no;
+            }
+
             return yes;
         });
         groupTemplate.registerFunction("enum", (params, contex) -> {
@@ -74,11 +83,14 @@ public class BeetlResolver implements TemplateResolver {
             } catch (ClassNotFoundException e) {
                 throw new SimplifiedException("解析枚举出错" + enumName, e);
             }
-            if (cls.isEnum() && UserEnumColumn.class.isAssignableFrom(cls)) {
+            if (cls.isEnum() && FriendlyEnum.class.isAssignableFrom(cls)) {
                 for (Object o : cls.getEnumConstants()) {
-                    String name = o.toString();
-                    int value = ((UserEnumColumn) o).getValue();
-                    sb.append(" WHEN ").append(field).append("=").append(value).append(" THEN '").append(name).append("'");
+                    String name = ((FriendlyEnum<?>) o).getDescription();
+                    Object value = ((FriendlyEnum<?>) o).getValue();
+                    if (ClassUtils.wrapperToPrimitive(value.getClass()) == null || value instanceof Character) {
+                        value = "'" + value + "'";
+                    }
+                    sb.append(" WHEN ").append(field).append(" = ").append(value).append(" THEN '").append(name).append("'");
                 }
             } else {
                 throw new SimplifiedException(enumName + "不是有效的枚举类型(请检查是否实现了UserEnumColumn接口)");
@@ -86,10 +98,19 @@ public class BeetlResolver implements TemplateResolver {
             sb.append(" END) AS ").append(asField);
             return sb.toString();
         });
+
+        groupTemplate.registerFunction("in", (params, contex) -> {
+            if (params.length != 2) {
+                throw new IllegalArgumentException("in函数参数个数不正确（需2个参数）");
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append(params[0].toString()).append(" ");
+            return sb.toString();
+        });
     }
 
     @Override
-    public String resolve(String id, String templateSrc, Map<String, ?> model, DatabaseType dbType) {
+    public String resolve(String id, String templateSrc, Map<String, ?> model) {
         Template template = groupTemplate.getTemplate(templateSrc);
 
         for (Map.Entry<String, ?> e : model.entrySet()) {

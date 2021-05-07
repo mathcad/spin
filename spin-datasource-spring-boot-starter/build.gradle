@@ -1,0 +1,60 @@
+plugins {
+    id 'java-library'
+}
+
+description '动态数据源组件'
+version '2.4.0-SNAPSHOT'
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact sourceJar
+            artifact javadocJar
+        }
+    }
+
+    repositories {
+        maven {
+            name = "mathcat"
+            url = version.endsWith("-SNAPSHOT") ? repoSnapUrl : repoReleaseUrl
+            allowInsecureProtocol = true
+            credentials {
+                username = repoUser
+                password = repoPasswd
+            }
+        }
+    }
+}
+
+dependencies {
+    // additional for Intellij
+    testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: junitLauncherVersion
+    testRuntimeOnly group: 'org.junit.vintage', name: 'junit-vintage-engine', version: junitJupiterVersion
+
+    // test runtime
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitJupiterVersion
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
+
+    api group: 'org.mathcat', name: 'spin-core', version: '2.4.0-SNAPSHOT'
+
+    api group: 'org.springframework.boot', name: 'spring-boot-starter-jdbc', version: springBootVersion
+    api group: 'org.springframework.boot', name: 'spring-boot-starter-aop', version: springBootVersion
+
+    compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion
+//    compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
+    compileOnly group: 'org.mybatis', name: 'mybatis', version: '3.5.6'
+
+    compileOnly group: 'com.alibaba', name: 'druid-spring-boot-starter', version: '1.2.5'
+    compileOnly group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
+//    compileOnly group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
+    compileOnly group: 'p6spy', name: 'p6spy', version: p6spyVersion
+    compileOnly group: 'io.seata', name: 'seata-all', version: seataVersion
+    compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: servletVersion
+
+    annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: springBootVersion
+}

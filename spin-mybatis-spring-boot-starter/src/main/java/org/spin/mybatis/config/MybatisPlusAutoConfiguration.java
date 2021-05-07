@@ -1,43 +1,85 @@
 package org.spin.mybatis.config;
 
-import com.baomidou.mybatisplus.extension.plugins.OptimisticLockerInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
+import com.baomidou.mybatisplus.core.incrementer.IdentifierGenerator;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import org.apache.ibatis.session.SqlSession;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.mybatis.spring.SqlSessionUtils;
+import org.spin.data.pk.generator.DistributedIdGenerator;
+import org.spin.datasource.schema.Schema;
+import org.spin.mybatis.DataPermissionInterceptor;
+import org.spin.mybatis.entity.SfIdGenerator;
+import org.spin.mybatis.handler.MybatisMetaObjectHandler;
 import org.spin.mybatis.handler.MybatisPlusMetaObjectHandler;
+import org.spin.mybatis.handler.PermissionDataMetaObjectHandler;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+import java.util.List;
 
 @Configuration
 @ConditionalOnProperty("mybatis-plus.mapper-locations")
 public class MybatisPlusAutoConfiguration {
 
-    /**
-     * 分页插件
-     *
-     * @return PaginationInterceptor
-     */
     @Bean
-    public PaginationInterceptor paginationInterceptor() {
-        return new PaginationInterceptor();
+    @ConditionalOnBean(DistributedIdGenerator.class)
+    public IdentifierGenerator sfIdGenerator(DistributedIdGenerator idGenerator) {
+        return new SfIdGenerator(idGenerator);
     }
 
-    /**
-     * 乐观锁
-     *
-     * @return optimisticLockerInterceptor
-     */
-    @Bean
-    public OptimisticLockerInterceptor optimisticLockerInterceptor() {
-        return new OptimisticLockerInterceptor();
-    }
 
     /**
-     * 自动填充
+     * 数据权限控制插件
      *
-     * @return mybatisPlusMetaObjectHandler
+     * @return DataPermissionInterceptor
      */
     @Bean
-    public MybatisPlusMetaObjectHandler mybatisPlusMetaObjectHandler() {
-        return new MybatisPlusMetaObjectHandler();
+    @ConditionalOnClass(name = "org.spin.cloud.vo.CurrentUser")
+    public DataPermissionInterceptor dataPermissionInterceptor() {
+        return new DataPermissionInterceptor();
+    }
+
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
+        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+        return interceptor;
+    }
+
+    @Bean
+    public PermissionDataMetaObjectHandler permissionDataMetaObjectHandler() {
+        return new PermissionDataMetaObjectHandler();
+    }
+
+    @Bean
+    @Primary
+    public MybatisPlusMetaObjectHandler mybatisPlusMetaObjectHandler(List<MybatisMetaObjectHandler> mybatisMetaObjectHandlers) {
+        return new MybatisPlusMetaObjectHandler(mybatisMetaObjectHandlers);
+    }
+
+    @Bean
+    @ConditionalOnClass(name = "org.spin.datasource.schema.Schema")
+    @ConditionalOnBean(SqlSessionTemplate.class)
+    public InitializingBean initMybatisConnectionProvider(SqlSessionTemplate sqlSessionTemplate) {
+        return () -> {
+            try {
+                Class.forName("org.spin.datasource.schema.Schema");
+                Schema.setTransactionSyncConnectionProvider(() -> {
+                    SqlSession sqlSession = SqlSessionUtils.getSqlSession(sqlSessionTemplate.getSqlSessionFactory(),
+                        sqlSessionTemplate.getExecutorType(), sqlSessionTemplate.getPersistenceExceptionTranslator());
+                    return sqlSession.getConnection();
+                });
+            } catch (ClassNotFoundException e) {
+                // do nothing
+            }
+        };
     }
 }

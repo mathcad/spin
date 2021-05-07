@@ -1,6 +1,5 @@
 package org.spin.web.handler.exception;
 
-import org.apache.http.conn.HttpHostConnectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.ErrorCode;
@@ -34,9 +33,6 @@ public class NetworkExceptionHandler implements WebExceptionHandler {
             msg.append("网络错误, 连接超时");
         } else {
             msg.append("网络错误");
-        }
-        if (e instanceof HttpHostConnectException) {
-            msg.append(": [").append(((HttpHostConnectException) e).getHost().toString()).append("]");
         }
         return RestfulResponse.<Void>error(ErrorCode.NETWORK_EXCEPTION, msg.toString(), e.getMessage())
             .withPath(appName + request.getRequestURI());

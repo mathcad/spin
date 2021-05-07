@@ -1,5 +1,6 @@
 package org.spin.enhance.pinyin;
 
+import org.junit.jupiter.api.Test;
 import org.spin.enhance.pinyin.format.HanyuPinyinCaseType;
 import org.spin.enhance.pinyin.format.HanyuPinyinOutputFormat;
 import org.spin.enhance.pinyin.format.HanyuPinyinToneType;
@@ -10,6 +11,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class PinyinHelperTest {
+
+    @Test
+    void testPy() throws BadHanyuPinyinOutputFormatCombination {
+
+        String src = "aa";
+        String s = PinyinHelper.toHanYuPinyinHeadString(src, true);
+
+        System.out.println(s);
+    }
+
     public void testToTongyongPinyinStringArray() {
         // any input of non-Chinese characters will return null
         {

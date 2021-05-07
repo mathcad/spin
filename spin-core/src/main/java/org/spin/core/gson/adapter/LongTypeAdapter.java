@@ -1,11 +1,11 @@
 package org.spin.core.gson.adapter;
 
+import org.spin.core.gson.MatchableTypeAdapter;
+import org.spin.core.gson.annotation.PreventOverflow;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.gson.stream.JsonReader;
 import org.spin.core.gson.stream.JsonToken;
 import org.spin.core.gson.stream.JsonWriter;
-import org.spin.core.gson.MatchableTypeAdapter;
-import org.spin.core.gson.annotation.PreventOverflow;
 import org.spin.core.util.StringUtils;
 
 import java.io.IOException;
@@ -38,8 +38,13 @@ public class LongTypeAdapter extends MatchableTypeAdapter<Long> {
         if (null == value) {
             out.nullValue();
         } else {
-            if (value > 9007199254740992L && null != field && null != field.getAnnotation(PreventOverflow.class)) {
-                out.value(value.toString());
+            if (null != field) {
+                PreventOverflow annotation = field.getAnnotation(PreventOverflow.class);
+                if (null != annotation && (value > 9007199254740992L || !annotation.onlyOverflow())) {
+                    out.value(value.toString());
+                } else {
+                    out.value(value);
+                }
             } else {
                 out.value(value);
             }

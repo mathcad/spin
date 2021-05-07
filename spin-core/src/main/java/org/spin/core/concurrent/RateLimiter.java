@@ -12,32 +12,24 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
- * A rate limiter. Conceptually, a rate limiter distributes permits at a configurable rate. Each
- * {@link #acquire()} blocks if necessary until a permit is available, and then takes it. Once
- * acquired, permits need not be released.
+ * 一个流量限制器. 指一个使用指定的速率来发放令牌的装置. 每次{@link #acquire()} 都会被阻塞直到(至少)有一个可用的令牌, 然后取走一个令牌.
+ * 当一个令牌被取走后, 它不需要被释放.
  *
- * <p>{@code RateLimiter} is safe for concurrent use: It will restrict the total rate of calls from
- * all threads. Note, however, that it does not guarantee fairness.
+ * <p>{@code RateLimiter} 是并发安全的: 它会限制所有线程上的总速率. 注意, 它并不能保证公平.
  *
- * <p>Rate limiters are often used to restrict the rate at which some physical or logical resource
- * is accessed. This is in contrast to {@link java.util.concurrent.Semaphore} which restricts the
- * number of concurrent accesses instead of the rate (note though that concurrency and rate are
- * closely related, e.g. see <a href="http://en.wikipedia.org/wiki/Little%27s_law">Little's
+ * <p>{@code RateLimiter} 通常被用来限制限制一些物理或逻辑资源的访问频率. 它与 {@link java.util.concurrent.Semaphore} 明显不同,后者是限制访问并发数而不是速率.
+ * 参见 <a href="http://en.wikipedia.org/wiki/Little%27s_law">Little's
  * Law</a>).
  *
- * <p>A {@code RateLimiter} is defined primarily by the rate at which permits are issued. Absent
- * additional configuration, permits will be distributed at a fixed rate, defined in terms of
- * permits per second. Permits will be distributed smoothly, with the delay between individual
- * permits being adjusted to ensure that the configured rate is maintained.
+ * <p>一个 {@code RateLimiter} 主要是由一个发放令牌的速率来定义. 如果没有额外的配置，令牌将按固定的速率发放，定义为令牌/每.
+ * 令牌的发放整体上是均匀的, 个别令牌之间的延迟会被动态调整来确保能够以配置的速率均匀发放.
  *
- * <p>It is possible to configure a {@code RateLimiter} to have a warmup period during which time
- * the permits issued each second steadily increases until it hits the stable rate.
+ * <p>可以为 {@code RateLimiter} 配置一个预热周期，在此期间，令牌发放的速率将稳步增加，直到达到稳定速率.
  *
- * <p>As an example, imagine that we have a list of tasks to execute, but we don't want to submit
- * more than 2 per second:
+ * <p>举一个例子, 这里我们有一系列的任务需要执行, 但是我们不希望它们的提交频率超过2次/秒:
  *
  * <pre>{@code
- * final RateLimiter rateLimiter = RateLimiter.create(2.0); // rate is "2 permits per second"
+ * final RateLimiter rateLimiter = RateLimiter.create(2.0); // 速率为 "2 令牌/秒"
  * void submitTasks(List<Runnable> tasks, Executor executor) {
  *   for (Runnable task : tasks) {
  *     rateLimiter.acquire(); // may wait
@@ -46,9 +38,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * }
  * }</pre>
  *
- * <p>As another example, imagine that we produce a stream of data, and we want to cap it at 5kb per
- * second. This could be accomplished by requiring a permit per byte, and specifying a rate of 5000
- * permits per second:
+ * <p>在这个例子中, 假设我们要生成一个数据流, 并且我们希望将数据流限制到 5kb/秒:
  *
  * <pre>{@code
  * final RateLimiter rateLimiter = RateLimiter.create(5000.0); // rate = 5000 permits per second
@@ -58,36 +48,24 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * }
  * }</pre>
  *
- * <p>It is important to note that the number of permits requested <i>never</i> affects the
- * throttling of the request itself (an invocation to {@code acquire(1)} and an invocation to {@code
- * acquire(1000)} will result in exactly the same throttling, if any), but it affects the throttling
- * of the <i>next</i> request. I.e., if an expensive task arrives at an idle RateLimiter, it will be
- * granted immediately, but it is the <i>next</i> request that will experience extra throttling,
- * thus paying for the cost of the expensive task.
+ * <p>需要注意的是，请求的令牌数量永远不会影响请求本身(一次{@code acquire(1)}调用与一次{@code acquire(1000)}调用将会导致完全一样的限流结果, 如果有足够令牌的话),
+ * 但它会影响下一次请求的限流, 例如一个代价高昂的请求作用于一个空闲的RateLimiter, 它会被立即授权,
+ * 但这个RateLimiter上的下一次请求可能会受到额外的限制来偿还上一个昂贵任务的成本
+ * </p>
  *
  * @author Dimitris Andreou
- * @since 13.0
+ * @author xuweinan
+ * @since 2.2.0
  */
-// TODO(user): switch to nano precision. A natural unit of cost is "bytes", and a micro precision
-// would mean a maximum rate of "1MB/s", which might be small in some cases.
 public abstract class RateLimiter {
+
     /**
-     * Creates a {@code RateLimiter} with the specified stable throughput, given as "permits per
-     * second" (commonly referred to as <i>QPS</i>, queries per second).
+     * 根据指定的吞吐量创建一个 {@code RateLimiter}.
      *
-     * <p>The returned {@code RateLimiter} ensures that on average no more than {@code
-     * permitsPerSecond} are issued during any given second, with sustained requests being smoothly
-     * spread over each second. When the incoming request rate exceeds {@code permitsPerSecond} the
-     * rate limiter will release one permit every {@code (1.0 / permitsPerSecond)} seconds. When the
-     * rate limiter is unused, bursts of up to {@code permitsPerSecond} permits will be allowed, with
-     * subsequent requests being smoothly limited at the stable rate of {@code permitsPerSecond}.
-     *
-     * @param permitsPerSecond the rate of the returned {@code RateLimiter}, measured in how many
-     *                         permits become available per second
+     * @param permitsPerSecond 每秒发放的令牌数
      * @return RateLimiter的实例
-     * @throws IllegalArgumentException if {@code permitsPerSecond} is negative or zero
+     * @throws IllegalArgumentException 当 {@code permitsPerSecond} 为非正数时抛出
      */
-    // TODO(user): "This is equivalent to
     // {@code createWithCapacity(permitsPerSecond, 1, TimeUnit.SECONDS)}".
     public static RateLimiter create(double permitsPerSecond) {
         /*
@@ -113,29 +91,12 @@ public abstract class RateLimiter {
     }
 
     /**
-     * Creates a {@code RateLimiter} with the specified stable throughput, given as "permits per
-     * second" (commonly referred to as <i>QPS</i>, queries per second), and a <i>warmup period</i>,
-     * during which the {@code RateLimiter} smoothly ramps up its rate, until it reaches its maximum
-     * rate at the end of the period (as long as there are enough requests to saturate it). Similarly,
-     * if the {@code RateLimiter} is left <i>unused</i> for a duration of {@code warmupPeriod}, it
-     * will gradually return to its "cold" state, i.e. it will go through the same warming up process
-     * as when it was first created.
+     * 根据指定的吞吐量创建一个 {@code RateLimiter}.
      *
-     * <p>The returned {@code RateLimiter} is intended for cases where the resource that actually
-     * fulfills the requests (e.g., a remote server) needs "warmup" time, rather than being
-     * immediately accessed at the stable (maximum) rate.
-     *
-     * <p>The returned {@code RateLimiter} starts in a "cold" state (i.e. the warmup period will
-     * follow), and if it is left unused for long enough, it will return to that state.
-     *
-     * @param permitsPerSecond the rate of the returned {@code RateLimiter}, measured in how many
-     *                         permits become available per second
-     * @param warmupPeriod     the duration of the period where the {@code RateLimiter} ramps up its rate,
-     *                         before reaching its stable (maximum) rate
-     * @param unit             the time unit of the warmupPeriod argument
+     * @param permitsPerSecond 每秒发放的令牌数
+     * @param warmupPeriod     预热周期
+     * @param unit             预热周期的时间单位
      * @return RateLimiter的实例
-     * @throws IllegalArgumentException if {@code permitsPerSecond} is negative or zero or {@code
-     *                                  warmupPeriod} is negative
      */
     public static RateLimiter create(double permitsPerSecond, long warmupPeriod, TimeUnit unit) {
         Assert.isTrue(warmupPeriod >= 0, "warmupPeriod must not be negative: %s", warmupPeriod);
@@ -345,6 +306,7 @@ public abstract class RateLimiter {
      * @return the required wait time, never negative
      */
     final long reserveAndGetWaitLength(int permits, long nowMicros) {
+
         long momentAvailable = reserveEarliestAvailable(permits, nowMicros);
         return max(momentAvailable - nowMicros, 0);
     }
@@ -379,7 +341,7 @@ public abstract class RateLimiter {
         }
 
         /*
-         * We always hold the mutex when calling this. TODO(cpovirk): Is that important? Perhaps we need
+         * We always hold the mutex when calling this. Is that important? Perhaps we need
          * to guarantee that each call to reserveEarliestAvailable, etc. sees a value >= the previous?
          * Also, is it OK that we don't hold the mutex when sleeping?
          */

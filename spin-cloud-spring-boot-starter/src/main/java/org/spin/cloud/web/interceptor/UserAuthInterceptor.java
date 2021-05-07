@@ -3,26 +3,29 @@ package org.spin.cloud.web.interceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.feign.FeignInterceptor;
+import org.spin.cloud.util.Env;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.core.ErrorCode;
-import org.spin.core.util.JsonUtils;
 import org.spin.core.util.NetUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.web.AuthLevel;
 import org.spin.web.InternalWhiteList;
-import org.spin.web.RestfulResponse;
 import org.spin.web.ScopeType;
 import org.spin.web.annotation.Auth;
+import org.spin.web.annotation.Author;
+import org.spin.web.util.RequestUtils;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 /**
  * 用户权限拦截器
@@ -30,16 +33,30 @@ import java.lang.reflect.Method;
  * @author wangy QQ 837195190
  * <p>Created by wangy on 2019/3/14.</p>
  */
-public class UserAuthInterceptor implements HandlerInterceptor {
+public class UserAuthInterceptor implements HandlerInterceptor, Ordered {
 
     private static final Logger logger = LoggerFactory.getLogger(UserAuthInterceptor.class);
+    private static final ThreadLocal<Long> EXECUTION_TIME = new ThreadLocal<>();
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
 
         // 是否调用方法
         if (!(handler instanceof HandlerMethod)) {
             return true;
+        }
+
+        // 环境检测
+        String profile = request.getHeader(FeignInterceptor.X_APP_PROFILE);
+        if (StringUtils.isNotEmpty(profile)) {
+            if (!Objects.equals(profile, Env.getActiveProfiles())) {
+                logger.error("禁止跨环境的服务调用 源环境: {}[{}], 目标环境: {}[{}]",
+                    StringUtils.trimToSpec(request.getHeader(FeignInterceptor.X_APP_NAME), "GATEWAY"),
+                    profile,
+                    Env.getAppName(),
+                    Env.getActiveProfiles());
+                return false;
+            }
         }
 
         // 认证信息判断
@@ -48,7 +65,7 @@ public class UserAuthInterceptor implements HandlerInterceptor {
         Auth authAnno = AnnotatedElementUtils.getMergedAnnotation(method, Auth.class);
         if (null == authAnno) {
             CurrentUser.clearCurrent();
-            responseWrite(response, ErrorCode.OTHER, "接口定义不正确");
+            RequestUtils.error(response, ErrorCode.OTHER, "接口定义不正确");
             return false;
         }
 
@@ -57,7 +74,7 @@ public class UserAuthInterceptor implements HandlerInterceptor {
             CurrentUser.clearCurrent();
             logger.info("接口[{}]仅允许内部调用, 实际来源[{}-{} <-- {}]", request.getRequestURI(),
                 request.getRemoteHost(), request.getRemoteAddr(), request.getHeader(HttpHeaders.USER_AGENT));
-            responseWrite(response, ErrorCode.ACCESS_DENINED, "接口仅允许内部调用: " + request.getRequestURI());
+            RequestUtils.error(response, ErrorCode.ACCESS_DENINED, "接口仅允许内部调用: " + request.getRequestURI());
             return false;
         }
         // 用户信息
@@ -76,15 +93,56 @@ public class UserAuthInterceptor implements HandlerInterceptor {
         if (null == currentUser) {
             CurrentUser.clearCurrent();
             if (auth) {
-                responseWrite(response, ErrorCode.ACCESS_DENINED, "该接口不允许匿名访问: " + request.getRequestURI());
+                RequestUtils.error(response, ErrorCode.ACCESS_DENINED, "该接口不允许匿名访问: " + request.getRequestURI());
                 return false;
             }
         }
+
+        if (AuthLevel.AUTHORIZE == authAnno.value()) {
+            String authName = authAnno.name();
+            if (StringUtils.isEmpty(authName)) {
+                authName = method.getDeclaringClass().getName() + "-" + method.getName();
+            }
+            authName = "API:" + authName;
+
+            Env.setCurrentApiCode(authName);
+        }
+        EXECUTION_TIME.set(System.currentTimeMillis());
         return true;
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+    public void postHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler, ModelAndView modelAndView) {
+        Long startTime = EXECUTION_TIME.get();
+        if (null != startTime) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            EXECUTION_TIME.remove();
+            String resource;
+            String author = "匿名";
+            if ((handler instanceof HandlerMethod)) {
+                Method method = ((HandlerMethod) handler).getMethod();
+                resource = method.toGenericString();
+                if (executionTime > 1000L) {
+                    Author authorAnno = AnnotatedElementUtils.getMergedAnnotation(method, Author.class);
+                    if (null != authorAnno) {
+                        author = StringUtils.join(authorAnno.value());
+                    }
+                }
+
+            } else {
+                resource = request.getRequestURI();
+            }
+
+            if (executionTime > 1000L) {
+                logger.warn("请求{}的执行时间过长, 作者: {}, 总计耗时: {}ms", resource, author, executionTime);
+            } else {
+                logger.debug("请求{}总计耗时: {}ms", resource, executionTime);
+            }
+        }
+    }
+
+    @Override
+    public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler, Exception ex) {
         CurrentUser.clearCurrent();
     }
 
@@ -108,15 +166,8 @@ public class UserAuthInterceptor implements HandlerInterceptor {
             && StringUtils.isNotEmpty(request.getHeader(FeignInterceptor.X_APP_NAME));
     }
 
-    private void responseWrite(HttpServletResponse response, ErrorCode errorCode, String... message) {
-        try {
-            response.setCharacterEncoding("UTF-8");
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.setHeader("Encoded", "1");
-            response.getWriter().write(JsonUtils.toJson(RestfulResponse
-                .error(errorCode, ((null == message || message.length == 0 || StringUtils.isEmpty(message[0])) ? errorCode.getDesc() : message[0]))));
-        } catch (IOException e) {
-            logger.error(e.getMessage());
-        }
+    @Override
+    public int getOrder() {
+        return 0;
     }
 }

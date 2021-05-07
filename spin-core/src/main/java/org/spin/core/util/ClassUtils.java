@@ -2,7 +2,11 @@ package org.spin.core.util;
 
 import org.spin.core.throwable.NullArgumentException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -26,7 +30,7 @@ import java.util.*;
  * @version $DistributedId: ClassUtils.java 907121 2010-02-05 22:53:21Z mbenson $
  * @since 2.0
  */
-public abstract class ClassUtils {
+public final class ClassUtils extends Util {
     /**
      * char形式的包名分隔符: <code>'&#x2e;' == {@value}</code>.
      */
@@ -908,6 +912,67 @@ public abstract class ClassUtils {
      */
     public static boolean equal(Class<?> cls1, Class<?> cls2) {
         return cls1 == cls2 || null != cls1 && null != cls2 && cls1.getName().equals(cls2.getName()) && cls1.getClassLoader() == cls2.getClassLoader();
+    }
+
+    /**
+     * Returns the internal name of the given class. The internal name of a class is its fully
+     * qualified name, as returned by Class.getName(), where '.' are replaced by '/'.
+     *
+     * @param clazz an object or array class.
+     * @return the internal name of the given class.
+     */
+    public static String getInternalName(final Class<?> clazz) {
+        return clazz.getName().replace('.', '/');
+    }
+
+    public static String getTypeDescriptor(Class<?> cls) {
+        if (null == cls) {
+            return null;
+        }
+
+        if (cls.isPrimitive()) {
+            if (cls == int.class) {
+                return "I";
+            }
+
+            if (cls == void.class) {
+                return "V";
+            }
+
+            if (cls == boolean.class) {
+                return "Z";
+            }
+
+            if (cls == byte.class) {
+                return "B";
+            }
+
+            if (cls == char.class) {
+                return "C";
+            }
+
+            if (cls == short.class) {
+                return "S";
+            }
+
+            if (cls == double.class) {
+                return "D";
+            }
+
+            if (cls == float.class) {
+                return "F";
+            }
+
+            if (cls == long.class) {
+                return "J";
+            }
+        }
+
+        if (!cls.isArray()) {
+            return "L" + getInternalName(cls) + ";";
+        }
+        
+        return "[" + getTypeDescriptor(cls.getComponentType());
     }
 
     /**

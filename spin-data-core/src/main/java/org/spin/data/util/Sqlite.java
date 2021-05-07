@@ -28,10 +28,10 @@ public class Sqlite implements AutoCloseable {
     private static final String MEMORY_MODE = ":memory:";
     private static final String CONN_STR_PREFIX = "jdbc:sqlite:";
 
-    private boolean inMemory;
+    private final String dbFilePath;
+    private final boolean inMemory;
     private boolean closed = false;
     private Connection connection;
-    private String dbFilePath;
 
     private Sqlite(String dbFilePath) {
         this.dbFilePath = dbFilePath;

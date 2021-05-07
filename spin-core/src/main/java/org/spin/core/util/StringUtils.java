@@ -40,7 +40,7 @@ import static java.lang.Character.isWhitespace;
  * @author xuweinan
  * @since 16 April 2001
  */
-public abstract class StringUtils {
+public final class StringUtils extends Util {
 
     private static final String FOLDER_SEPARATOR = "/";
 
@@ -55,6 +55,7 @@ public abstract class StringUtils {
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("^-?\\d+(\\.\\d+)?$");
     private static final Pattern INTEGER_PATTERN = Pattern.compile("^-?\\d+$");
     private static final Pattern CONTAINS_CHINESE_PATTERN = Pattern.compile("([\u4e00-\u9fa5\ufe30-\uffa0]+)");
+    private static final Pattern EMOJI_PATTERN = Pattern.compile(".*([\\uD83C\\uDF00-\\uD83D\\uDDFF]|[\\uD83E\\uDD00-\\uD83E\\uDDFF]|[\\uD83D\\uDE00-\\uD83D\\uDE4F]|[\\uD83D\\uDE80-\\uD83D\\uDEFF]|[\\u2600-\\u26FF]\\uFE0F?|[\\u2700-\\u27BF]\\uFE0F?|\\u24C2\\uFE0F?|[\\uD83C\\uDDE6-\\uD83C\\uDDFF]{1,2}|[\\uD83C\\uDD70\\uD83C\\uDD71\\uD83C\\uDD7E\\uD83C\\uDD7F\\uD83C\\uDD8E\\uD83C\\uDD91-\\uD83C\\uDD9A]\\uFE0F?|[\\u0023\\u002A\\u0030-\\u0039]\\uFE0F?\\u20E3|[\\u2194-\\u2199\\u21A9-\\u21AA]\\uFE0F?|[\\u2B05-\\u2B07\\u2B1B\\u2B1C\\u2B50\\u2B55]\\uFE0F?|[\\u2934\\u2935]\\uFE0F?|[\\u3030\\u303D]\\uFE0F?|[\\u3297\\u3299]\\uFE0F?|[\\uD83C\\uDE01\\uD83C\\uDE02\\uD83C\\uDE1A\\uD83C\\uDE2F\\uD83C\\uDE32-\\uD83C\\uDE3A\\uD83C\\uDE50\\uD83C\\uDE51]\\uFE0F?|[\\u203C\\u2049]\\uFE0F?|[\\u25AA\\u25AB\\u25B6\\u25C0\\u25FB-\\u25FE]\\uFE0F?|[\\u00A9\\u00AE]\\uFE0F?|[\\u2122\\u2139]\\uFE0F?|\\uD83C\\uDC04\\uFE0F?|\\uD83C\\uDCCF\\uFE0F?|[\\u231A\\u231B\\u2328\\u23CF\\u23E9-\\u23F3\\u23F8-\\u23FA]\\uFE0F)+.*");
 
     public static final String EMPTY = "";
 
@@ -498,7 +499,7 @@ public abstract class StringUtils {
 
     /**
      * 删除字符串开头与结尾处的不可见的控制字符(char &lt;= 32)
-     * <p>如果字符串为<code>null</code>，返回<code>null</code></p>
+     * <p>如果字符串为<code>null</code>或纯空白字符构成，返回<code>null</code></p>
      * <p>通过 {@link String#trim()}实现.</p>
      * <pre>
      * StringUtils.trimToNull(null)          = null
@@ -512,7 +513,8 @@ public abstract class StringUtils {
      * @return trim后的字符串
      */
     public static String trimToNull(String str) {
-        return str == null ? null : str.trim();
+        str =  str == null ? null : str.trim();
+        return null == str || str.length() == 0 ? null : str;
     }
 
     /**
@@ -3102,7 +3104,7 @@ public abstract class StringUtils {
         final StringBuilder u = new StringBuilder(tplt);
         Optional.ofNullable(params).ifPresent(p -> Arrays.stream(p).forEach(c -> {
             int b = u.indexOf("{}");
-            if (b > 0)
+            if (b > -1)
                 u.replace(b, b + 2, c.toString());
         }));
         return u.toString();
@@ -3282,7 +3284,7 @@ public abstract class StringUtils {
             return null;
         }
         if (isEmpty(regex)) {
-            return CollectionUtils.ofArray(toSplit);
+            return ArrayUtils.ofArray(toSplit);
         }
         return toSplit.split(regex);
     }
@@ -4260,6 +4262,20 @@ public abstract class StringUtils {
             newChars[len - 1] = chars[i];
         }
         return new String(newChars);
+    }
+
+    /**
+     * 判断字符串中是否包含Emoji表情符号
+     *
+     * @param input 输入字符串
+     * @return 是否包含表情符号
+     */
+    public static boolean containsEmoji(String input) {
+        if (StringUtils.isEmpty(input)) {
+            return false;
+        }
+
+        return EMOJI_PATTERN.matcher(input).matches();
     }
 }
 

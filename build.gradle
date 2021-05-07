@@ -1,5 +1,5 @@
 plugins {
-    id "org.sonarqube" version "2.8"
+    id "org.sonarqube" version "3.1.1"
 }
 
 sonarqube {
@@ -12,70 +12,82 @@ sonarqube {
 }
 
 allprojects {
-    group 'org.mathcat'
+    group "org.mathcat"
+
+    repositories {
+        mavenLocal()
+        maven {
+            url = "http://192.168.40.151:8081/repository/mathcat/"
+            allowInsecureProtocol = true
+        }
+        mavenCentral()
+    }
 }
 
 subprojects {
-    apply plugin: 'java'
-    apply plugin: 'maven'
-    apply plugin: 'idea'
+    apply plugin: "java"
+    apply plugin: "maven-publish"
+    apply plugin: "idea"
 
     ext {
         javaVersion = 1.8
-        encoding = 'UTF-8'
-        repoSnapUrl = 'http://60.169.170.69:8081/repository/maven-snapshots/'
-        repoUser = 'dev'
-        repoPasswd = '8D22185'
+        encoding = "UTF-8"
+        repoSnapUrl = "http://192.168.40.151:8081/repository/maven-snapshots/"
+        repoReleaseUrl = "http://192.168.40.151:8081/repository/maven-releases/"
+        repoUser = "dev"
+        repoPasswd = "8D22185"
 
         // core
-        junitJupiterVersion = '5.6.0'
-        slf4jVersion = '1.7.30'
-        asmVersion = '7.3.1'
-        httpclientVersion = '4.5.11'
-        httpasyncclientVersion = '4.1.4'
-        commonsNetVersion = '3.6'
-        dom4jVersion = '1.6'
-        poiVersion = '4.1.2'
-        bouncyVersion = '1.64'
-        zxingVersion = '3.4.0'
+        junitLauncherVersion =  "1.7.1"
+        junitJupiterVersion = "5.7.1"
+        slf4jVersion = "1.7.30"
+        asmVersion = "9.1"
+        httpclientVersion = "4.5.13"
+        httpasyncclientVersion = "4.1.4"
+        commonsNetVersion = "3.8.0"
+        dom4jVersion = "1.6"
+        poiVersion = "5.0.0"
+        bouncyVersion = "1.68"
+        zxingVersion = "3.4.1"
 
         //data core
-        springVersion = '5.2.4.RELEASE'
-        springDataRedisVersion = '2.2.5.RELEASE'
-        zookeeperVersion = '3.6.0'
-        sqliteVersion = '3.30.1'
-        freemarkerVersion = '2.3.30'
-        beetlVersion = '3.0.21.RELEASE'
+        springVersion = "5.3.5"
+        springDataRedisVersion = "2.4.7"
+        zookeeperVersion = "3.7.0"
+        sqliteVersion = "3.34.0"
+        freemarkerVersion = "2.3.31"
+        beetlVersion = "3.3.2.RELEASE"
 
         // data
-        hibernateVersion = '5.4.12.Final'
-        transactionApiVersion = '1.3'
+        hibernateVersion = "5.4.30.Final"
 
-        // data starter
-        springBootVersion = '2.2.5.RELEASE'
-        atomikosVersion = '5.0.6'
+        // data spring boot starter
+        springBootVersion = "2.4.4"
+        atomikosVersion = "5.0.8"
 
         // kotlin
-        kotlinVersion = '1.3.71'
+        kotlinVersion = "1.4.32"
+
+        // mybatis spring boot starter
+        mybatisPlusVersion = "3.4.2"
 
         // web
-        itextpdfVersion = '5.5.13.1'
-        swaggerVersion = '2.9.2'
-        servletVersion = '4.0.1'
+        itextpdfVersion = "5.5.13.2"
+        swaggerVersion = "2.10.5"
+        servletVersion = "4.0.1"
+        hibernateValidationVersion = "6.2.0.Final" // 7.0.0
+        validationApiVersion = "2.0.2" // 3.0.0
+        annotationVersion = "1.3.5"
 
-        springCloudVersion = '2.2.2.RELEASE'
-        jasyptVersion = '3.0.2'
-        commonsPoolVersion = '2.8.0'
-        springKafkaVersion = '2.4.3.RELEASE'
-        sentinelStarterVersion = '2.2.0.RELEASE'
-        yamlVersion = '1.25'
-        apolloVersion = '1.6.1.1'
-        knife4jVersion = '2.0.1'
-        p6spyVersion = '3.8.7'
-        mybatisPlusVersion = '3.3.1'
-        feignHttpVersion = '10.7.4'
-        validationVersion = '2.0.1.Final'
-        prometheusVersion = '1.4.0'
+        // cloud starter
+        springCloudVersion = "3.0.2"
+        springKafkaVersion = "2.6.7"
+        sentinelStarterVersion = "2.2.5.RELEASE"
+        knife4jVersion = "2.0.8"
+        p6spyVersion = "3.9.1"
+        feignHttpVersion = "11.1"
+        seataVersion = "1.4.1"
+        prometheusVersion = "1.6.5"
     }
 
     sourceCompatibility = javaVersion
@@ -97,31 +109,19 @@ subprojects {
         options.encoding = encoding
     }
 
-    repositories {
-        mavenLocal()
-        maven { url = "http://60.169.170.69:8081/repository/mathcat/" }
-        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-        mavenCentral()
-    }
-
-    task createDirs(group: 'help') doLast {
+    task createDirs(group: "help") doLast {
         sourceSets*.java.srcDirs*.each { it.mkdirs() }
         sourceSets*.resources.srcDirs*.each { it.mkdirs() }
     }
 
     task sourceJar(type: Jar) {
-        archiveClassifier.set('sources')
+        archiveClassifier.set("sources")
         from sourceSets.main.allJava
     }
 
     task javadocJar(type: Jar, dependsOn: javadoc) {
-        archiveClassifier.set('javadoc')
+        archiveClassifier.set("javadoc")
         from javadoc.destinationDir
-    }
-
-    artifacts {
-        archives javadocJar
-//    archives sourceJar
     }
 
     idea {
@@ -135,18 +135,18 @@ subprojects {
     }
 }
 
-task cleanBuild(group: 'build') doLast {
-    File f = file('build')
+task cleanBuild(group: "build") doLast {
+    File f = file("build")
     if (f.exists()) {
         print("delete build")
         println(f.deleteDir() ? " success" : " failure")
     }
-    f = file('out')
+    f = file("out")
     if (f.exists()) {
         print("delete out")
         println(f.deleteDir() ? " success" : " failure")
     }
-    f = file('target')
+    f = file("target")
     if (f.exists()) {
         print("delete target")
         println(f.deleteDir() ? " success" : " failure")
@@ -180,18 +180,18 @@ task cleanBuild(group: 'build') doLast {
     }
 }
 
-task cleanEclipse(group: 'build') doLast {
-    File f = file('.settings')
+task cleanEclipse(group: "build") doLast {
+    File f = file(".settings")
     if (f.exists()) {
         print("delete .settings")
         println(f.deleteDir() ? " success" : " failure")
     }
-    f = file('.classpath')
+    f = file(".classpath")
     if (f.exists()) {
         print("delete .classpath")
         println(f.delete() ? " success" : " failure")
     }
-    f = file('.project')
+    f = file(".project")
     if (f.exists()) {
         print("delete .project")
         println(f.delete() ? " success" : " failure")

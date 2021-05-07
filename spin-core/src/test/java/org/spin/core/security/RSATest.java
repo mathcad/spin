@@ -1,12 +1,13 @@
 package org.spin.core.security;
 
 import org.junit.jupiter.api.Test;
+import org.spin.core.collection.Pair;
 import org.spin.core.util.IOUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 
@@ -22,33 +23,72 @@ public class RSATest {
 
     @Test
     public void testRsaJs() {
-        String dencrypted = RSA.decrypt(privateKey, encrypted);
+        String content = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+        String encrypt = RSA.encrypt(publicKey, content);
+        System.out.println(encrypt);
+        String dencrypted = RSA.decrypt(privateKey, encrypt);
         System.out.println(dencrypted);
 
-        System.out.println(RSA.encrypt(publicKey, "abcd"));
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        RSA.encrypt(RSA.getPublicKey(publicKey), byteArrayInputStream, os);
+
+
+        String encode = Base64.encode(os.toByteArray());
+        System.out.println(encode);
+
+        byteArrayInputStream = new ByteArrayInputStream(Base64.decode(encode));
+        os = new ByteArrayOutputStream();
+        RSA.decrypt(RSA.getPrivateKey(privateKey), byteArrayInputStream, os);
+        System.out.println(new String(os.toByteArray(), StandardCharsets.UTF_8));
         assertTrue(true);
     }
 
-//    @Test
+    //    @Test
     void testKey() throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         FileInputStream fis = new FileInputStream("F:\\cert\\ca.crt");
-        Certificate c=cf.generateCertificate(fis);
+        Certificate c = cf.generateCertificate(fis);
 //        KeyStore ks = KeyStore.getInstance("JKS");
 //        ks.load(fis, null);
 //        Certificate c = ks.getCertificate("alias");//alias为条目的别名
         System.out.println("ss");
     }
 
-//    @Test
+    //    @Test
     void testSsh() throws Exception {
-        String pub = IOUtils.copyToString(new FileInputStream("F:\\id_rsa.pub"), StandardCharsets.UTF_8).split(" ")[1];
+        String pub = IOUtils.copyToString(new FileInputStream("F:\\id_rsa.pub"), StandardCharsets.UTF_8);
         String pri = IOUtils.copyToString(new FileInputStream("F:\\id_rsa"), StandardCharsets.UTF_8);
-        pri = pri.replaceAll("\n", "").substring(31);
-        pri = pri.substring(0, pri.length() - 29);
 
-        System.out.println(RSA.encrypt(pub, "abcd"));
-        System.out.println(RSA.decrypt(pri, "abcd"));
-        System.out.println("1");
+        String encrypt = RSA.encrypt(RSA.getPublicKeyFromSshKey(pub), "这是一段需要加密的字符串");
+        System.out.println(encrypt);
+        System.out.println(RSA.decrypt(RSA.getPrivateKeyFromSshKey(pri), encrypt));
+    }
+
+    private static final String tex = "中文xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+    @Test
+    void testEcc() {
+        String text = tex + tex + tex + tex + tex + tex + tex + tex + tex + tex;
+        Pair<String, String> key = ECC.generateSerializedKeyPair();
+        String privKey = key.c2;
+        String pubKey = key.c1;
+
+        System.out.println("私钥：" + privKey);
+
+        System.out.println("公钥：" + pubKey);
+
+        String str = ECC.encrypt(pubKey, text);
+        System.out.println("密文：" + str);
+        String outputStr = ECC.decrypt(privKey, str);
+        System.out.println("原始文本：" + text);
+        System.out.println("解密文本：" + outputStr);
+
+
+        String sign = ECC.sign(text, ECC.getPrivateKey(privKey));
+        System.out.println("签名: " + sign);
+
+        boolean verify = ECC.verify(text, sign, pubKey);
+        System.out.println("验证结果:" + verify);
     }
 }

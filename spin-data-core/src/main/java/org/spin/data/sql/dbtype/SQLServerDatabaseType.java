@@ -35,7 +35,7 @@ public class SQLServerDatabaseType implements DatabaseType {
         String pagedSql = orderedSql;
         pagedSql = "SELECT * FROM (SELECT O.*, ROWNUM RN FROM (" + orderedSql + ") O WHERE ROWNUM > "
             + pageRequest.getOffset() + ") WHERE RN <= "
-            + (pageRequest.getOffset() + pageRequest.getPageSize());
+            + (pageRequest.getOffset() + pageRequest.getSize());
         return new SqlSource(sqlSource.getId(), pagedSql);
     }
 }

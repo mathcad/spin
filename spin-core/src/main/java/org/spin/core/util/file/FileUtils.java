@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.throwable.SpinException;
 import org.spin.core.util.StreamUtils;
+import org.spin.core.util.Util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,7 +23,7 @@ import java.util.zip.ZipFile;
  *
  * @author xuweinan
  */
-public abstract class FileUtils {
+public final class FileUtils extends Util {
     private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
 
     private FileUtils() {

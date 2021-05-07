@@ -7,9 +7,14 @@ import org.spin.core.throwable.SpinException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.chrono.ChronoLocalDate;
+import java.time.chrono.ChronoLocalDateTime;
+import java.time.chrono.ChronoZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
@@ -27,7 +32,7 @@ import java.util.regex.Pattern;
  *
  * @author xuweinan
  */
-public abstract class DateUtils {
+public final class DateUtils extends Util {
     // 2017
     private static final String YEAR_PATTERN = "(\\d{4})";
     // 17
@@ -191,8 +196,27 @@ public abstract class DateUtils {
      * @return Date
      */
     public static Date toDate(TemporalAccessor date) {
+        if (null == date) {
+            return null;
+        }
         try {
-            return null == date ? null : millSecSdf.get().parse(millSecDtf.format(date));
+            if (date instanceof ChronoLocalDateTime) {
+                return new Date(((ChronoLocalDateTime<?>) date).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            }
+
+            if (date instanceof ChronoLocalDate) {
+                return new Date(((ChronoLocalDate) date).atTime(LocalTime.MIN).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            }
+
+            if (date instanceof LocalTime) {
+                return new Date(((LocalTime) date).atDate(LocalDate.now()).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            }
+
+            if (date instanceof ChronoZonedDateTime) {
+                return new Date(((ChronoZonedDateTime<?>) date).toEpochSecond());
+            }
+
+            return millSecSdf.get().parse(millSecDtf.format(date));
         } catch (ParseException e) {
             throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "时间转换失败", e);
         }
@@ -642,7 +666,7 @@ public abstract class DateUtils {
     }
 
     /**
-     * 将时间段解析为毫秒最后一位区分单位
+     * 将时间段解析为毫秒, 最后一位区分单位
      * <pre>
      *     例：1d = 86,400,000
      *     如果没有单位，相当于{@code Long.parseLong(period)}
@@ -659,17 +683,18 @@ public abstract class DateUtils {
     public static Long periodToMs(String period) {
         try {
 
+            final long l = Long.parseLong(period.substring(0, period.length() - 1));
             switch (period.charAt(period.length() - 1)) {
                 case 'w':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 604800000;
+                    return l * 604800000;
                 case 'd':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 86400000;
+                    return l * 86400000;
                 case 'h':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 3600000;
+                    return l * 3600000;
                 case 'm':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 60000;
+                    return l * 60000;
                 case 's':
-                    return Long.parseLong(period.substring(0, period.length() - 1)) * 1000;
+                    return l * 1000;
                 default:
                     return Long.parseLong(period);
             }

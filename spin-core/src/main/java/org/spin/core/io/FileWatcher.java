@@ -8,7 +8,6 @@ import org.spin.core.collection.Tuple4;
 import org.spin.core.function.serializable.Consumer;
 import org.spin.core.throwable.SpinException;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
@@ -28,7 +27,7 @@ import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
  * @author xuweinan
  * @version 1.0
  */
-public class FileWatcher implements Closeable {
+public class FileWatcher implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
     private static final AtomicInteger COUNTER = new AtomicInteger();
     private static final String THREAD_NAME_PREFIX = "FILE-WATCHER-";
@@ -151,7 +150,7 @@ public class FileWatcher implements Closeable {
             }
 
             for (WatchEvent<?> event : key.pollEvents()) {
-                Kind kind = event.kind();
+                Kind<?> kind = event.kind();
 
                 // 事件可能丢失或遗弃
                 if (kind == StandardWatchEventKinds.OVERFLOW) {
@@ -190,15 +189,15 @@ public class FileWatcher implements Closeable {
     }
 
     public static class FileAction {
-        private final Kind kind;
+        private final Kind<?> kind;
         private final File file;
 
-        public FileAction(Kind kind, File file) {
+        public FileAction(Kind<?> kind, File file) {
             this.kind = kind;
             this.file = file;
         }
 
-        public Kind getKind() {
+        public Kind<?> getKind() {
             return kind;
         }
 

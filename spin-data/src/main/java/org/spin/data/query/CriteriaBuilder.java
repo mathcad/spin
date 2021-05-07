@@ -34,7 +34,7 @@ import java.util.Set;
  * @param <T> 实体类型参数，必须具有{@link javax.persistence.Entity}注解
  * @author xuweinan
  */
-public class CriteriaBuilder<T extends IEntity<?>> {
+public class CriteriaBuilder<T extends IEntity<?, T>> {
 
     /**
      * 包含所有字段
@@ -49,7 +49,7 @@ public class CriteriaBuilder<T extends IEntity<?>> {
 
     private volatile boolean projected = false;
 
-    private Set<String> condJoins = new HashSet<>();
+    private final Set<String> condJoins = new HashSet<>();
 
     private CriteriaBuilder() {
     }
@@ -62,7 +62,7 @@ public class CriteriaBuilder<T extends IEntity<?>> {
      * @param <P>   实体主键类型
      * @return {@link CriteriaBuilder}
      */
-    public static <T extends IEntity<P>, P extends Serializable> CriteriaBuilder<T> forClass(Class<T> enCls) {
+    public static <T extends IEntity<P, T>, P extends Serializable> CriteriaBuilder<T> forClass(Class<T> enCls) {
         CriteriaBuilder<T> instance = new CriteriaBuilder<>();
         instance.enCls = enCls;
         instance.projected = false;

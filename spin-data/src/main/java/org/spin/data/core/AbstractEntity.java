@@ -21,7 +21,7 @@ import java.util.Objects;
  * @version 1.2
  */
 @MappedSuperclass
-public abstract class AbstractEntity implements IEntity<Long>, Serializable {
+public abstract class AbstractEntity<T extends AbstractEntity<T>> implements IEntity<Long, T>, Serializable {
     private static final long serialVersionUID = -6820468799272316789L;
 
     /**
@@ -112,8 +112,8 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
      * @param <E>   实体类型
      * @return DTO
      */
-    public final <E extends AbstractEntity> E getDTO(final int depth) {
-        //noinspection unchecked
+    @SuppressWarnings("unchecked")
+    public final <E extends AbstractEntity<E>> E getDTO(final int depth) {
         return (E) EntityUtils.getDTO(this, depth);
     }
 
@@ -154,11 +154,19 @@ public abstract class AbstractEntity implements IEntity<Long>, Serializable {
     }
 
     @Override
-    public Long getId() {
+    public Long id() {
         return id;
     }
 
     @Override
+    public void id(Long id) {
+        this.id = id;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }

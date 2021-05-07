@@ -1,7 +1,7 @@
 package org.spin.data.core;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -17,7 +17,12 @@ public class Page<T> implements Serializable {
     /**
      * 数据
      */
-    private List<T> rows = new ArrayList<>();
+    private List<T> records = Collections.emptyList();
+
+    /**
+     * 当前页码, 从1开始
+     */
+    private long current = 1L;
 
     /**
      * 总数
@@ -27,7 +32,7 @@ public class Page<T> implements Serializable {
     /**
      * 分页大小
      */
-    private int pageSize = 0;
+    private int size = 0;
 
     public Page() {
     }
@@ -35,22 +40,32 @@ public class Page<T> implements Serializable {
     /**
      * 构造方法
      *
-     * @param rows     数据
-     * @param total    总数
-     * @param pageSize 页面大小
+     * @param records 数据
+     * @param current 当前页
+     * @param total   总数
+     * @param size    页面大小
      */
-    public Page(List<T> rows, long total, int pageSize) {
-        this.rows = rows;
+    public Page(List<T> records, long current, long total, int size) {
+        this.records = records;
+        this.current = current;
         this.total = total;
-        this.pageSize = pageSize;
+        this.size = size;
     }
 
-    public List<T> getRows() {
-        return rows;
+    public List<T> getRecords() {
+        return records;
     }
 
-    public void setRows(List<T> rows) {
-        this.rows = rows;
+    public void setRecords(List<T> records) {
+        this.records = records;
+    }
+
+    public long getCurrent() {
+        return current;
+    }
+
+    public void setCurrent(long current) {
+        this.current = current;
     }
 
     public long getTotal() {
@@ -61,11 +76,11 @@ public class Page<T> implements Serializable {
         this.total = total;
     }
 
-    public int getPageSize() {
-        return pageSize;
+    public int getSize() {
+        return size;
     }
 
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
+    public void setSize(int size) {
+        this.size = size;
     }
 }

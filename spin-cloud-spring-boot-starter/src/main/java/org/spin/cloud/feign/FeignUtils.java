@@ -18,9 +18,9 @@ package org.spin.cloud.feign;
 
 import org.springframework.http.HttpHeaders;
 
-import java.util.*;
-
-import static java.util.Optional.ofNullable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author Spencer Gibb
@@ -40,21 +40,21 @@ public final class FeignUtils {
         return httpHeaders;
     }
 
-    static Map<String, Collection<String>> getHeaders(HttpHeaders httpHeaders) {
-        LinkedHashMap<String, Collection<String>> headers = new LinkedHashMap<>();
+//    static Map<String, Collection<String>> getHeaders(HttpHeaders httpHeaders) {
+//        LinkedHashMap<String, Collection<String>> headers = new LinkedHashMap<>();
+//
+//        for (Map.Entry<String, List<String>> entry : httpHeaders.entrySet()) {
+//            headers.put(entry.getKey(), entry.getValue());
+//        }
+//
+//        return headers;
+//    }
 
-        for (Map.Entry<String, List<String>> entry : httpHeaders.entrySet()) {
-            headers.put(entry.getKey(), entry.getValue());
-        }
-
-        return headers;
-    }
-
-    static Collection<String> addTemplateParameter(Collection<String> possiblyNull,
-                                                   String paramName) {
-        Collection<String> params = ofNullable(possiblyNull).orElse(new ArrayList<>());
-        params.add(String.format("{%s}", paramName));
-        return params;
-    }
+//    static Collection<String> addTemplateParameter(Collection<String> possiblyNull,
+//                                                   String paramName) {
+//        Collection<String> params = ofNullable(possiblyNull).orElse(new ArrayList<>());
+//        params.add(String.format("{%s}", paramName));
+//        return params;
+//    }
 
 }

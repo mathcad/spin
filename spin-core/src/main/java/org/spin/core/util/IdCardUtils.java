@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class IdCardUtils {
+public final class IdCardUtils extends Util {
 
     /**
      * 中国公民身份证号码最小长度。
@@ -118,6 +118,9 @@ public class IdCardUtils {
         HK_FIRST_CODE.put("W", 23);// 持证人报称在澳门地区出生
         HK_FIRST_CODE.put("X", 24);// 持证人报称在中国大陆出生
         HK_FIRST_CODE.put("Z", 26);// 持证人报称在香港出生
+    }
+
+    private IdCardUtils() {
     }
 
     /**

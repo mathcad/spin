@@ -15,7 +15,7 @@ import javax.persistence.MappedSuperclass;
  * @author xuweinan
  */
 @MappedSuperclass
-public abstract class AbstractUser extends AbstractEntity {
+public abstract class AbstractUser<T extends AbstractUser<T>> extends AbstractEntity<T> {
     private static final long serialVersionUID = 4486949049542319147L;
 
     /**

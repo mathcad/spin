@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * TITLE
+ * 基于外部读取的机器ID提供者
  * <p>DESCRIPTION</p>
  * <p>Created by xuweinan on 2020/1/2</p>
  *
@@ -71,6 +71,11 @@ public class ExternalMachineIdProvider implements MachineIdProvider {
         }
     }
 
+    @Override
+    public long getMachineId() {
+        return machineId;
+    }
+
     private void readConfigFile(String configFile) {
         if (StringUtils.isEmpty(configFile)) {
             throw new SpinException(ErrorCode.IO_FAIL, "the configuration file could not be empty");
@@ -102,7 +107,7 @@ public class ExternalMachineIdProvider implements MachineIdProvider {
         }
     }
 
-    public void readEnv() {
+    private void readEnv() {
         if (-1 == machineId) {
             String mid = System.getenv("machineId");
 
@@ -119,10 +124,5 @@ public class ExternalMachineIdProvider implements MachineIdProvider {
                 }
             }
         }
-    }
-
-    @Override
-    public long getMachineId() {
-        return machineId;
     }
 }

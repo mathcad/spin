@@ -32,17 +32,11 @@ import java.io.StringReader;
  * @since 1.3
  */
 public final class JsonParser {
-
     /**
-     * Parses the specified JSON string into a parse tree
-     *
-     * @param json JSON text
-     * @return a parse tree of {@link JsonElement}s corresponding to the specified JSON
-     * @throws JsonParseException if the specified text is not valid JSON
-     * @since 1.3
+     * @deprecated No need to instantiate this class, use the static methods instead.
      */
-    public JsonElement parse(String json) throws JsonSyntaxException {
-        return parse(new StringReader(json));
+    @Deprecated
+    public JsonParser() {
     }
 
     /**
@@ -51,42 +45,83 @@ public final class JsonParser {
      * @param json JSON text
      * @return a parse tree of {@link JsonElement}s corresponding to the specified JSON
      * @throws JsonParseException if the specified text is not valid JSON
-     * @since 1.3
      */
-    public JsonElement parse(Reader json) throws JsonIOException, JsonSyntaxException {
+    public static JsonElement parseString(String json) throws JsonSyntaxException {
+        return parseReader(new StringReader(json));
+    }
+
+    /**
+     * Parses the specified JSON string into a parse tree
+     *
+     * @param reader JSON text
+     * @return a parse tree of {@link JsonElement}s corresponding to the specified JSON
+     * @throws JsonParseException if the specified text is not valid JSON
+     */
+    public static JsonElement parseReader(Reader reader) throws JsonIOException, JsonSyntaxException {
         try {
-            JsonReader jsonReader = new JsonReader(json);
-            JsonElement element = parse(jsonReader);
+            JsonReader jsonReader = new JsonReader(reader);
+            JsonElement element = parseReader(jsonReader);
             if (!element.isJsonNull() && jsonReader.peek() != JsonToken.END_DOCUMENT) {
                 throw new JsonSyntaxException("Did not consume the entire document.");
             }
             return element;
-        } catch (MalformedJsonException | NumberFormatException e) {
+        } catch (MalformedJsonException e) {
             throw new JsonSyntaxException(e);
         } catch (IOException e) {
             throw new JsonIOException(e);
+        } catch (NumberFormatException e) {
+            throw new JsonSyntaxException(e);
         }
     }
 
     /**
      * Returns the next value from the JSON stream as a parse tree.
      *
-     * @param json json reader
-     * @return json element
-     * @throws JsonIOException     if there is an IOException or if the specified
-     *                             text is not valid JSON
-     * @throws JsonSyntaxException if there is a syntax error in json
-     * @since 1.6
+     * @param reader reader
+     * @return JsonElement
+     * @throws JsonParseException if there is an IOException or if the specified
+     *                            text is not valid JSON
      */
-    public JsonElement parse(JsonReader json) throws JsonIOException, JsonSyntaxException {
-        boolean lenient = json.isLenient();
-        json.setLenient(true);
+    public static JsonElement parseReader(JsonReader reader)
+        throws JsonIOException, JsonSyntaxException {
+        boolean lenient = reader.isLenient();
+        reader.setLenient(true);
         try {
-            return Streams.parse(json);
+            return Streams.parse(reader);
         } catch (StackOverflowError | OutOfMemoryError e) {
-            throw new JsonParseException("Failed parsing JSON source: " + json + " to Json", e);
+            throw new JsonParseException("Failed parsing JSON source: " + reader + " to Json", e);
         } finally {
-            json.setLenient(lenient);
+            reader.setLenient(lenient);
         }
+    }
+
+    /**
+     * @param json json
+     * @return JsonElement
+     * @deprecated Use {@link JsonParser#parseString}
+     */
+    @Deprecated
+    public JsonElement parse(String json) throws JsonSyntaxException {
+        return parseString(json);
+    }
+
+    /**
+     * @param json json
+     * @return JsonElement
+     * @deprecated Use {@link JsonParser#parseReader(Reader)}
+     */
+    @Deprecated
+    public JsonElement parse(Reader json) throws JsonIOException, JsonSyntaxException {
+        return parseReader(json);
+    }
+
+    /**
+     * @param json json
+     * @return JsonElement
+     * @deprecated Use {@link JsonParser#parseReader(JsonReader)}
+     */
+    @Deprecated
+    public JsonElement parse(JsonReader json) throws JsonIOException, JsonSyntaxException {
+        return parseReader(json);
     }
 }

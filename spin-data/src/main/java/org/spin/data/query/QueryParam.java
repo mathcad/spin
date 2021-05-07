@@ -186,8 +186,8 @@ public class QueryParam implements Serializable {
      * @return {@link QueryParam}
      */
     public QueryParam page(int pageIdx, int pageSize) {
-        pagger.setPage(pageIdx);
-        pagger.setPageSize(pageSize);
+        pagger.setCurrent(pageIdx);
+        pagger.setSize(pageSize);
         return this;
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,7 +261,7 @@ public class QueryParam implements Serializable {
      * @return 分页页码
      */
     public Integer getPage() {
-        return null == pagger ? null : pagger.getPage();
+        return null == pagger ? null : pagger.getCurrent();
     }
 
     /**
@@ -270,7 +270,7 @@ public class QueryParam implements Serializable {
      * @return 分页大小
      */
     public Integer getPageSize() {
-        return null == pagger ? null : pagger.getPageSize();
+        return null == pagger ? null : pagger.getSize();
     }
 
     /**

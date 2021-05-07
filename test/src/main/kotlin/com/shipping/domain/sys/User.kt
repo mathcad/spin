@@ -4,15 +4,7 @@ import com.shipping.domain.enums.UserTypeE
 import org.hibernate.annotations.Type
 import org.spin.data.core.AbstractUser
 import java.util.*
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.FetchType
-import javax.persistence.Index
-import javax.persistence.JoinColumn
-import javax.persistence.JoinTable
-import javax.persistence.ManyToMany
-import javax.persistence.ManyToOne
-import javax.persistence.Table
+import javax.persistence.*
 
 /**
  * 系统用户信息
@@ -70,7 +62,7 @@ class User(
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "sys_user_permission", joinColumns = [JoinColumn(name = "user_id")], inverseJoinColumns = [JoinColumn(name = "permission_id")])
     var permissions: MutableList<Permission> = ArrayList()
-) : AbstractUser() {
+) : AbstractUser<User>() {
     companion object {
         private const val serialVersionUID = -7875157725232505055L
     }

@@ -91,7 +91,7 @@ public abstract class FileType {
      * 图像文件类型
      */
     public static final class Image extends FileType {
-        public static final Image JPEG = new Image("JPEG", "image/jpeg", "FFD8F", 0, ".jpg", ".jpeg", ".jpe");
+        public static final Image JPEG = new Image("JPEG", "image/jpg", "FFD8F", 0, ".jpg", ".jpeg", ".jpe");
         public static final Image BMP = new Image("BMP", "application/x-bmp", "424D", 0, ".bmp", ".rle", ".dib");
         public static final Image PNG = new Image("PNG", "image/png", "89504E47", 0, ".png", "pns");
         public static final Image GIG = new Image("GIG", "image/gif", "47494638", 0, ".gif");

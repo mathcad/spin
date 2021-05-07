@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * Bean工具类
  * Created by xuweinan on 2016/8/15.
  */
-public abstract class BeanUtils {
+public final class BeanUtils extends Util {
     private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
     private static final Map<String, Map<String, PropertyDescriptorWrapper>> CLASS_PROPERTY_CACHE = new ConcurrentHashMap<>();
 
@@ -185,11 +185,10 @@ public abstract class BeanUtils {
                     bak = new HashMap<>();
                     work.put(propName[i], bak);
                     work = bak;
-                    ++i;
                 } else {
                     work.put(propName[i], entry.getValue());
-                    ++i;
                 }
+                ++i;
             }
         }
         return treeSightMap;
@@ -229,13 +228,61 @@ public abstract class BeanUtils {
      * @return 属性值
      */
     public static <T> T getFieldValue(Object target, String valuePath) {
-        String[] valuePaths = Assert.notEmpty(valuePath, "valuePath必须指定属性名称").split("\\.");
-        if (null == target) {
-            return null;
+        String[] valuePaths = StringUtils.trimToEmpty(valuePath).split("\\.");
+        return getFieldValueInternal(target, valuePaths);
+    }
+
+    /**
+     * 获取对象指定属性的值
+     * <p>通过反射直接读取属性, 如果字段不存在, 则会查找get方法.
+     * 数组, {@link Iterable}, {@link Tuple}等可迭代类型通过"[idx]"索引位置访问，Map中的元素可以直接访问，如果需要访问{@link Map}对象中的成员变量,
+     * 需要在变量名前加"#", 如map.#size</p>
+     * <p>获取数组与List等可迭代类型中的第n个元素：list[n], 高维数组(嵌套集合): list[x][y][z]</p>
+     * <p>获取Map中键为key对应的value：map.key</p>
+     * <p>获取Map中名称为size的成员变量的值：map.#size</p>
+     *
+     * @param target 对象实例
+     * @param fields 属性列表，可以是名字，field，或者索引(需要用[]包裹为字符串)
+     * @param <T>    属性类型参数
+     * @return 属性值
+     */
+    public static <T> T getFieldValue(Object target, Object... fields) {
+        return getFieldValueInternal(target, fields);
+    }
+
+    /**
+     * 获取对象指定属性的值
+     * <p>通过反射直接读取属性, 如果字段不存在, 则会查找get方法.
+     * 数组, {@link Iterable}, {@link Tuple}等可迭代类型通过"[idx]"索引位置访问，Map中的元素可以直接访问，如果需要访问{@link Map}对象中的成员变量,
+     * 需要在变量名前加"#", 如map.#size</p>
+     * <p>获取数组与List等可迭代类型中的第n个元素：list[n], 高维数组(嵌套集合): list[x][y][z]</p>
+     * <p>获取Map中键为key对应的value：map.key</p>
+     * <p>获取Map中名称为size的成员变量的值：map.#size</p>
+     *
+     * @param target 对象实例
+     * @param fields 属性列表，可以是名字，field，或者索引(需要用[]包裹为字符串)
+     * @param <T>    属性类型参数
+     * @return 属性值
+     */
+    private static <T> T getFieldValueInternal(Object target, Object[] fields) {
+        if (null == fields || fields.length == 0) {
+            //noinspection unchecked
+            return (T) target;
         }
+
         Object o = target;
-        for (int i = 0; i < valuePaths.length; i++) {
-            String field = valuePaths[i];
+        for (int i = 0; i < fields.length; i++) {
+            if (null == o) {
+                return null;
+            }
+            Object fo = fields[i];
+            if (!(fo instanceof CharSequence)) {
+                Assert.isTrue(target instanceof Map, "非字符串形式的属性只能对Map使用");
+                o = ((Map<?, ?>) target).get(fo);
+                continue;
+            }
+
+            String field = fo.toString();
             List<Integer> seqs = new LinkedList<>();
             if (field.indexOf('[') != -1) {
                 final StringBuilder f = new StringBuilder(field.length());
@@ -283,7 +330,7 @@ public abstract class BeanUtils {
             if (field.length() > 0) {
                 char mark = field.charAt(0);
 
-                if (i < valuePath.length() - 1 && null == o) {
+                if (i < fields.length - 1 && null == o) {
                     throw new SpinException(field + "属性为null");
                 }
                 if ('#' != mark && o instanceof Map) {
@@ -319,7 +366,6 @@ public abstract class BeanUtils {
                     }
                     o = ((List) o).get(idx);
                 } else if (o.getClass().isArray()) {
-                    @SuppressWarnings("ConstantConditions")
                     Object[] t = (Object[]) o;
                     if (t.length <= idx) {
                         throw new SpinException(idx + " 索引超出范围0-" + t.length);
@@ -468,8 +514,8 @@ public abstract class BeanUtils {
      * @param fields 取值的属性名称
      * @return 属性map
      */
-    public static Map<String, Object> getFieldValue(Object target, String... fields) {
-        return getFieldValue(target, Arrays.asList(fields));
+    public static Map<String, Object> getFieldValues(Object target, String... fields) {
+        return getFieldValues(target, Arrays.asList(fields));
 
     }
 
@@ -480,7 +526,7 @@ public abstract class BeanUtils {
      * @param fields 取值的属性名称
      * @return 属性map
      */
-    public static Map<String, Object> getFieldValue(Object target, Collection<String> fields) {
+    public static Map<String, Object> getFieldValues(Object target, Collection<String> fields) {
         Map<String, Object> result = new HashMap<>();
         if (CollectionUtils.isEmpty(fields)) {
             return new HashMap<>(0);
