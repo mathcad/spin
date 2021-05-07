@@ -27,7 +27,8 @@ import java.util.stream.Collectors;
 @UtilClass
 public final class DataDictionary extends Util {
     private static final String ROOT_DICT_REDIS_KEY = "ALL_DATA_DICTIONARY";
-    private static final DefaultRedisScript<List> redisScript = new DefaultRedisScript<List>();
+    private static final DefaultRedisScript<List> redisScript = new DefaultRedisScript<>();
+    private static final DefaultRedisScript<List> redisAllChildScript = new DefaultRedisScript<>();
 
     private static StringRedisTemplate redisTemplate;
 
@@ -35,6 +36,8 @@ public final class DataDictionary extends Util {
         Util.registerLatch(DataDictionary.class);
         redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getChildren.lua")));
         redisScript.setResultType(List.class);
+        redisAllChildScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("luascript/getAllChildren.lua")));
+        redisAllChildScript.setResultType(List.class);
     }
 
     public static void init(StringRedisTemplate redisTemplate) {

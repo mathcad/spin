@@ -29,14 +29,6 @@ import java.util.List;
 public class MybatisPlusAutoConfiguration {
 
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor() {
-        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
-        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
-        return interceptor;
-    }
-
-    @Bean
     @ConditionalOnBean(DistributedIdGenerator.class)
     public IdentifierGenerator sfIdGenerator(DistributedIdGenerator idGenerator) {
         return new SfIdGenerator(idGenerator);
@@ -52,6 +44,14 @@ public class MybatisPlusAutoConfiguration {
     @ConditionalOnClass(name = "org.spin.cloud.vo.CurrentUser")
     public DataPermissionInterceptor dataPermissionInterceptor() {
         return new DataPermissionInterceptor();
+    }
+
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
+        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+        return interceptor;
     }
 
     @Bean

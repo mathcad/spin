@@ -13,6 +13,7 @@ import org.spin.cloud.util.CloudInfrasContext;
 import org.spin.cloud.util.Env;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.core.concurrent.DistributedLock;
+import org.spin.core.concurrent.LockTicket;
 import org.spin.core.util.DateUtils;
 import org.spin.core.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class IdempotentAspect implements Ordered {
     private static final Logger logger = LoggerFactory.getLogger(IdempotentAspect.class);
-    private static final String IDENPOTENT_RESULT_CACHE_KEY = "IDENPOTENT_RESULT_CACHE:";
+    private static final String IDEMPOTENT_RESULT_CACHE_KEY = "IDEMPOTENT_RESULT_CACHE:";
 
     public static final String IDEMPOTENT_ID = "X-Request-Id";
 
@@ -62,11 +63,11 @@ public class IdempotentAspect implements Ordered {
     }
 
     @Pointcut("@annotation(org.spin.cloud.annotation.Idempotent)")
-    private void idenpotentMethod() {
+    private void idempotentMethod() {
     }
 
-    @Around("idenpotentMethod()")
-    public Object idenpotentProxy(ProceedingJoinPoint joinPoint) throws Throwable {
+    @Around("idempotentMethod()")
+    public Object idempotentProxy(ProceedingJoinPoint joinPoint) throws Throwable {
         IdempotentResult cache;
 
         Method apiMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
@@ -74,14 +75,12 @@ public class IdempotentAspect implements Ordered {
         String idempotentId = extractIdempotentId(joinPoint);
         if (StringUtils.isNotEmpty(idempotentId) && ready) {
             // 幂等处理
-            String key = IDENPOTENT_RESULT_CACHE_KEY + Env.getAppName() + ":" + joinPoint.getSignature().toShortString() + "-" + idempotentId;
+            String key = IDEMPOTENT_RESULT_CACHE_KEY + Env.getAppName() + ":" + joinPoint.getSignature().toShortString() + "-" + idempotentId;
             logger.info("开始为接口 [{}] 进行幂等担保处理, 本次业务id: {}", joinPoint.getSignature().toLongString(), key);
 
-
-            try {
-                boolean locked = (idempotent.reentrantable() ? distributedLock.lock(key, guaranteeTime, (int) guaranteeTime / 200, 200L)
-                    : distributedLock.lock(key, 100, 0, 0L));
-                if (locked) {
+            try (LockTicket lock = (idempotent.reentrantable() ? distributedLock.lock(key, guaranteeTime, (int) guaranteeTime / 200, 200L)
+                : distributedLock.lock(key, 100, 0, 0L))) {
+                if (lock.isSuccess()) {
                     cache = (IdempotentResult) redisTemplate.opsForValue().get(key);
                     if (null == cache) {
                         cache = doActualInvoke(joinPoint);
@@ -104,8 +103,6 @@ public class IdempotentAspect implements Ordered {
                         throw new BizException(idempotent.errorMessage());
                     }
                 }
-            } finally {
-                distributedLock.releaseLock(key);
             }
         } else {
             if (ready) {
