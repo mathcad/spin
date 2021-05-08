@@ -1,12 +1,9 @@
 package org.spin.mybatis;
 
+import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
-import org.apache.ibatis.plugin.Interceptor;
-import org.apache.ibatis.plugin.Intercepts;
-import org.apache.ibatis.plugin.Invocation;
-import org.apache.ibatis.plugin.Plugin;
-import org.apache.ibatis.plugin.Signature;
+import org.apache.ibatis.plugin.*;
 import org.spin.core.util.BeanUtils;
 
 import java.sql.Connection;
@@ -21,7 +18,11 @@ import java.util.regex.Pattern;
  * @author xuweinan
  * @version 1.0
  */
-@Intercepts({@Signature(type = StatementHandler.class, method = "prepare", args = {Connection.class, Integer.class})})
+@Intercepts(
+    {
+        @Signature(type = StatementHandler.class, method = "prepare", args = {Connection.class, Integer.class})
+    }
+)
 public class DataPermissionInterceptor implements Interceptor {
 
     private static final Pattern DATA_PERMISSION_PATTERN = Pattern.compile("##DataPerm-(\\w+)(-(.+))?##");
@@ -49,7 +50,7 @@ public class DataPermissionInterceptor implements Interceptor {
 
     @Override
     public Object plugin(Object target) {
-        if (target instanceof StatementHandler) {
+        if (target instanceof Executor || target instanceof StatementHandler) {
             return Plugin.wrap(target, this);
         }
         return target;
