@@ -4,10 +4,10 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.spin.core.Assert;
+import org.spin.core.OpResult;
 import org.spin.core.gson.annotation.PreventOverflow;
 import org.spin.core.util.BeanUtils;
 import org.spin.data.core.IEntity;
-import org.spin.data.rs.AffectedRows;
 import org.spin.mybatis.query.LambdaQueryExecutor;
 import org.spin.mybatis.query.R;
 
@@ -79,34 +79,26 @@ public abstract class BasicEntity<T extends BasicEntity<T>> implements IEntity<L
     /**
      * 将当前实体新增至数据库
      *
-     * @param failMsg 失败的错误提示
      * @return 当前对象本身
      */
-    public T insert(String... failMsg) {
+    public OpResult<T> insert() {
         @SuppressWarnings("unchecked")
         T e = (T) this;
         int cnt = repo().insert(e);
-        if (null != failMsg && failMsg.length > 0) {
-            Assert.isEquals(cnt, 1, failMsg[0]);
-        }
-        return e;
+        return OpResult.of(e, cnt == 1);
     }
 
     /**
      * 根据ID将当前实体更新到数据库
      *
-     * @param failMsg 失败的错误提示
      * @return 当前对象本身
      */
-    public T updateById(String... failMsg) {
+    public OpResult<Integer> updateById() {
         @SuppressWarnings("unchecked")
         T e = (T) this;
         Assert.notNull(e.getId(), "ID不能为空");
         int cnt = repo().updateById(e);
-        if (null != failMsg && failMsg.length > 0) {
-            Assert.isEquals(cnt, 1, failMsg[0]);
-        }
-        return e;
+        return OpResult.of(cnt, cnt == 1);
     }
 
     /**
@@ -114,27 +106,23 @@ public abstract class BasicEntity<T extends BasicEntity<T>> implements IEntity<L
      *
      * @return 影响行数
      */
-    public AffectedRows deleteById() {
+    public OpResult<Integer> deleteById() {
         @SuppressWarnings("unchecked")
         T e = (T) this;
-        return AffectedRows.of(repo().deleteById(Assert.notNull(e.getId(), "ID不能为空")));
+        return OpResult.of(repo().deleteById(Assert.notNull(e.getId(), "ID不能为空")), i -> i == 1);
     }
 
     /**
-     * 根据ID查询数据库实体
+     * 根据ID查询实体并合并到当前对象
      *
-     * @param failMsg 失败的错误提示
-     * @return 实体
+     * @return 实体包装
      */
-    public T getById(String... failMsg) {
+    public OpResult<T> loadById() {
         @SuppressWarnings("unchecked")
         T e = (T) this;
         T inDb = repo().selectById(Assert.notNull(e.getId(), "ID不能为空"));
-        if (null != failMsg && failMsg.length > 0) {
-            Assert.notNull(inDb, failMsg[0]);
-        }
         e.mergeAll(inDb);
-        return e;
+        return OpResult.of(e, inDb != null);
     }
 
     @SuppressWarnings("unchecked")

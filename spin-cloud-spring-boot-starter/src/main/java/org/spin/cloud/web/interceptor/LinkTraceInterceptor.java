@@ -2,8 +2,8 @@ package org.spin.cloud.web.interceptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.cloud.util.Linktrace;
-import org.spin.cloud.vo.LinktraceInfo;
+import org.spin.cloud.util.LinkTrace;
+import org.spin.cloud.vo.LinkTraceInfo;
 import org.spin.core.util.StringUtils;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -12,9 +12,11 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.support.HttpRequestWrapper;
 import org.springframework.lang.NonNull;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.context.request.WebRequestInterceptor;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -26,16 +28,24 @@ import java.util.UUID;
  * @author xuweinan
  * @version 1.0
  */
-public class LinktraceInterceptor implements WebRequestInterceptor, ClientHttpRequestInterceptor {
-    private static final Logger logger = LoggerFactory.getLogger(LinktraceInterceptor.class);
+public class LinkTraceInterceptor implements WebRequestInterceptor, ClientHttpRequestInterceptor {
+    private static final Logger logger = LoggerFactory.getLogger(LinkTraceInterceptor.class);
 
     public static final String X_TRACE_ID = "X-Trace-Id";
-    public static final String X_PARENTSPAN_ID = "X-Parent-Span-Id";
+    public static final String X_PARENT_SPAN_ID = "X-Parent-Span-Id";
     public static final String X_SPAN_ID = "X-Span-Id";
 
     @Override
     public void preHandle(@NonNull WebRequest request) {
-
+        String requestInfo;
+        if (request instanceof ServletRequestAttributes) {
+            HttpServletRequest nRequest = ((ServletRequestAttributes) request).getRequest();
+            requestInfo = "method=" + nRequest.getMethod() + ";uri=" +
+                nRequest.getRequestURI() + ";client=" + nRequest.getRemoteAddr() + ":" +
+                nRequest.getRemotePort();
+        } else {
+            requestInfo = request.getDescription(true);
+        }
         String traceId = request.getHeader(X_TRACE_ID);
         if (StringUtils.isEmpty(traceId)) {
             traceId = UUID.randomUUID().toString();
@@ -48,9 +58,9 @@ public class LinktraceInterceptor implements WebRequestInterceptor, ClientHttpRe
 
         String spanId = UUID.randomUUID().toString();
 
-        logger.info("Linktrace Info Entry - TraceId: {} ParentSpanId: {} SpanId: {}\n  Request Info: {}", traceId, parentSpanId, spanId,
-            request.getDescription(false));
-        Linktrace.setCurrentTraceInfo(new LinktraceInfo(traceId, parentSpanId, spanId));
+        LinkTraceInfo linktraceInfo = new LinkTraceInfo(traceId, parentSpanId, spanId);
+        LinkTrace.setCurrentTraceInfo(linktraceInfo);
+        logger.info(linktraceInfo.entryInfo(requestInfo));
     }
 
     @Override
@@ -60,13 +70,10 @@ public class LinktraceInterceptor implements WebRequestInterceptor, ClientHttpRe
 
     @Override
     public void afterCompletion(@NonNull WebRequest request, Exception ex) {
-        LinktraceInfo linktraceInfo = Linktrace.removeCurrentTraceInfo();
+        LinkTraceInfo linktraceInfo = LinkTrace.removeCurrentTraceInfo();
         if (null != linktraceInfo) {
-            logger.info("Linktrace Info Exit - TraceId: {} ParentSpanId: {} SpanId: {}",
-                linktraceInfo.getTraceId(),
-                linktraceInfo.getParentSpanId(),
-                linktraceInfo.getSpanId()
-            );
+            linktraceInfo.setExitTime(System.currentTimeMillis());
+            logger.info(linktraceInfo.exitInfo());
         }
     }
 
@@ -76,12 +83,12 @@ public class LinktraceInterceptor implements WebRequestInterceptor, ClientHttpRe
         throws IOException {
         HttpRequestWrapper requestWrapper = new HttpRequestWrapper(request);
 
-        LinktraceInfo linktraceInfo = Linktrace.getCurrentTraceInfo();
+        LinkTraceInfo linktraceInfo = LinkTrace.getCurrentTraceInfo();
 
         if (null != linktraceInfo) {
-            requestWrapper.getHeaders().add(LinktraceInterceptor.X_TRACE_ID, linktraceInfo.getTraceId());
-            requestWrapper.getHeaders().add(LinktraceInterceptor.X_PARENTSPAN_ID, linktraceInfo.getParentSpanId());
-            requestWrapper.getHeaders().add(LinktraceInterceptor.X_SPAN_ID, linktraceInfo.getSpanId());
+            requestWrapper.getHeaders().add(LinkTraceInterceptor.X_TRACE_ID, linktraceInfo.getTraceId());
+            requestWrapper.getHeaders().add(LinkTraceInterceptor.X_PARENT_SPAN_ID, linktraceInfo.getParentSpanId());
+            requestWrapper.getHeaders().add(LinkTraceInterceptor.X_SPAN_ID, linktraceInfo.getSpanId());
         }
         return execution.execute(requestWrapper, body);
     }

@@ -5,12 +5,12 @@ import feign.RequestTemplate;
 import org.spin.cloud.idempotent.IdempotentAspect;
 import org.spin.cloud.util.CloudInfrasContext;
 import org.spin.cloud.util.Env;
-import org.spin.cloud.util.Linktrace;
+import org.spin.cloud.util.LinkTrace;
 import org.spin.cloud.vo.CurrentUser;
-import org.spin.cloud.vo.LinktraceInfo;
+import org.spin.cloud.vo.LinkTraceInfo;
 import org.spin.cloud.web.interceptor.CustomizeRouteInterceptor;
 import org.spin.cloud.web.interceptor.GrayInterceptor;
-import org.spin.cloud.web.interceptor.LinktraceInterceptor;
+import org.spin.cloud.web.interceptor.LinkTraceInterceptor;
 import org.spin.core.util.StringUtils;
 import org.springframework.http.HttpHeaders;
 
@@ -56,11 +56,11 @@ public class FeignInterceptor implements RequestInterceptor {
         }
         template.header(IdempotentAspect.IDEMPOTENT_ID, idempotent.append(UUID.randomUUID().toString()).toString());
 
-        LinktraceInfo linktraceInfo = Linktrace.getCurrentTraceInfo();
+        LinkTraceInfo linktraceInfo = LinkTrace.getCurrentTraceInfo();
         if (null != linktraceInfo) {
-            template.header(LinktraceInterceptor.X_TRACE_ID, linktraceInfo.getTraceId());
-            template.header(LinktraceInterceptor.X_PARENTSPAN_ID, linktraceInfo.getParentSpanId());
-            template.header(LinktraceInterceptor.X_SPAN_ID, linktraceInfo.getSpanId());
+            template.header(LinkTraceInterceptor.X_TRACE_ID, linktraceInfo.getTraceId());
+            template.header(LinkTraceInterceptor.X_PARENT_SPAN_ID, linktraceInfo.getParentSpanId());
+            template.header(LinkTraceInterceptor.X_SPAN_ID, linktraceInfo.getSpanId());
         }
     }
 }

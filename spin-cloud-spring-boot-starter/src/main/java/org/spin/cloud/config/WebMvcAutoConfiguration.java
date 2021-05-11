@@ -4,7 +4,7 @@ import org.spin.cloud.web.config.RequestMappingBeanValidator;
 import org.spin.cloud.web.handler.FieldPermissionReturnValueModifier;
 import org.spin.cloud.web.interceptor.CustomizeRouteInterceptor;
 import org.spin.cloud.web.interceptor.GrayInterceptor;
-import org.spin.cloud.web.interceptor.LinktraceInterceptor;
+import org.spin.cloud.web.interceptor.LinkTraceInterceptor;
 import org.spin.cloud.web.interceptor.UserAuthInterceptor;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.StringUtils;
@@ -71,7 +71,7 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(0, JSON_HTTP_MESSAGE_CONVERTER);
         List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>(restTemplate.getInterceptors());
-        interceptors.add(new LinktraceInterceptor());
+        interceptors.add(new LinkTraceInterceptor());
         restTemplate.setInterceptors(interceptors);
         return restTemplate;
     }
@@ -107,7 +107,7 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addWebRequestInterceptor(new GrayInterceptor()).addPathPatterns("/**").order(Ordered.HIGHEST_PRECEDENCE);
-        registry.addWebRequestInterceptor(new LinktraceInterceptor()).addPathPatterns("/**").order(Ordered.HIGHEST_PRECEDENCE + 1);
+        registry.addWebRequestInterceptor(new LinkTraceInterceptor()).addPathPatterns("/**").order(Ordered.HIGHEST_PRECEDENCE + 1);
 
         Set<String> profiles = StringUtils.splitToSet(StringUtils.trimToEmpty(environment.getProperty("spring.profiles.active")).toLowerCase(), ",");
 

@@ -2,11 +2,11 @@ package org.spin.cloud.config;
 
 import org.spin.cloud.idempotent.IdempotentAspect;
 import org.spin.cloud.util.CloudInfrasContext;
-import org.spin.cloud.util.Linktrace;
+import org.spin.cloud.util.LinkTrace;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.cloud.web.interceptor.CustomizeRouteInterceptor;
 import org.spin.cloud.web.interceptor.GrayInterceptor;
-import org.spin.cloud.web.interceptor.LinktraceInterceptor;
+import org.spin.cloud.web.interceptor.LinkTraceInterceptor;
 import org.spin.core.concurrent.AsyncContext;
 import org.spin.core.concurrent.AsyncInterceptor;
 
@@ -38,8 +38,8 @@ public class SpinCloudAsyncInterceptor implements AsyncInterceptor {
             context.put(IdempotentAspect.IDEMPOTENT_ID, CloudInfrasContext.getIdempotentInfo());
         }
 
-        if (null != Linktrace.getCurrentTraceInfo()) {
-            context.put(LinktraceInterceptor.X_TRACE_ID, Linktrace.getCurrentTraceInfo());
+        if (null != LinkTrace.getCurrentTraceInfo()) {
+            context.put(LinkTraceInterceptor.X_TRACE_ID, LinkTrace.getCurrentTraceInfo());
         }
     }
 
@@ -61,8 +61,8 @@ public class SpinCloudAsyncInterceptor implements AsyncInterceptor {
             CloudInfrasContext.setIdempotentInfo(context.getString(IdempotentAspect.IDEMPOTENT_ID));
         }
 
-        if (context.containsKey(LinktraceInterceptor.X_TRACE_ID)) {
-            Linktrace.setCurrentTraceInfo(context.getObj(LinktraceInterceptor.X_TRACE_ID));
+        if (context.containsKey(LinkTraceInterceptor.X_TRACE_ID)) {
+            LinkTrace.setCurrentTraceInfo(context.getObj(LinkTraceInterceptor.X_TRACE_ID));
         }
     }
 
@@ -72,7 +72,7 @@ public class SpinCloudAsyncInterceptor implements AsyncInterceptor {
         CloudInfrasContext.removeGrayInfo();
         CloudInfrasContext.removeIdempotentInfo();
         CloudInfrasContext.removeCustomizeRoute();
-        Linktrace.removeCurrentTraceInfo();
+        LinkTrace.removeCurrentTraceInfo();
     }
 
     @Override

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.function.ExceptionalHandler;
+import org.spin.core.function.ExceptionalSupplier;
 import org.spin.core.util.Util;
 import org.spin.datasource.Ds;
 import org.spin.datasource.toolkit.DynamicDataSourceContextHolder;
@@ -28,10 +29,24 @@ public class Schema extends Util {
     private static TransactionalSyncConnectionProvider transactionSyncConnectionProvider;
 
     public static void using(String schema, ExceptionalHandler<Exception> handler) {
-        using(schema, handler, null);
+        using(schema, () -> {
+            handler.handle();
+            return null;
+        }, null);
     }
 
     public static void using(String schema, ExceptionalHandler<Exception> handler, Consumer<Exception> exceptionConsumer) {
+        using(schema, () -> {
+            handler.handle();
+            return null;
+        }, exceptionConsumer);
+    }
+
+    public static <T> T using(String schema, ExceptionalSupplier<T, Exception> handler) {
+        return using(schema, handler, null);
+    }
+
+    public static <T> T using(String schema, ExceptionalSupplier<T, Exception> handler, Consumer<Exception> exceptionConsumer) {
         String dataSource = schema;
         String currentDs = null == DynamicDataSourceContextHolder.peek() ?
             Ds.getPrimaryDataSource() : DynamicDataSourceContextHolder.peek().getDatasource();
@@ -45,7 +60,7 @@ public class Schema extends Util {
             }
         }
         if (null == handler) {
-            return;
+            return null;
         }
 
         DynamicDataSourceContextHolder.push(dataSource);
@@ -53,17 +68,22 @@ public class Schema extends Util {
             && null != transactionSyncConnectionProvider
             && TransactionSynchronizationManager.isActualTransactionActive();
 
-        try {
-            if (inCurrentDs) {
+        if (inCurrentDs) {
+            try {
                 transactionSyncConnectionProvider.currentConnection().setCatalog(DynamicDataSourceContextHolder.peek().getCatalog());
+            } catch (SQLException e) {
+                logger.error("切换Schema失败: ", e);
             }
-            handler.handle();
+        }
+        try {
+            return handler.get();
         } catch (Exception e) {
             if (null != exceptionConsumer) {
                 exceptionConsumer.accept(e);
             } else {
-                logger.error("切换Schema时操作异常: ", e);
+                logger.error("切换Schema后业务执行异常: ", e);
             }
+            return null;
         } finally {
             DynamicDataSourceContextHolder.poll();
             if (inCurrentDs) {
