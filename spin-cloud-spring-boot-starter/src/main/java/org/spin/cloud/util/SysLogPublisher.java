@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.cloud.annotation.UtilClass;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.cloud.vo.LogInfoVo;
+import org.spin.cloud.vo.LogLevel;
 import org.spin.cloud.vo.SessionEmpInfo;
 import org.spin.core.Assert;
 import org.spin.core.util.JsonUtils;
@@ -98,10 +99,13 @@ public final class SysLogPublisher extends Util {
     }
 
     public static void publish(String module, String operation, LocalDateTime operationTime) {
-        LogInfoVo infoVo = new LogInfoVo();
-        infoVo.setModule(module);
-        infoVo.setOperation(operation);
-        infoVo.setOperationTime(operationTime);
+        publish(module, LogLevel.INFO, operation, operationTime);
+    }
+
+    public static void publish(String module, LogLevel level, String operation, LocalDateTime operationTime) {
+        LogInfoVo infoVo = LogInfoVo.aLog(module, operation)
+            .withLevel(level)
+            .withOperationTime(operationTime);
         publish(infoVo);
     }
 }

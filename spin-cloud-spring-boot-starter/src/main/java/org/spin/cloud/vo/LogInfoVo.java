@@ -55,6 +55,11 @@ public class LogInfoVo implements Serializable {
     private String module;
 
     /**
+     * 日志级别
+     */
+    private LogLevel level = LogLevel.INFO;
+
+    /**
      * 操作行为
      */
     private String operation;
@@ -64,14 +69,14 @@ public class LogInfoVo implements Serializable {
      */
     private LocalDateTime operationTime;
 
-    public LogInfoVo aLog(String module) {
+    public static LogInfoVo aLog(String module) {
         LogInfoVo log = new LogInfoVo();
         log.setModule(module);
         log.setOperationTime(LocalDateTime.now());
         return log;
     }
 
-    public LogInfoVo aLog(String module, String operation) {
+    public static LogInfoVo aLog(String module, String operation) {
         LogInfoVo log = new LogInfoVo();
         log.setModule(module);
         log.setOperation(operation);
@@ -81,6 +86,11 @@ public class LogInfoVo implements Serializable {
 
     public LogInfoVo withModule(String module) {
         this.module = module;
+        return this;
+    }
+
+    public LogInfoVo withLevel(LogLevel level) {
+        this.level = level;
         return this;
     }
 
@@ -148,6 +158,14 @@ public class LogInfoVo implements Serializable {
 
     public void setModule(String module) {
         this.module = module;
+    }
+
+    public LogLevel getLevel() {
+        return level;
+    }
+
+    public void setLevel(LogLevel level) {
+        this.level = level;
     }
 
     public String getOperation() {
