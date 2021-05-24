@@ -25,7 +25,7 @@ public class JavaxValidationExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(JavaxValidationExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.warn("请求[{}]中携带参数校验不通过: \n  {}", request.getRequestURI(), e.getMessage());
 
         StringBuilder msg = new StringBuilder();

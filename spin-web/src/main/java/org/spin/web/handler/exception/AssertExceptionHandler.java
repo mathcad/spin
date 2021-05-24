@@ -23,7 +23,7 @@ public class AssertExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(AssertExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.info(e.getMessage(), e.getStackTrace()[0]);
         return RestfulResponse.<Void>error(ErrorCode.ASSERT_FAIL, ((AssertFailException) e).getSimpleMessage())
             .withPath(appName + request.getRequestURI());

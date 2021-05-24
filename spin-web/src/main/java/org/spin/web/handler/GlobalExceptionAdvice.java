@@ -60,12 +60,12 @@ public class GlobalExceptionAdvice {
      */
     @ResponseBody
     @ExceptionHandler(value = Exception.class)
-    public RestfulResponse<Void> errorHandler(Exception e, HttpServletRequest request, HttpServletResponse response) {
+    public RestfulResponse<?> errorHandler(Exception e, HttpServletRequest request, HttpServletResponse response) {
         response.setHeader("Encoded", "1");
 
         Throwable cause = e;
         int depth = 0;
-        RestfulResponse<Void> res;
+        RestfulResponse<?> res;
         boolean isInternal = StringUtils.isNotEmpty(request.getHeader("X-App-Name"));
         while (cause != null && depth < 30) {
             ++depth;
@@ -92,7 +92,7 @@ public class GlobalExceptionAdvice {
             response.setStatus(ErrorCode.INTERNAL_ERROR.getCode());
         }
         error.setPath(request.getRequestURI());
-        if (!isPro) {
+        if (!isPro && null != e) {
             error.setError(e.getMessage() + "\n" + e.getStackTrace()[0].toString());
         }
         return error;

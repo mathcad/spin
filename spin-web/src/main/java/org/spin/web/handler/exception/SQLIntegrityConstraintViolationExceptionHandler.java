@@ -23,7 +23,7 @@ public class SQLIntegrityConstraintViolationExceptionHandler implements WebExcep
     private static final Logger logger = LoggerFactory.getLogger(SQLIntegrityConstraintViolationExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         String msg = "数据重复";
         logger.warn(msg, e);
         return RestfulResponse.<Void>error(ErrorCode.INTERNAL_ERROR, msg, e.getMessage())

@@ -1,6 +1,7 @@
 package org.spin.data.rs;
 
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,10 +14,10 @@ import java.util.Map;
 public class MapRowMapper implements RowMapper<Map<String, Object>> {
 
     @Override
-    public Map<String, Object> apply(String[] columnNames, Object[] columns, int columnCount, int rowIdx) {
-        Map<String, Object> mapOfColValues = new HashMap<>(columnCount);
-        for (int i = 0; i < columnCount; i++) {
-            mapOfColValues.put(columnNames[i], columns[i]);
+    public Map<String, Object> apply(ColumnVisitor columnVisitor, int rowIdx) throws SQLException {
+        Map<String, Object> mapOfColValues = new HashMap<>(columnVisitor.getColumnCount());
+        for (int i = 0; i < columnVisitor.getColumnCount(); i++) {
+            mapOfColValues.put(columnVisitor.getColumnName(i), columnVisitor.getColumnValue(i));
         }
         return mapOfColValues;
     }

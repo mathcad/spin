@@ -2,6 +2,7 @@ package org.spin.web.handler.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.throwable.SpinException;
 import org.spin.web.RestfulResponse;
 import org.spin.web.handler.WebExceptionHandler;
@@ -22,11 +23,14 @@ public class SpinExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(SpinExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.info("系统异常", e);
-        return RestfulResponse.<Void>error(((SpinException) e).getExceptionType(),
+        RestfulResponse<Object> response = RestfulResponse.error(((SpinException) e).getExceptionType(),
             ((SpinException) e).getSimpleMessage(), e.getMessage())
             .withPath(appName + request.getRequestURI());
+        Object payload = ((SimplifiedException) e).getPayload();
+        response.setData(payload);
+        return response;
     }
 
     @Override

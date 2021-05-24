@@ -23,7 +23,7 @@ public class HttpMessageConversionExceptionHandler implements WebExceptionHandle
     private static final Logger logger = LoggerFactory.getLogger(HttpMessageConversionExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.warn("请求参数转换失败: {}", e.getMessage());
         return RestfulResponse.<Void>error(ErrorCode.INVALID_PARAM, "请求参数转换失败", e.getMessage())
             .withPath(appName + request.getRequestURI());

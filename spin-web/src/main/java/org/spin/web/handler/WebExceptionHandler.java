@@ -22,7 +22,7 @@ public interface WebExceptionHandler {
      * @param request 请求
      * @return RestfulResponse
      */
-    RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request);
+    RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request);
 
     /**
      * 是否支持指定的异常

@@ -23,7 +23,7 @@ public class DateExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(DateExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.warn("日期格式不正确: {}", e.getMessage());
         return RestfulResponse.<Void>error(ErrorCode.INVALID_PARAM, "日期格式不正确", e.getMessage())
             .withPath(appName + request.getRequestURI());

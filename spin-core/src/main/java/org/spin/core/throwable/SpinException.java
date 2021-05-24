@@ -13,6 +13,7 @@ import org.spin.core.util.StringUtils;
 public class SpinException extends RuntimeException {
     private static final long serialVersionUID = 3761977150343281224L;
     private ErrorCode exceptionType = ErrorCode.OTHER;
+    private Object payload;
 
     public SpinException(ErrorCode exceptionType) {
         super();
@@ -62,6 +63,15 @@ public class SpinException extends RuntimeException {
 
     public ErrorCode getExceptionType() {
         return this.exceptionType;
+    }
+
+    public Object getPayload() {
+        return payload;
+    }
+
+    public SpinException withPayload(Object payload) {
+        this.payload = payload;
+        return this;
     }
 
     @Override

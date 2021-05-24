@@ -23,7 +23,7 @@ public class HttpParamExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(HttpParamExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         if (e.getMessage().startsWith("Required request body")) {
             logger.warn("请求体中缺失参数: {}", e.getMessage());
             return RestfulResponse.<Void>error(ErrorCode.INVALID_PARAM, "请求体中缺失Request Body参数", e.getMessage())

@@ -22,9 +22,12 @@ public class SimplifiedExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(SimplifiedExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.info(((SimplifiedException) e).getSimpleMessage(), e.getStackTrace()[0]);
-        return RestfulResponse.<Void>error((SimplifiedException) e).withPath(appName + request.getRequestURI());
+        RestfulResponse<Object> response = RestfulResponse.error((SimplifiedException) e).withPath(appName + request.getRequestURI());
+        Object payload = ((SimplifiedException) e).getPayload();
+        response.setData(payload);
+        return response;
     }
 
     @Override

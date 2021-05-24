@@ -32,7 +32,7 @@ public class EntityRowMapper<E> implements RowMapper<E> {
     }
 
     @Override
-    public E apply(String[] columnNames, Object[] columns, int columnCount, int rowIdx) {
+    public E apply(ColumnVisitor columnVisitor, int rowIdx) throws java.sql.SQLException {
         E result;
         try {
             result = accessibleConstructor.newInstance();
@@ -43,8 +43,8 @@ public class EntityRowMapper<E> implements RowMapper<E> {
 
         Map<String, BeanMap> beanMapMap = new HashMap<>();
 
-        for (int i = 0; i < columnNames.length; i++) {
-            String alias = columnNames[i];
+        for (int i = 0; i < columnVisitor.getColumnCount(); i++) {
+            String alias = columnVisitor.getColumnName(i);
             if (alias != null) {
                 String[] ap = alias.split("\\.");
                 if (ap.length > 1) {
@@ -64,9 +64,9 @@ public class EntityRowMapper<E> implements RowMapper<E> {
                         }
                         work = beanMapMap.get(ap[j]);
                     }
-                    work.put(ap[ap.length - 1], columns[i]);
+                    work.put(ap[ap.length - 1], columnVisitor.getColumnValue(i));
                 } else {
-                    rootBeanMap.put(alias, columns[i]);
+                    rootBeanMap.put(alias, columnVisitor.getColumnValue(i));
                 }
             }
         }

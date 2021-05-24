@@ -5,6 +5,8 @@ import org.spin.core.function.serializable.Function;
 import org.spin.core.function.serializable.Supplier;
 import org.spin.core.util.BooleanExt;
 
+import java.util.Objects;
+
 /**
  * 封装操作结果
  * <p>DESCRIPTION</p>
@@ -38,6 +40,20 @@ public class OpResult<T> {
         this.payload = payload;
         this.success = success;
     }
+
+    public <U> OpResult<U> map(Function<? super T, ? extends U> mapper) {
+        Objects.requireNonNull(mapper);
+        return OpResult.of(mapper.apply(payload), success);
+    }
+
+    public OpResult<? extends T> or(Supplier<OpResult<? extends T>> supplier) {
+        if (success) {
+            return this;
+        } else {
+            return supplier.get();
+        }
+    }
+
 
     /**
      * 如果成功时执行逻辑

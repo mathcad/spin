@@ -23,7 +23,7 @@ public class NetworkExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(NetworkExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.warn("网络连接错误: [{}]", e.getMessage());
         String tmp = e.getCause().getMessage().toLowerCase();
         StringBuilder msg = new StringBuilder();

@@ -29,7 +29,7 @@ public class ArgumentTypeMismatchExceptionHandler implements WebExceptionHandler
     private static final Logger logger = LoggerFactory.getLogger(ArgumentTypeMismatchExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.info("参数类型转换失败: {}", e.getMessage());
         MethodArgumentTypeMismatchException cause = (MethodArgumentTypeMismatchException) e;
         String name = cause.getName();

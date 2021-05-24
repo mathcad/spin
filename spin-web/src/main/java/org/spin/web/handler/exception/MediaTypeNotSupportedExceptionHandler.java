@@ -23,7 +23,7 @@ public class MediaTypeNotSupportedExceptionHandler implements WebExceptionHandle
     private static final Logger logger = LoggerFactory.getLogger(MediaTypeNotSupportedExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         logger.warn("不支持的请求参数类型: {}", ((HttpMediaTypeNotSupportedException) e).getContentType());
         return RestfulResponse.<Void>error(ErrorCode.INVALID_PARAM, "不支持的请求参数类型", e.getMessage())
             .withPath(appName + request.getRequestURI());

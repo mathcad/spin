@@ -45,6 +45,7 @@ dependencies {
 
     api group: 'org.mathcat', name: 'spin-core', version: '2.4.0-SNAPSHOT'
     api group: 'cglib', name: 'cglib', version: '3.3.0'
+//    api group: 'io.projectreactor', name: 'reactor-core', version: '3.4.6'
 
     compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
     compileOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion

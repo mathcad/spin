@@ -23,7 +23,7 @@ public class MethodNotSupportedExceptionHandler implements WebExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(MethodNotSupportedExceptionHandler.class);
 
     @Override
-    public RestfulResponse<Void> handler(String appName, Throwable e, HttpServletRequest request) {
+    public RestfulResponse<?> handler(String appName, Throwable e, HttpServletRequest request) {
         String msg = String.format("不支持的请求方式: %s [%s]", ((HttpRequestMethodNotSupportedException) e).getMethod(), request.getRequestURI());
         logger.warn(msg);
         return RestfulResponse.<Void>error(ErrorCode.INTERNAL_ERROR, msg, e.getMessage())

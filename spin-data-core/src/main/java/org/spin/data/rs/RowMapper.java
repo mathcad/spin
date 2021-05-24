@@ -1,9 +1,6 @@
 package org.spin.data.rs;
 
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,16 +16,15 @@ import java.util.function.Function;
  */
 @FunctionalInterface
 public interface RowMapper<R> {
+
     /**
      * 将ResultSet中的当前行转换为指定类型
      *
-     * @param columnNames 列名称
-     * @param columns     列值
-     * @param columnCount 列数
-     * @param rowIdx      当前行的索引
+     * @param columnVisitor column访问者
+     * @param rowIdx        当前行的索引
      * @return 转换后的对象
      */
-    R apply(String[] columnNames, Object[] columns, int columnCount, int rowIdx);
+    R apply(ColumnVisitor columnVisitor, int rowIdx) throws SQLException;
 
     /**
      * 从ResultSet中抽取数据到List中
@@ -52,20 +48,33 @@ public interface RowMapper<R> {
     default List<R> extractData(ResultSet rs, int rows) throws SQLException {
         List<R> results = new LinkedList<>();
         int rowNum = 0;
-        ResultSetMetaData rsmd = rs.getMetaData();
-        int columnCount = rsmd.getColumnCount();
-        String[] keys = lookupColumnNames(rsmd);
-        Object[] values;
+        ColumnVisitor columnVisitor = new ColumnVisitor(rs);
         while (rs.next() && rowNum < rows) {
-            values = new Object[columnCount];
-            for (int i = 1; i <= columnCount; i++) {
-                Object obj = getResultSetValue(rs, i);
-                values[i - 1] = obj;
-            }
-            results.add(apply(keys, values, columnCount, rowNum++));
+            results.add(apply(columnVisitor, rowNum++));
         }
         return results;
     }
+
+//    default Flux<R> extractDataReactive(ResultSet rs) throws SQLException {
+//        return extractDataReactive(rs, Integer.MAX_VALUE);
+//    }
+//
+//    default Flux<R> extractDataReactive(ResultSet rs, int rows) throws SQLException {
+//        ColumnVisitor columnVisitor = new ColumnVisitor(rs);
+//        return Flux.generate(AtomicInteger::new, (state, sink) -> {
+//            int r = state.getAndIncrement();
+//            try {
+//                if (rs.next() && r < rows) {
+//                    sink.next(apply(columnVisitor, r));
+//                } else {
+//                    sink.complete();
+//                }
+//            } catch (SQLException e) {
+//                sink.error(e);
+//            }
+//            return state;
+//        });
+//    }
 
     /**
      * Returns a composed function that first applies this function to
@@ -81,88 +90,6 @@ public interface RowMapper<R> {
      */
     default <V> RowMapper<V> andThen(Function<? super R, ? extends V> after) {
         Objects.requireNonNull(after);
-        return (String[] k, Object[] v, int c, int r) -> after.apply(apply(k, v, c, r));
-    }
-
-    /**
-     * Determine the column name to use. The column name is determined based on a
-     * lookup using ResultSetMetaData.
-     * <p>This method implementation takes into account recent clarifications
-     * expressed in the JDBC 4.0 specification:
-     * <p><i>columnLabel - the label for the column specified with the SQL AS clause.
-     * If the SQL AS clause was not specified, then the label is the name of the column</i>.
-     *
-     * @param resultSetMetaData the current meta data to use
-     * @param columnIndex       the index of the column for the look up
-     * @return the column name to use
-     * @throws SQLException in case of lookup failure
-     */
-    default String lookupColumnName(ResultSetMetaData resultSetMetaData, int columnIndex) throws SQLException {
-        String name = resultSetMetaData.getColumnLabel(columnIndex);
-        if (name == null || name.length() < 1) {
-            name = resultSetMetaData.getColumnName(columnIndex);
-        }
-        return name;
-    }
-
-    default String[] lookupColumnNames(ResultSetMetaData resultSetMetaData) throws SQLException {
-        int columnCount = resultSetMetaData.getColumnCount();
-        String[] names = new String[columnCount];
-        for (int i = 1; i <= columnCount; i++) {
-            String name = resultSetMetaData.getColumnLabel(i);
-            if (name == null || name.length() < 1) {
-                name = resultSetMetaData.getColumnName(i);
-            }
-            names[i - 1] = name;
-        }
-        return names;
-    }
-
-    /**
-     * Retrieve a JDBC column value from a ResultSet, using the most appropriate
-     * value type. The returned value should be a detached value object, not having
-     * any ties to the active ResultSet: in particular, it should not be a Blob or
-     * Clob object but rather a byte array or String representation, respectively.
-     * <p>Uses the {@code getObject(index)} method, but includes additional "hacks"
-     * to get around Oracle 10g returning a non-standard object for its TIMESTAMP
-     * datatype and a {@code java.sql.Date} for DATE columns leaving out the
-     * time portion: These columns will explicitly be extracted as standard
-     * {@code java.sql.Timestamp} object.
-     *
-     * @param rs    is the ResultSet holding the data
-     * @param index is the column index
-     * @return the value object
-     * @throws SQLException if thrown by the JDBC API
-     * @see java.sql.Blob
-     * @see java.sql.Clob
-     * @see java.sql.Timestamp
-     */
-    default Object getResultSetValue(ResultSet rs, int index) throws SQLException {
-        Object obj = rs.getObject(index);
-        String className = null;
-        if (obj != null) {
-            className = obj.getClass().getName();
-        }
-        if (obj instanceof Blob) {
-            Blob blob = (Blob) obj;
-            obj = blob.getBytes(1, (int) blob.length());
-        } else if (obj instanceof Clob) {
-            Clob clob = (Clob) obj;
-            obj = clob.getSubString(1, (int) clob.length());
-        } else if ("oracle.sql.TIMESTAMP".equals(className) || "oracle.sql.TIMESTAMPTZ".equals(className)) {
-            obj = rs.getTimestamp(index);
-        } else if (className != null && className.startsWith("oracle.sql.DATE")) {
-            String metaDataClassName = rs.getMetaData().getColumnClassName(index);
-            if ("java.sql.Timestamp".equals(metaDataClassName) || "oracle.sql.TIMESTAMP".equals(metaDataClassName)) {
-                obj = rs.getTimestamp(index);
-            } else {
-                obj = rs.getDate(index);
-            }
-        } else if (obj instanceof java.sql.Date) {
-            if ("java.sql.Timestamp".equals(rs.getMetaData().getColumnClassName(index))) {
-                obj = rs.getTimestamp(index);
-            }
-        }
-        return obj;
+        return (ColumnVisitor cv, int r) -> after.apply(apply(cv, r));
     }
 }
