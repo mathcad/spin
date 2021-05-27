@@ -26,12 +26,12 @@ import java.util.stream.Collectors;
  * @version 1.0
  */
 public class RequestMappingInfoWrapper implements Serializable {
-    private LinkedHashSet<String> urlPatterns;
-    private LinkedHashSet<String> requestMethods;
+    private final LinkedHashSet<String> urlPatterns;
+    private final LinkedHashSet<String> requestMethods;
 
-    private String beanType;
+    private final String beanType;
     private String groupDesc;
-    private String methodName;
+    private final String methodName;
 
     private String author;
     private String department;
@@ -44,7 +44,7 @@ public class RequestMappingInfoWrapper implements Serializable {
     private String remark;
 
     public RequestMappingInfoWrapper(RequestMappingInfo info, HandlerMethod handlerMethod) {
-        urlPatterns = new LinkedHashSet<>(info.getPatternsCondition().getPatterns());
+        urlPatterns = null == info.getPatternsCondition() ? new LinkedHashSet<>() : new LinkedHashSet<>(info.getPatternsCondition().getPatterns());
         requestMethods = info.getMethodsCondition().getMethods().stream().map(Enum::name).collect(Collectors.toCollection(LinkedHashSet::new));
 
         beanType = handlerMethod.getBeanType().getName();
@@ -54,13 +54,12 @@ public class RequestMappingInfoWrapper implements Serializable {
             scopeType = authAnno.scope();
             auth = authAnno.value();
             authName = authAnno.name();
-            if (StringUtils.isEmpty(authName)) {
-                authName = beanType + "-" + methodName;
-            }
-            authName = "API:" + authName;
-            roles = new LinkedHashSet<>(authAnno.roles().length);
-            roles.addAll(Arrays.asList(authAnno.roles()));
+            roles = new LinkedHashSet<>(Arrays.asList(authAnno.roles()));
         }
+        if (StringUtils.isEmpty(authName)) {
+            authName = beanType + "-" + methodName;
+        }
+        authName = "API:" + authName;
 
         Author authorAnno = AnnotatedElementUtils.getMergedAnnotation(handlerMethod.getMethod(), Author.class);
         if (null != authorAnno) {

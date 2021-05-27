@@ -30,7 +30,7 @@ public interface MachineIdProvider {
     long getMachineId();
 
     default long resolveMachineId() {
-        if (0 < DEFAULT_MACHINE_ID) {
+        if (DEFAULT_MACHINE_ID < 0) {
             return getMachineId();
         }
         return DEFAULT_MACHINE_ID;

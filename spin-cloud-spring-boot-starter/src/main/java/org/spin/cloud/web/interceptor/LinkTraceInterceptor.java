@@ -48,7 +48,7 @@ public class LinkTraceInterceptor implements WebRequestInterceptor, ClientHttpRe
         }
         String traceId = request.getHeader(X_TRACE_ID);
         if (StringUtils.isEmpty(traceId)) {
-            traceId = UUID.randomUUID().toString();
+            traceId = fastUUID();
         }
 
         String parentSpanId = request.getHeader(X_SPAN_ID);
@@ -56,7 +56,7 @@ public class LinkTraceInterceptor implements WebRequestInterceptor, ClientHttpRe
             parentSpanId = "NONE";
         }
 
-        String spanId = UUID.randomUUID().toString();
+        String spanId = fastUUID();
 
         LinkTraceInfo linktraceInfo = new LinkTraceInfo(traceId, parentSpanId, spanId);
         LinkTrace.setCurrentTraceInfo(linktraceInfo);
@@ -92,4 +92,33 @@ public class LinkTraceInterceptor implements WebRequestInterceptor, ClientHttpRe
         }
         return execution.execute(requestWrapper, body);
     }
+
+    private String fastUUID() {
+        UUID uuid = UUID.randomUUID();
+        byte[] buf = new byte[32];
+        formatUnsignedLong0(uuid.getLeastSignificantBits(), buf, 20, 12);
+        formatUnsignedLong0(uuid.getLeastSignificantBits() >>> 48, buf, 16, 4);
+        formatUnsignedLong0(uuid.getMostSignificantBits(), buf, 12, 4);
+        formatUnsignedLong0(uuid.getMostSignificantBits() >>> 16, buf, 8, 4);
+        formatUnsignedLong0(uuid.getMostSignificantBits() >>> 32, buf, 0, 8);
+        return new String(buf);
+    }
+
+    private void formatUnsignedLong0(long val, byte[] buf, int offset, int len) {
+        int charPos = offset + len;
+        int mask = 15;
+        do {
+            buf[--charPos] = (byte) digits[((int) val) & mask];
+            val >>>= 4;
+        } while (charPos > offset);
+    }
+
+    private static final char[] digits = {
+        '0', '1', '2', '3', '4', '5',
+        '6', '7', '8', '9', 'a', 'b',
+        'c', 'd', 'e', 'f', 'g', 'h',
+        'i', 'j', 'k', 'l', 'm', 'n',
+        'o', 'p', 'q', 'r', 's', 't',
+        'u', 'v', 'w', 'x', 'y', 'z'
+    };
 }

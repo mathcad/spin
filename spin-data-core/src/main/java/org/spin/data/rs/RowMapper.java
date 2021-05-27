@@ -23,6 +23,7 @@ public interface RowMapper<R> {
      * @param columnVisitor column访问者
      * @param rowIdx        当前行的索引
      * @return 转换后的对象
+     * @throws SQLException SQLException
      */
     R apply(ColumnVisitor columnVisitor, int rowIdx) throws SQLException;
 
