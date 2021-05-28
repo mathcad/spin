@@ -33,7 +33,7 @@ public class BeanUtilsTest<E> {
 
     @Test
     public void testRSA() {
-        KeyPair keyPair = RSA.generateKeyPair();
+        KeyPair keyPair = RSA.generateKeyPair(2048);
         String pubKey = Base64.encode(keyPair.getPublic().getEncoded());
         String prvKey = Base64.encode(keyPair.getPrivate().getEncoded());
         System.out.println("公匙：" + pubKey);

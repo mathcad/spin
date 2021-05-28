@@ -1,16 +1,13 @@
 package org.spin.jpa.lin.impl;
 
 import org.spin.core.Assert;
-import org.spin.core.util.BeanUtils;
-import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.ConstructorUtils;
-import org.spin.core.util.LambdaUtils;
-import org.spin.core.util.ReflectionUtils;
+import org.spin.core.util.*;
 import org.spin.data.rs.RowMapper;
 import org.spin.data.rs.RowMappers;
 import org.spin.jpa.Prop;
 import org.spin.jpa.PropImpl;
 import org.spin.jpa.lin.Linq;
+import org.spin.jpa.vo.VirtualColumnVisitor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -21,26 +18,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.AbstractQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Selection;
+import javax.persistence.criteria.*;
 import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.sql.SQLException;
+import java.util.*;
 
 public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>> implements Linq<R, LinqImpl<R>> {
 
@@ -544,9 +527,17 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
                 Object tuple = tuples.get(i);
                 if (tuple != null) {
                     if (tuple.getClass().isArray()) {
-                        result.add((T) rowMapper.apply(aliases, (Object[]) tuple, ((Object[]) tuple).length, i));
+                        try {
+                            result.add((T) rowMapper.apply(new VirtualColumnVisitor((Object[]) tuple, aliases), i));
+                        } catch (SQLException ignore) {
+                            // do nothing
+                        }
                     } else {
-                        result.add((T) rowMapper.apply(aliases, new Object[]{tuple}, 1, i));
+                        try {
+                            result.add((T) rowMapper.apply(new VirtualColumnVisitor(new Object[]{tuple}, aliases), i));
+                        } catch (SQLException ignore) {
+                            // do nothing
+                        }
                     }
                 }
             }
