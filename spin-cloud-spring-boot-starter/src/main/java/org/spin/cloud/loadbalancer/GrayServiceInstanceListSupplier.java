@@ -38,8 +38,7 @@ public class GrayServiceInstanceListSupplier implements ServiceInstanceListSuppl
             Map<String, String> grayInfo = CloudInfrasContext.getGrayInfo().c2;
             if (null != grayInfo) {
                 String version = grayInfo.get(StringUtils.trimToEmpty(StringUtils.toUpperCase(getServiceId())));
-                return delegate.get().map(l -> CollectionUtils.select(l, i -> "true".equals(i.getMetadata().get("grayEnable"))
-                    && version.equals(i.getMetadata().get("serviceVersion"))));
+                return delegate.get().map(l -> CollectionUtils.select(l, i -> version.equals(i.getMetadata().get("serviceVersion"))));
             }
         }
         return delegate.get();

@@ -709,13 +709,14 @@ public final class CollectionUtils extends Util {
         if (iterable instanceof List) {
             return divide((List<T>) iterable, batchSize);
         }
-
+        Assert.isTrue(batchSize > 0, "分组容量必须大于0");
         List<List<T>> res = new LinkedList<>();
         List<T> work = new ArrayList<>(batchSize);
+        res.add(work);
         for (T it : iterable) {
             if (work.size() == batchSize) {
-                res.add(work);
                 work = new ArrayList<>(batchSize);
+                res.add(work);
             }
             work.add(it);
         }
