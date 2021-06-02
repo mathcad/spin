@@ -43,7 +43,7 @@ public class BeetlResolver implements TemplateResolver {
         configuration.setStatementStart2("@");
         groupTemplate = new GroupTemplate(resourceLoader, configuration);
 
-        groupTemplate.registerFunction("valid", (params, contex) -> {
+        groupTemplate.registerFunction("valid", (params, context) -> {
             if (params.length != 2 && params.length != 3) {
                 throw new IllegalArgumentException("valid函数参数个数不正确（需2个或3个）");
             }
@@ -68,7 +68,7 @@ public class BeetlResolver implements TemplateResolver {
 
             return yes;
         });
-        groupTemplate.registerFunction("enum", (params, contex) -> {
+        groupTemplate.registerFunction("enum", (params, context) -> {
             if (params.length != 3) {
                 throw new IllegalArgumentException("enum函数参数个数不正确（需3个）");
             }
@@ -99,13 +99,11 @@ public class BeetlResolver implements TemplateResolver {
             return sb.toString();
         });
 
-        groupTemplate.registerFunction("in", (params, contex) -> {
+        groupTemplate.registerFunction("in", (params, context) -> {
             if (params.length != 2) {
                 throw new IllegalArgumentException("in函数参数个数不正确（需2个参数）");
             }
-            StringBuilder sb = new StringBuilder();
-            sb.append(params[0].toString()).append(" ");
-            return sb.toString();
+            return params[0].toString() + " ";
         });
     }
 

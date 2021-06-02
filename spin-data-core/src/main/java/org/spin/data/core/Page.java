@@ -1,8 +1,10 @@
 package org.spin.data.core;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * 分页数据（列表使用)
@@ -50,6 +52,14 @@ public class Page<T> implements Serializable {
         this.current = current;
         this.total = total;
         this.size = size;
+    }
+
+    public <R> Page<R> map(Function<T, R> mapper) {
+        List<R> rows = new ArrayList<>(records.size());
+        for (T record : records) {
+            rows.add(mapper.apply(record));
+        }
+        return new Page<>(rows, current, total, size);
     }
 
     public List<T> getRecords() {
