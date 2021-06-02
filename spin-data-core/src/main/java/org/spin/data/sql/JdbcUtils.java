@@ -13,11 +13,7 @@ import org.spin.data.throwable.SQLError;
 
 import java.io.StringReader;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -108,9 +104,9 @@ public abstract class JdbcUtils {
 
     public static DatabaseType getDbType(Connection connection) {
         try {
-            String databaseProductName = connection.getMetaData().getDatabaseProductName().toLowerCase();
+            String databaseProductName = connection.getMetaData().getDatabaseProductName();
             return Assert.notNull(DbTypes.get(databaseProductName), "暂不支持的数据库类型");
-        } catch (SQLException throwables) {
+        } catch (SQLException ignore) {
             throw new org.spin.data.throwable.SQLException(SQLError.SQL_EXCEPTION, "数据库信息获取失败");
         }
     }

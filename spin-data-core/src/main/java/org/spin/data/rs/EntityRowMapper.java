@@ -64,9 +64,9 @@ public class EntityRowMapper<E> implements RowMapper<E> {
                         }
                         work = beanMapMap.get(ap[j]);
                     }
-                    work.put(ap[ap.length - 1], columnVisitor.getColumnValue(i));
+                    work.put(ap[ap.length - 1], columnVisitor.getColumnValue(i + 1));
                 } else {
-                    rootBeanMap.put(alias, columnVisitor.getColumnValue(i));
+                    rootBeanMap.put(alias, columnVisitor.getColumnValue(i + 1));
                 }
             }
         }

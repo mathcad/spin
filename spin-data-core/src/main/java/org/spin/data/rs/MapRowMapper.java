@@ -17,7 +17,7 @@ public class MapRowMapper implements RowMapper<Map<String, Object>> {
     public Map<String, Object> apply(ColumnVisitor columnVisitor, int rowIdx) throws SQLException {
         Map<String, Object> mapOfColValues = new HashMap<>(columnVisitor.getColumnCount());
         for (int i = 0; i < columnVisitor.getColumnCount(); i++) {
-            mapOfColValues.put(columnVisitor.getColumnName(i), columnVisitor.getColumnValue(i));
+            mapOfColValues.put(columnVisitor.getColumnName(i), columnVisitor.getColumnValue(i + 1));
         }
         return mapOfColValues;
     }
