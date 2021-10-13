@@ -15,15 +15,17 @@
 
 package org.spin.enhance.pinyin;
 
+import org.spin.core.function.TripleConsumer;
+import org.spin.core.util.ArrayUtils;
+import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.enhance.ip.Util;
-import org.spin.enhance.pinyin.format.HanyuPinyinOutputFormat;
-import org.spin.enhance.pinyin.format.HanyuPinyinToneType;
-import org.spin.enhance.pinyin.format.HanyuPinyinVCharType;
-import org.spin.enhance.pinyin.format.exception.BadHanyuPinyinOutputFormatCombination;
+import org.spin.enhance.pinyin.format.PinyinOutputFormat;
+import org.spin.enhance.pinyin.format.exception.BadPinyinOutputFormatCombination;
 import org.spin.enhance.pinyin.multipinyin.Trie;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Supplier;
 
 /**
  * A class provides several utility functions to convert Chinese characters
@@ -33,14 +35,6 @@ import java.util.Optional;
  * @author Li Min (xmlerlimin@gmail.com)
  */
 public final class PinyinHelper extends Util {
-
-    private static final String[] ARR_EMPTY = {};
-    private static final HanyuPinyinOutputFormat formatParam = new HanyuPinyinOutputFormat();
-
-    static {
-        formatParam.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
-        formatParam.setVCharType(HanyuPinyinVCharType.WITH_V);
-    }
 
     /**
      * Get all unformmatted Hanyu Pinyin presentations of a single Chinese
@@ -61,8 +55,8 @@ public final class PinyinHelper extends Util {
      * @return a String array contains all unformmatted Hanyu Pinyin
      * presentations with tone numbers; null for non-Chinese character
      */
-    public static String[] toHanyuPinyinStringArray(char ch) {
-        return getUnformattedHanyuPinyinStringArray(ch);
+    public static List<String> toPinyinStringList(char ch) {
+        return getUnformattedHanyuPinyinStringList(ch);
     }
 
     /**
@@ -84,13 +78,13 @@ public final class PinyinHelper extends Util {
      * @param outputFormat describes the desired format of returned Hanyu Pinyin String
      * @return a String array contains all Hanyu Pinyin presentations with tone
      * numbers; return empty string for non-Chinese character
-     * @throws BadHanyuPinyinOutputFormatCombination if certain combination of output formats happens
-     * @see HanyuPinyinOutputFormat
-     * @see BadHanyuPinyinOutputFormatCombination
+     * @throws BadPinyinOutputFormatCombination if certain combination of output formats happens
+     * @see PinyinOutputFormat
+     * @see BadPinyinOutputFormatCombination
      */
-    public static String[] toHanyuPinyinStringArray(char ch, HanyuPinyinOutputFormat outputFormat)
-        throws BadHanyuPinyinOutputFormatCombination {
-        return getFormattedHanyuPinyinStringArray(ch, outputFormat);
+    public static List<String> toPinyinStringList(char ch, PinyinOutputFormat outputFormat)
+        throws BadPinyinOutputFormatCombination {
+        return getFormattedPinyinStringList(ch, outputFormat);
     }
 
     /**
@@ -102,20 +96,22 @@ public final class PinyinHelper extends Util {
      * @return The formatted Hanyu Pinyin representations of the given codepoint
      * in array format; null if no record is found in the hashtable.
      */
-    private static String[] getFormattedHanyuPinyinStringArray(char ch,
-                                                               HanyuPinyinOutputFormat outputFormat) throws BadHanyuPinyinOutputFormatCombination {
-        String[] pinyinStrArray = getUnformattedHanyuPinyinStringArray(ch);
+    private static List<String> getFormattedPinyinStringList(char ch,
+                                                             PinyinOutputFormat outputFormat) throws BadPinyinOutputFormatCombination {
+        List<String> pinyinStringList = getUnformattedHanyuPinyinStringList(ch);
 
-        if (null != pinyinStrArray) {
-
-            for (int i = 0; i < pinyinStrArray.length; i++) {
-                pinyinStrArray[i] = PinyinFormatter.formatHanyuPinyin(pinyinStrArray[i], outputFormat);
+        List<String> res = new ArrayList<>(pinyinStringList.size());
+        Set<String> c = new HashSet<>(pinyinStringList.size());
+        if (CollectionUtils.isNotEmpty(pinyinStringList)) {
+            for (String s : pinyinStringList) {
+                String t = PinyinFormatter.formatHanyuPinyin(s, outputFormat);
+                if (!c.contains(t)) {
+                    c.add(t);
+                    res.add(t);
+                }
             }
-
-            return pinyinStrArray;
-
-        } else
-            return ARR_EMPTY;
+        }
+        return res;
     }
 
     /**
@@ -124,8 +120,8 @@ public final class PinyinHelper extends Util {
      * @param ch the given Chinese character
      * @return unformatted Hanyu Pinyin strings; null if the record is not found
      */
-    private static String[] getUnformattedHanyuPinyinStringArray(char ch) {
-        return ChineseToPinyinResource.getInstance().getHanyuPinyinStringArray(ch);
+    private static List<String> getUnformattedHanyuPinyinStringList(char ch) {
+        return ChineseToPinyinResource.getInstance().getPinyinStringList(ch);
     }
 
     /**
@@ -135,10 +131,10 @@ public final class PinyinHelper extends Util {
      * @param ch the given Chinese character
      * @return a String array contains all unformmatted Tongyong Pinyin
      * presentations with tone numbers; null for non-Chinese character
-     * @see #toHanyuPinyinStringArray(char)
+     * @see #toPinyinStringList(char)
      */
-    public static String[] toTongyongPinyinStringArray(char ch) {
-        return convertToTargetPinyinStringArray(ch, PinyinRomanizationType.TONGYONG_PINYIN);
+    public static List<String> toTongyongPinyinStringList(char ch) {
+        return convertToTargetPinyinStringList(ch, PinyinRomanizationType.TONGYONG_PINYIN);
     }
 
     /**
@@ -148,10 +144,10 @@ public final class PinyinHelper extends Util {
      * @param ch the given Chinese character
      * @return a String array contains all unformmatted Wade-Giles presentations
      * with tone numbers; null for non-Chinese character
-     * @see #toHanyuPinyinStringArray(char)
+     * @see #toPinyinStringList(char)
      */
-    public static String[] toWadeGilesPinyinStringArray(char ch) {
-        return convertToTargetPinyinStringArray(ch, PinyinRomanizationType.WADEGILES_PINYIN);
+    public static List<String> toWadeGilesPinyinStringList(char ch) {
+        return convertToTargetPinyinStringList(ch, PinyinRomanizationType.WADEGILES_PINYIN);
     }
 
     /**
@@ -162,10 +158,10 @@ public final class PinyinHelper extends Util {
      * @return a String array contains all unformmatted MPS2 (Mandarin Phonetic
      * Symbols 2) presentations with tone numbers; null for non-Chinese
      * character
-     * @see #toHanyuPinyinStringArray(char)
+     * @see #toPinyinStringList(char)
      */
-    public static String[] toMPS2PinyinStringArray(char ch) {
-        return convertToTargetPinyinStringArray(ch, PinyinRomanizationType.MPS2_PINYIN);
+    public static List<String> toMPS2PinyinStringList(char ch) {
+        return convertToTargetPinyinStringList(ch, PinyinRomanizationType.MPS2_PINYIN);
     }
 
     /**
@@ -175,10 +171,10 @@ public final class PinyinHelper extends Util {
      * @param ch the given Chinese character
      * @return a String array contains all unformmatted Yale Pinyin
      * presentations with tone numbers; null for non-Chinese character
-     * @see #toHanyuPinyinStringArray(char)
+     * @see #toPinyinStringList(char)
      */
-    public static String[] toYalePinyinStringArray(char ch) {
-        return convertToTargetPinyinStringArray(ch, PinyinRomanizationType.YALE_PINYIN);
+    public static List<String> toYalePinyinStringList(char ch) {
+        return convertToTargetPinyinStringList(ch, PinyinRomanizationType.YALE_PINYIN);
     }
 
     /**
@@ -190,23 +186,26 @@ public final class PinyinHelper extends Util {
      * null if error happens
      * @see PinyinRomanizationType
      */
-    private static String[] convertToTargetPinyinStringArray(char ch,
-                                                             PinyinRomanizationType targetPinyinSystem) {
-        String[] hanyuPinyinStringArray = getUnformattedHanyuPinyinStringArray(ch);
+    private static List<String> convertToTargetPinyinStringList(char ch,
+                                                                PinyinRomanizationType targetPinyinSystem) {
+        List<String> hanyuPinyinStringList = getUnformattedHanyuPinyinStringList(ch);
 
-        if (null != hanyuPinyinStringArray) {
-            String[] targetPinyinStringArray = new String[hanyuPinyinStringArray.length];
-
-            for (int i = 0; i < hanyuPinyinStringArray.length; i++) {
-                targetPinyinStringArray[i] =
-                    PinyinRomanizationTranslator.convertRomanizationSystem(hanyuPinyinStringArray[i],
-                        PinyinRomanizationType.HANYU_PINYIN, targetPinyinSystem);
+        if (null != hanyuPinyinStringList) {
+            List<String> targetPinyinStringArray = new ArrayList<>(hanyuPinyinStringList.size());
+            Set<String> c = new HashSet<>(hanyuPinyinStringList.size());
+            for (String s : hanyuPinyinStringList) {
+                String t = PinyinRomanizationTranslator
+                    .convertRomanizationSystem(s, PinyinRomanizationType.HANYU_PINYIN, targetPinyinSystem);
+                if (!c.contains(t)) {
+                    targetPinyinStringArray.add(t);
+                    c.add(t);
+                }
             }
 
             return targetPinyinStringArray;
-
-        } else
-            return ARR_EMPTY;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     /**
@@ -216,10 +215,10 @@ public final class PinyinHelper extends Util {
      * @param ch the given Chinese character
      * @return a String array contains all unformmatted Gwoyeu Romatzyh
      * presentations with tone numbers; null for non-Chinese character
-     * @see #toHanyuPinyinStringArray(char)
+     * @see #toPinyinStringList(char)
      */
-    static public String[] toGwoyeuRomatzyhStringArray(char ch) {
-        return convertToGwoyeuRomatzyhStringArray(ch);
+    static public List<String> toGwoyeuRomatzyhStringList(char ch) {
+        return convertToGwoyeuRomatzyhStringList(ch);
     }
 
     /**
@@ -228,21 +227,20 @@ public final class PinyinHelper extends Util {
      * Chinese character in array format; null if error happens
      * @see PinyinRomanizationType
      */
-    public static String[] convertToGwoyeuRomatzyhStringArray(char ch) {
-        String[] hanyuPinyinStringArray = getUnformattedHanyuPinyinStringArray(ch);
+    public static List<String> convertToGwoyeuRomatzyhStringList(char ch) {
+        List<String> hanyuPinyinStringList = getUnformattedHanyuPinyinStringList(ch);
 
-        if (null != hanyuPinyinStringArray) {
-            String[] targetPinyinStringArray = new String[hanyuPinyinStringArray.length];
+        if (null != hanyuPinyinStringList) {
+            List<String> targetPinyinStringList = new ArrayList<>(hanyuPinyinStringList.size());
 
-            for (int i = 0; i < hanyuPinyinStringArray.length; i++) {
-                targetPinyinStringArray[i] =
-                    GwoyeuRomatzyhTranslator.convertHanyuPinyinToGwoyeuRomatzyh(hanyuPinyinStringArray[i]);
+            for (String s : hanyuPinyinStringList) {
+                targetPinyinStringList.add(GwoyeuRomatzyhTranslator.convertHanyuPinyinToGwoyeuRomatzyh(s));
             }
 
-            return targetPinyinStringArray;
+            return targetPinyinStringList;
 
         } else
-            return ARR_EMPTY;
+            return new ArrayList<>();
     }
 
     /**
@@ -267,10 +265,10 @@ public final class PinyinHelper extends Util {
      * @param retain       Retain the characters that cannot be converted into pinyin characters
      * @param isHead       ishead
      * @return a String identical to the original one but all recognizable
-     * @throws BadHanyuPinyinOutputFormatCombination format error
+     * @throws BadPinyinOutputFormatCombination format error
      */
-    public static String toHanYuPinyinString(String str, HanyuPinyinOutputFormat outputFormat,
-                                             String separate, boolean retain, boolean isHead) throws BadHanyuPinyinOutputFormatCombination {
+    public static String toPinyinString(String str, PinyinOutputFormat outputFormat,
+                                             String separate, boolean retain, boolean isHead) throws BadPinyinOutputFormatCombination {
         if (StringUtils.isEmpty(str)) {
             return null;
         }
@@ -311,14 +309,14 @@ public final class PinyinHelper extends Util {
                     resultPinyinStrBuf.append(chars[i]);
                 }
             } else {
-                String[] pinyinStrArray = resource.parsePinyinString(result);
-                if (pinyinStrArray != null) {
+                List<String> pinyinStrList = resource.parsePinyinString(result);
+                if (pinyinStrList != null) {
                     String s;
-                    for (int j = 0; j < pinyinStrArray.length; j++) {
+                    for (String value : pinyinStrList) {
                         if (needSeprate) {
                             resultPinyinStrBuf.append(separate);
                         }
-                        s = PinyinFormatter.formatHanyuPinyin(pinyinStrArray[j], outputFormat);
+                        s = PinyinFormatter.formatHanyuPinyin(value, outputFormat);
                         resultPinyinStrBuf.append(isHead ? String.valueOf(s.charAt(0)) : s);
                         resultPinyinStrBuf.append(separate);
                         needSeprate = false;
@@ -335,22 +333,51 @@ public final class PinyinHelper extends Util {
         return separate.length() > 0 && pinyin.endsWith(separate) ? pinyin.substring(0, pinyin.length() - separate.length()) : pinyin;
     }
 
-    public static String toHanYuPinyinString(String str,
-                                             String separate, boolean isHead) throws BadHanyuPinyinOutputFormatCombination {
-        return toHanYuPinyinString(str, formatParam, separate, true, isHead);
+    public static String toPinyinString(String str,
+                                             String separate, boolean isHead) throws BadPinyinOutputFormatCombination {
+        return toPinyinString(str, PinyinOutputFormat.withoutTone(), separate, true, isHead);
     }
 
-    public static String toHanYuPinyinHeadString(String str) throws BadHanyuPinyinOutputFormatCombination {
-        return Optional.ofNullable(toHanYuPinyinString(str, formatParam, "", true, true)).map(it -> it.substring(0, 1)).orElse(null);
+    public static String toPinyinHeadString(String str) throws BadPinyinOutputFormatCombination {
+        return Optional.ofNullable(toPinyinString(str, PinyinOutputFormat.withoutTone(), "", true, true)).map(it -> it.substring(0, 1)).orElse(null);
     }
 
-    public static String toHanYuPinyinHeadString(String str, boolean uppercase) throws BadHanyuPinyinOutputFormatCombination {
-        String head = Optional.ofNullable(toHanYuPinyinString(str, formatParam, "", true, true)).map(it -> it.substring(0, 1)).orElse(null);
+    public static String toPinyinHeadString(String str, boolean uppercase) throws BadPinyinOutputFormatCombination {
+        String head = Optional.ofNullable(toPinyinString(str, PinyinOutputFormat.withoutTone(), "", true, true)).map(it -> it.substring(0, 1)).orElse(null);
         if (uppercase) {
             return StringUtils.toUpperCase(head);
         }
 
         return head;
+    }
+
+    public static <T> T splitStrToMultiPinyin(String str, Supplier<T> container, TripleConsumer<T, Integer, String> combiner, PinyinOutputFormat... format) {
+        T res = null == container ? null : container.get();
+        char[] chars = str.toCharArray();
+        List<List<String>> charPys = new ArrayList<>(chars.length);
+        int cnt = 1;
+
+        for(int i = 0; i < chars.length; ++i) {
+            charPys.add(ArrayUtils.isEmpty(format) ? toPinyinStringList(chars[i]) : toPinyinStringList(chars[i], format[0]));
+            cnt *= charPys.get(i).size();
+        }
+
+        StringBuilder t = new StringBuilder();
+
+        for(int i = 0; i < cnt; ++i) {
+            int f = cnt;
+
+            for(int j = 0; j < chars.length; ++j) {
+                int b = f;
+                f /= charPys.get(j).size();
+                t.append((charPys.get(j)).get(i % b / f));
+            }
+
+            combiner.accept(res, i, t.toString());
+            t.setLength(0);
+        }
+
+        return res;
     }
 
     // ! Hidden constructor

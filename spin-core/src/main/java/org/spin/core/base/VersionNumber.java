@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 /**
  * 版本号工具类
  * <p>支持Major.Minor.Build格式的版本解析, Major代表主版本, Minor代表次版本, Build代表构建版</p>
- * <p>主版本: 重大升级(项目结构, 架构, 使用的技术等), 依赖的核心技术的重大升级(如JDK, Spring等), 亦或是严重的破坏性升级应当选择升级主版本号</p>
+ * <p>主版本: 重大升级(项目结构, 架构, 使用的技术等), 依赖的核心技术的重大升级(如JDK, 基础框架与组件等), 功能的重大升级亦或是严重的破坏性升级应当选择升级主版本号</p>
  * <p>次版本: 一般的功能性升级或优化(允许轻微的破坏性升级), 或者部分模块在不改变外部接口情况下的重构等, 可以选择升级次版本号</p>
  * <p>构建版: 日常bug修复等, 每次新的发布都需要升级构建版</p>
  * <p>该版本号定义，构造了版本号字符串与自然数区间[1, 281474976710655]的双射，使得版本间的比较得以顺利进行</p>
@@ -164,7 +164,7 @@ public final class VersionNumber implements Comparable<VersionNumber>, Serializa
     }
 
     public long toNumber() {
-        return (major << 32) | (minor << 16) | build;
+        return ((long) major << 32) | ((long) minor << 16) | build;
     }
 
     @Override

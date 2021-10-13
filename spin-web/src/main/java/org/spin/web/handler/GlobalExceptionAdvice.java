@@ -30,7 +30,7 @@ public class GlobalExceptionAdvice {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionAdvice.class);
 
-    @Value("${spring.profiles.active:dev}")
+    @Value("${spring.profiles.active:DEV}")
     private String env;
 
     @Value("${spring.application.name:}")

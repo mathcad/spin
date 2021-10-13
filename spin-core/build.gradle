@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.4.0-SNAPSHOT'
+version = '2.4.2-SNAPSHOT'
 
 test {
     useJUnitPlatform()
@@ -56,12 +56,13 @@ dependencies {
     testRuntimeOnly(group: 'org.apache.poi', name: 'poi-excelant', version: poiVersion) {
         exclude(module: 'ant')
     }
-    testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
-    testRuntimeOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
+    testImplementation group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
+    testImplementation group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
     testImplementation group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
     testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
     testImplementation group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
-    testRuntimeOnly group: 'com.google.zxing', name: 'core', version: zxingVersion
+    testImplementation group: 'com.google.zxing', name: 'core', version: zxingVersion
+    testImplementation group: 'org.openjdk.jol', name: 'jol-core', version: '0.16'
 
 //    core
     api group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion

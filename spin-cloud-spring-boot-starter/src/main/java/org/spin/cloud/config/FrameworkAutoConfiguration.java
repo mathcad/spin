@@ -1,7 +1,5 @@
 package org.spin.cloud.config;
 
-import feign.AsyncFeign;
-import feign.Feign;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.core.session.SessionUser;

@@ -20,13 +20,13 @@ package org.spin.enhance.pinyin.format.exception;
  *
  * @author Li Min (xmlerlimin@gmail.com)
  */
-public class BadHanyuPinyinOutputFormatCombination extends RuntimeException {
+public class BadPinyinOutputFormatCombination extends RuntimeException {
     /**
      * Constructor
      *
      * @param message the exception message
      */
-    public BadHanyuPinyinOutputFormatCombination(String message) {
+    public BadPinyinOutputFormatCombination(String message) {
         super(message);
     }
 

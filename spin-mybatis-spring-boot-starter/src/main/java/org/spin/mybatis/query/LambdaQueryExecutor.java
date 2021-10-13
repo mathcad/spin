@@ -10,12 +10,10 @@ import com.baomidou.mybatisplus.core.enums.SqlKeyword;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.TableFieldInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
-import com.baomidou.mybatisplus.core.toolkit.ArrayUtils;
-import com.baomidou.mybatisplus.core.toolkit.StringPool;
+import com.baomidou.mybatisplus.core.toolkit.*;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.cloud.vo.DataPermInfo;
-import org.spin.core.Assert;
 import org.spin.core.util.ClassUtils;
 import org.spin.core.util.CollectionUtils;
 import org.spin.mybatis.entity.AbstractDataPermEntity;
@@ -93,6 +91,18 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
     public final LambdaQueryExecutor<T> select(SFunction<T, ?>... columns) {
         if (ArrayUtils.isNotEmpty(columns)) {
             this.sqlSelect.setStringValue(columnsToString(false, columns));
+        }
+        return typedThis;
+    }
+
+    /**
+     * SELECT 部分 SQL 设置
+     *
+     * @param columns 查询字段
+     */
+    public final LambdaQueryExecutor<T> select(String... columns) {
+        if (ArrayUtils.isNotEmpty(columns)) {
+            this.sqlSelect.setStringValue(org.spin.core.util.StringUtils.join(columns, ","));
         }
         return typedThis;
     }
@@ -190,8 +200,45 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
         return doIt(condition, () -> column, keyword, statement);
     }
 
-    private ISqlSegment inExpression(Collection<?> value) {
-        return () -> value.stream().map(i -> formatSql("{0}", i))
+    public ISqlSegment inExpression(Collection<?> value) {
+
+        if (CollectionUtils.isEmpty(value)) {
+            return () -> "()";
+        }
+        return () -> value.stream().map(i -> formatParam(null, i))
             .collect(joining(StringPool.COMMA, StringPool.LEFT_BRACKET, StringPool.RIGHT_BRACKET));
+    }
+
+    /**
+     * 对sql片段进行组装
+     *
+     * @param condition   是否执行
+     * @param sqlSegments sql片段数组
+     * @return children
+     */
+    protected LambdaQueryExecutor<T> doIt(boolean condition, ISqlSegment... sqlSegments) {
+        if (condition) {
+            expression.add(sqlSegments);
+        }
+        return typedThis;
+    }
+
+    protected final String formatSql(String sqlStr, Object... params) {
+        return formatSqlIfNeed(true, sqlStr, params);
+    }
+
+    protected final String formatSqlIfNeed(boolean need, String sqlStr, Object... params) {
+        if (!need || StringUtils.isBlank(sqlStr)) {
+            return null;
+        }
+        if (ArrayUtils.isNotEmpty(params)) {
+            for (int i = 0; i < params.length; ++i) {
+                String genParamName = Constants.WRAPPER_PARAM + paramNameSeq.incrementAndGet();
+                sqlStr = sqlStr.replace(String.format("{%s}", i),
+                    String.format("#{%s.paramNameValuePairs.%s}", Constants.WRAPPER, genParamName));
+                paramNameValuePairs.put(genParamName, params[i]);
+            }
+        }
+        return sqlStr;
     }
 }

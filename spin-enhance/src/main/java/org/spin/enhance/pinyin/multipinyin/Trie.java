@@ -1,21 +1,12 @@
 package org.spin.enhance.pinyin.multipinyin;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Hashtable;
+import java.io.*;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Created by 刘一波 on 16/3/4.
- * E-Mail:yibo.liu@tqmall.com
- */
 public class Trie {
 
-    private Hashtable<String, Trie> values = new Hashtable<>();//本节点包含的值
+    private final ConcurrentHashMap<String, Trie> values = new ConcurrentHashMap<>();//本节点包含的值
 
     private String pinyin;//本节点的拼音
 
@@ -47,13 +38,13 @@ public class Trie {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inStream))) {
             String s;
             while ((s = bufferedReader.readLine()) != null) {
-                int spliter = s.indexOf(' ');
-                if (s.length() == 0 || spliter < 0 || spliter != s.lastIndexOf(' ')) {
+                int idx = s.indexOf(' ');
+                if (s.length() == 0 || idx < 0 || idx != s.lastIndexOf(' ')) {
                     continue;
                 }
                 Trie trie = new Trie();
-                trie.pinyin = s.substring(spliter + 1);
-                put(s.substring(0, spliter), trie);
+                trie.pinyin = s.substring(idx + 1);
+                put(s.substring(0, idx), trie);
             }
         }
     }
@@ -68,13 +59,13 @@ public class Trie {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inStream))) {
             String s;
             while ((s = bufferedReader.readLine()) != null) {
-                int spliter = s.indexOf(' ');
-                if (s.length() == 0 || spliter < 0 || spliter != s.lastIndexOf(' ')) {
+                int idx = s.indexOf(' ');
+                if (s.length() == 0 || idx < 0 || idx != s.lastIndexOf(' ')) {
                     continue;
                 }
 
-                String key = s.substring(0, spliter);//多于一个字的字符串
-                String value = s.substring(spliter + 1);//字符串的拼音
+                String key = s.substring(0, idx);//多于一个字的字符串
+                String value = s.substring(idx + 1);//字符串的拼音
                 char[] keys = key.toCharArray();
 
                 Trie currentTrie = this;
@@ -138,8 +129,8 @@ public class Trie {
                         } finally {
                             try {
                                 inputStream.close();
-                            } catch (IOException e) {
-                                inputStream = null;
+                            } catch (IOException ignore) {
+                                // do nothing
                             }
                         }
                     }

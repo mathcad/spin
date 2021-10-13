@@ -77,7 +77,7 @@ public class DateTypeAdapter extends MatchableTypeAdapter<Date> {
         try {
             return ISO8601Utils.parse(json, new ParsePosition(0));
         } catch (ParseException e) {
-            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, e);
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORTED, e);
         }
     }
 

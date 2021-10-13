@@ -105,14 +105,33 @@ package org.spin.enhance.pinyin.format;
  * </table>
  *
  * @author Li Min (xmlerlimin@gmail.com)
- * @see HanyuPinyinVCharType
- * @see HanyuPinyinCaseType
- * @see HanyuPinyinToneType
+ * @see PinyinVCharType
+ * @see PinyinCaseType
+ * @see PinyinToneType
  */
-public final class HanyuPinyinOutputFormat {
+public final class PinyinOutputFormat {
+    private PinyinVCharType vCharType;
+    private PinyinCaseType caseType;
+    private PinyinToneType toneType;
 
-    public HanyuPinyinOutputFormat() {
+    public PinyinOutputFormat() {
         restoreDefault();
+    }
+
+    private static final PinyinOutputFormat DEFAULT = new PinyinOutputFormat();
+    private static final PinyinOutputFormat WITHOUT_TONE = new PinyinOutputFormat().setToneType(PinyinToneType.WITHOUT_TONE)
+        .setVCharType(PinyinVCharType.WITH_V);
+
+    public static PinyinOutputFormat getDefault() {
+        return DEFAULT;
+    }
+
+    public static PinyinOutputFormat withoutTone() {
+        return WITHOUT_TONE;
+    }
+
+    public static PinyinOutputFormat create() {
+        return new PinyinOutputFormat();
     }
 
     /**
@@ -124,20 +143,23 @@ public final class HanyuPinyinOutputFormat {
      * HanyuPinyinVCharType := WITH_U_AND_COLON <br>
      * HanyuPinyinCaseType := LOWERCASE <br>
      * HanyuPinyinToneType := WITH_TONE_NUMBER <br>
+     *
+     * @return instance
      */
-    public void restoreDefault() {
-        vCharType = HanyuPinyinVCharType.WITH_U_AND_COLON;
-        caseType = HanyuPinyinCaseType.LOWERCASE;
-        toneType = HanyuPinyinToneType.WITH_TONE_NUMBER;
+    public PinyinOutputFormat restoreDefault() {
+        vCharType = PinyinVCharType.WITH_U_AND_COLON;
+        caseType = PinyinCaseType.LOWERCASE;
+        toneType = PinyinToneType.WITH_TONE_NUMBER;
+        return this;
     }
 
     /**
      * Returns the output cases of Hanyu Pinyin characters
      *
      * @return caseType
-     * @see HanyuPinyinCaseType
+     * @see PinyinCaseType
      */
-    public HanyuPinyinCaseType getCaseType() {
+    public PinyinCaseType getCaseType() {
         return caseType;
     }
 
@@ -145,19 +167,21 @@ public final class HanyuPinyinOutputFormat {
      * Define the output cases of Hanyu Pinyin characters
      *
      * @param caseType the output cases of Hanyu Pinyin characters
-     * @see HanyuPinyinCaseType
+     * @return instance
+     * @see PinyinCaseType
      */
-    public void setCaseType(HanyuPinyinCaseType caseType) {
+    public PinyinOutputFormat setCaseType(PinyinCaseType caseType) {
         this.caseType = caseType;
+        return this;
     }
 
     /**
      * Returns the output format of Chinese tones
      *
      * @return toneType
-     * @see HanyuPinyinToneType
+     * @see PinyinToneType
      */
-    public HanyuPinyinToneType getToneType() {
+    public PinyinToneType getToneType() {
         return toneType;
     }
 
@@ -165,19 +189,21 @@ public final class HanyuPinyinOutputFormat {
      * Define the output format of Chinese tones
      *
      * @param toneType the output format of Chinese tones
-     * @see HanyuPinyinToneType
+     * @return instance
+     * @see PinyinToneType
      */
-    public void setToneType(HanyuPinyinToneType toneType) {
+    public PinyinOutputFormat setToneType(PinyinToneType toneType) {
         this.toneType = toneType;
+        return this;
     }
 
     /**
      * Returns output format of character 'ü'
      *
      * @return charType
-     * @see HanyuPinyinVCharType
+     * @see PinyinVCharType
      */
-    public HanyuPinyinVCharType getVCharType() {
+    public PinyinVCharType getVCharType() {
         return vCharType;
     }
 
@@ -185,16 +211,13 @@ public final class HanyuPinyinOutputFormat {
      * Define the output format of character 'ü'
      *
      * @param charType the output format of character 'ü'
-     * @see HanyuPinyinVCharType
+     * @return instance
+     * @see PinyinVCharType
      */
-    public void setVCharType(HanyuPinyinVCharType charType) {
+    public PinyinOutputFormat setVCharType(PinyinVCharType charType) {
         vCharType = charType;
+        return this;
     }
 
-    private HanyuPinyinVCharType vCharType;
-
-    private HanyuPinyinCaseType caseType;
-
-    private HanyuPinyinToneType toneType;
 
 }

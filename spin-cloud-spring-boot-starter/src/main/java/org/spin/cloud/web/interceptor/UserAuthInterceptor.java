@@ -45,6 +45,7 @@ public class UserAuthInterceptor implements HandlerInterceptor, Ordered {
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
+        EXECUTION_TIME.set(System.currentTimeMillis());
 
         // 环境检测
         String profile = request.getHeader(FeignInterceptor.X_APP_PROFILE);
@@ -69,14 +70,6 @@ public class UserAuthInterceptor implements HandlerInterceptor, Ordered {
             return false;
         }
 
-        boolean internal = internalRequest(request);
-        if (authAnno.scope() == ScopeType.INTERNAL && !internal) {
-            CurrentUser.clearCurrent();
-            logger.info("接口[{}]仅允许内部调用, 实际来源[{}-{} <-- {}]", request.getRequestURI(),
-                request.getRemoteHost(), request.getRemoteAddr(), request.getHeader(HttpHeaders.USER_AGENT));
-            RequestUtils.error(response, ErrorCode.ACCESS_DENINED, "接口仅允许内部调用: " + request.getRequestURI());
-            return false;
-        }
         // 用户信息
         String user = request.getHeader(HttpHeaders.FROM);
         CurrentUser currentUser = null;
@@ -84,30 +77,50 @@ public class UserAuthInterceptor implements HandlerInterceptor, Ordered {
             currentUser = CurrentUser.setCurrent(user);
         }
 
-        AuthLevel authLevel = authAnno.value();
-        boolean auth = AuthLevel.NONE != authLevel;
-        if (auth && authAnno.scope() == ScopeType.OPEN_UNAUTH) {
-            auth = !internal;
-        }
-
-        if (null == currentUser) {
-            CurrentUser.clearCurrent();
-            if (auth) {
-                RequestUtils.error(response, ErrorCode.ACCESS_DENINED, "该接口不允许匿名访问: " + request.getRequestURI());
+        if (authAnno.openAuth()) {
+            if (null == currentUser || !currentUser.isOpenAuth()) {
+                RequestUtils.error(response, ErrorCode.ACCESS_DENIED, "接口仅允许开放授权用户访问: " + request.getRequestURI());
                 return false;
             }
-        }
-
-        if (AuthLevel.AUTHORIZE == authAnno.value()) {
-            String authName = authAnno.name();
-            if (StringUtils.isEmpty(authName)) {
-                authName = method.getDeclaringClass().getName() + "-" + method.getName();
+        } else {
+            if (authAnno.value() != AuthLevel.NONE && null != currentUser && currentUser.isOpenAuth()) {
+                RequestUtils.error(response, ErrorCode.ACCESS_DENIED, "该接口不允许开放授权用户调用: " + request.getRequestURI());
+                return false;
             }
-            authName = "API:" + authName;
 
-            Env.setCurrentApiCode(authName);
+            boolean internal = internalRequest(request);
+            if (authAnno.scope() == ScopeType.INTERNAL && !internal) {
+                CurrentUser.clearCurrent();
+                logger.info("接口[{}]仅允许内部调用, 实际来源[{}-{} <-- {}]", request.getRequestURI(),
+                    request.getRemoteHost(), request.getRemoteAddr(), request.getHeader(HttpHeaders.USER_AGENT));
+                RequestUtils.error(response, ErrorCode.ACCESS_DENIED, "接口仅允许内部调用: " + request.getRequestURI());
+                return false;
+            }
+
+            AuthLevel authLevel = authAnno.value();
+            boolean auth = AuthLevel.NONE != authLevel;
+            if (auth && authAnno.scope() == ScopeType.OPEN_UNAUTH) {
+                auth = !internal;
+            }
+
+            if (null == currentUser) {
+                CurrentUser.clearCurrent();
+                if (auth) {
+                    RequestUtils.error(response, ErrorCode.ACCESS_DENIED, "该接口不允许匿名访问: " + request.getRequestURI());
+                    return false;
+                }
+            }
+
+            if (AuthLevel.AUTHORIZE == authAnno.value()) {
+                String authName = authAnno.name();
+                if (StringUtils.isEmpty(authName)) {
+                    authName = method.getDeclaringClass().getName() + "-" + method.getName();
+                }
+                authName = "API:" + authName;
+
+                Env.setCurrentApiCode(authName);
+            }
         }
-        EXECUTION_TIME.set(System.currentTimeMillis());
         return true;
     }
 

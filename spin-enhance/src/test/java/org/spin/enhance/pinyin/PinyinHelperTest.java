@@ -1,11 +1,13 @@
 package org.spin.enhance.pinyin;
 
 import org.junit.jupiter.api.Test;
-import org.spin.enhance.pinyin.format.HanyuPinyinCaseType;
-import org.spin.enhance.pinyin.format.HanyuPinyinOutputFormat;
-import org.spin.enhance.pinyin.format.HanyuPinyinToneType;
-import org.spin.enhance.pinyin.format.HanyuPinyinVCharType;
-import org.spin.enhance.pinyin.format.exception.BadHanyuPinyinOutputFormatCombination;
+import org.spin.enhance.pinyin.format.PinyinCaseType;
+import org.spin.enhance.pinyin.format.PinyinOutputFormat;
+import org.spin.enhance.pinyin.format.PinyinToneType;
+import org.spin.enhance.pinyin.format.PinyinVCharType;
+import org.spin.enhance.pinyin.format.exception.BadPinyinOutputFormatCombination;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -13,10 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class PinyinHelperTest {
 
     @Test
-    void testPy() throws BadHanyuPinyinOutputFormatCombination {
+    void testPy() throws BadPinyinOutputFormatCombination {
 
         String src = "aa";
-        String s = PinyinHelper.toHanYuPinyinHeadString(src, true);
+        String s = PinyinHelper.toPinyinHeadString(src, true);
 
         System.out.println(s);
     }
@@ -24,65 +26,65 @@ public class PinyinHelperTest {
     public void testToTongyongPinyinStringArray() {
         // any input of non-Chinese characters will return null
         {
-            assertNull(PinyinHelper.toTongyongPinyinStringArray('A'));
-            assertNull(PinyinHelper.toTongyongPinyinStringArray('z'));
-            assertNull(PinyinHelper.toTongyongPinyinStringArray(','));
-            assertNull(PinyinHelper.toTongyongPinyinStringArray('。'));
+            assertNull(PinyinHelper.toTongyongPinyinStringList('A'));
+            assertNull(PinyinHelper.toTongyongPinyinStringList('z'));
+            assertNull(PinyinHelper.toTongyongPinyinStringList(','));
+            assertNull(PinyinHelper.toTongyongPinyinStringList('。'));
         }
 
         // Chinese characters
         // single pronounciation
         {
             String[] expectedPinyinArray = new String[]{"li3"};
-            String[] pinyinArray = PinyinHelper.toTongyongPinyinStringArray('李');
+            List<String> pinyinArray = PinyinHelper.toTongyongPinyinStringList('李');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
         {
             String[] expectedPinyinArray = new String[]{"ciou2"};
-            String[] pinyinArray = PinyinHelper.toTongyongPinyinStringArray('球');
+            List<String> pinyinArray = PinyinHelper.toTongyongPinyinStringList('球');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
         {
             String[] expectedPinyinArray = new String[]{"jhuang1"};
-            String[] pinyinArray = PinyinHelper.toTongyongPinyinStringArray('桩');
+            List<String> pinyinArray = PinyinHelper.toTongyongPinyinStringList('桩');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         // multiple pronounciations
         {
             String[] expectedPinyinArray = new String[]{"chuan2", "jhuan4"};
-            String[] pinyinArray = PinyinHelper.toTongyongPinyinStringArray('传');
+            List<String> pinyinArray = PinyinHelper.toTongyongPinyinStringList('传');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         {
             String[] expectedPinyinArray = new String[]{"lyu4", "lu4"};
-            String[] pinyinArray = PinyinHelper.toTongyongPinyinStringArray('绿');
+            List<String> pinyinArray = PinyinHelper.toTongyongPinyinStringList('绿');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
     }
@@ -90,65 +92,65 @@ public class PinyinHelperTest {
     public void testToWadeGilesPinyinStringArray() {
         // any input of non-Chinese characters will return null
         {
-            assertNull(PinyinHelper.toWadeGilesPinyinStringArray('A'));
-            assertNull(PinyinHelper.toWadeGilesPinyinStringArray('z'));
-            assertNull(PinyinHelper.toWadeGilesPinyinStringArray(','));
-            assertNull(PinyinHelper.toWadeGilesPinyinStringArray('。'));
+            assertNull(PinyinHelper.toWadeGilesPinyinStringList('A'));
+            assertNull(PinyinHelper.toWadeGilesPinyinStringList('z'));
+            assertNull(PinyinHelper.toWadeGilesPinyinStringList(','));
+            assertNull(PinyinHelper.toWadeGilesPinyinStringList('。'));
         }
 
         // Chinese characters
         // single pronounciation
         {
             String[] expectedPinyinArray = new String[]{"li3"};
-            String[] pinyinArray = PinyinHelper.toWadeGilesPinyinStringArray('李');
+            List<String> pinyinArray = PinyinHelper.toWadeGilesPinyinStringList('李');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
         {
             String[] expectedPinyinArray = new String[]{"ch`iu2"};
-            String[] pinyinArray = PinyinHelper.toWadeGilesPinyinStringArray('球');
+            List<String> pinyinArray = PinyinHelper.toWadeGilesPinyinStringList('球');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
         {
             String[] expectedPinyinArray = new String[]{"chuang1"};
-            String[] pinyinArray = PinyinHelper.toWadeGilesPinyinStringArray('桩');
+            List<String> pinyinArray = PinyinHelper.toWadeGilesPinyinStringList('桩');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         // multiple pronounciations
         {
             String[] expectedPinyinArray = new String[]{"ch`uan2", "chuan4"};
-            String[] pinyinArray = PinyinHelper.toWadeGilesPinyinStringArray('传');
+            List<String> pinyinArray = PinyinHelper.toWadeGilesPinyinStringList('传');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         {
             String[] expectedPinyinArray = new String[]{"lu:4", "lu4"};
-            String[] pinyinArray = PinyinHelper.toWadeGilesPinyinStringArray('绿');
+            List<String> pinyinArray = PinyinHelper.toWadeGilesPinyinStringList('绿');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
     }
@@ -156,65 +158,65 @@ public class PinyinHelperTest {
     public void testToMPS2PinyinStringArray() {
         // any input of non-Chinese characters will return null
         {
-            assertNull(PinyinHelper.toMPS2PinyinStringArray('A'));
-            assertNull(PinyinHelper.toMPS2PinyinStringArray('z'));
-            assertNull(PinyinHelper.toMPS2PinyinStringArray(','));
-            assertNull(PinyinHelper.toMPS2PinyinStringArray('。'));
+            assertNull(PinyinHelper.toMPS2PinyinStringList('A'));
+            assertNull(PinyinHelper.toMPS2PinyinStringList('z'));
+            assertNull(PinyinHelper.toMPS2PinyinStringList(','));
+            assertNull(PinyinHelper.toMPS2PinyinStringList('。'));
         }
 
         // Chinese characters
         // single pronounciation
         {
             String[] expectedPinyinArray = new String[]{"li3"};
-            String[] pinyinArray = PinyinHelper.toMPS2PinyinStringArray('李');
+            List<String> pinyinArray = PinyinHelper.toMPS2PinyinStringList('李');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
         {
             String[] expectedPinyinArray = new String[]{"chiou2"};
-            String[] pinyinArray = PinyinHelper.toMPS2PinyinStringArray('球');
+            List<String> pinyinArray = PinyinHelper.toMPS2PinyinStringList('球');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
         {
             String[] expectedPinyinArray = new String[]{"juang1"};
-            String[] pinyinArray = PinyinHelper.toMPS2PinyinStringArray('桩');
+            List<String> pinyinArray = PinyinHelper.toMPS2PinyinStringList('桩');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         // multiple pronounciations
         {
             String[] expectedPinyinArray = new String[]{"chuan2", "juan4"};
-            String[] pinyinArray = PinyinHelper.toMPS2PinyinStringArray('传');
+            List<String> pinyinArray = PinyinHelper.toMPS2PinyinStringList('传');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         {
             String[] expectedPinyinArray = new String[]{"liu4", "lu4"};
-            String[] pinyinArray = PinyinHelper.toMPS2PinyinStringArray('绿');
+            List<String> pinyinArray = PinyinHelper.toMPS2PinyinStringList('绿');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
     }
@@ -222,65 +224,65 @@ public class PinyinHelperTest {
     public void testToYalePinyinStringArray() {
         // any input of non-Chinese characters will return null
         {
-            assertNull(PinyinHelper.toYalePinyinStringArray('A'));
-            assertNull(PinyinHelper.toYalePinyinStringArray('z'));
-            assertNull(PinyinHelper.toYalePinyinStringArray(','));
-            assertNull(PinyinHelper.toYalePinyinStringArray('。'));
+            assertNull(PinyinHelper.toYalePinyinStringList('A'));
+            assertNull(PinyinHelper.toYalePinyinStringList('z'));
+            assertNull(PinyinHelper.toYalePinyinStringList(','));
+            assertNull(PinyinHelper.toYalePinyinStringList('。'));
         }
 
         // Chinese characters
         // single pronounciation
         {
             String[] expectedPinyinArray = new String[]{"li3"};
-            String[] pinyinArray = PinyinHelper.toYalePinyinStringArray('李');
+            List<String> pinyinArray = PinyinHelper.toYalePinyinStringList('李');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
         {
             String[] expectedPinyinArray = new String[]{"chyou2"};
-            String[] pinyinArray = PinyinHelper.toYalePinyinStringArray('球');
+            List<String> pinyinArray = PinyinHelper.toYalePinyinStringList('球');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
         {
             String[] expectedPinyinArray = new String[]{"jwang1"};
-            String[] pinyinArray = PinyinHelper.toYalePinyinStringArray('桩');
+            List<String> pinyinArray = PinyinHelper.toYalePinyinStringList('桩');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         // multiple pronounciations
         {
             String[] expectedPinyinArray = new String[]{"chwan2", "jwan4"};
-            String[] pinyinArray = PinyinHelper.toYalePinyinStringArray('传');
+            List<String> pinyinArray = PinyinHelper.toYalePinyinStringList('传');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         {
             String[] expectedPinyinArray = new String[]{"lyu4", "lu4"};
-            String[] pinyinArray = PinyinHelper.toYalePinyinStringArray('绿');
+            List<String> pinyinArray = PinyinHelper.toYalePinyinStringList('绿');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
     }
@@ -288,102 +290,102 @@ public class PinyinHelperTest {
     public void testToGwoyeuRomatzyhStringArray() {
         // any input of non-Chinese characters will return null
         {
-            assertNull(PinyinHelper.toGwoyeuRomatzyhStringArray('A'));
-            assertNull(PinyinHelper.toGwoyeuRomatzyhStringArray('z'));
-            assertNull(PinyinHelper.toGwoyeuRomatzyhStringArray(','));
-            assertNull(PinyinHelper.toGwoyeuRomatzyhStringArray('。'));
+            assertNull(PinyinHelper.toGwoyeuRomatzyhStringList('A'));
+            assertNull(PinyinHelper.toGwoyeuRomatzyhStringList('z'));
+            assertNull(PinyinHelper.toGwoyeuRomatzyhStringList(','));
+            assertNull(PinyinHelper.toGwoyeuRomatzyhStringList('。'));
         }
 
         // Chinese characters
         // single pronounciation
         {
             String[] expectedPinyinArray = new String[]{"lii"};
-            String[] pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringArray('李');
+            List<String> pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringList('李');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
         {
             String[] expectedPinyinArray = new String[]{"chyou"};
-            String[] pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringArray('球');
+            List<String> pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringList('球');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
         {
             String[] expectedPinyinArray = new String[]{"juang"};
-            String[] pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringArray('桩');
+            List<String> pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringList('桩');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         {
             String[] expectedPinyinArray = new String[]{"fuh"};
-            String[] pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringArray('付');
+            List<String> pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringList('付');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         // multiple pronounciations
         {
             String[] expectedPinyinArray = new String[]{"chwan", "juann"};
-            String[] pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringArray('传');
+            List<String> pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringList('传');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         {
             String[] expectedPinyinArray = new String[]{".me", ".mha", "iau"};
-            String[] pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringArray('么');
+            List<String> pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringList('么');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
 
         {
             String[] expectedPinyinArray = new String[]{"liuh", "luh"};
-            String[] pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringArray('绿');
+            List<String> pinyinArray = PinyinHelper.toGwoyeuRomatzyhStringList('绿');
 
-            assertEquals(expectedPinyinArray.length, pinyinArray.length);
+            assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
             for (int i = 0; i < expectedPinyinArray.length; i++) {
-                assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
             }
         }
     }
 
-    public void testToHanyuPinyinStringArray() {
+    public void testToPinyinStringArray() {
 
         // any input of non-Chinese characters will return null
         {
-            HanyuPinyinOutputFormat defaultFormat = new HanyuPinyinOutputFormat();
+            PinyinOutputFormat defaultFormat = new PinyinOutputFormat();
             try {
-                assertNull(PinyinHelper.toHanyuPinyinStringArray('A', defaultFormat));
-                assertNull(PinyinHelper.toHanyuPinyinStringArray('z', defaultFormat));
-                assertNull(PinyinHelper.toHanyuPinyinStringArray(',', defaultFormat));
-                assertNull(PinyinHelper.toHanyuPinyinStringArray('。', defaultFormat));
-            } catch (BadHanyuPinyinOutputFormatCombination e) {
+                assertNull(PinyinHelper.toPinyinStringList('A', defaultFormat));
+                assertNull(PinyinHelper.toPinyinStringList('z', defaultFormat));
+                assertNull(PinyinHelper.toPinyinStringList(',', defaultFormat));
+                assertNull(PinyinHelper.toPinyinStringList('。', defaultFormat));
+            } catch (BadPinyinOutputFormatCombination e) {
                 e.printStackTrace();
             }
         }
@@ -392,67 +394,67 @@ public class PinyinHelperTest {
         // single pronounciation
         {
             try {
-                HanyuPinyinOutputFormat defaultFormat = new HanyuPinyinOutputFormat();
+                PinyinOutputFormat defaultFormat = new PinyinOutputFormat();
 
                 String[] expectedPinyinArray = new String[]{"li3"};
-                String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray('李', defaultFormat);
+                List<String> pinyinArray = PinyinHelper.toPinyinStringList('李', defaultFormat);
 
-                assertEquals(expectedPinyinArray.length, pinyinArray.length);
+                assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
                 for (int i = 0; i < expectedPinyinArray.length; i++) {
-                    assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                    assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
                 }
-            } catch (BadHanyuPinyinOutputFormatCombination e) {
+            } catch (BadPinyinOutputFormatCombination e) {
                 e.printStackTrace();
             }
         }
         {
             try {
-                HanyuPinyinOutputFormat upperCaseFormat = new HanyuPinyinOutputFormat();
-                upperCaseFormat.setCaseType(HanyuPinyinCaseType.UPPERCASE);
+                PinyinOutputFormat upperCaseFormat = new PinyinOutputFormat();
+                upperCaseFormat.setCaseType(PinyinCaseType.UPPERCASE);
 
                 String[] expectedPinyinArray = new String[]{"LI3"};
-                String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray('李', upperCaseFormat);
+                List<String> pinyinArray = PinyinHelper.toPinyinStringList('李', upperCaseFormat);
 
-                assertEquals(expectedPinyinArray.length, pinyinArray.length);
+                assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
                 for (int i = 0; i < expectedPinyinArray.length; i++) {
-                    assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                    assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
                 }
-            } catch (BadHanyuPinyinOutputFormatCombination e) {
+            } catch (BadPinyinOutputFormatCombination e) {
                 e.printStackTrace();
             }
         }
         {
             try {
-                HanyuPinyinOutputFormat defaultFormat = new HanyuPinyinOutputFormat();
+                PinyinOutputFormat defaultFormat = new PinyinOutputFormat();
 
                 String[] expectedPinyinArray = new String[]{"lu:3"};
-                String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray('吕', defaultFormat);
+                List<String> pinyinArray = PinyinHelper.toPinyinStringList('吕', defaultFormat);
 
-                assertEquals(expectedPinyinArray.length, pinyinArray.length);
+                assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
                 for (int i = 0; i < expectedPinyinArray.length; i++) {
-                    assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                    assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
                 }
-            } catch (BadHanyuPinyinOutputFormatCombination e) {
+            } catch (BadPinyinOutputFormatCombination e) {
                 e.printStackTrace();
             }
         }
         {
             try {
-                HanyuPinyinOutputFormat vCharFormat = new HanyuPinyinOutputFormat();
-                vCharFormat.setVCharType(HanyuPinyinVCharType.WITH_V);
+                PinyinOutputFormat vCharFormat = new PinyinOutputFormat();
+                vCharFormat.setVCharType(PinyinVCharType.WITH_V);
 
                 String[] expectedPinyinArray = new String[]{"lv3"};
-                String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray('吕', vCharFormat);
+                List<String> pinyinArray = PinyinHelper.toPinyinStringList('吕', vCharFormat);
 
-                assertEquals(expectedPinyinArray.length, pinyinArray.length);
+                assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
                 for (int i = 0; i < expectedPinyinArray.length; i++) {
-                    assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                    assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
                 }
-            } catch (BadHanyuPinyinOutputFormatCombination e) {
+            } catch (BadPinyinOutputFormatCombination e) {
                 e.printStackTrace();
             }
         }
@@ -460,34 +462,34 @@ public class PinyinHelperTest {
         // multiple pronounciations
         {
             try {
-                HanyuPinyinOutputFormat defaultFormat = new HanyuPinyinOutputFormat();
+                PinyinOutputFormat defaultFormat = new PinyinOutputFormat();
 
                 String[] expectedPinyinArray = new String[]{"jian1", "jian4"};
-                String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray('间', defaultFormat);
+                List<String> pinyinArray = PinyinHelper.toPinyinStringList('间', defaultFormat);
 
-                assertEquals(expectedPinyinArray.length, pinyinArray.length);
+                assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
                 for (int i = 0; i < expectedPinyinArray.length; i++) {
-                    assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                    assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
                 }
-            } catch (BadHanyuPinyinOutputFormatCombination e) {
+            } catch (BadPinyinOutputFormatCombination e) {
                 e.printStackTrace();
             }
         }
 
         {
             try {
-                HanyuPinyinOutputFormat defaultFormat = new HanyuPinyinOutputFormat();
+                PinyinOutputFormat defaultFormat = new PinyinOutputFormat();
 
                 String[] expectedPinyinArray = new String[]{"hao3", "hao4"};
-                String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray('好', defaultFormat);
+                List<String> pinyinArray = PinyinHelper.toPinyinStringList('好', defaultFormat);
 
-                assertEquals(expectedPinyinArray.length, pinyinArray.length);
+                assertEquals(expectedPinyinArray.length, pinyinArray.size());
 
                 for (int i = 0; i < expectedPinyinArray.length; i++) {
-                    assertEquals(expectedPinyinArray[i], pinyinArray[i]);
+                    assertEquals(expectedPinyinArray[i], pinyinArray.get(i));
                 }
-            } catch (BadHanyuPinyinOutputFormatCombination e) {
+            } catch (BadPinyinOutputFormatCombination e) {
                 e.printStackTrace();
             }
         }
@@ -498,108 +500,108 @@ public class PinyinHelperTest {
      */
     public void testOutputCombination() {
         try {
-            HanyuPinyinOutputFormat outputFormat = new HanyuPinyinOutputFormat();
+            PinyinOutputFormat outputFormat = new PinyinOutputFormat();
 
             // fix case type to lowercase firstly, change VChar and Tone
             // combination
-            outputFormat.setCaseType(HanyuPinyinCaseType.LOWERCASE);
+            outputFormat.setCaseType(PinyinCaseType.LOWERCASE);
 
             // WITH_U_AND_COLON and WITH_TONE_NUMBER
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_U_AND_COLON);
-            outputFormat.setToneType(HanyuPinyinToneType.WITH_TONE_NUMBER);
+            outputFormat.setVCharType(PinyinVCharType.WITH_U_AND_COLON);
+            outputFormat.setToneType(PinyinToneType.WITH_TONE_NUMBER);
 
-            assertEquals("lu:3", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("lu:3", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // WITH_V and WITH_TONE_NUMBER
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_V);
-            outputFormat.setToneType(HanyuPinyinToneType.WITH_TONE_NUMBER);
+            outputFormat.setVCharType(PinyinVCharType.WITH_V);
+            outputFormat.setToneType(PinyinToneType.WITH_TONE_NUMBER);
 
-            assertEquals("lv3", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("lv3", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // WITH_U_UNICODE and WITH_TONE_NUMBER
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_U_UNICODE);
-            outputFormat.setToneType(HanyuPinyinToneType.WITH_TONE_NUMBER);
+            outputFormat.setVCharType(PinyinVCharType.WITH_U_UNICODE);
+            outputFormat.setToneType(PinyinToneType.WITH_TONE_NUMBER);
 
-            assertEquals("lü3", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("lü3", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // // WITH_U_AND_COLON and WITHOUT_TONE
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_U_AND_COLON);
-            outputFormat.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+            outputFormat.setVCharType(PinyinVCharType.WITH_U_AND_COLON);
+            outputFormat.setToneType(PinyinToneType.WITHOUT_TONE);
 
-            assertEquals("lu:", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("lu:", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // WITH_V and WITHOUT_TONE
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_V);
-            outputFormat.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+            outputFormat.setVCharType(PinyinVCharType.WITH_V);
+            outputFormat.setToneType(PinyinToneType.WITHOUT_TONE);
 
-            assertEquals("lv", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("lv", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // WITH_U_UNICODE and WITHOUT_TONE
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_U_UNICODE);
-            outputFormat.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+            outputFormat.setVCharType(PinyinVCharType.WITH_U_UNICODE);
+            outputFormat.setToneType(PinyinToneType.WITHOUT_TONE);
 
-            assertEquals("lü", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("lü", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // WITH_U_AND_COLON and WITH_TONE_MARK is forbidden
 
             // WITH_V and WITH_TONE_MARK is forbidden
 
             // WITH_U_UNICODE and WITH_TONE_MARK
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_U_UNICODE);
-            outputFormat.setToneType(HanyuPinyinToneType.WITH_TONE_MARK);
+            outputFormat.setVCharType(PinyinVCharType.WITH_U_UNICODE);
+            outputFormat.setToneType(PinyinToneType.WITH_TONE_MARK);
 
-            assertEquals("lǚ", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("lǚ", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // fix case type to UPPERCASE, change VChar and Tone
             // combination
-            outputFormat.setCaseType(HanyuPinyinCaseType.UPPERCASE);
+            outputFormat.setCaseType(PinyinCaseType.UPPERCASE);
 
             // WITH_U_AND_COLON and WITH_TONE_NUMBER
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_U_AND_COLON);
-            outputFormat.setToneType(HanyuPinyinToneType.WITH_TONE_NUMBER);
+            outputFormat.setVCharType(PinyinVCharType.WITH_U_AND_COLON);
+            outputFormat.setToneType(PinyinToneType.WITH_TONE_NUMBER);
 
-            assertEquals("LU:3", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("LU:3", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // WITH_V and WITH_TONE_NUMBER
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_V);
-            outputFormat.setToneType(HanyuPinyinToneType.WITH_TONE_NUMBER);
+            outputFormat.setVCharType(PinyinVCharType.WITH_V);
+            outputFormat.setToneType(PinyinToneType.WITH_TONE_NUMBER);
 
-            assertEquals("LV3", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("LV3", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // WITH_U_UNICODE and WITH_TONE_NUMBER
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_U_UNICODE);
-            outputFormat.setToneType(HanyuPinyinToneType.WITH_TONE_NUMBER);
+            outputFormat.setVCharType(PinyinVCharType.WITH_U_UNICODE);
+            outputFormat.setToneType(PinyinToneType.WITH_TONE_NUMBER);
 
-            assertEquals("LÜ3", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("LÜ3", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // // WITH_U_AND_COLON and WITHOUT_TONE
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_U_AND_COLON);
-            outputFormat.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+            outputFormat.setVCharType(PinyinVCharType.WITH_U_AND_COLON);
+            outputFormat.setToneType(PinyinToneType.WITHOUT_TONE);
 
-            assertEquals("LU:", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("LU:", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // WITH_V and WITHOUT_TONE
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_V);
-            outputFormat.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+            outputFormat.setVCharType(PinyinVCharType.WITH_V);
+            outputFormat.setToneType(PinyinToneType.WITHOUT_TONE);
 
-            assertEquals("LV", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("LV", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // WITH_U_UNICODE and WITHOUT_TONE
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_U_UNICODE);
-            outputFormat.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+            outputFormat.setVCharType(PinyinVCharType.WITH_U_UNICODE);
+            outputFormat.setToneType(PinyinToneType.WITHOUT_TONE);
 
-            assertEquals("LÜ", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
+            assertEquals("LÜ", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
 
             // WITH_U_AND_COLON and WITH_TONE_MARK is forbidden
 
             // WITH_V and WITH_TONE_MARK is forbidden
 
             // WITH_U_UNICODE and WITH_TONE_MARK
-            outputFormat.setVCharType(HanyuPinyinVCharType.WITH_U_UNICODE);
-            outputFormat.setToneType(HanyuPinyinToneType.WITH_TONE_MARK);
+            outputFormat.setVCharType(PinyinVCharType.WITH_U_UNICODE);
+            outputFormat.setToneType(PinyinToneType.WITH_TONE_MARK);
 
-            assertEquals("LǙ", PinyinHelper.toHanyuPinyinStringArray('吕', outputFormat)[0]);
-        } catch (BadHanyuPinyinOutputFormatCombination e) {
+            assertEquals("LǙ", PinyinHelper.toPinyinStringList('吕', outputFormat).get(0));
+        } catch (BadPinyinOutputFormatCombination e) {
             e.printStackTrace();
         }
     }

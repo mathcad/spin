@@ -28,7 +28,7 @@ public @interface DeleteApi {
     /**
      * 认证级别，默认为仅认证
      *
-     * @return 是否需要认证
+     * @return 认证级别
      */
     @AliasFor(annotation = Auth.class, attribute = "value")
     AuthLevel auth() default AuthLevel.AUTHENCATE;
@@ -58,11 +58,19 @@ public @interface DeleteApi {
      *     OPEN_UNAUTH 公开调用，且内部调用时不验证用户权限(无论是否指定auth)
      * </pre>
      *
-     * @return 是否仅内部调用
+     * @return 接口可见范围
      * @see ScopeType
      */
     @AliasFor(annotation = Auth.class, attribute = "scope")
     ScopeType scope() default ScopeType.OPEN;
+
+    /**
+     * 是否是开放接口, 默认不是
+     *
+     * @return 是否是开放接口
+     */
+    @AliasFor(annotation = Auth.class, attribute = "openAuth")
+    boolean openAuth() default false;
 
     /**
      * RequestMapping的名称

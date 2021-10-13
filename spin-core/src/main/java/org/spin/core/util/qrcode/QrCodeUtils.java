@@ -107,8 +107,9 @@ public final class QrCodeUtils extends Util {
             LuminanceSource source = new BufferedImageLuminanceSource(imageSupplier.get());
             Binarizer binarizer = new HybridBinarizer(source);
             BinaryBitmap binaryBitmap = new BinaryBitmap(binarizer);
-            Map<DecodeHintType, String> hints = new HashMap<>();
+            Map<DecodeHintType, Object> hints = new HashMap<>();
             hints.put(DecodeHintType.CHARACTER_SET, "UTF-8");
+            hints.put(DecodeHintType.TRY_HARDER, true);
 
             MultiFormatReader formatReader = new MultiFormatReader();
             return formatReader.decode(binaryBitmap, hints);

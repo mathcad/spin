@@ -1,4 +1,4 @@
-package org.spin.core;
+package org.spin.core.stream;
 
 import org.spin.core.util.CollectionUtils;
 

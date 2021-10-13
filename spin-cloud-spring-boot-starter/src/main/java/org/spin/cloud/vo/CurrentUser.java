@@ -10,12 +10,7 @@ import org.spin.core.function.ExceptionalHandler;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.security.Base64;
 import org.spin.core.session.SessionUser;
-import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.EnumUtils;
-import org.spin.core.util.JsonUtils;
-import org.spin.core.util.MapUtils;
-import org.spin.core.util.StringUtils;
-import org.spin.core.util.SystemUtils;
+import org.spin.core.util.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -25,13 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -86,6 +75,7 @@ public class CurrentUser extends SessionUser<Long> {
     private final LocalDateTime loginTime;
     private final String loginIp;
     private final String clientType;
+    private final String appid;
 
     private final String originData;
 
@@ -107,7 +97,7 @@ public class CurrentUser extends SessionUser<Long> {
         try {
             String user = Base64.decodeWithUtf8(encodedFromStr);
             String[] split = user.split(":");
-            if (split.length != 7) {
+            if (split.length < 7) {
                 logger.warn("非法的用户信息: {}", user);
                 throw new BizException("非法的用户信息: " + user);
             }
@@ -119,6 +109,7 @@ public class CurrentUser extends SessionUser<Long> {
             this.loginIp = split[4];
             this.clientType = split[5];
             this.sid = split[6];
+            this.appid = split.length == 8 ? split[7] : null;
         } catch (Exception e) {
             logger.warn("非法的用户信息: {}", e.getMessage());
             throw new BizException("非法的用户信息", e);
@@ -243,6 +234,14 @@ public class CurrentUser extends SessionUser<Long> {
 
     public String getClientType() {
         return clientType;
+    }
+
+    public boolean isOpenAuth() {
+        return null != appid;
+    }
+
+    public String getAppid() {
+        return appid;
     }
 
     /**

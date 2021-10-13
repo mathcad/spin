@@ -25,10 +25,10 @@ public class ErrorCode implements Serializable {
     public static final ErrorCode OK = new ErrorCode(200, "OK");
 
     /////////////////////////////////// 内部错误，不应暴露给客户端 ////////////////////////////////////////////////
-    public static final ErrorCode DATEFORMAT_UNSUPPORT = new ErrorCode(5, "时间/日期格式不支持");
-    public static final ErrorCode KEY_FAIL = new ErrorCode(10, "获取密钥失败");
+    public static final ErrorCode DATEFORMAT_UNSUPPORTED = new ErrorCode(5, "时间/日期格式不支持");
+    public static final ErrorCode KEY_FAIL = new ErrorCode(10, "密钥解析失败");
     public static final ErrorCode ENCRYPT_FAIL = new ErrorCode(11, "加密算法执行失败");
-    public static final ErrorCode DEENCRYPT_FAIL = new ErrorCode(15, "解密算法执行失败");
+    public static final ErrorCode DECRYPT_FAIL = new ErrorCode(15, "解密算法执行失败");
     public static final ErrorCode SIGNATURE_FAIL = new ErrorCode(20, "签名验证失败");
     public static final ErrorCode BEAN_CREATE_FAIL = new ErrorCode(40, "创建bean实例错误");
     public static final ErrorCode IO_FAIL = new ErrorCode(70, "IO异常");
@@ -38,12 +38,11 @@ public class ErrorCode implements Serializable {
 
     /////////////////////////////////// 可通过Restful接口暴露给客户端的错误 //////////////////////////////////////
     // 4** 访问及权限错误
-    public static final ErrorCode LOGGIN_DENINED = new ErrorCode(400, "登录失败");
-    public static final ErrorCode ACCESS_DENINED = new ErrorCode(401, "未授权的访问");
+    public static final ErrorCode LOGIN_DENIED = new ErrorCode(400, "登录失败");
+    public static final ErrorCode ACCESS_DENIED = new ErrorCode(401, "未授权的访问");
     public static final ErrorCode ASSERT_FAIL = new ErrorCode(410, "数据验证失败");
     public static final ErrorCode INVALID_PARAM = new ErrorCode(412, "参数不合法");
     public static final ErrorCode NO_BIND_USER = new ErrorCode(413, "无关联用户");
-    public static final ErrorCode SMS_VALICODE_ERROR = new ErrorCode(420, "短信验证码错误");
 
     // 5** 服务端运行错误
     public static final ErrorCode INTERNAL_ERROR = new ErrorCode(500, "服务端内部错误");

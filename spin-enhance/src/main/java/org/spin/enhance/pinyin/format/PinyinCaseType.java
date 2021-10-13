@@ -41,35 +41,16 @@ package org.spin.enhance.pinyin.format;
  *
  * @author Li Min (xmlerlimin@gmail.com)
  */
-public class HanyuPinyinCaseType {
+public enum PinyinCaseType {
 
     /**
      * The option indicates that hanyu pinyin is outputted as uppercase letters
      */
-    public static final HanyuPinyinCaseType UPPERCASE = new HanyuPinyinCaseType("UPPERCASE");
+    UPPERCASE,
 
     /**
      * The option indicates that hanyu pinyin is outputted as lowercase letters
      */
-    public static final HanyuPinyinCaseType LOWERCASE = new HanyuPinyinCaseType("LOWERCASE");
-
-    /**
-     * @return Returns the name.
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @param name The name to set.
-     */
-    protected void setName(String name) {
-        this.name = name;
-    }
-
-    protected HanyuPinyinCaseType(String name) {
-        setName(name);
-    }
-
-    protected String name;
+    LOWERCASE,
+    ;
 }

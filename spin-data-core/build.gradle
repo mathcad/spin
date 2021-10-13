@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '数据访问模块核心依赖,脱离于具体的DAO层实现，只定义必须的接口与通用工具'
-version = '2.4.0-SNAPSHOT'
+version = '2.4.2-SNAPSHOT'
 
 test {
     useJUnitPlatform()
@@ -43,7 +43,7 @@ dependencies {
     testRuntimeOnly group: 'org.xerial', name: 'sqlite-jdbc', version: sqliteVersion
     testRuntimeOnly group: 'com.ibeetl', name: 'beetl', version: beetlVersion
 
-    api group: 'org.mathcat', name: 'spin-core', version: '2.4.0-SNAPSHOT'
+    api group: 'org.mathcat', name: 'spin-core', version: '2.4.2-SNAPSHOT'
     api group: 'cglib', name: 'cglib', version: '3.3.0'
 //    api group: 'io.projectreactor', name: 'reactor-core', version: '3.4.6'
 

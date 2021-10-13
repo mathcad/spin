@@ -19,6 +19,9 @@ import org.spin.enhance.pinyin.multipinyin.Trie;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Manage all external resources required in PinyinHelper class.
@@ -26,6 +29,8 @@ import java.io.IOException;
  * @author Li Min (xmlerlimin@gmail.com)
  */
 class ChineseToPinyinResource {
+    private static final String[] EMPTY = {};
+
     /**
      * A hash table contains <Unicode, HanyuPinyin> pairs
      */
@@ -69,9 +74,7 @@ class ChineseToPinyinResource {
     }
 
     Trie getHanyuPinyinTrie(char ch) {
-
         String codepointHexStr = Integer.toHexString((int) ch).toUpperCase();
-
         // fetch from hashtable
         return getUnicodeToHanyuPinyinTable().get(codepointHexStr);
     }
@@ -84,25 +87,41 @@ class ChineseToPinyinResource {
      * @return The Hanyu Pinyin strings of the given Chinese character in array
      * format; return null if there is no corresponding Pinyin string.
      */
-    String[] getHanyuPinyinStringArray(char ch) {
+    String[] getPinyinStringArray(char ch) {
+        String pinyinRecord = getHanyuPinyinRecordFromChar(ch);
+        return parsePinyinString(pinyinRecord).toArray(EMPTY);
+    }
+
+    List<String> getPinyinStringList(char ch) {
         String pinyinRecord = getHanyuPinyinRecordFromChar(ch);
         return parsePinyinString(pinyinRecord);
     }
 
-    String[] parsePinyinString(String pinyinRecord) {
-
+    List<String> parsePinyinString(String pinyinRecord) {
         if (null != pinyinRecord) {
             int indexOfLeftBracket = pinyinRecord.indexOf(Field.LEFT_BRACKET);
             int indexOfRightBracket = pinyinRecord.lastIndexOf(Field.RIGHT_BRACKET);
 
-            String stripedString =
-                pinyinRecord.substring(indexOfLeftBracket + Field.LEFT_BRACKET.length(),
-                    indexOfRightBracket);
+            String stripedString = pinyinRecord.substring(indexOfLeftBracket + 1, indexOfRightBracket);
 
-            return stripedString.split(Field.COMMA);
+            List<String> pinyinList = new ArrayList<>();
+            StringBuilder sb = new StringBuilder(stripedString.length());
+            for (char c : stripedString.toCharArray()) {
+                if (c == Field.COMMA) {
+                    pinyinList.add(sb.toString());
+                    sb.setLength(0);
+                } else {
+                    sb.append(c);
+                }
+            }
+            if (sb.length() > 0) {
+                pinyinList.add(sb.toString());
+            }
+            return pinyinList;
 
-        } else
-            return null; // no record found or mal-formatted record
+        } else {
+            return Collections.emptyList(); // no record found or mal-formatted record
+        }
     }
 
     /**
@@ -113,8 +132,8 @@ class ChineseToPinyinResource {
     private boolean isValidRecord(String record) {
         final String noneStr = "(none0)";
 
-        return (null != record) && !record.equals(noneStr) && record.startsWith(Field.LEFT_BRACKET)
-            && record.endsWith(Field.RIGHT_BRACKET);
+        return (null != record) && !record.equals(noneStr) && record.charAt(0) == Field.LEFT_BRACKET
+            && record.charAt(record.length() - 1) == Field.RIGHT_BRACKET;
     }
 
     /**
@@ -127,7 +146,7 @@ class ChineseToPinyinResource {
         // please refer to http://www.unicode.org/glossary/#code_point
         // Another reference: http://en.wikipedia.org/wiki/Unicode
 
-        String codepointHexStr = Integer.toHexString((int) ch).toUpperCase();
+        String codepointHexStr = Integer.toHexString(ch).toUpperCase();
 
         // fetch from hashtable
         Trie trie = getUnicodeToHanyuPinyinTable().get(codepointHexStr);
@@ -159,11 +178,11 @@ class ChineseToPinyinResource {
      *
      * @author Li Min (xmlerlimin@gmail.com)
      */
-    class Field {
-        static final String LEFT_BRACKET = "(";
+    static class Field {
+        static final char LEFT_BRACKET = '(';
 
-        static final String RIGHT_BRACKET = ")";
+        static final char RIGHT_BRACKET = ')';
 
-        static final String COMMA = ",";
+        static final char COMMA = ',';
     }
 }

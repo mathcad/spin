@@ -2,7 +2,9 @@ package org.spin.data.sql;
 
 import org.junit.jupiter.api.Test;
 import org.spin.core.trait.FriendlyEnum;
+import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.MapUtils;
+import org.spin.data.sql.loader.FileSystemMdLoader;
 import org.spin.data.sql.resolver.BeetlResolver;
 import org.spin.data.sql.resolver.TemplateResolver;
 
@@ -57,6 +59,13 @@ public class BeetlTest {
         public String getValue() {
             return value;
         }
+    }
+
+    @Test
+    void testBeetl() {
+        FileSystemMdLoader fileSystemMdLoader = new FileSystemMdLoader();
+        fileSystemMdLoader.setTemplateResolver(new BeetlResolver());
+        System.out.println(fileSystemMdLoader.getSQL("AppCatch.test", MapUtils.ofMap("a", CollectionUtils.ofArrayList(1, 2, 3, 4, 5))));
     }
 }
 

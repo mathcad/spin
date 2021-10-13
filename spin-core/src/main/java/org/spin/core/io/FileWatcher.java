@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 /**
- * 文件监控
+ * 文件监视器
  * <p>DESCRIPTION</p>
  * <p>Created by xuweinan on 2019/3/19</p>
  *
@@ -50,7 +50,7 @@ public class FileWatcher implements AutoCloseable {
         workThread = new Thread(this::working, id);
     }
 
-    public void registWatcher(File file, boolean recursion, Consumer<FileAction> fileActionCallback) {
+    public void registerWatcher(File file, boolean recursion, Consumer<FileAction> fileActionCallback) {
         checkState();
         Path originPath = null;
         if (!file.isDirectory()) {
@@ -97,8 +97,8 @@ public class FileWatcher implements AutoCloseable {
      * @param recursion          是否递归监视子文件夹
      * @param fileActionCallback 文件监视回调
      */
-    public void registWatcher(File watchFile, boolean recursion, FileActionCallback fileActionCallback) {
-        registWatcher(watchFile, recursion, (action -> {
+    public void registerWatcher(File watchFile, boolean recursion, FileActionCallback fileActionCallback) {
+        registerWatcher(watchFile, recursion, (action -> {
             if (action.isDelete()) {
                 fileActionCallback.onDelete(action.file);
             } else if (action.isCreate()) {
@@ -174,7 +174,7 @@ public class FileWatcher implements AutoCloseable {
                 // register it and its sub-directories
                 if (tuple.c3 && (kind.name().equals(StandardWatchEventKinds.ENTRY_CREATE.name()))) {
                     if (Files.isDirectory(child, NOFOLLOW_LINKS)) {
-                        registWatcher(file, true, tuple.c4);
+                        registerWatcher(file, true, tuple.c4);
                     }
                 }
             }

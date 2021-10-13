@@ -513,7 +513,7 @@ public final class StringUtils extends Util {
      * @return trim后的字符串
      */
     public static String trimToNull(String str) {
-        str =  str == null ? null : str.trim();
+        str = str == null ? null : str.trim();
         return null == str || str.length() == 0 ? null : str;
     }
 

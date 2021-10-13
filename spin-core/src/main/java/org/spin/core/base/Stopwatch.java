@@ -191,6 +191,17 @@ public final class Stopwatch {
     }
 
     /**
+     * Returns the last record elapsed time shown on this stopwatch as a {@link Duration}. Unlike {@link
+     * #elapsed(TimeUnit)}, this method does not lose any precision due to rounding.
+     *
+     * @return 计次逝去的时间
+     * @since 22.0
+     */
+    public Duration elapsedLastRecord() {
+        return Duration.ofNanos(elapsedRecordNanos(recordLen - 1));
+    }
+
+    /**
      * Returns the current elapsed time shown on this stopwatch as a {@link Duration}. Unlike {@link
      * #elapsed(TimeUnit)}, this method does not lose any precision due to rounding.
      *

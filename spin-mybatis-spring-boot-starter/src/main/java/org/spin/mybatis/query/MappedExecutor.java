@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.apache.ibatis.exceptions.TooManyResultsException;
+import org.mybatis.spring.MyBatisSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.data.rs.AffectedRows;
@@ -12,6 +14,7 @@ import org.spin.data.rs.AffectedRows;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * MyBatis条件执行器
@@ -83,6 +86,25 @@ public interface MappedExecutor<E, M extends BaseMapper<E>> {
     }
 
     /**
+     * 查询单条记录，存在多条时，抛出指定异常
+     *
+     * @param moreThanOneException 违反唯一约束时的异常
+     * @param <X>                  异常类型
+     * @return 实体(可能为null)
+     * @throws X 违反唯一约束时抛出
+     */
+    default <X extends Exception> Optional<E> unique(Supplier<X> moreThanOneException) throws X {
+        try {
+            return Optional.ofNullable(repo().selectOne(getQuery()));
+        } catch (MyBatisSystemException e) {
+            if (e.getCause() instanceof TooManyResultsException) {
+                throw moreThanOneException.get();
+            }
+            throw e;
+        }
+    }
+
+    /**
      * 条件删除
      *
      * @return 删除数量
@@ -106,8 +128,9 @@ public interface MappedExecutor<E, M extends BaseMapper<E>> {
      *
      * @return 记录数
      */
-    default Integer count() {
-        return repo().selectCount(getQuery());
+    default long count() {
+        Long cnt = repo().selectCount(getQuery());
+        return null == cnt ? 0L : cnt;
     }
 
     /**

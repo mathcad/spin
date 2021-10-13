@@ -49,43 +49,22 @@ package org.spin.enhance.pinyin.format;
  *
  * @author Li Min (xmlerlimin@gmail.com)
  */
-public class HanyuPinyinToneType {
+public enum PinyinToneType {
 
     /**
      * The option indicates that hanyu pinyin is outputted with tone numbers
      */
-    public static final HanyuPinyinToneType WITH_TONE_NUMBER =
-        new HanyuPinyinToneType("WITH_TONE_NUMBER");
+    WITH_TONE_NUMBER,
 
     /**
      * The option indicates that hanyu pinyin is outputted without tone numbers
      * or tone marks
      */
-    public static final HanyuPinyinToneType WITHOUT_TONE = new HanyuPinyinToneType("WITHOUT_TONE");
+    WITHOUT_TONE,
 
     /**
      * The option indicates that hanyu pinyin is outputted with tone marks
      */
-    public static final HanyuPinyinToneType WITH_TONE_MARK =
-        new HanyuPinyinToneType("WITH_TONE_MARK");
-
-    /**
-     * @return Returns the name.
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @param name The name to set.
-     */
-    protected void setName(String name) {
-        this.name = name;
-    }
-
-    protected HanyuPinyinToneType(String name) {
-        setName(name);
-    }
-
-    protected String name;
+    WITH_TONE_MARK,
+    ;
 }

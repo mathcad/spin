@@ -29,7 +29,7 @@ public final class Retries extends Util {
      * @param <T>      操作返回结果类型
      * @return 操作结果
      */
-    public static <T> T retry(Retriable<T> callable) {
+    public static <T> T retry(Retryable<T> callable) {
         return retry(callable, 3, DEFAULT_RETRY_CONFIG);
     }
 
@@ -41,7 +41,7 @@ public final class Retries extends Util {
      * @param <T>         操作返回结果类型
      * @return 操作结果
      */
-    public static <T> T retry(Retriable<T> callable, final int maxAttempts) {
+    public static <T> T retry(Retryable<T> callable, final int maxAttempts) {
         return retry(callable, maxAttempts, DEFAULT_RETRY_CONFIG);
     }
 
@@ -54,7 +54,7 @@ public final class Retries extends Util {
      * @param <T>         操作返回结果类型
      * @return 操作结果
      */
-    public static <T> T retry(Retriable<T> callable, final int maxAttempts, RetryConfig<Object> retryConfig) {
+    public static <T> T retry(Retryable<T> callable, final int maxAttempts, RetryConfig<Object> retryConfig) {
         if (null == retryConfig) {
             retryConfig = DEFAULT_RETRY_CONFIG;
         }
@@ -135,7 +135,7 @@ public final class Retries extends Util {
     }
 
     @FunctionalInterface
-    public interface Retriable<T> {
+    public interface Retryable<T> {
         T apply(Exception exception) throws Exception;
     }
 }

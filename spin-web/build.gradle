@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '基于spring mvc的web模块'
-version = '2.4.0-SNAPSHOT'
+version = '2.4.2-SNAPSHOT'
 
 test {
     useJUnitPlatform()
@@ -40,7 +40,7 @@ dependencies {
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitJupiterVersion
 
 //    web
-    api group: 'org.mathcat', name: 'spin-core', version: '2.4.0-SNAPSHOT'
+    api group: 'org.mathcat', name: 'spin-core', version: '2.4.2-SNAPSHOT'
 
     api group: 'org.springframework', name: 'spring-context-support', version: springVersion
     api group: 'org.springframework', name: 'spring-webmvc', version: springVersion

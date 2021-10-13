@@ -163,7 +163,7 @@ public final class DateUtils extends Util {
         try {
             return sdf.parse(matcher == null ? date : matcher.group(0));
         } catch (ParseException e) {
-            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORTED, "[" + date + "]");
         }
     }
 
@@ -185,7 +185,7 @@ public final class DateUtils extends Util {
         try {
             return sdf.parse(date);
         } catch (ParseException e) {
-            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORTED, "[" + date + "]");
         }
     }
 
@@ -218,7 +218,7 @@ public final class DateUtils extends Util {
 
             return millSecSdf.get().parse(millSecDtf.format(date));
         } catch (ParseException e) {
-            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "时间转换失败", e);
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORTED, "时间转换失败", e);
         }
     }
 
@@ -254,7 +254,7 @@ public final class DateUtils extends Util {
         try {
             return LocalDateTime.parse(date, dtf);
         } catch (DateTimeParseException e) {
-            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "[" + date + "]");
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORTED, "[" + date + "]");
         }
     }
 
@@ -699,7 +699,7 @@ public final class DateUtils extends Util {
                     return Long.parseLong(period);
             }
         } catch (Exception ignore) {
-            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORT, "时间段字符串格式不正确");
+            throw new SpinException(ErrorCode.DATEFORMAT_UNSUPPORTED, "时间段字符串格式不正确");
         }
     }
 

@@ -30,11 +30,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -109,6 +105,10 @@ public class RequestMappingBeanValidator implements ApplicationContextAware, App
                             if (authNames.contains(mappingInfoWrapper.getAuthName())) {
                                 errMsg.add("Web接口" + mappingInfoWrapper.getBeanType() + "[" + mappingInfoWrapper.getMethodName() + "]在当前Controller中使用了重复的权限名称，无法唯一标识");
                             }
+
+                            if (authAnnotation.openAuth() && mappingInfoWrapper.getAuth() == AuthLevel.AUTHORIZE) {
+                                errMsg.add("开放授权接口" + mappingInfoWrapper.getBeanType() + "[" + mappingInfoWrapper.getMethodName() + "]暂不允许开启权限验证");
+                            }
                             authNames.add(mappingInfoWrapper.getAuthName());
                         }
                     }
@@ -116,16 +116,17 @@ public class RequestMappingBeanValidator implements ApplicationContextAware, App
             }
         }
 
+        RequestMappingInfoHolder.setRequestInfo(new ServiceRequestInfo(appName.toUpperCase(), appVersion, contextPath, requestMappingInfoWrappers));
+
         if (!errMsg.isEmpty()) {
-            for (String err : errMsg) {
-                logger.error(err);
-            }
             if (authStrict) {
-                logger.error("系统启动过程中出现非法行为，即将关闭");
+                logger.error("******** 系统启动过程中出现非法行为, 即将关闭 ********");
+                for (String err : errMsg) {
+                    logger.error(err);
+                }
                 System.exit(-1);
             }
         }
-        RequestMappingInfoHolder.setRequestInfo(new ServiceRequestInfo(appName.toUpperCase(), appVersion, contextPath, requestMappingInfoWrappers));
 
         try {
             Class.forName("org.springframework.kafka.core.KafkaTemplate");

@@ -15,11 +15,11 @@
 
 package org.spin.enhance.pinyin;
 
-import org.spin.enhance.pinyin.format.HanyuPinyinCaseType;
-import org.spin.enhance.pinyin.format.HanyuPinyinOutputFormat;
-import org.spin.enhance.pinyin.format.HanyuPinyinToneType;
-import org.spin.enhance.pinyin.format.HanyuPinyinVCharType;
-import org.spin.enhance.pinyin.format.exception.BadHanyuPinyinOutputFormatCombination;
+import org.spin.enhance.pinyin.format.PinyinCaseType;
+import org.spin.enhance.pinyin.format.PinyinOutputFormat;
+import org.spin.enhance.pinyin.format.PinyinToneType;
+import org.spin.enhance.pinyin.format.PinyinVCharType;
+import org.spin.enhance.pinyin.format.exception.BadPinyinOutputFormatCombination;
 
 /**
  * Contains logic to format given Pinyin string
@@ -31,30 +31,29 @@ class PinyinFormatter {
      * @param pinyinStr    unformatted Hanyu Pinyin string
      * @param outputFormat given format of Hanyu Pinyin
      * @return formatted Hanyu Pinyin string
-     * @throws BadHanyuPinyinOutputFormatCombination
      */
-    static String formatHanyuPinyin(String pinyinStr, HanyuPinyinOutputFormat outputFormat)
-        throws BadHanyuPinyinOutputFormatCombination {
-        if ((HanyuPinyinToneType.WITH_TONE_MARK == outputFormat.getToneType())
-            && ((HanyuPinyinVCharType.WITH_V == outputFormat.getVCharType()) || (HanyuPinyinVCharType.WITH_U_AND_COLON == outputFormat
+    static String formatHanyuPinyin(String pinyinStr, PinyinOutputFormat outputFormat)
+        throws BadPinyinOutputFormatCombination {
+        if ((PinyinToneType.WITH_TONE_MARK == outputFormat.getToneType())
+            && ((PinyinVCharType.WITH_V == outputFormat.getVCharType()) || (PinyinVCharType.WITH_U_AND_COLON == outputFormat
             .getVCharType()))) {
-            throw new BadHanyuPinyinOutputFormatCombination("tone marks cannot be added to v or u:");
+            throw new BadPinyinOutputFormatCombination("tone marks cannot be added to v or u:");
         }
 
-        if (HanyuPinyinToneType.WITHOUT_TONE == outputFormat.getToneType()) {
+        if (PinyinToneType.WITHOUT_TONE == outputFormat.getToneType()) {
             pinyinStr = pinyinStr.replaceAll("[1-5]", "");
-        } else if (HanyuPinyinToneType.WITH_TONE_MARK == outputFormat.getToneType()) {
+        } else if (PinyinToneType.WITH_TONE_MARK == outputFormat.getToneType()) {
             pinyinStr = pinyinStr.replaceAll("u:", "v");
             pinyinStr = convertToneNumber2ToneMark(pinyinStr);
         }
 
-        if (HanyuPinyinVCharType.WITH_V == outputFormat.getVCharType()) {
+        if (PinyinVCharType.WITH_V == outputFormat.getVCharType()) {
             pinyinStr = pinyinStr.replaceAll("u:", "v");
-        } else if (HanyuPinyinVCharType.WITH_U_UNICODE == outputFormat.getVCharType()) {
+        } else if (PinyinVCharType.WITH_U_UNICODE == outputFormat.getVCharType()) {
             pinyinStr = pinyinStr.replaceAll("u:", "ü");
         }
 
-        if (HanyuPinyinCaseType.UPPERCASE == outputFormat.getCaseType()) {
+        if (PinyinCaseType.UPPERCASE == outputFormat.getCaseType()) {
             pinyinStr = pinyinStr.toUpperCase();
         }
         return pinyinStr;

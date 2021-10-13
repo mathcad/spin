@@ -14,6 +14,7 @@ import org.spin.core.util.StringUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -99,11 +100,33 @@ public class BeetlResolver implements TemplateResolver {
             return sb.toString();
         });
 
-        groupTemplate.registerFunction("in", (params, context) -> {
-            if (params.length != 2) {
-                throw new IllegalArgumentException("in函数参数个数不正确（需2个参数）");
+        groupTemplate.registerFunction("sqlIn", (params, context) -> {
+            if (params.length != 3) {
+                throw new IllegalArgumentException("in函数参数个数不正确（需3个参数）");
             }
-            return params[0].toString() + " ";
+            String paramName = StringUtils.toStringEmpty(params[1]);
+            if (paramName.length() == 0) {
+                throw new IllegalArgumentException("in函数需要指定参数名称");
+            }
+            Object param = params[2];
+            int size;
+            if (param instanceof Collection) {
+                size = ((Collection<?>) param).size();
+            } else if (param.getClass().isArray()) {
+                size = ((Object[]) param).length;
+            } else {
+                throw new IllegalArgumentException("in函数的参数必须是集合类型");
+            }
+            if (0 == size) {
+                return "";
+            }
+            StringBuilder sb = new StringBuilder(StringUtils.toStringEmpty(params[0])).append(" IN (");
+            for (int i = 0; i < size; ++i) {
+                sb.append(":").append(paramName).append("[").append(i).append("], ");
+            }
+            sb.setLength(sb.length() - 2);
+            sb.append(")");
+            return sb.toString();
         });
     }
 
