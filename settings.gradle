@@ -21,5 +21,4 @@ include 'spin-jpa-spring-boot-starter'
 include "spin-mybatis-spring-boot-starter"
 include "spin-web"
 include "spin-wx"
-include "test"
 
