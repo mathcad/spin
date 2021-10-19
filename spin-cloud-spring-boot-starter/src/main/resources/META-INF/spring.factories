@@ -3,6 +3,7 @@ org.springframework.cloud.bootstrap.BootstrapConfiguration=\
 org.spin.cloud.config.NacosBootstrapConfiguration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.spin.cloud.config.ConverterAutoConfiguration,\
+org.spin.cloud.config.DelayQueueAutoConfiguration,\
 org.spin.cloud.config.FeignAutoConfiguration, \
 org.spin.cloud.config.FrameworkAutoConfiguration,\
 org.spin.cloud.config.RedisExtendsAutoConfiguration,\

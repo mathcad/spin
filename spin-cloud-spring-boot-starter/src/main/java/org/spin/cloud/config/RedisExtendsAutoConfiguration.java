@@ -1,5 +1,6 @@
 package org.spin.cloud.config;
 
+import org.spin.cloud.vo.CurrentUser;
 import org.spin.core.concurrent.DistributedLock;
 import org.spin.data.lock.RedisDistributedLock;
 import org.springframework.beans.factory.InitializingBean;
@@ -30,6 +31,7 @@ public class RedisExtendsAutoConfiguration {
     @Bean
     @ConditionalOnBean(StringRedisTemplate.class)
     public DistributedLock redisDistributedLock(StringRedisTemplate redisTemplate) {
+        CurrentUser.init(redisTemplate);
         return new RedisDistributedLock(redisTemplate);
     }
 

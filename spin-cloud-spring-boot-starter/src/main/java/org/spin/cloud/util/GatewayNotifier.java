@@ -27,16 +27,14 @@ public final class GatewayNotifier extends Util {
     private static final String ROLES_UPDATE_TIME_KEY = "GATEWAY.ROLES.UPDATETIME";
     private static final String ROLE_DEST = "gateway.roles";
 
-    private static StringRedisTemplate redisTemplate;
     private static ApplicationContext applicationContext;
 
     static {
         Util.registerLatch(GatewayNotifier.class);
     }
 
-    public static void init(ApplicationContext applicationContext, StringRedisTemplate redisTemplate) {
+    public static void init(ApplicationContext applicationContext) {
         GatewayNotifier.applicationContext = applicationContext;
-        GatewayNotifier.redisTemplate = redisTemplate;
         Util.ready(GatewayNotifier.class);
     }
 
@@ -44,21 +42,26 @@ public final class GatewayNotifier extends Util {
      * 更新了角色-权限绑定，用户组-角色绑定，角色继承关系后，通知网关
      */
     public static void notifyRoleAndGroupChanged() {
-        Util.awaitUntilReady(GatewayNotifier.class);
-        redisTemplate.opsForValue().set(ROLES_UPDATE_TIME_KEY, String.valueOf(System.currentTimeMillis()));
-        @SuppressWarnings("unchecked")
-        KafkaTemplate<String, String> kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
-        ListenableFuture<SendResult<String, String>> result = kafkaTemplate.send(ROLE_DEST, ROLES_UPDATE_TIME_KEY, String.valueOf(System.currentTimeMillis()));
-        result.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
-            @Override
-            public void onSuccess(SendResult<String, String> result) {
-                logger.info("网关角色变更通知消息发送成功");
-            }
+        try {
+            Util.awaitUntilReady(GatewayNotifier.class);
+            StringRedisTemplate redisTemplate = applicationContext.getBean(StringRedisTemplate.class);
+            redisTemplate.opsForValue().set(ROLES_UPDATE_TIME_KEY, String.valueOf(System.currentTimeMillis()));
+            @SuppressWarnings("unchecked")
+            KafkaTemplate<String, String> kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
+            ListenableFuture<SendResult<String, String>> result = kafkaTemplate.send(ROLE_DEST, ROLES_UPDATE_TIME_KEY, String.valueOf(System.currentTimeMillis()));
+            result.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
+                @Override
+                public void onSuccess(SendResult<String, String> result) {
+                    logger.info("网关角色变更通知消息发送成功");
+                }
 
-            @Override
-            public void onFailure(@NonNull Throwable ex) {
-                logger.warn("网关角色变更通知消息发送失败", ex);
-            }
-        });
+                @Override
+                public void onFailure(@NonNull Throwable ex) {
+                    logger.warn("网关角色变更通知消息发送失败", ex);
+                }
+            });
+        } catch (Exception e) {
+            logger.warn("网关角色变更通知发送失败", e);
+        }
     }
 }

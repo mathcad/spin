@@ -17,7 +17,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -41,7 +40,7 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version 1.0
  */
-public class RequestMappingBeanValidator implements ApplicationContextAware, ApplicationListener {
+public class RequestMappingBeanValidator implements ApplicationContextAware, ApplicationListener<ApplicationReadyEvent> {
     private static final Logger logger = LoggerFactory.getLogger(RequestMappingBeanValidator.class);
 
     private ApplicationContext applicationContext;
@@ -64,10 +63,8 @@ public class RequestMappingBeanValidator implements ApplicationContextAware, App
     }
 
     @Override
-    public void onApplicationEvent(@NonNull ApplicationEvent event) {
-        if (event instanceof ApplicationReadyEvent) {
-            validateRequestMappingBeans();
-        }
+    public void onApplicationEvent(@NonNull ApplicationReadyEvent event) {
+        validateRequestMappingBeans();
     }
 
     private void validateRequestMappingBeans() {
@@ -155,7 +152,7 @@ public class RequestMappingBeanValidator implements ApplicationContextAware, App
         logger.info("系统启动完成");
     }
 
-    private boolean needValidate(Set<String> packages, Class cls) {
+    private boolean needValidate(Set<String> packages, Class<?> cls) {
         for (String p : packages) {
             if (cls.getName().startsWith(p)) {
                 return true;

@@ -52,11 +52,26 @@ public class AffectedRows {
         return num;
     }
 
+    public <X extends Exception> int whenFailThrow(Supplier<X> exception) throws X {
+        if (num <= 0) {
+            throw exception.get();
+        }
+        return num;
+    }
+
     public int assume(Predicate<Integer> cond, Supplier<String> failMsg) {
         if (!cond.test(num)) {
             throw new SimplifiedException(failMsg.get());
         }
 
+        return num;
+    }
+
+    public <X extends Exception> int assumeOrThrow(Predicate<Integer> cond, Supplier<X> exception) throws X {
+        if (!cond.test(num)) {
+            throw exception.get();
+        }
+        
         return num;
     }
 }

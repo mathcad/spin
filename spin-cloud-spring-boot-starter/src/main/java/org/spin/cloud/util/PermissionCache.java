@@ -2,16 +2,19 @@ package org.spin.cloud.util;
 
 import org.spin.cloud.annotation.UtilClass;
 import org.spin.cloud.vo.CurrentUser;
+import org.spin.core.OpResult;
 import org.spin.core.gson.reflect.TypeToken;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.JsonUtils;
+import org.spin.core.util.MapUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.core.util.Util;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.lang.Nullable;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -28,10 +31,10 @@ public final class PermissionCache extends Util {
     };
     private static final String FIELD_PERMISSION_CACHE_KEY = "ALL_FIELD_PERMISSION";
 
-    private static StringRedisTemplate redisTemplate;
+    private static OpResult<StringRedisTemplate> redisTemplate;
 
-    public static void init(StringRedisTemplate redisTemplate) {
-        PermissionCache.redisTemplate = redisTemplate;
+    public static void init(@Nullable StringRedisTemplate redisTemplate) {
+        PermissionCache.redisTemplate = OpResult.of(redisTemplate, null != redisTemplate);
         Util.ready(PermissionCache.class);
     }
 
@@ -51,9 +54,10 @@ public final class PermissionCache extends Util {
         }
 
         Util.awaitUntilReady(PermissionCache.class);
-        return Optional.ofNullable(JsonUtils.fromJson(StringUtils.trimToNull(redisTemplate.<String, String>opsForHash()
-            .get(FIELD_PERMISSION_CACHE_KEY, fieldPermCode)), STRING_MAP_TYPE_TOKEN))
-            .orElse(Collections.emptyMap());
+        return redisTemplate.map(r -> r.<String, String>opsForHash().get(FIELD_PERMISSION_CACHE_KEY, fieldPermCode))
+            .map(p -> JsonUtils.fromJson(StringUtils.trimToNull(p), STRING_MAP_TYPE_TOKEN))
+            .map(it -> it == null ? MapUtils.<String, String>ofMap() : it)
+            .ensureSuccess(() -> new SpinException("Redis未配置, 禁止使用权限缓存上下文"));
     }
 
     /**
@@ -69,9 +73,10 @@ public final class PermissionCache extends Util {
 
         String fieldPermCode = "FIELD" + apiCode.substring(3);
         Util.awaitUntilReady(PermissionCache.class);
-        return Optional.ofNullable(JsonUtils.fromJson(StringUtils.trimToNull(redisTemplate.<String, String>opsForHash()
-            .get(FIELD_PERMISSION_CACHE_KEY, fieldPermCode)), STRING_MAP_TYPE_TOKEN))
-            .orElse(Collections.emptyMap());
+        return redisTemplate.map(r -> r.<String, String>opsForHash().get(FIELD_PERMISSION_CACHE_KEY, fieldPermCode))
+            .map(s -> JsonUtils.fromJson(StringUtils.trimToNull(s), STRING_MAP_TYPE_TOKEN))
+            .map(it -> null == it ? MapUtils.<String, String>ofMap() : it)
+            .ensureSuccess(() -> new SpinException("Redis未配置, 禁止使用权限缓存上下文"));
     }
 
     /**

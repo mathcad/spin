@@ -2,7 +2,6 @@ package org.spin.cloud.vo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.cloud.annotation.UtilClass;
 import org.spin.cloud.throwable.BizException;
 import org.spin.cloud.util.Env;
 import org.spin.core.Assert;
@@ -33,7 +32,6 @@ import java.util.stream.Collectors;
  * @author xuweinan
  * @version 1.0
  */
-@UtilClass
 public class CurrentUser extends SessionUser<Long> {
     private static final Logger logger = LoggerFactory.getLogger(CurrentUser.class);
     private static final TypeToken<Map<String, Set<String>>> STRING_SETSTR_MAP_TOKEN = new TypeToken<Map<String, Set<String>>>() {

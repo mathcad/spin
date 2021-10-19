@@ -1,7 +1,9 @@
 package org.spin.cloud.util;
 
 import org.spin.cloud.annotation.UtilClass;
+import org.spin.core.OpResult;
 import org.spin.core.gson.annotation.PreventOverflow;
+import org.spin.core.throwable.SpinException;
 import org.spin.core.util.CollectionUtils;
 import org.spin.core.util.JsonUtils;
 import org.spin.core.util.StringUtils;
@@ -9,6 +11,7 @@ import org.spin.core.util.Util;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.lang.Nullable;
 import org.springframework.scripting.support.ResourceScriptSource;
 
 import java.util.Collections;
@@ -30,7 +33,7 @@ public final class DataDictionary extends Util {
     private static final DefaultRedisScript<List> redisScript = new DefaultRedisScript<>();
     private static final DefaultRedisScript<List> redisAllChildScript = new DefaultRedisScript<>();
 
-    private static StringRedisTemplate redisTemplate;
+    private static OpResult<StringRedisTemplate> redisTemplate;
 
     static {
         Util.registerLatch(DataDictionary.class);
@@ -40,8 +43,8 @@ public final class DataDictionary extends Util {
         redisAllChildScript.setResultType(List.class);
     }
 
-    public static void init(StringRedisTemplate redisTemplate) {
-        DataDictionary.redisTemplate = redisTemplate;
+    public static void init(@Nullable StringRedisTemplate redisTemplate) {
+        DataDictionary.redisTemplate = OpResult.of(redisTemplate, null != redisTemplate);
         Util.ready(DataDictionary.class);
     }
 
@@ -53,7 +56,8 @@ public final class DataDictionary extends Util {
      */
     public static DictContent findByCode(String code) {
         Util.awaitUntilReady(DataDictionary.class);
-        String content = redisTemplate.<String, String>opsForHash().get(ROOT_DICT_REDIS_KEY, code);
+        String content = redisTemplate.map(r -> r.<String, String>opsForHash().get(ROOT_DICT_REDIS_KEY, code))
+            .ensureSuccess(() -> new SpinException("Redis未配置, 禁止使用数据字典上下文"));
         if (StringUtils.isNotEmpty(content)) {
             return JsonUtils.fromJson(content, DictContent.class);
         }
@@ -68,7 +72,8 @@ public final class DataDictionary extends Util {
      */
     public static List<DictContent> findByCode(Set<String> code) {
         Util.awaitUntilReady(DataDictionary.class);
-        List<String> contentList = redisTemplate.<String, String>opsForHash().multiGet(ROOT_DICT_REDIS_KEY, code);
+        List<String> contentList = redisTemplate.map(r -> r.<String, String>opsForHash().multiGet(ROOT_DICT_REDIS_KEY, code))
+            .ensureSuccess(() -> new SpinException("Redis未配置, 禁止使用数据字典上下文"));
         if (CollectionUtils.isEmpty(code)) {
             return Collections.emptyList();
         }
@@ -83,7 +88,8 @@ public final class DataDictionary extends Util {
      */
     public static List<DictContent> findByParent(String parentCode) {
         Util.awaitUntilReady(DataDictionary.class);
-        List<?> children = redisTemplate.execute(redisScript, Collections.singletonList(ROOT_DICT_REDIS_KEY), parentCode);
+        List<?> children = redisTemplate.map(r -> r.execute(redisScript, Collections.singletonList(ROOT_DICT_REDIS_KEY), parentCode))
+            .ensureSuccess(() -> new SpinException("Redis未配置, 禁止使用数据字典上下文"));
         if (children != null) {
             return children.stream().map(Object::toString).map(it -> JsonUtils.fromJson(it, DictContent.class)).collect(Collectors.toList());
         } else {

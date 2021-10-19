@@ -3,6 +3,7 @@ package org.spin.cloud.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.cloud.annotation.UtilClass;
+import org.spin.core.util.ArrayUtils;
 import org.spin.core.util.ReflectionUtils;
 import org.spin.core.util.Util;
 import org.springframework.beans.BeansException;
@@ -13,7 +14,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.Ordered;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 
 /**
@@ -39,6 +42,7 @@ public class UtilsClassInitApplicationRunner implements ApplicationRunner, Appli
         String initMethod = null == annotation ? "init" : annotation.initMethod();
         ReflectionUtils.doWithMethods(clazz, method -> {
             Class<?>[] parameterTypes = method.getParameterTypes();
+            Annotation[][] parameterAnnotations = method.getParameterAnnotations();
             Object[] methodArgs = new Object[parameterTypes.length];
             for (int i = 0; i < methodArgs.length; i++) {
                 if (BeanFactory.class.isAssignableFrom(parameterTypes[i])) {
@@ -47,8 +51,12 @@ public class UtilsClassInitApplicationRunner implements ApplicationRunner, Appli
                     try {
                         methodArgs[i] = applicationContext.getBean(parameterTypes[i]);
                     } catch (BeansException e) {
-                        logger.error("工具类" + clazz.getName() + "的初始化方法" + method.getName() + "注入[" + parameterTypes[i].getName() + "]参数错误", e);
-                        return;
+                        if (ArrayUtils.detect(parameterAnnotations[i], it -> it instanceof Nullable).isPresent()) {
+                            methodArgs[i] = null;
+                        } else {
+                            logger.error("工具类" + clazz.getName() + "的初始化方法" + method.getName() + "注入[" + parameterTypes[i].getName() + "]参数错误", e);
+                            return;
+                        }
                     }
                 }
             }
