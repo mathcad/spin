@@ -51,15 +51,15 @@ subprojects {
         zxingVersion = "3.4.1"
 
         //data core
-        springVersion = "5.3.10"
-        springDataRedisVersion = "2.5.5"
+        springVersion = "5.3.11"
+        springDataRedisVersion = "2.5.6"
         zookeeperVersion = "3.7.0"
         sqliteVersion = "3.36.0.3"
         freemarkerVersion = "2.3.31"
         beetlVersion = "3.7.0.RELEASE"
 
         // data
-        hibernateVersion = "5.5.7.Final"
+        hibernateVersion = "5.6.0.Final"
 
         // data spring boot starter
         springBootVersion = "2.5.5"
@@ -78,13 +78,14 @@ subprojects {
 
         // cloud starter
         springCloudVersion = "3.0.4"
-        springKafkaVersion = "2.7.7"
+        springKafkaVersion = "2.7.8"
         sentinelStarterVersion = "2021.1"
+        nacosStarterVersion = "2021.1"
         knife4jVersion = "2.0.9"
         p6spyVersion = "3.9.1"
         feignHttpVersion = "11.6"
         seataVersion = "1.4.2"
-        prometheusVersion = "1.7.4"
+        prometheusVersion = "1.7.5"
     }
 
     sourceCompatibility = javaVersion

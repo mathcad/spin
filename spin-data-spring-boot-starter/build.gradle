@@ -46,7 +46,7 @@ dependencies {
     api group: 'jakarta.annotation', name: 'jakarta.annotation-api', version: annotationVersion
 
     api group: 'org.mathcat', name: 'spin-data', version: "$project.version"
-    compileOnly group: 'org.mathcat', name: 'spin-web', version: "2.4.0-SNAPSHOT"
+    compileOnly group: 'org.mathcat', name: 'spin-web', version: "2.4.2-SNAPSHOT"
     compileOnly group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compileOnly group: 'com.atomikos', name: 'transactions-jdbc', version: atomikosVersion
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: servletVersion

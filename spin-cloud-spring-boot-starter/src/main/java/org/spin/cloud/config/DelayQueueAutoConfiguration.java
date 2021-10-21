@@ -24,7 +24,7 @@ import java.util.List;
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(DelayQueueProperties.class)
 @ConditionalOnClass(name = "io.lettuce.core.cluster.RedisClusterClient")
-@ConditionalOnProperty(name = "spin.delay-queue.enable", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "spin.delay-queue.enable", havingValue = "true")
 public class DelayQueueAutoConfiguration {
 
     @Bean

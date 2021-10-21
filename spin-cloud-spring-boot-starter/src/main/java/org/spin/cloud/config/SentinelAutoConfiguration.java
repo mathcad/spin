@@ -1,7 +1,5 @@
 package org.spin.cloud.config;
 
-import com.alibaba.cloud.sentinel.feign.SentinelFeignAutoConfiguration;
-import com.alibaba.csp.sentinel.SphU;
 import feign.Feign;
 import org.spin.cloud.seata.feign.SeataFeignClient;
 import org.spin.cloud.sentinel.SentinelFeign;
@@ -14,8 +12,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass({SphU.class, Feign.class})
-@AutoConfigureBefore({SentinelFeignAutoConfiguration.class})
+@ConditionalOnClass(name = {"com.alibaba.csp.sentinel.SphU", "feign.Feign"})
+@AutoConfigureBefore(name = {"com.alibaba.cloud.sentinel.feign.SentinelFeignAutoConfiguration"})
 public class SentinelAutoConfiguration {
 
     @Bean
