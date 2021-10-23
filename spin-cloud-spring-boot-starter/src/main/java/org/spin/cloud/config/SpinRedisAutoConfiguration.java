@@ -16,8 +16,11 @@
 
 package org.spin.cloud.config;
 
+import org.spin.cloud.vo.CurrentUser;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
@@ -29,6 +32,8 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
  * RedisTemplate自动配置，取代Spring的自动装配
@@ -63,7 +68,17 @@ public class SpinRedisAutoConfiguration {
     public StringRedisTemplate stringRedisTemplate() {
         StringRedisTemplate template = new StringRedisTemplate();
         template.setConnectionFactory(redisConnectionFactory);
+        CurrentUser.init(template);
         return template;
     }
 
+    @Bean
+    @ConditionalOnBean(RedisTemplate.class)
+    public InitializingBean initRedisTemplate(RedisTemplate<?, ?> redisTemplate) {
+        return () -> {
+            RedisSerializer<?> redisSerializer = new StringRedisSerializer();
+            redisTemplate.setKeySerializer(redisSerializer);
+            redisTemplate.setHashKeySerializer(redisSerializer);
+        };
+    }
 }

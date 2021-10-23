@@ -2,7 +2,7 @@ package org.spin.data.rs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
+import org.spin.core.Assert;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

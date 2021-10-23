@@ -3,13 +3,14 @@ package org.spin.data.delayqueue;
 import io.lettuce.core.KeyValue;
 import io.lettuce.core.RedisCommandTimeoutException;
 import io.lettuce.core.RedisException;
-import io.lettuce.core.api.StatefulConnection;
-import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.util.JsonUtils;
+import org.spin.data.redis.RedisConnectionWrapper;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * TITLE
@@ -19,22 +20,33 @@ import java.util.UUID;
  * @author xuweinan
  * @version 1.0
  */
-class TopicListener {
+class TopicListener implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(TopicListener.class);
 
     private final String uuid = UUID.randomUUID().toString();
     private final String topic;
     private final DelayQueueContext delayQueueContext;
-    private StatefulConnection<String, String> connection;
     private final DelayMessageHandler delayMessageHandler;
+    private RedisConnectionWrapper<String, String> connection;
+    private final ConcurrentHashMap<String, Consumer<DelayMessage>> customizeHandler = new ConcurrentHashMap<>();
     private final Thread workThread;
     private volatile boolean isListen = true;
+    private final OffsetWindow offsetWindow = new OffsetWindow();
 
     TopicListener(DelayQueueContext delayQueueContext, DelayMessageHandler delayMessageHandler) {
+        this.topic = delayMessageHandler.getTopic();
         this.delayQueueContext = delayQueueContext;
         this.delayMessageHandler = delayMessageHandler;
-        topic = delayMessageHandler.getTopic();
-        connection = delayQueueContext.redisClientWrapper.newConnection();
+        connection = delayQueueContext.redisClientWrapper.connect();
+        workThread = new Thread(this::listen, "Thread-RedisDelayQueueListener-" + topic);
+        workThread.setDaemon(true);
+    }
+
+    TopicListener(String topic, DelayQueueContext delayQueueContext) {
+        this.topic = topic;
+        this.delayQueueContext = delayQueueContext;
+        this.delayMessageHandler = null;
+        connection = delayQueueContext.redisClientWrapper.connect();
         workThread = new Thread(this::listen, "Thread-RedisDelayQueueListener-" + topic);
         workThread.setDaemon(true);
     }
@@ -47,12 +59,25 @@ class TopicListener {
         workThread.start();
     }
 
-    void stopListen() {
+    @Override
+    public void close() {
         isListen = false;
         try {
             connection.close();
         } catch (Exception ignore) {
         }
+    }
+
+    public void addCustomizeHandler(String messageId, Consumer<DelayMessage> handler) {
+        customizeHandler.put(messageId, handler);
+    }
+
+    public void removeCustomizeHandler(String messageId) {
+        customizeHandler.remove(messageId);
+    }
+
+    public long getOffset() {
+        return offsetWindow.getOffset();
     }
 
     void listen() {
@@ -62,9 +87,7 @@ class TopicListener {
             String message;
             try {
                 KeyValue<String, String> value =
-                    connection instanceof StatefulRedisClusterConnection ?
-                        ((StatefulRedisClusterConnection<String, String>) connection).sync().blpop(300L, delayQueueContext.delayQueueTopicPrefix + topic)
-                        : ((StatefulRedisConnection<String, String>) connection).sync().blpop(300L, delayQueueContext.delayQueueTopicPrefix + topic);
+                    connection.syncBlpop(300L, delayQueueContext.delayQueueTopicPrefix + topic);
                 if (!value.hasValue()) {
                     continue;
                 }
@@ -73,17 +96,32 @@ class TopicListener {
                 continue;
             } catch (RedisException e) {
                 if (isListen && delayQueueContext.isRunning && e.getMessage().contains("close")) {
-                    connection = delayQueueContext.redisClientWrapper.newConnection();
+                    connection = delayQueueContext.redisClientWrapper.connect();
                 }
                 continue;
             }
+            logger.info("RedisDelayQueue listen on Topic [{}] message arrived", topic);
+            DelayMessage delayMessage = JsonUtils.fromJson(message, DelayMessage.class);
+            long time = System.currentTimeMillis();
+            delayMessage.setScheduleTime(time);
+            time -= (delayMessage.getTriggerTime() + delayMessage.getDelayTimeInMillis());
+            offsetWindow.put(time, 500L);
+            if (time > 1000L) {
+                logger.warn("RedisDelayQueue schedule offset on message [{}] is {}ms", delayMessage.getMessageId(), time);
+            }
             try {
-
-                logger.info("RedisDelayQueue listen on Topic [{}] message arrived", topic);
-                delayMessageHandler.handle(message);
+                if (customizeHandler.containsKey(delayMessage.getMessageId())) {
+                    customizeHandler.remove(delayMessage.getMessageId()).accept(delayMessage);
+                } else if (null != delayMessageHandler) {
+                    delayMessageHandler.handle(delayMessage);
+                } else {
+                    logger.warn("RedisDelayQueue messageId [{}] has no handler, message: {}", delayMessage.getMessageId(), message);
+                }
             } catch (Exception e) {
                 logger.warn("RedisDelayQueue listen on Topic [{}] throws an exception {}", topic, e.getMessage());
-                delayMessageHandler.handleException(message, e);
+                if (null != delayMessageHandler) {
+                    delayMessageHandler.handleException(delayMessage, e);
+                }
             }
         }
 

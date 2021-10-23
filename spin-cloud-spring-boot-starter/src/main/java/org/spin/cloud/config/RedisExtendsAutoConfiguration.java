@@ -1,19 +1,22 @@
 package org.spin.cloud.config;
 
-import org.spin.cloud.vo.CurrentUser;
+import org.spin.cloud.config.properties.SpinRedisProperties;
 import org.spin.core.concurrent.DistributedLock;
+import org.spin.data.delayqueue.DelayMessageHandler;
+import org.spin.data.delayqueue.RedisDelayQueue;
 import org.spin.data.lock.RedisDistributedLock;
-import org.springframework.beans.factory.InitializingBean;
+import org.spin.data.redis.RedisClientWrapper;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.lang.Nullable;
+
+import java.util.List;
 
 /**
  * 扩展的Redis自动配置
@@ -24,24 +27,32 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @version 1.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass(name = {"org.springframework.data.redis.core.StringRedisTemplate"})
+@EnableConfigurationProperties(SpinRedisProperties.class)
 @AutoConfigureAfter(RedisAutoConfiguration.class)
+@ConditionalOnClass(name = "io.lettuce.core.cluster.RedisClusterClient")
+@ConditionalOnProperty(name = "spin.redis.enable", havingValue = "true")
 public class RedisExtendsAutoConfiguration {
 
     @Bean
-    @ConditionalOnBean(StringRedisTemplate.class)
-    public DistributedLock redisDistributedLock(StringRedisTemplate redisTemplate) {
-        CurrentUser.init(redisTemplate);
-        return new RedisDistributedLock(redisTemplate);
+    public RedisClientWrapper redisClientWrapper(SpinRedisProperties spinRedisProperties) {
+        return new RedisClientWrapper(spinRedisProperties);
     }
 
     @Bean
-    @ConditionalOnBean(RedisTemplate.class)
-    public InitializingBean initRedisTemplate(RedisTemplate<?, ?> redisTemplate) {
-        return () -> {
-            RedisSerializer<?> redisSerializer = new StringRedisSerializer();
-            redisTemplate.setKeySerializer(redisSerializer);
-            redisTemplate.setHashKeySerializer(redisSerializer);
-        };
+    @ConditionalOnBean(RedisClientWrapper.class)
+    public DistributedLock redisDistributedLock(RedisClientWrapper redisClientWrapper) {
+        return new RedisDistributedLock(redisClientWrapper);
+    }
+
+    @Bean
+    @ConditionalOnBean(RedisClientWrapper.class)
+    @ConditionalOnProperty(name = "spin.redis.delay-queue-name")
+    public RedisDelayQueue redisDelayQueue(SpinRedisProperties spinRedisProperties,
+                                           RedisClientWrapper redisClientWrapper,
+                                           @Nullable List<DelayMessageHandler> messageHandlers) {
+        RedisDelayQueue redisDelayQueue = new RedisDelayQueue(spinRedisProperties.getDelayQueueName(),
+            redisClientWrapper);
+        redisDelayQueue.setMessageHandlers(messageHandlers);
+        return redisDelayQueue;
     }
 }

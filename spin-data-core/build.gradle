@@ -47,8 +47,8 @@ dependencies {
     api group: 'cglib', name: 'cglib', version: '3.3.0'
 //    api group: 'io.projectreactor', name: 'reactor-core', version: '3.4.6'
 
-    compileOnly group: 'org.springframework.data', name: 'spring-data-redis', version: springDataRedisVersion
-    compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '6.1.5.RELEASE'
+    compileOnly group: 'org.springframework', name: 'spring-tx', version: springVersion
+    compileOnly group: 'io.lettuce', name: 'lettuce-core', version: lettuceVersion
     compileOnly group: 'org.apache.zookeeper', name: 'zookeeper', version: zookeeperVersion
     compileOnly group: 'org.xerial', name: 'sqlite-jdbc', version: sqliteVersion
     compileOnly group: 'org.freemarker', name: 'freemarker', version: freemarkerVersion

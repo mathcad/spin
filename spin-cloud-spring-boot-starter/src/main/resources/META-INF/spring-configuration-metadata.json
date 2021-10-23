@@ -6,14 +6,14 @@
       "sourceType": "org.spin.cloud.config.properties.Swagger2Properties"
     },
     {
-      "name": "spin.delay-queue",
-      "type": "org.spin.cloud.config.properties.DelayQueueProperties",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties"
+      "name": "spin.redis",
+      "type": "org.spin.cloud.config.properties.SpinRedisProperties",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties"
     },
     {
-      "name": "spring.redis.cluster",
-      "type": "org.spin.data.delayqueue.RedisDelayQueueProperties$Cluster",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "name": "spin.redis.cluster",
+      "type": "org.spin.data.redis.LettuceRedisProperties$Cluster",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "sourceMethod": "getCluster()"
     }
   ],
@@ -142,94 +142,94 @@
       "description": "redis单机与集群无缝切换注解"
     },
     {
-      "name": "spin.delay-queue.enable",
+      "name": "spin.redis.enable",
       "type": "java.lang.Boolean",
-      "description": "enable or disable RedisDelayQueue",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "description": "enable or disable frame features based on redis",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": "true"
     },
     {
-      "name": "spin.delay-queue.delay-queue-prefix",
+      "name": "spin.redis.delay-queue-name",
       "type": "java.lang.String",
-      "description": "key prefix in redis",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
-      "defaultValue": "SpinDelayQueue"
+      "description": "redis delay queue name, configure a non-empty name to enable RedisDelayQueue",
+      "sourceType": "org.spin.cloud.config.properties.SpinRedisProperties",
+      "defaultValue": ""
     },
     {
-      "name": "spin.delay-queue.database",
+      "name": "spin.redis.database",
       "type": "java.lang.Integer",
       "description": "Database index used by the connection factory",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": "0"
     },
     {
-      "name": "spin.delay-queue.host",
+      "name": "spin.redis.host",
       "type": "java.lang.String",
       "description": "Redis server host",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": "localhost"
     },
     {
-      "name": "spin.delay-queue.port",
+      "name": "spin.redis.port",
       "type": "java.lang.Integer",
       "description": "Redis server port",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": "6379"
     },
     {
-      "name": "spin.delay-queue.username",
+      "name": "spin.redis.username",
       "type": "java.lang.String",
       "description": "Login username of the redis server",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": ""
     },
     {
-      "name": "spin.delay-queue.password",
+      "name": "spin.redis.password",
       "type": "java.lang.String",
       "description": "Login password of the redis server",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": ""
     },
     {
-      "name": "spin.delay-queue.ssl",
+      "name": "spin.redis.ssl",
       "type": "java.lang.Boolean",
       "description": "Whether to enable SSL support",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": "false"
     },
     {
-      "name": "spin.delay-queue.timeout",
+      "name": "spin.redis.timeout",
       "type": "java.time.Duration",
       "description": "Read timeout",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": "60s"
     },
     {
-      "name": "spin.delay-queue.connect-timeout",
+      "name": "spin.redis.connect-timeout",
       "type": "java.time.Duration",
       "description": "Connection timeout",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": ""
     },
     {
-      "name": "spin.delay-queue.client-name",
+      "name": "spin.redis.client-name",
       "type": "java.lang.String",
       "description": "Client name to be set on connections with CLIENT SETNAME",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": ""
     },
     {
-      "name": "spin.delay-queue.cluster.nodes",
+      "name": "spin.redis.cluster.nodes",
       "type": "java.util.List<java.lang.String>",
       "description": "Comma-separated list of \"host:port\" pairs to bootstrap from. This represents an \"initial\" list of cluster nodes and is required to have at least one entry",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties$Cluster",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties$Cluster",
       "defaultValue": ""
     },
     {
-      "name": "spin.delay-queue.cluster.max-redirects",
+      "name": "spin.redis.cluster.max-redirects",
       "type": "java.lang.Integer",
       "description": "Maximum number of redirects to follow when executing commands across the cluster",
-      "sourceType": "org.spin.data.delayqueue.RedisDelayQueueProperties$Cluster",
+      "sourceType": "org.spin.data.redis.LettuceRedisProperties$Cluster",
       "defaultValue": "5"
     }
   ]

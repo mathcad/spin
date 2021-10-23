@@ -1,15 +1,15 @@
 package org.spin.data.lock;
 
+import io.lettuce.core.ScriptOutputType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.concurrent.DistributedLock;
 import org.spin.core.concurrent.LockTicket;
 import org.spin.core.concurrent.Uninterruptibles;
-import org.spin.core.util.StringUtils;
+import org.spin.core.util.ArrayUtils;
+import org.spin.data.redis.RedisClientWrapper;
+import org.spin.data.redis.RedisConnectionWrapper;
 import org.spin.data.throwable.DistributedLockException;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.connection.ReturnType;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -22,12 +22,12 @@ import java.util.concurrent.TimeUnit;
  * @author xuweinan
  * @version 1.0
  */
-public class RedisDistributedLock extends DistributedLock {
+public class RedisDistributedLock extends DistributedLock implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(RedisDistributedLock.class);
     private static final String SPIN_REDIS_LOCKS = "SPIN_REDIS_LOCKS:";
     private static final String REDIS_UNLOCK_SCRIPT;
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisConnectionWrapper<String, String> connection;
 
     static {
         REDIS_UNLOCK_SCRIPT = "local val = redis.call(\"get\", KEYS[1])\n" +
@@ -42,9 +42,8 @@ public class RedisDistributedLock extends DistributedLock {
             "end";
     }
 
-    public RedisDistributedLock(StringRedisTemplate redisTemplate) {
-        super();
-        this.redisTemplate = redisTemplate;
+    public RedisDistributedLock(RedisClientWrapper redisClientWrapper) {
+        connection = redisClientWrapper.connect();
     }
 
     @Override
@@ -65,13 +64,11 @@ public class RedisDistributedLock extends DistributedLock {
         String lockKey = SPIN_REDIS_LOCKS + key;
         Long result;
         try {
-            result = redisTemplate.execute((RedisConnection connection) -> connection.eval(
-                REDIS_UNLOCK_SCRIPT.getBytes(),
-                ReturnType.INTEGER,
-                1,
-                StringUtils.getBytesUtf8(lockKey),
-                StringUtils.getBytesUtf8(ticket))
-            );
+            result = connection.syncEval(
+                REDIS_UNLOCK_SCRIPT,
+                ScriptOutputType.INTEGER,
+                ArrayUtils.ofArray(lockKey),
+                ticket);
         } catch (Exception e) {
             logger.error("Release RedisDistributeLock [" + key + "] occurred an exception", e);
             return false;
@@ -89,11 +86,15 @@ public class RedisDistributedLock extends DistributedLock {
 
     private boolean setRedisLock(final String key, final String ticket, final long expire) {
         try {
-            Boolean status = redisTemplate.opsForValue().setIfAbsent(key, ticket, expire, TimeUnit.MILLISECONDS);
-            return status != null && status;
+            return connection.syncSetNx(key, ticket, expire);
         } catch (Exception e) {
             logger.error("Operate RedisDistributeLock [" + key + "] occurred an exception", e);
+            return false;
         }
-        return false;
+    }
+
+    @Override
+    public void close() {
+        connection.close();
     }
 }

@@ -1,5 +1,9 @@
 package org.spin.data.delayqueue;
 
+import org.spin.data.redis.RedisClientWrapper;
+import org.spin.data.redis.RedisConnectionWrapper;
+import org.spin.data.redis.RedisPubSubConnectionWrapper;
+
 /**
  * TITLE
  * <p>DESCRIPTION</p>
@@ -12,16 +16,23 @@ public class DelayQueueContext {
 
     protected volatile boolean isRunning = true;
     protected RedisClientWrapper redisClientWrapper;
+    protected final String delayQueueName;
     protected final String delayQueueKeyPrefix;
     protected final String delayQueueTopicPrefix;
+    protected final String notifierChannel;
+    protected final RedisConnectionWrapper<String, String> connection;
+    protected final RedisPubSubConnectionWrapper<String, String> pubsubConnection;
 
-    public DelayQueueContext(RedisClientWrapper redisClientWrapper) {
+    public DelayQueueContext(String delayQueueName, RedisClientWrapper redisClientWrapper) {
         this.redisClientWrapper = redisClientWrapper;
-        if (redisClientWrapper.getDelayQueueProperties().getDelayQueuePrefix().contains("{")) {
-            delayQueueKeyPrefix = redisClientWrapper.getDelayQueueProperties().getDelayQueuePrefix() + ":";
-        } else {
-            delayQueueKeyPrefix = "{" + redisClientWrapper.getDelayQueueProperties().getDelayQueuePrefix() + "}:";
+        if (delayQueueName.indexOf('{') != -1 || delayQueueName.indexOf(':') != -1) {
+            throw new IllegalArgumentException("DelayQueue name must not contains '{', '}' or ':'");
         }
+        this.delayQueueName = delayQueueName;
+        delayQueueKeyPrefix = "{" + delayQueueName + "}:";
         delayQueueTopicPrefix = delayQueueKeyPrefix + "Topic:";
+        notifierChannel = delayQueueKeyPrefix + "TransferNotifier";
+        connection = redisClientWrapper.connect();
+        pubsubConnection = redisClientWrapper.connectPubSub();
     }
 }

@@ -1,31 +1,29 @@
-package org.spin.data.delayqueue;
+package org.spin.data.redis;
 
-import io.lettuce.core.*;
-import io.lettuce.core.api.StatefulConnection;
-import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.ClientOptions;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
+import io.lettuce.core.TimeoutOptions;
 import io.lettuce.core.cluster.ClusterClientOptions;
 import io.lettuce.core.cluster.RedisClusterClient;
-import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
+import io.lettuce.core.codec.RedisCodec;
+import io.lettuce.core.codec.StringCodec;
 import org.spin.core.util.CollectionUtils;
 
 import java.util.LinkedList;
 import java.util.List;
 
-class RedisClientWrapper {
-    private final RedisDelayQueueProperties delayQueueProperties;
+public class RedisClientWrapper implements AutoCloseable {
+    private final LettuceRedisProperties lettuceRedisProperties;
 
     private RedisClient client;
 
     private RedisClusterClient clusterClient;
 
-    private StatefulRedisConnection<String, String> connection;
-
-    private StatefulRedisClusterConnection<String, String> clusterConnection;
-
     private final boolean isCluster;
 
-    public RedisClientWrapper(RedisDelayQueueProperties queueProperties) {
-        this.delayQueueProperties = queueProperties;
+    public RedisClientWrapper(LettuceRedisProperties queueProperties) {
+        this.lettuceRedisProperties = queueProperties;
         if (null != queueProperties.getCluster() && CollectionUtils.isNotEmpty(queueProperties.getCluster().getNodes())) {
             this.isCluster = true;
             List<RedisURI> nodes = new LinkedList<>();
@@ -48,7 +46,6 @@ class RedisClientWrapper {
             }
             builder.maxRedirects(queueProperties.getCluster().getMaxRedirects());
             clusterClient.setOptions(builder.build());
-            clusterConnection = clusterClient.connect();
         } else {
             isCluster = false;
             RedisURI redisUri = RedisURI.builder().withDatabase(queueProperties.getDatabase())
@@ -65,21 +62,12 @@ class RedisClientWrapper {
                     .timeoutOptions(TimeoutOptions.builder().connectionTimeout().fixedTimeout(queueProperties.getConnectTimeout()).build())
                     .build());
             }
-            connection = client.connect();
         }
     }
 
 
-    public Long syncEval(String script, ScriptOutputType type, String[] keys, String... values) {
-        if (isCluster) {
-            return clusterConnection.sync().eval(script, type, keys, values);
-        } else {
-            return connection.sync().eval(script, type, keys, values);
-        }
-    }
-
-
-    void shutdown() {
+    @Override
+    public void close() {
         if (isCluster) {
             clusterClient.shutdown();
         } else {
@@ -87,17 +75,35 @@ class RedisClientWrapper {
         }
     }
 
-
-    public StatefulConnection<String, String> newConnection() {
-        if (isCluster) {
-            return clusterClient.connect();
-        } else {
-            return client.connect();
-
-        }
+    public RedisConnectionWrapper<String, String> connect() {
+        return new RedisConnectionWrapper<>(this, StringCodec.UTF8);
     }
 
-    public RedisDelayQueueProperties getDelayQueueProperties() {
-        return delayQueueProperties;
+    public <K, V> RedisConnectionWrapper<K, V> connect(RedisCodec<K, V> codec) {
+        return new RedisConnectionWrapper<>(this, codec);
+    }
+    
+    public RedisPubSubConnectionWrapper<String, String> connectPubSub() {
+        return new RedisPubSubConnectionWrapper<>(this, StringCodec.UTF8);
+    }
+
+    public <K, V> RedisPubSubConnectionWrapper<K, V> connectPubSub(RedisCodec<K, V> codec) {
+        return new RedisPubSubConnectionWrapper<>(this, codec);
+    }
+
+    public RedisClient getClient() {
+        return client;
+    }
+
+    public RedisClusterClient getClusterClient() {
+        return clusterClient;
+    }
+
+    public boolean isCluster() {
+        return isCluster;
+    }
+
+    public LettuceRedisProperties getLettuceRedisProperties() {
+        return lettuceRedisProperties;
     }
 }

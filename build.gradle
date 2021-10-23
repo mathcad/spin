@@ -52,7 +52,7 @@ subprojects {
 
         //data core
         springVersion = "5.3.11"
-        springDataRedisVersion = "2.5.6"
+        lettuceVersion = '6.1.5.RELEASE'
         zookeeperVersion = "3.7.0"
         sqliteVersion = "3.36.0.3"
         freemarkerVersion = "2.3.31"

@@ -1,4 +1,4 @@
-package org.spin.data.delayqueue;
+package org.spin.data.redis;
 
 import java.time.Duration;
 import java.util.List;
@@ -11,17 +11,12 @@ import java.util.List;
  * @author xuweinan
  * @version 1.0
  */
-public class RedisDelayQueueProperties {
+public class LettuceRedisProperties {
 
     /**
-     * enable or disable RedisDelayQueue
+     * enable or disable frame features based on redis
      */
-    private boolean enable = true;
-
-    /**
-     * key prefix in redis
-     */
-    private String delayQueuePrefix = "SpinDelayQueue";
+    private Boolean enable = false;
 
     /**
      * Database index used by the connection factory.
@@ -70,20 +65,12 @@ public class RedisDelayQueueProperties {
 
     private Cluster cluster;
 
-    public boolean isEnable() {
+    public boolean getEnable() {
         return enable;
     }
 
     public void setEnable(boolean enable) {
         this.enable = enable;
-    }
-
-    public String getDelayQueuePrefix() {
-        return delayQueuePrefix;
-    }
-
-    public void setDelayQueuePrefix(String delayQueuePrefix) {
-        this.delayQueuePrefix = delayQueuePrefix;
     }
 
     public int getDatabase() {

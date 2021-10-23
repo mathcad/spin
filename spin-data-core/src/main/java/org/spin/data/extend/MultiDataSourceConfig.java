@@ -1,7 +1,6 @@
 package org.spin.data.extend;
 
 import org.spin.core.util.StringUtils;
-import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.InitializingBean;
 
 import java.util.HashMap;
@@ -87,13 +86,13 @@ public interface MultiDataSourceConfig<T extends DataSourceConfig> extends Initi
             if (StringUtils.isEmpty(value.getUrl())
                 || StringUtils.isEmpty(value.getUsername())
                 || StringUtils.isEmpty(value.getPassword())) {
-                throw new BeanCreationException(key + "数据库连接必需配置url, username, password");
+                throw new IllegalArgumentException(key + "数据库连接必需配置url, username, password");
             }
             value.setName(key);
         });
 
         if (StringUtils.isEmpty(getPrimaryDataSource())) {
-            throw new BeanCreationException("多数据源模式下必需配置主数据源[spin.datasource.primaryDataSource]");
+            throw new IllegalArgumentException("多数据源模式下必需配置主数据源[spin.datasource.primaryDataSource]");
         }
     }
 }
