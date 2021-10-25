@@ -15,6 +15,12 @@
       "type": "org.spin.data.redis.LettuceRedisProperties$Cluster",
       "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "sourceMethod": "getCluster()"
+    },
+    {
+      "name": "spin.redis.delay-queue",
+      "type": "org.spin.cloud.config.properties.SpinRedisProperties$DelayQueue",
+      "sourceType": "org.spin.cloud.config.properties.SpinRedisProperties",
+      "sourceMethod": "getDelayQueue()"
     }
   ],
   "properties": [
@@ -149,13 +155,6 @@
       "defaultValue": "true"
     },
     {
-      "name": "spin.redis.delay-queue-name",
-      "type": "java.lang.String",
-      "description": "redis delay queue name, configure a non-empty name to enable RedisDelayQueue",
-      "sourceType": "org.spin.cloud.config.properties.SpinRedisProperties",
-      "defaultValue": ""
-    },
-    {
       "name": "spin.redis.database",
       "type": "java.lang.Integer",
       "description": "Database index used by the connection factory",
@@ -217,6 +216,48 @@
       "description": "Client name to be set on connections with CLIENT SETNAME",
       "sourceType": "org.spin.data.redis.LettuceRedisProperties",
       "defaultValue": ""
+    },
+    {
+      "name": "spin.redis.delay-queue.name",
+      "type": "java.lang.String",
+      "description": "redis delay queue name, configure a non-empty name to enable RedisDelayQueue",
+      "sourceType": "org.spin.cloud.config.properties.SpinRedisProperties$DelayQueue",
+      "defaultValue": ""
+    },
+    {
+      "name": "spin.redis.delay-queue.schedule-group-id",
+      "type": "java.lang.String",
+      "description": "redis delay queue group id, a group task will be scheduled in instances witch has same groupId",
+      "sourceType": "org.spin.cloud.config.properties.SpinRedisProperties$DelayQueue",
+      "defaultValue": ""
+    },
+    {
+      "name": "spin.redis.delay-queue.core-pool-size",
+      "type": "java.lang.Integer",
+      "description": "The core size of RedisDelayQueue's backend executor",
+      "sourceType": "org.spin.cloud.config.properties.SpinRedisProperties$DelayQueue",
+      "defaultValue": "2"
+    },
+    {
+      "name": "spin.redis.delay-queue.max-pool-size",
+      "type": "java.lang.Integer",
+      "description": "The max size of RedisDelayQueue's backend executor",
+      "sourceType": "org.spin.cloud.config.properties.SpinRedisProperties$DelayQueue",
+      "defaultValue": "10"
+    },
+    {
+      "name": "spin.redis.delay-queue.keep-alive-time",
+      "type": "java.time.Duration",
+      "description": "The alive time of idle thread in RedisDelayQueue's backend executor",
+      "sourceType": "org.spin.cloud.config.properties.SpinRedisProperties$DelayQueue",
+      "defaultValue": "3m"
+    },
+    {
+      "name": "spin.redis.delay-queue.work-queue-size",
+      "type": "java.lang.Integer",
+      "description": "The queue size of RedisDelayQueue's backend executor",
+      "sourceType": "org.spin.cloud.config.properties.SpinRedisProperties$DelayQueue",
+      "defaultValue": "20"
     },
     {
       "name": "spin.redis.cluster.nodes",

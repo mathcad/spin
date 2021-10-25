@@ -1,5 +1,8 @@
 package org.spin.data.delayqueue;
 
+import org.spin.core.security.Base64;
+import org.spin.core.util.SerializeUtils;
+
 /**
  * TITLE
  * <p>DESCRIPTION</p>
@@ -15,6 +18,10 @@ public class DelayMessage {
     private long triggerTime;
     private long scheduleTime;
     private String payload;
+    private String handler;
+
+    public DelayMessage() {
+    }
 
     public DelayMessage(String messageId, String topic, long delayTimeInMillis, long triggerTime, String payload) {
         this.messageId = messageId;
@@ -72,6 +79,18 @@ public class DelayMessage {
         this.payload = payload;
     }
 
+    public String getHandler() {
+        return handler;
+    }
+
+    public void setHandler(String handler) {
+        this.handler = handler;
+    }
+
+    public GroupScheduledTask parseHandler() {
+        return SerializeUtils.deserialize(Base64.decode(handler));
+    }
+
     @Override
     public String toString() {
         return "{" +
@@ -81,6 +100,7 @@ public class DelayMessage {
             ",\"triggerTime\":" + triggerTime +
             ",\"scheduleTime\":" + scheduleTime +
             ",\"payload\":\"" + payload + '\"' +
+            ",\"handler\":\"" + handler + '\"' +
             '}';
     }
 }

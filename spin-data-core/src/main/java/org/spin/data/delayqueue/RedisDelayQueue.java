@@ -3,8 +3,11 @@ package org.spin.data.delayqueue;
 import io.lettuce.core.ScriptOutputType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.Assert;
+import org.spin.core.security.Base64;
 import org.spin.core.throwable.SimplifiedException;
 import org.spin.core.util.ArrayUtils;
+import org.spin.core.util.SerializeUtils;
 import org.spin.core.util.StringUtils;
 import org.spin.data.redis.RedisClientWrapper;
 
@@ -13,8 +16,6 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 /**
  * TITLE
@@ -33,13 +34,20 @@ public class RedisDelayQueue implements AutoCloseable {
         "redis.call(\"PUBLISH\", KEYS[1] .. \"TransferNotifier\", \"WAKE UP\")\n" +
         "return cnt";
 
-    private final ConcurrentHashMap<String, TopicListener> TOPIC_LISTENERS = new ConcurrentHashMap<>();
+    private final TopicListener topicListener;
     private final QueueTransfer transfer;
     private final DelayQueueContext delayQueueContext;
 
-    public RedisDelayQueue(String delayQueueName, RedisClientWrapper clientWrapper) {
-        delayQueueContext = new DelayQueueContext(delayQueueName, clientWrapper);
-
+    public RedisDelayQueue(String delayQueueName,
+                           String scheduleGroupId,
+                           RedisClientWrapper clientWrapper,
+                           List<DelayMessageHandler> handlerList,
+                           int corePoolSize,
+                           int maxPoolSize,
+                           long keepAliveTimeInMs,
+                           int queueSize) {
+        delayQueueContext = new DelayQueueContext(delayQueueName, scheduleGroupId, clientWrapper);
+        topicListener = new TopicListener(delayQueueContext, handlerList, corePoolSize, maxPoolSize, keepAliveTimeInMs, queueSize);
         transfer = new QueueTransfer(delayQueueContext);
     }
 
@@ -49,77 +57,60 @@ public class RedisDelayQueue implements AutoCloseable {
         transfer.unPark();
         delayQueueContext.pubsubConnection.close();
         delayQueueContext.connection.close();
-        TOPIC_LISTENERS.forEach((k, v) -> v.close());
+        topicListener.close();
     }
 
-    public void publish(String topic, String message, LocalDateTime scheduleAt) {
-        publish(topic, message, scheduleAt, null);
-    }
-
-    public void publish(String topic, String message, LocalDateTime scheduleAt, Consumer<DelayMessage> delayHandler) {
+    public String scheduledInGroup(String message, LocalDateTime scheduleAt, GroupScheduledTask task) {
+        Assert.notNull(scheduleAt, "Delay Message's schedule time must not be null!!");
         if (scheduleAt.isBefore(LocalDateTime.now())) {
             throw new SimplifiedException("Delay Message's schedule time must not before now!!");
         }
 
         long delayTime = scheduleAt.toInstant(ZoneId.systemDefault().getRules().getOffset(scheduleAt)).toEpochMilli() - System.currentTimeMillis();
-        publishInternal(topic, message, delayTime, delayHandler);
+        return publishInternal(delayQueueContext.scheduleGroupId, message, delayTime, task);
     }
 
-    public void publish(String topic, String message, long delayTimeInSeconds) {
-        publishInternal(topic, message, delayTimeInSeconds * 1000L, null);
+    public String scheduledInGroup(String message, long delayTimeInSeconds, GroupScheduledTask task) {
+        return publishInternal(delayQueueContext.scheduleGroupId, message, delayTimeInSeconds * 1000L, task);
     }
 
-    public void publish(String topic, String message, long delayTimeInSeconds, Consumer<DelayMessage> delayHandler) {
-        publishInternal(topic, message, delayTimeInSeconds * 1000L, delayHandler);
+    public String publish(String topic, String message, LocalDateTime scheduleAt) {
+        Assert.notNull(scheduleAt, "Delay Message's schedule time must not be null!!");
+        if (scheduleAt.isBefore(LocalDateTime.now())) {
+            throw new SimplifiedException("Delay Message's schedule time must not before now!!");
+        }
+
+        long delayTime = scheduleAt.toInstant(ZoneId.systemDefault().getRules().getOffset(scheduleAt)).toEpochMilli() - System.currentTimeMillis();
+        return publishInternal(topic, message, delayTime, null);
     }
 
-    private void publishInternal(String topic, String message, long delayTimeInMillis, Consumer<DelayMessage> delayHandler) {
+    public String publish(String topic, String message, long delayTimeInSeconds) {
+        return publishInternal(topic, message, delayTimeInSeconds * 1000L, null);
+    }
+
+    private String publishInternal(String topic, String message, long delayTimeInMillis, GroupScheduledTask task) {
         long triggerTime = System.currentTimeMillis();
         String msgId = UUID.randomUUID().toString();
         if (delayTimeInMillis < 1000L) {
             throw new SimplifiedException("Message Delay Time must grate than 1s");
         }
 
-        TOPIC_LISTENERS.computeIfAbsent(topic, t -> {
-            TopicListener l = new TopicListener(topic, delayQueueContext);
-            l.startListen();
-            return l;
-        });
-        TopicListener listener = TOPIC_LISTENERS.get(topic);
-        if (null != delayHandler) {
-            listener.addCustomizeHandler(msgId, delayHandler);
-        }
-
         DelayMessage delayMessage = new DelayMessage(msgId, topic, delayTimeInMillis, triggerTime, message);
-
+        if (null != task) {
+            String taskStr = Base64.encode(SerializeUtils.serialize(task));
+            delayMessage.setHandler(taskStr);
+        }
 
         Long cnt = delayQueueContext.connection.syncEval(PUSH_MSG_SCRIPT, ScriptOutputType.INTEGER,
             ArrayUtils.ofArray(delayQueueContext.delayQueueKeyPrefix, msgId, topic, delayQueueContext.notifierChannel),
             delayMessage.toString(),
-            StringUtils.toString(Math.max(delayTimeInMillis - System.currentTimeMillis() + triggerTime - listener.getOffset(), 0)));
+            StringUtils.toString(Math.max(delayTimeInMillis - System.currentTimeMillis() + triggerTime - topicListener.getOffset(), 0)));
 
         if (!Objects.equals(1L, cnt)) {
-            listener.removeCustomizeHandler(msgId);
             throw new SimplifiedException("Delay message delivery failed");
         }
+
+        return msgId;
     }
 
-    public void setMessageHandlers(List<DelayMessageHandler> delayMessageHandlers) {
-        TOPIC_LISTENERS.clear();
-        if (null == delayMessageHandlers) {
-            return;
-        }
-        for (DelayMessageHandler handler : delayMessageHandlers) {
-            addMessageHandlers(handler);
-        }
-    }
-
-    public void addMessageHandlers(DelayMessageHandler handler) {
-        TopicListener topicListener = new TopicListener(delayQueueContext, handler);
-        if (TOPIC_LISTENERS.containsKey(handler.getTopic())) {
-            TOPIC_LISTENERS.get(handler.getTopic()).close();
-        }
-        TOPIC_LISTENERS.put(handler.getTopic(), topicListener);
-        topicListener.startListen();
-    }
 }

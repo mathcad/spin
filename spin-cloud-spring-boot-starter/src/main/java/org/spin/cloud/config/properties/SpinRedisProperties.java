@@ -3,6 +3,8 @@ package org.spin.cloud.config.properties;
 import org.spin.data.redis.LettuceRedisProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.time.Duration;
+
 /**
  * TITLE
  * <p>DESCRIPTION</p>
@@ -13,13 +15,70 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "spin.redis")
 public class SpinRedisProperties extends LettuceRedisProperties {
-    private String delayQueueName;
+    private DelayQueue delayQueue;
 
-    public String getDelayQueueName() {
-        return delayQueueName;
+    public DelayQueue getDelayQueue() {
+        return delayQueue;
     }
 
-    public void setDelayQueueName(String delayQueueName) {
-        this.delayQueueName = delayQueueName;
+    public void setDelayQueue(DelayQueue delayQueue) {
+        this.delayQueue = delayQueue;
+    }
+
+    public static class DelayQueue {
+        private String name;
+        private String scheduleGroupId;
+        private Integer corePoolSize = 2;
+        private Integer maxPoolSize = 10;
+        private Duration keepAliveTime = Duration.ofMinutes(3);
+        private Integer workQueueSize = 20;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getScheduleGroupId() {
+            return scheduleGroupId;
+        }
+
+        public void setScheduleGroupId(String scheduleGroupId) {
+            this.scheduleGroupId = scheduleGroupId;
+        }
+
+        public Integer getCorePoolSize() {
+            return corePoolSize;
+        }
+
+        public void setCorePoolSize(Integer corePoolSize) {
+            this.corePoolSize = corePoolSize;
+        }
+
+        public Integer getMaxPoolSize() {
+            return maxPoolSize;
+        }
+
+        public void setMaxPoolSize(Integer maxPoolSize) {
+            this.maxPoolSize = maxPoolSize;
+        }
+
+        public Duration getKeepAliveTime() {
+            return keepAliveTime;
+        }
+
+        public void setKeepAliveTime(Duration keepAliveTime) {
+            this.keepAliveTime = keepAliveTime;
+        }
+
+        public Integer getWorkQueueSize() {
+            return workQueueSize;
+        }
+
+        public void setWorkQueueSize(Integer workQueueSize) {
+            this.workQueueSize = workQueueSize;
+        }
     }
 }

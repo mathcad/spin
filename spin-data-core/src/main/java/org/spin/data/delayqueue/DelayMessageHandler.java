@@ -21,7 +21,7 @@ public interface DelayMessageHandler {
      * @param message 消息
      * @throws Exception 异常
      */
-    void handle(DelayMessage message) throws Exception;
+    void handle(String message) throws Exception;
 
     /**
      * 异常处理逻辑
@@ -29,6 +29,6 @@ public interface DelayMessageHandler {
      * @param message 消息
      * @param e       异常
      */
-    void handleException(DelayMessage message, Exception e);
+    void handleException(String message, Exception e);
 
 }

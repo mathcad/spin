@@ -46,13 +46,16 @@ public class RedisExtendsAutoConfiguration {
 
     @Bean
     @ConditionalOnBean(RedisClientWrapper.class)
-    @ConditionalOnProperty(name = "spin.redis.delay-queue-name")
+    @ConditionalOnProperty(name = "spin.redis.delay-queue.name")
     public RedisDelayQueue redisDelayQueue(SpinRedisProperties spinRedisProperties,
                                            RedisClientWrapper redisClientWrapper,
                                            @Nullable List<DelayMessageHandler> messageHandlers) {
-        RedisDelayQueue redisDelayQueue = new RedisDelayQueue(spinRedisProperties.getDelayQueueName(),
-            redisClientWrapper);
-        redisDelayQueue.setMessageHandlers(messageHandlers);
-        return redisDelayQueue;
+        return new RedisDelayQueue(spinRedisProperties.getDelayQueue().getName(),
+            spinRedisProperties.getDelayQueue().getScheduleGroupId(),
+            redisClientWrapper, messageHandlers,
+            spinRedisProperties.getDelayQueue().getCorePoolSize(),
+            spinRedisProperties.getDelayQueue().getMaxPoolSize(),
+            spinRedisProperties.getDelayQueue().getKeepAliveTime().toMillis(),
+            spinRedisProperties.getDelayQueue().getWorkQueueSize());
     }
 }
