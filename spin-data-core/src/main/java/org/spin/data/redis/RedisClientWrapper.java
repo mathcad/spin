@@ -5,11 +5,13 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.TimeoutOptions;
 import io.lettuce.core.cluster.ClusterClientOptions;
+import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
 import org.spin.core.util.CollectionUtils;
 
+import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -41,6 +43,7 @@ public class RedisClientWrapper implements AutoCloseable {
             }
             clusterClient = RedisClusterClient.create(nodes);
             ClusterClientOptions.Builder builder = ClusterClientOptions.builder();
+            builder.topologyRefreshOptions(ClusterTopologyRefreshOptions.builder().enablePeriodicRefresh().refreshPeriod(Duration.ofMinutes(2)).build());
             if (null != queueProperties.getConnectTimeout()) {
                 builder.timeoutOptions(TimeoutOptions.builder().connectionTimeout().fixedTimeout(queueProperties.getConnectTimeout()).build());
             }
@@ -82,7 +85,7 @@ public class RedisClientWrapper implements AutoCloseable {
     public <K, V> RedisConnectionWrapper<K, V> connect(RedisCodec<K, V> codec) {
         return new RedisConnectionWrapper<>(this, codec);
     }
-    
+
     public RedisPubSubConnectionWrapper<String, String> connectPubSub() {
         return new RedisPubSubConnectionWrapper<>(this, StringCodec.UTF8);
     }
