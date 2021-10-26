@@ -34,6 +34,10 @@ public class RedisDelayQueue implements AutoCloseable {
         "redis.call(\"PUBLISH\", KEYS[1] .. \"TransferNotifier\", \"WAKE UP\")\n" +
         "return cnt";
 
+    private static final String DELETE_MSG_SCRIPT = "local cnt = redis.call(\"ZREM\", KEYS[1] .. \"PriorityQueue\", KEYS[2] .. KEYS[3])\n" +
+        "redis.call(\"HDEL\", KEYS[1] .. \"Data\", KEYS[2])\n" +
+        "return cnt";
+
     private final TopicListener topicListener;
     private final QueueTransfer transfer;
     private final DelayQueueContext delayQueueContext;
@@ -66,7 +70,7 @@ public class RedisDelayQueue implements AutoCloseable {
             throw new SimplifiedException("Delay Message's schedule time must not before now!!");
         }
 
-        long delayTime = scheduleAt.toInstant(ZoneId.systemDefault().getRules().getOffset(scheduleAt)).toEpochMilli() - System.currentTimeMillis();
+        long delayTime = scheduleAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() - System.currentTimeMillis();
         return publishInternal(delayQueueContext.scheduleGroupId, message, delayTime, task);
     }
 
@@ -80,12 +84,22 @@ public class RedisDelayQueue implements AutoCloseable {
             throw new SimplifiedException("Delay Message's schedule time must not before now!!");
         }
 
-        long delayTime = scheduleAt.toInstant(ZoneId.systemDefault().getRules().getOffset(scheduleAt)).toEpochMilli() - System.currentTimeMillis();
+        long delayTime = scheduleAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() - System.currentTimeMillis();
         return publishInternal(topic, message, delayTime, null);
     }
 
     public String publish(String topic, String message, long delayTimeInSeconds) {
         return publishInternal(topic, message, delayTimeInSeconds * 1000L, null);
+    }
+
+    public boolean cancelGroupMessage(String messageId) {
+        return cancelMessage(delayQueueContext.scheduleGroupId, messageId);
+    }
+
+    public boolean cancelMessage(String topic, String messageId) {
+        Long cnt = delayQueueContext.connection.syncEval(DELETE_MSG_SCRIPT, ScriptOutputType.INTEGER,
+            ArrayUtils.ofArray(delayQueueContext.delayQueueKeyPrefix, messageId, topic));
+        return cnt != null && cnt == 1L;
     }
 
     private String publishInternal(String topic, String message, long delayTimeInMillis, GroupScheduledTask task) {
@@ -102,7 +116,7 @@ public class RedisDelayQueue implements AutoCloseable {
         }
 
         Long cnt = delayQueueContext.connection.syncEval(PUSH_MSG_SCRIPT, ScriptOutputType.INTEGER,
-            ArrayUtils.ofArray(delayQueueContext.delayQueueKeyPrefix, msgId, topic, delayQueueContext.notifierChannel),
+            ArrayUtils.ofArray(delayQueueContext.delayQueueKeyPrefix, msgId, topic),
             delayMessage.toString(),
             StringUtils.toString(Math.max(delayTimeInMillis - System.currentTimeMillis() + triggerTime - topicListener.getOffset(), 0)));
 

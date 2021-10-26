@@ -21,11 +21,6 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class RandomStringUtils extends Util {
 
-    /**
-     * <p>Random object used by random method.</p>
-     */
-    private static final Random RANDOM = ThreadLocalRandom.current();
-
     private RandomStringUtils() {
     }
 
@@ -144,7 +139,7 @@ public final class RandomStringUtils extends Util {
      * @return the random string
      */
     public static String random(final int count, final int start, final int end, final boolean letters, final boolean numbers) {
-        return random(count, start, end, letters, numbers, null, RANDOM);
+        return random(count, start, end, letters, numbers, null, ThreadLocalRandom.current());
     }
 
     /**
@@ -168,7 +163,7 @@ public final class RandomStringUtils extends Util {
      *                                        {@code (end - start) + 1} characters in the set array.
      */
     public static String random(final int count, final int start, final int end, final boolean letters, final boolean numbers, final char... chars) {
-        return random(count, start, end, letters, numbers, chars, RANDOM);
+        return random(count, start, end, letters, numbers, chars, ThreadLocalRandom.current());
     }
 
     /**
@@ -292,7 +287,7 @@ public final class RandomStringUtils extends Util {
      */
     public static String random(final int count, final String chars) {
         if (chars == null) {
-            return random(count, 0, 0, false, false, null, RANDOM);
+            return random(count, 0, 0, false, false, null, ThreadLocalRandom.current());
         }
         return random(count, chars.toCharArray());
     }
@@ -311,9 +306,9 @@ public final class RandomStringUtils extends Util {
      */
     public static String random(final int count, final char... chars) {
         if (chars == null) {
-            return random(count, 0, 0, false, false, null, RANDOM);
+            return random(count, 0, 0, false, false, null, ThreadLocalRandom.current());
         }
-        return random(count, 0, chars.length, false, false, chars, RANDOM);
+        return random(count, 0, chars.length, false, false, chars, ThreadLocalRandom.current());
     }
 
 }

@@ -3,10 +3,7 @@ package org.spin.core.util;
 import org.spin.core.Assert;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 
 /**
@@ -275,6 +272,162 @@ public class ArrayUtils extends Util {
     public static <T> T[] ofArray(T... elements) {
         return elements;
     }
+
+    public static boolean[] ofArray(boolean... elements) {
+        return elements;
+    }
+
+    public static byte[] ofArray(byte... elements) {
+        return elements;
+    }
+
+    public static short[] ofArray(short... elements) {
+        return elements;
+    }
+
+    public static int[] ofArray(int... elements) {
+        return elements;
+    }
+
+    public static long[] ofArray(long... elements) {
+        return elements;
+    }
+
+    public static float[] ofArray(float... elements) {
+        return elements;
+    }
+
+    public static double[] ofArray(double... elements) {
+        return elements;
+    }
+
+    public static char[] ofArray(char... elements) {
+        return elements;
+    }
+
+    public static boolean[] toBooleanArray(List<Boolean> booleans) {
+        if (null == booleans) return null;
+        boolean[] res = new boolean[booleans.size()];
+        for (int i = 0; i < booleans.size(); i++) {
+            res[i] = Boolean.TRUE.equals(booleans.get(i));
+        }
+        return res;
+    }
+
+    public static <T extends Number> byte[] toByteArray(List<T> numbers, byte nullValue) {
+        if (null == numbers) return null;
+        byte[] res = new byte[numbers.size()];
+        for (int i = 0; i < numbers.size(); i++) {
+            Number n = numbers.get(i);
+            res[i] = null == n ? nullValue : n.byteValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> short[] toShortArray(List<T> numbers, short nullValue) {
+        if (null == numbers) return null;
+        short[] res = new short[numbers.size()];
+        for (int i = 0; i < numbers.size(); i++) {
+            Number n = numbers.get(i);
+            res[i] = null == n ? nullValue : n.shortValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> int[] toIntArray(List<T> numbers, int nullValue) {
+        if (null == numbers) return null;
+        int[] res = new int[numbers.size()];
+        for (int i = 0; i < numbers.size(); i++) {
+            Number n = numbers.get(i);
+            res[i] = null == n ? nullValue : n.intValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> long[] toLongArray(List<T> numbers, long nullValue) {
+        if (null == numbers) return null;
+        long[] res = new long[numbers.size()];
+        for (int i = 0; i < numbers.size(); i++) {
+            Number n = numbers.get(i);
+            res[i] = null == n ? nullValue : n.longValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> float[] toFloatArray(List<T> numbers, float nullValue) {
+        if (null == numbers) return null;
+        float[] res = new float[numbers.size()];
+        for (int i = 0; i < numbers.size(); i++) {
+            Number n = numbers.get(i);
+            res[i] = null == n ? nullValue : n.floatValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> double[] toDoubleArray(List<T> numbers, double nullValue) {
+        if (null == numbers) return null;
+        double[] res = new double[numbers.size()];
+        for (int i = 0; i < numbers.size(); i++) {
+            Number n = numbers.get(i);
+            res[i] = null == n ? nullValue : n.doubleValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> byte[] toByteArray(T[] numbers, byte nullValue) {
+        if (null == numbers) return null;
+        byte[] res = new byte[numbers.length];
+        for (int i = 0; i < numbers.length; i++) {
+            res[i] = null == numbers[i] ? nullValue : numbers[i].byteValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> short[] toShortArray(T[] numbers, short nullValue) {
+        if (null == numbers) return null;
+        short[] res = new short[numbers.length];
+        for (int i = 0; i < numbers.length; i++) {
+            res[i] = null == numbers[i] ? nullValue : numbers[i].shortValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> int[] toIntArray(T[] numbers, int nullValue) {
+        if (null == numbers) return null;
+        int[] res = new int[numbers.length];
+        for (int i = 0; i < numbers.length; i++) {
+            res[i] = null == numbers[i] ? nullValue : numbers[i].intValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> long[] toLongArray(T[] numbers, long nullValue) {
+        if (null == numbers) return null;
+        long[] res = new long[numbers.length];
+        for (int i = 0; i < numbers.length; i++) {
+            res[i] = null == numbers[i] ? nullValue : numbers[i].longValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> float[] toFloatArray(T[] numbers, float nullValue) {
+        if (null == numbers) return null;
+        float[] res = new float[numbers.length];
+        for (int i = 0; i < numbers.length; i++) {
+            res[i] = null == numbers[i] ? nullValue : numbers[i].floatValue();
+        }
+        return res;
+    }
+
+    public static <T extends Number> double[] toDoubleArray(T[] numbers, double nullValue) {
+        if (null == numbers) return null;
+        double[] res = new double[numbers.length];
+        for (int i = 0; i < numbers.length; i++) {
+            res[i] = null == numbers[i] ? nullValue : numbers[i].doubleValue();
+        }
+        return res;
+    }
+
 
     /**
      * 将枚举类型的所有枚举值包装成为一个数组

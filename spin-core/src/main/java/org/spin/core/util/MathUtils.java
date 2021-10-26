@@ -34,7 +34,7 @@ public final class MathUtils extends Util {
      * @param roundingMode 舍入规则
      * @return 平方根
      */
-    public static BigDecimal sqrt(BigDecimal number, int scale, int roundingMode) {
+    public static BigDecimal sqrt(BigDecimal number, int scale, RoundingMode roundingMode) {
         if (number.compareTo(BigDecimal.ZERO) < 0)
             throw new ArithmeticException("sqrt with negative");
         BigInteger integer = number.toBigInteger();
@@ -69,7 +69,7 @@ public final class MathUtils extends Util {
             sb.append(j);
         }
         sb.append('.');
-        BigDecimal fraction = number.subtract(number.setScale(0, BigDecimal.ROUND_DOWN));
+        BigDecimal fraction = number.subtract(number.setScale(0, RoundingMode.DOWN));
         int fracLen = (fraction.scale() + 1) / 2;
         fraction = fraction.movePointRight(fracLen * 2);
         String strFrac = fraction.toPlainString();
@@ -105,7 +105,7 @@ public final class MathUtils extends Util {
      * @return 平方根
      */
     public static BigDecimal sqrt(BigDecimal number, int scale) {
-        return sqrt(number, scale, BigDecimal.ROUND_HALF_UP);
+        return sqrt(number, scale, RoundingMode.HALF_UP);
     }
 
     /**
@@ -118,7 +118,7 @@ public final class MathUtils extends Util {
         int scale = number.scale() * 2;
         if (scale < 50)
             scale = 50;
-        return sqrt(number, scale, BigDecimal.ROUND_HALF_UP);
+        return sqrt(number, scale, RoundingMode.HALF_UP);
     }
 
     /**
@@ -285,7 +285,7 @@ public final class MathUtils extends Util {
      */
     public static <T, P> BigDecimal mean(Collection<T> list, Function<T, P> propGetter) {
         BigDecimal total = sum(list, propGetter);
-        return total.divide(new BigDecimal(list.size()), BigDecimal.ROUND_HALF_UP);
+        return total.divide(new BigDecimal(list.size()), RoundingMode.HALF_UP);
     }
 
     /**
@@ -302,7 +302,7 @@ public final class MathUtils extends Util {
      */
     public static <K, V> BigDecimal mean(Collection<Map<K, V>> list, K key) {
         BigDecimal total = sum(list, key);
-        return total.divide(new BigDecimal(list.size()), BigDecimal.ROUND_HALF_UP);
+        return total.divide(new BigDecimal(list.size()), RoundingMode.HALF_UP);
     }
 
     /**
@@ -408,7 +408,7 @@ public final class MathUtils extends Util {
 
         List<BigDecimal> nums = list.stream().map(propGetter).map(NumericUtils::toBigDeciaml).collect(Collectors.toList());
 
-        BigDecimal avg = nums.stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size()), BigDecimal.ROUND_HALF_UP);
+        BigDecimal avg = nums.stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size()), RoundingMode.HALF_UP);
 
         return nums.stream().map(n -> n.subtract(avg).pow(2))
             .reduce(BigDecimal::add)
@@ -433,7 +433,7 @@ public final class MathUtils extends Util {
             return BigDecimal.ZERO;
         }
         List<BigDecimal> nums = list.stream().map(map -> MapUtils.getBigDecimalValue(map, key)).collect(Collectors.toList());
-        BigDecimal avg = nums.stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size()), BigDecimal.ROUND_HALF_UP);
+        BigDecimal avg = nums.stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size()), RoundingMode.HALF_UP);
 
 
         return nums.stream().map(n -> n.subtract(avg).pow(2))
@@ -463,7 +463,7 @@ public final class MathUtils extends Util {
         List<BigDecimal> nums = list.stream().map(propGetter).map(NumericUtils::toBigDeciaml).collect(Collectors.toList());
 
 
-        BigDecimal avg = nums.stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size()), BigDecimal.ROUND_HALF_UP);
+        BigDecimal avg = nums.stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size()), RoundingMode.HALF_UP);
 
         return nums.stream().map(n -> n.subtract(avg).pow(2))
             .reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size() - 1), RoundingMode.HALF_UP);
@@ -489,7 +489,7 @@ public final class MathUtils extends Util {
 
         List<BigDecimal> nums = list.stream().map(map -> MapUtils.getBigDecimalValue(map, key)).collect(Collectors.toList());
 
-        BigDecimal avg = nums.stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size()), BigDecimal.ROUND_HALF_UP);
+        BigDecimal avg = nums.stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size()), RoundingMode.HALF_UP);
 
         return nums.stream().map(n -> n.subtract(avg).pow(2))
             .reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size() - 1), RoundingMode.HALF_UP);

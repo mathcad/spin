@@ -98,6 +98,19 @@ public class OpResult<T> {
     }
 
     /**
+     * 如果失败则抛出指定异常
+     *
+     * @param exceptionSupplier 异常对象提供者
+     * @param <X>               需要抛出的异常类型
+     * @throws X 当失败时抛出
+     */
+    public <X extends Throwable> void onFailureThrow(Supplier<? extends X> exceptionSupplier) throws X {
+        if (!success) {
+            throw exceptionSupplier.get();
+        }
+    }
+
+    /**
      * 失败时返回
      *
      * @param supplier 数据提供者

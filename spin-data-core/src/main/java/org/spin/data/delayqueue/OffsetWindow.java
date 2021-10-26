@@ -1,5 +1,7 @@
 package org.spin.data.delayqueue;
 
+import org.spin.core.util.MathUtils;
+
 /**
  * 调度误差滑动窗口
  * <p>DESCRIPTION</p>
@@ -9,22 +11,25 @@ package org.spin.data.delayqueue;
  * @version 1.0
  */
 public class OffsetWindow {
-    private static final int WINDOW_SIZE = 5;
+    private static final int WINDOW_SIZE = 100;
 
     private final long[] offset = new long[WINDOW_SIZE];
+    private int idx = 0;
     private int cnt = 0;
 
     public void put(long offset, long ceil) {
-        this.offset[cnt++] = Math.min(offset, ceil);
-        cnt = cnt % WINDOW_SIZE;
+        this.offset[idx++] = Math.min(offset, ceil);
+        if (cnt < WINDOW_SIZE) cnt = idx;
+        idx %= WINDOW_SIZE;
     }
 
     public long getOffset() {
+        if (0 == cnt) return 0L;
         long accu = 0;
         int i = 0;
         while (i < offset.length) {
             accu += offset[i++];
         }
-        return accu / WINDOW_SIZE;
+        return accu / cnt;
     }
 }
