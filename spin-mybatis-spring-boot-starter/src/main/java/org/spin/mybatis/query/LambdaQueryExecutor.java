@@ -99,6 +99,7 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
      * SELECT 部分 SQL 设置
      *
      * @param columns 查询字段
+     * @return executor
      */
     public final LambdaQueryExecutor<T> select(String... columns) {
         if (ArrayUtils.isNotEmpty(columns)) {

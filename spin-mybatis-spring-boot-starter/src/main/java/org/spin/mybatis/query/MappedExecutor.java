@@ -65,11 +65,13 @@ public interface MappedExecutor<E, M extends BaseMapper<E>> {
      * @return 实体(可能为null)
      */
     default Optional<E> single() {
-        List<E> list = list();
+        Page<E> page = new Page<>(1, 2);
+        page.setSearchCount(false);
+        List<E> list = this.page(page).getRecords();
         if (CollectionUtils.isNotEmpty(list)) {
             int size = list.size();
             if (size > 1) {
-                logger.warn(String.format("Warn: execute Method There are  %s results.", size));
+                logger.warn("Warn: execute single has multi results.");
             }
             return Optional.ofNullable(list.get(0));
         }

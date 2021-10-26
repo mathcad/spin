@@ -1,6 +1,6 @@
 package org.spin.mybatis.plus;
 
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Alias;
@@ -9,6 +9,7 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.*;
+import org.spin.core.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,12 +24,24 @@ import java.util.Optional;
  */
 public class PaginationInnerInterceptor extends com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor {
 
-    protected String autoCountSql(boolean optimizeCountSql, String sql) {
-        if (!optimizeCountSql) {
+    /**
+     * 获取自动优化的 countSql, 抑制警告
+     *
+     * @param page 分页参数
+     * @param sql  sql
+     * @return countSql
+     */
+    protected String autoCountSql(IPage<?> page, String sql) {
+        if (!page.optimizeCountSql()) {
             return lowLevelCountSql(sql);
         }
         try {
             Select select = (Select) CCJSqlParserUtil.parse(sql);
+            SelectBody selectBody = select.getSelectBody();
+            // https://github.com/baomidou/mybatis-plus/issues/3920  分页增加union语法支持
+            if (selectBody instanceof SetOperationList) {
+                return lowLevelCountSql(sql);
+            }
             PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
             Distinct distinct = plainSelect.getDistinct();
             GroupByElement groupBy = plainSelect.getGroupBy();
@@ -62,7 +75,7 @@ public class PaginationInnerInterceptor extends com.baomidou.mybatisplus.extensi
                 return lowLevelCountSql(select.toString());
             }
             // 包含 join 连表,进行判断是否移除 join 连表
-            if (optimizeJoin) {
+            if (optimizeJoin && page.optimizeJoinOfCountSql()) {
                 List<Join> joins = plainSelect.getJoins();
                 if (CollectionUtils.isNotEmpty(joins)) {
                     boolean canRemoveJoin = true;
@@ -90,7 +103,7 @@ public class PaginationInnerInterceptor extends com.baomidou.mybatisplus.extensi
                         }
                         // 不区分大小写
                         str = str.toLowerCase();
-                        String onExpressionS = join.getOnExpression().toString();
+                        String onExpressionS = CollectionUtils.first(join.getOnExpressions()).toString();
                         /* 如果 join 里包含 ?(代表有入参) 或者 where 条件里包含使用 join 的表的字段作条件,就不移除 join */
                         if (onExpressionS.contains(StringPool.QUESTION_MARK) || whereS.contains(str)) {
                             canRemoveJoin = false;
