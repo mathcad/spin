@@ -1,35 +1,45 @@
 package org.spin.mybatis.query;
 
+import com.baomidou.mybatisplus.core.enums.SqlMethod;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.override.MybatisMapperProxy;
+import com.baomidou.mybatisplus.core.toolkit.ExceptionUtils;
+import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
+import org.apache.ibatis.exceptions.PersistenceException;
+import org.apache.ibatis.reflection.ExceptionUtil;
+import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.mybatis.spring.MyBatisExceptionTranslator;
+import org.mybatis.spring.SqlSessionHolder;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.SqlSessionUtils;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.cloud.util.BeanHolder;
 import org.spin.core.Assert;
 import org.spin.core.inspection.BytesClassLoader;
-import org.spin.core.util.ArrayUtils;
-import org.spin.core.util.ClassUtils;
-import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.ObjectUtils;
+import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.*;
 import org.spin.data.core.IEntity;
 import org.spin.data.rs.AffectedRows;
 import org.spin.data.rs.RowMapper;
 import org.spin.data.rs.RowMappers;
 import org.spin.data.throwable.SQLError;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.Serializable;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * 存储上下文工具类
@@ -40,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version 1.0
  */
 public class R extends ClassLoader {
-
+    private static final Logger logger = LoggerFactory.getLogger(R.class);
     private static final ConcurrentHashMap<String, BaseMapper<?>> MAPPERS = new ConcurrentHashMap<>();
     private static final Map<String, BaseMapper<?>> CUSTOMER_MAPPERS = new HashMap<>();
     private static final String[] MYBATIS_PLUS_BASE_MAPPER_INTFS = {"com/baomidou/mybatisplus/core/mapper/BaseMapper"};
@@ -65,6 +75,127 @@ public class R extends ClassLoader {
     public static <E> AffectedRows insert(E entity) {
         Assert.notNull(entity, "新增的实体不能为null");
         return AffectedRows.of(getMapper((Class<E>) entity.getClass()).insert(entity));
+    }
+
+    /**
+     * 批量保存实体
+     * <pre>
+     * 采用Batch操作模式
+     *
+     * 如果未开启MySQL JDBC的rewriteBatchedStatements参数:
+     *   在2000的插入规模上, 性能大约是单SQL插入的1/4左右.
+     *   随着规模提升, 性能差距会更大; 到达20000的规模时, 性能大约相差10倍.
+     *
+     * 如果开启该参数, 则batch性能与单sql性能没有显著差距
+     *
+     * Batch操作不受数据库最大sql长度的限制
+     * </pre>
+     *
+     * @param collection 实体
+     * @param <E>        实体类型
+     * @return 是否成功
+     */
+    public static <E> boolean batchInsert(Collection<E> collection) {
+        return batchInsert(collection, 1000);
+    }
+
+    /**
+     * 批量保存实体
+     * <pre>
+     * 采用Batch操作模式
+     *
+     * 如果未开启MySQL JDBC的rewriteBatchedStatements参数:
+     *   在2000的插入规模上, 性能大约是单SQL插入的1/4左右.
+     *   随着规模提升, 性能差距会更大; 到达20000的规模时, 性能大约相差10倍.
+     *
+     * 如果开启该参数, 则batch性能与单sql性能没有显著差距
+     *
+     * Batch操作不受数据库最大sql长度的限制
+     * </pre>
+     *
+     * @param collection 实体
+     * @param batchSize  批次大小
+     * @param <E>        实体类型
+     * @return 是否成功
+     */
+    public static <E> boolean batchInsert(Collection<E> collection, int batchSize) {
+        if (CollectionUtils.isEmpty(collection)) return false;
+        @SuppressWarnings("unchecked")
+        Class<E> type = (Class<E>) CollectionUtils.first(collection).getClass();
+        InvocationHandler mapper = Proxy.getInvocationHandler(getMapper(type));
+        if (!(mapper instanceof MybatisMapperProxy)) {
+            throw new SimplifiedException(type.getName() + "'s Mapper class does not support BatchInsert");
+        }
+        String sqlStatement = ((Class<?>) BeanUtils.getFieldValue(mapper, "mapperInterface")).getName()
+            + "." + SqlMethod.INSERT_ONE.getMethod();
+        return executeBatch(collection, type, batchSize, (sqlSession, entity) -> sqlSession.insert(sqlStatement, entity));
+    }
+
+    public static <E> boolean executeBatch(Collection<E> collection, int batchSize, BiConsumer<SqlSession, E> consumer) {
+        if (CollectionUtils.isEmpty(collection)) return false;
+        Assert.ge(batchSize, 1, "batchSize must not be less than one");
+        @SuppressWarnings("unchecked")
+        Class<E> type = (Class<E>) CollectionUtils.first(collection).getClass();
+        return executeBatch(collection, type, batchSize, consumer);
+    }
+
+    public static <E> boolean executeBatch(Collection<E> collection, Class<E> entityClass, int batchSize, BiConsumer<SqlSession, E> consumer) {
+        if (CollectionUtils.isEmpty(collection)) return false;
+        Assert.ge(batchSize, 1, "batchSize must not be less than one");
+        return executeBatch(entityClass, sqlSession -> {
+            int size = collection.size();
+            int i = 1;
+            for (E element : collection) {
+                consumer.accept(sqlSession, element);
+                if ((i % batchSize == 0) || i == size) {
+                    sqlSession.flushStatements();
+                }
+                i++;
+            }
+        });
+    }
+
+    /**
+     * 执行批量操作
+     *
+     * @param entityClass 实体
+     * @param consumer    consumer
+     * @return 操作结果
+     */
+    public static boolean executeBatch(Class<?> entityClass, Consumer<SqlSession> consumer) {
+        SqlSessionFactory sqlSessionFactory = SqlHelper.sqlSessionFactory(entityClass);
+        SqlSessionHolder sqlSessionHolder = (SqlSessionHolder) TransactionSynchronizationManager.getResource(sqlSessionFactory);
+        boolean transaction = TransactionSynchronizationManager.isSynchronizationActive();
+        if (sqlSessionHolder != null) {
+            SqlSession sqlSession = sqlSessionHolder.getSqlSession();
+            //原生无法支持执行器切换，当存在批量操作时，会嵌套两个session的，优先commit上一个session
+            //按道理来说，这里的值应该一直为false。
+            sqlSession.commit(!transaction);
+        }
+        SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH);
+        if (!transaction) {
+            logger.warn("SqlSession [" + sqlSession + "] Transaction not enabled");
+        }
+        try {
+            consumer.accept(sqlSession);
+            //非事物情况下，强制commit。
+            sqlSession.commit(!transaction);
+            return true;
+        } catch (Throwable t) {
+            sqlSession.rollback();
+            Throwable unwrapped = ExceptionUtil.unwrapThrowable(t);
+            if (unwrapped instanceof PersistenceException) {
+                MyBatisExceptionTranslator myBatisExceptionTranslator
+                    = new MyBatisExceptionTranslator(sqlSessionFactory.getConfiguration().getEnvironment().getDataSource(), true);
+                DataAccessException throwable = myBatisExceptionTranslator.translateExceptionIfPossible((PersistenceException) unwrapped);
+                if (throwable != null) {
+                    throw throwable;
+                }
+            }
+            throw ExceptionUtils.mpe(unwrapped);
+        } finally {
+            sqlSession.close();
+        }
     }
 
     /**
