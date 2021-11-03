@@ -11,16 +11,8 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.color.ColorSpace;
-import java.awt.image.BufferedImage;
-import java.awt.image.ColorConvertOp;
-import java.awt.image.CropImageFilter;
-import java.awt.image.FilteredImageSource;
-import java.awt.image.ImageFilter;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.awt.image.*;
+import java.io.*;
 
 /**
  * 图像工具
@@ -61,29 +53,29 @@ public final class ImageUtils extends Util {
      * 缩放图像
      * <p>支持拉伸、适应、填充与平铺4种缩放模式</p>
      *
-     * @param image        原始图像
-     * @param width        目标宽度
-     * @param height       目标高度
-     * @param mode         缩放模式
-     * @param fillColor    填充颜色(仅适应模式时有效)
-     * @param transparency 透明模式
+     * @param image     原始图像
+     * @param width     目标宽度
+     * @param height    目标高度
+     * @param mode      缩放模式
+     * @param fillColor 填充颜色(仅适应模式时有效)
+     * @param imageType 色彩空间
      * @return 缩放后的图像
      */
-    public static BufferedImage scale(Image image, int width, int height, ScaleMode mode, Color fillColor, Integer transparency) {
+    public static BufferedImage scale(Image image, int width, int height, ScaleMode mode, Color fillColor, Integer imageType) {
         int originWidth = image.getWidth(null);
         int originHeight = image.getHeight(null);
 
         // 尺寸不变直接返回
         if (originWidth == width && originHeight == height) {
-            return toBufferedImage(image, false, transparency);
+            return toBufferedImage(image, false, imageType);
         }
 
         // 比例不变直接缩放
         if (originHeight * width == originWidth * height) {
-            return toBufferedImage(image.getScaledInstance(width, height, Image.SCALE_SMOOTH), false, transparency);
+            return toBufferedImage(image.getScaledInstance(width, height, Image.SCALE_SMOOTH), false, imageType);
         }
 
-        int trans = null == transparency ? Transparency.OPAQUE : transparency;
+        int type = null == imageType ? (image instanceof BufferedImage ? ((BufferedImage) image).getType() : BufferedImage.TYPE_INT_RGB) : imageType;
         Image scaledInstance;
         BufferedImage result;
         Graphics2D g;
@@ -93,12 +85,10 @@ public final class ImageUtils extends Util {
         switch (mode) {
             case STRETCH:
                 scaledInstance = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                return toBufferedImage(scaledInstance, false, transparency);
+                return toBufferedImage(scaledInstance, false, type);
             case ADAPT:
-                result = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
-                    .getDefaultConfiguration().createCompatibleImage(width, height, trans);
-
-                Assert.notTrue((fillColor == null || fillColor.getAlpha() != 255) && (trans == Transparency.OPAQUE), "不透明模式时，无法实现透明的背景填充");
+                result = new BufferedImage(width, height, type);
+                Assert.notTrue((fillColor == null || fillColor.getAlpha() != 255) && (result.getTransparency() == Transparency.OPAQUE), "不透明模式时，无法实现透明的背景填充");
                 g = result.createGraphics();
                 if (null != fillColor) {
                     g.setColor(fillColor);
@@ -162,10 +152,9 @@ public final class ImageUtils extends Util {
                 scaledInstance = image.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
                 ImageFilter cropFilter = new CropImageFilter((targetWidth - width) / 2, (targetHeight - height) / 2, width, height);
                 scaledInstance = Toolkit.getDefaultToolkit().createImage(new FilteredImageSource(scaledInstance.getSource(), cropFilter));
-                return toBufferedImage(scaledInstance, false, transparency);
+                return toBufferedImage(scaledInstance, false, imageType);
             case TILE:
-                result = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
-                    .getDefaultConfiguration().createCompatibleImage(width, height, trans);
+                result = new BufferedImage(width, height, type);
                 g = result.createGraphics();
                 int xTimes = (int) Math.ceil(((double) width) / originWidth);
                 int yTimes = (int) Math.ceil(((double) height) / originHeight);
@@ -195,8 +184,7 @@ public final class ImageUtils extends Util {
         int originWidth = image.getWidth(null);
         int originHeight = image.getHeight(null);
 
-        BufferedImage result = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
-            .getDefaultConfiguration().createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+        BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
         // 如果起始坐标超出源图像范围，直接返回空白图像
         if (x >= originWidth || y >= originHeight) {
@@ -235,8 +223,7 @@ public final class ImageUtils extends Util {
 
         for (int y = 0; y < cols; ++y) {
             for (int x = 0; x < rows; x++) {
-                res[x][y] = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
-                    .getDefaultConfiguration().createCompatibleImage(ppr, ppc, Transparency.TRANSLUCENT);
+                res[x][y] = new BufferedImage(ppr, ppc, BufferedImage.TYPE_INT_ARGB);
 
                 int startX = x * ppr;
                 int startY = y * ppc;
@@ -276,9 +263,21 @@ public final class ImageUtils extends Util {
      * @return 灰度图
      */
     public static BufferedImage gray(Image image) {
-        ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+        return changeColorSpace(image, ColorSpace.CS_GRAY, null);
+    }
+
+    /**
+     * 切换色彩空间
+     *
+     * @param image      图像
+     * @param colorSpace 目标色彩空间
+     * @param dest       目标图像, 可以为null
+     * @return 目标图像
+     */
+    public static BufferedImage changeColorSpace(Image image, int colorSpace, BufferedImage dest) {
+        ColorSpace cs = ColorSpace.getInstance(colorSpace);
         ColorConvertOp op = new ColorConvertOp(cs, null);
-        return op.filter(toBufferedImage(image, true, null), null);
+        return op.filter(toBufferedImage(image, true, null), dest);
     }
 
     /**
@@ -358,10 +357,10 @@ public final class ImageUtils extends Util {
      */
     public static void overlay(BufferedImage image, Image overlay, int x, int y, float alpha) {
         Graphics2D g = image.createGraphics();
-        int wideth = overlay.getWidth(null);
+        int width = overlay.getWidth(null);
         int height = overlay.getHeight(null);
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha));
-        g.drawImage(overlay, x, y, wideth, height, null);
+        g.drawImage(overlay, x, y, width, height, null);
         g.dispose();
     }
 
@@ -377,29 +376,31 @@ public final class ImageUtils extends Util {
      * @return 处理后的图像
      */
     public static BufferedImage radius(Image srcImage, int radius, int border, Color borderColor, int padding) {
+        int diameter = radius * 2;
         int originWidth = srcImage.getWidth(null);
         int originHeight = srcImage.getHeight(null);
 
-        int trans = Transparency.TRANSLUCENT;
-        BufferedImage bimage = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()
-            .createCompatibleImage(originWidth + padding * 2 + border * 2, originHeight + padding * 2 + border * 2, trans);
-
-        Graphics2D g = bimage.createGraphics();
+        BufferedImage image = new BufferedImage(originWidth + padding * 2 + border * 2, originHeight + padding * 2 + border * 2, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
 
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC, 1.0F));
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.fillRoundRect(padding, padding, originWidth + border * 2, originHeight + border * 2, radius, radius);
+        g.fillRoundRect(padding, padding, originWidth + border * 2, originHeight + border * 2, diameter, diameter);
         g.setComposite(AlphaComposite.SrcIn);
         g.drawImage(srcImage, padding + border, padding + border, originWidth, originHeight, null);
 
         if (border > 0) {
+            g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
             g.setColor(borderColor);
-            g.setStroke(new BasicStroke(border));
-            g.drawRoundRect(padding + border / 2, padding + border / 2, originWidth + border, originHeight + border, radius, radius);
+            g.setStroke(new BasicStroke(border * 2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, null, 0.0f));
+            g.drawRoundRect(padding, padding, originWidth + border * 2, originHeight + border * 2,
+                diameter, diameter
+            );
         }
+
         g.dispose();
 
-        return bimage;
+        return image;
     }
 
     public static int getLength(String text) {
@@ -449,7 +450,7 @@ public final class ImageUtils extends Util {
     /**
      * 将图片进行Base64编码
      *
-     * @param image    图片内容
+     * @param image    图像
      * @param fileType 转换目标格式
      * @return 图片的Base64编码
      */
@@ -489,19 +490,19 @@ public final class ImageUtils extends Util {
     /**
      * 将Image对象转换为BufferedImage
      *
-     * @param image        源图像
-     * @param copy         是否复制(当copy为false, 如果源图像就是BufferedImage且透明模式与声明的一致时会直接返回源图像; 如果copy为true, 不论源图像是何对象, 都将为其生成新的副本)
-     * @param transparency 透明模式
+     * @param image     源图像
+     * @param copy      是否复制(当copy为false, 如果源图像就是BufferedImage且透明模式与声明的一致时会直接返回源图像; 如果copy为true, 不论源图像是何对象, 都将为其生成新的副本)
+     * @param imageType 图像类型
      * @return BufferedImage
      */
-    public static BufferedImage toBufferedImage(Image image, boolean copy, Integer transparency) {
+    public static BufferedImage toBufferedImage(Image image, boolean copy, Integer imageType) {
         if (image instanceof BufferedImage) {
-            if ((null == transparency || transparency == ((BufferedImage) image).getTransparency()) && !copy) {
+            if ((null == imageType || imageType == ((BufferedImage) image).getType()) && !copy) {
                 return (BufferedImage) image;
             }
 
-            if (null == transparency) {
-                transparency = ((BufferedImage) image).getTransparency();
+            if (null == imageType) {
+                imageType = ((BufferedImage) image).getTransparency();
             }
         }
 
@@ -513,41 +514,15 @@ public final class ImageUtils extends Util {
         //boolean hasAlpha = hasAlpha(image);
 
         // Create a buffered image with a format that's compatible with the screen
-        BufferedImage bimage = null;
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        try {
-            // Determine the type of transparency of the new buffered image
-            int trans = null == transparency ? Transparency.OPAQUE : transparency;
-	       /* if (hasAlpha) {
-	         transparency = Transparency.BITMASK;
-	         }*/
-
-            // Create the buffered image
-            GraphicsDevice gs = ge.getDefaultScreenDevice();
-            GraphicsConfiguration gc = gs.getDefaultConfiguration();
-            bimage = gc.createCompatibleImage(
-                image.getWidth(null), image.getHeight(null), trans);
-        } catch (HeadlessException e) {
-            // The system does not have a screen
-        }
-
-        if (bimage == null) {
-            // Create a buffered image using the default color model
-            int type = transparency == null || transparency == Transparency.OPAQUE ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
-            //int type = BufferedImage.TYPE_3BYTE_BGR;//by wang
-	        /*if (hasAlpha) {
-	         type = BufferedImage.TYPE_INT_ARGB;
-	         }*/
-            bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), type);
-        }
+        BufferedImage bufferedImage = new BufferedImage(image.getWidth(null), image.getHeight(null), imageType);
 
         // Copy image to buffered image
-        Graphics g = bimage.createGraphics();
+        Graphics g = bufferedImage.createGraphics();
 
         // Paint the image onto the buffered image
         g.drawImage(image, 0, 0, null);
         g.dispose();
 
-        return bimage;
+        return bufferedImage;
     }
 }
