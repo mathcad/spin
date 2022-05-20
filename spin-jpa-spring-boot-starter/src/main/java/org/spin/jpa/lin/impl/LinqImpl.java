@@ -320,10 +320,10 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
     }
 
     @Override
-    public Optional<R> findOne() {
+    public Optional<R> findUnique() {
         if (parent != null) {
             applyPredicateToCriteria(sq);
-            return parent.findOne();
+            return parent.findUnique();
         }
         applyPredicateToCriteria(criteria);
         TypedQuery<?> query = createQuery();
@@ -335,7 +335,7 @@ public class LinqImpl<R> extends LinImpl<Linq<R, LinqImpl<R>>, CriteriaQuery<?>>
     public Optional<R> findFirst() {
         if (parent != null) {
             applyPredicateToCriteria(sq);
-            return parent.findOne();
+            return parent.findUnique();
         }
         applyPredicateToCriteria(criteria);
         TypedQuery<?> query = createQuery();

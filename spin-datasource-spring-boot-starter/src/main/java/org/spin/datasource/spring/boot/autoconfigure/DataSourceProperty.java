@@ -3,6 +3,8 @@ package org.spin.datasource.spring.boot.autoconfigure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.util.StringUtils;
+import org.spin.datasource.spring.boot.autoconfigure.beecp.BeeCpConfig;
+import org.spin.datasource.spring.boot.autoconfigure.dbcp2.Dbcp2Config;
 import org.spin.datasource.spring.boot.autoconfigure.druid.DruidConfig;
 import org.spin.datasource.spring.boot.autoconfigure.hikari.HikariCpConfig;
 import org.spin.datasource.toolkit.CryptoUtils;
@@ -65,13 +67,17 @@ public class DataSourceProperty {
      */
     private String data;
     /**
-     *
+     * 是否启用seata
      */
     private Boolean seata = true;
     /**
-     *
+     * 是否启用p6spy
      */
     private Boolean p6spy = true;
+    /**
+     * lazy init datasource
+     */
+    private Boolean lazy;
     /**
      * 错误是否继续 默认 true
      */
@@ -90,7 +96,16 @@ public class DataSourceProperty {
      */
     @NestedConfigurationProperty
     private HikariCpConfig hikari = new HikariCpConfig();
-
+    /**
+     * BeeCp参数配置
+     */
+    @NestedConfigurationProperty
+    private BeeCpConfig beecp = new BeeCpConfig();
+    /**
+     * DBCP2参数配置
+     */
+    @NestedConfigurationProperty
+    private Dbcp2Config dbcp2 = new Dbcp2Config();
     /**
      * 解密公匙(如果未设置默认使用全局的)
      */
@@ -208,6 +223,14 @@ public class DataSourceProperty {
         this.p6spy = p6spy;
     }
 
+    public Boolean getLazy() {
+        return lazy;
+    }
+
+    public void setLazy(Boolean lazy) {
+        this.lazy = lazy;
+    }
+
     public boolean isContinueOnError() {
         return continueOnError;
     }
@@ -238,6 +261,22 @@ public class DataSourceProperty {
 
     public void setHikari(HikariCpConfig hikari) {
         this.hikari = hikari;
+    }
+
+    public BeeCpConfig getBeecp() {
+        return beecp;
+    }
+
+    public void setBeecp(BeeCpConfig beecp) {
+        this.beecp = beecp;
+    }
+
+    public Dbcp2Config getDbcp2() {
+        return dbcp2;
+    }
+
+    public void setDbcp2(Dbcp2Config dbcp2) {
+        this.dbcp2 = dbcp2;
     }
 
     public String getPublicKey() {

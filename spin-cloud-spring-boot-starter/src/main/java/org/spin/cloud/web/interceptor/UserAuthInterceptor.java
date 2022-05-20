@@ -51,11 +51,13 @@ public class UserAuthInterceptor implements HandlerInterceptor, Ordered {
         String profile = request.getHeader(FeignInterceptor.X_APP_PROFILE);
         if (StringUtils.isNotEmpty(profile)) {
             if (!Objects.equals(profile, Env.getActiveProfiles())) {
-                logger.error("禁止跨环境的服务调用 源环境: {}[{}], 目标环境: {}[{}]",
+                String msg = String.format("禁止跨环境的服务调用 源环境: %s[%s], 目标环境: %s[%s]",
                     StringUtils.trimToSpec(request.getHeader(FeignInterceptor.X_APP_NAME), "GATEWAY"),
                     profile,
                     Env.getAppName(),
                     Env.getActiveProfiles());
+                logger.error(msg);
+                RequestUtils.error(response, ErrorCode.OTHER, msg);
                 return false;
             }
         }
@@ -138,7 +140,7 @@ public class UserAuthInterceptor implements HandlerInterceptor, Ordered {
                 if (executionTime > 1000L) {
                     Author authorAnno = AnnotatedElementUtils.getMergedAnnotation(method, Author.class);
                     if (null != authorAnno) {
-                        author = StringUtils.join(authorAnno.value());
+                        author = StringUtils.join(authorAnno.value(), ",");
                     }
                 }
 

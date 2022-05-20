@@ -201,7 +201,7 @@ public final class EnumUtils extends Util {
     public static Map<String, List<Map<String, Object>>> parseEnums(String basePkg) {
         List<String> clsList = PackageUtils.getClassName(basePkg);
         HashMap<String, List<Map<String, Object>>> enumsMap = new HashMap<>();
-        Method getValueMehod = ReflectionUtils.findMethod(Evaluatable.class, "getValue");
+        Method getValueMethod = ReflectionUtils.findMethod(Evaluatable.class, "getValue");
         for (String clz : clsList) {
             Class cls;
             try {
@@ -215,7 +215,7 @@ public final class EnumUtils extends Util {
                 for (Object o : cls.getEnumConstants()) {
                     Map<String, Object> m = new HashMap<>();
                     m.put("name", o.toString());
-                    m.put("value", ReflectionUtils.invokeMethod(getValueMehod, o));
+                    m.put("value", ReflectionUtils.invokeMethod(getValueMethod, o));
                     valueList.add(m);
                 }
                 enumsMap.put(cls.getSimpleName(), valueList);

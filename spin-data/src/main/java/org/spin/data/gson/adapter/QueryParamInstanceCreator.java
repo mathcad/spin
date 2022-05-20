@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
  *
  * @author xuweinan
  */
-public class QueryParamInstanceCreater implements InstanceCreator<QueryParam> {
+public class QueryParamInstanceCreator implements InstanceCreator<QueryParam> {
 
     @Override
     public QueryParam createInstance(Type type) {

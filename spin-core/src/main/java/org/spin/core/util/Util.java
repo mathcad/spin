@@ -21,6 +21,7 @@ public abstract class Util {
     private static final LinkedBlockingDeque<Class<? extends Util>> INIT_QUEUE = new LinkedBlockingDeque<>();
     private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private static volatile boolean init = false;
+    private static volatile boolean running = true;
 
     protected Util() {
         throw new UnsupportedOperationException("工具类不允许实例化");
@@ -31,11 +32,11 @@ public abstract class Util {
             return;
         }
         executorService.submit(() -> {
-            while (true) {
+            while (running) {
                 try {
                     Class<? extends Util> aClass = INIT_QUEUE.poll(5, TimeUnit.MINUTES);
 
-                    if (null != aClass) {
+                    if (null != aClass && Util.class != aClass) {
                         initiator.accept(aClass);
                     }
                 } catch (Exception e) {
@@ -44,6 +45,16 @@ public abstract class Util {
             }
         });
         init = true;
+        logger.info("Util Initiator stopped...");
+    }
+
+    public static void stopInitiator() {
+        running = false;
+        try {
+            INIT_QUEUE.put(Util.class);
+        } catch (InterruptedException ignore) {
+            // do nothing
+        }
     }
 
 

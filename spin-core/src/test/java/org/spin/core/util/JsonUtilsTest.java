@@ -7,6 +7,7 @@ import org.spin.core.gson.annotation.SerializedName;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.trait.Evaluatable;
 import org.spin.core.trait.IntEvaluatable;
+import org.spin.core.util.http.Http;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -952,6 +953,21 @@ public class JsonUtilsTest {
 
         Set<String> companyOpenId = stringObjectMap.stream().map(it -> it.get("companyOpenId").toString()).collect(Collectors.toSet());
         System.out.println(companyOpenId.size());
+    }
+
+
+    @Test
+    void testJMap() {
+        String content = "{vms=123aaa}";
+        Map<String, Object> json = JsonUtils.fromJson(content, JsonUtils.MAP_TYPE_TOKEN);
+        System.out.println(json);
+    }
+
+
+@Test
+    void test5 () {
+        String execute = Http.POST.withUrl("https://xfk.bndxqc.com/bonade-vms/v1/hrm/interface/getEntByArea").withHead("dayKey", "BBS4HUlqP3KBS4cB").withJsonBody(CollectionUtils.ofHashSet(1433011854947487746L)).execute();
+        System.out.println(execute);
     }
 
     static class Vo1 {

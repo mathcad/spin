@@ -17,6 +17,11 @@ public class Swagger2Properties {
     private boolean enable;
 
     /**
+     * 文档类型
+     */
+    private DocType docType = DocType.SWAGGER_2;
+
+    /**
      * 扫描包
      */
     private String basePackage;
@@ -51,6 +56,14 @@ public class Swagger2Properties {
 
     public void setEnable(boolean enable) {
         this.enable = enable;
+    }
+
+    public DocType getDocType() {
+        return docType;
+    }
+
+    public void setDocType(DocType docType) {
+        this.docType = docType;
     }
 
     public String getBasePackage() {

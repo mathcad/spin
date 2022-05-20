@@ -411,7 +411,7 @@ public final class JsonUtils extends Util {
         try {
             Class<?> queryParamCls = ClassUtils.getClass("org.spin.data.query.QueryParam");
             @SuppressWarnings("unchecked")
-            Class<InstanceCreator<?>> instanceCreatorCls = (Class<InstanceCreator<?>>) ClassUtils.getClass("org.spin.data.gson.adapter.QueryParamInstanceCreater");
+            Class<InstanceCreator<?>> instanceCreatorCls = (Class<InstanceCreator<?>>) ClassUtils.getClass("org.spin.data.gson.adapter.QueryParamInstanceCreator");
             InstanceCreator<?> instanceCreator = instanceCreatorCls.newInstance();
             builder.registerTypeAdapter(queryParamCls, instanceCreator);
         } catch (Exception ignore) {

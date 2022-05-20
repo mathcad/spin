@@ -14,19 +14,33 @@ import org.spin.mybatis.handler.MybatisMetaObjectHandler;
 import org.spin.mybatis.handler.MybatisPlusMetaObjectHandler;
 import org.spin.mybatis.handler.PermissionDataMetaObjectHandler;
 import org.spin.mybatis.plus.PaginationInnerInterceptor;
+import org.spin.mybatis.util.ApplicationContextSupplier;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Configuration
 @ConditionalOnProperty("mybatis-plus.mapper-locations")
 public class MybatisPlusAutoConfiguration {
+
+    private final ApplicationContext applicationContext;
+
+    public MybatisPlusAutoConfiguration(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
+    @PostConstruct
+    public void init() {
+        ApplicationContextSupplier.init(applicationContext);
+    }
 
     @Bean
     @ConditionalOnBean(DistributedIdGenerator.class)

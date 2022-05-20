@@ -54,7 +54,7 @@ public final class DateUtils extends Util {
 
     private static final String DAY = "yyyy-MM-dd";
     private static final String SECOND = "yyyy-MM-dd HH:mm:ss";
-    private static final String MILLSEC = "yyyy-MM-dd HH:mm:ss SSS";
+    private static final String MILLS = "yyyy-MM-dd HH:mm:ss SSS";
     private static final String ZH_DAY = "yyyy年MM月dd日";
     private static final String ZH_SECOND = "yyyy年MM月dd日 HH时mm分ss秒";
     private static final String FULL_DAY = "yyyy_MM_dd_HH_mm_ss_S";
@@ -63,7 +63,7 @@ public final class DateUtils extends Util {
 
     private static final ThreadLocal<SimpleDateFormat> daySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(DAY));
     private static final ThreadLocal<SimpleDateFormat> secondSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(SECOND));
-    private static final ThreadLocal<SimpleDateFormat> millSecSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(MILLSEC));
+    private static final ThreadLocal<SimpleDateFormat> millSecSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(MILLS));
     private static final ThreadLocal<SimpleDateFormat> zhDaySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(ZH_DAY));
     private static final ThreadLocal<SimpleDateFormat> zhSecondSdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(ZH_SECOND));
     private static final ThreadLocal<SimpleDateFormat> fullDaySdf = ThreadLocal.withInitial(() -> new SimpleDateFormat(FULL_DAY));
@@ -71,7 +71,7 @@ public final class DateUtils extends Util {
 
     private static final DateTimeFormatter dayDtf = DateTimeFormatter.ofPattern(DAY);
     private static final DateTimeFormatter secondDtf = DateTimeFormatter.ofPattern(SECOND);
-    private static final DateTimeFormatter millSecDtf = DateTimeFormatter.ofPattern(MILLSEC);
+    private static final DateTimeFormatter millSecDtf = DateTimeFormatter.ofPattern(MILLS);
     private static final DateTimeFormatter zhDayDtf = DateTimeFormatter.ofPattern(ZH_DAY);
     private static final DateTimeFormatter zhSecondDtf = DateTimeFormatter.ofPattern(ZH_SECOND);
     private static final DateTimeFormatter fullDayDtf = DateTimeFormatter.ofPattern(FULL_DAY);

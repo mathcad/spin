@@ -17,6 +17,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
@@ -37,12 +38,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -52,7 +48,7 @@ import java.util.stream.Collectors;
  * <p>Created by wangy on 2019/3/13.</p>
  */
 @Configuration
-@ComponentScan(basePackages = {"org.spin.cloud.web.handler", "org.spin.web.handler", "org.spin.cloud.idempotent"})
+@ComponentScan(basePackages = {"org.spin.cloud.web.handler", "org.spin.web.handler"})
 @AutoConfigureBefore(LoadBalancerClientConfiguration.class)
 public class WebMvcAutoConfiguration implements WebMvcConfigurer {
 
@@ -100,6 +96,7 @@ public class WebMvcAutoConfiguration implements WebMvcConfigurer {
     }
 
     @Bean
+    @ConditionalOnProperty(value = "spring.auth.enable", havingValue = "true", matchIfMissing = true)
     public RequestMappingBeanValidator requestMappingBeanValidator() {
         return new RequestMappingBeanValidator();
     }

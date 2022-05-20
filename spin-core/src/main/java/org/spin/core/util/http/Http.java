@@ -22,7 +22,7 @@ import java.util.function.Function;
  */
 public final class Http<T extends HttpRequestBase> {
 
-    private final Function<URI, T> requestSuppiler;
+    private final Function<URI, T> requestSupplier;
     private final String method;
 
     public static final Http<HttpGet> GET = new Http<>(HttpGet::new, "GET");
@@ -36,8 +36,8 @@ public final class Http<T extends HttpRequestBase> {
 
     private static final String SCHEMA = "http://";
 
-    private Http(Function<URI, T> requestSuppiler, String method) {
-        this.requestSuppiler = requestSuppiler;
+    private Http(Function<URI, T> requestSupplier, String method) {
+        this.requestSupplier = requestSupplier;
         this.method = method;
 
     }
@@ -96,7 +96,7 @@ public final class Http<T extends HttpRequestBase> {
      * @return 请求对象
      */
     public final Request<T> withUrl(URI uri) {
-        return new Request<>(requestSuppiler.apply(uri));
+        return new Request<>(requestSupplier.apply(uri));
     }
 
 

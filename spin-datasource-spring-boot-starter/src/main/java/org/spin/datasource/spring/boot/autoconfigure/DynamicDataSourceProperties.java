@@ -1,6 +1,8 @@
 package org.spin.datasource.spring.boot.autoconfigure;
 
 import org.spin.datasource.enums.SeataMode;
+import org.spin.datasource.spring.boot.autoconfigure.beecp.BeeCpConfig;
+import org.spin.datasource.spring.boot.autoconfigure.dbcp2.Dbcp2Config;
 import org.spin.datasource.spring.boot.autoconfigure.druid.DruidConfig;
 import org.spin.datasource.spring.boot.autoconfigure.hikari.HikariCpConfig;
 import org.spin.datasource.strategy.DynamicDataSourceStrategy;
@@ -25,7 +27,7 @@ import java.util.Map;
 public class DynamicDataSourceProperties {
     public static final String PREFIX = "spring.datasource.dynamic";
     public static final String HEALTH = PREFIX + ".health";
-
+    public static final String DEFAULT_VALID_QUERY = "SELECT 1";
     /**
      * 主数据源,默认primary
      */
@@ -43,6 +45,10 @@ public class DynamicDataSourceProperties {
      */
     private Boolean seata = false;
     /**
+     * 是否懒加载数据源
+     */
+    private Boolean lazy = false;
+    /**
      * seata使用模式，默认AT
      */
     private SeataMode seataMode = SeataMode.AT;
@@ -50,6 +56,10 @@ public class DynamicDataSourceProperties {
      * 是否使用 spring actuator 监控检查，默认不检查
      */
     private boolean health = false;
+    /**
+     * 监控检查SQL
+     */
+    private String healthValidQuery = DEFAULT_VALID_QUERY;
     /**
      * 数据源列表
      */
@@ -72,7 +82,16 @@ public class DynamicDataSourceProperties {
      */
     @NestedConfigurationProperty
     private HikariCpConfig hikari = new HikariCpConfig();
-
+    /**
+     * BeeCp全局参数配置
+     */
+    @NestedConfigurationProperty
+    private BeeCpConfig beecp = new BeeCpConfig();
+    /**
+     * DBCP2全局参数配置
+     */
+    @NestedConfigurationProperty
+    private Dbcp2Config dbcp2 = new Dbcp2Config();
     /**
      * 全局默认publicKey
      */
@@ -114,6 +133,14 @@ public class DynamicDataSourceProperties {
         this.seata = seata;
     }
 
+    public Boolean getLazy() {
+        return lazy;
+    }
+
+    public void setLazy(Boolean lazy) {
+        this.lazy = lazy;
+    }
+
     public SeataMode getSeataMode() {
         return seataMode;
     }
@@ -128,6 +155,14 @@ public class DynamicDataSourceProperties {
 
     public void setHealth(boolean health) {
         this.health = health;
+    }
+
+    public String getHealthValidQuery() {
+        return healthValidQuery;
+    }
+
+    public void setHealthValidQuery(String healthValidQuery) {
+        this.healthValidQuery = healthValidQuery;
     }
 
     public Map<String, DataSourceProperty> getDatasource() {
@@ -168,6 +203,22 @@ public class DynamicDataSourceProperties {
 
     public void setHikari(HikariCpConfig hikari) {
         this.hikari = hikari;
+    }
+
+    public BeeCpConfig getBeecp() {
+        return beecp;
+    }
+
+    public void setBeecp(BeeCpConfig beecp) {
+        this.beecp = beecp;
+    }
+
+    public Dbcp2Config getDbcp2() {
+        return dbcp2;
+    }
+
+    public void setDbcp2(Dbcp2Config dbcp2) {
+        this.dbcp2 = dbcp2;
     }
 
     public String getPublicKey() {

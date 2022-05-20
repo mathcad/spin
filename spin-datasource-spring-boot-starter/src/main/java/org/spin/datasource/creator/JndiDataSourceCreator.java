@@ -1,7 +1,7 @@
 package org.spin.datasource.creator;
 
-import org.spin.core.util.StringUtils;
 import org.spin.datasource.spring.boot.autoconfigure.DataSourceProperty;
+import org.spin.datasource.spring.boot.autoconfigure.DynamicDataSourceProperties;
 import org.springframework.jdbc.datasource.lookup.JndiDataSourceLookup;
 
 import javax.sql.DataSource;
@@ -12,28 +12,32 @@ import javax.sql.DataSource;
  * @author TaoYu
  * @since 2020/1/27
  */
-public class JndiDataSourceCreator extends AbstractDataSourceCreator {
+public class JndiDataSourceCreator extends AbstractDataSourceCreator implements DataSourceCreator {
 
     private static final JndiDataSourceLookup LOOKUP = new JndiDataSourceLookup();
 
-    /**
-     * 创建JNDI数据源
-     *
-     * @param dataSourceProperty jndi数据源名称
-     * @param publicKey          publicKey
-     * @return 数据源
-     */
-    @Override
-    public DataSource createDataSource(DataSourceProperty dataSourceProperty, String publicKey) {
-        return LOOKUP.getDataSource(dataSourceProperty.getJndiName());
+    public JndiDataSourceCreator(DynamicDataSourceProperties dynamicDataSourceProperties) {
+        super(dynamicDataSourceProperties);
     }
 
     public DataSource createDataSource(String jndiName) {
         return LOOKUP.getDataSource(jndiName);
     }
 
+    /**
+     * 创建JNDI数据源
+     *
+     * @param dataSourceProperty jndi数据源名称
+     * @return 数据源
+     */
+    @Override
+    public DataSource doCreateDataSource(DataSourceProperty dataSourceProperty) {
+        return createDataSource(dataSourceProperty.getJndiName());
+    }
+
     @Override
     public boolean support(DataSourceProperty dataSourceProperty) {
-        return StringUtils.isNotBlank(dataSourceProperty.getJndiName());
+        String jndiName = dataSourceProperty.getJndiName();
+        return jndiName != null && !jndiName.isEmpty();
     }
 }

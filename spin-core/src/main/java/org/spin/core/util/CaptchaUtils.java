@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 验证码工具类
@@ -20,7 +21,6 @@ import java.util.Random;
  */
 public final class CaptchaUtils extends Util {
     public static final String VERIFY_CODES = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
-    private static final Random random = new Random();
 
     private CaptchaUtils() {
     }
@@ -47,7 +47,7 @@ public final class CaptchaUtils extends Util {
             sources = VERIFY_CODES;
         }
         int codesLen = sources.length();
-        Random rand = new Random(System.currentTimeMillis());
+        Random rand = ThreadLocalRandom.current();
         StringBuilder verifyCode = new StringBuilder(verifySize);
         for (int i = 0; i < verifySize; i++) {
             verifyCode.append(sources.charAt(rand.nextInt(codesLen - 1)));
@@ -169,8 +169,8 @@ public final class CaptchaUtils extends Util {
         g2.setColor(getRandColor(100, 160));
         float fontSize = h - 4;
 
-        try (InputStream aixing = CaptchaUtils.class.getClassLoader().getResourceAsStream("fonts/ALGER.TTF")) {
-            Font dynamicFont = Font.createFont(Font.TRUETYPE_FONT, aixing);
+        try (InputStream axing = CaptchaUtils.class.getClassLoader().getResourceAsStream("fonts/ALGER.TTF")) {
+            Font dynamicFont = Font.createFont(Font.TRUETYPE_FONT, axing);
             Font dynamicFontPt = dynamicFont.deriveFont(Font.ITALIC).deriveFont(fontSize);
             g2.setFont(dynamicFontPt);
         } catch (FontFormatException ignore) {
@@ -192,9 +192,9 @@ public final class CaptchaUtils extends Util {
             fc = 255;
         if (bc > 255)
             bc = 255;
-        int r = fc + random.nextInt(bc - fc);
-        int g = fc + random.nextInt(bc - fc);
-        int b = fc + random.nextInt(bc - fc);
+        int r = fc + ThreadLocalRandom.current().nextInt(bc - fc);
+        int g = fc + ThreadLocalRandom.current().nextInt(bc - fc);
+        int b = fc + ThreadLocalRandom.current().nextInt(bc - fc);
         return new Color(r, g, b);
     }
 
@@ -211,7 +211,7 @@ public final class CaptchaUtils extends Util {
     private static int[] getRandomRgb() {
         int[] rgb = new int[3];
         for (int i = 0; i < 3; i++) {
-            rgb[i] = random.nextInt(255);
+            rgb[i] = ThreadLocalRandom.current().nextInt(255);
         }
         return rgb;
     }
@@ -223,11 +223,11 @@ public final class CaptchaUtils extends Util {
 
     private static void shearX(Graphics g, int w1, int h1, Color color) {
 
-        int period = random.nextInt(2);
+        int period = ThreadLocalRandom.current().nextInt(2);
 
         boolean borderGap = true;
         int frames = 1;
-        int phase = random.nextInt(2);
+        int phase = ThreadLocalRandom.current().nextInt(2);
 
         for (int i = 0; i < h1; i++) {
             double d = (double) (period >> 1)
@@ -246,7 +246,7 @@ public final class CaptchaUtils extends Util {
 
     private static void shearY(Graphics g, int w1, int h1, Color color) {
 
-        int period = random.nextInt(40) + 10; // 50;
+        int period = ThreadLocalRandom.current().nextInt(40) + 10; // 50;
 
         boolean borderGap = true;
         int frames = 20;

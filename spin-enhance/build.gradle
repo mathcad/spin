@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '扩展模块'
-version = '2.4.2-SNAPSHOT'
+version = '2.4.3-SNAPSHOT'
 
 test {
     useJUnitPlatform()

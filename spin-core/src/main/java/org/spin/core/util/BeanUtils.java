@@ -715,27 +715,27 @@ public final class BeanUtils extends Util {
      */
     public static class PropertyDescriptorWrapper {
         public PropertyDescriptor descriptor;
-        public Class<?> protertyType;
+        public Class<?> propertyType;
         public Method reader;
         public Method writer;
 
         public PropertyDescriptorWrapper(PropertyDescriptor descriptor, Method reader, Method writer) {
             this.descriptor = descriptor;
-            this.protertyType = descriptor.getPropertyType();
+            this.propertyType = descriptor.getPropertyType();
             this.reader = reader;
             this.writer = writer;
         }
 
         public PropertyDescriptorWrapper(PropertyDescriptor descriptor) {
             this.descriptor = descriptor;
-            this.protertyType = descriptor.getPropertyType();
+            this.propertyType = descriptor.getPropertyType();
             this.reader = descriptor.getReadMethod();
             this.writer = descriptor.getWriteMethod();
         }
 
         public void applyProperty(Object target, Object propVal) {
             try {
-                writer.invoke(target, ObjectUtils.convert(protertyType, propVal));
+                writer.invoke(target, ObjectUtils.convert(propertyType, propVal));
             } catch (IllegalAccessException | InvocationTargetException e) {
                 logger.warn("Java Bean - {}设置属性[{}]失败", target.getClass().getName(), descriptor.getName());
                 if (logger.isDebugEnabled()) {
@@ -752,12 +752,12 @@ public final class BeanUtils extends Util {
             this.descriptor = descriptor;
         }
 
-        public Class<?> getProtertyType() {
-            return protertyType;
+        public Class<?> getPropertyType() {
+            return propertyType;
         }
 
-        public void setProtertyType(Class<?> protertyType) {
-            this.protertyType = protertyType;
+        public void setPropertyType(Class<?> propertyType) {
+            this.propertyType = propertyType;
         }
 
         public Method getReader() {
@@ -1159,7 +1159,7 @@ public final class BeanUtils extends Util {
                 BeanUtils.PropertyDescriptorWrapper prop = props.get(p);
                 if (null == prop)
                     continue;
-                args[0] = ObjectUtils.convert(prop.protertyType, entry.getValue());
+                args[0] = ObjectUtils.convert(prop.propertyType, entry.getValue());
                 prop.writer.invoke(bean, args);
                 continue;
             }
@@ -1173,7 +1173,7 @@ public final class BeanUtils extends Util {
                     ++i;
                     continue;
                 }
-                propType = prop.protertyType;
+                propType = prop.propertyType;
                 if (i != depth - 1) {
                     Object ib = prop.reader == null ? null : prop.reader.invoke(worker);
                     if (null == ib) {
@@ -1238,7 +1238,7 @@ public final class BeanUtils extends Util {
                 propName = propName.substring(0, index);
                 if (props.containsKey(propName)) {
                     BeanUtils.PropertyDescriptorWrapper prop = props.get(propName);
-                    Object tmp = wrapperMapToBean(prop.protertyType, values, StringUtils.isEmpty(propPrefix) ? propName : propPrefix + "." + propName);
+                    Object tmp = wrapperMapToBean(prop.propertyType, values, StringUtils.isEmpty(propPrefix) ? propName : propPrefix + "." + propName);
                     Object[] args = new Object[1];
                     args[0] = tmp;
                     prop.writer.invoke(bean, args);
@@ -1247,7 +1247,7 @@ public final class BeanUtils extends Util {
                 if (props.containsKey(propName)) {
                     BeanUtils.PropertyDescriptorWrapper prop = props.get(propName);
                     Object[] args = new Object[1];
-                    args[0] = ObjectUtils.convert(prop.protertyType, entry.getValue());
+                    args[0] = ObjectUtils.convert(prop.propertyType, entry.getValue());
                     prop.writer.invoke(bean, args);
                 }
             }

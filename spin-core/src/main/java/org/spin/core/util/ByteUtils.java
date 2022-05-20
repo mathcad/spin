@@ -230,7 +230,7 @@ public final class ByteUtils extends Util {
      *
      * @param input the byte array to be split
      * @param index the index where the byte array is split
-     * @return the splitted input array as an array of two byte arrays
+     * @return the separated input array as an array of two byte arrays
      * @throws ArrayIndexOutOfBoundsException if <code>index</code> is out of bounds
      */
     public static byte[][] split(byte[] input, int index)

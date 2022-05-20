@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * @author xuweinan
  */
 public final class NumericUtils extends Util {
-    private static final String UNKNOW_NUM = "无法识别的数字格式";
+    private static final String UNKNOWN_NUM = "无法识别的数字格式";
     private static final Pattern numPattern = Pattern.compile("^([-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]+)[^-负0-9零一壹二贰两俩三叁四肆五伍六陆七柒八捌九玖十拾百佰千仟万点.]{0,2}$");
     private static final Pattern pureNum = Pattern.compile("^-?\\d+(\\.\\d+)?$");
     private static final String[] scales = {"亿", "万", "千", "仟", "百", "佰", "十", "拾"};
@@ -77,7 +77,7 @@ public final class NumericUtils extends Util {
         }
 
         if (value instanceof CharSequence && isNum(value)) {
-            value = toBigDeciaml(value);
+            value = toBigDecimal(value);
         }
 
         if (value instanceof Number) {
@@ -105,7 +105,7 @@ public final class NumericUtils extends Util {
         }
 
         if (value instanceof CharSequence && isNum(value)) {
-            value = toBigDeciaml(value);
+            value = toBigDecimal(value);
         }
 
         if (value instanceof Number) {
@@ -133,7 +133,7 @@ public final class NumericUtils extends Util {
         }
 
         if (value instanceof CharSequence && isNum(value)) {
-            value = toBigDeciaml(value);
+            value = toBigDecimal(value);
         }
 
         if (value instanceof Number) {
@@ -161,7 +161,7 @@ public final class NumericUtils extends Util {
         }
 
         if (value instanceof CharSequence && isNum(value)) {
-            value = toBigDeciaml(value);
+            value = toBigDecimal(value);
         }
 
         if (value instanceof Number) {
@@ -189,7 +189,7 @@ public final class NumericUtils extends Util {
         }
 
         if (value instanceof CharSequence && isNum(value)) {
-            value = toBigDeciaml(value);
+            value = toBigDecimal(value);
         }
 
         if (value instanceof Number) {
@@ -217,7 +217,7 @@ public final class NumericUtils extends Util {
         }
 
         if (value instanceof CharSequence && isNum(value)) {
-            value = toBigDeciaml(value);
+            value = toBigDecimal(value);
         }
 
         if (value instanceof Number) {
@@ -317,7 +317,7 @@ public final class NumericUtils extends Util {
      * @param value 原始值
      * @return 转换后的BigDecimal数值
      */
-    public static BigDecimal toBigDeciaml(Object value) {
+    public static BigDecimal toBigDecimal(Object value) {
         if (null == value) {
             return BigDecimal.ZERO;
         }
@@ -343,7 +343,7 @@ public final class NumericUtils extends Util {
      * @param scale        精度(可以为null)
      * @return 转换后的BigDecimal数值
      */
-    public static BigDecimal toBigDeciaml(Number value, BigDecimal defaultValue, Integer scale) {
+    public static BigDecimal toBigDecimal(Number value, BigDecimal defaultValue, Integer scale) {
         if (null == value) {
             return defaultValue;
         }
@@ -413,7 +413,7 @@ public final class NumericUtils extends Util {
      *
      * @param value1 数值1
      * @param value2 数值2
-     * @return 数值1与数值2相等返回0，数值1大于数值2返回1，数值1小与数值2返回-1
+     * @return 数值1与数值2相等返回0，数值1大于数值2返回1，数值1小于数值2返回-1
      */
     public static int valueCompare(Number value1, Number value2) {
         if (null == value1 && null == value2) {
@@ -491,8 +491,8 @@ public final class NumericUtils extends Util {
         }
 
         // 分割整数部分与小数部分
-        String spliter = tmp.contains("点") ? "点" : "\\.";
-        String[] parts = tmp.split(spliter);
+        String splitter = tmp.contains("点") ? "点" : "\\.";
+        String[] parts = tmp.split(splitter);
         String n = parts[0];
         String d = parts.length > 1 ? parts[1] : null;
 
@@ -589,7 +589,7 @@ public final class NumericUtils extends Util {
                 case "亿":
                     parts = tmp.split(scale);
                     if (parts.length > 2) {
-                        throw new SpinException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOWN_NUM);
                     }
                     h = decodeNum(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
@@ -598,7 +598,7 @@ public final class NumericUtils extends Util {
                 case "万":
                     parts = tmp.split(scale);
                     if (parts.length > 2) {
-                        throw new SpinException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOWN_NUM);
                     }
                     h = decodeNum(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
@@ -608,7 +608,7 @@ public final class NumericUtils extends Util {
                 case "仟":
                     parts = tmp.split(scale);
                     if (parts.length > 2) {
-                        throw new SpinException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOWN_NUM);
                     }
                     h = parts[0].length() > 1 ? Long.parseLong(parts[0]) : numMap.get(parts[0]);
 
@@ -619,7 +619,7 @@ public final class NumericUtils extends Util {
                 case "佰":
                     parts = tmp.split(scale);
                     if (parts.length > 2) {
-                        throw new SpinException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOWN_NUM);
                     }
                     h = parts[0].length() > 1L ? Long.parseLong(parts[0]) : numMap.get(parts[0]);
                     tmp = parts.length > 1 ? parts[1] : null;
@@ -629,7 +629,7 @@ public final class NumericUtils extends Util {
                 case "拾":
                     parts = tmp.split(scale);
                     if (parts.length > 2) {
-                        throw new SpinException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOWN_NUM);
                     }
                     h = tmp.startsWith("十") ? 1L : (parts[0].length() > 1 ? Long.parseLong(parts[0]) : numMap.get(parts[0]));
                     tmp = parts.length > 1 ? parts[1] : null;
@@ -637,7 +637,7 @@ public final class NumericUtils extends Util {
                     break;
                 default:
                     if (!numMap.containsKey(tmp)) {
-                        throw new SpinException(UNKNOW_NUM);
+                        throw new SpinException(UNKNOWN_NUM);
                     }
                     resN += numMap.get(tmp);
                     tmp = null;

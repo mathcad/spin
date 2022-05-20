@@ -118,12 +118,12 @@ public final class ReflectionUtils extends Util {
             ns = name.split("\\.");
         }
         Class<?> searchType = clazz;
-        boolean isFinded;
+        boolean isFound;
 
         for (int i = 0; i < ns.length; i++) {
             String n = ns[i];
-            isFinded = false;
-            while (Object.class != searchType && searchType != null && !isFinded) {
+            isFound = false;
+            while (Object.class != searchType && searchType != null && !isFound) {
                 Field[] fields = getDeclaredFields(searchType);
                 for (Field field : fields) {
                     if (i == ns.length - 1) {
@@ -134,12 +134,12 @@ public final class ReflectionUtils extends Util {
                     } else {
                         if (field.getName().equals(n)) {
                             searchType = field.getType();
-                            isFinded = true;
+                            isFound = true;
                             break;
                         }
                     }
                 }
-                if (!isFinded) {
+                if (!isFound) {
                     searchType = searchType.getSuperclass();
                 }
             }
@@ -156,7 +156,7 @@ public final class ReflectionUtils extends Util {
      *
      * @param field  the field to set
      * @param target the target object on which to set the field
-     * @param value  the value to set (may be {@code null})
+     * @param value  the value to set (maybe {@code null})
      */
     public static void setField(Field field, Object target, Object value) {
         try {
@@ -197,7 +197,7 @@ public final class ReflectionUtils extends Util {
      * @param clazz      the class to introspect
      * @param name       the name of the method
      * @param paramTypes the parameter types of the method
-     *                   (may be {@code null} to indicate any signature)
+     *                   (maybe {@code null} to indicate any signature)
      * @return the Method object, or {@code null} if none found
      */
     public static Method findMethod(Class<?> clazz, String name, Class<?>... paramTypes) {
@@ -249,7 +249,7 @@ public final class ReflectionUtils extends Util {
      *
      * @param method the method to invoke
      * @param target the target object to invoke the method on
-     * @param args   the invocation arguments (may be {@code null})
+     * @param args   the invocation arguments (maybe {@code null})
      * @return the invocation result, if any
      */
     public static Object invokeMethod(Method method, Object target, Object... args) {
@@ -281,7 +281,7 @@ public final class ReflectionUtils extends Util {
      *
      * @param method the method to invoke
      * @param target the target object to invoke the method on
-     * @param args   the invocation arguments (may be {@code null})
+     * @param args   the invocation arguments (maybe {@code null})
      * @return the invocation result, if any
      * @throws SQLException the JDBC API SQLException to rethrow (if any)
      * @see #invokeMethod(Method, Object, Object[])
@@ -362,8 +362,8 @@ public final class ReflectionUtils extends Util {
 
     /**
      * Determine whether the given method explicitly declares the given
-     * exception or one of its superclasses, which means that an exception
-     * of that type can be propagated as-is within a reflective invocation.
+     * exception or one of its superclasses, which means that an exception to
+     * that type can be propagated as-is within a reflective invocation.
      *
      * @param method        the declaring method
      * @param exceptionType the exception to throw
@@ -768,8 +768,8 @@ public final class ReflectionUtils extends Util {
      * @param clazz 需要被解析的类
      * @return 第一个泛型参数的类型
      */
-    public static Class getSuperClassGenricType(Class clazz) {
-        return getSuperClassGenricType(clazz, 0);
+    public static Class getSuperClassGenericType(Class clazz) {
+        return getSuperClassGenericType(clazz, 0);
     }
 
     /**
@@ -779,7 +779,7 @@ public final class ReflectionUtils extends Util {
      * @param index 如有多个泛型声明该索引从0开始
      * @return 在index位置的泛型参数的类型，如果无法判断则返回<code>Object.class</code>
      */
-    public static Class getSuperClassGenricType(Class clazz, int index) {
+    public static Class getSuperClassGenericType(Class clazz, int index) {
         boolean flag = true;
         Type genType = clazz.getGenericSuperclass();
         Type[] params = null;
@@ -798,7 +798,7 @@ public final class ReflectionUtils extends Util {
             if (clazz == Object.class)
                 return Object.class;
             else
-                return getSuperClassGenricType(clazz, index);
+                return getSuperClassGenericType(clazz, index);
         }
 
         return (Class) params[index];

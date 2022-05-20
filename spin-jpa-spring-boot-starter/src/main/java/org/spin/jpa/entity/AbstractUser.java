@@ -22,7 +22,7 @@ public abstract class AbstractUser<T extends AbstractUser<T>> extends AbstractEn
      * 用户名
      */
     @Column(length = 32)
-    private String userName;
+    private String username;
 
     /**
      * 密码
@@ -42,12 +42,12 @@ public abstract class AbstractUser<T extends AbstractUser<T>> extends AbstractEn
     @Column
     private Boolean active;
 
-    public String getUserName() {
-        return userName;
+    public String getUsername() {
+        return username;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setUsername(String userName) {
+        this.username = userName;
     }
 
     public String getPassword() {
@@ -81,7 +81,7 @@ public abstract class AbstractUser<T extends AbstractUser<T>> extends AbstractEn
     @Override
     public String toString() {
         return super.toString() + " => AbstractUser(" + getClass().getSimpleName() + "){" +
-            "userName='" + userName + '\'' +
+            "userName='" + username + '\'' +
             ", salt='" + salt + '\'' +
             ", active=" + active +
             "} ";

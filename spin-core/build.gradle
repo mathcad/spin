@@ -3,7 +3,7 @@ plugins {
 }
 
 description = '核心模块'
-version = '2.4.2-SNAPSHOT'
+version = '2.4.3-SNAPSHOT'
 
 test {
     useJUnitPlatform()
@@ -60,7 +60,7 @@ dependencies {
     testImplementation group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
     testImplementation group: 'org.bouncycastle', name: 'bcprov-ext-jdk15on', version: bouncyVersion
     testRuntimeOnly group: 'dom4j', name: 'dom4j', version: dom4jVersion
-    testImplementation group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
+    testImplementation group: 'org.jsoup', name: 'jsoup', version: '1.14.3'
     testImplementation group: 'com.google.zxing', name: 'core', version: zxingVersion
     testImplementation group: 'org.openjdk.jol', name: 'jol-core', version: '0.16'
 
@@ -68,6 +68,7 @@ dependencies {
     api group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
     api group: 'org.ow2.asm', name: 'asm', version: asmVersion
 
+    compileOnly group: 'org.jetbrains', name: 'annotations', version: jetbrainsAnnoVersion
     compileOnly group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: httpasyncclientVersion
     compileOnly group: 'org.apache.httpcomponents', name: 'httpmime', version: httpclientVersion
     compileOnly group: 'commons-net', name: 'commons-net', version: commonsNetVersion

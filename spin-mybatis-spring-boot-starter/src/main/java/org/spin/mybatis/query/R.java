@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.override.MybatisMapperProxy;
 import com.baomidou.mybatisplus.core.toolkit.ExceptionUtils;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.reflection.ExceptionUtil;
 import org.apache.ibatis.session.ExecutorType;
@@ -18,7 +19,6 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.cloud.util.BeanHolder;
 import org.spin.core.Assert;
 import org.spin.core.inspection.BytesClassLoader;
 import org.spin.core.throwable.SimplifiedException;
@@ -28,6 +28,7 @@ import org.spin.data.rs.AffectedRows;
 import org.spin.data.rs.RowMapper;
 import org.spin.data.rs.RowMappers;
 import org.spin.data.throwable.SQLError;
+import org.spin.mybatis.util.ApplicationContextSupplier;
 import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -51,8 +52,8 @@ import java.util.function.Consumer;
  */
 public class R extends ClassLoader {
     private static final Logger logger = LoggerFactory.getLogger(R.class);
-    private static final ConcurrentHashMap<String, BaseMapper<?>> MAPPERS = new ConcurrentHashMap<>();
-    private static final Map<String, BaseMapper<?>> CUSTOMER_MAPPERS = new HashMap<>();
+    private static final ConcurrentHashMap<String, Object> MAPPERS = new ConcurrentHashMap<>();
+    private static final Map<String, Object> CUSTOMER_MAPPERS = new HashMap<>();
     private static final String[] MYBATIS_PLUS_BASE_MAPPER_INTFS = {"com/baomidou/mybatisplus/core/mapper/BaseMapper"};
 
     private static volatile boolean parsed = false;
@@ -62,6 +63,7 @@ public class R extends ClassLoader {
     private static SqlSessionTemplate sqlSessionTemplate;
 
     private R() {
+        throw new UnsupportedOperationException("工具类不允许实例化");
     }
 
     /**
@@ -274,6 +276,23 @@ public class R extends ClassLoader {
     }
 
     /**
+     * 获取条件更新上下文
+     *
+     * @param ignore 用来获取类型, 无实际意义
+     * @param <E>    实体类型
+     * @return 条件更新上下文
+     */
+    @SafeVarargs
+    public static <E> LambdaUpdateExecutor<E> forUpdate(E... ignore) {
+        Class<E> type = ArrayUtils.resolveArrayCompType(ignore);
+        Assert.notTrue(Modifier.isAbstract(type.getModifiers()), "不允许获取抽象类的Mapper对象");
+        LambdaUpdateExecutor<E> lambda = new LambdaUpdateExecutor<>(type);
+        BaseMapper<E> baseMapper = getMapper(type);
+        lambda.setRepo(baseMapper);
+        return lambda;
+    }
+
+    /**
      * 获取操作指定类型实体的Mapper对象，如果不存在用户创建的Mapper，会自动生成一个BaseMapper实例
      *
      * @param ignore 用来推断类型, 无实际意义
@@ -320,7 +339,7 @@ public class R extends ClassLoader {
     @SafeVarargs
     public static <E> Optional<E> executeForSingle(String sql, E... ignore) {
         if (null == sqlSessionTemplate) {
-            sqlSessionTemplate = BeanHolder.getApplicationContext().getBean(SqlSessionTemplate.class);
+            sqlSessionTemplate = ApplicationContextSupplier.getApplicationContext().getBean(SqlSessionTemplate.class);
         }
         SqlSession sqlSession = SqlSessionUtils.getSqlSession(sqlSessionTemplate.getSqlSessionFactory(),
             sqlSessionTemplate.getExecutorType(), sqlSessionTemplate.getPersistenceExceptionTranslator());
@@ -379,7 +398,7 @@ public class R extends ClassLoader {
     @SafeVarargs
     public static <E> List<E> executeQuery(String sql, E... ignore) {
         if (null == sqlSessionTemplate) {
-            sqlSessionTemplate = BeanHolder.getApplicationContext().getBean(SqlSessionTemplate.class);
+            sqlSessionTemplate = ApplicationContextSupplier.getApplicationContext().getBean(SqlSessionTemplate.class);
         }
         SqlSession sqlSession = SqlSessionUtils.getSqlSession(sqlSessionTemplate.getSqlSessionFactory(),
             sqlSessionTemplate.getExecutorType(), sqlSessionTemplate.getPersistenceExceptionTranslator());
@@ -406,7 +425,7 @@ public class R extends ClassLoader {
             initMapperBeans();
         }
         MAPPERS.computeIfAbsent(eClass.getName(), k -> {
-            SqlSessionTemplate sessionTemplate = BeanHolder.getApplicationContext().getBean(SqlSessionTemplate.class);
+            SqlSessionTemplate sessionTemplate = ApplicationContextSupplier.getApplicationContext().getBean(SqlSessionTemplate.class);
             Class<BaseMapper<E>> baseMapperClass = generateMapperClass(sessionTemplate.getSqlSessionFactory(), eClass);
             return sessionTemplate.getMapper(baseMapperClass);
         });
@@ -433,9 +452,8 @@ public class R extends ClassLoader {
     private static synchronized void initMapperBeans() {
         if (!parsed) {
             parsed = true;
-            @SuppressWarnings("rawtypes")
-            Map<String, BaseMapper> beans = BeanHolder.getApplicationContext().getBeansOfType(BaseMapper.class);
-            for (BaseMapper<?> v : beans.values()) {
+            Map<String, Object> beans = ApplicationContextSupplier.getApplicationContext().getBeansWithAnnotation(Mapper.class);
+            for (Object v : beans.values()) {
                 Class<?> c = v.getClass();
                 if (Proxy.isProxyClass(c)) {
                     c = c.getInterfaces()[0];

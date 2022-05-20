@@ -41,11 +41,11 @@ import java.util.stream.Collectors;
  */
 public class FtpConnection implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(FtpConnection.class);
-    private static final Pattern PROTOCAL_PATTERN = Pattern.compile("^(ftp[s]?)://(.+:.+@)?([^:]+)(:\\d{2,5})?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PROTOCOL_PATTERN = Pattern.compile("^(ftp[s]?)://(.+:.+@)?([^:]+)(:\\d{2,5})?$", Pattern.CASE_INSENSITIVE);
 
     private String name;
     private final boolean secure;
-    private final String protocal;
+    private final String protocol;
     private final String userName;
     private final String password;
     private final String host;
@@ -59,11 +59,11 @@ public class FtpConnection implements AutoCloseable {
      * 创建FTP客户端
      *
      * @param url      标准FTP连接地址，形如：ftp://用户名:密码@服务器ip地址
-     * @param protocal 如果是ftps连接，需指明加密协议
+     * @param protocol 如果是ftps连接，需指明加密协议
      * @return FTP连接
      */
-    public static FtpConnection ofUrl(String url, String protocal) {
-        Matcher matcher = PROTOCAL_PATTERN.matcher(url);
+    public static FtpConnection ofUrl(String url, String protocol) {
+        Matcher matcher = PROTOCOL_PATTERN.matcher(url);
         if (!matcher.matches()) {
             throw new SpinException("FTP连接URL格式错误");
         }
@@ -78,7 +78,7 @@ public class FtpConnection implements AutoCloseable {
         }
         String h = matcher.group(3).toLowerCase();
         String p = matcher.group(4);
-        return new FtpConnection(StringUtils.trimToSpec(protocal, "TLS"), u, pwd, h, StringUtils.isEmpty(p) ? 21 : Integer.parseInt(p.substring(1)));
+        return new FtpConnection(StringUtils.trimToSpec(protocol, "TLS"), u, pwd, h, StringUtils.isEmpty(p) ? 21 : Integer.parseInt(p.substring(1)));
     }
 
     /**
@@ -126,20 +126,20 @@ public class FtpConnection implements AutoCloseable {
     /**
      * 创建FTP客户端
      *
-     * @param protocal 加密协议
+     * @param protocol 加密协议
      * @param userName 用户名
      * @param password 密码
      * @param host     主机
      * @param port     端口
      */
-    public FtpConnection(String protocal, String userName, String password, String host, int port) {
-        secure = StringUtils.isNotEmpty(protocal);
-        this.protocal = protocal;
+    public FtpConnection(String protocol, String userName, String password, String host, int port) {
+        secure = StringUtils.isNotEmpty(protocol);
+        this.protocol = protocol;
         this.host = host;
         this.port = port;
         this.userName = userName;
         this.password = password;
-        client = secure ? new FTPSClient(protocal) : new FTPClient();
+        client = secure ? new FTPSClient(protocol) : new FTPClient();
     }
 
     /**
@@ -293,7 +293,7 @@ public class FtpConnection implements AutoCloseable {
                 }
             }
         } catch (Exception e) {
-            logger.error("下载文件失败", fullPath, e);
+            logger.error("下载文件失败: " + fullPath, e);
         }
         return flag;
     }
@@ -395,7 +395,7 @@ public class FtpConnection implements AutoCloseable {
     @Override
     public void close() {
         try {
-            if (isAvaliable()) {
+            if (isAvailable()) {
                 client.logout();
             }
         } catch (Exception e) {
@@ -424,8 +424,8 @@ public class FtpConnection implements AutoCloseable {
         return secure;
     }
 
-    public String getProtocal() {
-        return protocal;
+    public String getProtocol() {
+        return protocol;
     }
 
     public String getUserName() {
@@ -454,7 +454,7 @@ public class FtpConnection implements AutoCloseable {
         connect();
     }
 
-    public boolean isAvaliable() {
+    public boolean isAvailable() {
         if (client.isConnected()) {
             try {
                 return FTPReply.isPositiveCompletion(client.sendCommand("NOOP"));
@@ -466,7 +466,7 @@ public class FtpConnection implements AutoCloseable {
     }
 
     private void connect() {
-        if (isAvaliable()) {
+        if (isAvailable()) {
             return;
         }
         if (!client.isConnected()) {

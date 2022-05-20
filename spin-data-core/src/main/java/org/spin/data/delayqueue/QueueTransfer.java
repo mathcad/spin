@@ -63,6 +63,7 @@ class QueueTransfer {
                 LockSupport.parkNanos(nextTime * 1_000_000L);
             } catch (Exception e) {
                 logger.error("RedisDelayQueue Transfer worker throws an exception", e);
+                LockSupport.parkNanos(10L * 1_000_000L);
             }
         }
 

@@ -1,6 +1,5 @@
 package org.spin.datasource.strategy;
 
-import javax.sql.DataSource;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -13,7 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RandomDynamicDataSourceStrategy implements DynamicDataSourceStrategy {
 
     @Override
-    public DataSource determineDataSource(List<DataSource> dataSources) {
-        return dataSources.get(ThreadLocalRandom.current().nextInt(dataSources.size()));
+    public String determineDSKey(List<String> dsNames) {
+        return dsNames.get(ThreadLocalRandom.current().nextInt(dsNames.size()));
     }
 }

@@ -1,7 +1,5 @@
 package org.spin.data.delayqueue;
 
-import org.spin.core.util.MathUtils;
-
 /**
  * 调度误差滑动窗口
  * <p>DESCRIPTION</p>

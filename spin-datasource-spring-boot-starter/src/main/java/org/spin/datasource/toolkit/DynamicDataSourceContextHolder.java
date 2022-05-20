@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.Assert;
 import org.spin.core.throwable.SimplifiedException;
+import org.spin.core.util.StringUtils;
 import org.spin.datasource.CurrentDatasourceInfo;
 import org.spin.datasource.Ds;
 import org.springframework.core.NamedThreadLocal;
@@ -58,8 +59,10 @@ public final class DynamicDataSourceContextHolder {
      *
      * @param ds 数据源名称
      */
-    public static void push(String ds) {
-        push(new CurrentDatasourceInfo(Assert.notEmpty(ds, "数据源名称不能为空")));
+    public static String push(String ds) {
+        String dataSourceStr = StringUtils.isEmpty(ds) ? "" : ds;
+        push(new CurrentDatasourceInfo(Assert.notEmpty(dataSourceStr, "数据源名称不能为空")));
+        return dataSourceStr;
     }
 
     /**

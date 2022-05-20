@@ -47,7 +47,7 @@ public final class UserAgentParser extends Util {
      * @return 浏览器类型
      */
     private static Browser parseBrowser(String userAgentString) {
-        for (Browser brower : Browser.browers) {
+        for (Browser brower : Browser.browsers) {
             if (brower.isMatch(userAgentString)) {
                 return brower;
             }

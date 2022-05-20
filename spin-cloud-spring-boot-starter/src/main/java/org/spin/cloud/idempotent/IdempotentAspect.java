@@ -24,7 +24,6 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -39,7 +38,6 @@ import java.util.concurrent.TimeUnit;
  * @author xuweinan
  */
 @Aspect
-@Component
 public class IdempotentAspect implements Ordered {
     private static final Logger logger = LoggerFactory.getLogger(IdempotentAspect.class);
     private static final String IDEMPOTENT_RESULT_CACHE_KEY = "IDEMPOTENT_RESULT_CACHE:";

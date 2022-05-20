@@ -1,11 +1,6 @@
 package org.spin.core.util.http;
 
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpRequest;
-import org.apache.http.NameValuePair;
-import org.apache.http.NoHttpResponseException;
+import org.apache.http.*;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -313,7 +308,6 @@ public final class HttpExecutor extends Util {
                 }
             }
 
-            logger.error("远程连接到" + request.getURI() + "，发生错误:", e);
             throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
                 + request.getURI()
                 + "，发生错误: "
@@ -322,7 +316,7 @@ public final class HttpExecutor extends Util {
 
         try {
             if ((2 != code / 100) && checkResponseStatus) {
-                throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code + "\n响应:" + toStringProc(entity));
+                throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "\n错误状态码:" + code).withPayload(toStringProc(entity));
             }
             return Assert.notNull(entityProc, "请求结果处理器不能为空").process(entity);
         } finally {
@@ -355,12 +349,11 @@ public final class HttpExecutor extends Util {
                                                     Handler cancelledCallback,
                                                     boolean checkResponseStatus) {
         try {
-            initAync();
+            initAsync();
             return HttpExecutorAsyncHolder.execute(request, entityProc, completedCallback, failedCallback, cancelledCallback, checkResponseStatus);
         } catch (SpinException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("远程连接到" + request.getURI() + "，发生错误:", e);
             throw new SpinException(ErrorCode.NETWORK_EXCEPTION, "远程连接到"
                 + request.getURI()
                 + "，发生错误: "
@@ -396,9 +389,9 @@ public final class HttpExecutor extends Util {
         String contentType = entity.getContentType().getValue();
         long contentLength = entity.getContentLength();
         long inProgress = 0L;
-        String extention = contentType.substring(contentType.indexOf('/') + 1);
+        String extension = contentType.substring(contentType.indexOf('/') + 1);
         if (StringUtils.isNotBlank(savePath)) {
-            saveFile = savePath + "." + extention;
+            saveFile = savePath + "." + extension;
         }
         StreamProgress sp = null == progress ? DEFAULT_PROGRESS : progress;
         sp.start();
@@ -406,15 +399,16 @@ public final class HttpExecutor extends Util {
             if (inStream != null) {
                 final byte[] tmp = new byte[DEFAULT_BUFFER_SIZE];
                 int l;
+                long c = contentLength / 100;
                 while ((l = inStream.read(tmp)) != -1) {
                     fos.write(tmp, 0, l);
                     inProgress += l;
-                    sp.progress(inProgress / contentLength);
+                    sp.progress(inProgress / c);
                 }
             }
             fos.flush();
 
-            map.put("extention", StringUtils.isBlank(extention) ? "" : "." + extention);
+            map.put("extension", StringUtils.isBlank(extension) ? "" : "." + extension);
             map.put("bytes", Long.toString(contentLength));
         } catch (IOException e) {
             throw new SpinException("无法保存文件:[" + saveFile + "]", e);
@@ -486,7 +480,7 @@ public final class HttpExecutor extends Util {
         }
     }
 
-    private static void initAync() {
+    private static void initAsync() {
         if (INITIALIZER.currentThread != null) {
             throw new SpinException("Http异步客户端尚未配置完成，请先完成配置再使用");
         }

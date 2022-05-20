@@ -1,7 +1,5 @@
 package org.spin.core.io;
 
-import org.junit.jupiter.api.Test;
-
 import java.io.File;
 
 /**
@@ -17,13 +15,13 @@ class FileWatcherTest {
 //    @Test
     void registWatcher() throws InterruptedException {
         FileWatcher fileWatcher = new FileWatcher().start();
-        fileWatcher.registWatcher(new File("C:\\Users\\Mathcat\\feign-resolve.properties"), false, action -> {
+        fileWatcher.registerWatcher(new File("C:\\Users\\Mathcat\\feign-resolve.properties"), false, action -> {
             System.out.println(action.getKind().name());
             System.out.println(action.getFile().getAbsolutePath());
             System.out.println("-------------------------");
         });
 
-        fileWatcher.registWatcher(new File("C:\\Users\\Mathcat\\feign-resolve.properties"), false, action -> {
+        fileWatcher.registerWatcher(new File("C:\\Users\\Mathcat\\feign-resolve.properties"), false, action -> {
             System.out.println(action.getKind().name());
             System.out.println(action.getFile().getAbsolutePath());
             System.out.println("-------------------------");

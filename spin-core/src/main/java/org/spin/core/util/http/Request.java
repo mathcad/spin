@@ -9,11 +9,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.ByteArrayBody;
-import org.apache.http.entity.mime.content.ContentBody;
-import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.entity.mime.content.InputStreamBody;
-import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.entity.mime.content.*;
 import org.apache.http.message.BasicNameValuePair;
 import org.spin.core.Assert;
 import org.spin.core.ErrorCode;
@@ -145,6 +141,24 @@ public class Request<T extends HttpRequestBase> {
      *     再次设置相同的请求头，会覆盖之前的设置
      * </pre>
      *
+     * @param condition   条件
+     * @param header      headerKey
+     * @param headerValue headerValue
+     * @return 当前请求本身
+     */
+    public Request<T> withHead(boolean condition, String header, String headerValue) {
+        if (condition && StringUtils.isNotEmpty(header)) {
+            request.setHeader(header, headerValue);
+        }
+        return this;
+    }
+
+    /**
+     * 添加请求头部信息
+     * <pre>
+     *     再次设置相同的请求头，会覆盖之前的设置
+     * </pre>
+     *
      * @param headers 头部信息
      * @return 当前请求本身
      */
@@ -183,6 +197,28 @@ public class Request<T extends HttpRequestBase> {
     }
 
     /**
+     * 设置Authorization请求头部信息
+     * <pre>
+     *     再次设置相同的请求头，会覆盖之前的设置
+     * </pre>
+     *
+     * @param condition     条件
+     * @param authorization Authorization头部信息
+     * @return 当前请求本身
+     */
+    public Request<T> withAuthorization(boolean condition, String authorization) {
+        if (!condition) {
+            return this;
+        }
+        if (null == authorization) {
+            request.removeHeaders(HttpHeaders.AUTHORIZATION);
+        } else {
+            request.setHeader(HttpHeaders.AUTHORIZATION, authorization);
+        }
+        return this;
+    }
+
+    /**
      * 设置UserAgent请求头部信息
      * <pre>
      *     再次设置相同的请求头，会覆盖之前的设置
@@ -192,6 +228,28 @@ public class Request<T extends HttpRequestBase> {
      * @return 当前请求本身
      */
     public Request<T> withUserAgent(String userAgent) {
+        if (null == userAgent) {
+            request.removeHeaders(HttpHeaders.USER_AGENT);
+        } else {
+            request.setHeader(HttpHeaders.USER_AGENT, userAgent);
+        }
+        return this;
+    }
+
+    /**
+     * 设置UserAgent请求头部信息
+     * <pre>
+     *     再次设置相同的请求头，会覆盖之前的设置
+     * </pre>
+     *
+     * @param condition 条件
+     * @param userAgent UserAgent头部信息
+     * @return 当前请求本身
+     */
+    public Request<T> withUserAgent(boolean condition, String userAgent) {
+        if (!condition) {
+            return this;
+        }
         if (null == userAgent) {
             request.removeHeaders(HttpHeaders.USER_AGENT);
         } else {
@@ -260,6 +318,24 @@ public class Request<T extends HttpRequestBase> {
      *     再次设置相同的表单项，会覆盖之前的表单项
      * </pre>
      *
+     * @param condition 条件
+     * @param formKey   form key
+     * @param formValue form value
+     * @return 当前请求本身
+     */
+    public Request<T> withForm(boolean condition, String formKey, String formValue) {
+        if (condition && null != formKey) {
+            this.formData.put(formKey, formValue);
+        }
+        return this;
+    }
+
+    /**
+     * 添加请求form表单信息
+     * <pre>
+     *     再次设置相同的表单项，会覆盖之前的表单项
+     * </pre>
+     *
      * @param formData form表单
      * @return 当前请求本身
      */
@@ -304,6 +380,25 @@ public class Request<T extends HttpRequestBase> {
      *     再次设置相同的表单项，会覆盖之前的表单项
      * </pre>
      *
+     * @param condition 条件
+     * @param paramName 表单项名称
+     * @param param     表单项文件内容
+     * @return 当前请求本身
+     */
+    public Request<T> withForm(boolean condition, String paramName, File param) {
+        if (condition && StringUtils.isNotEmpty(paramName) && null != param) {
+            multiPartFormData.put(paramName + "%" + param.getName(), param);
+            formBuilt = false;
+        }
+        return this;
+    }
+
+    /**
+     * 添加请求multipart form表单信息
+     * <pre>
+     *     再次设置相同的表单项，会覆盖之前的表单项
+     * </pre>
+     *
      * @param paramName 表单项名称
      * @param fileName  文件名称
      * @param param     表单项文件内容
@@ -311,6 +406,26 @@ public class Request<T extends HttpRequestBase> {
      */
     public Request<T> withForm(String paramName, String fileName, byte[] param) {
         if (StringUtils.isNotEmpty(paramName) && null != param) {
+            multiPartFormData.put(paramName + "%" + StringUtils.trimToSpec(fileName, paramName), param);
+            formBuilt = false;
+        }
+        return this;
+    }
+
+    /**
+     * 添加请求multipart form表单信息
+     * <pre>
+     *     再次设置相同的表单项，会覆盖之前的表单项
+     * </pre>
+     *
+     * @param condition 条件
+     * @param paramName 表单项名称
+     * @param fileName  文件名称
+     * @param param     表单项文件内容
+     * @return 当前请求本身
+     */
+    public Request<T> withForm(boolean condition, String paramName, String fileName, byte[] param) {
+        if (condition && StringUtils.isNotEmpty(paramName) && null != param) {
             multiPartFormData.put(paramName + "%" + StringUtils.trimToSpec(fileName, paramName), param);
             formBuilt = false;
         }
@@ -342,13 +457,34 @@ public class Request<T extends HttpRequestBase> {
      *     再次设置相同的表单项，会覆盖之前的表单项
      * </pre>
      *
+     * @param condition 条件
      * @param paramName 表单项名称
      * @param fileName  文件名称
      * @param param     表单项文件内容
      * @return 当前请求本身
      */
-    public Request<T> withForm(String paramName, String fileName, FastByteBuffer param) {
-        if (StringUtils.isNotEmpty(paramName) && null != param) {
+    public Request<T> withForm(boolean condition, String paramName, String fileName, InputStream param) {
+        if (condition && StringUtils.isNotEmpty(paramName) && null != param) {
+            multiPartFormData.put(paramName + "%" + StringUtils.trimToSpec(fileName, paramName), param);
+            formBuilt = false;
+        }
+        return this;
+    }
+
+    /**
+     * 添加请求multipart form表单信息
+     * <pre>
+     *     再次设置相同的表单项，会覆盖之前的表单项
+     * </pre>
+     *
+     * @param condition 条件
+     * @param paramName 表单项名称
+     * @param fileName  文件名称
+     * @param param     表单项文件内容
+     * @return 当前请求本身
+     */
+    public Request<T> withForm(boolean condition, String paramName, String fileName, FastByteBuffer param) {
+        if (condition && StringUtils.isNotEmpty(paramName) && null != param) {
             multiPartFormData.put(paramName + "%" + StringUtils.trimToSpec(fileName, paramName), param);
             formBuilt = false;
         }

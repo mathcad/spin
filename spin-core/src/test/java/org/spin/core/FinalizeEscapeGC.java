@@ -1,7 +1,6 @@
 package org.spin.core;
 
 import java.lang.ref.SoftReference;
-import java.lang.ref.WeakReference;
 
 /**
  * 1 对象可以在被GC时自我拯救
@@ -10,16 +9,18 @@ import java.lang.ref.WeakReference;
  */
 public class FinalizeEscapeGC {
     private static FinalizeEscapeGC SAVE_HOOK = null;
-    private void isAlive(){
+
+    private void isAlive() {
         System.out.println("yes, i am still alive :)");
     }
+
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
         System.out.println("finalize method executed!");
         FinalizeEscapeGC.SAVE_HOOK = this;
     }
- 
+
     public static void main(String[] args) throws InterruptedException {
         SAVE_HOOK = new FinalizeEscapeGC();
         //对象第一次拯救自己
@@ -28,9 +29,9 @@ public class FinalizeEscapeGC {
         System.gc();
         //因为finalize 方法优先级很低，所以暂停0.5秒等待它
         Thread.sleep(500);
-        if(SAVE_HOOK != null){
+        if (SAVE_HOOK != null) {
             SAVE_HOOK.isAlive();
-        }else{
+        } else {
             System.out.println("no, i am dead :(");
         }
 
@@ -40,9 +41,9 @@ public class FinalizeEscapeGC {
         System.gc();
         //因为finalize 方法优先级很低，所以暂停0.5秒等待它
         Thread.sleep(500);
-        if(SAVE_HOOK != null){
+        if (SAVE_HOOK != null) {
             SAVE_HOOK.isAlive();
-        }else{
+        } else {
             System.out.println("no, i am dead :(");
         }
     }

@@ -3,12 +3,11 @@ package org.spin.mybatis.query;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.exceptions.TooManyResultsException;
-import org.mybatis.spring.MyBatisSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spin.core.util.CollectionUtils;
 import org.spin.data.rs.AffectedRows;
 
 import java.util.List;
@@ -81,10 +80,10 @@ public interface MappedExecutor<E, M extends BaseMapper<E>> {
     /**
      * 查询单条记录，存在多条时，抛出异常
      *
-     * @return 实体(可能为null)
+     * @return 实体
      */
     default Optional<E> unique() {
-        return Optional.ofNullable(repo().selectOne(getQuery()));
+        return unique(() -> new TooManyResultsException("One record is expected, but the query result is multiple records"));
     }
 
     /**
@@ -92,17 +91,22 @@ public interface MappedExecutor<E, M extends BaseMapper<E>> {
      *
      * @param moreThanOneException 违反唯一约束时的异常
      * @param <X>                  异常类型
-     * @return 实体(可能为null)
+     * @return 实体
      * @throws X 违反唯一约束时抛出
      */
     default <X extends Exception> Optional<E> unique(Supplier<X> moreThanOneException) throws X {
-        try {
-            return Optional.ofNullable(repo().selectOne(getQuery()));
-        } catch (MyBatisSystemException e) {
-            if (e.getCause() instanceof TooManyResultsException) {
+        Page<E> page = new Page<>(1, 2);
+        page.setSearchCount(false);
+        List<E> list = this.page(page).getRecords();
+
+        if (CollectionUtils.isNotEmpty(list)) {
+            if (list.size() != 1) {
                 throw moreThanOneException.get();
+            } else {
+                return Optional.of(list.get(0));
             }
-            throw e;
+        } else {
+            return Optional.empty();
         }
     }
 

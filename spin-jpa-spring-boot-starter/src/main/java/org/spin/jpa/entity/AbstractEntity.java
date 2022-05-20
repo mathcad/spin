@@ -24,14 +24,14 @@ public abstract class AbstractEntity<T extends AbstractEntity<T>> extends BasicE
     /**
      * 记录创建者id
      */
-    @Column
+    @Column(updatable = false)
     @PreventOverflow
     private Long createBy;
 
     /**
      * 记录创建者用户名
      */
-    @Column(length = 32)
+    @Column(updatable = false, length = 32)
     private String createUsername;
 
     /**

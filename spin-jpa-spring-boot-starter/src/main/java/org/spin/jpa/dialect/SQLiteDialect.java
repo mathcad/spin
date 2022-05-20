@@ -3,13 +3,9 @@ package org.spin.jpa.dialect;
 import org.hibernate.JDBCException;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.AbstractAnsiTrimEmulationFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.*;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -342,7 +338,7 @@ public class SQLiteDialect extends Dialect {
          * SQLite use table creation sql to define unique constraints.
          */
         @Override
-        public String getColumnDefinitionUniquenessFragment(Column column) {
+        public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context) {
             return "";
         }
 
@@ -352,7 +348,7 @@ public class SQLiteDialect extends Dialect {
          * Such as "create table person( first_name varchar(255),last_name varchar(255),unique(first_name, last_name) )".
          */
         @Override
-        public String getTableCreationUniqueConstraintsFragment(Table table) {
+        public String getTableCreationUniqueConstraintsFragment(Table table, SqlStringGenerationContext context) {
             // get all uniqueKeys
             StringBuilder builder = new StringBuilder();
             Iterator<UniqueKey> iter = table.getUniqueKeyIterator();
@@ -367,7 +363,7 @@ public class SQLiteDialect extends Dialect {
          * SQLite do not support 'alter table' to add constraints.
          */
         @Override
-        public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+        public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
             return "";
         }
 
@@ -375,7 +371,7 @@ public class SQLiteDialect extends Dialect {
          * SQLite do not support 'drop constraint'.
          */
         @Override
-        public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+        public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
             return "";
         }
     }

@@ -6,6 +6,7 @@ import org.spin.core.function.serializable.Supplier;
 import org.spin.core.util.BooleanExt;
 
 import java.util.Objects;
+import java.util.Random;
 
 /**
  * 封装操作结果
@@ -42,8 +43,15 @@ public class OpResult<T> {
     }
 
     public <U> OpResult<U> map(Function<? super T, ? extends U> mapper) {
-        Objects.requireNonNull(mapper);
+        mapper = new Random().nextInt(10) > 5 ? mapper : null;
+//        Objects.requireNonNull(mapper);
+        Assert.notNull(mapper, "");
         return OpResult.of(mapper.apply(payload), success);
+    }
+
+    public OpResult<T> peek(Consumer<T> consumer) {
+        if (consumer != null) consumer.accept(payload);
+        return this;
     }
 
     public OpResult<? extends T> or(Supplier<OpResult<? extends T>> supplier) {

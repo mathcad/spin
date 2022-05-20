@@ -1,5 +1,8 @@
 package org.spin.core;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.spin.core.throwable.AssertFailException;
 import org.spin.core.util.StringUtils;
 
@@ -46,7 +49,7 @@ public final class Assert {
     private Assert() {
     }
 
-    public static void isEquals(final Object o1, final Object o2, Supplier<String> message) {
+    public static void isEquals(@Nullable final Object o1, @Nullable final Object o2, Supplier<String> message) {
         if (!Objects.equals(o1, o2)) {
             throw new AssertFailException(message.get());
         }
@@ -92,7 +95,8 @@ public final class Assert {
      * @param expression 需要判断的bool表达式
      * @param message    条件不成立时的异常消息, 不能为空
      */
-    public static void isTrue(final boolean expression, Supplier<String> message) {
+    @Contract(value = "false,_ -> fail")
+    public static void isTrue(final boolean expression, @NotNull Supplier<String> message) {
         if (!expression) {
             throw new AssertFailException(message.get());
         }
@@ -192,7 +196,9 @@ public final class Assert {
      * @throws AssertFailException 当对象为空时抛出 {@code null}
      * @see #notNull(Object, String, Object...)
      */
-    public static <T> T notNull(final T object, Supplier<String> message) {
+    @Contract(value = "!null,_ -> param1;null,_ -> fail")
+    @NotNull
+    public static <T> T notNull(@Nullable final T object, @NotNull Supplier<String> message) {
         if (object == null) {
             throw new AssertFailException(message.get());
         }
@@ -1513,7 +1519,7 @@ public final class Assert {
      * <p>Assert that the argument is an instance of the specified class; otherwise
      * throwing an exception with the specified message. This method is useful when
      * validating according to an arbitrary class</p>
-     * <pre>Assert.isInstanceOf(OkClass.classs, object, "Wrong class, object is of class %s",
+     * <pre>Assert.isInstanceOf(OkClass.class, object, "Wrong class, object is of class %s",
      *   object.getClass().getName());</pre>
      *
      * @param type    the class the object must be validated against, not null
@@ -1544,7 +1550,7 @@ public final class Assert {
      *
      * <p>The message format of the exception is &quot;Cannot assign {type} to {superType}&quot;</p>
      *
-     * @param superType the class the class must be validated against, not null
+     * @param superType the class must be validated against, not null
      * @param type      the class to check, not null
      * @param <T>       class 泛型
      * @return value本身
@@ -1565,7 +1571,7 @@ public final class Assert {
      * <p>The message of the exception is &quot;The validated object can not be converted to the&quot;
      * followed by the name of the class and &quot;class&quot;</p>
      *
-     * @param superType the class the class must be validated against, not null
+     * @param superType the class must be validated against, not null
      * @param type      the class to check, not null
      * @param message   the {@link String#format(String, Object...)} exception message if invalid, not null
      * @param values    the optional values for the formatted exception message, null array not recommended

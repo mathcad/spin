@@ -444,4 +444,134 @@ public class ArrayUtils extends Util {
         }
         return elements.toArray(array);
     }
+
+    public static <T> T[] merge(T[] array1, T[] array2, T[] dest) {
+        if (ObjectUtils.isEmpty(array1)) {
+            return array2;
+        }
+        if (ObjectUtils.isEmpty(array2)) {
+            return array1;
+        }
+        @SuppressWarnings("unchecked")
+        T[] result = (T[]) Arrays.copyOf(array1, array1.length + array2.length, dest.getClass());
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
+
+    public static String[] merge(String[] array1, String[] array2) {
+        if (ObjectUtils.isEmpty(array1)) {
+            return array2;
+        }
+        if (ObjectUtils.isEmpty(array2)) {
+            return array1;
+        }
+        String[] result = new String[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
+
+    public static boolean[] merge(boolean[] array1, boolean[] array2) {
+        if (ObjectUtils.isEmpty(array1)) {
+            return array2;
+        }
+        if (ObjectUtils.isEmpty(array2)) {
+            return array1;
+        }
+        boolean[] result = new boolean[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
+
+    public static byte[] merge(byte[] array1, byte[] array2) {
+        if (ObjectUtils.isEmpty(array1)) {
+            return array2;
+        }
+        if (ObjectUtils.isEmpty(array2)) {
+            return array1;
+        }
+        byte[] result = new byte[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
+
+    public static char[] merge(char[] array1, char[] array2) {
+        if (ObjectUtils.isEmpty(array1)) {
+            return array2;
+        }
+        if (ObjectUtils.isEmpty(array2)) {
+            return array1;
+        }
+        char[] result = new char[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
+
+    public static short[] merge(short[] array1, short[] array2) {
+        if (ObjectUtils.isEmpty(array1)) {
+            return array2;
+        }
+        if (ObjectUtils.isEmpty(array2)) {
+            return array1;
+        }
+        short[] result = new short[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
+
+    public static int[] merge(int[] array1, int[] array2) {
+        if (ObjectUtils.isEmpty(array1)) {
+            return array2;
+        }
+        if (ObjectUtils.isEmpty(array2)) {
+            return array1;
+        }
+        int[] result = new int[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
+
+    public static long[] merge(long[] array1, long[] array2) {
+        if (ObjectUtils.isEmpty(array1)) {
+            return array2;
+        }
+        if (ObjectUtils.isEmpty(array2)) {
+            return array1;
+        }
+        long[] result = new long[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
+
+    public static float[] merge(float[] array1, float[] array2) {
+        if (ObjectUtils.isEmpty(array1)) {
+            return array2;
+        }
+        if (ObjectUtils.isEmpty(array2)) {
+            return array1;
+        }
+        float[] result = new float[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
+
+    public static double[] merge(double[] array1, double[] array2) {
+        if (ObjectUtils.isEmpty(array1)) {
+            return array2;
+        }
+        if (ObjectUtils.isEmpty(array2)) {
+            return array1;
+        }
+        double[] result = new double[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
 }

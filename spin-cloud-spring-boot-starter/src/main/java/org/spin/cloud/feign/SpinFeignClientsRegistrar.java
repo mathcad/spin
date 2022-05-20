@@ -16,21 +16,23 @@
 
 package org.spin.cloud.feign;
 
+import feign.Request;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.spin.core.inspection.BytesClassLoader;
 import org.spin.core.util.StringUtils;
+import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.BeanDefinitionHolder;
+import org.springframework.beans.factory.config.*;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.openfeign.OptionsFactoryBean;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -43,15 +45,13 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Spencer Gibb
@@ -70,7 +70,7 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
 
     private Environment environment;
 
-    private boolean handleDefaultFallack;
+    private boolean handleDefaultFallback;
 
     SpinFeignClientsRegistrar() {
     }
@@ -149,7 +149,7 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
         Map<String, Object> defaultAttrs = metadata.getAnnotationAttributes(EnableSpinFeignClients.class.getName(), true);
 
         if (null != defaultAttrs) {
-            handleDefaultFallack = (boolean) defaultAttrs.get("handleDefaultFallack");
+            handleDefaultFallback = (boolean) defaultAttrs.get("handleDefaultFallback");
             if (defaultAttrs.containsKey("defaultConfiguration")) {
                 String name;
                 if (metadata.hasEnclosingClass()) {
@@ -202,44 +202,61 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
         }
     }
 
-    private void registerFeignClient(BeanDefinitionRegistry registry, AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
+    private void registerFeignClient(BeanDefinitionRegistry registry, AnnotationMetadata annotationMetadata,
+                                     Map<String, Object> attributes) {
         String className = annotationMetadata.getClassName();
-        BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(FeignClientFactoryBean.class);
-        validate(attributes);
-
+        Class clazz = ClassUtils.resolveClassName(className, null);
+        ConfigurableBeanFactory beanFactory = registry instanceof ConfigurableBeanFactory
+            ? (ConfigurableBeanFactory) registry : null;
+        String contextId = getContextId(beanFactory, attributes);
         String name = getName(attributes);
-        String defUrl = FeignResolver.getUrl(name);
-        String url = getUrl(attributes);
+        FeignClientFactoryBean factoryBean = new FeignClientFactoryBean();
+        factoryBean.setBeanFactory(beanFactory);
+        factoryBean.setName(name);
+        factoryBean.setContextId(contextId);
+        factoryBean.setType(clazz);
+        factoryBean.setRefreshableClient(isClientRefreshEnabled());
 
+        String defUrl = FeignResolver.getUrl(name);
+        String url = getUrl(beanFactory, attributes);
         Class<?> fallbackFactory = analysisFallbackFactory(className, registry, (Class<?>) attributes.get("fallbackFactory"));
 
-        definition.addPropertyValue("url", StringUtils.isEmpty(url) ? defUrl : url);
-        definition.addPropertyValue("path", getPath(attributes));
-        definition.addPropertyValue("name", name);
-        String contextId = getContextId(attributes);
-        definition.addPropertyValue("contextId", contextId);
-        definition.addPropertyValue("type", className);
-        definition.addPropertyValue("decode404", attributes.get("decode404"));
-        definition.addPropertyValue("fallback", attributes.get("fallback"));
-        definition.addPropertyValue("fallbackFactory", fallbackFactory);
+        BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(clazz, () -> {
+            factoryBean.setUrl(StringUtils.isEmpty(url) ? defUrl : url);
+            factoryBean.setPath(getPath(beanFactory, attributes));
+            factoryBean.setDecode404(Boolean.parseBoolean(String.valueOf(attributes.get("decode404"))));
+            Object fallback = attributes.get("fallback");
+            if (fallback != null) {
+                factoryBean.setFallback(fallback instanceof Class ? (Class<?>) fallback
+                    : ClassUtils.resolveClassName(fallback.toString(), null));
+            }
+            if (fallbackFactory != null) {
+                factoryBean.setFallbackFactory(fallbackFactory);
+            }
+            return factoryBean.getObject();
+        });
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+        definition.setLazyInit(true);
+        validate(attributes);
 
-        String alias = contextId + "FeignClient";
         AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
         beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, className);
+        beanDefinition.setAttribute("feignClientsRegistrarFactoryBean", factoryBean);
 
         // has a default, won't be null
         boolean primary = (Boolean) attributes.get("primary");
 
         beanDefinition.setPrimary(primary);
 
-        String qualifier = getQualifier(attributes);
-        if (StringUtils.isNotBlank(qualifier)) {
-            alias = qualifier;
+        String[] qualifiers = getQualifiers(attributes);
+        if (ObjectUtils.isEmpty(qualifiers)) {
+            qualifiers = new String[]{contextId + "FeignClient"};
         }
 
-        BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, new String[]{alias});
+        BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, qualifiers);
         BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
+
+        registerOptionsBeanDefinition(registry, contextId);
     }
 
     private void validate(Map<String, Object> attributes) {
@@ -250,43 +267,54 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
         validateFallbackFactory(annotation.getClass("fallbackFactory"));
     }
 
-    /* for testing */
-    private String getName(Map<String, Object> attributes) {
+    /* for testing */ String getName(Map<String, Object> attributes) {
+        return getName(null, attributes);
+    }
+
+    String getName(ConfigurableBeanFactory beanFactory, Map<String, Object> attributes) {
         String name = (String) attributes.get("serviceId");
-        if (StringUtils.isBlank(name)) {
+        if (!org.springframework.util.StringUtils.hasText(name)) {
             name = (String) attributes.get("name");
         }
-        if (StringUtils.isBlank(name)) {
+        if (!org.springframework.util.StringUtils.hasText(name)) {
             name = (String) attributes.get("value");
         }
-        name = resolve(name);
+        name = resolve(beanFactory, name);
         return getName(name);
     }
 
-    private String getContextId(Map<String, Object> attributes) {
+    private String getContextId(ConfigurableBeanFactory beanFactory, Map<String, Object> attributes) {
         String contextId = (String) attributes.get("contextId");
         if (StringUtils.isBlank(contextId)) {
             return getName(attributes);
         }
 
-        contextId = resolve(contextId);
+        contextId = resolve(beanFactory, contextId);
         return getName(contextId);
     }
 
-    private String resolve(String value) {
-        if (StringUtils.isNotBlank(value)) {
-            return this.environment.resolvePlaceholders(value);
+    private String resolve(ConfigurableBeanFactory beanFactory, String value) {
+        if (org.springframework.util.StringUtils.hasText(value)) {
+            if (beanFactory == null) {
+                return this.environment.resolvePlaceholders(value);
+            }
+            BeanExpressionResolver resolver = beanFactory.getBeanExpressionResolver();
+            String resolved = beanFactory.resolveEmbeddedValue(value);
+            if (resolver == null) {
+                return resolved;
+            }
+            return String.valueOf(resolver.evaluate(resolved, new BeanExpressionContext(beanFactory, null)));
         }
         return value;
     }
 
-    private String getUrl(Map<String, Object> attributes) {
-        String url = resolve((String) attributes.get("url"));
+    private String getUrl(ConfigurableBeanFactory beanFactory, Map<String, Object> attributes) {
+        String url = resolve(beanFactory, (String) attributes.get("url"));
         return getUrl(url);
     }
 
-    private String getPath(Map<String, Object> attributes) {
-        String path = resolve((String) attributes.get("path"));
+    private String getPath(ConfigurableBeanFactory beanFactory, Map<String, Object> attributes) {
+        String path = resolve(beanFactory, (String) attributes.get("path"));
         return getPath(path);
     }
 
@@ -343,6 +371,18 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
         return null;
     }
 
+    private String[] getQualifiers(Map<String, Object> client) {
+        if (client == null) {
+            return null;
+        }
+        List<String> qualifierList = new ArrayList<>(Arrays.asList((String[]) client.get("qualifiers")));
+        qualifierList.removeIf(qualifier -> !org.springframework.util.StringUtils.hasText(qualifier));
+        if (qualifierList.isEmpty() && getQualifier(client) != null) {
+            qualifierList = Collections.singletonList(getQualifier(client));
+        }
+        return !qualifierList.isEmpty() ? qualifierList.toArray(new String[0]) : null;
+    }
+
     private String getClientName(Map<String, Object> client) {
         if (client == null) {
             return null;
@@ -372,8 +412,39 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
             builder.getBeanDefinition());
     }
 
+    @Override
+    public void setEnvironment(@NonNull Environment environment) {
+        this.environment = environment;
+        FeignResolver.init(environment);
+    }
+
+    /**
+     * This method is meant to create {@link Request.Options} beans definition with
+     * refreshScope.
+     *
+     * @param registry  spring bean definition registry
+     * @param contextId name of feign client
+     */
+    private void registerOptionsBeanDefinition(BeanDefinitionRegistry registry, String contextId) {
+        if (isClientRefreshEnabled()) {
+            String beanName = Request.Options.class.getCanonicalName() + "-" + contextId;
+            BeanDefinitionBuilder definitionBuilder = BeanDefinitionBuilder
+                .genericBeanDefinition(OptionsFactoryBean.class);
+            definitionBuilder.setScope("refresh");
+            definitionBuilder.addPropertyValue("contextId", contextId);
+            BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(definitionBuilder.getBeanDefinition(),
+                beanName);
+            definitionHolder = ScopedProxyUtils.createScopedProxy(definitionHolder, registry, true);
+            BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, registry);
+        }
+    }
+
+    private boolean isClientRefreshEnabled() {
+        return environment.getProperty("feign.client.refresh-enabled", Boolean.class, false);
+    }
+
     private Class<?> analysisFallbackFactory(String clientName, BeanDefinitionRegistry registry, Class<?> fallbackFactory) {
-        if (handleDefaultFallack && fallbackFactory == void.class) {
+        if (handleDefaultFallback && fallbackFactory == void.class) {
             fallbackFactory = SpinFallbackFactory.class;
         }
         if (!(SpinFallbackFactory.class == fallbackFactory)) {
@@ -415,12 +486,6 @@ class SpinFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, Resour
         @SuppressWarnings("unchecked")
         Class<F> mClass = (Class<F>) CLASS_LOADER.defineClass(name.replaceAll("/", "."), bytes);
         return mClass;
-    }
-
-    @Override
-    public void setEnvironment(@NonNull Environment environment) {
-        this.environment = environment;
-        FeignResolver.init(environment);
     }
 
 }

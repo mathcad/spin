@@ -2,6 +2,7 @@ package org.spin.core.security;
 
 import org.junit.jupiter.api.Test;
 import org.spin.core.collection.Pair;
+import org.spin.core.util.DigestUtils;
 import org.spin.core.util.IOUtils;
 
 import java.io.ByteArrayInputStream;
@@ -90,5 +91,14 @@ public class RSATest {
 
         boolean verify = ECC.verify(text, sign, pubKey);
         System.out.println("验证结果:" + verify);
+    }
+
+    @Test
+    void testRsaSign() {
+        String content = "19231225419546831543:1623114665449";
+        String sign = RSA.sign(content, RSA.getPrivateKey(privateKey));
+        System.out.println(content + ":" + sign);
+        RSA.verify(content, sign, RSA.getPublicKey(publicKey));
+        System.out.println("succ");
     }
 }

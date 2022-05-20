@@ -130,7 +130,7 @@ public final class MathUtils extends Util {
     public static BigDecimal add(Number... values) {
         BigDecimal res = BigDecimal.ZERO;
         for (Number value : values) {
-            res = res.add(NumericUtils.toBigDeciaml(value));
+            res = res.add(NumericUtils.toBigDecimal(value));
         }
         return res;
     }
@@ -144,7 +144,7 @@ public final class MathUtils extends Util {
     public static BigDecimal multiply(Number... values) {
         BigDecimal res = BigDecimal.ONE;
         for (Number value : values) {
-            res = res.multiply(NumericUtils.toBigDeciaml(value));
+            res = res.multiply(NumericUtils.toBigDecimal(value));
         }
         return res;
     }
@@ -157,7 +157,7 @@ public final class MathUtils extends Util {
      * @return 差
      */
     public static BigDecimal subtract(Number value1, Number value2) {
-        return NumericUtils.toBigDeciaml(value1).subtract(NumericUtils.toBigDeciaml(value2));
+        return NumericUtils.toBigDecimal(value1).subtract(NumericUtils.toBigDecimal(value2));
     }
 
     /**
@@ -168,11 +168,11 @@ public final class MathUtils extends Util {
      * @return 商
      */
     public static BigDecimal divide(Number value1, Number value2) {
-        BigDecimal v2 = NumericUtils.toBigDeciaml(value2);
+        BigDecimal v2 = NumericUtils.toBigDecimal(value2);
         if (v2.compareTo(BigDecimal.ZERO) == 0) {
             throw new SpinException(ErrorCode.INVALID_PARAM, "除数不能为0");
         }
-        return NumericUtils.toBigDeciaml(value1).divide(NumericUtils.toBigDeciaml(value2), RoundingMode.HALF_UP);
+        return NumericUtils.toBigDecimal(value1).divide(NumericUtils.toBigDecimal(value2), RoundingMode.HALF_UP);
     }
 
     /**
@@ -188,7 +188,7 @@ public final class MathUtils extends Util {
      * @return 统计结果
      */
     public static <T, P> BigDecimal sum(Collection<T> list, Function<T, P> propGetter) {
-        return list.stream().map(propGetter).filter(Objects::nonNull).map(NumericUtils::toBigDeciaml).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+        return list.stream().map(propGetter).filter(Objects::nonNull).map(NumericUtils::toBigDecimal).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
     }
 
     /**
@@ -220,7 +220,7 @@ public final class MathUtils extends Util {
      * @return 统计结果
      */
     public static <T, P> BigDecimal max(Collection<T> list, Function<T, P> propGetter) {
-        return list.stream().map(propGetter).filter(Objects::nonNull).map(NumericUtils::toBigDeciaml).max(BigDecimal::compareTo).orElse(null);
+        return list.stream().map(propGetter).filter(Objects::nonNull).map(NumericUtils::toBigDecimal).max(BigDecimal::compareTo).orElse(null);
     }
 
     /**
@@ -252,7 +252,7 @@ public final class MathUtils extends Util {
      * @return 统计结果
      */
     public static <T, P> BigDecimal min(Collection<T> list, Function<T, P> propGetter) {
-        return list.stream().map(propGetter).filter(Objects::nonNull).map(NumericUtils::toBigDeciaml).min(BigDecimal::compareTo).orElse(null);
+        return list.stream().map(propGetter).filter(Objects::nonNull).map(NumericUtils::toBigDecimal).min(BigDecimal::compareTo).orElse(null);
     }
 
     /**
@@ -320,7 +320,7 @@ public final class MathUtils extends Util {
     public static <T, P> BigDecimal geometricMean(Collection<T> list, Function<T, P> propGetter) {
         return BigDecimal.valueOf(Math.pow(list.stream()
             .map(propGetter)
-            .map(NumericUtils::toBigDeciaml)
+            .map(NumericUtils::toBigDecimal)
             .reduce(BigDecimal::multiply)
             .orElse(BigDecimal.ZERO).doubleValue(), 1.0D / list.size()));
     }
@@ -340,7 +340,7 @@ public final class MathUtils extends Util {
     public static <K, V> BigDecimal geometricMean(Collection<Map<K, V>> list, K key) {
         return BigDecimal.valueOf(Math.pow(list.stream()
             .map(m -> MapUtils.getBigDecimalValue(m, key))
-            .map(NumericUtils::toBigDeciaml)
+            .map(NumericUtils::toBigDecimal)
             .reduce(BigDecimal::multiply)
             .orElse(BigDecimal.ZERO).doubleValue(), 1.0D / list.size()));
     }
@@ -360,7 +360,7 @@ public final class MathUtils extends Util {
      */
     public static <T, P> BigDecimal quadraticMean(Collection<T> list, Function<T, P> propGetter) {
         return list.stream().map(propGetter)
-            .map(NumericUtils::toBigDeciaml)
+            .map(NumericUtils::toBigDecimal)
             .map(n -> n.multiply(n))
             .reduce(BigDecimal::add)
             .orElse(BigDecimal.ZERO)
@@ -381,7 +381,7 @@ public final class MathUtils extends Util {
      */
     public static <K, V> BigDecimal quadraticMean(Collection<Map<K, V>> list, K key) {
         return list.stream().map(m -> MapUtils.getBigDecimalValue(m, key))
-            .map(NumericUtils::toBigDeciaml)
+            .map(NumericUtils::toBigDecimal)
             .map(n -> n.multiply(n))
             .reduce(BigDecimal::add)
             .orElse(BigDecimal.ZERO)
@@ -406,7 +406,7 @@ public final class MathUtils extends Util {
             return BigDecimal.ZERO;
         }
 
-        List<BigDecimal> nums = list.stream().map(propGetter).map(NumericUtils::toBigDeciaml).collect(Collectors.toList());
+        List<BigDecimal> nums = list.stream().map(propGetter).map(NumericUtils::toBigDecimal).collect(Collectors.toList());
 
         BigDecimal avg = nums.stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size()), RoundingMode.HALF_UP);
 
@@ -460,7 +460,7 @@ public final class MathUtils extends Util {
             return null;
         }
 
-        List<BigDecimal> nums = list.stream().map(propGetter).map(NumericUtils::toBigDeciaml).collect(Collectors.toList());
+        List<BigDecimal> nums = list.stream().map(propGetter).map(NumericUtils::toBigDecimal).collect(Collectors.toList());
 
 
         BigDecimal avg = nums.stream().reduce(BigDecimal::add).orElse(BigDecimal.ZERO).divide(new BigDecimal(nums.size()), RoundingMode.HALF_UP);

@@ -14,6 +14,8 @@ import java.awt.color.ColorSpace;
 import java.awt.image.*;
 import java.io.*;
 
+import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
+
 /**
  * 图像工具
  * <p>Created by xuweinan on 2017/10/10.</p>
@@ -184,7 +186,7 @@ public final class ImageUtils extends Util {
         int originWidth = image.getWidth(null);
         int originHeight = image.getHeight(null);
 
-        BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage result = new BufferedImage(width, height, TYPE_INT_ARGB);
 
         // 如果起始坐标超出源图像范围，直接返回空白图像
         if (x >= originWidth || y >= originHeight) {
@@ -223,7 +225,7 @@ public final class ImageUtils extends Util {
 
         for (int y = 0; y < cols; ++y) {
             for (int x = 0; x < rows; x++) {
-                res[x][y] = new BufferedImage(ppr, ppc, BufferedImage.TYPE_INT_ARGB);
+                res[x][y] = new BufferedImage(ppr, ppc, TYPE_INT_ARGB);
 
                 int startX = x * ppr;
                 int startY = y * ppc;
@@ -380,7 +382,7 @@ public final class ImageUtils extends Util {
         int originWidth = srcImage.getWidth(null);
         int originHeight = srcImage.getHeight(null);
 
-        BufferedImage image = new BufferedImage(originWidth + padding * 2 + border * 2, originHeight + padding * 2 + border * 2, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(originWidth + padding * 2 + border * 2, originHeight + padding * 2 + border * 2, TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
 
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC, 1.0F));
@@ -502,8 +504,12 @@ public final class ImageUtils extends Util {
             }
 
             if (null == imageType) {
-                imageType = ((BufferedImage) image).getTransparency();
+                imageType = ((BufferedImage) image).getType();
             }
+        }
+
+        if (null == imageType) {
+            imageType = TYPE_INT_ARGB;
         }
 
         // This code ensures that all the pixels in the image are loaded

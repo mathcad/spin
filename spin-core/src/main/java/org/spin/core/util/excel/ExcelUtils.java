@@ -11,27 +11,13 @@ import org.spin.core.function.FinalConsumer;
 import org.spin.core.function.serializable.ExceptionalSupplier;
 import org.spin.core.io.BytesCombinedInputStream;
 import org.spin.core.throwable.SpinException;
-import org.spin.core.util.BeanUtils;
-import org.spin.core.util.CollectionUtils;
-import org.spin.core.util.DateUtils;
-import org.spin.core.util.MapUtils;
-import org.spin.core.util.StringUtils;
-import org.spin.core.util.Util;
+import org.spin.core.util.*;
 import org.spin.core.util.file.FileType;
 import org.spin.core.util.file.FileTypeUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.time.temporal.TemporalAccessor;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Excel工具类(基于SaxReader与事件驱动，支持大文件)
@@ -143,7 +129,7 @@ public final class ExcelUtils extends Util {
      * 根据指定的文件类型与数据，生成Excel并写出到输出流，写出完成后，并不会关闭流
      *
      * @param fileType     文件类型
-     * @param excelModel   ExceModel
+     * @param excelModel   ExcelModel
      * @param outputStream 输出流
      */
     public static void generateWorkBook(FileType fileType, ExcelModel excelModel, OutputStream outputStream) {
@@ -159,7 +145,7 @@ public final class ExcelUtils extends Util {
      * 根据指定的文件类型与数据，生成Excel并写出到指定提供者提供的输出流输出，输出完成后，将关闭该流
      *
      * @param fileType             文件类型
-     * @param excelModel           ExceModel
+     * @param excelModel           ExcelModel
      * @param outputStreamSupplier 输出流提供者
      */
     public static void generateWorkBook(FileType fileType, ExcelModel excelModel, ExceptionalSupplier<OutputStream, IOException> outputStreamSupplier) {
@@ -176,7 +162,7 @@ public final class ExcelUtils extends Util {
      * 根据指定的文件类型与数据，生成Excel
      *
      * @param fileType   文件类型
-     * @param excelModel ExceModel
+     * @param excelModel ExcelModel
      * @return workbook
      */
     public static Workbook generateWorkbook(FileType fileType, ExcelModel excelModel) {
@@ -401,6 +387,9 @@ public final class ExcelUtils extends Util {
                         cell.setCellValue("是");
                     }
                 }
+                break;
+            case NUMBER_COLUMN_TYPE:
+                cell.setCellValue(NumericUtils.toBigDecimal(o).doubleValue());
                 break;
             default:
                 if (o instanceof Boolean) {

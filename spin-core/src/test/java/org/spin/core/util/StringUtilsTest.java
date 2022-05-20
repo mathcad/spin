@@ -1,15 +1,9 @@
 package org.spin.core.util;
 
 import org.junit.jupiter.api.Test;
-import org.spin.core.SpinCollectors;
+import org.spin.core.stream.SpinCollectors;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -180,6 +174,17 @@ class StringUtilsTest {
         System.out.println(IdCardUtils.getBirthDate(idCard));
         System.out.println(IdCardUtils.getGenderByIdCard(idCard));
         System.out.println(IdCardUtils.getAgeByIdCard(idCard));
+    }
+
+    @Test
+    void testRandom() {
+        Set<String> a = new HashSet<>(256);
+        for (int i = 0; i < 128; i++) {
+            a.add(RandomStringUtils.randomAlphabetic(16));
+        }
+
+        System.out.println(a.size());
+        System.out.println(a);
     }
 
 }

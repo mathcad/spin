@@ -3,19 +3,16 @@ package org.spin.datasource.support;
 import org.spin.datasource.DynamicRoutingDataSource;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.Status;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.IncorrectResultSetColumnCountException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.JdbcUtils;
 
 import javax.sql.DataSource;
-import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 数据库健康状况指标
@@ -24,38 +21,18 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DbHealthIndicator extends AbstractHealthIndicator {
 
-    /**
-     * 维护数据源健康状况
-     */
-    private static final Map<String, Boolean> DB_HEALTH = new ConcurrentHashMap<>();
+    private final String validQuery;
+
+    private final HealthCheckAdapter healthCheckAdapter;
     /**
      * 当前执行数据源
      */
     private final DataSource dataSource;
 
-    public DbHealthIndicator(DataSource dataSource) {
+    public DbHealthIndicator(DataSource dataSource, String validQuery, HealthCheckAdapter healthCheckAdapter) {
         this.dataSource = dataSource;
-    }
-
-    /**
-     * 获取数据源连接健康状况
-     *
-     * @param dataSource 数据源名称
-     * @return 健康状况
-     */
-    public static boolean getDbHealth(String dataSource) {
-        return DB_HEALTH.get(dataSource);
-    }
-
-    /**
-     * 设置连接池健康状况
-     *
-     * @param dataSource 数据源名称
-     * @param health     健康状况 false 不健康 true 健康
-     * @return 设置状态
-     */
-    public static Boolean setDbHealth(String dataSource, boolean health) {
-        return DB_HEALTH.put(dataSource, health);
+        this.validQuery = validQuery;
+        this.healthCheckAdapter = healthCheckAdapter;
     }
 
     @Override
@@ -63,22 +40,39 @@ public class DbHealthIndicator extends AbstractHealthIndicator {
         if (dataSource instanceof DynamicRoutingDataSource) {
             Map<String, DataSource> dataSourceMap = ((DynamicRoutingDataSource) dataSource).getCurrentDataSources();
             // 循环检查当前数据源是否可用
+            Boolean available = null;
+            Boolean disable = null;
             for (Map.Entry<String, DataSource> dataSource : dataSourceMap.entrySet()) {
-                int result = 0;
+                Boolean resultAvailable = false;
                 try {
-                    result = query(dataSource.getValue());
+                    resultAvailable = queryAvailable(dataSource.getValue());
+                } catch (Throwable ignore) {
                 } finally {
-                    DB_HEALTH.put(dataSource.getKey(), 1 == result);
-                    builder.withDetail(dataSource.getKey(), result);
+                    healthCheckAdapter.putHealth(dataSource.getKey(), resultAvailable);
+                    builder.withDetail(dataSource.getKey(), resultAvailable);
+
+                    if (resultAvailable) {
+                        available = true;
+                    } else {
+                        disable = true;
+                    }
                 }
             }
+            if (available != null) {
+                if (disable != null) {
+                    builder.status(Status.OUT_OF_SERVICE);
+                } else {
+                    builder.status(Status.UP);
+                }
+            } else {
+                builder.status(Status.DOWN);
+            }
+
         }
     }
 
-
-    private Integer query(DataSource dataSource) {
-        //todo 这里应该可以配置或者可重写？
-        List<Integer> results = new JdbcTemplate(dataSource).query("SELECT 1", (resultSet, i) -> {
+    private Boolean queryAvailable(DataSource dataSource) {
+        List<Integer> results = new JdbcTemplate(dataSource).query(this.validQuery, (resultSet, i) -> {
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columns = metaData.getColumnCount();
             if (columns != 1) {
@@ -86,6 +80,6 @@ public class DbHealthIndicator extends AbstractHealthIndicator {
             }
             return (Integer) JdbcUtils.getResultSetValue(resultSet, 1, Integer.class);
         });
-        return DataAccessUtils.requiredSingleResult(results);
+        return DataAccessUtils.requiredSingleResult(results) == 1;
     }
 }

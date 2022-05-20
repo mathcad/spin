@@ -902,7 +902,7 @@ public final class StringUtils extends Util {
      *
      * @param str         the String to check, may be null
      * @param searchChars the chars to search for, may be null
-     * @return the index of any of the chars, -1 if no match or null input
+     * @return the index of the chars, -1 if no match or null input
      * @since 2.0
      */
     public static int indexOfAny(String str, String searchChars) {
@@ -940,7 +940,7 @@ public final class StringUtils extends Util {
      *
      * @param str        the String to check, may be null
      * @param searchStrs the Strings to search for, may be null
-     * @return the first index of any of the searchStrs in str, -1 if no match
+     * @return the first index of the searchStrs in str, -1 if no match
      */
     public static int indexOfAny(String str, String[] searchStrs) {
         if ((str == null) || (searchStrs == null)) {
@@ -1021,7 +1021,7 @@ public final class StringUtils extends Util {
      *
      * @param str         the String to check, may be null
      * @param searchChars the chars to search for, may be null
-     * @return the index of any of the chars, -1 if no match or null input
+     * @return the index of the chars, -1 if no match or null input
      * @since 2.0
      */
     public static int indexOfAnyBut(String str, String searchChars) {
@@ -1303,7 +1303,7 @@ public final class StringUtils extends Util {
      *
      * @param str        the String to check, may be null
      * @param searchStrs the Strings to search for, may be null
-     * @return the last index of any of the Strings, -1 if no match
+     * @return the last index of the Strings, -1 if no match
      */
     public static int lastIndexOfAny(String str, String[] searchStrs) {
         if ((str == null) || (searchStrs == null)) {
@@ -1607,33 +1607,6 @@ public final class StringUtils extends Util {
 
     // Joining
     //-----------------------------------------------------------------------
-
-    /**
-     * <p>Joins the elements of the provided array into a single String
-     * containing the provided list of elements.</p>
-     *
-     * <p>No separator is added to the joined String.
-     * Null objects or empty strings within the array are represented by
-     * empty strings.</p>
-     *
-     * <pre>
-     * StringUtils.join(null)            = null
-     * StringUtils.join([])              = ""
-     * StringUtils.join([null])          = ""
-     * StringUtils.join(["a", "b", "c"]) = "abc"
-     * StringUtils.join([null, "", "a"]) = "a"
-     * </pre>
-     *
-     * @param <T>      the specific type of values to join together
-     * @param elements the values to join together, may be null
-     * @return the joined String, {@code null} if null array input
-     * @since 3.0 Changed signature to use varargs
-     */
-    @SafeVarargs
-    public static <T> String join(final T... elements) {
-        return join(elements, null);
-    }
-
     /**
      * <p>Joins the elements of the provided array into a single String
      * containing the provided list of elements.</p>
@@ -2836,7 +2809,7 @@ public final class StringUtils extends Util {
      * Strip the filename extension from the given Java resource path,
      * e.g. "mypath/myfile.txt" -&gt; "mypath/myfile".
      *
-     * @param path the file path (may be {@code null})
+     * @param path the file path (maybe {@code null})
      * @return the path with stripped filename extension,
      * or {@code null} if none
      */
@@ -2957,7 +2930,7 @@ public final class StringUtils extends Util {
      * <p>This is the inverse operation of {@link Locale#toString Locale's toString}.
      *
      * @param localeString the locale {@code String}, following {@code Locale's}
-     *                     {@code toString()} format ("en", "en_UK", etc);
+     *                     {@code toString()} format ("en", "en_UK", etc.);
      *                     also accepts spaces as separators, as an alternative to underscores
      * @return a corresponding {@code Locale} instance
      * @throws IllegalArgumentException in case of an invalid locale specification
@@ -3156,30 +3129,6 @@ public final class StringUtils extends Util {
     }
 
     /**
-     * Merge the given {@code String} arrays into one, with overlapping
-     * array elements only included once.
-     * <p>The order of elements in the original arrays is preserved
-     * (with the exception of overlapping elements, which are only
-     * included on their first occurrence).
-     *
-     * @param array1 the first array (can be {@code null})
-     * @param array2 the second array (can be {@code null})
-     * @return the new array ({@code null} if both given arrays were {@code null})
-     */
-    public static String[] mergeStringArrays(String[] array1, String[] array2) {
-        if (ObjectUtils.isEmpty(array1)) {
-            return array2;
-        }
-        if (ObjectUtils.isEmpty(array2)) {
-            return array1;
-        }
-        Set<String> result = new HashSet<>();
-        result.addAll(Arrays.asList(array1));
-        result.addAll(Arrays.asList(array2));
-        return toStringArray(result);
-    }
-
-    /**
      * Turn given source {@code String} array into sorted array.
      *
      * @param array the source array
@@ -3363,11 +3312,11 @@ public final class StringUtils extends Util {
             if (charsToDelete != null) {
                 element = deleteAny(element, charsToDelete);
             }
-            String[] splittedElement = split(element, delimiter);
-            if (splittedElement == null) {
+            String[] splitElement = split(element, delimiter);
+            if (splitElement == null) {
                 continue;
             }
-            result.setProperty(splittedElement[0].trim(), splittedElement[1].trim());
+            result.setProperty(splitElement[0].trim(), splitElement[1].trim());
         }
         return result;
     }
@@ -3439,7 +3388,7 @@ public final class StringUtils extends Util {
      * {@code String} array.
      * <p>A single {@code delimiter} may consist of more than one character,
      * but it will still be considered as a single delimiter string, rather
-     * than as bunch of potential delimiter characters, in contrast to
+     * than as a bunch of potential delimiter characters, in contrast to
      * {@link #tokenizeToStringArray}.
      *
      * @param str       the input {@code String}
@@ -3942,7 +3891,7 @@ public final class StringUtils extends Util {
                      * If this character represents the start of a Unicode
                      * surrogate pair, then pass in two characters. It's not
                      * clear what should be done if a bytes reserved in the
-                     * surrogate pairs range occurs outside of a legal
+                     * surrogate pairs range occurs outside a legal
                      * surrogate pair. For now, just treat it as if it were
                      * any other character.
                      */

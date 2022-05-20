@@ -3,6 +3,8 @@ package org.spin.cloud.feign;
 import feign.Client;
 import feign.Feign;
 import feign.Target;
+import org.spin.core.util.BeanUtils;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.openfeign.FeignContext;
 import org.springframework.cloud.openfeign.Targeter;
 import org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient;
@@ -27,7 +29,9 @@ public class FeignClientFactoryBean extends org.springframework.cloud.openfeign.
      * information
      */
     <T> T getTarget() {
-        FeignContext context = getApplicationContext().getBean(FeignContext.class);
+        BeanFactory beanFactory = BeanUtils.getFieldValue(this, "beanFactory");
+        FeignContext context = beanFactory != null ? beanFactory.getBean(FeignContext.class)
+            : getApplicationContext().getBean(FeignContext.class);
         Feign.Builder builder = feign(context);
 
         if (!StringUtils.hasText(getUrl())) {

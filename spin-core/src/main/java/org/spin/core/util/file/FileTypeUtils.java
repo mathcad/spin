@@ -55,7 +55,7 @@ public final class FileTypeUtils extends Util {
      *
      * @param types 自定义类型
      */
-    public static void registType(Collection<FileType> types) {
+    public static void registerType(Collection<FileType> types) {
         for (FileType f : types) {
             traits.add(new Trait(f.getFirstExt(), f.getTrait(), f));
         }

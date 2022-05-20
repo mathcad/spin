@@ -39,6 +39,11 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
     private boolean hasDataPerm = false;
     private BaseMapper<T> mapper;
 
+    /**
+     * 查询字段
+     */
+    private StringBuilder sqlSelect = new StringBuilder();
+
     @Override
     public BaseMapper<T> repo() {
         return mapper;
@@ -52,12 +57,6 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
     public void setRepo(BaseMapper<T> mapper) {
         this.mapper = mapper;
     }
-
-
-    /**
-     * 查询字段
-     */
-    private SharedString sqlSelect = new SharedString();
 
     public LambdaQueryExecutor(Class<T> entityClass) {
         super.setEntityClass(entityClass);
@@ -75,10 +74,17 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
         this.paramNameSeq = paramNameSeq;
         this.paramNameValuePairs = paramNameValuePairs;
         this.expression = mergeSegments;
-        this.sqlSelect = sqlSelect;
+        this.sqlSelect = null == sqlSelect ? new StringBuilder() : new StringBuilder(org.spin.core.util.StringUtils.trimToEmpty(sqlSelect.getStringValue()));
         this.lastSql = lastSql;
         this.sqlComment = sqlComment;
         this.sqlFirst = sqlFirst;
+    }
+
+    public final LambdaQueryExecutor<T> select(boolean condition, SFunction<T, ?> column) {
+        if (condition) {
+            addSelect(columnsToString(false, column));
+        }
+        return typedThis;
     }
 
     /**
@@ -90,7 +96,15 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
     @Override
     public final LambdaQueryExecutor<T> select(SFunction<T, ?>... columns) {
         if (ArrayUtils.isNotEmpty(columns)) {
-            this.sqlSelect.setStringValue(columnsToString(false, columns));
+            this.sqlSelect.setLength(0);
+            this.sqlSelect.append(columnsToString(false, columns));
+        }
+        return typedThis;
+    }
+
+    public final LambdaQueryExecutor<T> select(boolean condition, String column) {
+        if (condition) {
+            addSelect(column);
         }
         return typedThis;
     }
@@ -103,7 +117,8 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
      */
     public final LambdaQueryExecutor<T> select(String... columns) {
         if (ArrayUtils.isNotEmpty(columns)) {
-            this.sqlSelect.setStringValue(org.spin.core.util.StringUtils.join(columns, ","));
+            this.sqlSelect.setLength(0);
+            this.sqlSelect.append(org.spin.core.util.StringUtils.join(columns, ","));
         }
         return typedThis;
     }
@@ -127,13 +142,14 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
             setEntityClass(entityClass);
         }
         Assert.notNull(entityClass, "entityClass can not be null");
-        this.sqlSelect.setStringValue(TableInfoHelper.getTableInfo(entityClass).chooseSelect(predicate));
+        this.sqlSelect.setLength(0);
+        this.sqlSelect.append(TableInfoHelper.getTableInfo(entityClass).chooseSelect(predicate));
         return typedThis;
     }
 
     @Override
     public String getSqlSelect() {
-        return sqlSelect.getStringValue();
+        return org.spin.core.util.StringUtils.trimToNull(sqlSelect.toString());
     }
 
     /**
@@ -182,7 +198,7 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
     @Override
     public void clear() {
         super.clear();
-        sqlSelect.toNull();
+        sqlSelect.setLength(0);
     }
 
     private LambdaQueryExecutor<T> cond(boolean condition, String column, SqlKeyword keyword, Object val) {
@@ -241,5 +257,13 @@ public class LambdaQueryExecutor<T> extends AbstractLambdaWrapper<T, LambdaQuery
             }
         }
         return sqlStr;
+    }
+
+    private void addSelect(String column) {
+        if (StringUtils.isEmpty(sqlSelect)) {
+            sqlSelect.append(column);
+        } else {
+            sqlSelect.append(",").append(column);
+        }
     }
 }

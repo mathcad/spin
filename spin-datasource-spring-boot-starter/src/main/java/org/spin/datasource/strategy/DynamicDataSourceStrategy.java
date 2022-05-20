@@ -1,6 +1,5 @@
 package org.spin.datasource.strategy;
 
-import javax.sql.DataSource;
 import java.util.List;
 
 /**
@@ -16,8 +15,8 @@ public interface DynamicDataSourceStrategy {
     /**
      * determine a database from the given dataSources
      *
-     * @param dataSources given dataSources
+     * @param dsNames given dataSources
      * @return final dataSource
      */
-    DataSource determineDataSource(List<DataSource> dataSources);
+    String determineDSKey(List<String> dsNames);
 }

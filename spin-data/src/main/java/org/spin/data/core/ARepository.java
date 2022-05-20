@@ -90,7 +90,7 @@ public class ARepository<T extends IEntity<PK, T>, PK extends Serializable> {
 
     public ARepository() {
         //noinspection unchecked
-        this.entityClazz = (Class<T>) ReflectionUtils.getSuperClassGenricType(this.getClass());
+        this.entityClazz = (Class<T>) ReflectionUtils.getSuperClassGenericType(this.getClass());
     }
 
     public ARepository(Class<T> entityClass) {

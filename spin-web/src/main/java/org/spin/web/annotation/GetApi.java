@@ -12,7 +12,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 定义resetful接口，组合了 {@link RequestMapping}({@link RequestMethod#GET})与{@link Auth}，拦截并验证身份
+ * 定义restful接口，组合了 {@link RequestMapping}({@link RequestMethod#GET})与{@link Auth}，拦截并验证身份
  * <p>Created by xuweinan on 2016/10/2.</p>
  *
  * @author xuweinan

@@ -2,6 +2,7 @@ package org.spin.data.gson.adapter;
 
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.HibernateProxyHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spin.core.gson.Gson;
@@ -41,7 +42,7 @@ public class HibernateProxyTypeAdapter extends MatchableTypeAdapter<HibernatePro
             out.nullValue();
             return;
         }
-        Class<?> baseType = javassist.util.proxy.ProxyFactory.isProxyClass(value.getClass()) ? value.getClass().getSuperclass() : value.getClass();
+        Class<?> baseType =HibernateProxyHelper.getClassWithoutInitializingProxy(value);
         TypeAdapter delegate = context.getAdapter(TypeToken.get(baseType));
 
         Object o = null;

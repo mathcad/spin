@@ -16,8 +16,11 @@
 
 package org.spin.cloud.config;
 
+import org.spin.cloud.idempotent.IdempotentAspect;
 import org.spin.cloud.vo.CurrentUser;
+import org.spin.core.concurrent.DistributedLock;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -80,5 +83,11 @@ public class SpinRedisAutoConfiguration {
             redisTemplate.setKeySerializer(redisSerializer);
             redisTemplate.setHashKeySerializer(redisSerializer);
         };
+    }
+
+    @Bean
+    public IdempotentAspect idempotentAspect(@Autowired(required = false) DistributedLock distributedLock,
+                                             @Autowired(required = false) RedisTemplate<Object, Object> redisTemplate) {
+        return new IdempotentAspect(distributedLock, redisTemplate);
     }
 }

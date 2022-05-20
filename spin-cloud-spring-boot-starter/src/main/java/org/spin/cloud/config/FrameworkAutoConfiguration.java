@@ -1,6 +1,8 @@
 package org.spin.cloud.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spin.cloud.vo.CurrentUser;
 import org.spin.core.session.SessionUser;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,9 +22,15 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration(proxyBeanMethods = false)
 public class FrameworkAutoConfiguration {
+    private static final Logger logger = LoggerFactory.getLogger(FrameworkAutoConfiguration.class);
 
-    static {
-        SessionUser.registerSupplier(CurrentUser::getCurrent);
+    public FrameworkAutoConfiguration() {
+        try {
+            Class.forName("org.springframework.data.redis.core.script.RedisScript");
+            SessionUser.registerSupplier(CurrentUser::getCurrent);
+        } catch (Exception ignore) {
+            logger.warn("CurrentUser init failed: Redis not enabled");
+        }
     }
 
     @Bean

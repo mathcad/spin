@@ -206,7 +206,7 @@ public class WxHelper {
         return DigestUtils.md5Hex(stringA + "key=" + WxConfigManager.getConfig(extractConfigName(configName)).getMchKey()).toUpperCase();
     }
 
-    private static String extractConfigName(String[] args) {
+    public static String extractConfigName(String[] args) {
         if (Objects.isNull(args) || args.length == 0) {
             return WxConfigManager.DEFAULT;
         } else if (args.length == 1) {

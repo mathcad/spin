@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.spin.cloud.util.LinkTrace;
 import org.spin.cloud.vo.LinkTraceInfo;
 import org.spin.core.util.StringUtils;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -40,9 +41,13 @@ public class LinkTraceInterceptor implements WebRequestInterceptor, ClientHttpRe
         String requestInfo;
         if (request instanceof ServletRequestAttributes) {
             HttpServletRequest nRequest = ((ServletRequestAttributes) request).getRequest();
+            String user = request.getHeader(HttpHeaders.FROM);
+            if (user == null) {
+                user = "unknown";
+            }
             requestInfo = "method=" + nRequest.getMethod() + ";uri=" +
                 nRequest.getRequestURI() + ";client=" + nRequest.getRemoteAddr() + ":" +
-                nRequest.getRemotePort();
+                nRequest.getRemotePort() + ";from=" + user;
         } else {
             requestInfo = request.getDescription(true);
         }

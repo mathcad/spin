@@ -27,15 +27,16 @@ import java.util.UUID;
  */
 public class RedisDelayQueue implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(RedisDelayQueue.class);
-    private static final String PUSH_MSG_SCRIPT = "redis.call(\"HSET\", KEYS[1] .. \"Data\", KEYS[2], ARGV[1])\n" +
-        "local now = redis.call(\"TIME\")\n" +
+
+    private static final String PUSH_MSG_SCRIPT = "redis.call('HSET', KEYS[1] .. 'Data', ARGV[1], ARGV[3])\n" +
+        "local now = redis.call('TIME')\n" +
         "local millis = now[1] * 1000 + math.ceil(now[2] / 1000)\n" +
-        "local cnt = redis.call(\"ZADD\", KEYS[1] .. \"PriorityQueue\", millis + ARGV[2], KEYS[2] .. KEYS[3])\n" +
-        "redis.call(\"PUBLISH\", KEYS[1] .. \"TransferNotifier\", \"WAKE UP\")\n" +
+        "local cnt = redis.call('ZADD', KEYS[1] .. 'PriorityQueue', millis + ARGV[4], ARGV[1] .. ARGV[2])\n" +
+        "redis.call('PUBLISH', KEYS[1] .. 'TransferNotifier', 'WAKE UP')\n" +
         "return cnt";
 
-    private static final String DELETE_MSG_SCRIPT = "local cnt = redis.call(\"ZREM\", KEYS[1] .. \"PriorityQueue\", KEYS[2] .. KEYS[3])\n" +
-        "redis.call(\"HDEL\", KEYS[1] .. \"Data\", KEYS[2])\n" +
+    private static final String DELETE_MSG_SCRIPT = "local cnt = redis.call('ZREM', KEYS[1] .. 'PriorityQueue', ARGV[1] .. ARGV[2])\n" +
+        "redis.call('HDEL', KEYS[1] .. 'Data', ARGV[1])\n" +
         "return cnt";
 
     private final TopicListener topicListener;
@@ -98,25 +99,26 @@ public class RedisDelayQueue implements AutoCloseable {
 
     public boolean cancelMessage(String topic, String messageId) {
         Long cnt = delayQueueContext.connection.syncEval(DELETE_MSG_SCRIPT, ScriptOutputType.INTEGER,
-            ArrayUtils.ofArray(delayQueueContext.delayQueueKeyPrefix, messageId, topic));
+            ArrayUtils.ofArray(delayQueueContext.delayQueueKeyPrefix), messageId, topic);
         return cnt != null && cnt == 1L;
     }
 
     private String publishInternal(String topic, String message, long delayTimeInMillis, GroupScheduledTask task) {
         long triggerTime = System.currentTimeMillis();
-        String msgId = UUID.randomUUID().toString();
+        String messageId = UUID.randomUUID().toString();
         if (delayTimeInMillis < 1000L) {
             throw new SimplifiedException("Message Delay Time must grate than 1s");
         }
 
-        DelayMessage delayMessage = new DelayMessage(msgId, topic, delayTimeInMillis, triggerTime, message);
+        DelayMessage delayMessage = new DelayMessage(messageId, topic, delayTimeInMillis, triggerTime, message);
         if (null != task) {
             String taskStr = Base64.encode(SerializeUtils.serialize(task));
             delayMessage.setHandler(taskStr);
         }
 
         Long cnt = delayQueueContext.connection.syncEval(PUSH_MSG_SCRIPT, ScriptOutputType.INTEGER,
-            ArrayUtils.ofArray(delayQueueContext.delayQueueKeyPrefix, msgId, topic),
+            ArrayUtils.ofArray(delayQueueContext.delayQueueKeyPrefix),
+            messageId, topic,
             delayMessage.toString(),
             StringUtils.toString(Math.max(delayTimeInMillis - System.currentTimeMillis() + triggerTime - topicListener.getOffset(), 0)));
 
@@ -124,7 +126,7 @@ public class RedisDelayQueue implements AutoCloseable {
             throw new SimplifiedException("Delay message delivery failed");
         }
 
-        return msgId;
+        return messageId;
     }
 
 }

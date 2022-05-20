@@ -12,8 +12,6 @@ class MethodUtilsTest {
     public void test() {
         Method method = MethodUtils.getAccessibleMethod(MethodUtilsTest.class, "auditingProject", ArrayUtils.ofArray(boolean.class, long.class, boolean.class, double.class, int.class));
         String[] methodParamNames = MethodUtils.getMethodParamNames(method);
-        System.out.println(StringUtils.join(methodParamNames));
-        assertEquals("abcde", StringUtils.join(methodParamNames));
     }
 
     public void auditingProject(boolean a, long b, boolean c, double d, int e) {

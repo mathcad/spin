@@ -41,30 +41,34 @@ public class UtilsClassInitApplicationRunner implements ApplicationRunner, Appli
         UtilClass annotation = clazz.getAnnotation(UtilClass.class);
         String initMethod = null == annotation ? "init" : annotation.initMethod();
         ReflectionUtils.doWithMethods(clazz, method -> {
-            Class<?>[] parameterTypes = method.getParameterTypes();
-            Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-            Object[] methodArgs = new Object[parameterTypes.length];
-            for (int i = 0; i < methodArgs.length; i++) {
-                if (BeanFactory.class.isAssignableFrom(parameterTypes[i])) {
-                    methodArgs[i] = applicationContext;
-                } else {
-                    try {
-                        methodArgs[i] = applicationContext.getBean(parameterTypes[i]);
-                    } catch (BeansException e) {
-                        if (ArrayUtils.detect(parameterAnnotations[i], it -> it instanceof Nullable).isPresent()) {
-                            methodArgs[i] = null;
-                        } else {
-                            logger.error("工具类" + clazz.getName() + "的初始化方法" + method.getName() + "注入[" + parameterTypes[i].getName() + "]参数错误", e);
-                            return;
+            try {
+                Class<?>[] parameterTypes = method.getParameterTypes();
+                Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+                Object[] methodArgs = new Object[parameterTypes.length];
+                for (int i = 0; i < methodArgs.length; i++) {
+                    if (BeanFactory.class.isAssignableFrom(parameterTypes[i])) {
+                        methodArgs[i] = applicationContext;
+                    } else {
+                        try {
+                            methodArgs[i] = applicationContext.getBean(parameterTypes[i]);
+                        } catch (BeansException e) {
+                            if (ArrayUtils.detect(parameterAnnotations[i], it -> it instanceof Nullable).isPresent()) {
+                                methodArgs[i] = null;
+                            } else {
+                                logger.error("工具类" + clazz.getName() + "的初始化方法" + method.getName() + "注入[" + parameterTypes[i].getName() + "]参数错误", e);
+                                return;
+                            }
                         }
                     }
                 }
-            }
-            ReflectionUtils.makeAccessible(method);
-            try {
-                method.invoke(null, methodArgs);
+                ReflectionUtils.makeAccessible(method);
+                try {
+                    method.invoke(null, methodArgs);
+                } catch (Exception e) {
+                    logger.error("工具类[{}]的初始化方法[{}]执行异常: {}", clazz, initMethod, e.getMessage());
+                }
             } catch (Exception e) {
-                logger.error("工具类[{}]的初始化方法[{}]执行异常: {}", clazz, initMethod, e.getMessage());
+                logger.error("工具类初始化异常: ", e);
             }
         }, method -> Modifier.isStatic(method.getModifiers()) && method.getName().equals(initMethod));
     }

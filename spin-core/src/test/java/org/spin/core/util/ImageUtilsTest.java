@@ -19,17 +19,17 @@ import java.io.InputStream;
  */
 public class ImageUtilsTest {
 
-//        @Test
+    @Test
     public void test() {
-        try (InputStream is = new FileInputStream(new File("D:\\cat.jpg"))) {
+        try (InputStream is = new FileInputStream(new File("D:\\cat.png"))) {
             BufferedImage bufferedImage = ImageIO.read(is);
-            BufferedImage radius = ImageUtils.radius(bufferedImage, 40, 5, Color.MAGENTA, 20);
+            BufferedImage radius = ImageUtils.radius(bufferedImage, 0, 4, new Color(255, 80, 0, 255), 20);
             ImageUtils.writeImage(radius, FileType.Image.PNG, new File("D:\\d.png"));
         } catch (Exception e) {
         }
     }
 
-//            @Test
+    //            @Test
     void testQr() throws IOException {
         String content = "aaaa";
         BufferedImage logo = QrCodeUtils.optimizeLogo(ImageIO.read(new File("D:\\cat.jpg")), 430, Color.WHITE);

@@ -52,9 +52,9 @@ import java.util.Objects;
 @UtilClass
 public final class RemoteClient extends Util {
     private static final Logger logger = LoggerFactory.getLogger(RemoteClient.class);
-    private static final String MSG_SERVICE = "BONADE-MESSAGE";
-    private static final String ADMIN_SERVICE = "BONADE-ADMIN";
-    private static final String UAAC_SERVICE = "BONADE-UAAC";
+    private static final String MSG_SERVICE = "bonade-message";
+    private static final String ADMIN_SERVICE = "bonade-admin";
+    private static final String UAAC_SERVICE = "bonade-uaac";
 
     private static final ParameterizedTypeReference<RestfulResponse<Void>> VOID_ENTITY = new ParameterizedTypeReference<RestfulResponse<Void>>() {
     };

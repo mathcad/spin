@@ -1,6 +1,5 @@
 package org.spin.datasource.strategy;
 
-import javax.sql.DataSource;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,7 +17,7 @@ public class LoadBalanceDynamicDataSourceStrategy implements DynamicDataSourceSt
     private final AtomicInteger index = new AtomicInteger(0);
 
     @Override
-    public DataSource determineDataSource(List<DataSource> dataSources) {
-        return dataSources.get(Math.abs(index.getAndAdd(1) % dataSources.size()));
+    public String determineDSKey(List<String> dsNames) {
+        return dsNames.get(Math.abs(index.getAndAdd(1) % dsNames.size()));
     }
 }

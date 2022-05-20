@@ -24,12 +24,7 @@ import org.springframework.util.Assert;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -46,26 +41,23 @@ public class SpinRetryableFeignBlockingLoadBalancerClient extends RetryableFeign
     private final Client delegate;
     private final LoadBalancerClient loadBalancerClient;
     private final LoadBalancedRetryFactory loadBalancedRetryFactory;
-    private final LoadBalancerProperties properties;
     private final LoadBalancerClientFactory loadBalancerClientFactory;
 
     public SpinRetryableFeignBlockingLoadBalancerClient(RetryableFeignBlockingLoadBalancerClient delegate) {
         this(delegate.getDelegate(), BeanUtils.getFieldValue(delegate, "loadBalancerClient"),
             BeanUtils.getFieldValue(delegate, "loadBalancedRetryFactory"),
-            BeanUtils.getFieldValue(delegate, "properties"),
             BeanUtils.getFieldValue(delegate, "loadBalancerClientFactory")
         );
     }
 
     public SpinRetryableFeignBlockingLoadBalancerClient(Client delegate, LoadBalancerClient loadBalancerClient,
-                                                        LoadBalancedRetryFactory loadBalancedRetryFactory, LoadBalancerProperties properties,
+                                                        LoadBalancedRetryFactory loadBalancedRetryFactory,
                                                         LoadBalancerClientFactory loadBalancerClientFactory) {
-        super(delegate, loadBalancerClient, loadBalancedRetryFactory, properties, loadBalancerClientFactory);
+        super(delegate, loadBalancerClient, loadBalancedRetryFactory, loadBalancerClientFactory);
 
         this.delegate = delegate;
         this.loadBalancerClient = loadBalancerClient;
         this.loadBalancedRetryFactory = loadBalancedRetryFactory;
-        this.properties = properties;
         this.loadBalancerClientFactory = loadBalancerClientFactory;
     }
 
@@ -200,6 +192,7 @@ public class SpinRetryableFeignBlockingLoadBalancerClient extends RetryableFeign
     }
 
     private String getHint(String serviceId) {
+        LoadBalancerProperties properties = loadBalancerClientFactory.getProperties(serviceId);
         String defaultHint = properties.getHint().getOrDefault("default", "default");
         String hintPropertyValue = properties.getHint().get(serviceId);
         return hintPropertyValue != null ? hintPropertyValue : defaultHint;

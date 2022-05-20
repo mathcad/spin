@@ -2,6 +2,7 @@ package org.spin.core.util.http;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 import org.spin.core.collection.Pair;
@@ -15,12 +16,7 @@ import org.spin.core.util.*;
 import org.spin.core.util.file.FileType;
 
 import javax.imageio.ImageIO;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.KeyStoreBuilderParameters;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509ExtendedKeyManager;
+import javax.net.ssl.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -32,15 +28,13 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.SecureRandom;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -141,14 +135,14 @@ class HttpUtilsTest {
             .executeAsyncAsString(System.out::println);
         long s = System.currentTimeMillis();
         Future<Map<String, Object>> future = Http.POST.withUrl("http://192.168.40.151/bonade-uaac/v1/auth").withJsonBody("{\n" +
-            "    \"loginType\": \"NORMAL\",\n" +
-            "    \"loginName\": \"aRC1jtdyPqj9CZNSdusyLB40OCinV9+//5ZIui+e1M7kKC4/wis2jvwT6Z2JhzM1oFFZ3woESpnQRmzuhwvxXTsCi/JrJd5wA2ZtATD++zqjfss19CtKTWcmiZNI4KmFmpdkESeBVONeNyY22dIDgNvOTHpm/YMX5lLk6X8gyGk=\",\n" +
-            "    \"secret\": \"TR9FSK4Ut5li5AmBbmxD69KaRFO3SXwho6E5NYKyV8F2w6zxE32wF3r2MLB6AB8pqY9r7SWsqTYOWlaCDrmnx6cde+60E44Foim+F942irgGzyV3FMIewm2rhbl8aqEtU5Q72eX6LAzGX/1zYuLqXllWe5VpeWOL2woP9x0amto=\",\n" +
-            "    \"rememberMe\": false,\n" +
-            "    \"clientType\": \"WEB\",\n" +
-            "    \"target\": \"MODULE:VISITOR-ENT-ADMIN\",\n" +
-            "    \"webSocketId\": \"0e2131ee-9aca-4206-8e49-e24621bfdb21\"\n" +
-            "}")
+                "    \"loginType\": \"NORMAL\",\n" +
+                "    \"loginName\": \"aRC1jtdyPqj9CZNSdusyLB40OCinV9+//5ZIui+e1M7kKC4/wis2jvwT6Z2JhzM1oFFZ3woESpnQRmzuhwvxXTsCi/JrJd5wA2ZtATD++zqjfss19CtKTWcmiZNI4KmFmpdkESeBVONeNyY22dIDgNvOTHpm/YMX5lLk6X8gyGk=\",\n" +
+                "    \"secret\": \"TR9FSK4Ut5li5AmBbmxD69KaRFO3SXwho6E5NYKyV8F2w6zxE32wF3r2MLB6AB8pqY9r7SWsqTYOWlaCDrmnx6cde+60E44Foim+F942irgGzyV3FMIewm2rhbl8aqEtU5Q72eX6LAzGX/1zYuLqXllWe5VpeWOL2woP9x0amto=\",\n" +
+                "    \"rememberMe\": false,\n" +
+                "    \"clientType\": \"WEB\",\n" +
+                "    \"target\": \"MODULE:VISITOR-ENT-ADMIN\",\n" +
+                "    \"webSocketId\": \"0e2131ee-9aca-4206-8e49-e24621bfdb21\"\n" +
+                "}")
             .executeAsync(JsonUtils.MAP_TYPE_TOKEN, e -> {
                 throw new SpinException(e);
             });
@@ -254,75 +248,75 @@ class HttpUtilsTest {
 
     }
 
-//    @Test
-//    void testNovel() {
-//        Map<String, String> chapters = chapters(novelId, titlePrefix);
-//
-//        chapters.forEach((k, v) -> {
-//            System.out.println(k);
-//            System.out.println("\n");
-//
-//            StringBuilder sb = new StringBuilder();
-//            int pageSize = parseContent(v, true, sb);
-//            for (int i = 2; i <= pageSize; ++i) {
-//                parseContent(v + "_" + i, false, sb);
-//            }
-//            System.out.println(sb.toString().replaceAll("\n+", "\n").replaceAll("\n[^ ]", ""));
-//        });
-//    }
-//
-//    private Map<String, String> chapters(String novelId, int titlePrefix) {
-//        Map<String, String> chapterList = new LinkedHashMap<>();
-//
-//        int pageSize = parseChapter(novelId, 1, titlePrefix, chapterList);
-//        for (int i = 2; i <= pageSize; i++) {
-//            parseChapter(novelId, i, titlePrefix, chapterList);
-//        }
-//        return chapterList;
-//    }
-//
-//    private int parseChapter(String novelId, int page, int titlePrefix, Map<String, String> chapterList) {
-//        String html = Http.GET.withUrl(url + "/" + novelId + "/all" + (page == 1 ? "" : ("_" + page)) + ".html").execute();
-//        Document document = Jsoup.parse(html);
-//        int pageSize = 1;
-//        if (1 == page) {
-//            String text = document.getElementsByClass("page").get(1).text();
-//            Matcher matcher = pattern.matcher(text);
-//            if (matcher.find()) {
-//                pageSize = Integer.parseInt(matcher.group(1));
-//            }
-//        }
-//        Elements chapters = document.getElementsByClass("chapter").get(0).children();
-//        chapters.stream().map(it -> it.child(0)).forEach(c -> chapterList.put(c.text().substring(titlePrefix), c.attr("href").replace(".html", "")));
-//
-//        return pageSize;
-//    }
-//
-//    private int parseContent(String no, boolean parsePageSize, StringBuilder content) {
-//        String html = Http.GET.withUrl(url + no + ".html").execute();
-//        Document document = Jsoup.parse(html);
-//
-//        int pageSize = 1;
-//        if (parsePageSize) {
-//            String title = document.getElementsByClass("nr_title").get(0).text();
-//            Matcher matcher = pattern.matcher(title);
-//            if (matcher.find()) {
-//                pageSize = Integer.parseInt(matcher.group(1));
-//            }
-//        }
-//
-//        Elements nr = document.getElementsByClass("nr_nr");
-//
-//        nr.forEach(e -> content.append(e.children().stream().map(Element::html)
-//            .map(it -> it.replaceAll("&nbsp;", " ")
-//                .replaceAll("<br>", "")
-//                .replaceAll("--&gt;.*）", "")
-//                .replaceAll("&amp;", "")
-//                .replaceAll("amp;", "")
-//            )
-//            .reduce("", (a, b) -> a + b)));
-//        return pageSize;
-//    }
+    @Test
+    void testNovel() {
+        Map<String, String> chapters = chapters(novelId, titlePrefix);
+
+        chapters.forEach((k, v) -> {
+            System.out.println(k);
+            System.out.println("\n");
+
+            StringBuilder sb = new StringBuilder();
+            int pageSize = parseContent(v, true, sb);
+            for (int i = 2; i <= pageSize; ++i) {
+                parseContent(v + "_" + i, false, sb);
+            }
+            System.out.println(sb.toString().replaceAll("\n+", "\n").replaceAll("\n[^ ]", ""));
+        });
+    }
+
+    private Map<String, String> chapters(String novelId, int titlePrefix) {
+        Map<String, String> chapterList = new LinkedHashMap<>();
+
+        int pageSize = parseChapter(novelId, 1, titlePrefix, chapterList);
+        for (int i = 2; i <= pageSize; i++) {
+            parseChapter(novelId, i, titlePrefix, chapterList);
+        }
+        return chapterList;
+    }
+
+    private int parseChapter(String novelId, int page, int titlePrefix, Map<String, String> chapterList) {
+        String html = Http.GET.withUrl(url + "/" + novelId + "/all" + (page == 1 ? "" : ("_" + page)) + ".html").execute();
+        Document document = Jsoup.parse(html);
+        int pageSize = 1;
+        if (1 == page) {
+            String text = document.getElementsByClass("page").get(1).text();
+            Matcher matcher = pattern.matcher(text);
+            if (matcher.find()) {
+                pageSize = Integer.parseInt(matcher.group(1));
+            }
+        }
+        Elements chapters = document.getElementsByClass("chapter").get(0).children();
+        chapters.stream().map(it -> it.child(0)).forEach(c -> chapterList.put(c.text().substring(titlePrefix), c.attr("href").replace(".html", "")));
+
+        return pageSize;
+    }
+
+    private int parseContent(String no, boolean parsePageSize, StringBuilder content) {
+        String html = Http.GET.withUrl(url + no + ".html").execute();
+        Document document = Jsoup.parse(html);
+
+        int pageSize = 1;
+        if (parsePageSize) {
+            String title = document.getElementsByClass("nr_title").get(0).text();
+            Matcher matcher = pattern.matcher(title);
+            if (matcher.find()) {
+                pageSize = Integer.parseInt(matcher.group(1));
+            }
+        }
+
+        Elements nr = document.getElementsByClass("nr_nr");
+
+        nr.forEach(e -> content.append(e.children().stream().map(Element::html)
+            .map(it -> it.replaceAll("&nbsp;", " ")
+                .replaceAll("<br>", "")
+                .replaceAll("--&gt;.*）", "")
+                .replaceAll("&amp;", "")
+                .replaceAll("amp;", "")
+            )
+            .reduce("", (a, b) -> a + b)));
+        return pageSize;
+    }
 
     public static class KeyStoreBuilder extends KeyStore.Builder {
         private final Supplier<KeyStore> keyStoreSupplier;

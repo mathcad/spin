@@ -21,9 +21,6 @@ public class GroupDataSource {
 
     private Map<String, DataSource> dataSourceMap = new ConcurrentHashMap<>();
 
-    public GroupDataSource() {
-    }
-
     public GroupDataSource(String groupName, DynamicDataSourceStrategy dynamicDataSourceStrategy) {
         this.groupName = groupName;
         this.dynamicDataSourceStrategy = dynamicDataSourceStrategy;
@@ -48,8 +45,12 @@ public class GroupDataSource {
         return dataSourceMap.remove(ds);
     }
 
+    public String determineDsKey() {
+        return dynamicDataSourceStrategy.determineDSKey(new ArrayList<>(dataSourceMap.keySet()));
+    }
+
     public DataSource determineDataSource() {
-        return dynamicDataSourceStrategy.determineDataSource(new ArrayList<>(dataSourceMap.values()));
+        return dataSourceMap.get(determineDsKey());
     }
 
     public int size() {

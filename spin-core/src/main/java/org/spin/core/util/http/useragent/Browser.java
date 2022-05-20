@@ -24,7 +24,7 @@ public class Browser extends UserAgentInfo {
     /**
      * 支持的浏览器类型
      */
-    public static final List<Browser> browers = CollectionUtils.ofArrayList(//
+    public static final List<Browser> browsers = CollectionUtils.ofArrayList(//
         new Browser("MSEdge", "Edge", "edge\\/([\\d\\w\\.\\-]+)"), //
         new Browser("Chrome", "chrome", "chrome\\/([\\d\\w\\.\\-]+)"), //
         new Browser("Firefox", "firefox", Other_Version), //

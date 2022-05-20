@@ -5,11 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.regex.Pattern;
@@ -90,6 +86,21 @@ public class DateUtilsTest {
     public void testSame() {
         System.out.println(DateUtils.formatDateForSecond(new Date(System.currentTimeMillis() / 86400_000L * 86400_00L)));
         System.out.println(DateUtils.isSameDay(LocalDate.now(), DateUtils.toLocalDateTime("2019-02-25 00:12:47")));
+    }
+
+    @Test
+    void testDate() throws ParseException {
+        System.out.println(DateUtils.toLocalDateTime("2021-11-10 17:02:05"));
+        System.out.println(DateUtils.toLocalDateTime("2021-11-10 17:02"));
+        System.out.println(DateUtils.toLocalDateTime("2021-11-10"));
+
+        Date startTime = DateUtils.toDate("2021-11-10 17:02");
+        Date endTime = DateUtils.toDate("2021-11-10 00:00:00");
+        System.out.println(DateUtils.isSameDay(startTime, endTime));
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date parse = sdf.parse("2021-11-10 17:02");
+        System.out.println(parse);
     }
 
     public static class A {

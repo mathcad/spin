@@ -27,11 +27,12 @@ public class FeignHttpException extends SimplifiedException {
         this.message = message;
     }
 
-    public RestfulResponse<Void> toResponse() {
-        RestfulResponse<Void> response = RestfulResponse.error(ErrorCode.INTERNAL_ERROR, "远程服务调用失败-[" + message + "]");
+    public RestfulResponse<Object> toResponse() {
+        RestfulResponse<Object> response = RestfulResponse.error(ErrorCode.INTERNAL_ERROR, "远程服务调用失败-[" + message + "]");
         response.setStatus(status);
         response.setPath(path);
         response.setError(error);
+        response.setData(getPayload());
         return response;
     }
 

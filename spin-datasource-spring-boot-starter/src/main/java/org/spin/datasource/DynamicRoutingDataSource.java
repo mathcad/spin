@@ -8,6 +8,7 @@ import org.spin.core.util.StringUtils;
 import org.spin.datasource.ds.AbstractRoutingDataSource;
 import org.spin.datasource.ds.GroupDataSource;
 import org.spin.datasource.ds.ItemDataSource;
+import org.spin.datasource.exception.CannotFindDataSourceException;
 import org.spin.datasource.provider.DynamicDataSourceProvider;
 import org.spin.datasource.strategy.DynamicDataSourceStrategy;
 import org.spin.datasource.strategy.LoadBalanceDynamicDataSourceStrategy;
@@ -18,6 +19,8 @@ import org.springframework.beans.factory.InitializingBean;
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,24 +31,27 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 1.0.0
  */
 public class DynamicRoutingDataSource extends AbstractRoutingDataSource implements InitializingBean, DisposableBean {
-
     private static final Logger logger = LoggerFactory.getLogger(DynamicRoutingDataSource.class);
 
     private static final String UNDERLINE = "_";
     /**
-     * 所有数据库
+     * 所有数据库¬
      */
     private final Map<String, DataSource> dataSourceMap = new ConcurrentHashMap<>();
     /**
      * 分组数据库
      */
     private final Map<String, GroupDataSource> groupDataSources = new ConcurrentHashMap<>();
-    private DynamicDataSourceProvider provider;
+    private final List<DynamicDataSourceProvider> providers;
     private Class<? extends DynamicDataSourceStrategy> strategy = LoadBalanceDynamicDataSourceStrategy.class;
     private String primary = "primary";
     private Boolean strict = false;
     private Boolean p6spy = false;
     private Boolean seata = false;
+
+    public DynamicRoutingDataSource(List<DynamicDataSourceProvider> providers) {
+        this.providers = providers;
+    }
 
     @Override
     public DataSource determineDataSource() {
@@ -55,24 +61,54 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource implemen
 
     private DataSource determinePrimaryDataSource() {
         logger.debug("dynamic-datasource switch to the primary datasource");
-        return groupDataSources.containsKey(primary) ? groupDataSources.get(primary).determineDataSource() : dataSourceMap.get(primary);
+        DataSource dataSource = dataSourceMap.get(primary);
+        if (dataSource != null) {
+            return dataSource;
+        }
+        GroupDataSource groupDataSource = groupDataSources.get(primary);
+        if (groupDataSource != null) {
+            return groupDataSource.determineDataSource();
+        }
+        throw new CannotFindDataSourceException("dynamic-datasource can not find primary datasource");
     }
 
     /**
      * 获取当前所有的数据源
+     * please use getDataSources()
      *
      * @return 当前所有数据源
      */
+    @Deprecated
     public Map<String, DataSource> getCurrentDataSources() {
         return dataSourceMap;
     }
 
     /**
+     * 获取所有的数据源
+     *
+     * @return 当前所有数据源
+     */
+    public Map<String, DataSource> getDataSources() {
+        return dataSourceMap;
+    }
+
+    /**
      * 获取的当前所有的分组数据源
+     * please use getGroupDataSources()
      *
      * @return 当前所有的分组数据源
      */
+    @Deprecated
     public Map<String, GroupDataSource> getCurrentGroupDataSources() {
+        return groupDataSources;
+    }
+
+    /**
+     * 获取的所有的分组数据源
+     *
+     * @return 当前所有的分组数据源
+     */
+    public Map<String, GroupDataSource> getGroupDataSources() {
         return groupDataSources;
     }
 
@@ -93,7 +129,7 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource implemen
             return dataSourceMap.get(ds);
         }
         if (strict) {
-            throw new RuntimeException("dynamic-datasource could not find a datasource named" + ds);
+            throw new CannotFindDataSourceException("dynamic-datasource could not find a datasource named" + ds);
         }
         return determinePrimaryDataSource();
     }
@@ -110,14 +146,9 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource implemen
         this.addGroupDataSource(ds, dataSource);
         // 关闭老的数据源
         if (oldDataSource != null) {
-            try {
-                closeDataSource(oldDataSource);
-            } catch (Exception e) {
-                logger.error("dynamic-datasource - remove the database named [{}]  failed", ds, e);
-            }
+            closeDataSource(ds, oldDataSource);
         }
-
-        logger.info("dynamic-datasource - load a datasource named [{}] success", ds);
+        logger.info("dynamic-datasource - add a datasource named [{}] success", ds);
     }
 
     /**
@@ -156,20 +187,13 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource implemen
         }
         if (dataSourceMap.containsKey(ds)) {
             DataSource dataSource = dataSourceMap.remove(ds);
-            try {
-                closeDataSource(dataSource);
-            } catch (Exception e) {
-                logger.error("dynamic-datasource - remove the database named [{}]  failed", ds, e);
-            }
-
+            closeDataSource(ds, dataSource);
             if (ds.contains(UNDERLINE)) {
                 String group = ds.split(UNDERLINE)[0];
                 if (groupDataSources.containsKey(group)) {
                     DataSource oldDataSource = groupDataSources.get(group).removeDatasource(ds);
                     if (oldDataSource == null) {
-                        if (logger.isWarnEnabled()) {
-                            logger.warn("fail for remove datasource from group. dataSource: {} ,group: {}", ds, group);
-                        }
+                        logger.warn("fail for remove datasource from group. dataSource: {} ,group: {}", ds, group);
                     }
                 }
             }
@@ -179,38 +203,11 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource implemen
         }
     }
 
-    /**
-     * 关闭数据源。
-     * <pre>
-     *    从3.2.0开启，如果是原生或使用 DataSourceCreator 创建的数据源会包装成ItemDataSource。
-     *    ItemDataSource保留了最原始的数据源，其可直接关闭。
-     *    如果不是DataSourceCreator创建的数据源则只有尝试解包装再关闭。
-     * </pre>
-     */
-    private void closeDataSource(DataSource dataSource) throws Exception {
-        if (dataSource instanceof ItemDataSource) {
-            ((ItemDataSource) dataSource).close();
-        } else {
-            if (seata && dataSource instanceof DataSourceProxy) {
-                DataSourceProxy dataSourceProxy = (DataSourceProxy) dataSource;
-                dataSource = dataSourceProxy.getTargetDataSource();
-            }
-            if (p6spy && dataSource instanceof P6DataSource) {
-                Field realDataSourceField = P6DataSource.class.getDeclaredField("realDataSource");
-                realDataSourceField.setAccessible(true);
-                dataSource = (DataSource) realDataSourceField.get(dataSource);
-            }
-            Class<? extends DataSource> clazz = dataSource.getClass();
-            Method closeMethod = clazz.getDeclaredMethod("close");
-            closeMethod.invoke(dataSource);
-        }
-    }
-
     @Override
     public void destroy() throws Exception {
         logger.info("dynamic-datasource start closing ....");
         for (Map.Entry<String, DataSource> item : dataSourceMap.entrySet()) {
-            closeDataSource(item.getValue());
+            closeDataSource(item.getKey(), item.getValue());
         }
         logger.info("dynamic-datasource all closed success,bye");
     }
@@ -220,7 +217,10 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource implemen
         // 检查开启了配置但没有相关依赖
         checkEnv();
         // 添加并分组数据源
-        Map<String, DataSource> dataSources = provider.loadDataSources();
+        Map<String, DataSource> dataSources = new HashMap<>();
+        for (DynamicDataSourceProvider provider : providers) {
+            dataSources.putAll(provider.loadDataSources());
+        }
         for (Map.Entry<String, DataSource> dsItem : dataSources.entrySet()) {
             addDataSource(dsItem.getKey(), dsItem.getValue());
         }
@@ -230,12 +230,60 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource implemen
         } else if (dataSourceMap.containsKey(primary)) {
             logger.info("dynamic-datasource initial loaded [{}] datasource,primary datasource named [{}]", dataSources.size(), primary);
         } else {
-            throw new RuntimeException("dynamic-datasource Please check the setting of primary");
+            logger.warn("dynamic-datasource initial loaded [{}] datasource,Please add your primary datasource or check your configuration", dataSources.size());
         }
     }
 
-    public void setProvider(DynamicDataSourceProvider provider) {
-        this.provider = provider;
+    private void checkEnv() {
+        if (p6spy) {
+            try {
+                Class.forName("com.p6spy.engine.spy.P6DataSource");
+                logger.info("dynamic-datasource detect P6SPY plugin and enabled it");
+            } catch (Exception e) {
+                throw new RuntimeException("dynamic-datasource enabled P6SPY ,however without p6spy dependency", e);
+            }
+        }
+        if (seata) {
+            try {
+                Class.forName("io.seata.rm.datasource.DataSourceProxy");
+                logger.info("dynamic-datasource detect ALIBABA SEATA and enabled it");
+            } catch (Exception e) {
+                throw new RuntimeException("dynamic-datasource enabled ALIBABA SEATA,however without seata dependency", e);
+            }
+        }
+    }
+
+    /**
+     * close db
+     *
+     * @param ds         dsName
+     * @param dataSource db
+     */
+    private void closeDataSource(String ds, DataSource dataSource) {
+        try {
+            if (dataSource instanceof ItemDataSource) {
+                ((ItemDataSource) dataSource).close();
+            } else {
+                if (seata) {
+                    if (dataSource instanceof DataSourceProxy) {
+                        DataSourceProxy dataSourceProxy = (DataSourceProxy) dataSource;
+                        dataSource = dataSourceProxy.getTargetDataSource();
+                    }
+                }
+                if (p6spy) {
+                    if (dataSource instanceof P6DataSource) {
+                        Field realDataSourceField = P6DataSource.class.getDeclaredField("realDataSource");
+                        realDataSourceField.setAccessible(true);
+                        dataSource = (DataSource) realDataSourceField.get(dataSource);
+                    }
+                }
+                Class<? extends DataSource> clazz = dataSource.getClass();
+                Method closeMethod = clazz.getDeclaredMethod("close");
+                closeMethod.invoke(dataSource);
+            }
+        } catch (Exception e) {
+            logger.warn("dynamic-datasource closed datasource named [{}] failed", ds, e);
+        }
     }
 
     public void setStrategy(Class<? extends DynamicDataSourceStrategy> strategy) {
@@ -256,24 +304,5 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource implemen
 
     public void setSeata(Boolean seata) {
         this.seata = seata;
-    }
-
-    private void checkEnv() {
-        if (p6spy) {
-            try {
-                Class.forName("com.p6spy.engine.spy.P6DataSource");
-                logger.info("dynamic-datasource detect P6SPY plugin and enabled it");
-            } catch (Exception e) {
-                throw new RuntimeException("dynamic-datasource enabled P6SPY ,however without p6spy dependency", e);
-            }
-        }
-        if (seata) {
-            try {
-                Class.forName("io.seata.rm.datasource.DataSourceProxy");
-                logger.info("dynamic-datasource detect ALIBABA SEATA and enabled it");
-            } catch (Exception e) {
-                throw new RuntimeException("dynamic-datasource enabled ALIBABA SEATA,however without seata dependency", e);
-            }
-        }
     }
 }

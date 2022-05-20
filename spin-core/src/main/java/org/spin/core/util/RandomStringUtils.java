@@ -1,22 +1,14 @@
 package org.spin.core.util;
 
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * <p>Operations for random {@code String}s.</p>
- * <p>Currently <em>private high surrogate</em> characters are ignored.
- * These are Unicode characters that fall between the values 56192 (db80)
- * and 56319 (dbff) as we don't know how to handle them.
- * High and low surrogates are correctly dealt with - that is if a
- * high surrogate is randomly chosen, 55296 (d800) to 56191 (db7f)
- * then it is followed by a low surrogate. If a low surrogate is chosen,
- * 56320 (dc00) to 57343 (dfff) then it is placed after a randomly
- * chosen high surrogate. </p>
+ * <p>随机字符串工具类</p>
  *
- * <p>#ThreadSafe#</p>
+ * <p><em>线程安全</em></p>
  *
- * @version $DistributedId: RandomStringUtils.java 1532684 2013-10-16 08:28:42Z bayard $
  * @since 1.0
  */
 public final class RandomStringUtils extends Util {
@@ -28,49 +20,60 @@ public final class RandomStringUtils extends Util {
     //-----------------------------------------------------------------------
 
     /**
-     * <p>Creates a random string whose length is the number of characters
-     * specified.</p>
+     * <p>创建指定长度的随机字符串</p>
      *
-     * <p>Characters will be chosen from the set of all characters.</p>
+     * <p>将会从所有字符中选取随机字符</p>
      *
-     * @param count the length of random string to create
-     * @return the random string
+     * @param count 需要生成的随机字符个数
+     * @return 随机字符串
      */
     public static String random(final int count) {
         return random(count, false, false);
     }
 
     /**
-     * <p>Creates a random string whose length is the number of characters
-     * specified.</p>
+     * <p>创建指定长度的随机字符串</p>
      *
-     * <p>Characters will be chosen from the set of characters whose
-     * ASCII value is between {@code 32} and {@code 126} (inclusive).</p>
+     * <p>将会从ASCII码{@code 32} 到 {@code 126} 之间随机选取字符</p>
      *
-     * @param count the length of random string to create
-     * @return the random string
+     * @param count 需要生成的随机字符个数
+     * @return 随机字符串
      */
     public static String randomAscii(final int count) {
         return random(count, 32, 127, false, false);
     }
 
+    /**
+     * <p>创建指定长度的随机字符串</p>
+     *
+     * <p>将会从小写英文字母中随机选取字符</p>
+     *
+     * @param count 需要生成的随机字符个数
+     * @return 随机字符串
+     */
     public static String randomAlphabeticL(final int count) {
         return random(count, 97, 123, false, false);
     }
 
+    /**
+     * <p>创建指定长度的随机字符串</p>
+     *
+     * <p>将会从大写英文字母中随机选取字符</p>
+     *
+     * @param count 需要生成的随机字符个数
+     * @return 随机字符串
+     */
     public static String randomAlphabeticU(final int count) {
         return random(count, 65, 91, false, false);
     }
 
     /**
-     * <p>Creates a random string whose length is the number of characters
-     * specified.</p>
+     * <p>创建指定长度的随机字符串</p>
      *
-     * <p>Characters will be chosen from the set of alphabetic
-     * characters.</p>
+     * <p>将会从所有大、小写英文字母中随机选取字符</p>
      *
-     * @param count the length of random string to create
-     * @return the random string
+     * @param count 需要生成的随机字符个数
+     * @return 随机字符串
      */
     public static String randomAlphabetic(final int count) {
         return random(count, true, false);
@@ -311,4 +314,37 @@ public final class RandomStringUtils extends Util {
         return random(count, 0, chars.length, false, false, chars, ThreadLocalRandom.current());
     }
 
+    /**
+     * 生成不带分隔符的UUID
+     *
+     * @return UUID
+     */
+    public static String randomShortUUID() {
+        UUID uuid = UUID.randomUUID();
+        byte[] buf = new byte[32];
+        formatUnsignedLong0(uuid.getLeastSignificantBits(), buf, 20, 12);
+        formatUnsignedLong0(uuid.getLeastSignificantBits() >>> 48, buf, 16, 4);
+        formatUnsignedLong0(uuid.getMostSignificantBits(), buf, 12, 4);
+        formatUnsignedLong0(uuid.getMostSignificantBits() >>> 16, buf, 8, 4);
+        formatUnsignedLong0(uuid.getMostSignificantBits() >>> 32, buf, 0, 8);
+        return new String(buf);
+    }
+
+    private static void formatUnsignedLong0(long val, byte[] buf, int offset, int len) {
+        int charPos = offset + len;
+        int mask = 15;
+        do {
+            buf[--charPos] = (byte) digits[((int) val) & mask];
+            val >>>= 4;
+        } while (charPos > offset);
+    }
+
+    private static final char[] digits = {
+        '0', '1', '2', '3', '4', '5',
+        '6', '7', '8', '9', 'a', 'b',
+        'c', 'd', 'e', 'f', 'g', 'h',
+        'i', 'j', 'k', 'l', 'm', 'n',
+        'o', 'p', 'q', 'r', 's', 't',
+        'u', 'v', 'w', 'x', 'y', 'z'
+    };
 }

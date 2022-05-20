@@ -125,11 +125,11 @@ public interface Linq<R, Q extends Linq<R, Q>> extends Lin<Linq<R, Q>, CriteriaQ
     Long count();
 
     /**
-     * 查询并返回一条记录（必须有一条记录）
+     * 查询并返回一条记录
      *
      * @return 实体对象
      */
-    Optional<R> findOne();
+    Optional<R> findUnique();
 
     Optional<R> findFirst();
 

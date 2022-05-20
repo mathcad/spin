@@ -2,15 +2,12 @@ package org.spin.datasource.tx;
 
 import org.spin.core.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * @author funkye
  */
 public class TransactionContext {
 
-    private static final ThreadLocal<Map<String, String>> CONTEXT_HOLDER = ThreadLocal.withInitial(HashMap::new);
+    private static final ThreadLocal<String> CONTEXT_HOLDER = new ThreadLocal<>();
 
     private static final String XID = "LOCAL_XID";
 
@@ -20,8 +17,8 @@ public class TransactionContext {
      * @return the xid
      */
     public static String getXID() {
-        String xid = CONTEXT_HOLDER.get().get(XID);
-        if (StringUtils.isNotEmpty(xid)) {
+        String xid = CONTEXT_HOLDER.get();
+        if (!StringUtils.isEmpty(xid)) {
             return xid;
         }
         return null;
@@ -34,7 +31,7 @@ public class TransactionContext {
      * @return the string
      */
     public static String unbind(String xid) {
-        CONTEXT_HOLDER.get().remove(xid);
+        CONTEXT_HOLDER.remove();
         return xid;
     }
 
@@ -45,7 +42,7 @@ public class TransactionContext {
      * @return the string
      */
     public static String bind(String xid) {
-        CONTEXT_HOLDER.get().put(XID, xid);
+        CONTEXT_HOLDER.set(xid);
         return xid;
     }
 

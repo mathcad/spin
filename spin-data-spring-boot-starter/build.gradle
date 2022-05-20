@@ -3,7 +3,7 @@ plugins {
 }
 
 description 'spin-data的starter'
-version '2.4.2-SNAPSHOT'
+version '2.4.3-SNAPSHOT'
 
 test {
     useJUnitPlatform()
@@ -46,10 +46,10 @@ dependencies {
     api group: 'jakarta.annotation', name: 'jakarta.annotation-api', version: annotationVersion
 
     api group: 'org.mathcat', name: 'spin-data', version: "$project.version"
-    compileOnly group: 'org.mathcat', name: 'spin-web', version: "2.4.2-SNAPSHOT"
+    compileOnly group: 'org.mathcat', name: 'spin-web', version: "2.4.3-SNAPSHOT"
     compileOnly group: 'org.springframework', name: 'spring-webmvc', version: springVersion
     compileOnly group: 'com.atomikos', name: 'transactions-jdbc', version: atomikosVersion
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: servletVersion
-    compileOnly group: 'com.alibaba', name: 'druid', version: '1.2.5'
+    compileOnly group: 'com.alibaba', name: 'druid', version: '1.2.8'
     compileOnly group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
 }

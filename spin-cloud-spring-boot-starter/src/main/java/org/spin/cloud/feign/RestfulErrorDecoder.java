@@ -51,7 +51,8 @@ public class RestfulErrorDecoder implements ErrorDecoder {
                 restfulEnt.getPath(),
                 restfulEnt.getError(),
                 restfulEnt.getMessage());
-            return new FeignHttpException(restfulEnt.getStatus(), restfulEnt.getPath(), restfulEnt.getError(), restfulEnt.getMessage(), exception);
+            return new FeignHttpException(restfulEnt.getStatus(), restfulEnt.getPath(), restfulEnt.getError(), restfulEnt.getMessage(), exception)
+                .withPayload(restfulEnt.getData());
         }
         Date retryAfter = retryAfterDecoder.apply(firstOrNull(response.headers(), RETRY_AFTER));
         if (retryAfter != null) {

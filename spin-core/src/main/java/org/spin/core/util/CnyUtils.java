@@ -12,7 +12,7 @@ public final class CnyUtils extends Util {
     /**
      * 汉语中货币单位大写，这样的设计类似于占位符
      */
-    private static final String[] CN_UPPER_MONETRAY_UNIT = {"分", "角", "元", "拾", "佰", "仟", "万", "拾", "佰", "仟", "亿", "拾", "佰", "仟", "兆", "拾", "佰", "仟"};
+    private static final String[] CN_UPPER_MONETARY_UNIT = {"分", "角", "元", "拾", "佰", "仟", "万", "拾", "佰", "仟", "亿", "拾", "佰", "仟", "兆", "拾", "佰", "仟"};
     /**
      * 特殊字符：整
      */
@@ -28,7 +28,7 @@ public final class CnyUtils extends Util {
     /**
      * 特殊字符：零元整
      */
-    private static final String CN_ZEOR_FULL = "零元" + CN_FULL;
+    private static final String CN_ZERO_FULL = "零元" + CN_FULL;
 
     private CnyUtils() {
     }
@@ -57,7 +57,7 @@ public final class CnyUtils extends Util {
         int signum = money.signum();
         // 零元整的情况
         if (signum == 0) {
-            return CN_ZEOR_FULL;
+            return CN_ZERO_FULL;
         }
         // 这里会进行金额的四舍五入
         long number = money.movePointRight(MONEY_PRECISION).setScale(0, RoundingMode.HALF_UP).abs().longValue();
@@ -87,17 +87,17 @@ public final class CnyUtils extends Util {
                     sb.append(CN_UPPER_NUMBER[numUnit]);
                 }
                 if (numIndex == 2 || ((numIndex - 2) % 4 == 0) && (number % 1000 > 0)) {
-                    sb.append(CN_UPPER_MONETRAY_UNIT[numIndex]);
+                    sb.append(CN_UPPER_MONETARY_UNIT[numIndex]);
                 }
                 getZero = true;
             } else {
                 if ((numIndex == 9) && (zeroSize >= 3)) {
-                    sb.append(CN_UPPER_MONETRAY_UNIT[6]);
+                    sb.append(CN_UPPER_MONETARY_UNIT[6]);
                 }
                 if ((numIndex == 13) && (zeroSize >= 3)) {
-                    sb.append(CN_UPPER_MONETRAY_UNIT[10]);
+                    sb.append(CN_UPPER_MONETARY_UNIT[10]);
                 }
-                sb.append(CN_UPPER_MONETRAY_UNIT[numIndex]);
+                sb.append(CN_UPPER_MONETARY_UNIT[numIndex]);
                 sb.append(CN_UPPER_NUMBER[numUnit]);
                 getZero = false;
                 zeroSize = 0;
@@ -130,7 +130,7 @@ public final class CnyUtils extends Util {
             return null;
         }
 
-        if (CN_ZEOR_FULL.equals(money)) {
+        if (CN_ZERO_FULL.equals(money)) {
             return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         }
 
@@ -140,10 +140,10 @@ public final class CnyUtils extends Util {
             integer = money.substring(0, money.length() - 1);
             decimal = "";
         } else {
-            int spliterIdx = money.indexOf('元');
-            if (spliterIdx > 0) {
-                integer = money.substring(0, spliterIdx);
-                decimal = money.substring(spliterIdx + 1);
+            int splitterIdx = money.indexOf('元');
+            if (splitterIdx > 0) {
+                integer = money.substring(0, splitterIdx);
+                decimal = money.substring(splitterIdx + 1);
             } else {
                 if (money.startsWith(CN_NEGATIVE)) {
                     integer = CN_NEGATIVE;

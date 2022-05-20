@@ -95,5 +95,5 @@ public @interface EnableSpinFeignClients {
      *
      * @return default is true
      */
-    boolean handleDefaultFallack() default true;
+    boolean handleDefaultFallback() default true;
 }

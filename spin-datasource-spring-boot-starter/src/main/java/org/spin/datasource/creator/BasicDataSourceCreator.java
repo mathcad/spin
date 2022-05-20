@@ -2,9 +2,9 @@ package org.spin.datasource.creator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spin.core.util.StringUtils;
 import org.spin.datasource.exception.ErrorCreateDataSourceException;
 import org.spin.datasource.spring.boot.autoconfigure.DataSourceProperty;
+import org.spin.datasource.spring.boot.autoconfigure.DynamicDataSourceProperties;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Method;
@@ -15,7 +15,7 @@ import java.lang.reflect.Method;
  * @author TaoYu
  * @since 2020/1/21
  */
-public class BasicDataSourceCreator extends AbstractDataSourceCreator {
+public class BasicDataSourceCreator extends AbstractDataSourceCreator implements DataSourceCreator {
     private static final Logger logger = LoggerFactory.getLogger(BasicDataSourceCreator.class);
 
     private static Method createMethod;
@@ -55,18 +55,18 @@ public class BasicDataSourceCreator extends AbstractDataSourceCreator {
         }
     }
 
+    public BasicDataSourceCreator(DynamicDataSourceProperties dynamicDataSourceProperties) {
+        super(dynamicDataSourceProperties);
+    }
+
     /**
      * 创建基础数据源
      *
      * @param dataSourceProperty 数据源参数
-     * @param publicKey          解密公钥
      * @return 数据源
      */
     @Override
-    public DataSource createDataSource(DataSourceProperty dataSourceProperty, String publicKey) {
-        if (StringUtils.isEmpty(dataSourceProperty.getPublicKey())) {
-            dataSourceProperty.setPublicKey(publicKey);
-        }
+    public DataSource doCreateDataSource(DataSourceProperty dataSourceProperty) {
         try {
             Object o1 = createMethod.invoke(null);
             Object o2 = typeMethod.invoke(o1, dataSourceProperty.getType());

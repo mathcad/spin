@@ -1,12 +1,12 @@
 package org.spin.mybatis.vo;
 
 import org.spin.core.util.BeanUtils;
-import org.spin.mybatis.entity.BasicEntity;
+import org.spin.data.core.IEntity;
 
 import java.io.Serializable;
 import java.util.function.Supplier;
 
-public interface VoEntityMapper<V, T extends BasicEntity<T>> extends Serializable {
+public interface VoEntityMapper<V, PK extends Serializable, T extends IEntity<PK, T>> extends Serializable {
 
     /**
      * 将目标实体中的字段copy到当前vo

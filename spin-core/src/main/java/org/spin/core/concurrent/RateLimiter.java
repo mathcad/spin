@@ -21,7 +21,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * 参见 <a href="http://en.wikipedia.org/wiki/Little%27s_law">Little's
  * Law</a>).
  *
- * <p>一个 {@code RateLimiter} 主要是由一个发放令牌的速率来定义. 如果没有额外的配置，令牌将按固定的速率发放，定义为令牌/每.
+ * <p>一个 {@code RateLimiter} 主要是由一个发放令牌的速率来定义. 如果没有额外的配置，令牌将按固定的速率发放，定义为令牌/每秒.
  * 令牌的发放整体上是均匀的, 个别令牌之间的延迟会被动态调整来确保能够以配置的速率均匀发放.
  *
  * <p>可以为 {@code RateLimiter} 配置一个预热周期，在此期间，令牌发放的速率将稳步增加，直到达到稳定速率.

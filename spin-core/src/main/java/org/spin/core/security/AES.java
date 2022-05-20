@@ -16,7 +16,7 @@ import javax.crypto.SecretKey;
 public final class AES extends Symmetry {
 
     /**
-     * 密钥强度，WEAK为128bit，MEDIAM为192bit，STRONG为256bit
+     * 密钥强度，WEAK为128bit，MEDIUM为192bit，STRONG为256bit
      * <p>使用强度超过 {@link org.spin.core.security.AES.KeyLength#WEAK} 的密钥需要JCE无限制权限策略文件(jdk 9以上不需要)</p>
      * <p>Created by xuweinan on 2016/8/15.</p>
      *
@@ -32,7 +32,7 @@ public final class AES extends Symmetry {
         /**
          * 中等强度(192bit)
          */
-        MEDIAM(192),
+        MEDIUM(192),
 
         /**
          * 最高强度(256bit)

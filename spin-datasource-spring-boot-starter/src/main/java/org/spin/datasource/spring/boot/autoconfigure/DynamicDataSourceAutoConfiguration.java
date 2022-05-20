@@ -1,10 +1,11 @@
 package org.spin.datasource.spring.boot.autoconfigure;
 
+import org.spin.core.util.CollectionUtils;
 import org.spin.datasource.Ds;
 import org.spin.datasource.DynamicRoutingDataSource;
 import org.spin.datasource.aop.DynamicDataSourceAnnotationAdvisor;
 import org.spin.datasource.aop.DynamicDataSourceAnnotationInterceptor;
-import org.spin.datasource.aop.DynamicTransactionAdvisor;
+import org.spin.datasource.aop.DynamicLocalTransactionAdvisor;
 import org.spin.datasource.processor.DsHeaderProcessor;
 import org.spin.datasource.processor.DsProcessor;
 import org.spin.datasource.processor.DsSessionProcessor;
@@ -16,6 +17,9 @@ import org.spin.datasource.strategy.DynamicDataSourceStrategy;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -26,9 +30,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Role;
+import org.springframework.context.expression.BeanFactoryResolver;
 
 import javax.sql.DataSource;
-import java.util.Map;
+import java.util.List;
 
 /**
  * 动态数据源核心自动配置类
@@ -41,33 +46,36 @@ import java.util.Map;
  */
 @Configuration
 @EnableConfigurationProperties(DynamicDataSourceProperties.class)
-@AutoConfigureBefore(DataSourceAutoConfiguration.class)
-@Import(value = {DruidDynamicDataSourceConfiguration.class, DynamicDataSourceCreatorAutoConfiguration.class})
+@AutoConfigureBefore(value = DataSourceAutoConfiguration.class, name = "com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure")
+@Import(value = {DruidDynamicDataSourceConfiguration.class, DynamicDataSourceCreatorAutoConfiguration.class, DynamicDataSourceHealthCheckConfiguration.class})
 @ConditionalOnProperty(prefix = DynamicDataSourceProperties.PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
-public class DynamicDataSourceAutoConfiguration {
+public class DynamicDataSourceAutoConfiguration implements InitializingBean {
 
     private final DynamicDataSourceProperties properties;
 
-    public DynamicDataSourceAutoConfiguration(DynamicDataSourceProperties properties) {
+    private final List<DynamicDataSourcePropertiesCustomizer> dataSourcePropertiesCustomizers;
+
+    public DynamicDataSourceAutoConfiguration(
+        DynamicDataSourceProperties properties,
+        ObjectProvider<List<DynamicDataSourcePropertiesCustomizer>> dataSourcePropertiesCustomizers) {
         this.properties = properties;
+        this.dataSourcePropertiesCustomizers = dataSourcePropertiesCustomizers.getIfAvailable();
         Ds.setPrimaryDataSource(properties.getPrimary());
     }
 
     @Bean
     @ConditionalOnMissingBean
     public DynamicDataSourceProvider dynamicDataSourceProvider() {
-        Map<String, DataSourceProperty> datasourceMap = properties.getDatasource();
-        return new YmlDynamicDataSourceProvider(datasourceMap);
+        return new YmlDynamicDataSourceProvider(properties.getDatasource());
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public DataSource dataSource(DynamicDataSourceProvider dynamicDataSourceProvider) {
-        DynamicRoutingDataSource dataSource = new DynamicRoutingDataSource();
+    public DataSource dataSource(List<DynamicDataSourceProvider> providers) {
+        DynamicRoutingDataSource dataSource = new DynamicRoutingDataSource(providers);
         dataSource.setPrimary(properties.getPrimary());
         dataSource.setStrict(properties.getStrict());
         dataSource.setStrategy(properties.getStrategy());
-        dataSource.setProvider(dynamicDataSourceProvider);
         dataSource.setP6spy(properties.getP6spy());
         dataSource.setSeata(properties.getSeata());
         return dataSource;
@@ -75,8 +83,7 @@ public class DynamicDataSourceAutoConfiguration {
 
     @Role(value = BeanDefinition.ROLE_INFRASTRUCTURE)
     @Bean
-    @ConditionalOnMissingBean
-    public DynamicDataSourceAnnotationAdvisor dynamicDatasourceAnnotationAdvisor(DsProcessor dsProcessor) {
+    public Advisor dynamicDatasourceAnnotationAdvisor(DsProcessor dsProcessor) {
         DynamicDataSourceAnnotationInterceptor interceptor = new DynamicDataSourceAnnotationInterceptor(properties.isAllowedPublicOnly(), dsProcessor);
         DynamicDataSourceAnnotationAdvisor advisor = new DynamicDataSourceAnnotationAdvisor(interceptor);
         advisor.setOrder(properties.getOrder());
@@ -89,18 +96,28 @@ public class DynamicDataSourceAutoConfiguration {
     public Advisor dynamicTransactionAdvisor() {
         AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
         pointcut.setExpression("@annotation(org.spin.datasource.annotation.DSTransactional)");
-        return new DefaultPointcutAdvisor(pointcut, new DynamicTransactionAdvisor());
+        return new DefaultPointcutAdvisor(pointcut, new DynamicLocalTransactionAdvisor());
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public DsProcessor dsProcessor() {
+    public DsProcessor dsProcessor(BeanFactory beanFactory) {
         DsHeaderProcessor headerProcessor = new DsHeaderProcessor();
         DsSessionProcessor sessionProcessor = new DsSessionProcessor();
         DsSpelExpressionProcessor spelExpressionProcessor = new DsSpelExpressionProcessor();
+        spelExpressionProcessor.setBeanResolver(new BeanFactoryResolver(beanFactory));
         headerProcessor.setNextProcessor(sessionProcessor);
         sessionProcessor.setNextProcessor(spelExpressionProcessor);
         return headerProcessor;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        if (!CollectionUtils.isEmpty(dataSourcePropertiesCustomizers)) {
+            for (DynamicDataSourcePropertiesCustomizer customizer : dataSourcePropertiesCustomizers) {
+                customizer.customize(properties);
+            }
+        }
     }
 
 }
