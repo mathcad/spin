@@ -1,17 +1,19 @@
 package org.spin.core.gson.adapter;
 
+import org.spin.core.gson.DatePatternParser;
+import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.gson.reflect.TypeToken;
 import org.spin.core.gson.stream.JsonReader;
 import org.spin.core.gson.stream.JsonToken;
 import org.spin.core.gson.stream.JsonWriter;
-import org.spin.core.gson.DatePatternParser;
-import org.spin.core.gson.MatchableTypeAdapter;
 import org.spin.core.util.StringUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
 /**
  * LocalDateTime的GSON适配器
@@ -20,10 +22,10 @@ import java.time.format.DateTimeFormatter;
  * @author xuweinan
  */
 public class LocalDateTypeAdapter extends MatchableTypeAdapter<LocalDate> {
-    private DateTimeFormatter formater;
+    private final DateTimeFormatter formatter;
 
     public LocalDateTypeAdapter(String datePattern) {
-        this.formater = DateTimeFormatter.ofPattern(datePattern);
+        this.formatter = DateTimeFormatter.ofPattern(datePattern);
     }
 
     @Override
@@ -36,7 +38,17 @@ public class LocalDateTypeAdapter extends MatchableTypeAdapter<LocalDate> {
         if (StringUtils.isEmpty(tmp)) {
             return null;
         } else {
-            return LocalDate.parse(tmp, DatePatternParser.getReadPattern(formater, field));
+            List<DateTimeFormatter> readPattern = DatePatternParser.getReadPattern(formatter, field);
+            DateTimeParseException last = null;
+            for (DateTimeFormatter dateTimeFormatter : readPattern) {
+                try {
+                    return LocalDate.parse(tmp, dateTimeFormatter);
+                } catch (DateTimeParseException e) {
+                    last = e;
+                }
+            }
+
+            throw last;
         }
     }
 
@@ -45,7 +57,7 @@ public class LocalDateTypeAdapter extends MatchableTypeAdapter<LocalDate> {
         if (null == value) {
             out.nullValue();
         } else {
-            out.value(DatePatternParser.getWritePattern(formater, field).format(value));
+            out.value(DatePatternParser.getWritePattern(formatter, field).format(value));
         }
     }
 

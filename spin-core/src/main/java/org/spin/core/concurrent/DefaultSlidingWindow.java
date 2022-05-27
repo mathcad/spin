@@ -30,14 +30,14 @@ public class DefaultSlidingWindow implements SlidingWindow {
     @Override
     public void acquire() throws InterruptedException {
         long time = appendTimestamp(System.currentTimeMillis());
-        if (time > period) {
-            TimeUnit.MILLISECONDS.sleep(time - period);
+        if (time > 0) {
+            TimeUnit.MILLISECONDS.sleep(time);
         }
     }
 
     @Override
     public boolean tryAcquire() {
-        return appendTimestampIfPossible(System.currentTimeMillis()) >= 0L;
+        return appendTimestampIfPossible(System.currentTimeMillis()) <= 0L;
     }
 
     @Override

@@ -1,6 +1,6 @@
 package org.spin.core.util;
 
-import org.spin.core.collection.FixedVector;
+import org.spin.core.collection.CyclicArrayDeque;
 import org.spin.core.throwable.SpinException;
 
 import java.io.ByteArrayInputStream;
@@ -31,7 +31,7 @@ public final class SerializeUtils extends Util {
      * @return 字节数组
      */
     public static byte[] serialize(Object object) {
-        FixedVector<byte[]> bytes = new FixedVector<>(1);
+        CyclicArrayDeque<byte[]> bytes = new CyclicArrayDeque<>(1);
         serialize(object, ByteArrayOutputStream::new, os -> bytes.push(os.toByteArray()));
         return bytes.pop();
     }

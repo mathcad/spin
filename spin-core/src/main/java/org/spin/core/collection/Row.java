@@ -11,9 +11,9 @@ import java.util.function.Consumer;
  */
 public interface Row<E> {
 
-    int rownum();
+    int rowNum();
 
-    void setRownum(int rownum);
+    void setRowNum(int rowNum);
 
     /**
      * Returns the number of elements in this list.  If this list contains
@@ -115,7 +115,7 @@ public interface Row<E> {
     }
 
     /**
-     * Removes all of the elements from this list (optional operation).
+     * Removes all the elements from this list (optional operation).
      * The list will be empty after this call returns.
      *
      * @throws UnsupportedOperationException if the <code>clear</code> operation
@@ -130,5 +130,5 @@ public interface Row<E> {
 
     void forEach(Consumer<? super E> action);
 
-    void setUpdateLestener(RowUpdateListener listener);
+    void setUpdateListener(RowUpdateListener listener);
 }

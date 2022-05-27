@@ -1,54 +1,46 @@
 package org.spin.core.collection;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.util.AbstractList;
-import java.util.ConcurrentModificationException;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.RandomAccess;
+import java.util.*;
 
 /**
- * 固定大小的向量，放入元素超过容器大小后会循环覆盖
+ * 循环顺序队列 放入元素超过容器大小后会循环覆盖
  * <p>Created by xuweinan on 2017/9/3.</p>
  *
  * @author xuweinan
  */
-public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAccess, Deque<E>, Cloneable, java.io.Serializable {
+public class CyclicArrayDeque<E> extends AbstractList<E> implements List<E>, RandomAccess, Deque<E>, Serializable {
 
-    private transient final E[] elementData;
+    private final transient E[] elementData;
 
-    private final int compacity;
+    private final int capacity;
     private int head;
     private int next;
 
     @SafeVarargs
-    public static <E> FixedVector<E> of(E... elements) {
-        return new FixedVector<>(elements.length, elements);
+    public static <E> CyclicArrayDeque<E> of(E... elements) {
+        return new CyclicArrayDeque<>(elements.length, elements);
     }
 
     @SafeVarargs
-    public FixedVector(int compacity, E... elements) {
-        if (compacity <= 0) {
-            throw new IllegalStateException("Illegal compacity declared, must be a positive number: " + compacity);
+    public CyclicArrayDeque(int capacity, E... elements) {
+        if (capacity <= 0) {
+            throw new IllegalStateException("Illegal capacity declared, must be a positive number: " + capacity);
         }
         if (null == elements) {
             throw new IllegalArgumentException("elements should not be null");
         }
-        this.compacity = compacity + 1;
+        this.capacity = capacity + 1;
         //noinspection unchecked
-        elementData = (elements.getClass() == Object[].class) ?
-            (E[]) new Object[this.compacity] :
-            (E[]) Array.newInstance(elements.getClass().getComponentType(), this.compacity);
+        elementData = (elements.getClass() == Object[].class) ? (E[]) new Object[this.capacity] : (E[]) Array.newInstance(elements.getClass().getComponentType(), this.capacity);
         head = 0;
         if (elements.length == 0) {
             next = 0;
         } else {
-            if (elements.length > compacity) {
-                System.arraycopy(elements, elements.length - compacity, elementData, 0, compacity);
-                next = compacity;
+            if (elements.length > capacity) {
+                System.arraycopy(elements, elements.length - capacity, elementData, 0, capacity);
+                next = capacity;
             } else {
                 System.arraycopy(elements, 0, elementData, 0, elements.length);
                 next = elements.length;
@@ -59,29 +51,29 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
 
     @Override
     public void addFirst(E e) {
-        if (compacity() == 0) {
-            throw new IllegalStateException("No available space to store element, compacity is: " + compacity());
+        if (capacity() == 0) {
+            throw new IllegalStateException("No available space to store element, capacity is: " + capacity());
         }
-        head = (head == 0 ? compacity : head) - 1;
+        head = (head == 0 ? capacity : head) - 1;
         elementData[head] = e;
 
         if (head == next) {
             // full abandon tail
-            next = (next == 0 ? compacity : next) - 1;
+            next = (next == 0 ? capacity : next) - 1;
         }
     }
 
     @Override
     public void addLast(E e) {
-        if (compacity() == 0) {
-            throw new IllegalStateException("No available space to store element, compacity is: " + compacity());
+        if (capacity() == 0) {
+            throw new IllegalStateException("No available space to store element, capacity is: " + capacity());
         }
         elementData[next] = e;
-        next = ++next % compacity;
+        next = ++next % capacity;
 
         if (next == head) {
             // full, abandon head
-            head = ++head % compacity;
+            head = ++head % capacity;
         }
     }
 
@@ -105,7 +97,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
             modCount++;
             E e = elementData[head];
             elementData[head] = null;
-            head = ++head % compacity;
+            head = ++head % capacity;
             return e;
         }
     }
@@ -116,7 +108,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
             throw new NoSuchElementException("FixedVector is empty");
         } else {
             modCount++;
-            next = (next == 0 ? compacity : next) - 1;
+            next = (next == 0 ? capacity : next) - 1;
             E e = elementData[next];
             elementData[next] = null;
             return e;
@@ -131,7 +123,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
             modCount++;
             E e = elementData[head];
             elementData[head] = null;
-            head = ++head % compacity;
+            head = ++head % capacity;
             return e;
         }
     }
@@ -142,7 +134,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
             return null;
         } else {
             modCount++;
-            next = (next == 0 ? compacity : next) - 1;
+            next = (next == 0 ? capacity : next) - 1;
             E e = elementData[next];
             elementData[next] = null;
             return e;
@@ -163,7 +155,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
         if (head == next) {
             throw new NoSuchElementException("FixedVector is empty");
         } else {
-            return elementData[(next == 0 ? compacity : next) - 1];
+            return elementData[(next == 0 ? capacity : next) - 1];
         }
     }
 
@@ -174,7 +166,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
 
     @Override
     public E peekLast() {
-        return head == next ? null : elementData[(next == 0 ? compacity : next) - 1];
+        return head == next ? null : elementData[(next == 0 ? capacity : next) - 1];
     }
 
     @Override
@@ -251,7 +243,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
 
     @Override
     public int size() {
-        return (next - head + compacity) % compacity;
+        return (next - head + capacity) % capacity;
     }
 
     @Override
@@ -264,7 +256,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
         if (index < 0 || index >= size()) {
             throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
         }
-        return elementData[(head + index) % compacity];
+        return elementData[(head + index) % capacity];
     }
 
     @Override
@@ -272,7 +264,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
         if (index < 0 || index >= size()) {
             throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
         }
-        index = (head + index) % compacity;
+        index = (head + index) % capacity;
         E previous = elementData[index];
         elementData[index] = element;
         return previous;
@@ -295,15 +287,15 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
         }
 
         // actual idx
-        index = (head + index) % compacity;
+        index = (head + index) % capacity;
         if (index < next) {
             // ahead of cursor
             System.arraycopy(elementData, index, elementData, index + 1, next - index);
             elementData[index] = element;
-            next = ++next % compacity;
+            next = ++next % capacity;
             if (next == head) {
                 // full, abandon head
-                head = ++head % compacity;
+                head = ++head % capacity;
             }
             return;
         }
@@ -312,13 +304,13 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
         if (next > 0) {
             System.arraycopy(elementData, 0, elementData, 1, next);
         }
-        next = ++next % compacity;
+        next = ++next % capacity;
         if (next == head) {
             // full, abandon head
-            head = ++head % compacity;
+            head = ++head % capacity;
         }
-        elementData[0] = elementData[compacity - 1];
-        System.arraycopy(elementData, index, elementData, index + 1, compacity - index - 1);
+        elementData[0] = elementData[capacity - 1];
+        System.arraycopy(elementData, index, elementData, index + 1, capacity - index - 1);
         elementData[index] = element;
     }
 
@@ -338,21 +330,21 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
         }
 
         // actual idx
-        index = (head + index) % compacity;
+        index = (head + index) % capacity;
         E e = elementData[index];
         if (index < next) {
             System.arraycopy(elementData, index + 1, elementData, index, next - index - 1);
             --next;
         } else {
-            System.arraycopy(elementData, index + 1, elementData, index, compacity - index - 1);
+            System.arraycopy(elementData, index + 1, elementData, index, capacity - index - 1);
             if (next > 0) {
-                elementData[compacity - 1] = elementData[0];
+                elementData[capacity - 1] = elementData[0];
                 if (next > 1) {
-                    System.arraycopy(elementData, 1, elementData, 0, compacity - index - 1);
+                    System.arraycopy(elementData, 1, elementData, 0, capacity - index - 1);
                 }
                 --next;
             } else {
-                next = compacity - 1;
+                next = capacity - 1;
             }
         }
         elementData[next] = null;
@@ -363,7 +355,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
     public int indexOf(Object o) {
         int idx = 0;
         while (idx != size()) {
-            if (Objects.equals(o, elementData[(head + idx) % compacity])) {
+            if (Objects.equals(o, elementData[(head + idx) % capacity])) {
                 return idx;
             }
             idx = ++idx;
@@ -376,7 +368,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
     public int lastIndexOf(Object o) {
         int idx = size() - 1;
         while (idx != -1) {
-            if (Objects.equals(o, elementData[(head + idx) % compacity])) {
+            if (Objects.equals(o, elementData[(head + idx) % capacity])) {
                 return idx;
             }
             idx = --idx;
@@ -391,19 +383,18 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
         head = 0;
         next = 0;
         // clear to let GC do its work
-        for (int i = 0; i < compacity; i++)
+        for (int i = 0; i < capacity; i++)
             elementData[i] = null;
     }
 
-    public int compacity() {
-        return compacity - 1;
+    public int capacity() {
+        return capacity - 1;
     }
 
     @Override
     public boolean isEmpty() {
         return head == next;
     }
-
 
     @Override
     public Object[] toArray() {
@@ -423,16 +414,16 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
         if (head < next) {
             System.arraycopy(elementData, head, a, 0, next - head);
         } else {
-            System.arraycopy(elementData, head, a, 0, compacity - head);
+            System.arraycopy(elementData, head, a, 0, capacity - head);
             if (next > 0) {
-                System.arraycopy(elementData, 0, a, compacity - head, next);
+                System.arraycopy(elementData, 0, a, capacity - head, next);
             }
         }
         return a;
     }
 
     private String outOfBoundsMsg(int index) {
-        return "Index: " + index + ", Size: " + compacity + ", Length: " + size();
+        return "Index: " + index + ", Size: " + capacity + ", Length: " + size();
     }
 
     private class DescItr implements Iterator<E> {
@@ -448,7 +439,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
             checkForComodification();
             try {
                 int i = cursor;
-                E next = get((i + head) % compacity);
+                E next = get((i + head) % capacity);
                 lastRet = i;
                 cursor = i - 1;
                 return next;
@@ -458,15 +449,14 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
             }
         }
 
+        @Override
         public void remove() {
-            if (lastRet < 0)
-                throw new IllegalStateException();
+            if (lastRet < 0) throw new IllegalStateException();
             checkForComodification();
 
             try {
-                FixedVector.this.remove(lastRet);
-                if (lastRet < cursor)
-                    cursor--;
+                CyclicArrayDeque.this.remove(lastRet);
+                if (lastRet < cursor) cursor--;
                 lastRet = -1;
                 expectedModCount = modCount;
             } catch (IndexOutOfBoundsException e) {
@@ -475,8 +465,7 @@ public class FixedVector<E> extends AbstractList<E> implements List<E>, RandomAc
         }
 
         final void checkForComodification() {
-            if (modCount != expectedModCount)
-                throw new ConcurrentModificationException();
+            if (modCount != expectedModCount) throw new ConcurrentModificationException();
         }
     }
 }

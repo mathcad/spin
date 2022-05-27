@@ -27,7 +27,11 @@ public class Retries {
     private static final Logger logger = LoggerFactory.getLogger(Retries.class);
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
+    /**
+     * 最大重试次数 与maxTime只能2选1
+     */
     private final int attempts;
+
     private int delayMultiplier = 1;
     private long minDelay = 500L;
     private long maxDelay = 500L;
@@ -38,10 +42,14 @@ public class Retries {
 
 
     public static Retries attempts(int attempts) {
-        return new Retries(attempts);
+        return new Retries(attempts, 0L);
     }
 
-    private Retries(int attempts) {
+    public static Retries maxTime(long maxTime) {
+        return new Retries(0, maxTime);
+    }
+
+    private Retries(int attempts, long maxTime) {
         this.attempts = attempts;
     }
 
@@ -253,7 +261,37 @@ public class Retries {
             Uninterruptibles.sleepUninterruptibly(getBackoff() * delayMultiplier, TimeUnit.MILLISECONDS);
         }
 
-//        throw lastException;
+        throw new RetryException("所有重试均已失败, " + "重试次数: " + (i - 1), lastException);
+    }
+
+    /**
+     * 执行指定的操作，并根据配置的重试规则进行最多 {@code maxAttempts} 次重试(不包括首次执行, 最多执行maxAttempts+1次)
+     *
+     * @param handler 操作
+     * @throws InterruptedException 线程中断时抛出
+     */
+    public void execInterruptible(ExceptionalConsumer<Exception, Exception> handler) throws InterruptedException {
+        Exception lastException = null;
+        int i = 0;
+        while (i <= attempts) {
+            try {
+                handler.accept(lastException);
+                return;
+            } catch (Exception e) {
+                lastException = e;
+
+                if (!checkException(e)) {
+                    logger.info("Retries[{}/{}] *** EXCEPTION IGNORED [{}] *** , finish.", i, attempts, e.getClass().getName());
+                    break;
+                } else {
+                    logger.info("Retries[{}/{}] *** OCCURRED EXCEPTION[{}] *** , will retry later...", i, attempts, e.getClass().getName());
+                }
+            }
+
+            ++i;
+            TimeUnit.MILLISECONDS.sleep(getBackoff() * delayMultiplier);
+        }
+
         throw new RetryException("所有重试均已失败, " + "重试次数: " + (i - 1), lastException);
     }
 
@@ -287,7 +325,7 @@ public class Retries {
      * @version 1.0
      */
     public class RetriesWithResult<T> {
-        private Predicate<T> resultRetryPredicate;
+        private final Predicate<T> resultRetryPredicate;
 
         private RetriesWithResult(Predicate<T> resultRetryPredicate) {
             this.resultRetryPredicate = resultRetryPredicate;
@@ -489,7 +527,44 @@ public class Retries {
 
                 }
 
-                Uninterruptibles.sleepUninterruptibly(getBackoff(), TimeUnit.MILLISECONDS);
+                Uninterruptibles.sleepUninterruptibly(getBackoff() * delayMultiplier, TimeUnit.MILLISECONDS);
+                ++i;
+            }
+
+            throw new RetryException("所有重试均已失败, " + "重试次数: " + (i - 1), lastException);
+        }
+
+        /**
+         * 执行指定的操作，并根据配置的重试规则进行最多 {@code maxAttempts} 次重试
+         *
+         * @param callable 操作
+         * @return 操作结果
+         * @throws InterruptedException 线程中断时抛出
+         */
+        public T execInterruptible(Retryable<T> callable) throws InterruptedException {
+            Exception lastException = null;
+            int i = 0;
+            while (i <= attempts) {
+                try {
+                    T result = callable.apply(lastException);
+                    if (null == resultRetryPredicate || !resultRetryPredicate.test(result)) {
+                        return result;
+                    } else {
+                        logger.info("Retries[{}/{}] *** RESULT NOT MATCH *** , will retry later...", i, attempts);
+                    }
+                } catch (Exception e) {
+                    lastException = e;
+
+                    if (!checkException(e)) {
+                        logger.info("Retries[{}/{}] *** EXCEPTION IGNORED [{}] *** , finish.", i, attempts, e.getClass().getName());
+                        break;
+                    } else {
+                        logger.info("Retries[{}/{}] *** OCCURRED EXCEPTION[{}] *** , will retry later...", i, attempts, e.getClass().getName());
+                    }
+
+                }
+
+                TimeUnit.MILLISECONDS.sleep(getBackoff() * delayMultiplier);
                 ++i;
             }
 

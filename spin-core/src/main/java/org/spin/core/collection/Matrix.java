@@ -140,10 +140,10 @@ public class Matrix<T> implements RowUpdateListener {
         }
 
         ArrayRow<T> row = new ArrayRow<>(Arrays.asList(values));
-        row.setUpdateLestener(this);
+        row.setUpdateListener(this);
         // 插入数据
         rows.add(row);
-        row.setRownum(rows.size() - 1);
+        row.setRowNum(rows.size() - 1);
         // 构建索引
         buildIndex(row);
         return this;
@@ -229,9 +229,9 @@ public class Matrix<T> implements RowUpdateListener {
      */
     public boolean delete(int column, T key) {
         rangeCheck(column);
-        Set<Integer> rownums = findRows(column, key).stream().map(Row::rownum).collect(Collectors.toSet());
-        deleteRowIndex(rownums);
-        return rows.removeIf(next -> rownums.contains(next.rownum()));
+        Set<Integer> rowNums = findRows(column, key).stream().map(Row::rowNum).collect(Collectors.toSet());
+        deleteRowIndex(rowNums);
+        return rows.removeIf(next -> rowNums.contains(next.rowNum()));
     }
 
     /**
@@ -270,11 +270,11 @@ public class Matrix<T> implements RowUpdateListener {
             MultiDiffValueMap<T, Integer> indexMap = index.get(c);
             //noinspection unchecked
             Row<T> row = (Row<T>) event.getSource();
-            Set<Integer> rownums = indexMap.get(row.get(c));
-            if (rownums.size() == 1) {
+            Set<Integer> rowNums = indexMap.get(row.get(c));
+            if (rowNums.size() == 1) {
                 indexMap.remove(row.get(c));
             } else {
-                rownums.remove(row.rownum());
+                rowNums.remove(row.rowNum());
             }
         }
     }
@@ -287,8 +287,8 @@ public class Matrix<T> implements RowUpdateListener {
     }
 
     @Override
-    public void onDelete(int rownum) {
-        deleteRowIndex(rownum);
+    public void onDelete(int rowNum) {
+        deleteRowIndex(rowNum);
     }
 
     private void rangeCheck(int column) {
@@ -304,7 +304,7 @@ public class Matrix<T> implements RowUpdateListener {
             if (null != indexMap) {
                 indexMap.clear();
                 for (Row<T> row : rows) {
-                    indexMap.add(row.get(indexCol), row.rownum());
+                    indexMap.add(row.get(indexCol), row.rowNum());
                 }
             }
         }
@@ -317,7 +317,7 @@ public class Matrix<T> implements RowUpdateListener {
         for (Map.Entry<Integer, MultiDiffValueMap<T, Integer>> indexEntry : index.entrySet()) {
             MultiDiffValueMap<T, Integer> indexMap = indexEntry.getValue();
             int indexCol = indexEntry.getKey();
-            indexMap.add(row.get(indexCol), row.rownum());
+            indexMap.add(row.get(indexCol), row.rowNum());
         }
     }
 
@@ -328,7 +328,7 @@ public class Matrix<T> implements RowUpdateListener {
         for (int indexCol : cols) {
             MultiDiffValueMap<T, Integer> indexMap = index.get(indexCol);
             if (null != indexMap) {
-                indexMap.add(row.get(indexCol), row.rownum());
+                indexMap.add(row.get(indexCol), row.rowNum());
             }
         }
     }
@@ -340,19 +340,19 @@ public class Matrix<T> implements RowUpdateListener {
         for (int indexCol : cols) {
             MultiDiffValueMap<T, Integer> indexMap = index.get(indexCol);
             if (null != indexMap) {
-                indexMap.add(row.get(indexCol), row.rownum());
+                indexMap.add(row.get(indexCol), row.rowNum());
             }
         }
     }
 
-    private void deleteRowIndex(Set<Integer> rownums) {
+    private void deleteRowIndex(Set<Integer> rowNums) {
         for (MultiDiffValueMap<T, Integer> index : index.values()) {
             Iterator<Map.Entry<T, Set<Integer>>> iterator = index.entrySet().iterator();
 
             while (iterator.hasNext()) {
                 Map.Entry<T, Set<Integer>> next = iterator.next();
 
-                next.getValue().removeIf(rownums::contains);
+                next.getValue().removeIf(rowNums::contains);
                 if (next.getValue().isEmpty()) {
                     iterator.remove();
                 }
@@ -360,14 +360,14 @@ public class Matrix<T> implements RowUpdateListener {
         }
     }
 
-    private void deleteRowIndex(Integer rownum) {
+    private void deleteRowIndex(Integer rowNum) {
         for (MultiDiffValueMap<T, Integer> index : index.values()) {
             Iterator<Map.Entry<T, Set<Integer>>> iterator = index.entrySet().iterator();
 
             while (iterator.hasNext()) {
                 Map.Entry<T, Set<Integer>> next = iterator.next();
 
-                next.getValue().removeIf(rownum::equals);
+                next.getValue().removeIf(rowNum::equals);
                 if (next.getValue().isEmpty()) {
                     iterator.remove();
                 }

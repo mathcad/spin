@@ -29,7 +29,7 @@ public @interface DatePattern {
      *
      * @return 日期格式
      */
-    String read() default "";
+    String[] read() default {};
 
     /**
      * 指定写出时的时间日期模式

@@ -25,15 +25,7 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -220,7 +212,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
      * collisions. This implementation uses the same Wang/Jenkins algorithm as
      * {@link ConcurrentHashMap}. Subclasses can override to provide alternative hashing.
      *
-     * @param o the object to hash (may be null)
+     * @param o the object to hash (maybe null)
      * @return the resulting hash code
      */
     protected int getHash(Object o) {
@@ -527,7 +519,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
 
         /**
          * Restructure the underlying data structure when it becomes necessary. This
-         * method can increase the size of the references table as well as purge any
+         * method can increase the size of the reference table as well as purge any
          * references that have been garbage collected.
          *
          * @param allowResize if resizing is permitted
@@ -764,7 +756,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V> implemen
         }
 
         /**
-         * Convenience method that can be used for tasks that do not need access to {@link Entries}.
+         * Convenience method that can be used for tasks that do not need to access {@link Entries}.
          *
          * @param reference the found reference or {@code null}
          * @param entry     the found entry or {@code null}

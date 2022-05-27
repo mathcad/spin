@@ -1,6 +1,7 @@
 package org.spin.core;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * 异常与错误代码
@@ -73,6 +74,19 @@ public class ErrorCode implements Serializable {
 
     public String getDesc() {
         return desc;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ErrorCode errorCode = (ErrorCode) o;
+        return code == errorCode.code && Objects.equals(desc, errorCode.desc);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(code, desc);
     }
 
     @Override

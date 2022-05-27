@@ -13,14 +13,14 @@ import java.util.HashMap;
  * @version 1.0
  */
 public class AsyncContext extends HashMap<String, Object> {
-    private final String schduleThreadName;
+    private final String scheduleThreadName;
 
     public AsyncContext() {
-        schduleThreadName = Thread.currentThread().getName();
+        scheduleThreadName = Thread.currentThread().getName();
     }
 
-    public String getSchduleThreadName() {
-        return schduleThreadName;
+    public String getScheduleThreadName() {
+        return scheduleThreadName;
     }
 
     @SuppressWarnings("unchecked")

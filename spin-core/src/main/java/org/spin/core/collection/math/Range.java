@@ -43,7 +43,7 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
         return parseRange(expression, Integer::parseInt);
     }
 
-    public static <T extends Comparable<T>> Range<T> parseRange(String expression, Function<String, T> conveter) {
+    public static <T extends Comparable<T>> Range<T> parseRange(String expression, Function<String, T> converter) {
         expression = StringUtils.trimToEmpty(expression).replaceAll("\\s", "");
         Assert.isTrue(EXPRESSION_PATTERN.matcher(expression).matches(), "表达式不合法");
 
@@ -54,11 +54,11 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
 
         String[] r = expression.split(",");
 
-        T begin = conveter.apply(r[0]);
+        T begin = converter.apply(r[0]);
 
         T end = null;
         if (r.length == 2) {
-            end = conveter.apply(r[1]);
+            end = converter.apply(r[1]);
         }
         return new Range<>(begin, inclusiveBegin, end, inclusiveEnd);
     }

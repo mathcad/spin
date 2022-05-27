@@ -25,7 +25,7 @@ public final class SpinContext {
     public static final Map<String, List<Integer>> CHECKED_METHOD_PARAM = new ConcurrentHashMap<>();
 
     /** 实体中*ToOne字段列表缓存 */
-    public static final Map<String, Map<String, Field>> ENTITY_SOMETOONE_JOIN_FIELDS = new ConcurrentHashMap<>();
+    public static final Map<String, Map<String, Field>> ENTITY_SOME_TO_ONE_JOIN_FIELDS = new ConcurrentHashMap<>();
 
     /** 实体对应列名列表缓存 */
     public static final Map<String, Set<String>> ENTITY_COLUMNS = new ConcurrentHashMap<>();
@@ -104,7 +104,7 @@ public final class SpinContext {
     }
 
     public synchronized static void clearCache() {
-        ENTITY_SOMETOONE_JOIN_FIELDS.clear();
+        ENTITY_SOME_TO_ONE_JOIN_FIELDS.clear();
         BEAN_FIELDS.clear();
         CHECKED_METHOD_PARAM.clear();
         ENTITY_COLUMNS.clear();

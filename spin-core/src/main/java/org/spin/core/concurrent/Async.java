@@ -187,7 +187,7 @@ public final class Async extends Util {
         intercept(GLOBAL_INTERCEPTOR, context, 1);
         intercept(name, context, 1);
         Future<V> result = poolWrapper.executor.submit(() -> {
-            logger.info("Task Schdule from : {}", context.getSchduleThreadName());
+            logger.info("Task Scheduled from : {}", context.getScheduleThreadName());
             // beforeExecute
             intercept(GLOBAL_INTERCEPTOR, context, 2);
             intercept(name, context, 2);
@@ -241,7 +241,7 @@ public final class Async extends Util {
         intercept(GLOBAL_INTERCEPTOR, context, 1);
         intercept(name, context, 1);
         poolWrapper.executor.execute(() -> {
-            logger.info("Task Schdule from : {}", context.getSchduleThreadName());
+            logger.info("Task Scheduled from : {}", context.getScheduleThreadName());
             // beforeExecute
             intercept(GLOBAL_INTERCEPTOR, context, 2);
             intercept(name, context, 2);
@@ -602,13 +602,13 @@ public final class Async extends Util {
             }
         }
 
-        private void completeTask(long taskId, boolean succ) {
+        private void completeTask(long taskId, boolean success) {
             TaskInfo taskInfo = tasks.remove(taskId);
             if (null != taskInfo) {
                 taskInfo.finishTime = System.currentTimeMillis();
                 runningTaskCnt.decrementAndGet();
                 completedTaskCnt.incrementAndGet();
-                if (succ) {
+                if (success) {
                     correctCompletedCnt.incrementAndGet();
                 }
                 long execTime = taskInfo.finishTime - taskInfo.runTime;

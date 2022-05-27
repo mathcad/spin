@@ -104,9 +104,9 @@ public class LockTicket implements AutoCloseable {
     public void close() {
         if (success) {
             if (lock.releaseLock(key, ticket)) {
-                logger.debug("锁[" + key + "]释放成功");
+                logger.debug("锁[{}]释放成功", key);
             } else {
-                logger.warn("锁[" + key + "]释放失败");
+                logger.warn("锁[{}]释放失败", key);
             }
         }
     }

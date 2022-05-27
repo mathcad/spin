@@ -12,11 +12,11 @@ import java.util.Arrays;
  * @author xuweinan
  * @version 1.0
  */
-class FixedVectorTest {
+class CyclicArrayDequeTest {
 
     @Test
     void testVector() {
-        FixedVector<Integer> vector = new FixedVector<>(8);
+        CyclicArrayDeque<Integer> vector = new CyclicArrayDeque<>(8);
         vector.push(1);
         vector.push(2);
         vector.push(3);
@@ -37,7 +37,7 @@ class FixedVectorTest {
         System.out.println(vector.pop());
         System.out.println(vector.pop());
 
-        vector = new FixedVector<>(5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        vector = new CyclicArrayDeque<>(5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         System.out.println(vector.pop());
         System.out.println(vector.pop());
         System.out.println(vector.pop());

@@ -25,7 +25,7 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
 
     private final int size;
 
-    private int rownum = -1;
+    private int rowNum = -1;
 
     /**
      * The number of times this list has been <i>structurally modified</i>.
@@ -75,13 +75,13 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
     }
 
     @Override
-    public int rownum() {
-        return rownum;
+    public int rowNum() {
+        return rowNum;
     }
 
     @Override
-    public void setRownum(int rownum) {
-        this.rownum = rownum;
+    public void setRowNum(int rowNum) {
+        this.rowNum = rowNum;
     }
 
     @Override
@@ -151,7 +151,7 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
     }
 
     public void delete() {
-        notifyDeleted(rownum);
+        notifyDeleted(rowNum);
     }
 
     @Override
@@ -174,7 +174,7 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
     }
 
     @Override
-    public void setUpdateLestener(RowUpdateListener listener) {
+    public void setUpdateListener(RowUpdateListener listener) {
         this.observer = listener;
     }
 
@@ -190,9 +190,9 @@ public class ArrayRow<E> implements Row<E>, RandomAccess, Cloneable, Serializabl
         }
     }
 
-    private void notifyDeleted(int rownum) {
+    private void notifyDeleted(int rowNum) {
         if (null != observer) {
-            observer.onDelete(rownum);
+            observer.onDelete(rowNum);
         }
     }
 

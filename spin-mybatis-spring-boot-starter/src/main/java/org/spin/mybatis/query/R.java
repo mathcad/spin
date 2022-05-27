@@ -107,7 +107,7 @@ public class R extends ClassLoader {
      * 采用Batch操作模式
      *
      * 如果未开启MySQL JDBC的rewriteBatchedStatements参数:
-     *   在2000的插入规模上, 性能大约是单SQL插入的1/4左右.
+     *   在2000的插入规模上, 性能大约是单SQL插入的4倍左右.
      *   随着规模提升, 性能差距会更大; 到达20000的规模时, 性能大约相差10倍.
      *
      * 如果开启该参数, 则batch性能与单sql性能没有显著差距

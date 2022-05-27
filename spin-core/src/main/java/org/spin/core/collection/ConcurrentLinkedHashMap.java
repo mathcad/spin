@@ -351,7 +351,7 @@ public final class ConcurrentLinkedHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Performs the post-processing work required after a write.
+     * Performs the post-processing work required after written.
      *
      * @param task the pending operation to be applied
      */
